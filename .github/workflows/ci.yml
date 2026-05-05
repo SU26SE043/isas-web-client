@@ -1,0 +1,34 @@
+name: React Frontend CI
+
+# Chỉ kích hoạt CI khi có người tạo Pull Request đòi gộp code vào nhánh main
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Lấy code từ repo về máy chủ ảo của GitHub
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Cài đặt môi trường Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Phiên bản Node.js ổn định nhất hiện tại
+          cache: 'npm'
+
+      # 3. Cài đặt các thư viện (như đã khai báo trong package.json)
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Chạy kiểm tra lỗi cú pháp (Lưu ý: Bạn phải cài ESLint trong project trước)
+      - name: Check Linting
+        run: npm run lint
+
+      # 5. Build thử dự án xem có bị lỗi Crash không
+      - name: Test Build
+        run: npm run build
