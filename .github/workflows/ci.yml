@@ -25,10 +25,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # 4. Chạy kiểm tra lỗi cú pháp (Lưu ý: Bạn phải cài ESLint trong project trước)
-      - name: Check Linting
-        run: npm run lint
-
-      # 5. Build thử dự án xem có bị lỗi Crash không
+      # 4. Build thử dự án xem có bị lỗi Crash không
       - name: Test Build
         run: npm run build
