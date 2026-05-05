@@ -2,6 +2,8 @@ name: React Frontend CI
 
 # Chỉ kích hoạt CI khi có người tạo Pull Request đòi gộp code vào nhánh main
 on:
+  push:
+    branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
 
