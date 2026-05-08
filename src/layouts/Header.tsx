@@ -1,48 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const navItems = [
-  { label: 'Trang chủ', to: '/' },
-  { label: 'Bảng điều khiển', to: '/dashboard' },
-  { label: 'Cá nhân', to: '/profile' },
-];
+import { AuthModal } from '../features/auth/components/AuthModal';
 
 export const Header: React.FC = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-        <Link to="/" className="flex items-center gap-2" aria-label="ISAS homepage">
-          <img alt="" className="h-5 w-5" src="/favicon.svg" />
-          <span className="text-[11px] font-semibold tracking-tight text-slate-800">ISAS</span>
-        </Link>
+    <>
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="w-full px-6 lg:px-20 xl:px-32">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <div className="flex-shrink-0 flex items-center">
+              <Link to="/">
+                <img alt="ISAS Logo" className="h-40 w-auto" src="https://lh3.googleusercontent.com/aida/ADBb0uiSmzxRAhvuypS8dnkXlByzB6ZActi4ZbzHfz46HjXli05zlL9fuVAnZ9hYqMCkx7re4gFO0tQSJL9t3gkXuq_JEMueNfJARZfxFSuhJ-Wc_9zSUQxx7vqJHYvSn5kHmWXjZ_NNFIgwsTfytR2edioszKgT6lESc4KMv9kElcWs3yHu7lCq4Cac67dy9TcSfu-80svuU65RrDJGg6CUfE6MD5hLeonAooKw4av-2takrkboPK0pX0MnuFoD" />
+              </Link>
+            </div>
 
-        <nav className="hidden items-center gap-12 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.to}
-              className="text-sm font-medium text-slate-700 transition-colors hover:text-emerald-600"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+            {/* Menu Links */}
+            <div className="hidden md:flex space-x-10 items-center">
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/">Trang chủ</Link>
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/dashboard">Bảng điều khiển</Link>
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/profile">Cá nhân</Link>
+            </div>
 
-        <div className="flex items-center gap-4">
-          <Link
-            to="/login"
-            className="hidden text-sm font-semibold text-slate-800 transition-colors hover:text-emerald-600 sm:inline"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-emerald-100 transition-colors hover:bg-emerald-600"
-          >
-            Bắt đầu ngay
-          </Link>
+            {/* Auth Actions */}
+            <div className="flex items-center space-x-6">
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
+                style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
+              >
+                <span className="text">Đăng nhập</span>
+              </button>
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
+              >
+                <span className="text">Bắt đầu ngay</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </nav>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+    </>
   );
 };
