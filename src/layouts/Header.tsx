@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthModal } from '../features/auth/components/AuthModal';
+import { ThemeToggle } from './ThemeToggle/ThemeToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+      <nav className="layout-fixed sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="w-full px-6 lg:px-20 xl:px-32">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -26,14 +27,15 @@ export const Header: React.FC = () => {
 
             {/* Auth Actions */}
             <div className="flex items-center space-x-6">
-              <button 
+              <ThemeToggle />
+              <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
                 style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
               >
                 <span className="text">Đăng nhập</span>
               </button>
-              <button 
+              <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
               >
@@ -44,9 +46,9 @@ export const Header: React.FC = () => {
         </div>
       </nav>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </>
   );

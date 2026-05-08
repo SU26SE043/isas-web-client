@@ -4,24 +4,123 @@
   --color-brand-green: #02462E;
   --color-brand-green-light: #035c3d;
   --color-brand-green-dark: #013020;
-  
+
   --color-brand-yellow: #FEC700;
   --color-brand-yellow-light: #ffd740;
   --color-brand-yellow-dark: #e5b300;
 }
-@layer utilities {
-  .hero-gradient {
-    background: linear-gradient(180deg, rgba(240, 253, 244, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
-  }
+
+/* Theme variables */
+:root {
+  --theme-bg: #F8F9FA; /* Off-white / light slate */
+  --theme-text: #1E293B; /* Slate 800 */
+  --theme-border: #E2E8F0; /* Slate 200 */
+  --theme-surface: rgba(255, 255, 255, 0.6); /* Lighter surface for light mode */
+}
+
+:root.dark {
+  --theme-bg: #1E293B; /* Slate 800 (not too black) */
+  --theme-text: #F1F5F9; /* Slate 50 (not too white) */
+  --theme-border: #334155; /* Slate 700 */
+  --theme-surface: #0F172A; /* Slate 900 */
+}
+
+/* Smooth transitions for theme switching */
+*, *::before, *::after {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
-  color: #0f172a;
-  background: #ffffff;
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-text) !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Override hardcoded Tailwind classes */
+.bg-white {
+  background-color: var(--theme-bg) !important;
+}
+.text-slate-800, .text-slate-700, .text-slate-600 {
+  color: var(--theme-text) !important;
+}
+.bg-slate-50, .bg-slate-100 {
+  background-color: var(--theme-surface) !important;
+}
+.border-slate-100, .border-slate-200, .border-slate-300 {
+  border-color: var(--theme-border) !important;
+}
+
+/* Keep transparent backgrounds dynamic! */
+.bg-white\/80 {
+  background-color: color-mix(in srgb, var(--theme-bg) 80%, transparent) !important;
+}
+.bg-white\/5 {
+  background-color: color-mix(in srgb, var(--theme-bg) 5%, transparent) !important;
+}
+.bg-white\/10 {
+  background-color: color-mix(in srgb, var(--theme-bg) 10%, transparent) !important;
+}
+.bg-white\/20 {
+  background-color: color-mix(in srgb, var(--theme-bg) 20%, transparent) !important;
+}
+.text-white\/80 {
+  color: color-mix(in srgb, var(--theme-text) 80%, transparent) !important;
+}
+
+@layer utilities {
+  .hero-gradient {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand-green) 10%, transparent) 0%, var(--theme-bg) 100%);
+  }
+}
+
+/* Dark mode: green text -> white */
+:root.dark .text-brand-green,
+:root.dark .hover\:text-brand-green:hover,
+:root.dark .text-green-600,
+:root.dark .text-green-700,
+:root.dark .text-green-800 {
+  color: #F1F5F9 !important;
+}
+
+/* Layout-fixed: Header & Footer always stay in light mode */
+.layout-fixed,
+.layout-fixed * {
+  --theme-bg: #F8F9FA !important;
+  --theme-text: #1E293B !important;
+  --theme-border: #E2E8F0 !important;
+  --theme-surface: rgba(255, 255, 255, 0.6) !important;
+}
+
+:root.dark .layout-fixed {
+  background-color: #F8F9FA !important;
+  color: #1E293B !important;
+  border-color: #E2E8F0 !important;
+}
+
+:root.dark .layout-fixed .text-brand-green {
+  color: #02462E !important;
+}
+
+:root.dark .layout-fixed .hover\:text-brand-green:hover {
+  color: #02462E !important;
+}
+
+:root.dark .layout-fixed .text-slate-600,
+:root.dark .layout-fixed .text-slate-500,
+:root.dark .layout-fixed .text-slate-400 {
+  color: #475569 !important;
+}
+
+:root.dark .layout-fixed .border-slate-100,
+:root.dark .layout-fixed .border-slate-50 {
+  border-color: #F1F5F9 !important;
+}
+
+:root.dark .layout-fixed .bg-white\/80 {
+  background-color: rgba(248, 249, 250, 0.8) !important;
 }
 
 button,
@@ -33,10 +132,11 @@ input {
 .btn-slice {
   --c1: var(--color-brand-green);
   --c2: var(--color-brand-yellow);
-  
+
   background-color: transparent;
   border: 2px solid var(--c2);
-  border-radius: 0.75rem; /* Match rounded-xl */
+  border-radius: 0.75rem;
+  /* Match rounded-xl */
   cursor: pointer;
   overflow: hidden;
   position: relative;
@@ -47,7 +147,7 @@ input {
   font-weight: bold;
 }
 
-.btn-slice > .text {
+.btn-slice>.text {
   color: var(--c2);
   position: relative;
   z-index: 1;
@@ -69,7 +169,7 @@ input {
   z-index: 0;
 }
 
-.btn-slice:hover > .text {
+.btn-slice:hover>.text {
   color: var(--c1);
 }
 
