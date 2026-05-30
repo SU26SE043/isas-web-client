@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthModal } from '../features/auth/components/AuthModal';
-import { ThemeToggle } from './ThemeToggle/ThemeToggle';
+import { useLanguage } from '../shared/languages';
+import { LanguageToggle } from './LanguageToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <>
@@ -20,26 +22,26 @@ export const Header: React.FC = () => {
 
             {/* Menu Links */}
             <div className="hidden md:flex space-x-10 items-center">
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/">Trang chủ</Link>
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/dashboard">Bảng điều khiển</Link>
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/profile">Cá nhân</Link>
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/">{t('nav.home')}</Link>
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/dashboard">{t('nav.dashboard')}</Link>
+              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/profile">{t('nav.profile')}</Link>
             </div>
 
             {/* Auth Actions */}
-            <div className="flex items-center space-x-6">
-              <ThemeToggle />
+            <div className="flex items-center space-x-4">
+              <LanguageToggle />
               <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
                 style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
               >
-                <span className="text">Đăng nhập</span>
+                <span className="text">{t('nav.signIn')}</span>
               </button>
               <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
               >
-                <span className="text">Bắt đầu ngay</span>
+                <span className="text">{t('nav.getStarted')}</span>
               </button>
             </div>
           </div>

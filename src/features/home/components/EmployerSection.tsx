@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useLanguage } from '../../../shared/languages';
 
 const stats = [
-  { end: 500, suffix: '+', label: 'Doanh nghiệp tin dùng' },
-  { end: 10, suffix: 'k+', label: 'Lượt phỏng vấn/tháng' },
-  { end: 92, suffix: '%', label: 'Độ chính xác đánh giá' },
-  { end: 45, suffix: '%', label: 'Tiết kiệm chi phí' },
+  { end: 500, suffix: '+', labelKey: 'employer.statCompanies' },
+  { end: 10, suffix: 'k+', labelKey: 'employer.statInterviews' },
+  { end: 92, suffix: '%', labelKey: 'employer.statAccuracy' },
+  { end: 45, suffix: '%', labelKey: 'employer.statSavings' },
 ];
 
 const AnimatedNumber: React.FC<{ end: number; suffix: string }> = ({ end, suffix }) => {
@@ -52,6 +53,8 @@ const AnimatedNumber: React.FC<{ end: number; suffix: string }> = ({ end, suffix
 };
 
 export const EmployerSection: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-brand-green text-white">
       <div className="w-full px-6 lg:px-20 xl:px-32">
@@ -59,37 +62,37 @@ export const EmployerSection: React.FC = () => {
           {/* Left Content */}
           <div>
             <span className="inline-block px-4 py-1.5 rounded-full bg-brand-yellow text-brand-green text-xs font-bold tracking-widest mb-6">
-              DÀNH CHO DOANH NGHIỆP
+              {t('employer.badge')}
             </span>
             <h2 className="text-5xl font-extrabold text-white mb-8 leading-tight">
-              Chuẩn hóa quy trình <br /> Tuyển dụng dựa trên dữ liệu
+              {t('employer.titleLine1')} <br /> {t('employer.titleLine2')}
             </h2>
             <p className="text-xl text-white/80 mb-12 leading-relaxed">
-              Giảm 50% thời gian sàng lọc ban đầu với bộ câu hỏi phỏng vấn tự động và báo cáo phân tích ứng viên chi tiết. ISAS giúp bạn tìm thấy "mảnh ghép hoàn hảo" dựa trên dữ liệu, không phải cảm tính.
+              {t('employer.description')}
             </p>
             <div className="grid grid-cols-2 gap-10 mb-12">
               <div>
-                <h4 className="text-2xl font-bold text-brand-yellow mb-3">Tạo bộ câu hỏi JD</h4>
-                <p className="text-lg text-white/70">Tự động sinh câu hỏi theo yêu cầu công việc.</p>
+                <h4 className="text-2xl font-bold text-brand-yellow mb-3">{t('employer.jdTitle')}</h4>
+                <p className="text-lg text-white/70">{t('employer.jdDescription')}</p>
               </div>
               <div>
-                <h4 className="text-2xl font-bold text-brand-yellow mb-3">Báo cáo so sánh</h4>
-                <p className="text-lg text-white/70">Dashboard đối chiếu nhiều ứng viên cùng lúc.</p>
+                <h4 className="text-2xl font-bold text-brand-yellow mb-3">{t('employer.reportTitle')}</h4>
+                <p className="text-lg text-white/70">{t('employer.reportDescription')}</p>
               </div>
             </div>
             <button className="bg-brand-yellow text-brand-green px-10 py-5 text-lg rounded-xl font-bold hover:bg-brand-yellow-dark shadow-lg shadow-brand-yellow/20 transition-all">
-              Đăng ký Demo B2B
+              {t('employer.demo')}
             </button>
           </div>
 
           {/* Right Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             {stats.map((stat) => (
-              <div key={stat.label} className="bg-brand-green-light/30 backdrop-blur-md p-10 rounded-3xl border border-brand-green-light shadow-2xl text-center flex flex-col justify-center">
+              <div key={stat.labelKey} className="bg-brand-green-light/30 backdrop-blur-md p-10 rounded-3xl border border-brand-green-light shadow-2xl text-center flex flex-col justify-center">
                 <div className="text-6xl font-extrabold text-brand-yellow mb-3">
                   <AnimatedNumber end={stat.end} suffix={stat.suffix} />
                 </div>
-                <div className="text-base text-white/70 font-bold uppercase tracking-wide">{stat.label}</div>
+                <div className="text-base text-white/70 font-bold uppercase tracking-wide">{t(stat.labelKey)}</div>
               </div>
             ))}
           </div>

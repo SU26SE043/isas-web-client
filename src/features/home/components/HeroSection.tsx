@@ -1,8 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../../shared/languages';
 
 export const HeroSection: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
   return (
     <section className="bg-gradient-to-b from-brand-green/5 to-white pt-16 pb-24 overflow-hidden">
       <div className="w-full px-6 lg:px-20 xl:px-32">
@@ -10,27 +13,27 @@ export const HeroSection: React.FC = () => {
           {/* Text Content */}
           <div>
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-yellow/20 text-brand-green text-sm font-bold tracking-wide uppercase mb-8">
-              <span className="mr-2">✦</span> AI-POWERED INTERVIEW SYSTEM
+              <span className="mr-2">✦</span> {t('hero.badge')}
             </div>
             <h1 className="text-5xl lg:text-6xl xl:text-[4.5rem] font-extrabold text-brand-green leading-[1.1] mb-8">
-              Luyện phỏng vấn cùng <br />
+              {t('hero.titleLine1')} <br />
               <span className="relative inline-block mt-2">
-                <span className="relative z-10 text-brand-green">Trí tuệ nhân tạo</span>
+                <span className="relative z-10 text-brand-green">{t('hero.highlight')}</span>
                 <span className="absolute bottom-2 left-0 w-full h-4 bg-brand-yellow -z-10"></span>
               </span>
             </h1>
             <p className="text-xl text-slate-600 mb-10 max-w-xl leading-relaxed">
-              Nâng tầm kỹ năng phỏng vấn của bạn với hệ thống mô phỏng thực tế ảo. Phân tích CV, phản hồi tức thì và lộ trình thăng tiến nghề nghiệp chuyên sâu.
+              {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={() => navigate('/cv-analysis')}
                 className="btn-slice px-10 py-5 text-lg shadow-lg shadow-brand-yellow/30"
               >
-                <span className="text">Trải nghiệm ngay <span className="ml-2">→</span></span>
+                <span className="text">{t('hero.tryNow')} <span className="ml-2">→</span></span>
               </button>
               <button className="flex items-center justify-center px-10 py-5 text-lg bg-white border border-slate-200 text-brand-green rounded-xl font-bold hover:bg-slate-50 active:scale-95 transition-all">
-                Xem bản Demo <span className="ml-2">⊚</span>
+                {t('hero.watchDemo')} <span className="ml-2">⊚</span>
               </button>
             </div>
           </div>
@@ -68,8 +71,8 @@ export const HeroSection: React.FC = () => {
                 {/* Metrics Bottom Bar */}
                 <div className="absolute bottom-4 left-4 right-4 z-10">
                   <div className="flex justify-between mb-2">
-                    <span className="text-[10px] md:text-xs text-white font-medium bg-brand-green/60 backdrop-blur-md px-2 py-1 rounded border border-brand-green-light">Tự tin: 85%</span>
-                    <span className="text-[10px] md:text-xs text-white font-medium bg-brand-green/60 backdrop-blur-md px-2 py-1 rounded border border-brand-green-light">Phát âm: 92%</span>
+                    <span className="text-[10px] md:text-xs text-white font-medium bg-brand-green/60 backdrop-blur-md px-2 py-1 rounded border border-brand-green-light">{t('hero.confidence')}: 85%</span>
+                    <span className="text-[10px] md:text-xs text-white font-medium bg-brand-green/60 backdrop-blur-md px-2 py-1 rounded border border-brand-green-light">{t('hero.pronunciation')}: 92%</span>
                   </div>
                   <div className="h-1.5 bg-brand-green-dark/80 rounded-full w-full overflow-hidden backdrop-blur-sm border border-brand-green-light">
                     <div className="h-full bg-brand-yellow w-[85%] relative">
@@ -85,22 +88,22 @@ export const HeroSection: React.FC = () => {
                     <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                   </svg>
                 </div>
-                <h3 className="text-white text-lg font-bold">Ghi hình & Chấm điểm tức thì</h3>
+                <h3 className="text-white text-lg font-bold">{t('hero.cardTitle')}</h3>
                 <p className="text-white text-sm leading-relaxed">
-                  Công nghệ nhận diện cảm khuôn mặt và phân tích giọng nói giúp bạn cải thiện phong thái tự tin và cách diễn đạt trong mỗi câu trả lời.
+                  {t('hero.cardDescription')}
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-center text-xs text-brand-yellow">
                     <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fillRule="evenodd" />
                     </svg>
-                    Phân tích ngữ điệu & tốc độ nói
+                    {t('hero.bulletTone')}
                   </li>
                   <li className="flex items-center text-xs text-brand-yellow">
                     <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fillRule="evenodd" />
                     </svg>
-                    Đánh giá ngôn ngữ cơ thể qua webcam
+                    {t('hero.bulletBody')}
                   </li>
                 </ul>
               </div>

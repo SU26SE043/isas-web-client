@@ -1,13 +1,16 @@
 import React from 'react';
+import { useLanguage } from '../../../../shared/languages';
 
 interface SignUpFormProps {
   isSignUp: boolean;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp }) => {
+  const { t } = useLanguage();
+
   return (
     <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${isSignUp ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}>
-      <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">Tạo tài khoản</h1>
+      <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">{t('auth.signUpTitle')}</h1>
       
       {/* Google Login */}
       <div className="w-full mb-6">
@@ -22,11 +25,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp }) => {
         </button>
       </div>
 
-      <span className="text-xs text-slate-400 mb-6 font-medium">Hoặc sử dụng email của bạn để đăng ký</span>
+      <span className="text-xs text-slate-400 mb-6 font-medium">{t('auth.signUpSubtitle')}</span>
       
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
-        placeholder="Họ và tên" 
+        placeholder={t('auth.fullNamePlaceholder')}
       />
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
@@ -35,11 +38,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp }) => {
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
         type="password" 
-        placeholder="Mật khẩu" 
+        placeholder={t('auth.password')}
       />
       
       <button className="bg-brand-yellow text-brand-green px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-yellow-dark active:scale-95 transition-all shadow-lg shadow-brand-yellow/30 w-full">
-        Đăng ký
+        {t('auth.signUp')}
       </button>
     </div>
   );

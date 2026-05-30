@@ -3,6 +3,7 @@ import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { AuthOverlay } from './AuthOverlay';
+import { useLanguage } from '../../../../shared/languages';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const { t } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -30,6 +32,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <button 
           onClick={onClose}
           className={`absolute top-4 right-4 z-50 p-2 rounded-full transition-colors ${isSignUp ? 'text-slate-400 hover:text-brand-green' : 'text-white/80 hover:text-white'} `}
+          aria-label={t('auth.close')}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -68,4 +71,3 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
-

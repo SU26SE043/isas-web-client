@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../../../shared/languages';
 
 interface SignInFormProps {
   isSignUp: boolean;
@@ -7,9 +8,11 @@ interface SignInFormProps {
 }
 
 export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPassword, onForgotPasswordClick }) => {
+  const { t } = useLanguage();
+
   return (
     <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${(isSignUp || isForgotPassword) ? 'opacity-0 pointer-events-none translate-x-[-10%]' : 'opacity-100 translate-x-0'}`}>
-      <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">Đăng nhập</h1>
+      <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">{t('auth.signInTitle')}</h1>
       
       {/* Google Login */}
       <div className="w-full mb-6">
@@ -24,27 +27,27 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
         </button>
       </div>
 
-      <span className="text-xs text-slate-400 mb-6 font-medium">Đăng nhập bằng Email & Mật khẩu</span>
+      <span className="text-xs text-slate-400 mb-6 font-medium">{t('auth.signInSubtitle')}</span>
       
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
-        placeholder="Nhập E-mail" 
+        placeholder={t('auth.emailPlaceholder')}
       />
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
         type="password" 
-        placeholder="Nhập mật khẩu" 
+        placeholder={t('auth.passwordPlaceholder')}
       />
       
       <button 
         onClick={(e) => { e.preventDefault(); onForgotPasswordClick(); }}
         className="text-sm font-medium text-slate-500 mb-8 hover:text-brand-green transition-colors"
       >
-        Quên mật khẩu?
+        {t('auth.forgotPassword')}
       </button>
       
       <button className="bg-brand-green text-white px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-green-light active:scale-95 transition-all shadow-lg shadow-brand-green/30 w-full">
-        Đăng nhập
+        {t('auth.signInTitle')}
       </button>
     </div>
   );
