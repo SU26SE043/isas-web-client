@@ -13,4 +13,13 @@ export const authService = {
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
     return data;
   },
+  refresh: async () => {
+    const refreshToken = authTokenStorage.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.refresh, { refreshToken });
+    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    return data;
+  },
 };
