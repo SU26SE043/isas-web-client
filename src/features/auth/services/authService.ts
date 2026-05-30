@@ -22,4 +22,14 @@ export const authService = {
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
     return data;
   },
+  logout: async () => {
+    const refreshToken = authTokenStorage.getRefreshToken();
+    try {
+      if (refreshToken) {
+        await apiClient.post(authEndpoints.logout, { refreshToken });
+      }
+    } finally {
+      authTokenStorage.clear();
+    }
+  },
 };
