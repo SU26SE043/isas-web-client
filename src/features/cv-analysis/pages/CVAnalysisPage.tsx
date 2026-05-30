@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { CVUploadForm } from '../components/CVUploadForm';
 import { CVAnalysisSidebar } from '../components/CVAnalysisSidebar';
+import { useLanguage } from '../../../shared/languages';
 
 export const CVAnalysisPage: React.FC = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const { t } = useLanguage();
 
   return (
     <div className="bg-slate-50 min-h-[calc(100vh-80px)] pb-24 pt-8">
@@ -11,9 +13,9 @@ export const CVAnalysisPage: React.FC = () => {
         
         {/* Header Section */}
         <div className="mb-10">
-          <h1 className="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Phân tích CV thông minh</h1>
+          <h1 className="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">{t('cv.title')}</h1>
           <p className="text-lg text-slate-500 max-w-2xl">
-            Tải CV và mô tả công việc để AI bắt đầu quá trình đánh giá năng lực của bạn.
+            {t('cv.description')}
           </p>
         </div>
 

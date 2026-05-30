@@ -1,15 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../../shared/languages';
 
 export const FeaturesSection: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-white">
       <div className="w-full px-6 lg:px-20 xl:px-32">
         <div className="text-center mb-20">
-          <h2 className="text-5xl font-extrabold text-brand-green mb-6">Tính năng đột phá</h2>
+          <h2 className="text-5xl font-extrabold text-brand-green mb-6">{t('features.title')}</h2>
           <p className="text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
-            ISAS cung cấp bộ công cụ toàn diện giúp ứng viên và nhà tuyển dụng tối ưu hóa quy trình đánh giá năng lực thông qua AI.
+            {t('features.description')}
           </p>
         </div>
 
@@ -70,7 +73,7 @@ export const FeaturesSection: React.FC = () => {
                   {/* Scanning metrics overlay (floating near the scanner) */}
                   <div className="absolute right-4 -top-8 bg-brand-yellow/90 backdrop-blur-md text-brand-green font-bold text-[10px] font-mono px-3 py-1 rounded shadow-lg border border-brand-yellow flex items-center space-x-1">
                     <div className="w-1.5 h-1.5 bg-brand-green rounded-full animate-ping"></div>
-                    <span>SCANNING</span>
+                    <span>{t('features.scanning')}</span>
                   </div>
                 </div>
 
@@ -82,8 +85,8 @@ export const FeaturesSection: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">AI Rating</div>
-                    <div className="text-lg font-extrabold text-brand-green">95% Match</div>
+                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">{t('features.aiRating')}</div>
+                    <div className="text-lg font-extrabold text-brand-green">95% {t('features.match')}</div>
                   </div>
                 </div>
               </div>
@@ -95,15 +98,15 @@ export const FeaturesSection: React.FC = () => {
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Phân tích CV thông minh</h3>
+              <h3 className="text-2xl font-bold text-white mb-4">{t('features.cvTitle')}</h3>
               <p className="text-lg text-white/80 mb-8 leading-relaxed">
-                Tự động quét và đối sánh hồ sơ của bạn với các mô tả công việc (JD) phổ biến trên thị trường để tìm ra điểm mạnh và khoảng trống kỹ năng.
+                {t('features.cvDescription')}
               </p>
               <button 
                 onClick={() => navigate('/cv-analysis')}
                 className="btn-slice mt-auto px-8 py-4 text-lg shadow-lg shadow-brand-yellow/30"
               >
-                <span className="text">Trải nghiệm ngay <span className="ml-2">→</span></span>
+                <span className="text">{t('hero.tryNow')} <span className="ml-2">→</span></span>
               </button>
             </div>
           </div>
@@ -116,9 +119,9 @@ export const FeaturesSection: React.FC = () => {
                   <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Biểu đồ Radar Năng lực</h3>
+              <h3 className="text-2xl font-bold text-white mb-4">{t('features.radarTitle')}</h3>
               <p className="text-lg text-white/80 mb-6 leading-relaxed">
-                Trực quan hóa 6 chỉ số: Kỹ năng kỹ thuật, Giao tiếp, Giải quyết vấn đề, Lãnh đạo, Tư duy và Thích nghi.
+                {t('features.radarDescription')}
               </p>
             </div>
 
@@ -208,12 +211,12 @@ export const FeaturesSection: React.FC = () => {
 
                 {/* Text Labels */}
                 <g fontSize="14" fontWeight="800" fill="#ffffff" className="select-none font-sans">
-                  <text x="200" y="32" textAnchor="middle">Kỹ thuật</text>
-                  <text x="345" y="125" textAnchor="start" dominantBaseline="middle">Giao tiếp</text>
-                  <text x="345" y="275" textAnchor="start" dominantBaseline="middle">Giải quyết VĐ</text>
-                  <text x="200" y="378" textAnchor="middle">Lãnh đạo</text>
-                  <text x="55" y="275" textAnchor="end" dominantBaseline="middle">Tư duy</text>
-                  <text x="55" y="125" textAnchor="end" dominantBaseline="middle">Thích nghi</text>
+                  <text x="200" y="32" textAnchor="middle">{t('features.axisTechnical')}</text>
+                  <text x="345" y="125" textAnchor="start" dominantBaseline="middle">{t('features.axisCommunication')}</text>
+                  <text x="345" y="275" textAnchor="start" dominantBaseline="middle">{t('features.axisProblemSolving')}</text>
+                  <text x="200" y="378" textAnchor="middle">{t('features.axisLeadership')}</text>
+                  <text x="55" y="275" textAnchor="end" dominantBaseline="middle">{t('features.axisThinking')}</text>
+                  <text x="55" y="125" textAnchor="end" dominantBaseline="middle">{t('features.axisAdaptability')}</text>
                 </g>
               </svg>
             </div>

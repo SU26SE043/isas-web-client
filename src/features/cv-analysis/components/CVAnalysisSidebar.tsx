@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useLanguage } from '../../../shared/languages';
 
 interface CVAnalysisSidebarProps {
   uploadedFile: File | null;
@@ -6,6 +7,7 @@ interface CVAnalysisSidebarProps {
 
 export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFile }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const { t } = useLanguage();
   
   const fileUrl = useMemo(() => {
     if (uploadedFile) {
@@ -26,7 +28,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
              </svg>
-             Bản xem trước CV
+             {t('cv.previewTitle')}
            </h3>
         </div>
         
@@ -34,7 +36,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
           <button 
             onClick={() => setIsPreviewOpen(true)}
             className="flex-grow flex flex-col items-center justify-center bg-brand-green/5 rounded-xl border border-brand-green/20 relative overflow-hidden group hover:bg-brand-green/10 transition-colors w-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-green/50"
-            title="Nhấn để xem trước"
+            title={t('cv.previewHint')}
           >
             {/* Minimal document UI icon */}
             <div className="w-16 h-20 bg-white shadow-md rounded-sm border border-slate-200 flex flex-col p-2.5 mb-3 transform group-hover:-translate-y-1 transition-transform">
@@ -64,7 +66,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                  </svg>
-                 Xem trước
+                 {t('cv.viewPreview')}
                </span>
             </div>
           </button>
@@ -73,7 +75,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
              <svg className="w-10 h-10 text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
              </svg>
-             <span className="text-sm text-slate-400 font-medium text-center px-4">Chưa có CV nào được tải lên</span>
+             <span className="text-sm text-slate-400 font-medium text-center px-4">{t('cv.noFile')}</span>
           </div>
         )}
       </div>
@@ -88,7 +90,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </div>
-          <h3 className="text-xl font-extrabold text-slate-800">Mẹo để phân tích tốt hơn</h3>
+          <h3 className="text-xl font-extrabold text-slate-800">{t('cv.tipsTitle')}</h3>
         </div>
 
         <ul className="space-y-5">
@@ -96,19 +98,19 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
             <svg className={`w-6 h-6 shrink-0 transition-colors duration-500 ${uploadedFile ? 'text-brand-yellow drop-shadow-sm' : 'text-brand-green'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">Đảm bảo CV của bạn rõ ràng, trình bày theo từng mục tiêu chuẩn.</span>
+            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">{t('cv.tipStructure')}</span>
           </li>
           <li className="flex items-start space-x-3">
             <svg className={`w-6 h-6 shrink-0 transition-colors duration-500 delay-100 ${uploadedFile ? 'text-brand-yellow drop-shadow-sm' : 'text-brand-green'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">Cung cấp đầy đủ JD sẽ giúp AI đánh giá chính xác mức độ phù hợp.</span>
+            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">{t('cv.tipJd')}</span>
           </li>
           <li className="flex items-start space-x-3">
             <svg className={`w-6 h-6 shrink-0 transition-colors duration-500 delay-200 ${uploadedFile ? 'text-brand-yellow drop-shadow-sm' : 'text-brand-green'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">Sử dụng từ khóa chuyên ngành trong CV để tối ưu hóa kết quả AI.</span>
+            <span className="text-sm text-slate-600 leading-relaxed font-medium mt-0.5">{t('cv.tipKeywords')}</span>
           </li>
         </ul>
       </div>
@@ -116,7 +118,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
       {/* Profile Completion Card */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
         <div className="flex justify-between items-end mb-4">
-          <h4 className="text-sm font-extrabold text-slate-800">Độ hoàn thiện hồ sơ</h4>
+          <h4 className="text-sm font-extrabold text-slate-800">{t('cv.profileCompletion')}</h4>
           <span className="text-xl font-black text-brand-green">75%</span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-3 mb-5 overflow-hidden shadow-inner">
@@ -125,7 +127,7 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
           </div>
         </div>
         <p className="text-sm text-slate-500 font-medium leading-relaxed italic border-t border-slate-100 pt-4">
-          Cung cấp thêm kinh nghiệm làm việc để đạt 100% độ chính xác khi phân tích.
+          {t('cv.profileCompletionNote')}
         </p>
       </div>
     </div>
@@ -158,14 +160,14 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
           </div>
           <div className="flex-grow bg-slate-100 overflow-hidden relative">
             {uploadedFile.type === 'application/pdf' ? (
-              <iframe src={fileUrl} className="w-full h-full border-none" title="CV Preview" />
+              <iframe src={fileUrl} className="w-full h-full border-none" title={t('cv.previewModalTitle')} />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-500 bg-slate-50">
                  <svg className="w-20 h-20 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                  </svg>
-                 <p className="font-bold text-slate-700 text-lg">Không thể xem trước định dạng này trực tiếp.</p>
-                 <p className="text-sm mt-2">Định dạng file ({uploadedFile.type || 'Word Document'}) hiện chưa được hỗ trợ xem trước trên trình duyệt.</p>
+                 <p className="font-bold text-slate-700 text-lg">{t('cv.unsupportedPreviewTitle')}</p>
+                 <p className="text-sm mt-2">{t('cv.unsupportedPreviewDescription')} ({uploadedFile.type || 'Word Document'})</p>
               </div>
             )}
           </div>

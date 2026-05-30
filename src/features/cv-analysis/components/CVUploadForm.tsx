@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../../shared/languages';
 
 interface CVUploadFormProps {
   onFileUpload: (file: File) => void;
@@ -7,7 +8,8 @@ interface CVUploadFormProps {
 
 export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<'vi' | 'en'>('en');
+  const { t } = useLanguage();
+  const [analysisLanguage, setAnalysisLanguage] = useState<'vi' | 'en'>('en');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -23,20 +25,20 @@ export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
           <svg className="w-6 h-6 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
           </svg>
-          <span>Ngôn ngữ phân tích</span>
+          <span>{t('cv.analysisLanguage')}</span>
         </div>
         <div className="flex bg-slate-100 p-1.5 rounded-xl">
           <button
-            onClick={() => setLanguage('vi')}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${language === 'vi' ? 'bg-brand-green text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            onClick={() => setAnalysisLanguage('vi')}
+            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'vi' ? 'bg-brand-green text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Tiếng Việt
+            {t('cv.vietnamese')}
           </button>
           <button
-            onClick={() => setLanguage('en')}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${language === 'en' ? 'bg-brand-yellow text-brand-green shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            onClick={() => setAnalysisLanguage('en')}
+            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'en' ? 'bg-brand-yellow text-brand-green shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            English
+            {t('cv.english')}
           </button>
         </div>
       </div>
@@ -58,11 +60,11 @@ export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
           </svg>
         </div>
 
-        <h3 className="text-2xl font-extrabold text-slate-800 mb-2 relative z-10">Kéo và thả CV tại đây</h3>
-        <p className="text-slate-500 mb-8 font-medium relative z-10">Hỗ trợ định dạng PDF hoặc DOCX (Tối đa 10MB)</p>
+        <h3 className="text-2xl font-extrabold text-slate-800 mb-2 relative z-10">{t('cv.dropTitle')}</h3>
+        <p className="text-slate-500 mb-8 font-medium relative z-10">{t('cv.dropDescription')}</p>
 
         <button className="bg-brand-green text-white px-8 py-3.5 rounded-xl font-bold hover:bg-brand-green-light active:scale-95 transition-all shadow-lg shadow-brand-green/30 relative z-10 pointer-events-none">
-          Chọn từ máy tính
+          {t('cv.chooseFile')}
         </button>
       </div>
 
@@ -73,15 +75,15 @@ export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
             <svg className="w-6 h-6 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span>Mô tả công việc (JD)</span>
+            <span>{t('cv.jdTitle')}</span>
           </div>
           <span className="text-xs text-slate-500 font-bold bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-            Tùy chọn nhưng khuyến khích
+            {t('cv.optional')}
           </span>
         </div>
         <textarea
           className="w-full h-40 bg-slate-50 border border-slate-200 rounded-xl p-5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/40 focus:bg-white resize-none transition-all placeholder:text-slate-400 font-medium"
-          placeholder="Dán nội dung mô tả công việc vào đây để AI phân tích độ phù hợp của bạn..."
+          placeholder={t('cv.jdPlaceholder')}
         />
       </div>
 
@@ -91,7 +93,7 @@ export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
           onClick={() => navigate('/cv-analysis/result')}
           className="bg-brand-green text-brand-yellow px-10 py-4 rounded-xl font-bold text-lg uppercase tracking-wider hover:bg-brand-green-light active:scale-95 transition-all shadow-xl shadow-brand-green/40 flex items-center space-x-3 group w-full md:w-auto justify-center"
         >
-          <span>Bắt đầu phân tích</span>
+          <span>{t('cv.startAnalysis')}</span>
           <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>

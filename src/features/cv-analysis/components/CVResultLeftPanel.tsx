@@ -1,6 +1,9 @@
 import React from 'react';
+import { useLanguage } from '../../../shared/languages';
 
 export const CVResultLeftPanel: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
 
@@ -10,18 +13,18 @@ export const CVResultLeftPanel: React.FC = () => {
         {/* Header Info inside Radar Card */}
         <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-100">
           <div>
-            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Nguyễn Văn A</h2>
+            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Nguyen Van A</h2>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Senior Frontend Developer</p>
             <div className="inline-flex items-center px-2.5 py-1 bg-brand-green text-white text-[10px] font-bold rounded-full shadow-sm">
               <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
               </svg>
-              GOOD FIT
+              {t('result.goodFit')}
             </div>
           </div>
         </div>
 
-        <h3 className="text-lg font-extrabold text-slate-800 mb-6">Competency Profile</h3>
+        <h3 className="text-lg font-extrabold text-slate-800 mb-6">{t('result.profile')}</h3>
         <div className="flex-grow flex items-center justify-center relative w-full max-w-[280px] mx-auto">
           {/* Simplified SVG Radar Chart Mockup */}
           <svg viewBox="-20 -10 140 120" className="w-full h-auto drop-shadow-md overflow-visible">
@@ -72,7 +75,7 @@ export const CVResultLeftPanel: React.FC = () => {
           <svg className="w-6 h-6 mr-3 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          Skills
+          {t('result.skills')}
         </h3>
         <div className="flex flex-wrap gap-2">
           <span className="px-4 py-1.5 bg-brand-green text-white text-sm font-bold rounded-full shadow-sm">React.js</span>
@@ -92,7 +95,7 @@ export const CVResultLeftPanel: React.FC = () => {
           <svg className="w-6 h-6 mr-3 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
-          Key Projects
+          {t('result.projects')}
         </h3>
         <div className="space-y-6">
           <div className="relative pl-4 border-l-4 border-brand-green">
@@ -100,14 +103,14 @@ export const CVResultLeftPanel: React.FC = () => {
             <p className="text-sm text-slate-500 mb-2 leading-relaxed">
               Led the migration of a monolithic frontend to a suite of independent micro-apps.
             </p>
-            <p className="text-[11px] font-bold text-brand-green uppercase tracking-wider">Next.js • Module Federation • AWS</p>
+            <p className="text-[11px] font-bold text-brand-green uppercase tracking-wider">Next.js / Module Federation / AWS</p>
           </div>
           <div className="relative pl-4 border-l-4 border-blue-400">
             <h4 className="font-bold text-slate-800 mb-1">Internal Dashboard System</h4>
             <p className="text-sm text-slate-500 mb-2 leading-relaxed">
               Developed high-performance data visualization tools for real-time analytics.
             </p>
-            <p className="text-[11px] font-bold text-brand-green uppercase tracking-wider">D3.js • React • Redux Toolkit</p>
+            <p className="text-[11px] font-bold text-brand-green uppercase tracking-wider">D3.js / React / Redux Toolkit</p>
           </div>
         </div>
       </div>
