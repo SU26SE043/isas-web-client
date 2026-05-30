@@ -56,6 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           <SignUpForm 
             isSignUp={isSignUp} 
+            onRegisterSuccess={onClose}
           />
 
         </div>

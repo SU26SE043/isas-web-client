@@ -1,15 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { getApiErrorMessage } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
+import { authService } from '../../services/authService';
 
 interface SignUpFormProps {
   isSignUp: boolean;
+  onRegisterSuccess: () => void;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSuccess }) => {
   const { t } = useLanguage();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!fullName.trim() || !email.trim() || !password.trim()) {
+      setStatusMessage(t('auth.registerRequired'));
+      return;
+    }
+
+    if (password.length < 6) {
+      setStatusMessage(t('auth.passwordMinLength'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMessage('');
+
+    try {
+      await authService.register({
+        email: email.trim(),
+        fullName: fullName.trim(),
+        password,
+      });
+      setStatusMessage(t('auth.registerSuccess'));
+      onRegisterSuccess();
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${isSignUp ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${isSignUp ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}
+    >
       <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">{t('auth.signUpTitle')}</h1>
       
       {/* Google Login */}
@@ -30,20 +72,38 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp }) => {
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
         placeholder={t('auth.fullNamePlaceholder')}
+        value={fullName}
+        onChange={(event) => setFullName(event.target.value)}
+        autoComplete="name"
       />
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
-        placeholder="Email" 
+        placeholder="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        autoComplete="email"
       />
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
+        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400"
         type="password" 
         placeholder={t('auth.password')}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete="new-password"
       />
+
+      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-brand-green' : 'text-red-500'}`}>
+        {statusMessage}
+      </p>
       
-      <button className="bg-brand-yellow text-brand-green px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-yellow-dark active:scale-95 transition-all shadow-lg shadow-brand-yellow/30 w-full">
-        {t('auth.signUp')}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="bg-brand-yellow text-brand-green px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-yellow-dark active:scale-95 transition-all shadow-lg shadow-brand-yellow/30 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? t('auth.registering') : t('auth.signUp')}
       </button>
-    </div>
+    </form>
   );
 };
