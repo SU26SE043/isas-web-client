@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 import type { TranslationDictionary } from '../../../shared/languages';
 
 export const authTranslations: TranslationDictionary = {
@@ -13,6 +6,11 @@ export const authTranslations: TranslationDictionary = {
     'auth.signInSubtitle': 'Đăng nhập bằng Email & Mật khẩu',
     'auth.emailPlaceholder': 'Nhập E-mail',
     'auth.passwordPlaceholder': 'Nhập mật khẩu',
+    'auth.loggingIn': 'Đang đăng nhập...',
+    'auth.loginSuccess': 'Đăng nhập thành công.',
+    'auth.loginFailed': 'Đăng nhập thất bại. Vui lòng thử lại.',
+    'auth.loginRequired': 'Vui lòng nhập email và mật khẩu.',
+    'auth.invalidCredentials': 'Email hoặc mật khẩu không đúng.',
     'auth.forgotPassword': 'Quên mật khẩu?',
     'auth.signUpTitle': 'Tạo tài khoản',
     'auth.signUpSubtitle': 'Hoặc sử dụng email của bạn để đăng ký',
@@ -24,6 +22,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.registerFailed': 'Đăng ký thất bại. Vui lòng thử lại.',
     'auth.registerRequired': 'Vui lòng nhập đầy đủ họ tên, email và mật khẩu.',
     'auth.passwordMinLength': 'Mật khẩu phải có ít nhất 6 ký tự.',
+    'auth.emailAlreadyUsed': 'Email này đã được sử dụng. Vui lòng sử dụng email khác.',
     'auth.forgotTitle': 'Quên mật khẩu',
     'auth.forgotDescription': 'Nhập email liên kết với tài khoản của bạn để nhận liên kết đặt lại mật khẩu.',
     'auth.sendLink': 'Gửi liên kết',
@@ -39,6 +38,11 @@ export const authTranslations: TranslationDictionary = {
     'auth.signInSubtitle': 'Sign in with Email & Password',
     'auth.emailPlaceholder': 'Enter E-mail',
     'auth.passwordPlaceholder': 'Enter password',
+    'auth.loggingIn': 'Signing in...',
+    'auth.loginSuccess': 'Signed in successfully.',
+    'auth.loginFailed': 'Sign in failed. Please try again.',
+    'auth.loginRequired': 'Please enter your email and password.',
+    'auth.invalidCredentials': 'Email or password is incorrect.',
     'auth.forgotPassword': 'Forgot password?',
     'auth.signUpTitle': 'Create account',
     'auth.signUpSubtitle': 'Or use your email to register',
@@ -50,6 +54,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.registerFailed': 'Registration failed. Please try again.',
     'auth.registerRequired': 'Please enter your full name, email, and password.',
     'auth.passwordMinLength': 'Password must be at least 6 characters.',
+    'auth.emailAlreadyUsed': 'This email is already in use. Please use a different email.',
     'auth.forgotTitle': 'Forgot password',
     'auth.forgotDescription': 'Enter the email linked to your account to receive a password reset link.',
     'auth.sendLink': 'Send link',

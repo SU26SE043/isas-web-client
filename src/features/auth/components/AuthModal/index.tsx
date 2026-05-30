@@ -46,6 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             isSignUp={isSignUp} 
             isForgotPassword={isForgotPassword} 
             onForgotPasswordClick={() => setIsForgotPassword(true)} 
+            onLoginSuccess={onClose}
           />
 
           <ForgotPasswordForm 

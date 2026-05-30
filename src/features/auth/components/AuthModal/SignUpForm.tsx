@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getApiErrorMessage } from '../../../../shared/api';
+import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
 
@@ -41,7 +41,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
       setStatusMessage(t('auth.registerSuccess'));
       onRegisterSuccess();
     } catch (error) {
-      setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));
+      const statusCode = getApiStatusCode(error);
+      // Handle email already in use (400 Conflict)
+      if (statusCode === 400) {
+        setStatusMessage(t('auth.emailAlreadyUsed'));
+      } else {
+        setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));
+      }
     } finally {
       setIsSubmitting(false);
     }

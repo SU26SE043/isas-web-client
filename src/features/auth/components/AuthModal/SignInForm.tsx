@@ -1,17 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
+import { authService } from '../../services/authService';
 
 interface SignInFormProps {
   isSignUp: boolean;
   isForgotPassword: boolean;
   onForgotPasswordClick: () => void;
+  onLoginSuccess: () => void;
 }
 
-export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPassword, onForgotPasswordClick }) => {
+export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPassword, onForgotPasswordClick, onLoginSuccess }) => {
   const { t } = useLanguage();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      setStatusMessage(t('auth.loginRequired'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMessage('');
+
+    try {
+      await authService.login({
+        email: email.trim(),
+        password,
+      });
+      setStatusMessage(t('auth.loginSuccess'));
+      onLoginSuccess();
+    } catch (error) {
+      const statusCode = getApiStatusCode(error);
+      setStatusMessage(
+        statusCode === 400 || statusCode === 401
+          ? t('auth.invalidCredentials')
+          : getApiErrorMessage(error, t('auth.loginFailed'))
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${(isSignUp || isForgotPassword) ? 'opacity-0 pointer-events-none translate-x-[-10%]' : 'opacity-100 translate-x-0'}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${(isSignUp || isForgotPassword) ? 'opacity-0 pointer-events-none translate-x-[-10%]' : 'opacity-100 translate-x-0'}`}
+    >
       <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">{t('auth.signInTitle')}</h1>
       
       {/* Google Login */}
@@ -32,11 +72,18 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
         placeholder={t('auth.emailPlaceholder')}
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        autoComplete="email"
       />
       <input 
         className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
         type="password" 
         placeholder={t('auth.passwordPlaceholder')}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete="current-password"
       />
       
       <button 
@@ -45,10 +92,18 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       >
         {t('auth.forgotPassword')}
       </button>
+
+      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.loginSuccess') ? 'text-brand-green' : 'text-red-500'}`}>
+        {statusMessage}
+      </p>
       
-      <button className="bg-brand-green text-white px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-green-light active:scale-95 transition-all shadow-lg shadow-brand-green/30 w-full">
-        {t('auth.signInTitle')}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="bg-brand-green text-white px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-green-light active:scale-95 transition-all shadow-lg shadow-brand-green/30 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? t('auth.loggingIn') : t('auth.signInTitle')}
       </button>
-    </div>
+    </form>
   );
 };

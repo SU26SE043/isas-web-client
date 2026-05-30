@@ -13,3 +13,11 @@ export const getApiErrorMessage = (error: unknown, fallback = 'Request failed') 
   const responseData = error.response?.data;
   return responseData?.message ?? responseData?.error ?? error.message ?? fallback;
 };
+
+export const getApiStatusCode = (error: unknown) => {
+  if (!axios.isAxiosError(error)) {
+    return undefined;
+  }
+
+  return error.response?.status;
+};

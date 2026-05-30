@@ -105,6 +105,40 @@ Flow frontend:
 3. `authService.register` gọi `apiClient.post(authEndpoints.register, payload)`.
 4. Token trả về được lưu bằng `authTokenStorage.setTokens`.
 
+## Login API hiện tại
+
+Endpoint:
+
+```text
+POST /api/auth/login
+```
+
+Request:
+
+```ts
+{
+  email: string;
+  password: string;
+}
+```
+
+Response:
+
+```ts
+{
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+```
+
+Flow frontend:
+
+1. `SignInForm` validate required fields.
+2. `SignInForm` gọi `authService.login(payload)`.
+3. `authService.login` gọi `apiClient.post(authEndpoints.login, payload)`.
+4. Token trả về được lưu bằng `authTokenStorage.setTokens`.
+
 ## Checklist review
 
 - Không hard-code full URL trong component.
