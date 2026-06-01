@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { useLanguage } from '../../../shared/languages';
 import { getRoleDisplayName, getRoleColor, getPermissionDisplayName } from '../utils/rolePermissions';
+import { EditProfileModal } from '../components/EditProfileModal';
 
 export const ProfilePage: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { userPermissions } = usePermissions();
   const { t } = useLanguage();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditSuccess = () => {
+    // Modal sẽ tự động refresh user data và đóng
+    console.log('Profile updated successfully');
+  };
 
   if (isLoading) {
     return (
@@ -139,7 +146,10 @@ export const ProfilePage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="mt-8 pt-6 border-t border-slate-200">
-                  <button className="w-full bg-brand-green text-white py-3 px-4 rounded-lg hover:bg-brand-green/90 transition-colors font-medium">
+                  <button 
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="w-full bg-brand-green text-white py-3 px-4 rounded-lg hover:bg-brand-green/90 transition-colors font-medium"
+                  >
                     Chỉnh sửa thông tin
                   </button>
                 </div>
@@ -174,6 +184,13 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 };
