@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <nav className="layout-fixed sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+      <nav className="sticky top-0 z-50 bg-milk/95 backdrop-blur-md">
         <div className="w-full px-6 lg:px-20 xl:px-32">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -25,9 +25,9 @@ export const Header: React.FC = () => {
 
             {/* Menu Links */}
             <div className="hidden md:flex space-x-10 items-center">
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/">{t('nav.home')}</Link>
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/dashboard">{t('nav.dashboard')}</Link>
-              <Link className="text-lg text-slate-600 hover:text-brand-green font-medium" to="/profile">{t('nav.profile')}</Link>
+              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/">{t('nav.home')}</Link>
+              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/dashboard">{t('nav.dashboard')}</Link>
+              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/profile">{t('nav.profile')}</Link>
             </div>
 
             {/* Auth Actions */}
@@ -39,16 +39,15 @@ export const Header: React.FC = () => {
                 <>
                   <button
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
-                    style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
+                    className="bg-white text-pine border-2 border-white rounded-lg px-[22px] py-[10px] font-bold hover:bg-white/90 transition-all"
                   >
-                    <span className="text">{t('nav.signIn')}</span>
+                    {t('nav.signIn')}
                   </button>
                   <button
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
+                    className="btn-primary"
                   >
-                    <span className="text">{t('nav.getStarted')}</span>
+                    {t('nav.getStarted')}
                   </button>
                 </>
               )}

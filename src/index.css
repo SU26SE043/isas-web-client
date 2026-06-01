@@ -1,21 +1,21 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap');
+@import "./styles/colors.css";
+
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap');
+@import "./styles/colors.css";
 
 @theme {
-  --color-brand-green: #02462E;
-  --color-brand-green-light: #035c3d;
-  --color-brand-green-dark: #013020;
-
-  --color-brand-yellow: #FEC700;
-  --color-brand-yellow-light: #ffd740;
-  --color-brand-yellow-dark: #e5b300;
+  --color-pine: #02462E;
+  --color-milk: #FEC700;
 }
 
-/* Base theme variables */
 :root {
-  --theme-bg: #F8F9FA; /* Off-white / light slate */
-  --theme-text: #1E293B; /* Slate 800 */
-  --theme-border: #E2E8F0; /* Slate 200 */
-  --theme-surface: rgba(255, 255, 255, 0.6); /* Lighter surface for light mode */
+  --font-heading: 'Be Vietnam Pro', sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
+  --font-weight-heading: 800; /* Extra Bold */
+  --font-weight-body: 400;    /* Regular */
 }
 
 *, *::before, *::after {
@@ -23,58 +23,12 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   margin: 0;
-  background-color: var(--theme-bg) !important;
-  color: var(--theme-text) !important;
+  background-color: #ffffff;
+  color: #000000;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* Override hardcoded Tailwind classes */
-.bg-white {
-  background-color: var(--theme-bg) !important;
-}
-.text-slate-800, .text-slate-700, .text-slate-600 {
-  color: var(--theme-text) !important;
-}
-.bg-slate-50, .bg-slate-100 {
-  background-color: var(--theme-surface) !important;
-}
-.border-slate-100, .border-slate-200, .border-slate-300 {
-  border-color: var(--theme-border) !important;
-}
-
-/* Keep transparent backgrounds dynamic! */
-.bg-white\/80 {
-  background-color: color-mix(in srgb, var(--theme-bg) 80%, transparent) !important;
-}
-.bg-white\/5 {
-  background-color: color-mix(in srgb, var(--theme-bg) 5%, transparent) !important;
-}
-.bg-white\/10 {
-  background-color: color-mix(in srgb, var(--theme-bg) 10%, transparent) !important;
-}
-.bg-white\/20 {
-  background-color: color-mix(in srgb, var(--theme-bg) 20%, transparent) !important;
-}
-.text-white\/80 {
-  color: color-mix(in srgb, var(--theme-text) 80%, transparent) !important;
-}
-
-@layer utilities {
-  .hero-gradient {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand-green) 10%, transparent) 0%, var(--theme-bg) 100%);
-  }
-}
-
-/* Layout-fixed: Header & Footer base colors */
-.layout-fixed,
-.layout-fixed * {
-  --theme-bg: #F8F9FA !important;
-  --theme-text: #1E293B !important;
-  --theme-border: #E2E8F0 !important;
-  --theme-surface: rgba(255, 255, 255, 0.6) !important;
 }
 
 button,
@@ -82,15 +36,14 @@ input {
   font: inherit;
 }
 
-/* From Uiverse.io by nikk7007 - Adapted for ISAS Brand */
+/* Base button animations */
 .btn-slice {
-  --c1: var(--color-brand-green);
-  --c2: var(--color-brand-yellow);
+  --c1: #ffffff;
+  --c2: var(--color-pine);
 
   background-color: transparent;
   border: 2px solid var(--c2);
   border-radius: 0.75rem;
-  /* Match rounded-xl */
   cursor: pointer;
   overflow: hidden;
   position: relative;
@@ -134,4 +87,96 @@ input {
 .btn-slice:active {
   scale: 0.95;
   filter: brightness(0.9);
+}
+
+@layer utilities {
+  .heading-primary {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+  }
+  
+  .heading-secondary {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+  }
+  
+  .body-text {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-body);
+    line-height: 1.6;
+  }
+
+  .btn-primary {
+    background-color: var(--color-pine);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: color-mix(in srgb, var(--color-pine) 90%, black);
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--color-pine);
+    border: 2px solid var(--color-pine);
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-pine);
+    color: #ffffff;
+  }
+  
+  .btn-accent {
+    background-color: var(--color-milk);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-accent:hover {
+    background-color: color-mix(in srgb, var(--color-milk) 85%, black);
+  }
+}
+
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-accent:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--color-milk);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .heading-primary {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  
+  .heading-secondary {
+    font-size: clamp(1.25rem, 3vw, 2rem);
+  }
+  
+  .body-text {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
 }

@@ -59,7 +59,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       
       {/* Google Login */}
       <div className="w-full mb-6">
-        <button className="w-full h-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:border-brand-green hover:text-brand-green hover:bg-brand-green/5 transition-colors font-bold space-x-2">
+        <button className="w-full h-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:border-pine hover:text-pine hover:bg-pine/5 transition-colors font-bold space-x-2">
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -73,7 +73,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       <span className="text-xs text-slate-400 mb-6 font-medium">{t('auth.signInSubtitle')}</span>
       
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
+        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-pine/30 transition-all placeholder:text-slate-400" 
         placeholder={t('auth.emailPlaceholder')}
         type="email"
         value={email}
@@ -81,7 +81,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
         autoComplete="email"
       />
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-all placeholder:text-slate-400" 
+        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-pine/30 transition-all placeholder:text-slate-400" 
         type="password" 
         placeholder={t('auth.passwordPlaceholder')}
         value={password}
@@ -91,19 +91,19 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       
       <button 
         onClick={(e) => { e.preventDefault(); onForgotPasswordClick(); }}
-        className="text-sm font-medium text-slate-500 mb-8 hover:text-brand-green transition-colors"
+        className="text-sm font-medium text-slate-500 mb-8 hover:text-pine transition-colors"
       >
         {t('auth.forgotPassword')}
       </button>
 
-      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.loginSuccess') ? 'text-brand-green' : 'text-red-500'}`}>
+      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.loginSuccess') ? 'text-pine' : 'text-red-500'}`}>
         {statusMessage}
       </p>
       
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-brand-green text-white px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-green-light active:scale-95 transition-all shadow-lg shadow-brand-green/30 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+        className="bg-pine text-white px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-pine/90 active:scale-95 transition-all shadow-lg shadow-pine/30 w-full disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? t('auth.loggingIn') : t('auth.signInTitle')}
       </button>

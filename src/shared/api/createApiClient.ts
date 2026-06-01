@@ -43,7 +43,7 @@ export const createApiClient = () => {
     async (error) => {
       console.log('Error response from:', error.config?.url, 'Status:', error.response?.status);
       console.log('Error details:', error.response?.data);
-      
+
       const originalRequest = error.config;
 
       // Prevent infinite loops by marking requests that have already been retried

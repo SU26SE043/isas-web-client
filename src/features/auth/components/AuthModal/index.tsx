@@ -26,7 +26,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       />
       
       {/* Modal Container */}
-      <div className="relative w-full max-w-[800px] h-[550px] bg-white rounded-3xl shadow-2xl overflow-hidden flex z-10">
+      <div className="relative w-full max-w-[800px] h-[550px] bg-white rounded-xl shadow-2xl overflow-hidden flex z-10">
         
         {/* Close Button (Absolute positioned on top of everything) */}
         <button 

@@ -57,7 +57,7 @@ export const getRoleDisplayName = (role: UserRole): string => {
     [UserRole.ADMIN]: 'Quản trị viên',
     [UserRole.HR]: 'Nhân sự',
     [UserRole.INTERVIEWER]: 'Người phỏng vấn',
-    [UserRole.CANDIDATE]: 'Candidate',
+    [UserRole.CANDIDATE]: 'Ứng viên',
     [UserRole.GUEST]: 'Khách',
   };
   return roleNames[role];
