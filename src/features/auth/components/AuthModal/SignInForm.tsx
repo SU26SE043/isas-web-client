@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
+import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 
 interface SignInFormProps {
@@ -12,6 +13,7 @@ interface SignInFormProps {
 
 export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPassword, onForgotPasswordClick, onLoginSuccess }) => {
   const { t } = useLanguage();
+  const { fetchUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -33,6 +35,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
         email: email.trim(),
         password,
       });
+      await fetchUser();
       setStatusMessage(t('auth.loginSuccess'));
       onLoginSuccess();
     } catch (error) {

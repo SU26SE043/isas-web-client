@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
+import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 
 interface SignUpFormProps {
@@ -10,6 +11,7 @@ interface SignUpFormProps {
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSuccess }) => {
   const { t } = useLanguage();
+  const { fetchUser } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +40,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
         fullName: fullName.trim(),
         password,
       });
+      await fetchUser();
       setStatusMessage(t('auth.registerSuccess'));
       onRegisterSuccess();
     } catch (error) {

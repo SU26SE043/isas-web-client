@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthModal } from '../features/auth/components/AuthModal';
+import { AvatarDropdown } from '../features/auth/components/AvatarDropdown';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
 
   return (
@@ -30,19 +33,25 @@ export const Header: React.FC = () => {
             {/* Auth Actions */}
             <div className="flex items-center space-x-4">
               <LanguageToggle />
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
-                style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
-              >
-                <span className="text">{t('nav.signIn')}</span>
-              </button>
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
-              >
-                <span className="text">{t('nav.getStarted')}</span>
-              </button>
+              {isAuthenticated ? (
+                <AvatarDropdown />
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-green/20"
+                    style={{ '--c1': '#ffffff', '--c2': '#02462E' } as React.CSSProperties}
+                  >
+                    <span className="text">{t('nav.signIn')}</span>
+                  </button>
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="btn-slice text-lg px-6 py-3 shadow-lg shadow-brand-yellow/30"
+                  >
+                    <span className="text">{t('nav.getStarted')}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

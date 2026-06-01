@@ -11,6 +11,7 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.profile': 'Cá nhân',
     'nav.signIn': 'Đăng nhập',
     'nav.getStarted': 'Bắt đầu ngay',
+    'nav.logout': 'Đăng xuất',
 
     'footer.description': 'Nền tảng tiên phong trong việc ứng dụng AI vào đánh giá năng lực và huấn luyện phỏng vấn tại Việt Nam.',
     'footer.products': 'Sản phẩm',
@@ -38,6 +39,7 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.profile': 'Profile',
     'nav.signIn': 'Sign in',
     'nav.getStarted': 'Get started',
+    'nav.logout': 'Logout',
 
     'footer.description': 'A pioneering platform applying AI to competency assessment and interview coaching in Vietnam.',
     'footer.products': 'Products',
