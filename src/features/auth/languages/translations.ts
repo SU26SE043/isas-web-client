@@ -57,6 +57,8 @@ export const authTranslations: TranslationDictionary = {
     'profile.cancel': 'Hủy',
     'profile.saving': 'Đang lưu...',
     'profile.saveChanges': 'Lưu thay đổi',
+    'profile.navProfile': 'Hồ sơ',
+    'profile.logout': 'Đăng xuất',
   },
   en: {
     'auth.signInTitle': 'Sign in',
@@ -114,5 +116,7 @@ export const authTranslations: TranslationDictionary = {
     'profile.cancel': 'Cancel',
     'profile.saving': 'Saving...',
     'profile.saveChanges': 'Save Changes',
+    'profile.navProfile': 'Profile',
+    'profile.logout': 'Log Out',
   },
 };

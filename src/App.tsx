@@ -20,10 +20,10 @@ function App() {
             <Route path="/practice" element={<PracticeInterviewPage />} />
           </Route>
 
+          {/* Main Layout Routes */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             
-            {/* Protected Routes inside MainLayout */}
             <Route element={<ProtectedRoute />}>
               <Route path="cv-analysis" element={<CVAnalysisPage />} />
               <Route path="cv-analysis/result" element={<CVResultPage />} />
