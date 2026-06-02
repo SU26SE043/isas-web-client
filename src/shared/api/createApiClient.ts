@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authTokenStorage } from './authTokenStorage';
 
-const DEFAULT_API_BASE_URL = 'https://engine-spectrum-differential-book.trycloudflare.com';
+const DEFAULT_API_BASE_URL = 'https://suggestion-beverage-onto-definitely.trycloudflare.com/';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];

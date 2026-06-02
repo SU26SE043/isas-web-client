@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand Info */}
           <div className="col-span-1 md:col-span-1">
-            <img alt="ISAS Logo" className="h-12 w-auto mb-8 filter brightness-0" src="https://lh3.googleusercontent.com/aida/ADBb0uiSmzxRAhvuypS8dnkXlByzB6ZActi4ZbzHfz46HjXli05zlL9fuVAnZ9hYqMCkx7re4gFO0tQSJL9t3gkXuq_JEMueNfJARZfxFSuhJ-Wc_9zSUQxx7vqJHYvSn5kHmWXjZ_NNFIgwsTfytR2edioszKgT6lESc4KMv9kElcWs3yHu7lCq4Cac67dy9TcSfu-80svuU65RrDJGg6CUfE6MD5hLeonAooKw4av-2takrkboPK0pX0MnuFoD" />
+            <img alt="ISAS Logo" className="h-14 w-auto mb-8 object-contain" src="/logo-horizontal-white.png" />
             <p className="text-lg text-black/80 leading-relaxed body-text">
               {t('footer.description')}
             </p>

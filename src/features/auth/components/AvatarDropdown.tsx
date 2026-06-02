@@ -4,13 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { useLanguage } from '../../../shared/languages';
 import { getRoleDisplayName, getRoleColor } from '../utils/rolePermissions';
-import { Permission, UserRole } from '../types/auth.types';
+import { Permission } from '../types/auth.types';
 
 export const AvatarDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
-  const { hasPermission, hasAnyRole } = usePermissions();
+  const { hasPermission } = usePermissions();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export const AvatarDropdown: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 bg-brand-green text-white rounded-full hover:bg-brand-green/90 transition-colors"
+        className="flex items-center justify-center w-10 h-10 bg-pine text-white rounded-full hover:bg-pine/90 transition-colors"
       >
         {getInitials(user.fullName)}
       </button>

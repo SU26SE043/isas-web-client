@@ -14,18 +14,23 @@
 :root {
   --font-heading: 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --font-weight-heading: 800; /* Extra Bold */
-  --font-weight-body: 400;    /* Regular */
+  --font-weight-heading: 800;
+  /* Extra Bold */
+  --font-weight-body: 400;
+  /* Regular */
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 
 body {
   font-family: var(--font-body);
   margin: 0;
-  background-color: #ffffff;
+  background-color: #d6e16c;
+  /* changed from #ffffff for a slightly darker background */
   color: #000000;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -94,12 +99,12 @@ input {
     font-family: var(--font-heading);
     font-weight: var(--font-weight-heading);
   }
-  
+
   .heading-secondary {
     font-family: var(--font-heading);
     font-weight: var(--font-weight-heading);
   }
-  
+
   .body-text {
     font-family: var(--font-body);
     font-weight: var(--font-weight-body);
@@ -117,12 +122,12 @@ input {
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .btn-primary:hover {
     background-color: color-mix(in srgb, var(--color-pine) 90%, black);
     transform: translateY(-1px);
   }
-  
+
   .btn-secondary {
     background-color: transparent;
     color: var(--color-pine);
@@ -134,12 +139,12 @@ input {
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .btn-secondary:hover {
     background-color: var(--color-pine);
     color: #ffffff;
   }
-  
+
   .btn-accent {
     background-color: var(--color-milk);
     color: #ffffff;
@@ -151,7 +156,7 @@ input {
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .btn-accent:hover {
     background-color: color-mix(in srgb, var(--color-milk) 85%, black);
   }
@@ -171,11 +176,11 @@ select:focus {
   .heading-primary {
     font-size: clamp(1.5rem, 4vw, 2.5rem);
   }
-  
+
   .heading-secondary {
     font-size: clamp(1.25rem, 3vw, 2rem);
   }
-  
+
   .body-text {
     font-size: clamp(0.875rem, 2.5vw, 1rem);
   }

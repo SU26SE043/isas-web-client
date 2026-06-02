@@ -19,7 +19,7 @@ export const Header: React.FC = () => {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
               <Link to="/">
-                <img alt="ISAS Logo" className="h-40 w-auto" src="https://lh3.googleusercontent.com/aida/ADBb0uiSmzxRAhvuypS8dnkXlByzB6ZActi4ZbzHfz46HjXli05zlL9fuVAnZ9hYqMCkx7re4gFO0tQSJL9t3gkXuq_JEMueNfJARZfxFSuhJ-Wc_9zSUQxx7vqJHYvSn5kHmWXjZ_NNFIgwsTfytR2edioszKgT6lESc4KMv9kElcWs3yHu7lCq4Cac67dy9TcSfu-80svuU65RrDJGg6CUfE6MD5hLeonAooKw4av-2takrkboPK0pX0MnuFoD" />
+                <img alt="ISAS Logo" className="h-14 w-auto object-contain" src="/logo-horizontal-white.png" />
               </Link>
             </div>
 
