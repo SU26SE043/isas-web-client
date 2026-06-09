@@ -31,6 +31,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
       return;
     }
 
+    if (!/\d/.test(password)) {
+      setStatusMessage(t('auth.passwordRequireNumber'));
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusMessage('');
 
