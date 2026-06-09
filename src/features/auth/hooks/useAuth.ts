@@ -56,6 +56,17 @@ export const useAuth = () => {
   }, [logout, navigate]);
 
   useEffect(() => {
+    // Check for tokens in URL params (e.g., from Google Login callback)
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlAccessToken = searchParams.get('accessToken');
+    const urlRefreshToken = searchParams.get('refreshToken');
+
+    if (urlAccessToken && urlRefreshToken) {
+      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken);
+      // Clean up URL parameters without refreshing page
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const token = authTokenStorage.getAccessToken();
     // Only fetch user if we have a token and no user data yet
     if (token && !user && !isLoading) {
