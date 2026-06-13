@@ -154,8 +154,10 @@ export const InterviewHistoryPage: React.FC = () => {
       <div 
         className="relative px-6 py-8 md:py-10 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(2, 70, 46, 0.85) 0%, rgba(2, 70, 46, 0.75) 100%)',
+          backgroundImage: 'linear-gradient(135deg, rgba(2, 70, 46, 0.85) 0%, rgba(2, 70, 46, 0.75) 100%), url("https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1400&q=80")',
           backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
         }}
       >
         <div className="max-w-6xl mx-auto flex flex-col justify-center items-center text-center">
