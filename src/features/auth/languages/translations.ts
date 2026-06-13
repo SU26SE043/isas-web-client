@@ -72,6 +72,8 @@ export const authTranslations: TranslationDictionary = {
     'profile.saving': 'Đang lưu...',
     'profile.saveChanges': 'Lưu thay đổi',
     'profile.navProfile': 'Hồ sơ',
+    'profile.navInterviewHistory': 'Lịch sử phỏng vấn',
+    'profile.interviewHistory': 'Lịch sử phỏng vấn',
     'profile.logout': 'Đăng xuất',
   },
   en: {
@@ -145,6 +147,8 @@ export const authTranslations: TranslationDictionary = {
     'profile.saving': 'Saving...',
     'profile.saveChanges': 'Save Changes',
     'profile.navProfile': 'Profile',
+    'profile.navInterviewHistory': 'Interview History',
+    'profile.interviewHistory': 'Interview History',
     'profile.logout': 'Log Out',
   },
 };

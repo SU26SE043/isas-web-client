@@ -1,41 +1,31 @@
 import React from 'react';
-import { usePermissions } from '../hooks/usePermissions';
-import { Permission, UserRole } from '../types/auth.types';
+import { UserRole } from '../types/auth.types';
 
-interface PermissionGateProps {
+interface RoleGateProps {
   children: React.ReactNode;
-  requiredPermissions?: Permission[];
   requiredRoles?: UserRole[];
   fallback?: React.ReactNode;
-  requireAll?: boolean; // true = require ALL permissions/roles, false = require ANY
+  requireAll?: boolean; // true = require ALL roles, false = require ANY
 }
 
-export const PermissionGate: React.FC<PermissionGateProps> = ({
+export const RoleGate: React.FC<RoleGateProps> = ({
   children,
-  requiredPermissions = [],
   requiredRoles = [],
   fallback = null,
   requireAll = false,
 }) => {
-  const { hasPermission, hasAllPermissions, hasAnyPermission, hasRole, hasAnyRole } = usePermissions();
+  // Replace with your actual user role context/hook
+  const userRole: UserRole | null = null; // TODO: get user role from context/store
 
-  // Check permissions
-  if (requiredPermissions.length > 0) {
-    const hasRequiredPermissions = requireAll 
-      ? hasAllPermissions(requiredPermissions)
-      : hasAnyPermission(requiredPermissions);
-    
-    if (!hasRequiredPermissions) {
-      return <>{fallback}</>;
-    }
+  if (!userRole) {
+    return <>{fallback}</>;
   }
 
-  // Check roles
   if (requiredRoles.length > 0) {
     const hasRequiredRoles = requireAll
-      ? requiredRoles.every(role => hasRole(role))
-      : hasAnyRole(requiredRoles);
-    
+      ? requiredRoles.every(role => userRole === role)
+      : requiredRoles.includes(userRole);
+
     if (!hasRequiredRoles) {
       return <>{fallback}</>;
     }
@@ -46,25 +36,25 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
 
 // Convenience components for common use cases
 export const AdminOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => (
-  <PermissionGate requiredRoles={[UserRole.ADMIN]} fallback={fallback}>
+  <RoleGate requiredRoles={[UserRole.ADMIN]} fallback={fallback}>
     {children}
-  </PermissionGate>
+  </RoleGate>
 );
 
 export const HROnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => (
-  <PermissionGate requiredRoles={[UserRole.HR]} fallback={fallback}>
+  <RoleGate requiredRoles={[UserRole.HR]} fallback={fallback}>
     {children}
-  </PermissionGate>
+  </RoleGate>
 );
 
 export const InterviewerOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => (
-  <PermissionGate requiredRoles={[UserRole.INTERVIEWER]} fallback={fallback}>
+  <RoleGate requiredRoles={[UserRole.INTERVIEWER]} fallback={fallback}>
     {children}
-  </PermissionGate>
+  </RoleGate>
 );
 
 export const StaffOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => (
-  <PermissionGate requiredRoles={[UserRole.ADMIN, UserRole.HR, UserRole.INTERVIEWER]} fallback={fallback}>
+  <RoleGate requiredRoles={[UserRole.ADMIN, UserRole.HR, UserRole.INTERVIEWER]} fallback={fallback}>
     {children}
-  </PermissionGate>
+  </RoleGate>
 );

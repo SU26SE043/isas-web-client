@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
-import { usePermissions } from '../hooks/usePermissions';
-import { getRoleDisplayName, getPermissionDisplayName } from '../utils/rolePermissions';
+import { getRoleDisplayName } from '../utils/rolePermissions';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { useLanguage } from '../../../shared/languages';
 
@@ -11,7 +10,6 @@ export const ProfilePage: React.FC = () => {
   const { user, isLoading } = useAuth();
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
-  const { userPermissions } = usePermissions();
   const { t } = useLanguage();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -92,6 +90,16 @@ export const ProfilePage: React.FC = () => {
             </svg>
             {t('profile.navProfile')}
           </div>
+
+          <button
+            onClick={() => navigate('/practice/history')}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors text-left"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {t('profile.interviewHistory')}
+          </button>
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -209,7 +217,7 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column (Additional Info & Permissions) */}
+          {/* Right Column (Additional Info) */}
           <div className="w-full xl:w-[400px] flex flex-col gap-4 lg:gap-6">
              {/* Additional Info */}
              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
@@ -234,33 +242,6 @@ export const ProfilePage: React.FC = () => {
                       </div>
                    </div>
                 </div>
-             </div>
-
-             {/* Permissions */}
-             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 flex flex-col">
-                <h2 className="text-lg font-bold text-slate-900 mb-6">{t('profile.permissions')}</h2>
-                
-                {userPermissions && userPermissions.length > 0 ? (
-                  <div className="space-y-3">
-                    {userPermissions.map((permission) => (
-                      <div key={permission} className="flex items-center px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl">
-                        <svg className="w-4 h-4 text-pine mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-sm text-slate-700 font-medium">
-                          {getPermissionDisplayName(permission)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
-                     <svg className="w-12 h-12 text-slate-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                     </svg>
-                     <p className="text-sm text-slate-400 max-w-[200px]">{t('profile.noPermissions')}</p>
-                  </div>
-                )}
              </div>
           </div>
 

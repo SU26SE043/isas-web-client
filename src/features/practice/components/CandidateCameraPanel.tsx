@@ -1,8 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../../../shared/languages';
 
 export const CandidateCameraPanel: React.FC = () => {
-  const { t } = useLanguage();
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden relative">
