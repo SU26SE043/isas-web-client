@@ -39,6 +39,7 @@ function App() {
               <Route element={<DashboardLayout />}>
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="practice/history" element={<InterviewHistoryPage />} />
+                <Route path="practice/history/:id" element={<InterviewResultPage />} />
               </Route>
             </Route>
 

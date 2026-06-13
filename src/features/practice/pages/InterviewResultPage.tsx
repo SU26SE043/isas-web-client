@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, AlertCircle, CalendarClock, Languages, Loader2, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, AlertCircle, CalendarClock, Languages, Loader2, Sparkles, ChevronRight } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 import { resultService } from '../services/result.service';
 import type { InterviewResult } from '../types/result.types';
@@ -17,12 +17,14 @@ const formatDateTime = (value: string, locale: string) =>
 
 export const InterviewResultPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { t, language, setLanguage } = useLanguage();
   const [result, setResult] = useState<InterviewResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+  const isFromHistory = !!id;
 
   useEffect(() => {
     let mounted = true;
@@ -70,13 +72,25 @@ export const InterviewResultPage: React.FC = () => {
       <header className="border-b border-black/5 bg-milk">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
+            {isFromHistory && (
+              <div className="mb-3 flex items-center gap-2 text-sm text-black/60">
+                <button
+                  onClick={() => navigate('/practice/history')}
+                  className="font-semibold text-pine hover:underline"
+                >
+                  {t('practice.history.title')}
+                </button>
+                <ChevronRight className="h-4 w-4" />
+                <span className="font-semibold text-pine">{t('practice.result.title')}</span>
+              </div>
+            )}
             <button
               type="button"
-              onClick={() => navigate('/practice')}
+              onClick={() => isFromHistory ? navigate('/practice/history') : navigate('/practice')}
               className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-pine transition hover:bg-white"
             >
               <ArrowLeft className="h-4 w-4" />
-              {t('practice.result.backToPractice')}
+              {isFromHistory ? t('practice.history.title') : t('practice.result.backToPractice')}
             </button>
             <div>
               <h1 className="heading-primary text-3xl text-pine sm:text-4xl">
