@@ -107,7 +107,7 @@ export const InterviewHistoryPage: React.FC = () => {
   };
 
   const handleInterviewClick = (id: string) => {
-    navigate(`/practice/result/${id}`);
+    navigate(`/practice/history/${id}`);
   };
 
   const handleRefresh = () => {

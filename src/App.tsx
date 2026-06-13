@@ -23,7 +23,6 @@ function App() {
              <Route path="/practice" element={<PracticeInterviewPage />} />
              <Route path="/practice/result" element={<InterviewResultPage />} />
              <Route path="/practice/interview/:id" element={<InterviewResultPage />} />
-             <Route path="/practice/result/:id" element={<InterviewResultPage />} />
            </Route>
 
            {/* Main Layout Routes */}
@@ -40,6 +39,7 @@ function App() {
                <Route element={<DashboardLayout />}>
                  <Route path="profile" element={<ProfilePage />} />
                  <Route path="practice/history" element={<InterviewHistoryPage />} />
+                 <Route path="practice/history/:id" element={<InterviewResultPage />} />
                </Route>
              </Route>
 

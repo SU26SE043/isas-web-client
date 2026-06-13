@@ -68,9 +68,9 @@ export const InterviewResultPage: React.FC = () => {
   }, [language, result]);
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className={`${isFromHistory ? 'h-screen flex flex-col bg-white overflow-hidden' : 'min-h-screen bg-white'}`}>
       <header className="border-b border-black/5 bg-milk">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className={`${isFromHistory ? 'flex flex-col gap-4 px-6 py-5' : 'mx-auto flex max-w-[1200px] flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between'}`}>
           <div className="space-y-2">
             {isFromHistory && (
               <div className="mb-3 flex items-center gap-2 text-sm text-black/60">
@@ -126,7 +126,7 @@ export const InterviewResultPage: React.FC = () => {
         </div>
       </header>
 
-      <section className="mx-auto max-w-[1200px] px-6 py-8">
+      <section className={`${isFromHistory ? 'flex-1 min-h-0 overflow-y-auto px-6 py-6' : 'mx-auto max-w-[1200px] px-6 py-8'}`}>
         {isLoading ? (
           <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-black/5 bg-white shadow-sm">
             <div className="flex items-center gap-3 text-pine">
