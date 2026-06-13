@@ -77,28 +77,6 @@ export const InterviewHistoryPage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#F1F5F9] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-pine text-white flex flex-col shrink-0 min-h-[calc(100vh-80px)] border-t border-white/10">
-        <div className="p-6 pb-2">
-          <p className="text-[10px] font-bold text-white/60 tracking-wider uppercase">
-            {t('profile.navInterviewHistory')}
-          </p>
-        </div>
-
-        <nav className="flex-1 px-4 py-6 flex flex-col gap-2">
-          <button
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors text-left"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            {t('profile.navProfile')}
-          </button>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
       <div className="flex-1 py-12 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
