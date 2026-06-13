@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, AlertCircle, CalendarClock, Languages, Loader2, Sparkles, ChevronRight } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CalendarClock, Languages, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 import { resultService } from '../services/result.service';
@@ -69,25 +69,15 @@ export const InterviewResultPage: React.FC = () => {
 
   return (
     <main className={`${isFromHistory ? 'h-screen flex flex-col bg-white overflow-hidden' : 'min-h-screen bg-white'}`}>
-      <header className="border-b border-black/5 bg-milk">
+      <header className={`border-b border-black/5 ${isFromHistory ? 'bg-[#FACC15]' : 'bg-milk'}`}>
         <div className={`${isFromHistory ? 'flex flex-col gap-4 px-6 py-5' : 'mx-auto flex max-w-[1200px] flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between'}`}>
           <div className="space-y-2">
-            {isFromHistory && (
-              <div className="mb-3 flex items-center gap-2 text-sm text-black/60">
-                <button
-                  onClick={() => navigate('/practice/history')}
-                  className="font-semibold text-pine hover:underline"
-                >
-                  {t('practice.history.title')}
-                </button>
-                <ChevronRight className="h-4 w-4" />
-                <span className="font-semibold text-pine">{t('practice.result.title')}</span>
-              </div>
-            )}
             <button
               type="button"
               onClick={() => isFromHistory ? navigate('/practice/history') : navigate('/practice')}
-              className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-pine transition hover:bg-white"
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                isFromHistory ? 'bg-white/80 text-pine hover:bg-white' : 'bg-white/70 text-pine hover:bg-white'
+              }`}
             >
               <ArrowLeft className="h-4 w-4" />
               {isFromHistory ? t('practice.history.title') : t('practice.result.backToPractice')}
