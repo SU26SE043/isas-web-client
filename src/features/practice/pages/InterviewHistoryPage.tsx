@@ -151,34 +151,20 @@ export const InterviewHistoryPage: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-white">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-12 md:py-16">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="flex-1">
-            <h1 className="text-4xl md:text-5xl font-black text-pine mb-3">
-              {t('practice.history.title')}
-            </h1>
-            <p className="text-slate-600 text-lg">
-              {t('practice.history.subtitle')}
-            </p>
-          </div>
-          {/* Decorative Plant Illustration */}
-          <div className="hidden md:block w-48 h-48">
-            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="200" height="200" fill="transparent" />
-              {/* Simple plant decoration */}
-              <path
-                d="M100 180 Q95 160 95 140 Q95 120 100 100"
-                stroke="#02462E"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <ellipse cx="85" cy="130" rx="20" ry="30" fill="#02462E" opacity="0.8" transform="rotate(-30 85 130)" />
-              <ellipse cx="115" cy="130" rx="20" ry="30" fill="#02462E" opacity="0.8" transform="rotate(30 115 130)" />
-              <ellipse cx="80" cy="110" rx="18" ry="28" fill="#02462E" opacity="0.7" transform="rotate(-35 80 110)" />
-              <ellipse cx="120" cy="110" rx="18" ry="28" fill="#02462E" opacity="0.7" transform="rotate(35 120 110)" />
-              <circle cx="100" cy="100" r="8" fill="#FEC700" />
-            </svg>
-          </div>
+      <div 
+        className="relative px-6 py-8 md:py-10 overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, rgba(2, 70, 46, 0.85) 0%, rgba(2, 70, 46, 0.75) 100%)',
+          backgroundSize: 'cover',
+        }}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col justify-center items-center text-center">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+            {t('practice.history.title')}
+          </h1>
+          <p className="text-white/90 text-base md:text-lg">
+            {t('practice.history.subtitle')}
+          </p>
         </div>
       </div>
 
@@ -321,7 +307,7 @@ export const InterviewHistoryPage: React.FC = () => {
                     </div>
 
                     {/* Details Row */}
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-sm">
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-slate-400 text-xs uppercase tracking-wide block mb-1">
                           {t('practice.history.date')}
@@ -345,18 +331,6 @@ export const InterviewHistoryPage: React.FC = () => {
                         >
                           {interview.overallScore > 0 ? `${interview.overallScore}%` : '-'}
                         </span>
-                      </div>
-
-                      {/* Arrow Button */}
-                      <div className="col-span-3 md:col-span-2 flex justify-end md:justify-end">
-                        <button
-                          className="w-10 h-10 rounded-full bg-milk text-pine flex items-center justify-center group-hover:bg-opacity-80 transition-all"
-                          aria-label={t('practice.history.viewDetails')}
-                        >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   </div>
