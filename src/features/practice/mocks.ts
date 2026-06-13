@@ -84,7 +84,7 @@ export const fetchMockSessionMetadata = async (sessionId: string): Promise<MockP
  */
 let pollCount = 0; // Biến tạm giả lập việc poll (gọi lại nhiều lần)
 export const fetchMockSessionQuestions = async (sessionId: string): Promise<MockQuestion[]> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       const session = MOCK_SESSION_DATA[sessionId];
       

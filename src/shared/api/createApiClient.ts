@@ -75,7 +75,7 @@ export const createApiClient = () => {
           }
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           addRefreshSubscriber((token: string) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             resolve(client(originalRequest));

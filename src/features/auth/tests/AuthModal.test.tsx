@@ -1,5 +1,4 @@
 /* @vitest-environment jsdom */
-import React from 'react';
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
