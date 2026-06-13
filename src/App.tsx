@@ -18,30 +18,30 @@ function App() {
     <LanguageProvider>
       <BrowserRouter>
         <Routes>
-          {/* Practice Interview Route - Requires Candidate or Admin role */}
-          <Route element={<ProtectedRoute allowedRoles={[UserRole.CANDIDATE, UserRole.ADMIN]} />}>
-            <Route path="/practice" element={<PracticeInterviewPage />} />
-            <Route path="/practice/result" element={<InterviewResultPage />} />
-            <Route path="/practice/interview/:id" element={<InterviewResultPage />} />
-          </Route>
+           {/* Practice Interview Route - Requires Candidate or Admin role */}
+           <Route element={<ProtectedRoute allowedRoles={[UserRole.CANDIDATE, UserRole.ADMIN]} />}>
+             <Route path="/practice" element={<PracticeInterviewPage />} />
+             <Route path="/practice/result" element={<InterviewResultPage />} />
+             <Route path="/practice/interview/:id" element={<InterviewResultPage />} />
+             <Route path="/practice/result/:id" element={<InterviewResultPage />} />
+           </Route>
 
-          {/* Main Layout Routes */}
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
+           {/* Main Layout Routes */}
+           <Route path="/" element={<MainLayout />}>
+             <Route index element={<HomePage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="cv-analysis" element={<CVAnalysisPage />} />
-              <Route path="cv-analysis/result" element={<CVResultPage />} />
-            </Route>
+             <Route element={<ProtectedRoute />}>
+               <Route path="cv-analysis" element={<CVAnalysisPage />} />
+               <Route path="cv-analysis/result" element={<CVResultPage />} />
+             </Route>
 
-            {/* Dashboard Layout Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="practice/history" element={<InterviewHistoryPage />} />
-                <Route path="practice/history/:id" element={<InterviewResultPage />} />
-              </Route>
-            </Route>
+             {/* Dashboard Layout Routes */}
+             <Route element={<ProtectedRoute />}>
+               <Route element={<DashboardLayout />}>
+                 <Route path="profile" element={<ProfilePage />} />
+                 <Route path="practice/history" element={<InterviewHistoryPage />} />
+               </Route>
+             </Route>
 
             {/* We will add more routes here later */}
           </Route>
