@@ -1,8 +1,6 @@
 import axios from 'axios';
 import { authTokenStorage } from './authTokenStorage';
 
-const DEFAULT_API_BASE_URL = 'https://suggestion-beverage-onto-definitely.trycloudflare.com/';
-
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
@@ -17,7 +15,7 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
 
 export const createApiClient = () => {
   const client = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL,
+    baseURL: import.meta.env.VITE_API_BASE_URL || '',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -47,4 +47,22 @@ export const authService = {
     const { data } = await apiClient.put<User>(authEndpoints.me, payload);
     return data;
   },
+  forgotPassword: async (payload: { email: string }) => {
+    const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);
+    return data;
+  },
+  verifyOtp: async (payload: { email: string; otp: string }) => {
+    const { data } = await apiClient.post(authEndpoints.verifyOtp, payload);
+    return data;
+  },
+  resetPassword: async (payload: { email: string; newPassword: string }) => {
+    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+    return data;
+  },
+  loginWithGoogle: () => {
+    const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    window.location.href = `${normalizedBaseUrl}/api/auth/login-google?returnUrl=${returnUrl}`;
+  },
 };
