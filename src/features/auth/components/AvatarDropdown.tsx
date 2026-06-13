@@ -4,13 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { useLanguage } from '../../../shared/languages';
 import { getRoleDisplayName, getRoleColor } from '../utils/rolePermissions';
-import { Permission } from '../types/auth.types';
+import { UserRole } from '../types/auth.types';
 
 export const AvatarDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasRole, hasAnyRole } = usePermissions();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -67,21 +67,19 @@ export const AvatarDropdown: React.FC = () => {
             </Link>
 
             {/* Dashboard - for all authenticated users */}
-            {hasPermission(Permission.VIEW_DASHBOARD) && (
-              <Link
-                to="/dashboard"
-                className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                {t('nav.dashboard')}
-              </Link>
-            )}
+            <Link
+              to="/dashboard"
+              className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              {t('nav.dashboard')}
+            </Link>
 
             {/* User Management - for Admin and HR */}
-            {hasPermission(Permission.MANAGE_USERS) && (
+            {hasRole(UserRole.ADMIN) && (
               <Link
                 to="/users"
                 className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -95,7 +93,7 @@ export const AvatarDropdown: React.FC = () => {
             )}
 
             {/* Reports - for Admin and HR */}
-            {hasPermission(Permission.VIEW_REPORTS) && (
+            {hasAnyRole([UserRole.ADMIN, UserRole.HR]) && (
               <Link
                 to="/reports"
                 className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -109,7 +107,7 @@ export const AvatarDropdown: React.FC = () => {
             )}
 
             {/* Settings - for Admin only */}
-            {hasPermission(Permission.MANAGE_SETTINGS) && (
+            {hasRole(UserRole.ADMIN) && (
               <Link
                 to="/settings"
                 className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -122,8 +120,6 @@ export const AvatarDropdown: React.FC = () => {
                 Cài đặt hệ thống
               </Link>
             )}
-
-
 
             <div className="border-t border-slate-100 my-1"></div>
             

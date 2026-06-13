@@ -2,11 +2,10 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
-import { Permission, UserRole } from '../types/auth.types';
+import { UserRole } from '../types/auth.types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredPermissions?: Permission[];
   requiredRoles?: UserRole[];
   requireAuth?: boolean;
   fallbackPath?: string;
@@ -14,13 +13,12 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  requiredPermissions = [],
   requiredRoles = [],
   requireAuth = true,
   fallbackPath = '/',
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { hasAnyPermission, hasAnyRole } = usePermissions();
+  const { hasAnyRole } = usePermissions();
 
   // Show loading while checking auth
   if (isLoading) {
@@ -36,23 +34,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // Check permissions
-  if (requiredPermissions.length > 0 && !hasAnyPermission(requiredPermissions)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Không có quyền truy cập</h2>
-          <p className="text-slate-600 mb-6">Bạn không có quyền truy cập vào trang này.</p>
-          <button
-            onClick={() => window.history.back()}
-            className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/90 transition-colors"
-          >
-            Quay lại
-          </button>
-        </div>
-      </div>
-    );
-  }
+ 
 
   // Check roles
   if (requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {

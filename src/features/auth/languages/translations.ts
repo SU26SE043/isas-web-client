@@ -59,8 +59,7 @@ export const authTranslations: TranslationDictionary = {
     'profile.location': 'Vị trí',
     'profile.notUpdated': 'Chưa cập nhật',
     'profile.title': 'Chức danh',
-    'profile.permissions': 'Quyền hạn',
-    'profile.noPermissions': 'Hiện tại tài khoản này không có quyền hạn nào được gán',
+ 
     'profile.copied': 'Đã copy',
     'profile.userNotFound': 'Không tìm thấy thông tin người dùng',
     'profile.pleaseLoginAgain': 'Vui lòng đăng nhập lại',
@@ -132,8 +131,7 @@ export const authTranslations: TranslationDictionary = {
     'profile.location': 'Location',
     'profile.notUpdated': 'Not updated yet',
     'profile.title': 'Job Title',
-    'profile.permissions': 'Permissions',
-    'profile.noPermissions': 'Currently, no permissions are assigned to this account',
+ 
     'profile.copied': 'Copied',
     'profile.userNotFound': 'User information not found',
     'profile.pleaseLoginAgain': 'Please log in again',
