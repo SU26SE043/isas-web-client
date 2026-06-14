@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Phiên bản Node.js ổn định nhất hiện tại
+          node-version: '22' # Phiên bản Node.js ổn định nhất hiện tại
           cache: 'npm'
 
       # 3. Cài đặt các thư viện (như đã khai báo trong package.json)

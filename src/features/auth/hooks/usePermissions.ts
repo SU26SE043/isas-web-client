@@ -1,8 +1,8 @@
-import { UserRole } from '../types/auth.types';
-import { useAuth } from './useAuth';
+
 
 export const useRole = () => {
   const { user } = useAuth();
+
 
   const hasRole = (role: UserRole): boolean => {
     return user?.role === role;

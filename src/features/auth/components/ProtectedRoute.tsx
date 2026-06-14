@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+
 import { UserRole } from '../types/auth.types';
 
 interface ProtectedRouteProps {
@@ -16,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   fallbackPath = '/',
 }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+
 
   // Show loading while checking auth
   if (isLoading) {
@@ -31,6 +32,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requireAuth && !isAuthenticated) {
     return <Navigate to={fallbackPath} replace />;
   }
+
 
   // Check roles
   if (requiredRoles.length > 0 && (!user || !requiredRoles.includes(user.role))) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ProfileHeader } from '../components/ProfileHeader';
 import { AccountInfoCard } from '../components/AccountInfoCard';
@@ -10,6 +11,7 @@ import { useLanguage } from '../../../shared/languages';
 
 export const ProfilePage: React.FC = () => {
   const { user, isLoading } = useAuth();
+
   const { t } = useLanguage();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -68,6 +70,7 @@ export const ProfilePage: React.FC = () => {
             <SecurityCard />
             <SecurityAlertCard />
           </div>
+
         </div>
       </div>
 
