@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, AlertCircle, CalendarClock, Languages, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, CalendarClock, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 import { resultService } from '../services/result.service';
@@ -18,7 +18,7 @@ const formatDateTime = (value: string, locale: string) =>
 export const InterviewResultPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language } = useLanguage();
   const [result, setResult] = useState<InterviewResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +52,8 @@ export const InterviewResultPage: React.FC = () => {
     };
   }, [language]);
 
+  const resultBreadcrumbLabel = language === 'vi' ? 'Kết quả' : 'Result';
+
   const summaryText = useMemo(() => {
     if (!result) return '';
     return language === 'vi' ? result.summaryVi : result.summary;
@@ -69,50 +71,19 @@ export const InterviewResultPage: React.FC = () => {
 
   return (
     <main className={`${isFromHistory ? 'h-screen flex flex-col bg-white overflow-hidden' : 'min-h-screen bg-white'}`}>
-      <header className={`border-b border-black/5 ${isFromHistory ? 'bg-[#FACC15]' : 'bg-milk'}`}>
-        <div className={`${isFromHistory ? 'flex flex-col gap-4 px-6 py-5' : 'mx-auto flex max-w-[1200px] flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between'}`}>
-          <div className="space-y-2">
+      <header className="border-b border-black/5 bg-white">
+        <div className="mx-auto max-w-[1200px] px-4 py-4 sm:px-6">
+          <nav className="flex items-center gap-2 text-sm font-semibold text-pine">
             <button
               type="button"
-              onClick={() => isFromHistory ? navigate('/practice/history') : navigate('/practice')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                isFromHistory ? 'bg-white/80 text-pine hover:bg-white' : 'bg-white/70 text-pine hover:bg-white'
-              }`}
+              onClick={() => navigate('/practice/history')}
+              className="text-pine hover:underline"
             >
-              <ArrowLeft className="h-4 w-4" />
-              {isFromHistory ? t('practice.history.title') : t('practice.result.backToPractice')}
+              {t('practice.history.title')}
             </button>
-            <div>
-              <h1 className="heading-primary text-3xl text-pine sm:text-4xl">
-                {t('practice.result.title')}
-              </h1>
-              <p className="body-text mt-1 max-w-2xl text-sm text-black/75">
-                {t('practice.result.subtitle')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 self-start rounded-2xl bg-white/70 px-4 py-3">
-            <Languages className="h-5 w-5 text-pine" />
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                language === 'vi' ? 'bg-pine text-white' : 'text-pine hover:bg-pine/10'
-              }`}
-            >
-              VI
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                language === 'en' ? 'bg-pine text-white' : 'text-pine hover:bg-pine/10'
-              }`}
-            >
-              EN
-            </button>
-          </div>
+            <span className="text-black/30">{'>'}</span>
+            <span className="text-black/60">{resultBreadcrumbLabel}</span>
+          </nav>
         </div>
       </header>
 

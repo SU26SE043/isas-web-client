@@ -1,4 +1,3 @@
-import { apiClient } from '../../../shared/api/apiClient';
 import type { InterviewResult } from '../types/result.types';
 
 const MOCK_DELAY_MS = 600;
@@ -123,14 +122,8 @@ const mockInterviewResult: InterviewResult = {
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 export const resultService = {
-  async getInterviewResult(resultId: string): Promise<InterviewResult> {
-    // Production-style mock: keep the Axios contract but return mock data for now.
+  async getInterviewResult(_resultId: string): Promise<InterviewResult> {
     await wait(MOCK_DELAY_MS);
-
-    const response = await apiClient.get<InterviewResult>(`/interview-results/${resultId}`);
-
-    // In real production, the API response would be returned directly.
-    // For now, we preserve the Axios flow while using typed mock data.
-    return response.data ?? mockInterviewResult;
+    return mockInterviewResult;
   },
 };
