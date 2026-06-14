@@ -46,7 +46,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.welcomeBackTitle': 'Mừng bạn trở lại!',
     'auth.welcomeBackDescription': 'Nhập thông tin cá nhân để tiếp tục sử dụng hệ thống',
     'auth.close': 'Đóng',
-    
+
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
     'profile.editInfo': 'Chỉnh sửa thông tin',
@@ -59,7 +59,7 @@ export const authTranslations: TranslationDictionary = {
     'profile.location': 'Vị trí',
     'profile.notUpdated': 'Chưa cập nhật',
     'profile.title': 'Chức danh',
- 
+
     'profile.copied': 'Đã copy',
     'profile.userNotFound': 'Không tìm thấy thông tin người dùng',
     'profile.pleaseLoginAgain': 'Vui lòng đăng nhập lại',
@@ -71,7 +71,20 @@ export const authTranslations: TranslationDictionary = {
     'profile.saving': 'Đang lưu...',
     'profile.saveChanges': 'Lưu thay đổi',
     'profile.navProfile': 'Hồ sơ',
+    'profile.navInterviewHistory': 'Lịch sử phỏng vấn',
+    'profile.interviewHistory': 'Lịch sử phỏng vấn',
     'profile.logout': 'Đăng xuất',
+    'profile.candidate': 'Ứng viên',
+    'profile.security': 'Bảo mật tài khoản',
+    'profile.accountSecurity': 'Bảo mật tài khoản luôn an toàn',
+    'profile.accountSecurityDesc': 'Tăng cường bảo mật để bảo vệ tài khoản của bạn',
+    'profile.emailVerified': 'Xác thực email',
+    'profile.password': 'Mật khẩu',
+    'profile.verified': 'Đã xác thực',
+    'profile.change': 'Đổi mật khẩu',
+    'profile.twoFactor': 'Phiên đăng nhập nhập',
+    'profile.device': 'thiết bị',
+    'profile.updateInfo': 'Cập nhật thông tin',
   },
   en: {
     'auth.signInTitle': 'Sign in',
@@ -131,7 +144,7 @@ export const authTranslations: TranslationDictionary = {
     'profile.location': 'Location',
     'profile.notUpdated': 'Not updated yet',
     'profile.title': 'Job Title',
- 
+
     'profile.copied': 'Copied',
     'profile.userNotFound': 'User information not found',
     'profile.pleaseLoginAgain': 'Please log in again',
@@ -143,6 +156,19 @@ export const authTranslations: TranslationDictionary = {
     'profile.saving': 'Saving...',
     'profile.saveChanges': 'Save Changes',
     'profile.navProfile': 'Profile',
+    'profile.navInterviewHistory': 'Interview History',
+    'profile.interviewHistory': 'Interview History',
     'profile.logout': 'Log Out',
+    'profile.candidate': 'Candidate',
+    'profile.security': 'Account Security',
+    'profile.accountSecurity': 'Keep your account always secure',
+    'profile.accountSecurityDesc': 'Increase security to protect your account',
+    'profile.emailVerified': 'Email Verified',
+    'profile.password': 'Password',
+    'profile.verified': 'Verified',
+    'profile.change': 'Change',
+    'profile.twoFactor': 'Login sessions',
+    'profile.device': 'device',
+    'profile.updateInfo': 'Update Information',
   },
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { usePermissions } from '../hooks/usePermissions';
+
 import { UserRole } from '../types/auth.types';
 
 interface ProtectedRouteProps {
@@ -17,8 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   fallbackPath = '/',
 }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { hasAnyRole } = usePermissions();
+
 
   // Show loading while checking auth
   if (isLoading) {
@@ -34,10 +33,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={fallbackPath} replace />;
   }
 
- 
 
   // Check roles
-  if (requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
+  if (requiredRoles.length > 0 && (!user || !requiredRoles.includes(user.role))) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

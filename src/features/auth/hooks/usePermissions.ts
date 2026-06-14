@@ -1,17 +1,8 @@
-import { useAuth } from './useAuth';
-import { UserRole } from '../types/auth.types';
- 
 
-export const usePermissions = () => {
+
+export const useRole = () => {
   const { user } = useAuth();
 
- 
-
- 
-
- 
-
- 
 
   const hasRole = (role: UserRole): boolean => {
     return user?.role === role;
@@ -21,21 +12,10 @@ export const usePermissions = () => {
     return user ? roles.includes(user.role) : false;
   };
 
-  const isAdmin = (): boolean => {
-    return hasRole(UserRole.ADMIN);
-  };
-
-  const isHR = (): boolean => {
-    return hasRole(UserRole.HR);
-  };
-
-  const isInterviewer = (): boolean => {
-    return hasRole(UserRole.INTERVIEWER);
-  };
-
-  const isCandidate = (): boolean => {
-    return hasRole(UserRole.CANDIDATE);
-  };
+  const isAdmin = (): boolean => hasRole(UserRole.ADMIN);
+  const isHR = (): boolean => hasRole(UserRole.HR);
+  const isInterviewer = (): boolean => hasRole(UserRole.INTERVIEWER);
+  const isCandidate = (): boolean => hasRole(UserRole.CANDIDATE);
 
   return {
     hasRole,
@@ -44,5 +24,6 @@ export const usePermissions = () => {
     isHR,
     isInterviewer,
     isCandidate,
+    userRole: user?.role ?? null,
   };
 };

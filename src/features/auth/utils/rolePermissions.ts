@@ -1,6 +1,6 @@
 import { UserRole } from '../types/auth.types';
 
- 
+
 
 // Get role display name
 export const getRoleDisplayName = (role: UserRole): string => {
@@ -26,4 +26,4 @@ export const getRoleColor = (role: UserRole): string => {
   return roleColors[role];
 };
 
- 
+

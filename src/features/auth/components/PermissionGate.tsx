@@ -1,1 +1,1 @@
-// PermissionGate component removed as permissions feature has been deprecated.
+
