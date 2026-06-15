@@ -35,19 +35,21 @@ export interface AuthTokensResponse {
   expiresAt: string;
 }
 
+export const UserRole = {
+  ADMIN: 'admin',
+  HR: 'hr',
+  INTERVIEWER: 'interviewer',
+  CANDIDATE: 'Candidate',
+} as const;
+
+export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
+
 export interface User {
   id: string;
   fullName: string;
   email: string;
   location: string;
   title: string;
-  role: UserRole;
+  role: UserRoleType;
   createdAt: string;
 }
-
-export const UserRole = {
-  ADMIN: 'admin',
-  HR: 'hr',
-  INTERVIEWER: 'interviewer',
-  CANDIDATE: 'Candidate',
-
