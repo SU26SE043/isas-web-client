@@ -1,0 +1,3 @@
+[submodule ".agents/skills/ux-ui-agent-skills"]
+	path = .agents/skills/ux-ui-agent-skills
+	url = https://github.com/plugin87/ux-ui-agent-skills
