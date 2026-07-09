@@ -25,39 +25,6 @@ The scope encompasses all frontend interactions, visual layouts, and user workfl
 
 ---
 
-## 2. Global UX Principles
-Driven by Human-Centered Design (HCD) and Nielsen’s Usability Heuristics, ISAS adheres to the following principles:
-
-1.  **Consistency**: Utilize centralized design tokens (colors, typography, spacing) via Ant Design/Material Design 3 hybrids to ensure predictable behaviors across modules.
-2.  **Clarity**: Present information hierarchically. The most critical action (e.g., "Start Interview") must always hold the highest visual weight.
-3.  **Accessibility (WCAG 2.2 AA)**: Ensure all text maintains a minimum contrast ratio of 4.5:1. All interactive elements must be keyboard navigable (`Tab` indexing).
-4.  **Efficiency**: Provide accelerators (keyboard shortcuts) for power users, particularly for employers reviewing mass candidate reports.
-5.  **Feedback**: The system must acknowledge every action within 400ms (e.g., Toast notification on save, skeleton loader during API fetch).
-6.  **Error Prevention**: Implement inline validation on forms before submission. Use non-destructive warnings for critical actions (e.g., exiting an active interview).
-7.  **Minimal Cognitive Load**: Limit primary navigation items to 7±2. Use progressive disclosure for advanced settings.
-8.  **Trust & Transparency**: Clearly indicate when the user is interacting with an AI versus a human, especially during automated feedback generation.
-9.  **Performance Perception**: Utilize optimistic UI updates and skeleton screens rather than blocking spinners.
-10. **Desktop-First Design**: Optimized for extensive data grids and video-rendering views, gracefully degrading to tablet and mobile via fluid grids.
-
----
-
-## 3. Global Layout Standards
-
-### 3.1 Application Shell
-*   **Sidebar (Left)**: Collapsible navigation menu. Width: `240px` (expanded), `64px` (collapsed). Background: `#FAFAFA`.
-*   **Top Navigation**: Height: `64px`. Contains Breadcrumbs, Global Search, Notification Bell, and User Avatar/Profile Dropdown. Sticky positioned.
-*   **Content Area**: Fluid width, `min-height: calc(100vh - 64px)`. Padding: `24px` universally.
-*   **Page Header**: H1 Title (`24px`, bold), optional subtitle (`14px`, text-secondary), and primary page-level actions (Top-Right).
-
-### 3.2 Components
-*   **Cards**: `border-radius: 8px`, `box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05)`. Used to group related content.
-*   **Panels/Drawers**: Slide-in from right. Used for contextual editing without losing the main view context. Width: `400px`.
-*   **Modals**: Centered overlays for blocking actions (e.g., Delete Confirmation, Interview Setup). Background overlay: `rgba(0,0,0,0.45)`, blur `2px`.
-*   **Tables**: Ant Design standard. Sticky headers, alternating row colors (`#FFFFFF` and `#FAFAFA`). Default pagination: 10 items/page.
-*   **Forms**: Top-aligned labels, `8px` spacing between label and input, `24px` spacing between form groups.
-
----
-
 ## 4. Navigation Specification
 
 *   **Primary Navigation**: Located in the Left Sidebar. Categories change based on Role (Candidate vs. Employer).
@@ -184,18 +151,6 @@ Driven by Human-Centered Design (HCD) and Nielsen’s Usability Heuristics, ISAS
 | Type in IDE | Code Editor | Syntax highlighting updates | Allowed languages only | Code formats dynamically |
 | Submit File | Dropzone | Progress bar appears (0-100%) | Max file size 10MB | File uploads, success icon shows |
 | Change Tab | Tab Navigation | Panel content swaps | None | Instant view change without reload |
-
----
-
-## 8. Responsive Behavior
-
-While ISAS is Desktop-first for deep analytical tasks, responsive rules apply:
-
-*   **Large Desktop (1440px+)**: Standard layout. Maximum container width constrained to `1600px` to prevent text stretching.
-*   **Laptop (1024px - 1439px)**: Fluid grids. Side panels compress slightly.
-*   **Minimum Supported Resolution (1024x768)**: Standard target for typical enterprise displays. No horizontal scrolling permitted on main views.
-*   **Window Resize**: Echarts/D3 charts must re-render via `ResizeObserver` to fit new container dimensions dynamically.
-*   **Browser Zoom**: UI must remain fully functional and legible at up to `200%` zoom per WCAG 2.2 guidelines.
 
 ---
 
