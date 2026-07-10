@@ -59,6 +59,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.passwordRuleLowercase': 'chữ thường',
     'auth.passwordRuleNumber': 'chữ số',
     'auth.passwordRuleSymbol': 'ký tự đặc biệt',
+    'auth.sessionExpiredBanner': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -165,6 +166,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.passwordRuleLowercase': 'lowercase letter',
     'auth.passwordRuleNumber': 'number',
     'auth.passwordRuleSymbol': 'special character',
+    'auth.sessionExpiredBanner': 'Your session has expired. Please sign in again.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
