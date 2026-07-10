@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../config';
 import { authTokenStorage } from './authTokenStorage';
 
 let isRefreshing = false;
@@ -15,7 +16,7 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
 
 export const createApiClient = () => {
   const client = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '',
+    baseURL: getApiBaseUrl(),
     headers: {
       'Content-Type': 'application/json',
     },

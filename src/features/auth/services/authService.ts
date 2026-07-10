@@ -1,4 +1,5 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
+import { getApiBaseUrl } from '../../../shared/config';
 import type { AuthTokensResponse, LoginRequest, RegisterRequest, User, UpdateProfileRequest } from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
@@ -62,7 +63,7 @@ export const authService = {
   },
   loginWithGoogle: () => {
     const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}/api/auth/login-google?returnUrl=${returnUrl}`;
   },
