@@ -1,12 +1,20 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '../shared/languages';
 
-export const LanguageToggle: React.FC = () => {
+interface LanguageToggleProps {
+  compact?: boolean;
+}
+
+export const LanguageToggle: React.FC<LanguageToggleProps> = ({ compact = false }) => {
   const { language, setLanguage, t } = useLanguage();
 
   return (
     <div
-      className="relative flex h-9 w-[5.5rem] items-center rounded-full border border-subtle bg-surface-overlay p-0.5"
+      className={cn(
+        'relative flex items-center rounded-full border border-subtle bg-surface-overlay p-0.5',
+        compact ? 'h-8 w-[4.25rem]' : 'h-9 w-[5.5rem]',
+      )}
       aria-label={t('language.label')}
     >
       <div
@@ -18,7 +26,9 @@ export const LanguageToggle: React.FC = () => {
       <button
         type="button"
         onClick={() => setLanguage('vi')}
-        className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors ${
+        className={`relative z-10 flex-1 text-center font-semibold transition-colors ${
+          compact ? 'text-[10px]' : 'text-xs'
+        } ${
           language === 'vi' ? 'text-black' : 'text-muted-foreground hover:text-foreground'
         }`}
         title={t('language.vietnamese')}
@@ -29,7 +39,9 @@ export const LanguageToggle: React.FC = () => {
       <button
         type="button"
         onClick={() => setLanguage('en')}
-        className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors ${
+        className={`relative z-10 flex-1 text-center font-semibold transition-colors ${
+          compact ? 'text-[10px]' : 'text-xs'
+        } ${
           language === 'en' ? 'text-black' : 'text-muted-foreground hover:text-foreground'
         }`}
         title={t('language.english')}

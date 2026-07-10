@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
+import { LanguageToggle } from './LanguageToggle';
 
 type NavItem = {
   to: string;
@@ -146,7 +147,10 @@ export const DashboardLayout: React.FC = () => {
             </div>
           </nav>
 
-          <div className="border-t border-subtle p-3">
+          <div className="border-t border-subtle p-3 space-y-3">
+            <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
+              <LanguageToggle compact={isCollapsed} />
+            </div>
             <button
               type="button"
               onClick={handleLogout}

@@ -1,84 +1,63 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { EditProfileModal } from '@/features/auth/components/EditProfileModal';
 import { useLanguage } from '@/shared/languages';
-import { ProfileSectionLayout } from '../components/ProfileSectionLayout';
 import { useProfile } from '../hooks/useProfile';
-
-const SECTION_LINKS = [
-  'career-goal',
-  'education',
-  'experience',
-  'skills',
-  'certificates',
-  'portfolio',
-  'social',
-] as const;
+import { CandidateProfileHeader } from '../components/profile-view/CandidateProfileHeader';
+import { ProfileAboutSection } from '../components/profile-view/ProfileAboutSection';
+import { ProfileExperienceSection } from '../components/profile-view/ProfileExperienceSection';
+import { ProfileEducationSection } from '../components/profile-view/ProfileEducationSection';
+import { ProfileSkillsSection } from '../components/profile-view/ProfileSkillsSection';
+import { ProfileCertificationsSection } from '../components/profile-view/ProfileCertificationsSection';
+import { ProfileProjectsSection } from '../components/profile-view/ProfileProjectsSection';
+import { ProfileContactSection } from '../components/profile-view/ProfileContactSection';
+import { ProfileSidebar } from '../components/profile-view/ProfileSidebar';
+import { ProfileViewLoading } from '../components/profile-view/ProfileViewLoading';
 
 export const ProfileViewPage: React.FC = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const { profile, completeness, isLoading } = useProfile();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  if (isLoading || !profile) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-        <span className="sr-only">{t('ds.loading.page')}</span>
-      </div>
-    );
+  if (isLoading || !profile || !completeness) {
+    return <ProfileViewLoading />;
   }
 
   return (
-    <ProfileSectionLayout
-      title={t('profile.view.title')}
-      description={t('profile.view.subtitle')}
-      completeness={completeness}
-      actions={(
-        <Link to="/candidate/profile/complete" className="btn-secondary">
-          {t('profile.view.completeWizard')}
-        </Link>
-      )}
-    >
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-subtle bg-surface-raised p-5">
-          <h2 className="heading-secondary text-lg">{t('profile.view.basicInfo')}</h2>
-          <dl className="mt-4 space-y-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{t('profile.view.name')}</dt>
-              <dd className="font-medium text-foreground">{user?.fullName ?? '-'}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t('profile.view.titleLabel')}</dt>
-              <dd className="font-medium text-foreground">{user?.title || t('profile.view.notSet')}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t('profile.view.location')}</dt>
-              <dd className="font-medium text-foreground">{user?.location || t('profile.view.notSet')}</dd>
-            </div>
-          </dl>
-        </section>
+    <div className="dashboard-content min-h-full">
+      <p className="text-label mb-4 text-muted-foreground">{t('profile.breadcrumb')}</p>
 
-        <section className="rounded-xl border border-subtle bg-surface-raised p-5">
-          <h2 className="heading-secondary text-lg">{t('profile.view.sectionsTitle')}</h2>
-          <ul className="mt-4 space-y-2">
-            {SECTION_LINKS.map((section) => (
-              <li key={section}>
-                <Link
-                  to={`/candidate/profile/${section}`}
-                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-surface-overlay"
-                >
-                  <span>{t(`profile.sections.${section}`)}</span>
-                  <span className="text-muted-foreground">
-                    {completeness?.sections[section] ? t('profile.sections.complete') : t('profile.sections.incomplete')}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="space-y-4">
+        <CandidateProfileHeader
+          fullName={user?.fullName ?? t('profile.view.notSet')}
+          title={user?.title}
+          location={user?.location}
+          onEditClick={() => setIsEditModalOpen(true)}
+        />
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+          <aside className="order-1 lg:order-2">
+            <ProfileSidebar completeness={completeness} />
+          </aside>
+
+          <main className="order-2 space-y-4 lg:order-1">
+            <ProfileAboutSection careerGoal={profile.careerGoal} />
+            <ProfileExperienceSection experiences={profile.experiences} />
+            <ProfileEducationSection education={profile.education} />
+            <ProfileSkillsSection skills={profile.skills} />
+            <ProfileCertificationsSection certificates={profile.certificates} />
+            <ProfileProjectsSection portfolio={profile.portfolio} />
+            <ProfileContactSection socialLinks={profile.socialLinks} />
+          </main>
+        </div>
       </div>
-    </ProfileSectionLayout>
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => void fetchUser()}
+      />
+    </div>
   );
 };
