@@ -4,7 +4,7 @@ import { useUnauthorizedHandler } from '@/shared/api';
 import { adminRoutes } from './groups/adminRoutes';
 import { authRoutes } from './groups/authRoutes';
 import { candidateRoutes } from './groups/candidateRoutes';
-import { employerRoutes } from './groups/employerRoutes';
+import { enterpriseRoutes } from './groups/enterpriseRoutes';
 import { publicRoutes } from './groups/publicRoutes';
 
 export function AppRouter() {
@@ -13,7 +13,7 @@ export function AppRouter() {
   return useRoutes([
     {
       element: <RootLayout />,
-      children: [...publicRoutes, ...authRoutes, ...candidateRoutes, ...employerRoutes, ...adminRoutes],
+      children: [...publicRoutes, ...authRoutes, ...candidateRoutes, ...enterpriseRoutes, ...adminRoutes],
     },
   ]);
 }
