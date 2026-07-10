@@ -11,13 +11,14 @@ import { InterviewHistoryPage } from './features/practice/pages/InterviewHistory
 import { LanguageProvider } from './shared/languages';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { UserRole } from './features/auth/types/auth.types';
+import { useUnauthorizedHandler } from './shared/api';
 import './App.css';
 
-function App() {
+function AppRoutes() {
+  useUnauthorizedHandler();
+
   return (
-    <LanguageProvider>
-      <BrowserRouter>
-        <Routes>
+    <Routes>
            {/* Practice Interview Route - Requires Candidate or Admin role */}
            <Route element={<ProtectedRoute allowedRoles={[UserRole.CANDIDATE]} />}>
              <Route path="/practice" element={<PracticeInterviewPage />} />
@@ -46,6 +47,14 @@ function App() {
             {/* We will add more routes here later */}
           </Route>
         </Routes>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <BrowserRouter>
+        <AppRoutes />
       </BrowserRouter>
     </LanguageProvider>
   );

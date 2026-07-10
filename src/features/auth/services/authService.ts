@@ -12,14 +12,7 @@ export const authService = {
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.login, payload);
-    console.log('Login response:', data); // Debug login response
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
-
-    // Verify token was saved
-    const savedToken = authTokenStorage.getAccessToken();
-    console.log('Token saved:', savedToken ? 'Yes' : 'No');
-    console.log('Token preview:', savedToken?.substring(0, 20) + '...');
-
     return data;
   },
   refresh: async () => {
