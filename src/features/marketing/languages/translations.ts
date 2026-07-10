@@ -35,7 +35,7 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.feature2': 'Campaign & magic link',
     'pricing.enterprise.feature3': 'Dashboard HR',
 
-    'enterprise.pageTitle': 'Enterprise | PIpraint',
+    'enterprise.pageTitle': 'Doanh nghiệp | PIpraint',
     'enterprise.title': 'Tuyển dụng thông minh với AI',
     'enterprise.description': 'Chuẩn hóa sàng lọc ứng viên, giảm thời gian HR và ra quyết định dựa trên dữ liệu.',
     'enterprise.cta': 'Đăng ký demo',
