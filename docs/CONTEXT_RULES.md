@@ -15,6 +15,7 @@ Read to classify the request, find the affected surface, and choose a lane.
 | Document Or Source | Tiny | Normal | High-Risk |
 | --- | --- | --- | --- |
 | `AGENTS.md` | Must | Must | Must |
+| `docs/UI_GUIDE.md` | Must if UI changes | Must if UI changes | Must if UI changes |
 | `docs/FEATURE_INTAKE.md` | Must | Must | Must |
 | `scripts/bin/harness-cli query matrix` | Must | Must | Must |
 | `README.md` | Should | Must | Must |

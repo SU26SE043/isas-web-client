@@ -32,11 +32,11 @@ interface CustomTooltipProps {
 }
 
 const chartColors = {
-  current: '#02462E',
-  target: '#FEC700',
-  grid: 'rgba(2, 70, 46, 0.12)',
+  current: '#111827',
+  target: '#9CA3AF',
+  grid: 'rgba(17, 24, 39, 0.12)',
   text: '#0F172A',
-  tooltipBorder: 'rgba(2, 70, 46, 0.12)',
+  tooltipBorder: 'rgba(17, 24, 39, 0.12)',
   tooltipBg: '#FFFFFF',
 } as const;
 
@@ -53,21 +53,21 @@ const CustomTooltip = memo(function CustomTooltip({
   if (!item) return null;
 
   return (
-    <div className="rounded-2xl border border-[rgba(2,70,46,0.12)] bg-white px-4 py-3 shadow-lg">
-      <p className="text-sm font-semibold text-pine">
+    <div className="rounded-xl border border-[rgba(2,70,46,0.12)] bg-surface-raised px-4 py-3 shadow-lg">
+      <p className="text-sm font-semibold text-foreground">
         {language === 'vi' ? item.subjectVi : item.subject}
       </p>
-      <div className="mt-2 space-y-1 text-sm text-slate-700">
+      <div className="mt-2 space-y-1 text-sm text-muted-foreground">
         <div className="flex items-center justify-between gap-4">
           <span>{t('practice.radar.current')}</span>
-          <span className="font-semibold text-pine">{item.A}%</span>
+          <span className="font-semibold text-foreground">{item.A}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span>{t('practice.radar.target')}</span>
           <span className="font-semibold text-[#A97D00]">{item.B}%</span>
         </div>
       </div>
-      <p className="mt-2 text-xs text-slate-500">{label ?? ''}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{label ?? ''}</p>
     </div>
   );
 });
@@ -87,16 +87,16 @@ export const SkillRadarChart = memo(function SkillRadarChart({
   );
 
   return (
-    <section aria-labelledby="skill-radar-chart-title" className="rounded-3xl border border-black/5 bg-white p-6 shadow-sm">
+    <section aria-labelledby="skill-radar-chart-title" className="rounded-3xl border border-subtle bg-surface-raised p-6 shadow-sm">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2
             id="skill-radar-chart-title"
-            className="heading-secondary text-2xl text-pine"
+            className="heading-secondary text-2xl text-foreground"
           >
             {t('practice.result.skillOverview')}
           </h2>
-          <p className="mt-1 body-text text-sm text-black/70">
+          <p className="mt-1 body-text text-sm text-muted-foreground">
             {t('practice.result.skillOverviewDesc')}
           </p>
         </div>
@@ -137,12 +137,12 @@ export const SkillRadarChart = memo(function SkillRadarChart({
 
       <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-pine" />
-          <span className="text-black/70">{t('practice.radar.current')}</span>
+          <span className="h-3 w-3 rounded-full bg-surface-raised" />
+          <span className="text-muted-foreground">{t('practice.radar.current')}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-milk" />
-          <span className="text-black/70">{t('practice.radar.target')}</span>
+          <span className="h-3 w-3 rounded-full bg-surface-overlay" />
+          <span className="text-muted-foreground">{t('practice.radar.target')}</span>
         </div>
       </div>
     </section>

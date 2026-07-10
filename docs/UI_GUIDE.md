@@ -1,30 +1,87 @@
-# UI Guide
+# UI Guide — Premium Dark Monochrome Design System
 
-This frontend uses a shared UI baseline so generated code remains consistent.
+**Bắt buộc đọc file này trước khi generate hoặc chỉnh sửa giao diện.**
 
-## Tech Stack
+> Không có `SPEC.md` riêng trong repo — file này là source of truth cho UI.
 
-- Framework: React + Vite + TypeScript
-- Styling: Tailwind CSS v4
-- Base primitives: `@base-ui/react`
-- Class variants: `class-variance-authority`
-- Utility merge: `clsx` + `tailwind-merge` via `cn()`
+## Nguyên tắc
 
-## Component Locations
+- **Dark mode only** — không light mode, không theme switcher
+- **Monochrome** — White, Black, Gray cho UI cấu trúc
+- **Depth qua surface layers** — không dùng màu accent, không flat pure black
+- **Inspiration:** Linear, Vercel Dashboard, GitHub Dark, Stripe Dashboard (spacing/hierarchy only)
+- **Semantic colors** chỉ cho trạng thái (success/error/warning/info)
 
-- UI primitives: `src/components/ui`
-- Shared utility helpers: `src/lib`
+## Surface elevation (depth)
 
-## Generation Rules
+| Token / Class | Hex | Dùng cho |
+|---------------|-----|----------|
+| `surface-base` / `bg-surface-base` | `#09090b` | Page background |
+| `surface-sunken` | `#0c0c0e` | Sidebar, footer |
+| `surface-raised` | `#141416` | Cards, panels |
+| `surface-overlay` | `#1c1c1f` | Inputs, hover, nested |
+| `surface-elevated` | `#232326` | Modals, dropdowns, active nav |
+| `surface-highlight` | `#2a2a2e` | Strong hover |
 
-- Prefer reusing existing primitives from `src/components/ui`.
-- Import `cn()` from `src/lib/utils` for class composition.
-- Keep business screens compositional: feature-level containers + reusable UI atoms.
-- Do not introduce a second styling system (no CSS-in-JS or extra UI kit by default).
-- Keep forms on `react-hook-form` with schema validation via `zod`.
-- Keep async server state on `@tanstack/react-query`.
+## Borders (white alpha)
 
-## Vercel Commands
+| Class | Opacity |
+|-------|---------|
+| `border-subtle` | 6% |
+| `border-default` | 10% |
+| `--border-focus` | 24% (focus ring) |
 
-- Local preview with Vercel runtime: `npm run vercel:dev`
-- Production deploy: `npm run vercel:deploy`
+## Typography
+
+| Class | Dùng cho |
+|-------|----------|
+| `heading-primary` | Page title (font-semibold, tracking-tight) |
+| `heading-secondary` | Section title |
+| `body-text` | Paragraph (muted) |
+| `text-label` | Uppercase label (xs, tracking-wide) |
+| `text-caption` | Helper text |
+
+Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
+
+## Layout utilities
+
+| Class | Mô tả |
+|-------|--------|
+| `page-container` | max-w-7xl, responsive padding |
+| `page-section` | Vertical section padding |
+| `dashboard-content` | Dashboard main area padding |
+
+## Components
+
+| Component | Pattern |
+|-----------|---------|
+| Header | `h-16`, `bg-surface-base/80 backdrop-blur-xl border-subtle` |
+| Sidebar | `bg-surface-sunken border-subtle`, active `bg-surface-elevated` |
+| Card | `surface-raised rounded-xl` |
+| Modal | `bg-surface-elevated border-default shadow-lg` |
+| Input | `bg-surface-overlay border-default rounded-lg text-sm` |
+| Primary button | `btn-primary` (white bg, black text) |
+| Secondary button | `btn-secondary` (outline) |
+| Ghost button | `btn-ghost` |
+
+## Semantic colors (NGOẠI LỆ)
+
+Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, recording indicator, Google OAuth logo.
+
+## Files
+
+| File | Vai trò |
+|------|---------|
+| `src/styles/colors.css` | CSS variables |
+| `src/index.css` | Tailwind theme + utilities |
+| `src/components/ui/*` | shadcn primitives |
+
+## Agent rules
+
+1. Đọc file này trước khi sửa UI
+2. Dùng `src/components/ui` — không tạo button/input mới
+3. Dùng surface tokens — không hardcode hex
+4. Không thêm màu accent vào layout
+5. `cn()` từ `src/lib/utils`
+6. Form: `react-hook-form` + `zod`
+7. Data: `@tanstack/react-query`

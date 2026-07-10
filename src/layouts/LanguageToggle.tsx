@@ -6,18 +6,21 @@ export const LanguageToggle: React.FC = () => {
 
   return (
     <div
-      className="relative flex items-center rounded-full  p-1 w-24 h-10 bg-white"
+      className="relative flex h-9 w-[5.5rem] items-center rounded-full border border-subtle bg-surface-overlay p-0.5"
       aria-label={t('language.label')}
     >
-      {/* Sliding Background */}
       <div
-        className={`absolute top-1 bottom-1 w-[42px] bg-black rounded-full transition-transform duration-300 ease-out shadow-sm ${language === 'vi' ? 'translate-x-0' : 'translate-x-[42px]'}`}
-      ></div>
+        className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+          language === 'vi' ? 'translate-x-0.5' : 'translate-x-[calc(100%+2px)]'
+        }`}
+      />
 
       <button
         type="button"
         onClick={() => setLanguage('vi')}
-        className={`relative flex-1 text-center text-sm font-extrabold z-10 transition-colors duration-300 ${language === 'vi' ? 'text-white' : 'text-black hover:text-black/80'}`}
+        className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors ${
+          language === 'vi' ? 'text-black' : 'text-muted-foreground hover:text-foreground'
+        }`}
         title={t('language.vietnamese')}
       >
         VI
@@ -26,7 +29,9 @@ export const LanguageToggle: React.FC = () => {
       <button
         type="button"
         onClick={() => setLanguage('en')}
-        className={`relative flex-1 text-center text-sm font-extrabold z-10 transition-colors duration-300 ${language === 'en' ? 'text-white' : 'text-black hover:text-black/80'}`}
+        className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors ${
+          language === 'en' ? 'text-black' : 'text-muted-foreground hover:text-foreground'
+        }`}
         title={t('language.english')}
       >
         EN

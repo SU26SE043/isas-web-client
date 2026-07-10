@@ -56,23 +56,23 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px]">
-            <div className="bg-white rounded-[1.5rem] shadow-xl w-full max-w-[480px] overflow-hidden">
+            <div className="bg-surface-raised rounded-[1.5rem] shadow-sm w-full max-w-[480px] overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-yellow-400">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-subtle bg-surface-base">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/50 border border-yellow-500/30 text-yellow-900">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-raised border border-subtle text-muted-foreground">
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                         </div>
-                        <h2 className="text-xl font-bold text-slate-900">
+                        <h2 className="text-xl font-bold text-foreground">
                             {t('profile.editInfo')}
                         </h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-700 hover:text-slate-900 transition-colors p-1"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -84,8 +84,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="space-y-5">
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                                <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                                <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
@@ -95,14 +95,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 type="text"
                                 value={formData.fullName}
                                 onChange={(e) => handleChange('fullName', e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-slate-900"
+                                className="w-full px-4 py-2.5 border border-default rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-foreground"
                                 placeholder={t('profile.fullNamePlaceholder')}
                             />
                         </div>
 
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                                <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                                <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
@@ -112,14 +112,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 type="text"
                                 value={formData.location}
                                 onChange={(e) => handleChange('location', e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-slate-900"
+                                className="w-full px-4 py-2.5 border border-default rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-foreground"
                                 placeholder={t('profile.locationPlaceholder')}
                             />
                         </div>
 
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                                <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                                <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                                 </svg>
@@ -129,18 +129,18 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => handleChange('title', e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-slate-900"
+                                className="w-full px-4 py-2.5 border border-default rounded-xl focus:outline-none focus:ring-4 focus:ring-[#E1EAF2] focus:border-[#4B83B3] transition-all text-foreground"
                                 placeholder={t('profile.titlePlaceholder')}
                             />
                         </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end items-center gap-3 mt-8 pt-5 border-t border-slate-100">
+                    <div className="flex justify-end items-center gap-3 mt-8 pt-5 border-t border-subtle">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-sm font-medium bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
+                            className="px-5 py-2.5 text-sm font-medium bg-surface-overlay text-muted-foreground rounded-xl hover:bg-surface-elevated transition-colors"
                             disabled={isLoading}
                         >
                             {t('profile.cancel')}
@@ -148,7 +148,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="px-5 py-2.5 bg-pine text-white rounded-xl text-sm font-medium shadow-sm hover:bg-pine/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isLoading ? (
                                 <>

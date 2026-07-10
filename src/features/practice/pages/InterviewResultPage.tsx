@@ -70,27 +70,27 @@ export const InterviewResultPage: React.FC = () => {
   }, [language, result]);
 
   return (
-    <main className={`${isFromHistory ? 'h-screen flex flex-col bg-white overflow-hidden' : 'min-h-screen bg-white'}`}>
-      <header className="border-b border-black/5 bg-white">
+    <main className={`${isFromHistory ? 'h-screen flex flex-col bg-surface-raised overflow-hidden' : 'min-h-screen bg-surface-raised'}`}>
+      <header className="border-b border-subtle bg-surface-raised">
         <div className="mx-auto max-w-[1200px] px-4 py-4 sm:px-6">
-          <nav className="flex items-center gap-2 text-sm font-semibold text-pine">
+          <nav className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <button
               type="button"
               onClick={() => navigate('/practice/history')}
-              className="text-pine hover:underline"
+              className="text-foreground hover:underline"
             >
               {t('practice.history.title')}
             </button>
-            <span className="text-black/30">{'>'}</span>
-            <span className="text-black/60">{resultBreadcrumbLabel}</span>
+            <span className="text-muted-foreground">{'>'}</span>
+            <span className="text-muted-foreground">{resultBreadcrumbLabel}</span>
           </nav>
         </div>
       </header>
 
       <section className={`${isFromHistory ? 'flex-1 min-h-0 overflow-y-auto px-6 py-6' : 'mx-auto max-w-[1200px] px-6 py-8'}`}>
         {isLoading ? (
-          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-black/5 bg-white shadow-sm">
-            <div className="flex items-center gap-3 text-pine">
+          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-subtle bg-surface-raised shadow-sm">
+            <div className="flex items-center gap-3 text-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span className="body-text text-sm font-medium">
                 {t('practice.result.loading')}
@@ -98,13 +98,13 @@ export const InterviewResultPage: React.FC = () => {
             </div>
           </div>
         ) : error ? (
-          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-red-200 bg-red-50 p-6 shadow-sm">
+          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-error/20 bg-error-bg p-6 shadow-sm">
             <div className="max-w-xl text-center">
-              <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
-              <h2 className="mt-4 heading-secondary text-2xl text-red-700">
+              <AlertCircle className="mx-auto h-10 w-10 text-error" />
+              <h2 className="mt-4 heading-secondary text-2xl text-error">
                 {t('practice.result.errorTitle')}
               </h2>
-              <p className="body-text mt-2 text-sm text-red-700/80">{error}</p>
+              <p className="body-text mt-2 text-sm text-error/80">{error}</p>
             </div>
           </div>
         ) : result ? (
@@ -112,62 +112,62 @@ export const InterviewResultPage: React.FC = () => {
             <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
               <SkillRadarChart data={result.radarData} language={language} />
 
-              <aside className="space-y-6 rounded-3xl border border-black/5 bg-white p-6 shadow-sm">
+              <aside className="space-y-6 rounded-3xl border border-subtle bg-surface-raised p-6 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-black/50">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                       {t('practice.result.overallScore')}
                     </p>
                     <div className="mt-2 flex items-end gap-2">
-                      <span className="heading-primary text-5xl text-pine">{result.overallScore}</span>
-                      <span className="pb-1 text-lg font-semibold text-black/60">/100</span>
+                      <span className="heading-primary text-5xl text-foreground">{result.overallScore}</span>
+                      <span className="pb-1 text-lg font-semibold text-muted-foreground">/100</span>
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-pine/5 p-3 text-pine">
+                  <div className="rounded-xl bg-surface-raised/5 p-3 text-foreground">
                     <Sparkles className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-[#F8FBF9] p-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-pine">
+                <div className="rounded-xl bg-surface-base p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CalendarClock className="h-4 w-4" />
                     {t('practice.result.completedAt')}
                   </div>
-                  <p className="mt-2 body-text text-sm text-black/70">
+                  <p className="mt-2 body-text text-sm text-muted-foreground">
                     {formatDateTime(result.completedAt, locale)}
                   </p>
                 </div>
 
                 <div>
-                  <h2 className="heading-secondary text-xl text-pine">
+                  <h2 className="heading-secondary text-xl text-foreground">
                     {t('practice.result.summary')}
                   </h2>
-                  <p className="body-text mt-2 text-sm text-black/70">{summaryText}</p>
+                  <p className="body-text mt-2 text-sm text-muted-foreground">{summaryText}</p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl bg-pine/5 p-4">
-                    <h3 className="text-sm font-semibold text-pine">
+                  <div className="rounded-xl bg-surface-raised/5 p-4">
+                    <h3 className="text-sm font-semibold text-foreground">
                       {t('practice.result.strengths')}
                     </h3>
                     <ul className="mt-3 space-y-2">
                       {strengthText.map((item) => (
-                        <li key={item} className="body-text flex gap-2 text-sm text-black/70">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pine" />
+                        <li key={item} className="body-text flex gap-2 text-sm text-muted-foreground">
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-surface-raised" />
                           <span>{item}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="rounded-2xl bg-[#FFF9E2] p-4">
-                    <h3 className="text-sm font-semibold text-pine">
+                  <div className="rounded-xl bg-surface-overlay p-4">
+                    <h3 className="text-sm font-semibold text-foreground">
                       {t('practice.result.weaknesses')}
                     </h3>
                     <ul className="mt-3 space-y-2">
                       {weaknessText.map((item) => (
-                        <li key={item} className="body-text flex gap-2 text-sm text-black/70">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-milk" />
+                        <li key={item} className="body-text flex gap-2 text-sm text-muted-foreground">
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-surface-overlay" />
                           <span>{item}</span>
                         </li>
                       ))}

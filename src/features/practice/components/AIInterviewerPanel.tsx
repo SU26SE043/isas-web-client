@@ -22,21 +22,21 @@ export const AIInterviewerPanel: React.FC = () => {
   const getStateConfig = () => {
     switch (interviewerState) {
       case 'speaking': 
-        return { label: 'Speaking', color: 'bg-green-500', animation: 'animate-pulse' };
+        return { label: 'Speaking', color: 'bg-success', animation: 'animate-pulse' };
       case 'thinking': 
-        return { label: 'Thinking...', color: 'bg-milk', animation: 'animate-ping' };
+        return { label: 'Thinking...', color: 'bg-surface-overlay', animation: 'animate-ping' };
       case 'listening': 
-        return { label: 'Listening', color: 'bg-blue-500', animation: '' };
+        return { label: 'Listening', color: 'bg-info', animation: '' };
     }
   };
 
   const config = getStateConfig();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between h-full relative overflow-hidden">
+    <div className="bg-surface-raised rounded-lg shadow-sm border border-subtle flex flex-col justify-between h-full relative overflow-hidden">
       
       {/* Realistic Avatar Container */}
-      <div className="relative flex-1 w-full bg-slate-900 overflow-hidden">
+      <div className="relative flex-1 w-full bg-surface-base overflow-hidden">
         
         {/* Main Avatar Video Placeholder */}
         <img 
@@ -47,7 +47,7 @@ export const AIInterviewerPanel: React.FC = () => {
         />
 
         {/* Dynamic State Indicator */}
-        <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300">
+        <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-subtle shadow-lg transition-all duration-300">
           <div className="flex items-center justify-center w-3 h-3">
             <div className={`w-2 h-2 rounded-full ${config.color} ${config.animation}`}></div>
           </div>
@@ -56,18 +56,18 @@ export const AIInterviewerPanel: React.FC = () => {
           {/* Voice waveform when speaking */}
           {interviewerState === 'speaking' && (
             <div className="flex items-center gap-0.5 ml-1 h-3">
-              <div className="w-0.5 h-1.5 bg-white/80 rounded-full animate-[bounce_1s_infinite]"></div>
-              <div className="w-0.5 h-3 bg-white/80 rounded-full animate-[bounce_1s_infinite_0.2s]"></div>
-              <div className="w-0.5 h-2 bg-white/80 rounded-full animate-[bounce_1s_infinite_0.4s]"></div>
-              <div className="w-0.5 h-1.5 bg-white/80 rounded-full animate-[bounce_1s_infinite_0.1s]"></div>
+              <div className="w-0.5 h-1.5 bg-surface-raised/80 rounded-full animate-[bounce_1s_infinite]"></div>
+              <div className="w-0.5 h-3 bg-surface-raised/80 rounded-full animate-[bounce_1s_infinite_0.2s]"></div>
+              <div className="w-0.5 h-2 bg-surface-raised/80 rounded-full animate-[bounce_1s_infinite_0.4s]"></div>
+              <div className="w-0.5 h-1.5 bg-surface-raised/80 rounded-full animate-[bounce_1s_infinite_0.1s]"></div>
             </div>
           )}
         </div>
 
         {/* Interviewer Info Overlay */}
         <div className="absolute bottom-4 left-4 z-10">
-          <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20 shadow-md">
-            <h2 className="text-white font-bold text-sm drop-shadow-sm">{t('practice.aiName')}</h2>
+          <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg border border-default shadow-md">
+            <h2 className="text-white font-bold text-sm ">{t('practice.aiName')}</h2>
             <p className="text-white/80 text-xs font-medium">{t('practice.aiRole')}</p>
           </div>
         </div>

@@ -17,11 +17,11 @@ export const getRoleDisplayName = (role: UserRole): string => {
 // Get role color for UI
 export const getRoleColor = (role: UserRole): string => {
   const roleColors: Record<UserRole, string> = {
-    [UserRole.ADMIN]: 'bg-red-100 text-red-800',
-    [UserRole.HR]: 'bg-blue-100 text-blue-800',
-    [UserRole.INTERVIEWER]: 'bg-green-100 text-green-800',
-    [UserRole.CANDIDATE]: 'bg-yellow-100 text-yellow-800',
-    [UserRole.GUEST]: 'bg-gray-100 text-gray-800',
+    [UserRole.ADMIN]: 'bg-error-bg text-error',
+    [UserRole.HR]: 'bg-info-bg text-info',
+    [UserRole.INTERVIEWER]: 'bg-success-bg text-success',
+    [UserRole.CANDIDATE]: 'bg-warning-bg text-warning',
+    [UserRole.GUEST]: 'bg-surface-overlay text-muted-foreground',
   };
   return roleColors[role];
 };

@@ -14,7 +14,7 @@ const statusConfig = {
     label: 'practice.history.status.inProgress',
   },
   pending: {
-    badge: 'bg-slate-100 text-slate-500',
+    badge: 'bg-surface-overlay text-muted-foreground',
     label: 'practice.history.status.pending',
   },
 };
@@ -25,11 +25,11 @@ const getCompanyInitials = (company: string) => {
 
 const getCompanyColor = (index: number) => {
   const colors = [
-    'bg-blue-600',
-    'bg-purple-600',
-    'bg-orange-600',
-    'bg-emerald-600',
-    'bg-indigo-600',
+    'bg-surface-raised',
+    'bg-surface-overlay',
+    'bg-surface-elevated',
+    'bg-surface-highlight',
+    'bg-surface-base0',
   ];
   return colors[index % colors.length];
 };
@@ -149,22 +149,22 @@ export const InterviewHistoryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pine"></div>
+      <div className="h-screen flex items-center justify-center bg-surface-raised">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-subtle"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-surface-raised overflow-hidden">
       {/* Header Section */}
       <div className="flex-shrink-0 relative h-28 md:h-32 bg-gradient-to-r from-[#F0FDF4] to-[#DCFCE7] overflow-hidden">
         <div className="absolute inset-0 right-0 bg-[url('/history-bg.jpg')] bg-right bg-no-repeat bg-contain opacity-50"></div>
         <div className="absolute inset-0 px-8 flex flex-col justify-center z-10 max-w-[1400px] mx-auto w-full">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
             {t('practice.history.title')}
           </h1>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             {t('practice.history.subtitle')}
           </p>
         </div>
@@ -177,14 +177,14 @@ export const InterviewHistoryPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-4 pr-10 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-slate-300 appearance-none shadow-sm cursor-pointer"
+              className="w-full pl-4 pr-10 py-2 border border-subtle rounded-lg text-sm bg-surface-raised focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] appearance-none shadow-sm cursor-pointer"
             >
               <option value="">{t('practice.history.filterStatus')}</option>
               <option value="completed">{t('practice.history.status.completed')}</option>
               <option value="in-progress">{t('practice.history.status.inProgress')}</option>
               <option value="pending">{t('practice.history.status.pending')}</option>
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -192,7 +192,7 @@ export const InterviewHistoryPage: React.FC = () => {
           </div>
           <button
             onClick={handleRefresh}
-            className="flex items-center justify-center w-10 h-10 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-all shadow-sm"
+            className="flex items-center justify-center w-10 h-10 bg-surface-raised border border-subtle text-muted-foreground rounded-lg hover:bg-surface-overlay transition-all shadow-sm"
             aria-label={t('practice.history.refresh')}
             title={t('practice.history.refresh')}
           >
@@ -204,51 +204,51 @@ export const InterviewHistoryPage: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="flex-shrink-0 grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-[#F4F8FF] rounded-xl p-4 flex items-center border border-transparent">
-            <div className="w-12 h-12 rounded-lg bg-[#E0EFFF] text-blue-600 flex items-center justify-center mr-4 shadow-sm shrink-0">
+          <div className="bg-surface-raised rounded-xl p-4 flex items-center border border-subtle">
+            <div className="w-12 h-12 rounded-lg bg-surface-overlay text-muted-foreground flex items-center justify-center mr-4 shadow-sm shrink-0">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
             <div>
-              <p className="text-[11px] md:text-xs text-slate-600 font-medium mb-0.5">{t('practice.history.totalInterviews')}</p>
-              <p className="text-xl md:text-2xl font-bold text-blue-600 leading-none">{stats.total}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground font-medium mb-0.5">{t('practice.history.totalInterviews')}</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground leading-none">{stats.total}</p>
             </div>
           </div>
           
-          <div className="bg-[#F0FDF4] rounded-xl p-4 flex items-center border border-transparent">
-            <div className="w-12 h-12 rounded-lg bg-[#DCFCE7] text-emerald-600 flex items-center justify-center mr-4 shadow-sm shrink-0">
+          <div className="bg-surface-raised rounded-xl p-4 flex items-center border border-subtle">
+            <div className="w-12 h-12 rounded-lg bg-surface-overlay text-muted-foreground flex items-center justify-center mr-4 shadow-sm shrink-0">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <div>
-              <p className="text-[11px] md:text-xs text-slate-600 font-medium mb-0.5">{t('practice.history.completed')}</p>
-              <p className="text-xl md:text-2xl font-bold text-emerald-600 leading-none">{stats.completed}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground font-medium mb-0.5">{t('practice.history.completed')}</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground leading-none">{stats.completed}</p>
             </div>
           </div>
 
-          <div className="bg-[#FFFBEB] rounded-xl p-4 flex items-center border border-transparent">
-            <div className="w-12 h-12 rounded-lg bg-[#FEF3C7] text-amber-500 flex items-center justify-center mr-4 shadow-sm shrink-0">
+          <div className="bg-surface-raised rounded-xl p-4 flex items-center border border-subtle">
+            <div className="w-12 h-12 rounded-lg bg-surface-overlay text-muted-foreground flex items-center justify-center mr-4 shadow-sm shrink-0">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <p className="text-[11px] md:text-xs text-slate-600 font-medium mb-0.5">{t('practice.history.averageScore')}</p>
-              <p className="text-xl md:text-2xl font-bold text-amber-500 leading-none">{stats.avgScore}%</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground font-medium mb-0.5">{t('practice.history.averageScore')}</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground leading-none">{stats.avgScore}%</p>
             </div>
           </div>
 
-          <div className="bg-[#FAF5FF] rounded-xl p-4 flex items-center border border-transparent">
-            <div className="w-12 h-12 rounded-lg bg-[#F3E8FF] text-purple-600 flex items-center justify-center mr-4 shadow-sm shrink-0">
+          <div className="bg-surface-raised rounded-xl p-4 flex items-center border border-subtle">
+            <div className="w-12 h-12 rounded-lg bg-surface-overlay text-muted-foreground flex items-center justify-center mr-4 shadow-sm shrink-0">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-[11px] md:text-xs text-slate-600 font-medium mb-0.5">{t('practice.history.inProgress')}</p>
-              <p className="text-xl md:text-2xl font-bold text-purple-600 leading-none">{stats.inProgress}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground font-medium mb-0.5">{t('practice.history.inProgress')}</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground leading-none">{stats.inProgress}</p>
             </div>
           </div>
         </div>
@@ -259,7 +259,7 @@ export const InterviewHistoryPage: React.FC = () => {
             paginatedInterviews.map((interview, index) => (
               <div
                 key={interview.id}
-                className="flex items-center border border-slate-200 rounded-xl px-5 py-4 bg-white hover:shadow-md transition-all cursor-pointer group shrink-0"
+                className="flex items-center border border-subtle rounded-xl px-5 py-4 bg-surface-raised hover:shadow-md transition-all cursor-pointer group shrink-0"
                 onClick={() => handleInterviewClick(interview.id)}
               >
                 {/* Avatar & Title */}
@@ -268,10 +268,10 @@ export const InterviewHistoryPage: React.FC = () => {
                     {getCompanyInitials(interview.jobTitle || interview.company)}
                   </div>
                   <div className="ml-4 truncate">
-                    <h3 className="font-bold text-slate-800 text-[15px] group-hover:text-pine transition-colors truncate">
+                    <h3 className="font-bold text-foreground text-[15px] group-hover:text-foreground transition-colors truncate">
                       {interview.jobTitle}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">{interview.company}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{interview.company}</p>
                   </div>
                 </div>
 
@@ -279,28 +279,28 @@ export const InterviewHistoryPage: React.FC = () => {
                 <div className="flex-1 flex items-center justify-between px-4">
                   {/* Date */}
                   <div className="w-36 flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">{t('practice.history.date')}</span>
-                    <div className="flex items-center text-[13px] text-slate-600 font-medium">
-                      <CalendarIcon className="w-3.5 h-3.5 text-slate-400 mr-1.5"/>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1.5">{t('practice.history.date')}</span>
+                    <div className="flex items-center text-[13px] text-muted-foreground font-medium">
+                      <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground mr-1.5"/>
                       {formatDate(interview.date)}
                     </div>
                   </div>
 
                   {/* Duration */}
                   <div className="w-24 flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">{t('practice.history.duration')}</span>
-                    <div className="flex items-center text-[13px] text-slate-600 font-medium">
-                      <ClockIcon className="w-3.5 h-3.5 text-slate-400 mr-1.5"/>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1.5">{t('practice.history.duration')}</span>
+                    <div className="flex items-center text-[13px] text-muted-foreground font-medium">
+                      <ClockIcon className="w-3.5 h-3.5 text-muted-foreground mr-1.5"/>
                       {formatDuration(interview.duration)}
                     </div>
                   </div>
 
                   {/* Score */}
                   <div className="w-24 flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">{t('practice.history.score')}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1.5">{t('practice.history.score')}</span>
                     <div className="flex items-center text-[13px] font-bold">
-                      <StarIcon className={`w-3.5 h-3.5 mr-1.5 ${interview.overallScore > 0 ? 'text-emerald-500' : 'text-slate-300'}`}/>
-                      <span className={interview.overallScore > 0 ? 'text-emerald-600' : 'text-slate-400'}>
+                      <StarIcon className={`w-3.5 h-3.5 mr-1.5 ${interview.overallScore > 0 ? 'text-emerald-500' : 'text-muted-foreground'}`}/>
+                      <span className={interview.overallScore > 0 ? 'text-emerald-600' : 'text-muted-foreground'}>
                         {interview.overallScore > 0 ? `${interview.overallScore}%` : '-'}
                       </span>
                     </div>
@@ -312,18 +312,18 @@ export const InterviewHistoryPage: React.FC = () => {
                   <span className={`px-3.5 py-1.5 rounded-full text-xs font-semibold ${statusConfig[interview.status].badge}`}>
                     {getStatusLabel(interview.status)}
                   </span>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 group-hover:border-slate-300 group-hover:bg-slate-50 transition-colors">
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-subtle text-muted-foreground group-hover:border-default group-hover:bg-surface-overlay transition-colors">
                     <ChevronRightIcon className="w-4 h-4"/>
                   </button>
                 </div>
               </div>
             ))
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-400">
-              <svg className="w-12 h-12 mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex-1 flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <svg className="w-12 h-12 mb-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm font-semibold text-slate-600">{t('practice.history.emptyTitle')}</p>
+              <p className="text-sm font-semibold text-muted-foreground">{t('practice.history.emptyTitle')}</p>
               <p className="text-xs mt-1">{t('practice.history.emptyDesc')}</p>
             </div>
           )}
@@ -331,16 +331,16 @@ export const InterviewHistoryPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 0 && (
-          <div className="flex-shrink-0 pt-5 flex items-center justify-between border-t border-slate-100 mt-2">
+          <div className="flex-shrink-0 pt-5 flex items-center justify-between border-t border-subtle mt-2">
             <div className="w-32"></div> {/* Spacer for center alignment */}
             
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 rounded-lg border border-subtle flex items-center justify-center hover:bg-surface-overlay disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
@@ -352,7 +352,7 @@ export const InterviewHistoryPage: React.FC = () => {
                   className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
                     currentPage === page
                       ? 'bg-[#DCFCE7] text-emerald-700 font-bold border border-transparent'
-                      : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                      : 'text-muted-foreground hover:bg-surface-overlay border border-transparent'
                   }`}
                 >
                   {page}
@@ -362,18 +362,18 @@ export const InterviewHistoryPage: React.FC = () => {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 rounded-lg border border-subtle flex items-center justify-center hover:bg-surface-overlay disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronRightIcon className="w-4 h-4 text-slate-500" />
+                <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
             <div className="w-32 flex justify-end">
               <div className="relative">
-                <select className="pl-3 pr-8 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-600 bg-white appearance-none focus:outline-none cursor-pointer shadow-sm">
+                <select className="pl-3 pr-8 py-1.5 border border-subtle rounded-lg text-xs text-muted-foreground bg-surface-raised appearance-none focus:outline-none cursor-pointer shadow-sm">
                   <option>{itemsPerPage} / trang</option>
                 </select>
-                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>

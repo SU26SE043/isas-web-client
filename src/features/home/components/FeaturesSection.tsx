@@ -9,7 +9,7 @@ export const FeaturesSection: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-surface-raised">
       <div className="w-full px-6 lg:px-20 xl:px-32">
         <motion.div 
           className="text-center mb-20"
@@ -18,8 +18,8 @@ export const FeaturesSection: React.FC = () => {
           viewport={{ once: false, margin: "-50px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-5xl font-extrabold text-pine mb-6">{t('features.title')}</h2>
-          <p className="text-xl text-black/70 max-w-3xl mx-auto leading-relaxed">
+          <h2 className="text-4xl heading-primary mb-6">{t('features.title')}</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             {t('features.description')}
           </p>
         </motion.div>
@@ -27,14 +27,14 @@ export const FeaturesSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* CV Analysis Card */}
           <motion.div 
-            className="bg-pine rounded-xl p-8 hover:shadow-2xl hover:shadow-pine/30 transition-all group flex flex-col"
+            className="bg-surface-raised rounded-xl p-8 hover:border-default transition-all group flex flex-col"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: false, margin: "-50px" }}
             transition={{ duration: 0.7 }}
           >
             {/* CV Illustration (Top) */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 mb-8 relative overflow-hidden flex justify-center items-center min-h-[360px]">
+            <div className="bg-surface-overlay/50 backdrop-blur-sm rounded-xl p-8 mb-8 relative overflow-hidden flex justify-center items-center min-h-[360px]">
               {/* Custom animation style */}
               <style>{`
                 @keyframes scan {
@@ -46,79 +46,79 @@ export const FeaturesSection: React.FC = () => {
               `}</style>
 
               {/* Decorative Background */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-milk rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-pine rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-surface-overlay rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-surface-raised rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
 
               {/* CV Document Base */}
-              <div className="w-64 md:w-72 bg-white rounded-lg shadow-2xl p-6 md:p-8 relative border border-slate-100 transform group-hover:-translate-y-3 transition-transform duration-700 z-10">
+              <div className="w-64 md:w-72 bg-surface-raised rounded-lg shadow-md p-6 md:p-8 relative border border-subtle transform group-hover:-translate-y-3 transition-transform duration-700 z-10">
                 {/* CV Content */}
                 <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 rounded-full bg-pine/10 border-2 border-pine/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-8 h-8 text-pine" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 rounded-full bg-surface-overlay/40 border-2 border-default flex items-center justify-center flex-shrink-0">
+                    <svg className="w-8 h-8 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <div className="space-y-3 flex-grow">
-                    <div className="w-3/4 h-3.5 bg-slate-200 rounded-full"></div>
-                    <div className="w-1/2 h-2.5 bg-slate-100 rounded-full"></div>
+                    <div className="w-3/4 h-3.5 bg-surface-highlight rounded-full"></div>
+                    <div className="w-1/2 h-2.5 bg-surface-overlay rounded-full"></div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <div className="w-1/3 h-3 bg-slate-200 rounded-full"></div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full"></div>
-                    <div className="w-5/6 h-2 bg-slate-100 rounded-full"></div>
+                    <div className="w-1/3 h-3 bg-surface-highlight rounded-full"></div>
+                    <div className="w-full h-2 bg-surface-overlay rounded-full"></div>
+                    <div className="w-5/6 h-2 bg-surface-overlay rounded-full"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="w-1/3 h-3 bg-slate-200 rounded-full"></div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full"></div>
-                    <div className="w-4/6 h-2 bg-slate-100 rounded-full"></div>
+                    <div className="w-1/3 h-3 bg-surface-highlight rounded-full"></div>
+                    <div className="w-full h-2 bg-surface-overlay rounded-full"></div>
+                    <div className="w-4/6 h-2 bg-surface-overlay rounded-full"></div>
                   </div>
                 </div>
 
                 {/* AI Scanner Overlay */}
                 <div
-                  className="absolute left-[-15%] right-[-15%] h-16 bg-gradient-to-b from-transparent via-brand-yellow/20 to-transparent border-y border-milk/80 transform -translate-y-1/2 flex items-center justify-center z-20 pointer-events-none"
+                  className="absolute left-[-15%] right-[-15%] h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent border-y border-default transform -translate-y-1/2 flex items-center justify-center z-20 pointer-events-none"
                   style={{ animation: 'scan 3s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate' }}
                 >
-                  <div className="absolute w-full h-[2px] bg-milk shadow-[0_0_15px_4px_rgba(254,199,0,0.8)]"></div>
+                  <div className="absolute w-full h-[2px] bg-surface-overlay shadow-[0_0_15px_4px_rgba(209,213,219,0.8)]"></div>
 
                   {/* Scanning metrics overlay (floating near the scanner) */}
-                  <div className="absolute right-4 -top-8 bg-milk/90 backdrop-blur-md text-pine font-bold text-[10px] font-mono px-3 py-1 rounded shadow-lg border border-milk flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 bg-pine rounded-full animate-ping"></div>
+                  <div className="absolute right-4 -top-8 bg-surface-overlay/90 backdrop-blur-md text-foreground font-bold text-[10px] font-mono px-3 py-1 rounded border border-default flex items-center space-x-1">
+                    <div className="w-1.5 h-1.5 bg-surface-raised rounded-full animate-ping"></div>
                     <span>{t('features.scanning')}</span>
                   </div>
                 </div>
 
                 {/* AI Match Badge */}
-                <div className="absolute -right-6 -bottom-6 bg-white rounded-lg shadow-2xl border border-milk/30 p-4 flex items-center space-x-3 z-30 transform group-hover:scale-110 transition-transform duration-500">
-                  <div className="w-10 h-10 bg-pine/10 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-pine" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="absolute -right-6 -bottom-6 bg-surface-raised rounded-lg border border-subtle p-4 flex items-center space-x-3 z-30 transform group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-10 h-10 bg-surface-overlay/40 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
-                    <div className="text-xs text-black/70 font-bold uppercase tracking-wider mb-0.5">{t('features.aiRating')}</div>
-                    <div className="text-lg font-extrabold text-pine">95% {t('features.match')}</div>
+                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-0.5">{t('features.aiRating')}</div>
+                    <div className="text-lg font-extrabold text-foreground">95% {t('features.match')}</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="flex-grow flex flex-col">
-              <div className="w-12 h-12 bg-white/10 rounded-xl shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-6 h-6 text-milk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-surface-overlay/40 rounded-xl shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">{t('features.cvTitle')}</h3>
-              <p className="text-lg text-white/80 mb-8 leading-relaxed">
+              <h3 className="text-2xl heading-secondary mb-4">{t('features.cvTitle')}</h3>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 {t('features.cvDescription')}
               </p>
               <button
                 onClick={() => navigate('/cv-analysis')}
-                className="btn-slice mt-auto px-8 py-4 text-lg shadow-lg shadow-brand-yellow/30"
+                className="btn-slice mt-auto px-8 py-4 text-lg"
               >
                 <span className="text">{t('hero.tryNow')} <span className="ml-2">→</span></span>
               </button>
@@ -127,32 +127,32 @@ export const FeaturesSection: React.FC = () => {
 
           {/* Radar Chart Card */}
           <motion.div 
-            className="bg-pine rounded-xl p-8 hover:shadow-2xl hover:shadow-pine/30 transition-all group flex flex-col"
+            className="bg-surface-raised rounded-xl p-8 hover:border-default transition-all group flex flex-col"
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: false, margin: "-50px" }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <div className="flex-grow">
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-6 h-6 text-milk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-surface-overlay/40 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">{t('features.radarTitle')}</h3>
-              <p className="text-lg text-white/80 mb-6 leading-relaxed">
+              <h3 className="text-2xl heading-secondary mb-4">{t('features.radarTitle')}</h3>
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 {t('features.radarDescription')}
               </p>
             </div>
 
             {/* Detailed Radar Chart Visual */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 flex justify-center items-center mt-auto">
-              <svg viewBox="0 0 400 400" className="w-full h-full max-w-[360px] drop-shadow-2xl">
+            <div className="bg-surface-overlay/50 backdrop-blur-sm rounded-xl p-8 flex justify-center items-center mt-auto">
+              <svg viewBox="0 0 400 400" className="w-full h-full max-w-[360px] drop-shadow-md">
                 {/* Defs for gradients and filters */}
                 <defs>
                   <linearGradient id="radarFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-milk)" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="var(--color-milk)" stopOpacity="0.05" />
+                    <stop offset="0%" stopColor="#F3F4F6" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#F3F4F6" stopOpacity="0.05" />
                   </linearGradient>
                   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="4" result="blur" />
@@ -183,7 +183,7 @@ export const FeaturesSection: React.FC = () => {
                 {/* Data Polygon */}
                 <polygon
                   fill="url(#radarFill)"
-                  stroke="var(--color-milk)"
+                  stroke="#D1D5DB"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
                   filter="url(#glow)"
@@ -202,7 +202,7 @@ export const FeaturesSection: React.FC = () => {
                 </polygon>
 
                 {/* Data Points (Dots) */}
-                <g fill="var(--color-milk)" stroke="#ffffff" strokeWidth="2">
+                <g fill="#D1D5DB" stroke="#ffffff" strokeWidth="2">
                   <circle r="6">
                     <animate attributeName="cx" dur="4s" repeatCount="indefinite" values="200; 200; 200" />
                     <animate attributeName="cy" dur="4s" repeatCount="indefinite" values="60; 140; 60" />

@@ -25,26 +25,26 @@ export const ProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pine"></div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-base">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-subtle"></div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-surface-base">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">{t('profile.userNotFound')}</h2>
-          <p className="text-slate-600">{t('profile.pleaseLoginAgain')}</p>
+          <h2 className="text-2xl font-bold text-foreground mb-4">{t('profile.userNotFound')}</h2>
+          <p className="text-muted-foreground">{t('profile.pleaseLoginAgain')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="w-full px-8 py-8">
+    <main className="min-h-screen surface-base">
+      <div className="page-container dashboard-content">
         <ProfileHeader
           fullName={user.fullName}
           email={user.email}

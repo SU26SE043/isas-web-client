@@ -18,6 +18,7 @@ The skill is project-scoped; do not use a global copy as the source of truth.
 This repo uses Harness. Before work, read:
 
 - `README.md`
+- `docs/UI_GUIDE.md` (bắt buộc trước khi generate/sửa giao diện)
 - `docs/HARNESS.md`
 - `docs/FEATURE_INTAKE.md`
 - `docs/ARCHITECTURE.md`
@@ -34,11 +35,26 @@ capability is a clean skip.
 
 ## UI Generation Guardrails
 
-When generating UI in this frontend project:
+**Đọc `docs/UI_GUIDE.md` trước khi generate hoặc sửa giao diện.**
+
+### Monochrome Design System (bắt buộc)
+
+Giao diện **luôn dark mode**, chỉ dùng **White, Black, Gray** cho UI cấu trúc. Không có light mode / theme toggle.
+
+| Phạm vi | Quy tắc |
+|---------|---------|
+| Background, Sidebar, Header, Card, Modal, Button, Input, Table, Tabs, Typography, Border, Shadow, Icon, Hover/Focus/Active | Chỉ monochrome |
+| Success / Error / Warning / Info | Giữ semantic colors (green/red/orange/blue) |
+| Toast, Alert, validation errors, progress, charts, status badges | Giữ semantic colors |
+
+Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base` → `surface-elevated`. Primitives: `src/components/ui`.
+
+### Code conventions
 
 - Prefer components from `src/components/ui` first.
 - Reuse utility function `cn()` from `src/lib/utils`.
-- Keep styling in Tailwind utility classes and existing design tokens.
+- Use `.btn-primary`, `.btn-secondary`, `.btn-ghost` utility classes when appropriate.
+- Keep styling in Tailwind gray scale and CSS variables — no hardcoded brand hex.
 - Prefer `react-hook-form` + `zod` for forms.
 - Prefer `@tanstack/react-query` for async server state.
 

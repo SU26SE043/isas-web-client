@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
 
@@ -8,16 +8,15 @@ type NavItem = {
   label: string;
   icon: React.ReactNode;
   end?: boolean;
-  permission?: string;
 };
 
 const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
   [
-    'group relative flex items-center rounded-xl text-sm font-medium transition-all duration-300 ease-in-out outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-pine',
-    isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3 text-left',
+    'group relative flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
+    isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 text-left',
     isActive
-      ? 'bg-[#FACC15] text-gray-900 font-bold shadow-[0_8px_24px_rgba(250,204,21,0.2)]'
-      : 'text-white/80 hover:bg-white/10 hover:text-white',
+      ? 'bg-surface-elevated text-foreground shadow-sm'
+      : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
   ].join(' ');
 
 export const DashboardLayout: React.FC = () => {
@@ -37,7 +36,7 @@ export const DashboardLayout: React.FC = () => {
         to: '/profile',
         label: t('profile.navProfile'),
         icon: (
-          <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         ),
@@ -46,7 +45,7 @@ export const DashboardLayout: React.FC = () => {
         to: '/practice/history',
         label: t('profile.navInterviewHistory'),
         icon: (
-          <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         ),
@@ -56,24 +55,28 @@ export const DashboardLayout: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
+    <div className="min-h-screen surface-base">
       <div className="flex min-h-screen">
         <aside
           className={[
-            'sticky top-0 flex h-screen shrink-0 flex-col border-r border-white/10 bg-pine text-white shadow-xl transition-[width] duration-300 ease-in-out',
-            isCollapsed ? 'w-20' : 'w-64',
+            'sticky top-0 flex h-screen shrink-0 flex-col border-r border-subtle bg-surface-sunken transition-[width] duration-300 ease-out',
+            isCollapsed ? 'w-[4.5rem]' : 'w-60',
           ].join(' ')}
         >
-          <div className="flex items-center justify-end gap-3 px-4 pt-4 pb-3">
+          <div className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-between gap-2'}`}>
+            {!isCollapsed ? (
+              <Link to="/" className="focus-ring rounded-md">
+                <img alt="ISAS" className="h-7 w-auto" src="/logo-horizontal-white.png" />
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => setIsCollapsed((value) => !value)}
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               aria-pressed={isCollapsed}
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]/70"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-surface-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 {isCollapsed ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 ) : (
@@ -83,8 +86,8 @@ export const DashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <nav className="flex-1 px-4 py-4">
-            <div className="space-y-2">
+          <nav className="flex-1 px-3 py-4" aria-label="Dashboard">
+            <div className="space-y-1">
               {navItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -94,10 +97,10 @@ export const DashboardLayout: React.FC = () => {
                   aria-label={item.label}
                   end={item.end}
                 >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center">{item.icon}</span>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>
                   <span
                     className={[
-                      'overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out',
+                      'overflow-hidden whitespace-nowrap transition-all duration-300',
                       isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
                     ].join(' ')}
                     aria-hidden={isCollapsed}
@@ -105,7 +108,7 @@ export const DashboardLayout: React.FC = () => {
                     {item.label}
                   </span>
                   {isCollapsed ? (
-                    <span className="pointer-events-none absolute left-full ml-3 hidden rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
+                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-md border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
                       {item.label}
                     </span>
                   ) : null}
@@ -114,7 +117,7 @@ export const DashboardLayout: React.FC = () => {
             </div>
           </nav>
 
-          <div className="border-t border-white/10 p-4">
+          <div className="border-t border-subtle p-3">
             <button
               type="button"
               onClick={handleLogout}
@@ -122,28 +125,23 @@ export const DashboardLayout: React.FC = () => {
               aria-label={t('profile.logout')}
               className={navLinkClassName(false, isCollapsed)}
             >
-              <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span
                 className={[
-                  'overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out',
+                  'overflow-hidden whitespace-nowrap transition-all duration-300',
                   isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
                 ].join(' ')}
                 aria-hidden={isCollapsed}
               >
                 {t('profile.logout')}
               </span>
-              {isCollapsed ? (
-                <span className="pointer-events-none absolute left-full ml-3 hidden rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
-                  {t('profile.logout')}
-                </span>
-              ) : null}
             </button>
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden transition-all duration-300 ease-in-out">
+        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
           <Outlet />
         </main>
       </div>

@@ -38,16 +38,16 @@ export const AvatarDropdown: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 bg-pine text-white rounded-full hover:bg-pine/90 transition-colors"
+        className="flex items-center justify-center w-10 h-10 bg-surface-raised text-white rounded-full hover:bg-surface-overlay transition-colors"
       >
         {getInitials(user.fullName)}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
-          <div className="px-4 py-3 border-b border-slate-100">
-            <p className="text-sm font-medium text-slate-900">{user.fullName}</p>
-            <p className="text-sm text-slate-500 mb-2">{user.email}</p>
+        <div className="absolute right-0 mt-2 w-72 bg-surface-raised rounded-lg border border-subtle py-2 z-50">
+          <div className="px-4 py-3 border-b border-subtle">
+            <p className="text-sm font-medium text-foreground">{user.fullName}</p>
+            <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
               {getRoleDisplayName(user.role)}
             </span>
@@ -56,7 +56,7 @@ export const AvatarDropdown: React.FC = () => {
           <div className="py-1">
             <Link
               to="/profile"
-              className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:bg-surface-overlay transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ export const AvatarDropdown: React.FC = () => {
 
             <Link
               to="/dashboard"
-              className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:bg-surface-overlay transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,14 +79,14 @@ export const AvatarDropdown: React.FC = () => {
 
 
 
-            <div className="border-t border-slate-100 my-1"></div>
+            <div className="border-t border-subtle my-1"></div>
             
             <button
               onClick={() => {
                 logout();
                 setIsOpen(false);
               }}
-              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center w-full px-4 py-2 text-sm text-error hover:bg-error-bg transition-colors"
             >
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

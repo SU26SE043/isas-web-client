@@ -23,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-subtle"></div>
       </div>
     );
   }
@@ -39,11 +39,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Không có quyền truy cập</h2>
-          <p className="text-slate-600 mb-6">Vai trò của bạn không được phép truy cập trang này.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Không có quyền truy cập</h2>
+          <p className="text-muted-foreground mb-6">Vai trò của bạn không được phép truy cập trang này.</p>
           <button
             onClick={() => window.history.back()}
-            className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/90 transition-colors"
+            className="btn-primary px-6 py-2"
           >
             Quay lại
           </button>

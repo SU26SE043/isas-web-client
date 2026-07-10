@@ -13,37 +13,41 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-milk/95 backdrop-blur-md">
-        <div className="w-full px-6 lg:px-20 xl:px-32">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <div className="flex-shrink-0 flex items-center">
-              <Link to="/">
-                <img alt="ISAS Logo" className="h-14 w-auto object-contain" src="/logo-horizontal-white.png" />
+      <header className="sticky top-0 z-50 border-b border-subtle bg-surface-base/80 backdrop-blur-xl">
+        <div className="page-container">
+          <div className="flex h-16 items-center justify-between gap-6">
+            <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
+              <img
+                alt="ISAS Logo"
+                className="h-8 w-auto object-contain"
+                src="/logo-horizontal-white.png"
+              />
+            </Link>
+
+            <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
+              <Link className="nav-link focus-ring rounded-md" to="/">
+                {t('nav.home')}
               </Link>
-            </div>
+              <Link className="nav-link focus-ring rounded-md" to="/profile">
+                {t('nav.profile')}
+              </Link>
+            </nav>
 
-            {/* Menu Links */}
-            <div className="hidden md:flex space-x-10 items-center">
-              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/">{t('nav.home')}</Link>
-              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/dashboard">{t('nav.dashboard')}</Link>
-              <Link className="text-lg text-black hover:text-pine transition-colors font-medium heading-secondary" to="/profile">{t('nav.profile')}</Link>
-            </div>
-
-            {/* Auth Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               <LanguageToggle />
               {isAuthenticated ? (
                 <AvatarDropdown />
               ) : (
                 <>
                   <button
+                    type="button"
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="bg-white text-pine border-2 border-white rounded-lg px-[22px] py-[10px] font-bold hover:bg-white/90 transition-all"
+                    className="btn-secondary hidden sm:inline-flex"
                   >
                     {t('nav.signIn')}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setIsAuthModalOpen(true)}
                     className="btn-primary"
                   >
@@ -54,7 +58,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
       <AuthModal
         isOpen={isAuthModalOpen}

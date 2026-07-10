@@ -11,7 +11,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ isSignUp, onSignUpClic
   const { t } = useLanguage();
 
   return (
-    <div className={`absolute top-0 left-1/2 w-1/2 h-full transition-all duration-700 ease-in-out z-20 overflow-hidden ${isSignUp ? '-translate-x-full bg-pine text-white' : 'translate-x-0 bg-milk text-pine'}`}>
+    <div className={`absolute top-0 left-1/2 w-1/2 h-full transition-all duration-700 ease-in-out z-20 overflow-hidden ${isSignUp ? '-translate-x-full bg-surface-raised text-white' : 'translate-x-0 bg-surface-overlay text-foreground'}`}>
       
       {/* Overlay Background Pattern (Optional styling) */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
@@ -19,13 +19,13 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ isSignUp, onSignUpClic
       <div className="relative w-full h-full">
         {/* Right Overlay Panel (For Sign In mode) */}
         <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 text-center transition-all duration-700 delay-100 ${isSignUp ? 'translate-x-[20%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
-          <h1 className="text-4xl font-extrabold mb-4">{t('auth.helloTitle')}</h1>
-          <p className="text-base text-pine/80 mb-10 font-medium leading-relaxed">
+          <h1 className="text-4xl heading-primary mb-4">{t('auth.helloTitle')}</h1>
+          <p className="text-base text-muted-foreground mb-10 font-medium leading-relaxed">
             {t('auth.helloDescription')}
           </p>
           <button 
             onClick={onSignUpClick}
-            className="bg-pine text-milk px-14 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-pine/90 active:scale-95 transition-all shadow-lg shadow-pine/30"
+            className="btn-secondary uppercase tracking-wider px-14"
           >
             {t('auth.signUp')}
           </button>
@@ -33,13 +33,13 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ isSignUp, onSignUpClic
 
         {/* Left Overlay Panel (For Sign Up mode) */}
         <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 text-center transition-all duration-700 delay-100 ${isSignUp ? 'translate-x-0 opacity-100' : '-translate-x-[20%] opacity-0 pointer-events-none'}`}>
-          <h1 className="text-4xl font-extrabold mb-4">{t('auth.welcomeBackTitle')}</h1>
+          <h1 className="text-4xl heading-primary mb-4">{t('auth.welcomeBackTitle')}</h1>
           <p className="text-base text-white/80 mb-10 font-medium leading-relaxed">
             {t('auth.welcomeBackDescription')}
           </p>
           <button 
             onClick={onSignInClick}
-            className="bg-milk text-pine px-14 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-milk/90 active:scale-95 transition-all shadow-lg shadow-milk/30"
+            className="btn-secondary uppercase tracking-wider px-14"
           >
             {t('auth.signInTitle')}
           </button>

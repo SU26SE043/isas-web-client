@@ -8,7 +8,7 @@ import { InterviewControls } from '../components/InterviewControls';
 
 export const PracticeInterviewPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#F4F7F6] font-sans flex flex-col pb-24">
+    <div className="min-h-screen surface-base font-sans flex flex-col pb-24">
       {/* Header */}
       <InterviewHeader />
 

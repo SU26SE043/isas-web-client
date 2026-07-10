@@ -66,14 +66,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
       onSubmit={handleSubmit}
       className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${isSignUp ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}
     >
-      <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">{t('auth.signUpTitle')}</h1>
+      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
       
       {/* Google Login */}
       <div className="w-full mb-6">
         <button 
           type="button"
           onClick={(e) => { e.preventDefault(); authService.loginWithGoogle(); }}
-          className="w-full h-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:border-pine hover:text-pine hover:bg-pine/5 transition-colors font-bold space-x-2"
+          className="w-full h-12 rounded-xl border border-subtle flex items-center justify-center text-muted-foreground hover:border-default hover:text-foreground hover:bg-surface-overlay/50 transition-colors font-bold space-x-2"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -85,17 +85,17 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
         </button>
       </div>
 
-      <span className="text-xs text-slate-400 mb-6 font-medium">{t('auth.signUpSubtitle')}</span>
+      <span className="text-xs text-muted-foreground mb-6 font-medium">{t('auth.signUpSubtitle')}</span>
       
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-pine/30 transition-all placeholder:text-slate-400" 
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4" 
         placeholder={t('auth.fullNamePlaceholder')}
         value={fullName}
         onChange={(event) => setFullName(event.target.value)}
         autoComplete="name"
       />
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-pine/30 transition-all placeholder:text-slate-400" 
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4" 
         placeholder="Email"
         type="email"
         value={email}
@@ -103,7 +103,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
         autoComplete="email"
       />
       <input 
-        className="bg-slate-100 border-none px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-pine/30 transition-all placeholder:text-slate-400"
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
         type="password" 
         placeholder={t('auth.password')}
         value={password}
@@ -111,14 +111,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
         autoComplete="new-password"
       />
 
-      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-pine' : 'text-red-500'}`}>
+      <p className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-foreground' : 'text-error'}`}>
         {statusMessage}
       </p>
       
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-milk text-pine px-12 py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-milk/90 active:scale-95 transition-all shadow-lg shadow-milk/30 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+        className="btn-primary w-full uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? t('auth.registering') : t('auth.signUp')}
       </button>
