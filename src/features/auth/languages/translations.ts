@@ -60,6 +60,13 @@ export const authTranslations: TranslationDictionary = {
     'auth.passwordRuleNumber': 'chữ số',
     'auth.passwordRuleSymbol': 'ký tự đặc biệt',
     'auth.sessionExpiredBanner': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+    'auth.verifyEmailTitle': 'Xác minh email',
+    'auth.verifyEmailDescription': 'Kiểm tra hộp thư và nhấp vào liên kết xác minh, hoặc gửi lại email xác minh.',
+    'auth.verifyEmailSuccess': 'Email đã được xác minh. Bạn có thể đăng nhập.',
+    'auth.verifyEmailFailed': 'Liên kết xác minh không hợp lệ hoặc đã hết hạn.',
+    'auth.verifyEmailResend': 'Gửi lại email xác minh',
+    'auth.verifyEmailResent': 'Email xác minh đã được gửi lại.',
+    'auth.verifyEmailResendFailed': 'Không thể gửi lại email xác minh.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -167,6 +174,13 @@ export const authTranslations: TranslationDictionary = {
     'auth.passwordRuleNumber': 'number',
     'auth.passwordRuleSymbol': 'special character',
     'auth.sessionExpiredBanner': 'Your session has expired. Please sign in again.',
+    'auth.verifyEmailTitle': 'Verify email',
+    'auth.verifyEmailDescription': 'Check your inbox and click the verification link, or resend the verification email.',
+    'auth.verifyEmailSuccess': 'Email verified. You can sign in now.',
+    'auth.verifyEmailFailed': 'Verification link is invalid or has expired.',
+    'auth.verifyEmailResend': 'Resend verification email',
+    'auth.verifyEmailResent': 'Verification email has been resent.',
+    'auth.verifyEmailResendFailed': 'Could not resend verification email.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
