@@ -1,11 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
 
 export const HeroSection: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useLanguage();
 
   return (
@@ -33,14 +32,11 @@ export const HeroSection: React.FC = () => {
               {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/cv-analysis')}
-                className="btn-primary"
-              >
-                {t('hero.tryNow')} <span className="ml-2">→</span>
-              </button>
-              <button className="btn-secondary">
-                {t('hero.watchDemo')} <span className="ml-2">⊚</span>
+              <Link to="/register" className="btn-primary">
+                {t('hero.getStarted')}
+              </Link>
+              <button type="button" className="btn-secondary">
+                {t('hero.watchDemo')}
               </button>
             </div>
           </motion.div>
