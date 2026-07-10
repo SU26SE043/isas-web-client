@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('landing smoke', () => {
-  test('home page loads with ISAS branding', async ({ page }) => {
+  test('home page loads with PIpraint branding', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('banner').getByRole('img', { name: 'ISAS Logo' })).toBeVisible();
+    await expect(page.getByRole('banner').getByRole('img', { name: 'PIpraint Logo' })).toBeVisible();
   });
 
   test('login route is reachable', async ({ page }) => {

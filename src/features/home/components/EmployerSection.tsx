@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
@@ -58,18 +59,19 @@ export const EmployerSection: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
+    <section id="enterprise" className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
       {/* Wave Divider */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none transform -translate-y-[99%]">
         <svg 
-          className="w-full h-[60px] md:h-[120px] block" 
+          className="block h-[60px] w-full text-surface-raised md:h-[120px]" 
           viewBox="0 0 1440 100" 
           preserveAspectRatio="none" 
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
         >
           <path 
             d="M0,50 C360,130 1080,-30 1440,50 L1440,105 L0,105 Z" 
-            fill="#111827" 
+            fill="currentColor" 
           />
         </svg>
       </div>
@@ -102,9 +104,9 @@ export const EmployerSection: React.FC = () => {
                 <p className="text-lg text-white/70">{t('employer.reportDescription')}</p>
               </div>
             </div>
-            <button className="btn-accent px-10 py-5 text-lg transition-all">
+            <Link to="/enterprise" className="btn-accent px-10 py-5 text-lg transition-all">
               {t('employer.demo')}
-            </button>
+            </Link>
           </motion.div>
 
           {/* Right Stats Grid */}

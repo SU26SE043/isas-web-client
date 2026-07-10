@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { AuthModal } from '../features/auth/components/AuthModal';
 import { AvatarDropdown } from '../features/auth/components/AvatarDropdown';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -17,11 +18,7 @@ export const Header: React.FC = () => {
         <div className="page-container">
           <div className="flex h-16 items-center justify-between gap-6">
             <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
-              <img
-                alt="ISAS Logo"
-                className="h-8 w-auto object-contain"
-                src="/logo-horizontal-white.png"
-              />
+              <BrandLogo />
             </Link>
 
             <nav className="hidden items-center gap-8 md:flex" aria-label="Main">

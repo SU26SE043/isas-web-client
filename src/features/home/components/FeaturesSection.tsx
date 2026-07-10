@@ -9,7 +9,7 @@ export const FeaturesSection: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section className="py-24 bg-surface-raised">
+    <section id="features" className="py-24 bg-surface-raised">
       <div className="w-full px-6 lg:px-20 xl:px-32">
         <motion.div 
           className="text-center mb-20"
