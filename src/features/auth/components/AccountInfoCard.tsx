@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../../shared/languages';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import { getRoleColor, getRoleDisplayName } from '../utils/rolePermissions';
+import type { UserRoleType } from '../types/auth.types';
 
 interface AccountInfoCardProps {
   userId: string;
   email: string;
+  role: UserRoleType;
   createdAt: string;
   onCopyId: () => void;
 }
@@ -24,7 +27,13 @@ const InfoRow: React.FC<{
   </div>
 );
 
-export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ userId, email, createdAt, onCopyId }) => {
+export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
+  userId,
+  email,
+  role,
+  createdAt,
+  onCopyId,
+}) => {
   const { t } = useLanguage();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
@@ -68,10 +77,9 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ userId, email,
           }
           label={t('profile.role')}
           value={
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">--</span>
-              <span className="text-sm font-medium text-success bg-success-bg px-3 py-1 rounded-full">{t('profile.candidate')}</span>
-            </div>
+            <span className={`text-sm font-medium px-3 py-1 rounded-full ${getRoleColor(role)}`}>
+              {getRoleDisplayName(role)}
+            </span>
           }
         />
         <InfoRow

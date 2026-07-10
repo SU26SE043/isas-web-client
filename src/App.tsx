@@ -19,7 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
            {/* Practice Interview Route - Requires Candidate or Admin role */}
-           <Route element={<ProtectedRoute allowedRoles={[UserRole.CANDIDATE, UserRole.ADMIN]} />}>
+           <Route element={<ProtectedRoute allowedRoles={[UserRole.CANDIDATE]} />}>
              <Route path="/practice" element={<PracticeInterviewPage />} />
              <Route path="/practice/result" element={<InterviewResultPage />} />
              <Route path="/practice/interview/:id" element={<InterviewResultPage />} />

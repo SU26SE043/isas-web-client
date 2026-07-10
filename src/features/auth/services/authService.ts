@@ -1,5 +1,6 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
 import type { AuthTokensResponse, LoginRequest, RegisterRequest, User, UpdateProfileRequest } from '../types/auth.types';
+import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
 
 export const authService = {
@@ -41,11 +42,11 @@ export const authService = {
   },
   me: async () => {
     const { data } = await apiClient.get<User>(authEndpoints.me);
-    return data;
+    return parseUser(data);
   },
   updateProfile: async (payload: UpdateProfileRequest) => {
     const { data } = await apiClient.put<User>(authEndpoints.me, payload);
-    return data;
+    return parseUser(data);
   },
   forgotPassword: async (payload: { email: string }) => {
     const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);

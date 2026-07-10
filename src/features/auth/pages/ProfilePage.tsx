@@ -56,6 +56,7 @@ export const ProfilePage: React.FC = () => {
             <AccountInfoCard
               userId={user.id}
               email={user.email}
+              role={user.role}
               createdAt={user.createdAt}
               onCopyId={() => copyToClipboard(user.id)}
             />

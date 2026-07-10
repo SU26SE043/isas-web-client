@@ -1,29 +1,23 @@
-import { UserRole } from '../types/auth.types';
+import { UserRole, type UserRoleType } from '../types/auth.types';
 
-
-
-// Get role display name
-export const getRoleDisplayName = (role: UserRole): string => {
-  const roleNames: Record<UserRole, string> = {
-    [UserRole.ADMIN]: 'Quản trị viên',
-    [UserRole.HR]: 'Nhân sự',
-    [UserRole.INTERVIEWER]: 'Người phỏng vấn',
-    [UserRole.CANDIDATE]: 'Ứng viên',
+export const getRoleDisplayName = (role: UserRoleType): string => {
+  const roleNames: Record<UserRoleType, string> = {
     [UserRole.GUEST]: 'Khách',
+    [UserRole.CANDIDATE]: 'Ứng viên',
+    [UserRole.HR]: 'Nhân sự',
+    [UserRole.ORGANIZE]: 'Quản trị tổ chức',
+    [UserRole.ADMIN]: 'Quản trị viên',
   };
   return roleNames[role];
 };
 
-// Get role color for UI
-export const getRoleColor = (role: UserRole): string => {
-  const roleColors: Record<UserRole, string> = {
-    [UserRole.ADMIN]: 'bg-error-bg text-error',
-    [UserRole.HR]: 'bg-info-bg text-info',
-    [UserRole.INTERVIEWER]: 'bg-success-bg text-success',
-    [UserRole.CANDIDATE]: 'bg-warning-bg text-warning',
+export const getRoleColor = (role: UserRoleType): string => {
+  const roleColors: Record<UserRoleType, string> = {
     [UserRole.GUEST]: 'bg-surface-overlay text-muted-foreground',
+    [UserRole.CANDIDATE]: 'bg-warning-bg text-warning',
+    [UserRole.HR]: 'bg-info-bg text-info',
+    [UserRole.ORGANIZE]: 'bg-success-bg text-success',
+    [UserRole.ADMIN]: 'bg-error-bg text-error',
   };
   return roleColors[role];
 };
-
-

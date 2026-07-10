@@ -2,14 +2,18 @@
 
 BRD: `BRD/User_Roles_and_Permissions.md`, `BRD/Security_Requirements.md`, FR-001–003.
 
-## Roles
+## Roles (BRD ROL-001 … ROL-005)
 
-| Role | Access (current client) |
-| --- | --- |
-| Guest | Home, auth modal |
-| Candidate | CV analysis, practice, profile, history |
-| Admin | Same as candidate for practice (route guard) |
-| HR / Interviewer | Not yet routed in client |
+| Role | API value | Client status |
+| --- | --- | --- |
+| Guest | `guest` | Unauthenticated (no `user.role`) |
+| Candidate | `candidate` | B2C: CV, practice, profile |
+| HR | `hr` | B2B: campaigns (future) |
+| Organize | `organize` | B2B: org admin, billing (future) |
+| Admin | `admin` | Platform admin (future) |
+
+Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
+`interviewer` maps to `hr` per BRD (no separate Interviewer role).
 
 ## Surfaces
 

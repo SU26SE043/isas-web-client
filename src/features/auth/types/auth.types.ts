@@ -1,3 +1,44 @@
+/** BRD ROL-001 … ROL-005 — see BRD/User_Roles_and_Permissions.md */
+export const UserRole = {
+  GUEST: 'guest',
+  CANDIDATE: 'candidate',
+  HR: 'hr',
+  ORGANIZE: 'organize',
+  ADMIN: 'admin',
+} as const;
+
+export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
+
+/** Roles that require a logged-in session (excludes Guest). */
+export const AUTHENTICATED_ROLES: UserRoleType[] = [
+  UserRole.CANDIDATE,
+  UserRole.HR,
+  UserRole.ORGANIZE,
+  UserRole.ADMIN,
+];
+
+const LEGACY_ROLE_ALIASES: Record<string, UserRoleType> = {
+  guest: UserRole.GUEST,
+  candidate: UserRole.CANDIDATE,
+  Candidate: UserRole.CANDIDATE,
+  hr: UserRole.HR,
+  HR: UserRole.HR,
+  organize: UserRole.ORGANIZE,
+  Organize: UserRole.ORGANIZE,
+  organization: UserRole.ORGANIZE,
+  Organization: UserRole.ORGANIZE,
+  admin: UserRole.ADMIN,
+  Admin: UserRole.ADMIN,
+  /** @deprecated BRD removed Interviewer — maps to HR */
+  interviewer: UserRole.HR,
+  Interviewer: UserRole.HR,
+};
+
+export function normalizeUserRole(role: string | null | undefined): UserRoleType | null {
+  if (!role) return null;
+  return LEGACY_ROLE_ALIASES[role] ?? null;
+}
+
 export interface UpdateProfileRequest {
   fullName?: string;
   location?: string;
@@ -35,15 +76,6 @@ export interface AuthTokensResponse {
   expiresAt: string;
 }
 
-export const UserRole = {
-  ADMIN: 'admin',
-  HR: 'hr',
-  INTERVIEWER: 'interviewer',
-  CANDIDATE: 'Candidate',
-} as const;
-
-export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
-
 export interface User {
   id: string;
   fullName: string;
@@ -52,4 +84,12 @@ export interface User {
   title: string;
   role: UserRoleType;
   createdAt: string;
+}
+
+export function parseUser(raw: User): User {
+  const role = normalizeUserRole(raw.role as unknown as string);
+  if (!role || role === UserRole.GUEST) {
+    throw new Error(`Invalid user role from API: ${String(raw.role)}`);
+  }
+  return { ...raw, role };
 }
