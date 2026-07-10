@@ -35,7 +35,7 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.feature2': 'Campaign & magic link',
     'pricing.enterprise.feature3': 'Dashboard HR',
 
-    'employers.pageTitle': 'Giải pháp B2B | ISAS',
+    'employers.pageTitle': 'Enterprise | ISAS',
     'employers.title': 'Tuyển dụng thông minh với AI',
     'employers.description': 'Chuẩn hóa sàng lọc ứng viên, giảm thời gian HR và ra quyết định dựa trên dữ liệu.',
     'employers.cta': 'Đăng ký demo',
@@ -95,7 +95,7 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.feature2': 'Campaigns and magic links',
     'pricing.enterprise.feature3': 'HR dashboard',
 
-    'employers.pageTitle': 'B2B Solutions | ISAS',
+    'employers.pageTitle': 'Enterprise | ISAS',
     'employers.title': 'Hire smarter with AI',
     'employers.description': 'Standardize candidate screening, reduce HR time, and make data-driven hiring decisions.',
     'employers.cta': 'Book a demo',
