@@ -69,7 +69,7 @@ export const CandidateDashboardPage: React.FC = () => {
           label={t('profile.dashboard.cvStatus')}
           value={summary?.hasCv ? t('profile.dashboard.cvUploaded') : t('profile.dashboard.cvMissing')}
           hint={t('profile.dashboard.cvHint')}
-          to="/candidate/cv/upload"
+          to="/candidate/cv/analysis"
         />
       </div>
     </div>
