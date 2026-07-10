@@ -74,7 +74,7 @@ export const InterviewHistoryPage: React.FC = () => {
                 key={interview.id}
                 interview={interview}
                 index={index}
-                onSelect={(id) => navigate(`/practice/history/${id}`)}
+                onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
               />
             ))
           ) : (

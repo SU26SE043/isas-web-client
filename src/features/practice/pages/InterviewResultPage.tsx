@@ -76,7 +76,7 @@ export const InterviewResultPage: React.FC = () => {
           <nav className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <button
               type="button"
-              onClick={() => navigate('/practice/history')}
+              onClick={() => navigate('/candidate/practice/history')}
               className="text-foreground hover:underline"
             >
               {t('practice.history.title')}

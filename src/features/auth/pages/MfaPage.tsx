@@ -49,7 +49,7 @@ export function MfaPage() {
       await authService.verifyMfa({ mfaToken, code: code.trim() });
       await fetchUser();
       const currentUser = useAuthStore.getState().user;
-      navigate(from ?? (currentUser ? getPostLoginPath(currentUser.role) : '/profile'), { replace: true });
+      navigate(from ?? (currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard'), { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, t('auth.mfaInvalid')));
     } finally {

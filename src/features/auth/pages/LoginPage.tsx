@@ -57,7 +57,7 @@ export function LoginPage() {
 
       await fetchUser();
       const currentUser = useAuthStore.getState().user;
-      navigate(from ?? (currentUser ? getPostLoginPath(currentUser.role) : '/profile'), { replace: true });
+      navigate(from ?? (currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard'), { replace: true });
     } catch (err) {
       const parsed = parseAuthError(err, t('auth.loginFailed'));
       if (parsed.kind === 'accountLocked') {

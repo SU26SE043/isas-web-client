@@ -10,6 +10,6 @@ export function getPostLoginPath(role: UserRoleType): string {
       return '/enterprise/dashboard';
     case UserRole.CANDIDATE:
     default:
-      return '/profile';
+      return '/candidate/dashboard';
   }
 }

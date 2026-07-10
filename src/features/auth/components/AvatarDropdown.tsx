@@ -55,7 +55,7 @@ export const AvatarDropdown: React.FC = () => {
           
           <div className="py-1">
             <Link
-              to="/profile"
+              to="/candidate/profile"
               className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:bg-surface-overlay transition-colors"
               onClick={() => setIsOpen(false)}
             >
