@@ -71,6 +71,12 @@ export const authTranslations: TranslationDictionary = {
     'auth.otpRequired': 'Vui lòng nhập mã OTP.',
     'auth.otpInvalid': 'Mã OTP không hợp lệ hoặc đã hết hạn.',
     'auth.resetFailed': 'Không thể đặt lại mật khẩu.',
+    'auth.mfaTitle': 'Xác minh hai bước',
+    'auth.mfaDescription': 'Nhập mã xác thực từ ứng dụng hoặc SMS để hoàn tất đăng nhập.',
+    'auth.mfaCodeLabel': 'Mã xác thực',
+    'auth.mfaCodeRequired': 'Vui lòng nhập mã xác thực.',
+    'auth.mfaInvalid': 'Mã xác thực không hợp lệ.',
+    'auth.mfaSubmit': 'Xác minh',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -189,6 +195,12 @@ export const authTranslations: TranslationDictionary = {
     'auth.otpRequired': 'Please enter the OTP code.',
     'auth.otpInvalid': 'OTP is invalid or has expired.',
     'auth.resetFailed': 'Could not reset password.',
+    'auth.mfaTitle': 'Two-factor authentication',
+    'auth.mfaDescription': 'Enter the code from your authenticator app or SMS to complete sign-in.',
+    'auth.mfaCodeLabel': 'Authentication code',
+    'auth.mfaCodeRequired': 'Please enter the authentication code.',
+    'auth.mfaInvalid': 'Authentication code is invalid.',
+    'auth.mfaSubmit': 'Verify',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
