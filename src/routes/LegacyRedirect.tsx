@@ -2,8 +2,8 @@ import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 const LEGACY_REDIRECTS: Record<string, string> = {
   '/profile': '/candidate/profile',
-  '/cv-analysis': '/candidate/cv/upload',
-  '/cv-analysis/result': '/candidate/cv/analysis',
+  '/cv-analysis': '/candidate/cv/analysis',
+  '/cv-analysis/result': '/candidate/cv/analysis/report',
 };
 
 export function LegacyRedirect() {

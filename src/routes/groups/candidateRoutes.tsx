@@ -20,6 +20,7 @@ import { UserRole } from '@/features/auth/types/auth.types';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { LegacyRedirect, PracticeHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
+import { CvUploadLegacyRedirect } from '@/routes/CvUploadLegacyRedirect';
 
 export const candidateRoutes: RouteObject[] = [
   {
@@ -40,8 +41,9 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'profile/certificates', element: <CertificatesPage /> },
           { path: 'profile/portfolio', element: <PortfolioPage /> },
           { path: 'profile/social', element: <SocialLinksPage /> },
-          { path: 'cv/upload', element: <CVAnalysisPage /> },
-          { path: 'cv/analysis', element: <CVResultPage /> },
+          { path: 'cv/analysis', element: <CVAnalysisPage /> },
+          { path: 'cv/analysis/report', element: <CVResultPage /> },
+          { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
           { path: 'practice/history', element: <InterviewHistoryPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },
         ],

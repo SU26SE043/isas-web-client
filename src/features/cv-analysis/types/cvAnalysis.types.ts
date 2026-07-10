@@ -28,6 +28,7 @@ export interface CvAnalysisResult {
   fullName: string;
   jobTitle: string;
   profileCompletionPercent: number;
+  matchScore: number;
   skills: CvSkill[];
   projects: CvProject[];
   experiences: CvExperience[];

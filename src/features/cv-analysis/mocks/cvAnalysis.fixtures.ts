@@ -5,6 +5,7 @@ export const MOCK_CV_ANALYSIS_RESULT: CvAnalysisResult = {
   fullName: 'Nguyen Van A',
   jobTitle: 'Senior Frontend Developer',
   profileCompletionPercent: 75,
+  matchScore: 78,
   skills: [
     { name: 'React.js', highlight: true },
     { name: 'TypeScript', highlight: true },

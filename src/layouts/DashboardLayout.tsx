@@ -54,15 +54,6 @@ export const DashboardLayout: React.FC = () => {
         ),
       },
       {
-        to: '/candidate/cv/upload',
-        label: t('profile.navCvUpload'),
-        icon: (
-          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-        ),
-      },
-      {
         to: '/candidate/cv/analysis',
         label: t('profile.navCvAnalysis'),
         icon: (
