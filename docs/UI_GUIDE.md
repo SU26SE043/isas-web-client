@@ -100,3 +100,19 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 Khi page > 250 dòng: tách thành `components/<feature>/` + `hooks/` + page mỏng điều phối.
 
 Kiểm tra: `npm run check:ui-size`
+
+## Internationalization (bắt buộc)
+
+Mọi page/component mới phải hỗ trợ **tiếng Việt và tiếng Anh**.
+
+| Quy tắc | Chi tiết |
+|---------|----------|
+| Hook | `const { t, language } = useLanguage()` từ `src/shared/languages` |
+| Text UI | Luôn dùng `t('feature.section.key')` — không hardcode chuỗi hiển thị |
+| File dịch | `src/features/<feature>/languages/translations.ts` hoặc `src/layouts/languages/translations.ts` |
+| Cấu trúc | Export `TranslationDictionary` với cả `vi` và `en` |
+| Đăng ký | Feature mới: import vào `src/shared/languages/translations.ts` |
+| Vai trò | Dùng `t(getRoleTranslationKey(role))` — không hardcode tên role |
+| Ngày/giờ | `toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', ...)` |
+
+Kiểm tra parity key vi/en: `npm run check:i18n`

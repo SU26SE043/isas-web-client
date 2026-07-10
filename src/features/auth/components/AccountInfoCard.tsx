@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../../shared/languages';
 import { ChangePasswordModal } from './ChangePasswordModal';
-import { getRoleColor, getRoleDisplayName } from '../utils/rolePermissions';
+import { getRoleColor, getRoleTranslationKey } from '../utils/rolePermissions';
 import type { UserRoleType } from '../types/auth.types';
 
 interface AccountInfoCardProps {
@@ -34,11 +34,15 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
   createdAt,
   onCopyId,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    new Date(dateString).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
 
   const shortenId = (id: string) => {
     if (!id || id.length < 12) return id;
@@ -78,7 +82,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
           label={t('profile.role')}
           value={
             <span className={`text-sm font-medium px-3 py-1 rounded-full ${getRoleColor(role)}`}>
-              {getRoleDisplayName(role)}
+              {t(getRoleTranslationKey(role))}
             </span>
           }
         />

@@ -28,6 +28,12 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Nhận tin tức mới nhất về công nghệ và nghề nghiệp.',
     'footer.emailPlaceholder': 'Email của bạn',
     'footer.subscribe': 'Đăng ký',
+
+    'common.accessDenied': 'Không có quyền truy cập',
+    'common.accessDeniedDescription': 'Vai trò của bạn không được phép truy cập trang này.',
+    'common.goBack': 'Quay lại',
+    'common.perPage': '/ trang',
+    'common.itemsPerPage': 'Số mục mỗi trang',
   },
   en: {
     'language.label': 'Language',
@@ -56,5 +62,11 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Get the latest updates about technology and careers.',
     'footer.emailPlaceholder': 'Your email',
     'footer.subscribe': 'Subscribe',
+
+    'common.accessDenied': 'Access denied',
+    'common.accessDeniedDescription': 'Your role is not allowed to access this page.',
+    'common.goBack': 'Go back',
+    'common.perPage': 'per page',
+    'common.itemsPerPage': 'Items per page',
   },
 };

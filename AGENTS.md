@@ -61,5 +61,6 @@ Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base`
 - Prefer `react-hook-form` + `zod` for forms.
 - Prefer `@tanstack/react-query` for async server state.
 - **Max 250 lines per UI file** (`*.tsx` under `src/features/`, `src/layouts/`, `src/components/ui/`). Split into subcomponents when larger. Verify: `npm run check:ui-size`.
+- **Bilingual vi/en (bắt buộc)** — mọi text hiển thị cho user phải qua `useLanguage().t('key')`; mỗi key phải có cả `vi` và `en` trong `src/features/<feature>/languages/translations.ts` (hoặc `src/layouts/languages/translations.ts`). Verify: `npm run check:i18n`.
 
 <!-- 💡 GHI CHÚ CHO BẠN: SAU NÀY NẾU CHỐT THÊM ĐƯỢC RULE MỚI KHI FIX GIAO DIỆN (Ví dụ: "Không được xài thẻ <div> bọc ngoài cùng mà phải xài Fragment", hay "Luôn phải handle state loading cho nút button"), BẠN HÃY GẠCH ĐẦU DÒNG VÀ CẬP NHẬT TRỰC TIẾP VÀO KHU VỰC NÀY ĐỂ AI NÓ NHỚ LUẬT MỚI -->

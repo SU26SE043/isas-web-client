@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "check:ui-size": "node scripts/check-ui-file-length.mjs",
+    "check:i18n": "node scripts/check-i18n-parity.mjs",
     "vercel:dev": "vercel dev",
     "vercel:deploy": "vercel --prod"
   },

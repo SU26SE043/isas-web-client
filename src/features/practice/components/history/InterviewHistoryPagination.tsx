@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../../../shared/languages';
 
 interface InterviewHistoryPaginationProps {
   currentPage: number;
@@ -19,6 +20,8 @@ export const InterviewHistoryPagination: React.FC<InterviewHistoryPaginationProp
   itemsPerPage,
   onPageChange,
 }) => {
+  const { t } = useLanguage();
+
   if (totalPages <= 0) return null;
 
   return (
@@ -67,9 +70,11 @@ export const InterviewHistoryPagination: React.FC<InterviewHistoryPaginationProp
           <select
             className="pl-3 pr-8 py-1.5 border border-subtle rounded-lg text-xs text-muted-foreground bg-surface-raised appearance-none focus:outline-none cursor-pointer shadow-sm"
             defaultValue={String(itemsPerPage)}
-            aria-label="Items per page"
+            aria-label={t('common.itemsPerPage')}
           >
-            <option value={String(itemsPerPage)}>{itemsPerPage} / trang</option>
+            <option value={String(itemsPerPage)}>
+              {itemsPerPage} {t('common.perPage')}
+            </option>
           </select>
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

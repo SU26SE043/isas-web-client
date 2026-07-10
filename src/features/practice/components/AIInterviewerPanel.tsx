@@ -21,12 +21,12 @@ export const AIInterviewerPanel: React.FC = () => {
 
   const getStateConfig = () => {
     switch (interviewerState) {
-      case 'speaking': 
-        return { label: 'Speaking', color: 'bg-success', animation: 'animate-pulse' };
-      case 'thinking': 
-        return { label: 'Thinking...', color: 'bg-surface-overlay', animation: 'animate-ping' };
-      case 'listening': 
-        return { label: 'Listening', color: 'bg-info', animation: '' };
+      case 'speaking':
+        return { label: t('practice.aiState.speaking'), color: 'bg-success', animation: 'animate-pulse' };
+      case 'thinking':
+        return { label: t('practice.aiState.thinking'), color: 'bg-surface-overlay', animation: 'animate-ping' };
+      case 'listening':
+        return { label: t('practice.aiState.listening'), color: 'bg-info', animation: '' };
     }
   };
 

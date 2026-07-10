@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import type { UserRoleType } from '../features/auth/types/auth.types';
+import { useLanguage } from '../shared/languages';
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRoleType[];
@@ -10,6 +11,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
+  const { t } = useLanguage();
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/" state={{ from: location }} replace />;
@@ -19,12 +21,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     return (
       <div className="min-h-screen flex items-center justify-center surface-base px-4">
         <div className="text-center max-w-md">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Không có quyền truy cập</h2>
-          <p className="text-muted-foreground mb-6">
-            Vai trò của bạn không được phép truy cập trang này.
-          </p>
+          <h2 className="text-2xl font-bold text-foreground mb-4">{t('common.accessDenied')}</h2>
+          <p className="text-muted-foreground mb-6">{t('common.accessDeniedDescription')}</p>
           <button type="button" onClick={() => window.history.back()} className="btn-primary px-6 py-2">
-            Quay lại
+            {t('common.goBack')}
           </button>
         </div>
       </div>

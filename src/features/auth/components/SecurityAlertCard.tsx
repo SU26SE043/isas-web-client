@@ -15,7 +15,7 @@ export const SecurityAlertCard: React.FC = () => {
         <div className="flex-1">
           <h3 className="font-bold text-foreground mb-1">{t('profile.accountSecurity')}</h3>
           <p className="text-sm font-medium text-muted-foreground mb-4">
-            Hãy đảm bảo thông tin tài khoản luôn được cập nhật để bảo mật và nhận thông báo quan trọng.
+            {t('profile.securityReminder')}
           </p>
           <button className="w-full bg-surface-overlay hover:bg-surface-elevated border border-default text-foreground font-semibold py-2.5 px-4 rounded-lg transition-colors">
             {t('profile.updateInfo')}

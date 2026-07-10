@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../../../shared/languages';
-import { getRoleDisplayName, getRoleColor } from '../utils/rolePermissions';
+import { getRoleTranslationKey, getRoleColor } from '../utils/rolePermissions';
 
 
 export const AvatarDropdown: React.FC = () => {
@@ -49,7 +49,7 @@ export const AvatarDropdown: React.FC = () => {
             <p className="text-sm font-medium text-foreground">{user.fullName}</p>
             <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-              {getRoleDisplayName(user.role)}
+              {t(getRoleTranslationKey(user.role))}
             </span>
           </div>
           

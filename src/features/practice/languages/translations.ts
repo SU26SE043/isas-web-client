@@ -84,6 +84,10 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.status.inProgress': 'Đang thực hiện',
      'practice.history.status.pending': 'Chưa bắt đầu',
      'practice.history.pagination': 'Trang',
+
+    'practice.aiState.speaking': 'Đang nói',
+    'practice.aiState.thinking': 'Đang suy nghĩ...',
+    'practice.aiState.listening': 'Đang lắng nghe',
   },
   en: {
     'practice.title': 'Mock Interview',
@@ -168,5 +172,9 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.status.inProgress': 'In Progress',
      'practice.history.status.pending': 'Pending',
      'practice.history.pagination': 'Page',
+
+    'practice.aiState.speaking': 'Speaking',
+    'practice.aiState.thinking': 'Thinking...',
+    'practice.aiState.listening': 'Listening',
   },
 };

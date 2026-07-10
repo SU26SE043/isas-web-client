@@ -1,15 +1,14 @@
 import { UserRole, type UserRoleType } from '../types/auth.types';
 
-export const getRoleDisplayName = (role: UserRoleType): string => {
-  const roleNames: Record<UserRoleType, string> = {
-    [UserRole.GUEST]: 'Khách',
-    [UserRole.CANDIDATE]: 'Ứng viên',
-    [UserRole.HR]: 'Nhân sự',
-    [UserRole.ORGANIZE]: 'Quản trị tổ chức',
-    [UserRole.ADMIN]: 'Quản trị viên',
-  };
-  return roleNames[role];
+export const roleTranslationKeys: Record<UserRoleType, string> = {
+  [UserRole.GUEST]: 'role.guest',
+  [UserRole.CANDIDATE]: 'role.candidate',
+  [UserRole.HR]: 'role.hr',
+  [UserRole.ORGANIZE]: 'role.organize',
+  [UserRole.ADMIN]: 'role.admin',
 };
+
+export const getRoleTranslationKey = (role: UserRoleType): string => roleTranslationKeys[role];
 
 export const getRoleColor = (role: UserRoleType): string => {
   const roleColors: Record<UserRoleType, string> = {

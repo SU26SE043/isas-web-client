@@ -78,6 +78,8 @@ export const authTranslations: TranslationDictionary = {
     'profile.security': 'Bảo mật tài khoản',
     'profile.accountSecurity': 'Bảo mật tài khoản luôn an toàn',
     'profile.accountSecurityDesc': 'Tăng cường bảo mật để bảo vệ tài khoản của bạn',
+    'profile.securityReminder':
+      'Hãy đảm bảo thông tin tài khoản luôn được cập nhật để bảo mật và nhận thông báo quan trọng.',
     'profile.emailVerified': 'Xác thực email',
     'profile.password': 'Mật khẩu',
     'profile.verified': 'Đã xác thực',
@@ -85,6 +87,12 @@ export const authTranslations: TranslationDictionary = {
     'profile.twoFactor': 'Phiên đăng nhập nhập',
     'profile.device': 'thiết bị',
     'profile.updateInfo': 'Cập nhật thông tin',
+
+    'role.guest': 'Khách',
+    'role.candidate': 'Ứng viên',
+    'role.hr': 'Nhân sự',
+    'role.organize': 'Quản trị tổ chức',
+    'role.admin': 'Quản trị viên',
   },
   en: {
     'auth.signInTitle': 'Sign in',
@@ -163,6 +171,8 @@ export const authTranslations: TranslationDictionary = {
     'profile.security': 'Account Security',
     'profile.accountSecurity': 'Keep your account always secure',
     'profile.accountSecurityDesc': 'Increase security to protect your account',
+    'profile.securityReminder':
+      'Keep your account information up to date for security and important notifications.',
     'profile.emailVerified': 'Email Verified',
     'profile.password': 'Password',
     'profile.verified': 'Verified',
@@ -170,5 +180,11 @@ export const authTranslations: TranslationDictionary = {
     'profile.twoFactor': 'Login sessions',
     'profile.device': 'device',
     'profile.updateInfo': 'Update Information',
+
+    'role.guest': 'Guest',
+    'role.candidate': 'Candidate',
+    'role.hr': 'HR',
+    'role.organize': 'Organization Admin',
+    'role.admin': 'Administrator',
   },
 };
