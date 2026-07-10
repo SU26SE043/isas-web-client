@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { MainLayout } from '@/layouts/MainLayout';
+import { MarketingLayout } from '@/layouts/MarketingLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { RouteGroupPlaceholder } from '@/routes/RouteGroupPlaceholder';
@@ -19,7 +19,7 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
 export const publicRoutes: RouteObject[] = [
   {
     path: '/',
-    element: <MainLayout />,
+    element: <MarketingLayout />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'pricing', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
