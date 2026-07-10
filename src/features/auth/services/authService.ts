@@ -12,10 +12,12 @@ import type {
 } from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
+import { sessionManager } from '../utils/sessionManager';
 
 function storeTokensIfPresent(data: AuthTokensResponse) {
   if (data.accessToken && data.refreshToken) {
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    sessionManager.markSessionStart();
   }
 }
 
@@ -50,6 +52,7 @@ export const authService = {
       }
     } finally {
       authTokenStorage.clear();
+      sessionManager.clear();
     }
   },
   me: async () => {

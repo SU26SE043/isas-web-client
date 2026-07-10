@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { sessionManager } from '@/features/auth/utils/sessionManager';
 import { authTokenStorage } from './authTokenStorage';
 import { clearUnauthorizedHandler, setUnauthorizedHandler } from './unauthorizedHandler';
 
@@ -12,6 +13,7 @@ export function useUnauthorizedHandler() {
     setUnauthorizedHandler(() => {
       logout();
       authTokenStorage.clear();
+      sessionManager.clear();
       navigate('/session-expired', { replace: true });
     });
 
