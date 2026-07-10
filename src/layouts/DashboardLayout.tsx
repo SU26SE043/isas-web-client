@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
 
@@ -66,7 +67,7 @@ export const DashboardLayout: React.FC = () => {
           <div className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-between gap-2'}`}>
             {!isCollapsed ? (
               <Link to="/" className="focus-ring rounded-md">
-                <img alt="ISAS" className="h-7 w-auto" src="/logo-horizontal-white.png" />
+                <BrandLogo className="h-7" />
               </Link>
             ) : null}
             <button

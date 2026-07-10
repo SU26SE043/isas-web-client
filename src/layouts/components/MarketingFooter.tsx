@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useLanguage } from '@/shared/languages';
 
 export const MarketingFooter: React.FC = () => {
@@ -11,11 +12,7 @@ export const MarketingFooter: React.FC = () => {
       <div className="page-container page-section pb-10">
         <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
           <div className="md:col-span-1">
-            <img
-              alt="ISAS Logo"
-              className="mb-6 h-8 w-auto object-contain"
-              src="/logo-horizontal-white.png"
-            />
+            <BrandLogo className="mb-6" />
             <p className="body-text max-w-sm text-sm leading-relaxed">
               {t('footer.description')}
             </p>

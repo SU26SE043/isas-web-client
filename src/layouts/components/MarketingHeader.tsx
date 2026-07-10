@@ -5,6 +5,7 @@ import { AuthModal } from '@/features/auth/components/AuthModal';
 import { AvatarDropdown } from '@/features/auth/components/AvatarDropdown';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/shared/languages';
+import { BrandLogo } from '@/components/BrandLogo';
 import { LanguageToggle } from '../LanguageToggle';
 import { MarketingMobileNav } from './MarketingMobileNav';
 
@@ -27,11 +28,7 @@ export const MarketingHeader: React.FC = () => {
         <div className="page-container">
           <div className="flex h-16 items-center justify-between gap-4">
             <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
-              <img
-                alt="ISAS Logo"
-                className="h-8 w-auto object-contain"
-                src="/logo-horizontal-white.png"
-              />
+              <BrandLogo />
             </Link>
 
             <nav className="hidden items-center gap-6 lg:gap-8 md:flex" aria-label={t('nav.main')}>

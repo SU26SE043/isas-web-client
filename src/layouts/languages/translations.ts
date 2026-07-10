@@ -33,7 +33,7 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Nhận tin tức mới nhất về công nghệ và nghề nghiệp.',
     'footer.emailPlaceholder': 'Email của bạn',
     'footer.subscribe': 'Đăng ký',
-    'footer.rightsReserved': 'ISAS Platform. Bảo lưu mọi quyền.',
+    'footer.rightsReserved': 'PIpraint. Bảo lưu mọi quyền.',
 
     'common.accessDenied': 'Không có quyền truy cập',
     'common.accessDeniedDescription': 'Vai trò của bạn không được phép truy cập trang này.',
@@ -44,7 +44,7 @@ export const layoutTranslations: TranslationDictionary = {
     'route.authShell': 'Nhóm route xác thực — shell Phase 0',
     'route.employerShell': 'Nhóm route nhà tuyển dụng — shell Phase 0',
     'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
-    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng ISAS.',
+    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng PIpraint.',
   },
   en: {
     'language.label': 'Language',
@@ -78,7 +78,7 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Get the latest updates about technology and careers.',
     'footer.emailPlaceholder': 'Your email',
     'footer.subscribe': 'Subscribe',
-    'footer.rightsReserved': 'ISAS Platform. All rights reserved.',
+    'footer.rightsReserved': 'PIpraint. All rights reserved.',
 
     'common.accessDenied': 'Access denied',
     'common.accessDeniedDescription': 'Your role is not allowed to access this page.',
@@ -89,6 +89,6 @@ export const layoutTranslations: TranslationDictionary = {
     'route.authShell': 'Auth route group — Phase 0 shell',
     'route.employerShell': 'Employer route group — Phase 0 shell',
     'route.adminShell': 'Admin route group — Phase 0 shell',
-    'auth.loginPrompt': 'Sign in to continue to ISAS.',
+    'auth.loginPrompt': 'Sign in to continue to PIpraint.',
   },
 };

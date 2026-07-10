@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useLanguage } from '../../../shared/languages';
 
 export const InterviewHeader: React.FC = () => {
@@ -10,7 +11,7 @@ export const InterviewHeader: React.FC = () => {
       {/* Left: Logo & Title */}
       <div className="flex items-center gap-6">
         <Link to="/">
-          <img src="/logo-horizontal-white.png" alt="PraInt Logo" className="h-8 w-auto object-contain" />
+          <BrandLogo />
         </Link>
         <div className="h-6 w-px bg-surface-raised/30"></div>
         <div className="flex items-center gap-3">
