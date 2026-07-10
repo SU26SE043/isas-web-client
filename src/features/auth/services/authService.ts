@@ -1,4 +1,5 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
+import { getApiBaseUrl } from '../../../shared/config';
 import type { AuthTokensResponse, LoginRequest, RegisterRequest, User, UpdateProfileRequest } from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
@@ -11,14 +12,7 @@ export const authService = {
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.login, payload);
-    console.log('Login response:', data); // Debug login response
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
-
-    // Verify token was saved
-    const savedToken = authTokenStorage.getAccessToken();
-    console.log('Token saved:', savedToken ? 'Yes' : 'No');
-    console.log('Token preview:', savedToken?.substring(0, 20) + '...');
-
     return data;
   },
   refresh: async () => {
@@ -62,7 +56,7 @@ export const authService = {
   },
   loginWithGoogle: () => {
     const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}/api/auth/login-google?returnUrl=${returnUrl}`;
   },
