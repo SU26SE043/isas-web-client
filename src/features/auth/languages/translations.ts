@@ -85,6 +85,9 @@ export const authTranslations: TranslationDictionary = {
     'auth.accountLockedTitle': 'Tài khoản bị khóa',
     'auth.accountLockedDescription': 'Tài khoản đã bị khóa sau nhiều lần đăng nhập thất bại.',
     'auth.accountLockedHint': 'Vui lòng thử lại sau 15 phút hoặc liên hệ hỗ trợ.',
+    'auth.sessionTimeoutTitle': 'Phiên sắp hết hạn',
+    'auth.sessionTimeoutDescription': 'Bạn sẽ bị đăng xuất sau {time} vì không hoạt động. Gia hạn phiên để tiếp tục.',
+    'auth.sessionTimeoutExtend': 'Gia hạn phiên',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -217,6 +220,9 @@ export const authTranslations: TranslationDictionary = {
     'auth.accountLockedTitle': 'Account locked',
     'auth.accountLockedDescription': 'Your account was locked after too many failed sign-in attempts.',
     'auth.accountLockedHint': 'Please try again in 15 minutes or contact support.',
+    'auth.sessionTimeoutTitle': 'Session expiring soon',
+    'auth.sessionTimeoutDescription': 'You will be signed out in {time} due to inactivity. Extend your session to continue.',
+    'auth.sessionTimeoutExtend': 'Extend session',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
