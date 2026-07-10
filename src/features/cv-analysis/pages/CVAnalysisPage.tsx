@@ -11,8 +11,8 @@ export const CVAnalysisPage: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="bg-surface-base min-h-[calc(100vh-80px)] pb-24 pt-8">
-      <div className="page-container">
+    <div className="dashboard-content min-h-full pb-12">
+      <div className="page-container max-w-none px-0">
         <div className="mb-10">
           <h1 className="text-4xl heading-primary mb-3 tracking-tight">{t('cv.title')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl">{t('cv.description')}</p>
