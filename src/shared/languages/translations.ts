@@ -1,3 +1,4 @@
+import { profileTranslations } from '../../features/profile/languages/translations';
 import { authTranslations } from '../../features/auth/languages/translations';
 import { cvAnalysisTranslations } from '../../features/cv-analysis/languages/translations';
 import { homeTranslations } from '../../features/home/languages/translations';
@@ -12,6 +13,7 @@ export const translations = mergeTranslations(
   homeTranslations,
   marketingTranslations,
   authTranslations,
+  profileTranslations,
   cvAnalysisTranslations,
   practiceTranslations,
   designSystemTranslations,
