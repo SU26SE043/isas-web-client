@@ -79,7 +79,7 @@ export const CVResultBottomPanel: React.FC = () => {
       {/* Action Buttons Footer */}
       <div className="flex flex-col sm:flex-row flex-wrap justify-center sm:justify-end gap-4 pt-4 border-t border-subtle">
         <button 
-          onClick={() => navigate('/cv-analysis')}
+          onClick={() => navigate('/candidate/cv/upload')}
           className="px-6 py-3 bg-surface-raised border border-subtle text-muted-foreground rounded-xl font-bold hover:bg-surface-overlay hover:text-foreground transition-colors flex items-center justify-center shadow-sm"
         >
           <svg className="w-5 h-5 mr-2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">

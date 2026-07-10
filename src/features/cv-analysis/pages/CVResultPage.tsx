@@ -4,6 +4,7 @@ import { useLanguage } from '@/shared/languages';
 import { CVResultBottomPanel } from '../components/CVResultBottomPanel';
 import { CVResultLeftPanel } from '../components/CVResultLeftPanel';
 import { CVResultRightPanel } from '../components/CVResultRightPanel';
+import { CvProfileMappingPanel } from '@/features/profile/components/CvProfileMappingPanel';
 import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
 
 export const CVResultPage: React.FC = () => {
@@ -28,12 +29,13 @@ export const CVResultPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-surface-base min-h-screen pb-24 pt-8">
-      <div className="page-container space-y-6">
+    <div className="dashboard-content min-h-full pb-12">
+      <div className="page-container max-w-none px-0 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <CVResultLeftPanel result={result} />
           <CVResultRightPanel result={result} />
         </div>
+        <CvProfileMappingPanel result={result} />
         <CVResultBottomPanel />
       </div>
     </div>
