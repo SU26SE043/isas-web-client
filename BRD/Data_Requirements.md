@@ -1,1022 +1,859 @@
-# 12_Data_Requirements.md
-## 1. Document Purpose
-This document defines the business data architecture, logical data domains, and governance requirements for the AI-powered Interview & Skill Assessment System (ISAS).
-### 1.1 Scope
-The scope includes all logical business data entities, relationships, master data, reference data, and data lifecycles. It defines *what* data is managed, not *how* it is stored (e.g., no SQL schemas or ERDs).
-### 1.2 Intended Audience
-Data Architects, Enterprise Architects, Business Analysts, Data Governance Officers, and Executive Stakeholders.
-### 1.3 Relationship with Other Documents
-- **Relationship with BRD:** Realizes business goals through structured data assets.
-- **Relationship with Functional Requirements:** Defines the logical entities manipulated by system functions.
-- **Relationship with Business Rules:** Captures data validation, integrity, and lifecycle constraints.
+# 12_Data_Requirement.md
+## 1. Mục đích tài liệu
+Tài liệu này xác định kiến trúc dữ liệu nghiệp vụ, các miền dữ liệu logic và các yêu cầu quản trị cho Hệ thống Phỏng vấn & Đánh giá Kỹ năng tích hợp AI (ISAS).
+### 1.1 Phạm vi
+Phạm vi bao gồm tất cả các thực thể dữ liệu nghiệp vụ logic, các mối quan hệ, dữ liệu chủ (master data), dữ liệu tham chiếu và vòng đời dữ liệu. Nó xác định *những gì* dữ liệu được quản lý, không phải *cách thức* nó được lưu trữ (ví dụ: không có lược đồ SQL hoặc ERD).
+### 1.2 Đối tượng độc giả
+Kiến trúc sư Dữ liệu, Kiến trúc sư Doanh nghiệp, Chuyên viên Phân tích Nghiệp vụ, Cán bộ Quản trị Dữ liệu và Các bên liên quan cấp quản lý.
+### 1.3 Mối quan hệ với các tài liệu khác
+- **Relationship with BRD:** Hiện thực hóa các mục tiêu nghiệp vụ thông qua các tài sản dữ liệu có cấu trúc.
+- **Relationship with Yêu cầu Chức nănguirements:** Xác định các thực thể logic được xử lý bởi các chức năng của hệ thống.
+- **Relationship with Quy tắc Nghiệp vụs:** Nắm bắt các ràng buộc về xác thực, tính toàn vẹn và vòng đời dữ liệu.
 
-## 2. Data Architecture Overview
-The ISAS data architecture is organized into 12 distinct logical domains to ensure modularity, clear ownership, and strict governance. These domains collectively cover the end-to-end recruitment, interview, assessment, and learning lifecycle. Master Data Management (MDM) principles are applied across all shared entities.
+## 2. Tổng quan Kiến trúc Dữ liệu
+Kiến trúc dữ liệu ISAS được tổ chức thành 12 miền logic riêng biệt nhằm đảm bảo tính mô-đun, quyền sở hữu rõ ràng và quản trị nghiêm ngặt. Các miền này bao trùm toàn bộ vòng đời tuyển dụng, phỏng vấn, đánh giá và học tập. Các nguyên tắc Quản lý Dữ liệu Chủ (MDM) được áp dụng trên tất cả các thực thể dùng chung.
 
-## 3. Business Data Domains
-### 3.1 Identity Data
-- **Domain ID:** DOM-01
-- **Description:** Manages authentication, authorization, and security profiles.
-- **Business Owner:** CISO
-- **Primary Users:** System, Admin
-- **Business Value:** Secures system access
-- **Dependencies:** None
-- **Priority:** Critical
+## 3. Các Miền Dữ liệu Nghiệp vụ
+### 3.1 Dữ liệu Danh tính
+- **ID Miền:** DOM-01
+- **Mô tả:** Quản lý xác thực, ủy quyền và hồ sơ bảo mật.
+- **Chủ sở hữu Nghiệp vụ:** CISO
+- **Người dùng Chính:** System, Admin
+- **Giá trị Nghiệp vụ:** Bảo mật truy cập hệ thống
+- **Phụ thuộc:** Không có
+- **Độ ưu tiên:** Đặc biệt quan trọng
 
-### 3.2 Candidate Data
-- **Domain ID:** DOM-02
-- **Description:** Manages candidate profiles, skills, and career histories.
-- **Business Owner:** VP of HR
-- **Primary Users:** Recruiters, Candidates
-- **Business Value:** Core talent profiling
-- **Dependencies:** DOM-01
-- **Priority:** High
+### 3.2 Dữ liệu Ứng viên
+- **ID Miền:** DOM-02
+- **Mô tả:** Quản lý hồ sơ, kỹ năng và lịch sử nghề nghiệp ứng viên.
+- **Chủ sở hữu Nghiệp vụ:** VP of HR
+- **Người dùng Chính:** Nhà tuyển dụng, Ứng viên
+- **Giá trị Nghiệp vụ:** Lập hồ sơ tài năng cốt lõi
+- **Phụ thuộc:** DOM-01
+- **Độ ưu tiên:** Cao
 
-### 3.3 Employer Data
-- **Domain ID:** DOM-03
-- **Description:** Manages enterprise clients, teams, and subscriptions.
-- **Business Owner:** VP of Sales
-- **Primary Users:** Employers
-- **Business Value:** Client lifecycle management
-- **Dependencies:** DOM-01
-- **Priority:** High
+### 3.3 Dữ liệu Nhà tuyển dụng
+- **ID Miền:** DOM-03
+- **Mô tả:** Quản lý khách hàng doanh nghiệp, nhóm và gói đăng ký.
+- **Chủ sở hữu Nghiệp vụ:** VP of Sales
+- **Người dùng Chính:** Nhà tuyển dụng
+- **Giá trị Nghiệp vụ:** Quản lý vòng đời khách hàng
+- **Phụ thuộc:** DOM-01
+- **Độ ưu tiên:** Cao
 
-### 3.4 Recruitment Data
-- **Domain ID:** DOM-04
-- **Description:** Manages campaigns, job postings, and pipelines.
-- **Business Owner:** VP of Recruitment
-- **Primary Users:** Recruiters
-- **Business Value:** Drives hiring workflows
-- **Dependencies:** DOM-02, DOM-03
-- **Priority:** High
+### 3.4 Dữ liệu Tuyển dụng
+- **ID Miền:** DOM-04
+- **Mô tả:** Quản lý chiến dịch, tin đăng tuyển và quy trình tuyển dụng.
+- **Chủ sở hữu Nghiệp vụ:** VP of Recruitment
+- **Người dùng Chính:** Nhà tuyển dụngs
+- **Giá trị Nghiệp vụ:** Thúc đẩy quy trình làm việc tuyển dụng
+- **Phụ thuộc:** DOM-02, DOM-03
+- **Độ ưu tiên:** Cao
 
-### 3.5 Interview Data
-- **Domain ID:** DOM-05
-- **Description:** Manages scheduling, rubrics, and recordings.
-- **Business Owner:** VP of Product
-- **Primary Users:** All Users
-- **Business Value:** Core interview execution
-- **Dependencies:** DOM-04
-- **Priority:** Critical
+### 3.5 Dữ liệu Phỏng vấn
+- **ID Miền:** DOM-05
+- **Mô tả:** Quản lý lịch trình, phiếu tự đánh giá và bản ghi hình.
+- **Chủ sở hữu Nghiệp vụ:** VP of Product
+- **Người dùng Chính:** Tất cả Người dùng
+- **Giá trị Nghiệp vụ:** Thực hiện phỏng vấn cốt lõi
+- **Phụ thuộc:** DOM-04
+- **Độ ưu tiên:** Đặc biệt quan trọng
 
-### 3.6 Assessment Data
-- **Domain ID:** DOM-06
-- **Description:** Manages technical tests, scoring, and proctoring.
-- **Business Owner:** VP of Product
-- **Primary Users:** Candidates
-- **Business Value:** Skill validation accuracy
-- **Dependencies:** DOM-02
-- **Priority:** Critical
+### 3.6 Dữ liệu Đánh giá
+- **ID Miền:** DOM-06
+- **Mô tả:** Quản lý các bài kiểm tra kỹ thuật, chấm điểm và giám thị.
+- **Chủ sở hữu Nghiệp vụ:** VP of Product
+- **Người dùng Chính:** Ứng viêns
+- **Giá trị Nghiệp vụ:** Độ chính xác của việc xác thực kỹ năng
+- **Phụ thuộc:** DOM-02
+- **Độ ưu tiên:** Đặc biệt quan trọng
 
-### 3.7 Learning Data
-- **Domain ID:** DOM-07
-- **Description:** Manages roadmaps, courses, and skill progression.
-- **Business Owner:** Chief Learning Officer
-- **Primary Users:** Candidates
-- **Business Value:** Skill gap bridging
-- **Dependencies:** DOM-06
-- **Priority:** Medium
+### 3.7 Dữ liệu Học tập
+- **ID Miền:** DOM-07
+- **Mô tả:** Quản lý lộ trình, khóa học và sự tiến bộ kỹ năng.
+- **Chủ sở hữu Nghiệp vụ:** Chief Learning Officer
+- **Người dùng Chính:** Ứng viêns
+- **Giá trị Nghiệp vụ:** Rút ngắn khoảng cách kỹ năng
+- **Phụ thuộc:** DOM-06
+- **Độ ưu tiên:** Trung bình
 
-### 3.8 Payment Data
-- **Domain ID:** DOM-08
-- **Description:** Manages transactions, credits, and invoices.
-- **Business Owner:** CFO
-- **Primary Users:** Finance
-- **Business Value:** Revenue tracking
-- **Dependencies:** DOM-03
-- **Priority:** High
+### 3.8 Dữ liệu Thanh toán
+- **ID Miền:** DOM-08
+- **Mô tả:** Quản lý giao dịch, tín dụng và hóa đơn.
+- **Chủ sở hữu Nghiệp vụ:** CFO
+- **Người dùng Chính:** Finance
+- **Giá trị Nghiệp vụ:** Theo dõi doanh thu
+- **Phụ thuộc:** DOM-03
+- **Độ ưu tiên:** Cao
 
-### 3.9 Notification Data
-- **Domain ID:** DOM-09
-- **Description:** Manages omnichannel alerts and messaging logs.
-- **Business Owner:** VP of Product
-- **Primary Users:** All Users
-- **Business Value:** User engagement
-- **Dependencies:** All
-- **Priority:** Medium
+### 3.9 Dữ liệu Thông báo
+- **ID Miền:** DOM-09
+- **Mô tả:** Quản lý cảnh báo đa kênh và nhật ký tin nhắn.
+- **Chủ sở hữu Nghiệp vụ:** VP of Product
+- **Người dùng Chính:** Tất cả Người dùng
+- **Giá trị Nghiệp vụ:** Sự tương tác của người dùng
+- **Phụ thuộc:** Tất cả
+- **Độ ưu tiên:** Trung bình
 
-### 3.10 Audit Data
-- **Domain ID:** DOM-10
-- **Description:** Manages compliance, access logs, and system events.
-- **Business Owner:** Data Protection Officer
-- **Primary Users:** Security
-- **Business Value:** Regulatory compliance
-- **Dependencies:** All
-- **Priority:** High
+### 3.10 Dữ liệu Kiểm toán
+- **ID Miền:** DOM-10
+- **Mô tả:** Quản lý tuân thủ, nhật ký truy cập và sự kiện hệ thống.
+- **Chủ sở hữu Nghiệp vụ:** Data Protection Officer
+- **Người dùng Chính:** Security
+- **Giá trị Nghiệp vụ:** Tuân thủ quy định
+- **Phụ thuộc:** Tất cả
+- **Độ ưu tiên:** Cao
 
-### 3.11 Analytics Data
-- **Domain ID:** DOM-11
-- **Description:** Manages aggregated metrics and dashboards.
-- **Business Owner:** CDO
-- **Primary Users:** Management
-- **Business Value:** Business Insights
-- **Dependencies:** All
-- **Priority:** Medium
+### 3.11 Dữ liệu Phân tích
+- **ID Miền:** DOM-11
+- **Mô tả:** Quản lý các số liệu tổng hợp và bảng điều khiển.
+- **Chủ sở hữu Nghiệp vụ:** CDO
+- **Người dùng Chính:** Management
+- **Giá trị Nghiệp vụ:** Thông tin chi tiết về doanh nghiệp
+- **Phụ thuộc:** Tất cả
+- **Độ ưu tiên:** Trung bình
 
-### 3.12 System Configuration Data
-- **Domain ID:** DOM-12
-- **Description:** Manages system-wide reference data and settings.
-- **Business Owner:** CTO
-- **Primary Users:** System
-- **Business Value:** Platform stability
-- **Dependencies:** None
-- **Priority:** High
+### 3.12 Dữ liệu Cấu hình Hệ thống
+- **ID Miền:** DOM-12
+- **Mô tả:** Quản lý dữ liệu tham chiếu và cài đặt toàn hệ thống.
+- **Chủ sở hữu Nghiệp vụ:** CTO
+- **Người dùng Chính:** System
+- **Giá trị Nghiệp vụ:** Sự ổn định của nền tảng
+- **Phụ thuộc:** Không có
+- **Độ ưu tiên:** Cao
 
-## 4. Business Data Objects
-This section defines the logical business entities managed by the system.
-| Data Object ID | Business Name | Description | Business Purpose | Business Owner | Source | Consumers | Lifecycle | Sensitivity | Retention | Dependencies |
+## 4. Các Đối tượng Dữ liệu Nghiệp vụ
+Phần này xác định các thực thể nghiệp vụ logic do hệ thống quản lý.
+| ID Đối tượng Dữ liệu | Tên Nghiệp vụ | Mô tả | Mục đích Nghiệp vụ | Chủ sở hữu Nghiệp vụ | Nguồn | Bên tiêu thụ | Vòng đời | Độ nhạy cảm | Lưu giữ | Phụ thuộc |
 |---|---|---|---|---|---|---|---|---|---|---|
-| DATA-001 | User | Logical entity representing user data. | To manage the lifecycle of users. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-002 | Role | Logical entity representing role data. | To manage the lifecycle of roles. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-003 | Permission | Logical entity representing permission data. | To manage the lifecycle of permissions. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-004 | Session | Logical entity representing session data. | To manage the lifecycle of sessions. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-005 | MFA Token | Logical entity representing mfa token data. | To manage the lifecycle of mfa tokens. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-006 | Consent Record | Logical entity representing consent record data. | To manage the lifecycle of consent records. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-007 | Identity Verification | Logical entity representing identity verification data. | To manage the lifecycle of identity verifications. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-008 | Security Profile | Logical entity representing security profile data. | To manage the lifecycle of security profiles. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-009 | SSO Configuration | Logical entity representing sso configuration data. | To manage the lifecycle of sso configurations. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-010 | Password History | Logical entity representing password history data. | To manage the lifecycle of password historys. | CISO | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-01 Entities |
-| DATA-011 | Candidate | Logical entity representing candidate data. | To manage the lifecycle of candidates. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-012 | Profile | Logical entity representing profile data. | To manage the lifecycle of profiles. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-013 | Education | Logical entity representing education data. | To manage the lifecycle of educations. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-014 | Experience | Logical entity representing experience data. | To manage the lifecycle of experiences. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-015 | Skill Claim | Logical entity representing skill claim data. | To manage the lifecycle of skill claims. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-016 | Certification | Logical entity representing certification data. | To manage the lifecycle of certifications. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-017 | Career Goal | Logical entity representing career goal data. | To manage the lifecycle of career goals. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-018 | Language Proficiency | Logical entity representing language proficiency data. | To manage the lifecycle of language proficiencys. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-019 | Portfolio Item | Logical entity representing portfolio item data. | To manage the lifecycle of portfolio items. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-020 | Availability | Logical entity representing availability data. | To manage the lifecycle of availabilitys. | VP of HR | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-02 Entities |
-| DATA-021 | Employer | Logical entity representing employer data. | To manage the lifecycle of employers. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-022 | Company | Logical entity representing company data. | To manage the lifecycle of companys. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-023 | Department | Logical entity representing department data. | To manage the lifecycle of departments. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-024 | Team | Logical entity representing team data. | To manage the lifecycle of teams. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-025 | Recruiter | Logical entity representing recruiter data. | To manage the lifecycle of recruiters. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-026 | Hiring Manager | Logical entity representing hiring manager data. | To manage the lifecycle of hiring managers. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-027 | Billing Profile | Logical entity representing billing profile data. | To manage the lifecycle of billing profiles. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-028 | Subscription | Logical entity representing subscription data. | To manage the lifecycle of subscriptions. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-029 | Company Address | Logical entity representing company address data. | To manage the lifecycle of company addresss. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-030 | Employer Setting | Logical entity representing employer setting data. | To manage the lifecycle of employer settings. | VP of Sales | User Input | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-03 Entities |
-| DATA-031 | Job Posting | Logical entity representing job posting data. | To manage the lifecycle of job postings. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-032 | Campaign | Logical entity representing campaign data. | To manage the lifecycle of campaigns. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-033 | Application | Logical entity representing application data. | To manage the lifecycle of applications. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-034 | Talent Pool | Logical entity representing talent pool data. | To manage the lifecycle of talent pools. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-035 | Offer | Logical entity representing offer data. | To manage the lifecycle of offers. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-036 | Pipeline Stage | Logical entity representing pipeline stage data. | To manage the lifecycle of pipeline stages. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-037 | Sourcing Channel | Logical entity representing sourcing channel data. | To manage the lifecycle of sourcing channels. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-038 | Referral | Logical entity representing referral data. | To manage the lifecycle of referrals. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-039 | Screening Form | Logical entity representing screening form data. | To manage the lifecycle of screening forms. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-040 | Shortlist | Logical entity representing shortlist data. | To manage the lifecycle of shortlists. | VP of Recruitment | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-04 Entities |
-| DATA-041 | Interview | Logical entity representing interview data. | To manage the lifecycle of interviews. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-042 | Session | Logical entity representing session data. | To manage the lifecycle of sessions. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-043 | Question | Logical entity representing question data. | To manage the lifecycle of questions. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-044 | Answer | Logical entity representing answer data. | To manage the lifecycle of answers. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-045 | Rubric | Logical entity representing rubric data. | To manage the lifecycle of rubrics. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-046 | Recording | Logical entity representing recording data. | To manage the lifecycle of recordings. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-047 | Transcript | Logical entity representing transcript data. | To manage the lifecycle of transcripts. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-048 | Interviewer | Logical entity representing interviewer data. | To manage the lifecycle of interviewers. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-049 | Feedback | Logical entity representing feedback data. | To manage the lifecycle of feedbacks. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-050 | Rating | Logical entity representing rating data. | To manage the lifecycle of ratings. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-051 | Interview Template | Logical entity representing interview template data. | To manage the lifecycle of interview templates. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-05 Entities |
-| DATA-052 | Assessment | Logical entity representing assessment data. | To manage the lifecycle of assessments. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-053 | Test Case | Logical entity representing test case data. | To manage the lifecycle of test cases. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-054 | Submission | Logical entity representing submission data. | To manage the lifecycle of submissions. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-055 | Score | Logical entity representing score data. | To manage the lifecycle of scores. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-056 | Skill Gap | Logical entity representing skill gap data. | To manage the lifecycle of skill gaps. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-057 | Proctoring Log | Logical entity representing proctoring log data. | To manage the lifecycle of proctoring logs. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-058 | Code Execution Result | Logical entity representing code execution result data. | To manage the lifecycle of code execution results. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-059 | Plagiarism Report | Logical entity representing plagiarism report data. | To manage the lifecycle of plagiarism reports. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-060 | Question Bank | Logical entity representing question bank data. | To manage the lifecycle of question banks. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-061 | Assessment Template | Logical entity representing assessment template data. | To manage the lifecycle of assessment templates. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-06 Entities |
-| DATA-062 | Roadmap | Logical entity representing roadmap data. | To manage the lifecycle of roadmaps. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-063 | Module | Logical entity representing module data. | To manage the lifecycle of modules. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-064 | Course | Logical entity representing course data. | To manage the lifecycle of courses. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-065 | Lesson | Logical entity representing lesson data. | To manage the lifecycle of lessons. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-066 | Progress | Logical entity representing progress data. | To manage the lifecycle of progresss. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-067 | Certificate | Logical entity representing certificate data. | To manage the lifecycle of certificates. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-068 | Badge | Logical entity representing badge data. | To manage the lifecycle of badges. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-069 | Recommendation | Logical entity representing recommendation data. | To manage the lifecycle of recommendations. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-070 | Content Resource | Logical entity representing content resource data. | To manage the lifecycle of content resources. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-071 | Learning Path | Logical entity representing learning path data. | To manage the lifecycle of learning paths. | Chief Learning Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-07 Entities |
-| DATA-072 | Transaction | Logical entity representing transaction data. | To manage the lifecycle of transactions. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-073 | Invoice | Logical entity representing invoice data. | To manage the lifecycle of invoices. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-074 | Credit Balance | Logical entity representing credit balance data. | To manage the lifecycle of credit balances. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-075 | Plan | Logical entity representing plan data. | To manage the lifecycle of plans. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-076 | Discount | Logical entity representing discount data. | To manage the lifecycle of discounts. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-077 | Tax Record | Logical entity representing tax record data. | To manage the lifecycle of tax records. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-078 | Refund | Logical entity representing refund data. | To manage the lifecycle of refunds. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-079 | Payment Method | Logical entity representing payment method data. | To manage the lifecycle of payment methods. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-080 | Billing Cycle | Logical entity representing billing cycle data. | To manage the lifecycle of billing cycles. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-081 | Receipt | Logical entity representing receipt data. | To manage the lifecycle of receipts. | CFO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 7 Years | Core DOM-08 Entities |
-| DATA-082 | Notification | Logical entity representing notification data. | To manage the lifecycle of notifications. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-083 | Email Template | Logical entity representing email template data. | To manage the lifecycle of email templates. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-084 | SMS Log | Logical entity representing sms log data. | To manage the lifecycle of sms logs. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-085 | In-App Message | Logical entity representing in-app message data. | To manage the lifecycle of in-app messages. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-086 | Push Notification | Logical entity representing push notification data. | To manage the lifecycle of push notifications. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-087 | Delivery Status | Logical entity representing delivery status data. | To manage the lifecycle of delivery statuss. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-088 | Subscription Preference | Logical entity representing subscription preference data. | To manage the lifecycle of subscription preferences. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-089 | Alert | Logical entity representing alert data. | To manage the lifecycle of alerts. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-090 | Reminder | Logical entity representing reminder data. | To manage the lifecycle of reminders. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-091 | Digest | Logical entity representing digest data. | To manage the lifecycle of digests. | VP of Product | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-09 Entities |
-| DATA-092 | Audit Log | Logical entity representing audit log data. | To manage the lifecycle of audit logs. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-093 | Access Log | Logical entity representing access log data. | To manage the lifecycle of access logs. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-094 | Change Record | Logical entity representing change record data. | To manage the lifecycle of change records. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-095 | Error Log | Logical entity representing error log data. | To manage the lifecycle of error logs. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-096 | Compliance Report | Logical entity representing compliance report data. | To manage the lifecycle of compliance reports. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-097 | Data Export Request | Logical entity representing data export request data. | To manage the lifecycle of data export requests. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-098 | Privacy Request | Logical entity representing privacy request data. | To manage the lifecycle of privacy requests. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-099 | Admin Action | Logical entity representing admin action data. | To manage the lifecycle of admin actions. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-100 | Login Event | Logical entity representing login event data. | To manage the lifecycle of login events. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-101 | System Alert | Logical entity representing system alert data. | To manage the lifecycle of system alerts. | Data Protection Officer | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-10 Entities |
-| DATA-102 | Analytics Snapshot | Logical entity representing analytics snapshot data. | To manage the lifecycle of analytics snapshots. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-103 | Usage Metric | Logical entity representing usage metric data. | To manage the lifecycle of usage metrics. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-104 | Performance Metric | Logical entity representing performance metric data. | To manage the lifecycle of performance metrics. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-105 | Diversity Metric | Logical entity representing diversity metric data. | To manage the lifecycle of diversity metrics. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-106 | ROI Report | Logical entity representing roi report data. | To manage the lifecycle of roi reports. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-107 | Candidate Funnel | Logical entity representing candidate funnel data. | To manage the lifecycle of candidate funnels. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-108 | Drop-off Rate | Logical entity representing drop-off rate data. | To manage the lifecycle of drop-off rates. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-109 | Satisfaction Score | Logical entity representing satisfaction score data. | To manage the lifecycle of satisfaction scores. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-110 | Time-to-Hire | Logical entity representing time-to-hire data. | To manage the lifecycle of time-to-hires. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-111 | Cost-per-Hire | Logical entity representing cost-per-hire data. | To manage the lifecycle of cost-per-hires. | CDO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-11 Entities |
-| DATA-112 | System Configuration | Logical entity representing system configuration data. | To manage the lifecycle of system configurations. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-113 | Localization Setting | Logical entity representing localization setting data. | To manage the lifecycle of localization settings. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-114 | API Key | Logical entity representing api key data. | To manage the lifecycle of api keys. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-115 | Webhook | Logical entity representing webhook data. | To manage the lifecycle of webhooks. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-116 | Integration Profile | Logical entity representing integration profile data. | To manage the lifecycle of integration profiles. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-117 | Business Rule Config | Logical entity representing business rule config data. | To manage the lifecycle of business rule configs. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-118 | Feature Flag | Logical entity representing feature flag data. | To manage the lifecycle of feature flags. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
-| DATA-119 | Maintenance Window | Logical entity representing maintenance window data. | To manage the lifecycle of maintenance windows. | CTO | System Generated | System Processes, Reporting | Active / Archived | Confidential | 3 Years | Core DOM-12 Entities |
+| DATA-001 | User | Thực thể logic đại diện cho dữ liệu user. | Quản lý vòng đời của user. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-002 | Role | Thực thể logic đại diện cho dữ liệu role. | Quản lý vòng đời của role. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-003 | Permission | Thực thể logic đại diện cho dữ liệu permission. | Quản lý vòng đời của permission. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-004 | Session | Thực thể logic đại diện cho dữ liệu session. | Quản lý vòng đời của session. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-005 | MFA Token | Thực thể logic đại diện cho dữ liệu mfa token. | Quản lý vòng đời của mfa token. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-006 | Consent Record | Thực thể logic đại diện cho dữ liệu consent record. | Quản lý vòng đời của consent record. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-007 | Identity Verification | Thực thể logic đại diện cho dữ liệu identity verification. | Quản lý vòng đời của identity verification. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-008 | Security Profile | Thực thể logic đại diện cho dữ liệu security profile. | Quản lý vòng đời của security profile. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-009 | SSO Configuration | Thực thể logic đại diện cho dữ liệu sso configuration. | Quản lý vòng đời của sso configuration. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-010 | Password History | Thực thể logic đại diện cho dữ liệu password history. | Quản lý vòng đời của password history. | CISO | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-01 cốt lõi |
+| DATA-011 | Ứng viên | Thực thể logic đại diện cho dữ liệu candidate. | Quản lý vòng đời của candidate. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-012 | Profile | Thực thể logic đại diện cho dữ liệu profile. | Quản lý vòng đời của profile. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-013 | Education | Thực thể logic đại diện cho dữ liệu education. | Quản lý vòng đời của education. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-014 | Experience | Thực thể logic đại diện cho dữ liệu experience. | Quản lý vòng đời của experience. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-015 | Skill Claim | Thực thể logic đại diện cho dữ liệu skill claim. | Quản lý vòng đời của skill claim. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-016 | Certification | Thực thể logic đại diện cho dữ liệu certification. | Quản lý vòng đời của certification. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-017 | Career Goal | Thực thể logic đại diện cho dữ liệu career goal. | Quản lý vòng đời của career goal. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-018 | Language Proficiency | Thực thể logic đại diện cho dữ liệu language proficiency. | Quản lý vòng đời của language proficiency. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-019 | Portfolio Item | Thực thể logic đại diện cho dữ liệu portfolio item. | Quản lý vòng đời của portfolio item. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-020 | Availability | Thực thể logic đại diện cho dữ liệu availability. | Quản lý vòng đời của availability. | VP of HR | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-02 cốt lõi |
+| DATA-021 | Employer | Thực thể logic đại diện cho dữ liệu employer. | Quản lý vòng đời của employer. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-022 | Company | Thực thể logic đại diện cho dữ liệu company. | Quản lý vòng đời của company. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-023 | Department | Thực thể logic đại diện cho dữ liệu department. | Quản lý vòng đời của department. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-024 | Team | Thực thể logic đại diện cho dữ liệu team. | Quản lý vòng đời của team. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-025 | Nhà tuyển dụng | Thực thể logic đại diện cho dữ liệu recruiter. | Quản lý vòng đời của recruiter. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-026 | Hiring Manager | Thực thể logic đại diện cho dữ liệu hiring manager. | Quản lý vòng đời của hiring manager. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-027 | Billing Profile | Thực thể logic đại diện cho dữ liệu billing profile. | Quản lý vòng đời của billing profile. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-028 | Subscription | Thực thể logic đại diện cho dữ liệu subscription. | Quản lý vòng đời của subscription. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-029 | Company Address | Thực thể logic đại diện cho dữ liệu company addres. | Quản lý vòng đời của company address. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-030 | Employer Setting | Thực thể logic đại diện cho dữ liệu employer setting. | Quản lý vòng đời của employer setting. | VP of Sales | Người dùng Nhập | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-03 cốt lõi |
+| DATA-031 | Job Posting | Thực thể logic đại diện cho dữ liệu job posting. | Quản lý vòng đời của job posting. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-032 | Campaign | Thực thể logic đại diện cho dữ liệu campaign. | Quản lý vòng đời của campaign. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-033 | Application | Thực thể logic đại diện cho dữ liệu application. | Quản lý vòng đời của application. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-034 | Talent Pool | Thực thể logic đại diện cho dữ liệu talent pool. | Quản lý vòng đời của talent pool. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-035 | Offer | Thực thể logic đại diện cho dữ liệu offer. | Quản lý vòng đời của offer. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-036 | Pipeline Stage | Thực thể logic đại diện cho dữ liệu pipeline stage. | Quản lý vòng đời của pipeline stage. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-037 | Sourcing Channel | Thực thể logic đại diện cho dữ liệu sourcing channel. | Quản lý vòng đời của sourcing channel. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-038 | Referral | Thực thể logic đại diện cho dữ liệu referral. | Quản lý vòng đời của referral. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-039 | Screening Form | Thực thể logic đại diện cho dữ liệu screening form. | Quản lý vòng đời của screening form. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-040 | Shortlist | Thực thể logic đại diện cho dữ liệu shortlist. | Quản lý vòng đời của shortlist. | VP of Recruitment | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-04 cốt lõi |
+| DATA-041 | Interview | Thực thể logic đại diện cho dữ liệu interview. | Quản lý vòng đời của interview. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-042 | Session | Thực thể logic đại diện cho dữ liệu session. | Quản lý vòng đời của session. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-043 | Question | Thực thể logic đại diện cho dữ liệu question. | Quản lý vòng đời của question. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-044 | Answer | Thực thể logic đại diện cho dữ liệu answer. | Quản lý vòng đời của answer. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-045 | Rubric | Thực thể logic đại diện cho dữ liệu rubric. | Quản lý vòng đời của rubric. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-046 | Recording | Thực thể logic đại diện cho dữ liệu recording. | Quản lý vòng đời của recording. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-047 | Transcript | Thực thể logic đại diện cho dữ liệu transcript. | Quản lý vòng đời của transcript. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-048 | Interviewer | Thực thể logic đại diện cho dữ liệu interviewer. | Quản lý vòng đời của interviewer. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-049 | Feedback | Thực thể logic đại diện cho dữ liệu feedback. | Quản lý vòng đời của feedback. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-050 | Rating | Thực thể logic đại diện cho dữ liệu rating. | Quản lý vòng đời của rating. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-051 | Interview Template | Thực thể logic đại diện cho dữ liệu interview template. | Quản lý vòng đời của interview template. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-05 cốt lõi |
+| DATA-052 | Assessment | Thực thể logic đại diện cho dữ liệu assessment. | Quản lý vòng đời của assessment. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-053 | Test Case | Thực thể logic đại diện cho dữ liệu test case. | Quản lý vòng đời của test case. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-054 | Submission | Thực thể logic đại diện cho dữ liệu submission. | Quản lý vòng đời của submission. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-055 | Score | Thực thể logic đại diện cho dữ liệu score. | Quản lý vòng đời của score. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-056 | Skill Gap | Thực thể logic đại diện cho dữ liệu skill gap. | Quản lý vòng đời của skill gap. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-057 | Proctoring Log | Thực thể logic đại diện cho dữ liệu proctoring log. | Quản lý vòng đời của proctoring log. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-058 | Code Execution Result | Thực thể logic đại diện cho dữ liệu code execution result. | Quản lý vòng đời của code execution result. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-059 | Plagiarism Báo cáo | Thực thể logic đại diện cho dữ liệu plagiarism report. | Quản lý vòng đời của plagiarism report. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-060 | Question Bank | Thực thể logic đại diện cho dữ liệu question bank. | Quản lý vòng đời của question bank. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-061 | Assessment Template | Thực thể logic đại diện cho dữ liệu assessment template. | Quản lý vòng đời của assessment template. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-06 cốt lõi |
+| DATA-062 | Roadmap | Thực thể logic đại diện cho dữ liệu roadmap. | Quản lý vòng đời của roadmap. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-063 | Module | Thực thể logic đại diện cho dữ liệu module. | Quản lý vòng đời của module. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-064 | Course | Thực thể logic đại diện cho dữ liệu course. | Quản lý vòng đời của course. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-065 | Lesson | Thực thể logic đại diện cho dữ liệu lesson. | Quản lý vòng đời của lesson. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-066 | Progress | Thực thể logic đại diện cho dữ liệu progres. | Quản lý vòng đời của progress. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-067 | Certificate | Thực thể logic đại diện cho dữ liệu certificate. | Quản lý vòng đời của certificate. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-068 | Badge | Thực thể logic đại diện cho dữ liệu badge. | Quản lý vòng đời của badge. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-069 | Recommendation | Thực thể logic đại diện cho dữ liệu recommendation. | Quản lý vòng đời của recommendation. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-070 | Content Resource | Thực thể logic đại diện cho dữ liệu content resource. | Quản lý vòng đời của content resource. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-071 | Learning Path | Thực thể logic đại diện cho dữ liệu learning path. | Quản lý vòng đời của learning path. | Chief Learning Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-07 cốt lõi |
+| DATA-072 | Transaction | Thực thể logic đại diện cho dữ liệu transaction. | Quản lý vòng đời của transaction. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-073 | Invoice | Thực thể logic đại diện cho dữ liệu invoice. | Quản lý vòng đời của invoice. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-074 | Credit Balance | Thực thể logic đại diện cho dữ liệu credit balance. | Quản lý vòng đời của credit balance. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-075 | Plan | Thực thể logic đại diện cho dữ liệu plan. | Quản lý vòng đời của plan. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-076 | Discount | Thực thể logic đại diện cho dữ liệu discount. | Quản lý vòng đời của discount. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-077 | Tax Record | Thực thể logic đại diện cho dữ liệu tax record. | Quản lý vòng đời của tax record. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-078 | Refund | Thực thể logic đại diện cho dữ liệu refund. | Quản lý vòng đời của refund. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-079 | Payment Method | Thực thể logic đại diện cho dữ liệu payment method. | Quản lý vòng đời của payment method. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-080 | Billing Cycle | Thực thể logic đại diện cho dữ liệu billing cycle. | Quản lý vòng đời của billing cycle. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-081 | Receipt | Thực thể logic đại diện cho dữ liệu receipt. | Quản lý vòng đời của receipt. | CFO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 7 Năm | Các thực thể DOM-08 cốt lõi |
+| DATA-082 | Notification | Thực thể logic đại diện cho dữ liệu notification. | Quản lý vòng đời của notification. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-083 | Email Template | Thực thể logic đại diện cho dữ liệu email template. | Quản lý vòng đời của email template. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-084 | SMS Log | Thực thể logic đại diện cho dữ liệu sms log. | Quản lý vòng đời của sms log. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-085 | In-App Message | Thực thể logic đại diện cho dữ liệu in-app message. | Quản lý vòng đời của in-app message. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-086 | Push Notification | Thực thể logic đại diện cho dữ liệu push notification. | Quản lý vòng đời của push notification. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-087 | Delivery Status | Thực thể logic đại diện cho dữ liệu delivery statu. | Quản lý vòng đời của delivery status. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-088 | Subscription Preference | Thực thể logic đại diện cho dữ liệu subscription preference. | Quản lý vòng đời của subscription preference. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-089 | Alert | Thực thể logic đại diện cho dữ liệu alert. | Quản lý vòng đời của alert. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-090 | Reminder | Thực thể logic đại diện cho dữ liệu reminder. | Quản lý vòng đời của reminder. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-091 | Digest | Thực thể logic đại diện cho dữ liệu digest. | Quản lý vòng đời của digest. | VP of Product | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-09 cốt lõi |
+| DATA-092 | Audit Log | Thực thể logic đại diện cho dữ liệu audit log. | Quản lý vòng đời của audit log. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-093 | Access Log | Thực thể logic đại diện cho dữ liệu access log. | Quản lý vòng đời của access log. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-094 | Change Record | Thực thể logic đại diện cho dữ liệu change record. | Quản lý vòng đời của change record. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-095 | Error Log | Thực thể logic đại diện cho dữ liệu error log. | Quản lý vòng đời của error log. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-096 | Compliance Báo cáo | Thực thể logic đại diện cho dữ liệu compliance report. | Quản lý vòng đời của compliance report. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-097 | Data Export Request | Thực thể logic đại diện cho dữ liệu data export request. | Quản lý vòng đời của data export request. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-098 | Privacy Request | Thực thể logic đại diện cho dữ liệu privacy request. | Quản lý vòng đời của privacy request. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-099 | Admin Action | Thực thể logic đại diện cho dữ liệu admin action. | Quản lý vòng đời của admin action. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-100 | Login Event | Thực thể logic đại diện cho dữ liệu login event. | Quản lý vòng đời của login event. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-101 | System Alert | Thực thể logic đại diện cho dữ liệu system alert. | Quản lý vòng đời của system alert. | Data Protection Officer | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-10 cốt lõi |
+| DATA-102 | Analytics Snapshot | Thực thể logic đại diện cho dữ liệu analytics snapshot. | Quản lý vòng đời của analytics snapshot. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-103 | Usage Metric | Thực thể logic đại diện cho dữ liệu usage metric. | Quản lý vòng đời của usage metric. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-104 | Performance Metric | Thực thể logic đại diện cho dữ liệu performance metric. | Quản lý vòng đời của performance metric. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-105 | Diversity Metric | Thực thể logic đại diện cho dữ liệu diversity metric. | Quản lý vòng đời của diversity metric. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-106 | ROI Báo cáo | Thực thể logic đại diện cho dữ liệu roi report. | Quản lý vòng đời của roi report. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-107 | Ứng viên Funnel | Thực thể logic đại diện cho dữ liệu candidate funnel. | Quản lý vòng đời của candidate funnel. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-108 | Drop-off Rate | Thực thể logic đại diện cho dữ liệu drop-off rate. | Quản lý vòng đời của drop-off rate. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-109 | Satisfaction Score | Thực thể logic đại diện cho dữ liệu satisfaction score. | Quản lý vòng đời của satisfaction score. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-110 | Time-to-Hire | Thực thể logic đại diện cho dữ liệu time-to-hire. | Quản lý vòng đời của time-to-hire. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-111 | Cost-per-Hire | Thực thể logic đại diện cho dữ liệu cost-per-hire. | Quản lý vòng đời của cost-per-hire. | CDO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-11 cốt lõi |
+| DATA-112 | System Configuration | Thực thể logic đại diện cho dữ liệu system configuration. | Quản lý vòng đời của system configuration. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-113 | Localization Setting | Thực thể logic đại diện cho dữ liệu localization setting. | Quản lý vòng đời của localization setting. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-114 | API Key | Thực thể logic đại diện cho dữ liệu api key. | Quản lý vòng đời của api key. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-115 | Webhook | Thực thể logic đại diện cho dữ liệu webhook. | Quản lý vòng đời của webhook. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-116 | Integration Profile | Thực thể logic đại diện cho dữ liệu integration profile. | Quản lý vòng đời của integration profile. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-117 | Quy tắc Nghiệp vụ Config | Thực thể logic đại diện cho dữ liệu business rule config. | Quản lý vòng đời của business rule config. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-118 | Feature Flag | Thực thể logic đại diện cho dữ liệu feature flag. | Quản lý vòng đời của feature flag. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
+| DATA-119 | Maintenance Window | Thực thể logic đại diện cho dữ liệu maintenance window. | Quản lý vòng đời của maintenance window. | CTO | Hệ thống Tạo | Quy trình Hệ thống, Báo cáo | Hoạt động / Đã lưu trữ | Bảo mật | 3 Năm | Các thực thể DOM-12 cốt lõi |
 
 
-## 5. Data Attributes
-Attributes define the specific data points collected for each business object. (Sample of comprehensive mapping across all objects).
-| Data Object ID | Attribute Name | Business Definition | Data Type | Req/Opt | Validation Rule | Example Value | Sensitivity Level | Business Rule Ref |
+## 5. Thuộc tính Dữ liệu
+Các thuộc tính xác định các điểm dữ liệu cụ thể được thu thập cho từng đối tượng kinh doanh. (Mẫu ánh xạ toàn diện trên tất cả các đối tượng).
+| ID Đối tượng Dữ liệu | Tên Thuộc tính | Định nghĩa Nghiệp vụ | Kiểu Dữ liệu | Bắt buộc/Tùy chọn | Quy tắc Xác thực | Giá trị Ví dụ | Độ nhạy cảm Level | Tham chiếu Quy tắc Nghiệp vụ |
 |---|---|---|---|---|---|---|---|---|
-| DATA-001 | User ID | Unique identifier for User | Reference | Required | VAL-001 | USE-8821 | Internal | BR-01 |
-| DATA-001 | Name / Title | Primary descriptive label | Text | Required | VAL-002 | Standard User | Public | BR-02 |
-| DATA-001 | Status | Current lifecycle state | Enumeration | Required | VAL-003 | Active | Internal | BR-03 |
-| DATA-001 | Email Address | Primary contact email | Text | Required | VAL-004 | user@example.com | PII | BR-05 |
-| DATA-002 | Role ID | Unique identifier for Role | Reference | Required | VAL-005 | ROL-8821 | Internal | BR-01 |
-| DATA-002 | Name / Title | Primary descriptive label | Text | Required | VAL-006 | Standard Role | Public | BR-02 |
-| DATA-002 | Status | Current lifecycle state | Enumeration | Required | VAL-007 | Active | Internal | BR-03 |
-| DATA-002 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-008 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-003 | Permission ID | Unique identifier for Permission | Reference | Required | VAL-009 | PER-8821 | Internal | BR-01 |
-| DATA-003 | Name / Title | Primary descriptive label | Text | Required | VAL-010 | Standard Permission | Public | BR-02 |
-| DATA-003 | Status | Current lifecycle state | Enumeration | Required | VAL-011 | Active | Internal | BR-03 |
-| DATA-003 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-012 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-004 | Session ID | Unique identifier for Session | Reference | Required | VAL-013 | SES-8821 | Internal | BR-01 |
-| DATA-004 | Name / Title | Primary descriptive label | Text | Required | VAL-014 | Standard Session | Public | BR-02 |
-| DATA-004 | Status | Current lifecycle state | Enumeration | Required | VAL-015 | Active | Internal | BR-03 |
-| DATA-004 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-016 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-005 | MFA Token ID | Unique identifier for MFA Token | Reference | Required | VAL-017 | MFA-8821 | Internal | BR-01 |
-| DATA-005 | Name / Title | Primary descriptive label | Text | Required | VAL-018 | Standard MFA Token | Public | BR-02 |
-| DATA-005 | Status | Current lifecycle state | Enumeration | Required | VAL-019 | Active | Internal | BR-03 |
-| DATA-005 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-020 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-006 | Consent Record ID | Unique identifier for Consent Record | Reference | Required | VAL-021 | CON-8821 | Internal | BR-01 |
-| DATA-006 | Name / Title | Primary descriptive label | Text | Required | VAL-022 | Standard Consent Record | Public | BR-02 |
-| DATA-006 | Status | Current lifecycle state | Enumeration | Required | VAL-023 | Active | Internal | BR-03 |
-| DATA-006 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-024 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-007 | Identity Verification ID | Unique identifier for Identity Verification | Reference | Required | VAL-025 | IDE-8821 | Internal | BR-01 |
-| DATA-007 | Name / Title | Primary descriptive label | Text | Required | VAL-026 | Standard Identity Verification | Public | BR-02 |
-| DATA-007 | Status | Current lifecycle state | Enumeration | Required | VAL-027 | Active | Internal | BR-03 |
-| DATA-007 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-028 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-008 | Security Profile ID | Unique identifier for Security Profile | Reference | Required | VAL-029 | SEC-8821 | Internal | BR-01 |
-| DATA-008 | Name / Title | Primary descriptive label | Text | Required | VAL-030 | Standard Security Profile | Public | BR-02 |
-| DATA-008 | Status | Current lifecycle state | Enumeration | Required | VAL-031 | Active | Internal | BR-03 |
-| DATA-008 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-032 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-009 | SSO Configuration ID | Unique identifier for SSO Configuration | Reference | Required | VAL-033 | SSO-8821 | Internal | BR-01 |
-| DATA-009 | Name / Title | Primary descriptive label | Text | Required | VAL-034 | Standard SSO Configuration | Public | BR-02 |
-| DATA-009 | Status | Current lifecycle state | Enumeration | Required | VAL-035 | Active | Internal | BR-03 |
-| DATA-009 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-036 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-010 | Password History ID | Unique identifier for Password History | Reference | Required | VAL-037 | PAS-8821 | Internal | BR-01 |
-| DATA-010 | Name / Title | Primary descriptive label | Text | Required | VAL-038 | Standard Password History | Public | BR-02 |
-| DATA-010 | Status | Current lifecycle state | Enumeration | Required | VAL-039 | Active | Internal | BR-03 |
-| DATA-010 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-040 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-011 | Candidate ID | Unique identifier for Candidate | Reference | Required | VAL-041 | CAN-8821 | Internal | BR-01 |
-| DATA-011 | Name / Title | Primary descriptive label | Text | Required | VAL-042 | Standard Candidate | Public | BR-02 |
-| DATA-011 | Status | Current lifecycle state | Enumeration | Required | VAL-043 | Active | Internal | BR-03 |
-| DATA-011 | Resume | Attached CV document | Attachment | Optional | VAL-044 | resume.pdf | PII | BR-07 |
-| DATA-012 | Profile ID | Unique identifier for Profile | Reference | Required | VAL-045 | PRO-8821 | Internal | BR-01 |
-| DATA-012 | Name / Title | Primary descriptive label | Text | Required | VAL-046 | Standard Profile | Public | BR-02 |
-| DATA-012 | Status | Current lifecycle state | Enumeration | Required | VAL-047 | Active | Internal | BR-03 |
-| DATA-012 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-048 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-013 | Education ID | Unique identifier for Education | Reference | Required | VAL-049 | EDU-8821 | Internal | BR-01 |
-| DATA-013 | Name / Title | Primary descriptive label | Text | Required | VAL-050 | Standard Education | Public | BR-02 |
-| DATA-013 | Status | Current lifecycle state | Enumeration | Required | VAL-051 | Active | Internal | BR-03 |
-| DATA-013 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-052 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-014 | Experience ID | Unique identifier for Experience | Reference | Required | VAL-053 | EXP-8821 | Internal | BR-01 |
-| DATA-014 | Name / Title | Primary descriptive label | Text | Required | VAL-054 | Standard Experience | Public | BR-02 |
-| DATA-014 | Status | Current lifecycle state | Enumeration | Required | VAL-055 | Active | Internal | BR-03 |
-| DATA-014 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-056 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-015 | Skill Claim ID | Unique identifier for Skill Claim | Reference | Required | VAL-057 | SKI-8821 | Internal | BR-01 |
-| DATA-015 | Name / Title | Primary descriptive label | Text | Required | VAL-058 | Standard Skill Claim | Public | BR-02 |
-| DATA-015 | Status | Current lifecycle state | Enumeration | Required | VAL-059 | Active | Internal | BR-03 |
-| DATA-015 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-060 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-016 | Certification ID | Unique identifier for Certification | Reference | Required | VAL-061 | CER-8821 | Internal | BR-01 |
-| DATA-016 | Name / Title | Primary descriptive label | Text | Required | VAL-062 | Standard Certification | Public | BR-02 |
-| DATA-016 | Status | Current lifecycle state | Enumeration | Required | VAL-063 | Active | Internal | BR-03 |
-| DATA-016 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-064 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-017 | Career Goal ID | Unique identifier for Career Goal | Reference | Required | VAL-065 | CAR-8821 | Internal | BR-01 |
-| DATA-017 | Name / Title | Primary descriptive label | Text | Required | VAL-066 | Standard Career Goal | Public | BR-02 |
-| DATA-017 | Status | Current lifecycle state | Enumeration | Required | VAL-067 | Active | Internal | BR-03 |
-| DATA-017 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-068 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-018 | Language Proficiency ID | Unique identifier for Language Proficiency | Reference | Required | VAL-069 | LAN-8821 | Internal | BR-01 |
-| DATA-018 | Name / Title | Primary descriptive label | Text | Required | VAL-070 | Standard Language Proficiency | Public | BR-02 |
-| DATA-018 | Status | Current lifecycle state | Enumeration | Required | VAL-071 | Active | Internal | BR-03 |
-| DATA-018 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-072 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-019 | Portfolio Item ID | Unique identifier for Portfolio Item | Reference | Required | VAL-073 | POR-8821 | Internal | BR-01 |
-| DATA-019 | Name / Title | Primary descriptive label | Text | Required | VAL-074 | Standard Portfolio Item | Public | BR-02 |
-| DATA-019 | Status | Current lifecycle state | Enumeration | Required | VAL-075 | Active | Internal | BR-03 |
-| DATA-019 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-076 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-020 | Availability ID | Unique identifier for Availability | Reference | Required | VAL-077 | AVA-8821 | Internal | BR-01 |
-| DATA-020 | Name / Title | Primary descriptive label | Text | Required | VAL-078 | Standard Availability | Public | BR-02 |
-| DATA-020 | Status | Current lifecycle state | Enumeration | Required | VAL-079 | Active | Internal | BR-03 |
-| DATA-020 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-080 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-021 | Employer ID | Unique identifier for Employer | Reference | Required | VAL-081 | EMP-8821 | Internal | BR-01 |
-| DATA-021 | Name / Title | Primary descriptive label | Text | Required | VAL-082 | Standard Employer | Public | BR-02 |
-| DATA-021 | Status | Current lifecycle state | Enumeration | Required | VAL-083 | Active | Internal | BR-03 |
-| DATA-021 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-084 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-022 | Company ID | Unique identifier for Company | Reference | Required | VAL-085 | COM-8821 | Internal | BR-01 |
-| DATA-022 | Name / Title | Primary descriptive label | Text | Required | VAL-086 | Standard Company | Public | BR-02 |
-| DATA-022 | Status | Current lifecycle state | Enumeration | Required | VAL-087 | Active | Internal | BR-03 |
-| DATA-022 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-088 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-023 | Department ID | Unique identifier for Department | Reference | Required | VAL-089 | DEP-8821 | Internal | BR-01 |
-| DATA-023 | Name / Title | Primary descriptive label | Text | Required | VAL-090 | Standard Department | Public | BR-02 |
-| DATA-023 | Status | Current lifecycle state | Enumeration | Required | VAL-091 | Active | Internal | BR-03 |
-| DATA-023 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-092 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-024 | Team ID | Unique identifier for Team | Reference | Required | VAL-093 | TEA-8821 | Internal | BR-01 |
-| DATA-024 | Name / Title | Primary descriptive label | Text | Required | VAL-094 | Standard Team | Public | BR-02 |
-| DATA-024 | Status | Current lifecycle state | Enumeration | Required | VAL-095 | Active | Internal | BR-03 |
-| DATA-024 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-096 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-025 | Recruiter ID | Unique identifier for Recruiter | Reference | Required | VAL-097 | REC-8821 | Internal | BR-01 |
-| DATA-025 | Name / Title | Primary descriptive label | Text | Required | VAL-098 | Standard Recruiter | Public | BR-02 |
-| DATA-025 | Status | Current lifecycle state | Enumeration | Required | VAL-099 | Active | Internal | BR-03 |
-| DATA-025 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-100 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-026 | Hiring Manager ID | Unique identifier for Hiring Manager | Reference | Required | VAL-101 | HIR-8821 | Internal | BR-01 |
-| DATA-026 | Name / Title | Primary descriptive label | Text | Required | VAL-102 | Standard Hiring Manager | Public | BR-02 |
-| DATA-026 | Status | Current lifecycle state | Enumeration | Required | VAL-103 | Active | Internal | BR-03 |
-| DATA-026 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-104 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-027 | Billing Profile ID | Unique identifier for Billing Profile | Reference | Required | VAL-105 | BIL-8821 | Internal | BR-01 |
-| DATA-027 | Name / Title | Primary descriptive label | Text | Required | VAL-106 | Standard Billing Profile | Public | BR-02 |
-| DATA-027 | Status | Current lifecycle state | Enumeration | Required | VAL-107 | Active | Internal | BR-03 |
-| DATA-027 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-108 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-028 | Subscription ID | Unique identifier for Subscription | Reference | Required | VAL-109 | SUB-8821 | Internal | BR-01 |
-| DATA-028 | Name / Title | Primary descriptive label | Text | Required | VAL-110 | Standard Subscription | Public | BR-02 |
-| DATA-028 | Status | Current lifecycle state | Enumeration | Required | VAL-111 | Active | Internal | BR-03 |
-| DATA-028 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-112 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-029 | Company Address ID | Unique identifier for Company Address | Reference | Required | VAL-113 | COM-8821 | Internal | BR-01 |
-| DATA-029 | Name / Title | Primary descriptive label | Text | Required | VAL-114 | Standard Company Address | Public | BR-02 |
-| DATA-029 | Status | Current lifecycle state | Enumeration | Required | VAL-115 | Active | Internal | BR-03 |
-| DATA-029 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-116 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-030 | Employer Setting ID | Unique identifier for Employer Setting | Reference | Required | VAL-117 | EMP-8821 | Internal | BR-01 |
-| DATA-030 | Name / Title | Primary descriptive label | Text | Required | VAL-118 | Standard Employer Setting | Public | BR-02 |
-| DATA-030 | Status | Current lifecycle state | Enumeration | Required | VAL-119 | Active | Internal | BR-03 |
-| DATA-030 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-120 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-031 | Job Posting ID | Unique identifier for Job Posting | Reference | Required | VAL-121 | JOB-8821 | Internal | BR-01 |
-| DATA-031 | Name / Title | Primary descriptive label | Text | Required | VAL-122 | Standard Job Posting | Public | BR-02 |
-| DATA-031 | Status | Current lifecycle state | Enumeration | Required | VAL-123 | Active | Internal | BR-03 |
-| DATA-031 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-124 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-032 | Campaign ID | Unique identifier for Campaign | Reference | Required | VAL-125 | CAM-8821 | Internal | BR-01 |
-| DATA-032 | Name / Title | Primary descriptive label | Text | Required | VAL-126 | Standard Campaign | Public | BR-02 |
-| DATA-032 | Status | Current lifecycle state | Enumeration | Required | VAL-127 | Active | Internal | BR-03 |
-| DATA-032 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-128 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-033 | Application ID | Unique identifier for Application | Reference | Required | VAL-129 | APP-8821 | Internal | BR-01 |
-| DATA-033 | Name / Title | Primary descriptive label | Text | Required | VAL-130 | Standard Application | Public | BR-02 |
-| DATA-033 | Status | Current lifecycle state | Enumeration | Required | VAL-131 | Active | Internal | BR-03 |
-| DATA-033 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-132 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-034 | Talent Pool ID | Unique identifier for Talent Pool | Reference | Required | VAL-133 | TAL-8821 | Internal | BR-01 |
-| DATA-034 | Name / Title | Primary descriptive label | Text | Required | VAL-134 | Standard Talent Pool | Public | BR-02 |
-| DATA-034 | Status | Current lifecycle state | Enumeration | Required | VAL-135 | Active | Internal | BR-03 |
-| DATA-034 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-136 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-035 | Offer ID | Unique identifier for Offer | Reference | Required | VAL-137 | OFF-8821 | Internal | BR-01 |
-| DATA-035 | Name / Title | Primary descriptive label | Text | Required | VAL-138 | Standard Offer | Public | BR-02 |
-| DATA-035 | Status | Current lifecycle state | Enumeration | Required | VAL-139 | Active | Internal | BR-03 |
-| DATA-035 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-140 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-036 | Pipeline Stage ID | Unique identifier for Pipeline Stage | Reference | Required | VAL-141 | PIP-8821 | Internal | BR-01 |
-| DATA-036 | Name / Title | Primary descriptive label | Text | Required | VAL-142 | Standard Pipeline Stage | Public | BR-02 |
-| DATA-036 | Status | Current lifecycle state | Enumeration | Required | VAL-143 | Active | Internal | BR-03 |
-| DATA-036 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-144 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-037 | Sourcing Channel ID | Unique identifier for Sourcing Channel | Reference | Required | VAL-145 | SOU-8821 | Internal | BR-01 |
-| DATA-037 | Name / Title | Primary descriptive label | Text | Required | VAL-146 | Standard Sourcing Channel | Public | BR-02 |
-| DATA-037 | Status | Current lifecycle state | Enumeration | Required | VAL-147 | Active | Internal | BR-03 |
-| DATA-037 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-148 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-038 | Referral ID | Unique identifier for Referral | Reference | Required | VAL-149 | REF-8821 | Internal | BR-01 |
-| DATA-038 | Name / Title | Primary descriptive label | Text | Required | VAL-150 | Standard Referral | Public | BR-02 |
-| DATA-038 | Status | Current lifecycle state | Enumeration | Required | VAL-151 | Active | Internal | BR-03 |
-| DATA-038 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-152 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-039 | Screening Form ID | Unique identifier for Screening Form | Reference | Required | VAL-153 | SCR-8821 | Internal | BR-01 |
-| DATA-039 | Name / Title | Primary descriptive label | Text | Required | VAL-154 | Standard Screening Form | Public | BR-02 |
-| DATA-039 | Status | Current lifecycle state | Enumeration | Required | VAL-155 | Active | Internal | BR-03 |
-| DATA-039 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-156 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-040 | Shortlist ID | Unique identifier for Shortlist | Reference | Required | VAL-157 | SHO-8821 | Internal | BR-01 |
-| DATA-040 | Name / Title | Primary descriptive label | Text | Required | VAL-158 | Standard Shortlist | Public | BR-02 |
-| DATA-040 | Status | Current lifecycle state | Enumeration | Required | VAL-159 | Active | Internal | BR-03 |
-| DATA-040 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-160 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-041 | Interview ID | Unique identifier for Interview | Reference | Required | VAL-161 | INT-8821 | Internal | BR-01 |
-| DATA-041 | Name / Title | Primary descriptive label | Text | Required | VAL-162 | Standard Interview | Public | BR-02 |
-| DATA-041 | Status | Current lifecycle state | Enumeration | Required | VAL-163 | Active | Internal | BR-03 |
-| DATA-041 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-164 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-042 | Session ID | Unique identifier for Session | Reference | Required | VAL-165 | SES-8821 | Internal | BR-01 |
-| DATA-042 | Name / Title | Primary descriptive label | Text | Required | VAL-166 | Standard Session | Public | BR-02 |
-| DATA-042 | Status | Current lifecycle state | Enumeration | Required | VAL-167 | Active | Internal | BR-03 |
-| DATA-042 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-168 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-043 | Question ID | Unique identifier for Question | Reference | Required | VAL-169 | QUE-8821 | Internal | BR-01 |
-| DATA-043 | Name / Title | Primary descriptive label | Text | Required | VAL-170 | Standard Question | Public | BR-02 |
-| DATA-043 | Status | Current lifecycle state | Enumeration | Required | VAL-171 | Active | Internal | BR-03 |
-| DATA-043 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-172 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-044 | Answer ID | Unique identifier for Answer | Reference | Required | VAL-173 | ANS-8821 | Internal | BR-01 |
-| DATA-044 | Name / Title | Primary descriptive label | Text | Required | VAL-174 | Standard Answer | Public | BR-02 |
-| DATA-044 | Status | Current lifecycle state | Enumeration | Required | VAL-175 | Active | Internal | BR-03 |
-| DATA-044 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-176 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-045 | Rubric ID | Unique identifier for Rubric | Reference | Required | VAL-177 | RUB-8821 | Internal | BR-01 |
-| DATA-045 | Name / Title | Primary descriptive label | Text | Required | VAL-178 | Standard Rubric | Public | BR-02 |
-| DATA-045 | Status | Current lifecycle state | Enumeration | Required | VAL-179 | Active | Internal | BR-03 |
-| DATA-045 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-180 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-046 | Recording ID | Unique identifier for Recording | Reference | Required | VAL-181 | REC-8821 | Internal | BR-01 |
-| DATA-046 | Name / Title | Primary descriptive label | Text | Required | VAL-182 | Standard Recording | Public | BR-02 |
-| DATA-046 | Status | Current lifecycle state | Enumeration | Required | VAL-183 | Active | Internal | BR-03 |
-| DATA-046 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-184 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-047 | Transcript ID | Unique identifier for Transcript | Reference | Required | VAL-185 | TRA-8821 | Internal | BR-01 |
-| DATA-047 | Name / Title | Primary descriptive label | Text | Required | VAL-186 | Standard Transcript | Public | BR-02 |
-| DATA-047 | Status | Current lifecycle state | Enumeration | Required | VAL-187 | Active | Internal | BR-03 |
-| DATA-047 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-188 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-048 | Interviewer ID | Unique identifier for Interviewer | Reference | Required | VAL-189 | INT-8821 | Internal | BR-01 |
-| DATA-048 | Name / Title | Primary descriptive label | Text | Required | VAL-190 | Standard Interviewer | Public | BR-02 |
-| DATA-048 | Status | Current lifecycle state | Enumeration | Required | VAL-191 | Active | Internal | BR-03 |
-| DATA-048 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-192 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-049 | Feedback ID | Unique identifier for Feedback | Reference | Required | VAL-193 | FEE-8821 | Internal | BR-01 |
-| DATA-049 | Name / Title | Primary descriptive label | Text | Required | VAL-194 | Standard Feedback | Public | BR-02 |
-| DATA-049 | Status | Current lifecycle state | Enumeration | Required | VAL-195 | Active | Internal | BR-03 |
-| DATA-049 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-196 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-050 | Rating ID | Unique identifier for Rating | Reference | Required | VAL-197 | RAT-8821 | Internal | BR-01 |
-| DATA-050 | Name / Title | Primary descriptive label | Text | Required | VAL-198 | Standard Rating | Public | BR-02 |
-| DATA-050 | Status | Current lifecycle state | Enumeration | Required | VAL-199 | Active | Internal | BR-03 |
-| DATA-050 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-200 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-051 | Interview Template ID | Unique identifier for Interview Template | Reference | Required | VAL-201 | INT-8821 | Internal | BR-01 |
-| DATA-051 | Name / Title | Primary descriptive label | Text | Required | VAL-202 | Standard Interview Template | Public | BR-02 |
-| DATA-051 | Status | Current lifecycle state | Enumeration | Required | VAL-203 | Active | Internal | BR-03 |
-| DATA-051 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-204 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-052 | Assessment ID | Unique identifier for Assessment | Reference | Required | VAL-205 | ASS-8821 | Internal | BR-01 |
-| DATA-052 | Name / Title | Primary descriptive label | Text | Required | VAL-206 | Standard Assessment | Public | BR-02 |
-| DATA-052 | Status | Current lifecycle state | Enumeration | Required | VAL-207 | Active | Internal | BR-03 |
-| DATA-052 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-208 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-053 | Test Case ID | Unique identifier for Test Case | Reference | Required | VAL-209 | TES-8821 | Internal | BR-01 |
-| DATA-053 | Name / Title | Primary descriptive label | Text | Required | VAL-210 | Standard Test Case | Public | BR-02 |
-| DATA-053 | Status | Current lifecycle state | Enumeration | Required | VAL-211 | Active | Internal | BR-03 |
-| DATA-053 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-212 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-054 | Submission ID | Unique identifier for Submission | Reference | Required | VAL-213 | SUB-8821 | Internal | BR-01 |
-| DATA-054 | Name / Title | Primary descriptive label | Text | Required | VAL-214 | Standard Submission | Public | BR-02 |
-| DATA-054 | Status | Current lifecycle state | Enumeration | Required | VAL-215 | Active | Internal | BR-03 |
-| DATA-054 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-216 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-055 | Score ID | Unique identifier for Score | Reference | Required | VAL-217 | SCO-8821 | Internal | BR-01 |
-| DATA-055 | Name / Title | Primary descriptive label | Text | Required | VAL-218 | Standard Score | Public | BR-02 |
-| DATA-055 | Status | Current lifecycle state | Enumeration | Required | VAL-219 | Active | Internal | BR-03 |
-| DATA-055 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-220 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-056 | Skill Gap ID | Unique identifier for Skill Gap | Reference | Required | VAL-221 | SKI-8821 | Internal | BR-01 |
-| DATA-056 | Name / Title | Primary descriptive label | Text | Required | VAL-222 | Standard Skill Gap | Public | BR-02 |
-| DATA-056 | Status | Current lifecycle state | Enumeration | Required | VAL-223 | Active | Internal | BR-03 |
-| DATA-056 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-224 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-057 | Proctoring Log ID | Unique identifier for Proctoring Log | Reference | Required | VAL-225 | PRO-8821 | Internal | BR-01 |
-| DATA-057 | Name / Title | Primary descriptive label | Text | Required | VAL-226 | Standard Proctoring Log | Public | BR-02 |
-| DATA-057 | Status | Current lifecycle state | Enumeration | Required | VAL-227 | Active | Internal | BR-03 |
-| DATA-057 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-228 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-058 | Code Execution Result ID | Unique identifier for Code Execution Result | Reference | Required | VAL-229 | COD-8821 | Internal | BR-01 |
-| DATA-058 | Name / Title | Primary descriptive label | Text | Required | VAL-230 | Standard Code Execution Result | Public | BR-02 |
-| DATA-058 | Status | Current lifecycle state | Enumeration | Required | VAL-231 | Active | Internal | BR-03 |
-| DATA-058 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-232 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-059 | Plagiarism Report ID | Unique identifier for Plagiarism Report | Reference | Required | VAL-233 | PLA-8821 | Internal | BR-01 |
-| DATA-059 | Name / Title | Primary descriptive label | Text | Required | VAL-234 | Standard Plagiarism Report | Public | BR-02 |
-| DATA-059 | Status | Current lifecycle state | Enumeration | Required | VAL-235 | Active | Internal | BR-03 |
-| DATA-059 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-236 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-060 | Question Bank ID | Unique identifier for Question Bank | Reference | Required | VAL-237 | QUE-8821 | Internal | BR-01 |
-| DATA-060 | Name / Title | Primary descriptive label | Text | Required | VAL-238 | Standard Question Bank | Public | BR-02 |
-| DATA-060 | Status | Current lifecycle state | Enumeration | Required | VAL-239 | Active | Internal | BR-03 |
-| DATA-060 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-240 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-061 | Assessment Template ID | Unique identifier for Assessment Template | Reference | Required | VAL-241 | ASS-8821 | Internal | BR-01 |
-| DATA-061 | Name / Title | Primary descriptive label | Text | Required | VAL-242 | Standard Assessment Template | Public | BR-02 |
-| DATA-061 | Status | Current lifecycle state | Enumeration | Required | VAL-243 | Active | Internal | BR-03 |
-| DATA-061 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-244 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-062 | Roadmap ID | Unique identifier for Roadmap | Reference | Required | VAL-245 | ROA-8821 | Internal | BR-01 |
-| DATA-062 | Name / Title | Primary descriptive label | Text | Required | VAL-246 | Standard Roadmap | Public | BR-02 |
-| DATA-062 | Status | Current lifecycle state | Enumeration | Required | VAL-247 | Active | Internal | BR-03 |
-| DATA-062 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-248 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-063 | Module ID | Unique identifier for Module | Reference | Required | VAL-249 | MOD-8821 | Internal | BR-01 |
-| DATA-063 | Name / Title | Primary descriptive label | Text | Required | VAL-250 | Standard Module | Public | BR-02 |
-| DATA-063 | Status | Current lifecycle state | Enumeration | Required | VAL-251 | Active | Internal | BR-03 |
-| DATA-063 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-252 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-064 | Course ID | Unique identifier for Course | Reference | Required | VAL-253 | COU-8821 | Internal | BR-01 |
-| DATA-064 | Name / Title | Primary descriptive label | Text | Required | VAL-254 | Standard Course | Public | BR-02 |
-| DATA-064 | Status | Current lifecycle state | Enumeration | Required | VAL-255 | Active | Internal | BR-03 |
-| DATA-064 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-256 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-065 | Lesson ID | Unique identifier for Lesson | Reference | Required | VAL-257 | LES-8821 | Internal | BR-01 |
-| DATA-065 | Name / Title | Primary descriptive label | Text | Required | VAL-258 | Standard Lesson | Public | BR-02 |
-| DATA-065 | Status | Current lifecycle state | Enumeration | Required | VAL-259 | Active | Internal | BR-03 |
-| DATA-065 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-260 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-066 | Progress ID | Unique identifier for Progress | Reference | Required | VAL-261 | PRO-8821 | Internal | BR-01 |
-| DATA-066 | Name / Title | Primary descriptive label | Text | Required | VAL-262 | Standard Progress | Public | BR-02 |
-| DATA-066 | Status | Current lifecycle state | Enumeration | Required | VAL-263 | Active | Internal | BR-03 |
-| DATA-066 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-264 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-067 | Certificate ID | Unique identifier for Certificate | Reference | Required | VAL-265 | CER-8821 | Internal | BR-01 |
-| DATA-067 | Name / Title | Primary descriptive label | Text | Required | VAL-266 | Standard Certificate | Public | BR-02 |
-| DATA-067 | Status | Current lifecycle state | Enumeration | Required | VAL-267 | Active | Internal | BR-03 |
-| DATA-067 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-268 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-068 | Badge ID | Unique identifier for Badge | Reference | Required | VAL-269 | BAD-8821 | Internal | BR-01 |
-| DATA-068 | Name / Title | Primary descriptive label | Text | Required | VAL-270 | Standard Badge | Public | BR-02 |
-| DATA-068 | Status | Current lifecycle state | Enumeration | Required | VAL-271 | Active | Internal | BR-03 |
-| DATA-068 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-272 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-069 | Recommendation ID | Unique identifier for Recommendation | Reference | Required | VAL-273 | REC-8821 | Internal | BR-01 |
-| DATA-069 | Name / Title | Primary descriptive label | Text | Required | VAL-274 | Standard Recommendation | Public | BR-02 |
-| DATA-069 | Status | Current lifecycle state | Enumeration | Required | VAL-275 | Active | Internal | BR-03 |
-| DATA-069 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-276 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-070 | Content Resource ID | Unique identifier for Content Resource | Reference | Required | VAL-277 | CON-8821 | Internal | BR-01 |
-| DATA-070 | Name / Title | Primary descriptive label | Text | Required | VAL-278 | Standard Content Resource | Public | BR-02 |
-| DATA-070 | Status | Current lifecycle state | Enumeration | Required | VAL-279 | Active | Internal | BR-03 |
-| DATA-070 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-280 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-071 | Learning Path ID | Unique identifier for Learning Path | Reference | Required | VAL-281 | LEA-8821 | Internal | BR-01 |
-| DATA-071 | Name / Title | Primary descriptive label | Text | Required | VAL-282 | Standard Learning Path | Public | BR-02 |
-| DATA-071 | Status | Current lifecycle state | Enumeration | Required | VAL-283 | Active | Internal | BR-03 |
-| DATA-071 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-284 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-072 | Transaction ID | Unique identifier for Transaction | Reference | Required | VAL-285 | TRA-8821 | Internal | BR-01 |
-| DATA-072 | Name / Title | Primary descriptive label | Text | Required | VAL-286 | Standard Transaction | Public | BR-02 |
-| DATA-072 | Status | Current lifecycle state | Enumeration | Required | VAL-287 | Active | Internal | BR-03 |
-| DATA-072 | Amount | Transaction financial value | Currency | Required | VAL-288 | $500.00 | Financial | BR-06 |
-| DATA-073 | Invoice ID | Unique identifier for Invoice | Reference | Required | VAL-289 | INV-8821 | Internal | BR-01 |
-| DATA-073 | Name / Title | Primary descriptive label | Text | Required | VAL-290 | Standard Invoice | Public | BR-02 |
-| DATA-073 | Status | Current lifecycle state | Enumeration | Required | VAL-291 | Active | Internal | BR-03 |
-| DATA-073 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-292 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-074 | Credit Balance ID | Unique identifier for Credit Balance | Reference | Required | VAL-293 | CRE-8821 | Internal | BR-01 |
-| DATA-074 | Name / Title | Primary descriptive label | Text | Required | VAL-294 | Standard Credit Balance | Public | BR-02 |
-| DATA-074 | Status | Current lifecycle state | Enumeration | Required | VAL-295 | Active | Internal | BR-03 |
-| DATA-074 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-296 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-075 | Plan ID | Unique identifier for Plan | Reference | Required | VAL-297 | PLA-8821 | Internal | BR-01 |
-| DATA-075 | Name / Title | Primary descriptive label | Text | Required | VAL-298 | Standard Plan | Public | BR-02 |
-| DATA-075 | Status | Current lifecycle state | Enumeration | Required | VAL-299 | Active | Internal | BR-03 |
-| DATA-075 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-300 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-076 | Discount ID | Unique identifier for Discount | Reference | Required | VAL-301 | DIS-8821 | Internal | BR-01 |
-| DATA-076 | Name / Title | Primary descriptive label | Text | Required | VAL-302 | Standard Discount | Public | BR-02 |
-| DATA-076 | Status | Current lifecycle state | Enumeration | Required | VAL-303 | Active | Internal | BR-03 |
-| DATA-076 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-304 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-077 | Tax Record ID | Unique identifier for Tax Record | Reference | Required | VAL-305 | TAX-8821 | Internal | BR-01 |
-| DATA-077 | Name / Title | Primary descriptive label | Text | Required | VAL-306 | Standard Tax Record | Public | BR-02 |
-| DATA-077 | Status | Current lifecycle state | Enumeration | Required | VAL-307 | Active | Internal | BR-03 |
-| DATA-077 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-308 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-078 | Refund ID | Unique identifier for Refund | Reference | Required | VAL-309 | REF-8821 | Internal | BR-01 |
-| DATA-078 | Name / Title | Primary descriptive label | Text | Required | VAL-310 | Standard Refund | Public | BR-02 |
-| DATA-078 | Status | Current lifecycle state | Enumeration | Required | VAL-311 | Active | Internal | BR-03 |
-| DATA-078 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-312 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-079 | Payment Method ID | Unique identifier for Payment Method | Reference | Required | VAL-313 | PAY-8821 | Internal | BR-01 |
-| DATA-079 | Name / Title | Primary descriptive label | Text | Required | VAL-314 | Standard Payment Method | Public | BR-02 |
-| DATA-079 | Status | Current lifecycle state | Enumeration | Required | VAL-315 | Active | Internal | BR-03 |
-| DATA-079 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-316 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-080 | Billing Cycle ID | Unique identifier for Billing Cycle | Reference | Required | VAL-317 | BIL-8821 | Internal | BR-01 |
-| DATA-080 | Name / Title | Primary descriptive label | Text | Required | VAL-318 | Standard Billing Cycle | Public | BR-02 |
-| DATA-080 | Status | Current lifecycle state | Enumeration | Required | VAL-319 | Active | Internal | BR-03 |
-| DATA-080 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-320 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-081 | Receipt ID | Unique identifier for Receipt | Reference | Required | VAL-321 | REC-8821 | Internal | BR-01 |
-| DATA-081 | Name / Title | Primary descriptive label | Text | Required | VAL-322 | Standard Receipt | Public | BR-02 |
-| DATA-081 | Status | Current lifecycle state | Enumeration | Required | VAL-323 | Active | Internal | BR-03 |
-| DATA-081 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-324 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-082 | Notification ID | Unique identifier for Notification | Reference | Required | VAL-325 | NOT-8821 | Internal | BR-01 |
-| DATA-082 | Name / Title | Primary descriptive label | Text | Required | VAL-326 | Standard Notification | Public | BR-02 |
-| DATA-082 | Status | Current lifecycle state | Enumeration | Required | VAL-327 | Active | Internal | BR-03 |
-| DATA-082 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-328 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-083 | Email Template ID | Unique identifier for Email Template | Reference | Required | VAL-329 | EMA-8821 | Internal | BR-01 |
-| DATA-083 | Name / Title | Primary descriptive label | Text | Required | VAL-330 | Standard Email Template | Public | BR-02 |
-| DATA-083 | Status | Current lifecycle state | Enumeration | Required | VAL-331 | Active | Internal | BR-03 |
-| DATA-083 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-332 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-084 | SMS Log ID | Unique identifier for SMS Log | Reference | Required | VAL-333 | SMS-8821 | Internal | BR-01 |
-| DATA-084 | Name / Title | Primary descriptive label | Text | Required | VAL-334 | Standard SMS Log | Public | BR-02 |
-| DATA-084 | Status | Current lifecycle state | Enumeration | Required | VAL-335 | Active | Internal | BR-03 |
-| DATA-084 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-336 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-085 | In-App Message ID | Unique identifier for In-App Message | Reference | Required | VAL-337 | IN--8821 | Internal | BR-01 |
-| DATA-085 | Name / Title | Primary descriptive label | Text | Required | VAL-338 | Standard In-App Message | Public | BR-02 |
-| DATA-085 | Status | Current lifecycle state | Enumeration | Required | VAL-339 | Active | Internal | BR-03 |
-| DATA-085 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-340 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-086 | Push Notification ID | Unique identifier for Push Notification | Reference | Required | VAL-341 | PUS-8821 | Internal | BR-01 |
-| DATA-086 | Name / Title | Primary descriptive label | Text | Required | VAL-342 | Standard Push Notification | Public | BR-02 |
-| DATA-086 | Status | Current lifecycle state | Enumeration | Required | VAL-343 | Active | Internal | BR-03 |
-| DATA-086 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-344 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-087 | Delivery Status ID | Unique identifier for Delivery Status | Reference | Required | VAL-345 | DEL-8821 | Internal | BR-01 |
-| DATA-087 | Name / Title | Primary descriptive label | Text | Required | VAL-346 | Standard Delivery Status | Public | BR-02 |
-| DATA-087 | Status | Current lifecycle state | Enumeration | Required | VAL-347 | Active | Internal | BR-03 |
-| DATA-087 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-348 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-088 | Subscription Preference ID | Unique identifier for Subscription Preference | Reference | Required | VAL-349 | SUB-8821 | Internal | BR-01 |
-| DATA-088 | Name / Title | Primary descriptive label | Text | Required | VAL-350 | Standard Subscription Preference | Public | BR-02 |
-| DATA-088 | Status | Current lifecycle state | Enumeration | Required | VAL-351 | Active | Internal | BR-03 |
-| DATA-088 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-352 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-089 | Alert ID | Unique identifier for Alert | Reference | Required | VAL-353 | ALE-8821 | Internal | BR-01 |
-| DATA-089 | Name / Title | Primary descriptive label | Text | Required | VAL-354 | Standard Alert | Public | BR-02 |
-| DATA-089 | Status | Current lifecycle state | Enumeration | Required | VAL-355 | Active | Internal | BR-03 |
-| DATA-089 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-356 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-090 | Reminder ID | Unique identifier for Reminder | Reference | Required | VAL-357 | REM-8821 | Internal | BR-01 |
-| DATA-090 | Name / Title | Primary descriptive label | Text | Required | VAL-358 | Standard Reminder | Public | BR-02 |
-| DATA-090 | Status | Current lifecycle state | Enumeration | Required | VAL-359 | Active | Internal | BR-03 |
-| DATA-090 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-360 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-091 | Digest ID | Unique identifier for Digest | Reference | Required | VAL-361 | DIG-8821 | Internal | BR-01 |
-| DATA-091 | Name / Title | Primary descriptive label | Text | Required | VAL-362 | Standard Digest | Public | BR-02 |
-| DATA-091 | Status | Current lifecycle state | Enumeration | Required | VAL-363 | Active | Internal | BR-03 |
-| DATA-091 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-364 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-092 | Audit Log ID | Unique identifier for Audit Log | Reference | Required | VAL-365 | AUD-8821 | Internal | BR-01 |
-| DATA-092 | Name / Title | Primary descriptive label | Text | Required | VAL-366 | Standard Audit Log | Public | BR-02 |
-| DATA-092 | Status | Current lifecycle state | Enumeration | Required | VAL-367 | Active | Internal | BR-03 |
-| DATA-092 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-368 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-093 | Access Log ID | Unique identifier for Access Log | Reference | Required | VAL-369 | ACC-8821 | Internal | BR-01 |
-| DATA-093 | Name / Title | Primary descriptive label | Text | Required | VAL-370 | Standard Access Log | Public | BR-02 |
-| DATA-093 | Status | Current lifecycle state | Enumeration | Required | VAL-371 | Active | Internal | BR-03 |
-| DATA-093 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-372 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-094 | Change Record ID | Unique identifier for Change Record | Reference | Required | VAL-373 | CHA-8821 | Internal | BR-01 |
-| DATA-094 | Name / Title | Primary descriptive label | Text | Required | VAL-374 | Standard Change Record | Public | BR-02 |
-| DATA-094 | Status | Current lifecycle state | Enumeration | Required | VAL-375 | Active | Internal | BR-03 |
-| DATA-094 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-376 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-095 | Error Log ID | Unique identifier for Error Log | Reference | Required | VAL-377 | ERR-8821 | Internal | BR-01 |
-| DATA-095 | Name / Title | Primary descriptive label | Text | Required | VAL-378 | Standard Error Log | Public | BR-02 |
-| DATA-095 | Status | Current lifecycle state | Enumeration | Required | VAL-379 | Active | Internal | BR-03 |
-| DATA-095 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-380 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-096 | Compliance Report ID | Unique identifier for Compliance Report | Reference | Required | VAL-381 | COM-8821 | Internal | BR-01 |
-| DATA-096 | Name / Title | Primary descriptive label | Text | Required | VAL-382 | Standard Compliance Report | Public | BR-02 |
-| DATA-096 | Status | Current lifecycle state | Enumeration | Required | VAL-383 | Active | Internal | BR-03 |
-| DATA-096 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-384 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-097 | Data Export Request ID | Unique identifier for Data Export Request | Reference | Required | VAL-385 | DAT-8821 | Internal | BR-01 |
-| DATA-097 | Name / Title | Primary descriptive label | Text | Required | VAL-386 | Standard Data Export Request | Public | BR-02 |
-| DATA-097 | Status | Current lifecycle state | Enumeration | Required | VAL-387 | Active | Internal | BR-03 |
-| DATA-097 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-388 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-098 | Privacy Request ID | Unique identifier for Privacy Request | Reference | Required | VAL-389 | PRI-8821 | Internal | BR-01 |
-| DATA-098 | Name / Title | Primary descriptive label | Text | Required | VAL-390 | Standard Privacy Request | Public | BR-02 |
-| DATA-098 | Status | Current lifecycle state | Enumeration | Required | VAL-391 | Active | Internal | BR-03 |
-| DATA-098 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-392 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-099 | Admin Action ID | Unique identifier for Admin Action | Reference | Required | VAL-393 | ADM-8821 | Internal | BR-01 |
-| DATA-099 | Name / Title | Primary descriptive label | Text | Required | VAL-394 | Standard Admin Action | Public | BR-02 |
-| DATA-099 | Status | Current lifecycle state | Enumeration | Required | VAL-395 | Active | Internal | BR-03 |
-| DATA-099 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-396 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-100 | Login Event ID | Unique identifier for Login Event | Reference | Required | VAL-397 | LOG-8821 | Internal | BR-01 |
-| DATA-100 | Name / Title | Primary descriptive label | Text | Required | VAL-398 | Standard Login Event | Public | BR-02 |
-| DATA-100 | Status | Current lifecycle state | Enumeration | Required | VAL-399 | Active | Internal | BR-03 |
-| DATA-100 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-400 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-101 | System Alert ID | Unique identifier for System Alert | Reference | Required | VAL-401 | SYS-8821 | Internal | BR-01 |
-| DATA-101 | Name / Title | Primary descriptive label | Text | Required | VAL-402 | Standard System Alert | Public | BR-02 |
-| DATA-101 | Status | Current lifecycle state | Enumeration | Required | VAL-403 | Active | Internal | BR-03 |
-| DATA-101 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-404 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-102 | Analytics Snapshot ID | Unique identifier for Analytics Snapshot | Reference | Required | VAL-405 | ANA-8821 | Internal | BR-01 |
-| DATA-102 | Name / Title | Primary descriptive label | Text | Required | VAL-406 | Standard Analytics Snapshot | Public | BR-02 |
-| DATA-102 | Status | Current lifecycle state | Enumeration | Required | VAL-407 | Active | Internal | BR-03 |
-| DATA-102 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-408 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-103 | Usage Metric ID | Unique identifier for Usage Metric | Reference | Required | VAL-409 | USA-8821 | Internal | BR-01 |
-| DATA-103 | Name / Title | Primary descriptive label | Text | Required | VAL-410 | Standard Usage Metric | Public | BR-02 |
-| DATA-103 | Status | Current lifecycle state | Enumeration | Required | VAL-411 | Active | Internal | BR-03 |
-| DATA-103 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-412 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-104 | Performance Metric ID | Unique identifier for Performance Metric | Reference | Required | VAL-413 | PER-8821 | Internal | BR-01 |
-| DATA-104 | Name / Title | Primary descriptive label | Text | Required | VAL-414 | Standard Performance Metric | Public | BR-02 |
-| DATA-104 | Status | Current lifecycle state | Enumeration | Required | VAL-415 | Active | Internal | BR-03 |
-| DATA-104 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-416 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-105 | Diversity Metric ID | Unique identifier for Diversity Metric | Reference | Required | VAL-417 | DIV-8821 | Internal | BR-01 |
-| DATA-105 | Name / Title | Primary descriptive label | Text | Required | VAL-418 | Standard Diversity Metric | Public | BR-02 |
-| DATA-105 | Status | Current lifecycle state | Enumeration | Required | VAL-419 | Active | Internal | BR-03 |
-| DATA-105 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-420 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-106 | ROI Report ID | Unique identifier for ROI Report | Reference | Required | VAL-421 | ROI-8821 | Internal | BR-01 |
-| DATA-106 | Name / Title | Primary descriptive label | Text | Required | VAL-422 | Standard ROI Report | Public | BR-02 |
-| DATA-106 | Status | Current lifecycle state | Enumeration | Required | VAL-423 | Active | Internal | BR-03 |
-| DATA-106 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-424 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-107 | Candidate Funnel ID | Unique identifier for Candidate Funnel | Reference | Required | VAL-425 | CAN-8821 | Internal | BR-01 |
-| DATA-107 | Name / Title | Primary descriptive label | Text | Required | VAL-426 | Standard Candidate Funnel | Public | BR-02 |
-| DATA-107 | Status | Current lifecycle state | Enumeration | Required | VAL-427 | Active | Internal | BR-03 |
-| DATA-107 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-428 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-108 | Drop-off Rate ID | Unique identifier for Drop-off Rate | Reference | Required | VAL-429 | DRO-8821 | Internal | BR-01 |
-| DATA-108 | Name / Title | Primary descriptive label | Text | Required | VAL-430 | Standard Drop-off Rate | Public | BR-02 |
-| DATA-108 | Status | Current lifecycle state | Enumeration | Required | VAL-431 | Active | Internal | BR-03 |
-| DATA-108 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-432 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-109 | Satisfaction Score ID | Unique identifier for Satisfaction Score | Reference | Required | VAL-433 | SAT-8821 | Internal | BR-01 |
-| DATA-109 | Name / Title | Primary descriptive label | Text | Required | VAL-434 | Standard Satisfaction Score | Public | BR-02 |
-| DATA-109 | Status | Current lifecycle state | Enumeration | Required | VAL-435 | Active | Internal | BR-03 |
-| DATA-109 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-436 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-110 | Time-to-Hire ID | Unique identifier for Time-to-Hire | Reference | Required | VAL-437 | TIM-8821 | Internal | BR-01 |
-| DATA-110 | Name / Title | Primary descriptive label | Text | Required | VAL-438 | Standard Time-to-Hire | Public | BR-02 |
-| DATA-110 | Status | Current lifecycle state | Enumeration | Required | VAL-439 | Active | Internal | BR-03 |
-| DATA-110 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-440 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-111 | Cost-per-Hire ID | Unique identifier for Cost-per-Hire | Reference | Required | VAL-441 | COS-8821 | Internal | BR-01 |
-| DATA-111 | Name / Title | Primary descriptive label | Text | Required | VAL-442 | Standard Cost-per-Hire | Public | BR-02 |
-| DATA-111 | Status | Current lifecycle state | Enumeration | Required | VAL-443 | Active | Internal | BR-03 |
-| DATA-111 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-444 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-112 | System Configuration ID | Unique identifier for System Configuration | Reference | Required | VAL-445 | SYS-8821 | Internal | BR-01 |
-| DATA-112 | Name / Title | Primary descriptive label | Text | Required | VAL-446 | Standard System Configuration | Public | BR-02 |
-| DATA-112 | Status | Current lifecycle state | Enumeration | Required | VAL-447 | Active | Internal | BR-03 |
-| DATA-112 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-448 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-113 | Localization Setting ID | Unique identifier for Localization Setting | Reference | Required | VAL-449 | LOC-8821 | Internal | BR-01 |
-| DATA-113 | Name / Title | Primary descriptive label | Text | Required | VAL-450 | Standard Localization Setting | Public | BR-02 |
-| DATA-113 | Status | Current lifecycle state | Enumeration | Required | VAL-451 | Active | Internal | BR-03 |
-| DATA-113 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-452 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-114 | API Key ID | Unique identifier for API Key | Reference | Required | VAL-453 | API-8821 | Internal | BR-01 |
-| DATA-114 | Name / Title | Primary descriptive label | Text | Required | VAL-454 | Standard API Key | Public | BR-02 |
-| DATA-114 | Status | Current lifecycle state | Enumeration | Required | VAL-455 | Active | Internal | BR-03 |
-| DATA-114 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-456 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-115 | Webhook ID | Unique identifier for Webhook | Reference | Required | VAL-457 | WEB-8821 | Internal | BR-01 |
-| DATA-115 | Name / Title | Primary descriptive label | Text | Required | VAL-458 | Standard Webhook | Public | BR-02 |
-| DATA-115 | Status | Current lifecycle state | Enumeration | Required | VAL-459 | Active | Internal | BR-03 |
-| DATA-115 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-460 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-116 | Integration Profile ID | Unique identifier for Integration Profile | Reference | Required | VAL-461 | INT-8821 | Internal | BR-01 |
-| DATA-116 | Name / Title | Primary descriptive label | Text | Required | VAL-462 | Standard Integration Profile | Public | BR-02 |
-| DATA-116 | Status | Current lifecycle state | Enumeration | Required | VAL-463 | Active | Internal | BR-03 |
-| DATA-116 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-464 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-117 | Business Rule Config ID | Unique identifier for Business Rule Config | Reference | Required | VAL-465 | BUS-8821 | Internal | BR-01 |
-| DATA-117 | Name / Title | Primary descriptive label | Text | Required | VAL-466 | Standard Business Rule Config | Public | BR-02 |
-| DATA-117 | Status | Current lifecycle state | Enumeration | Required | VAL-467 | Active | Internal | BR-03 |
-| DATA-117 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-468 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-118 | Feature Flag ID | Unique identifier for Feature Flag | Reference | Required | VAL-469 | FEA-8821 | Internal | BR-01 |
-| DATA-118 | Name / Title | Primary descriptive label | Text | Required | VAL-470 | Standard Feature Flag | Public | BR-02 |
-| DATA-118 | Status | Current lifecycle state | Enumeration | Required | VAL-471 | Active | Internal | BR-03 |
-| DATA-118 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-472 | 2026-07-09T10:00:00Z | Internal | BR-04 |
-| DATA-119 | Maintenance Window ID | Unique identifier for Maintenance Window | Reference | Required | VAL-473 | MAI-8821 | Internal | BR-01 |
-| DATA-119 | Name / Title | Primary descriptive label | Text | Required | VAL-474 | Standard Maintenance Window | Public | BR-02 |
-| DATA-119 | Status | Current lifecycle state | Enumeration | Required | VAL-475 | Active | Internal | BR-03 |
-| DATA-119 | Created Date | Timestamp of instantiation | DateTime | Required | VAL-476 | 2026-07-09T10:00:00Z | Internal | BR-04 |
+| DATA-001 | User ID | Mã định danh duy nhất cho User | Tham chiếu | Bắt buộc | VAL-001 | USE-8821 | Nội bộ | BR-01 |
+| DATA-001 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-002 | Standard User | Công khai | BR-02 |
+| DATA-001 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-003 | Active | Nội bộ | BR-03 |
+| DATA-001 | Email Address | Email liên hệ chính | Văn bản | Bắt buộc | VAL-004 | user@example.com | Dữ liệu cá nhân (PII) | BR-05 |
+| DATA-002 | Role ID | Mã định danh duy nhất cho Role | Tham chiếu | Bắt buộc | VAL-005 | ROL-8821 | Nội bộ | BR-01 |
+| DATA-002 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-006 | Standard Role | Công khai | BR-02 |
+| DATA-002 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-007 | Active | Nội bộ | BR-03 |
+| DATA-002 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-008 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-003 | Permission ID | Mã định danh duy nhất cho Permission | Tham chiếu | Bắt buộc | VAL-009 | PER-8821 | Nội bộ | BR-01 |
+| DATA-003 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-010 | Standard Permission | Công khai | BR-02 |
+| DATA-003 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-011 | Active | Nội bộ | BR-03 |
+| DATA-003 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-012 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-004 | Session ID | Mã định danh duy nhất cho Session | Tham chiếu | Bắt buộc | VAL-013 | SES-8821 | Nội bộ | BR-01 |
+| DATA-004 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-014 | Standard Session | Công khai | BR-02 |
+| DATA-004 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-015 | Active | Nội bộ | BR-03 |
+| DATA-004 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-016 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-005 | MFA Token ID | Mã định danh duy nhất cho MFA Token | Tham chiếu | Bắt buộc | VAL-017 | MFA-8821 | Nội bộ | BR-01 |
+| DATA-005 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-018 | Standard MFA Token | Công khai | BR-02 |
+| DATA-005 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-019 | Active | Nội bộ | BR-03 |
+| DATA-005 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-020 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-006 | Consent Record ID | Mã định danh duy nhất cho Consent Record | Tham chiếu | Bắt buộc | VAL-021 | CON-8821 | Nội bộ | BR-01 |
+| DATA-006 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-022 | Standard Consent Record | Công khai | BR-02 |
+| DATA-006 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-023 | Active | Nội bộ | BR-03 |
+| DATA-006 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-024 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-007 | Identity Verification ID | Mã định danh duy nhất cho Identity Verification | Tham chiếu | Bắt buộc | VAL-025 | IDE-8821 | Nội bộ | BR-01 |
+| DATA-007 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-026 | Standard Identity Verification | Công khai | BR-02 |
+| DATA-007 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-027 | Active | Nội bộ | BR-03 |
+| DATA-007 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-028 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-008 | Security Profile ID | Mã định danh duy nhất cho Security Profile | Tham chiếu | Bắt buộc | VAL-029 | SEC-8821 | Nội bộ | BR-01 |
+| DATA-008 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-030 | Standard Security Profile | Công khai | BR-02 |
+| DATA-008 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-031 | Active | Nội bộ | BR-03 |
+| DATA-008 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-032 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-009 | SSO Configuration ID | Mã định danh duy nhất cho SSO Configuration | Tham chiếu | Bắt buộc | VAL-033 | SSO-8821 | Nội bộ | BR-01 |
+| DATA-009 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-034 | Standard SSO Configuration | Công khai | BR-02 |
+| DATA-009 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-035 | Active | Nội bộ | BR-03 |
+| DATA-009 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-036 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-010 | Password History ID | Mã định danh duy nhất cho Password History | Tham chiếu | Bắt buộc | VAL-037 | PAS-8821 | Nội bộ | BR-01 |
+| DATA-010 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-038 | Standard Password History | Công khai | BR-02 |
+| DATA-010 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-039 | Active | Nội bộ | BR-03 |
+| DATA-010 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-040 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-011 | Ứng viên ID | Mã định danh duy nhất cho Ứng viên | Tham chiếu | Bắt buộc | VAL-041 | CAN-8821 | Nội bộ | BR-01 |
+| DATA-011 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-042 | Standard Ứng viên | Công khai | BR-02 |
+| DATA-011 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-043 | Active | Nội bộ | BR-03 |
+| DATA-011 | Resume | Tài liệu CV đính kèm | Tệp đính kèm | Tùy chọn | VAL-044 | resume.pdf | Dữ liệu cá nhân (PII) | BR-07 |
+| DATA-012 | Profile ID | Mã định danh duy nhất cho Profile | Tham chiếu | Bắt buộc | VAL-045 | PRO-8821 | Nội bộ | BR-01 |
+| DATA-012 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-046 | Standard Profile | Công khai | BR-02 |
+| DATA-012 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-047 | Active | Nội bộ | BR-03 |
+| DATA-012 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-048 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-013 | Education ID | Mã định danh duy nhất cho Education | Tham chiếu | Bắt buộc | VAL-049 | EDU-8821 | Nội bộ | BR-01 |
+| DATA-013 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-050 | Standard Education | Công khai | BR-02 |
+| DATA-013 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-051 | Active | Nội bộ | BR-03 |
+| DATA-013 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-052 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-014 | Experience ID | Mã định danh duy nhất cho Experience | Tham chiếu | Bắt buộc | VAL-053 | EXP-8821 | Nội bộ | BR-01 |
+| DATA-014 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-054 | Standard Experience | Công khai | BR-02 |
+| DATA-014 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-055 | Active | Nội bộ | BR-03 |
+| DATA-014 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-056 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-015 | Skill Claim ID | Mã định danh duy nhất cho Skill Claim | Tham chiếu | Bắt buộc | VAL-057 | SKI-8821 | Nội bộ | BR-01 |
+| DATA-015 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-058 | Standard Skill Claim | Công khai | BR-02 |
+| DATA-015 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-059 | Active | Nội bộ | BR-03 |
+| DATA-015 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-060 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-016 | Certification ID | Mã định danh duy nhất cho Certification | Tham chiếu | Bắt buộc | VAL-061 | CER-8821 | Nội bộ | BR-01 |
+| DATA-016 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-062 | Standard Certification | Công khai | BR-02 |
+| DATA-016 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-063 | Active | Nội bộ | BR-03 |
+| DATA-016 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-064 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-017 | Career Goal ID | Mã định danh duy nhất cho Career Goal | Tham chiếu | Bắt buộc | VAL-065 | CAR-8821 | Nội bộ | BR-01 |
+| DATA-017 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-066 | Standard Career Goal | Công khai | BR-02 |
+| DATA-017 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-067 | Active | Nội bộ | BR-03 |
+| DATA-017 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-068 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-018 | Language Proficiency ID | Mã định danh duy nhất cho Language Proficiency | Tham chiếu | Bắt buộc | VAL-069 | LAN-8821 | Nội bộ | BR-01 |
+| DATA-018 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-070 | Standard Language Proficiency | Công khai | BR-02 |
+| DATA-018 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-071 | Active | Nội bộ | BR-03 |
+| DATA-018 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-072 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-019 | Portfolio Item ID | Mã định danh duy nhất cho Portfolio Item | Tham chiếu | Bắt buộc | VAL-073 | POR-8821 | Nội bộ | BR-01 |
+| DATA-019 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-074 | Standard Portfolio Item | Công khai | BR-02 |
+| DATA-019 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-075 | Active | Nội bộ | BR-03 |
+| DATA-019 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-076 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-020 | Availability ID | Mã định danh duy nhất cho Availability | Tham chiếu | Bắt buộc | VAL-077 | AVA-8821 | Nội bộ | BR-01 |
+| DATA-020 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-078 | Standard Availability | Công khai | BR-02 |
+| DATA-020 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-079 | Active | Nội bộ | BR-03 |
+| DATA-020 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-080 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-021 | Employer ID | Mã định danh duy nhất cho Employer | Tham chiếu | Bắt buộc | VAL-081 | EMP-8821 | Nội bộ | BR-01 |
+| DATA-021 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-082 | Standard Employer | Công khai | BR-02 |
+| DATA-021 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-083 | Active | Nội bộ | BR-03 |
+| DATA-021 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-084 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-022 | Company ID | Mã định danh duy nhất cho Company | Tham chiếu | Bắt buộc | VAL-085 | COM-8821 | Nội bộ | BR-01 |
+| DATA-022 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-086 | Standard Company | Công khai | BR-02 |
+| DATA-022 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-087 | Active | Nội bộ | BR-03 |
+| DATA-022 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-088 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-023 | Department ID | Mã định danh duy nhất cho Department | Tham chiếu | Bắt buộc | VAL-089 | DEP-8821 | Nội bộ | BR-01 |
+| DATA-023 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-090 | Standard Department | Công khai | BR-02 |
+| DATA-023 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-091 | Active | Nội bộ | BR-03 |
+| DATA-023 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-092 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-024 | Team ID | Mã định danh duy nhất cho Team | Tham chiếu | Bắt buộc | VAL-093 | TEA-8821 | Nội bộ | BR-01 |
+| DATA-024 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-094 | Standard Team | Công khai | BR-02 |
+| DATA-024 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-095 | Active | Nội bộ | BR-03 |
+| DATA-024 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-096 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-025 | Nhà tuyển dụng ID | Mã định danh duy nhất cho Nhà tuyển dụng | Tham chiếu | Bắt buộc | VAL-097 | REC-8821 | Nội bộ | BR-01 |
+| DATA-025 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-098 | Standard Nhà tuyển dụng | Công khai | BR-02 |
+| DATA-025 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-099 | Active | Nội bộ | BR-03 |
+| DATA-025 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-100 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-026 | Hiring Manager ID | Mã định danh duy nhất cho Hiring Manager | Tham chiếu | Bắt buộc | VAL-101 | HIR-8821 | Nội bộ | BR-01 |
+| DATA-026 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-102 | Standard Hiring Manager | Công khai | BR-02 |
+| DATA-026 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-103 | Active | Nội bộ | BR-03 |
+| DATA-026 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-104 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-027 | Billing Profile ID | Mã định danh duy nhất cho Billing Profile | Tham chiếu | Bắt buộc | VAL-105 | BIL-8821 | Nội bộ | BR-01 |
+| DATA-027 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-106 | Standard Billing Profile | Công khai | BR-02 |
+| DATA-027 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-107 | Active | Nội bộ | BR-03 |
+| DATA-027 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-108 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-028 | Subscription ID | Mã định danh duy nhất cho Subscription | Tham chiếu | Bắt buộc | VAL-109 | SUB-8821 | Nội bộ | BR-01 |
+| DATA-028 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-110 | Standard Subscription | Công khai | BR-02 |
+| DATA-028 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-111 | Active | Nội bộ | BR-03 |
+| DATA-028 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-112 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-029 | Company Address ID | Mã định danh duy nhất cho Company Address | Tham chiếu | Bắt buộc | VAL-113 | COM-8821 | Nội bộ | BR-01 |
+| DATA-029 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-114 | Standard Company Address | Công khai | BR-02 |
+| DATA-029 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-115 | Active | Nội bộ | BR-03 |
+| DATA-029 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-116 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-030 | Employer Setting ID | Mã định danh duy nhất cho Employer Setting | Tham chiếu | Bắt buộc | VAL-117 | EMP-8821 | Nội bộ | BR-01 |
+| DATA-030 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-118 | Standard Employer Setting | Công khai | BR-02 |
+| DATA-030 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-119 | Active | Nội bộ | BR-03 |
+| DATA-030 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-120 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-031 | Job Posting ID | Mã định danh duy nhất cho Job Posting | Tham chiếu | Bắt buộc | VAL-121 | JOB-8821 | Nội bộ | BR-01 |
+| DATA-031 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-122 | Standard Job Posting | Công khai | BR-02 |
+| DATA-031 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-123 | Active | Nội bộ | BR-03 |
+| DATA-031 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-124 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-032 | Campaign ID | Mã định danh duy nhất cho Campaign | Tham chiếu | Bắt buộc | VAL-125 | CAM-8821 | Nội bộ | BR-01 |
+| DATA-032 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-126 | Standard Campaign | Công khai | BR-02 |
+| DATA-032 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-127 | Active | Nội bộ | BR-03 |
+| DATA-032 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-128 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-033 | Application ID | Mã định danh duy nhất cho Application | Tham chiếu | Bắt buộc | VAL-129 | APP-8821 | Nội bộ | BR-01 |
+| DATA-033 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-130 | Standard Application | Công khai | BR-02 |
+| DATA-033 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-131 | Active | Nội bộ | BR-03 |
+| DATA-033 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-132 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-034 | Talent Pool ID | Mã định danh duy nhất cho Talent Pool | Tham chiếu | Bắt buộc | VAL-133 | TAL-8821 | Nội bộ | BR-01 |
+| DATA-034 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-134 | Standard Talent Pool | Công khai | BR-02 |
+| DATA-034 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-135 | Active | Nội bộ | BR-03 |
+| DATA-034 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-136 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-035 | Offer ID | Mã định danh duy nhất cho Offer | Tham chiếu | Bắt buộc | VAL-137 | OFF-8821 | Nội bộ | BR-01 |
+| DATA-035 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-138 | Standard Offer | Công khai | BR-02 |
+| DATA-035 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-139 | Active | Nội bộ | BR-03 |
+| DATA-035 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-140 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-036 | Pipeline Stage ID | Mã định danh duy nhất cho Pipeline Stage | Tham chiếu | Bắt buộc | VAL-141 | PIP-8821 | Nội bộ | BR-01 |
+| DATA-036 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-142 | Standard Pipeline Stage | Công khai | BR-02 |
+| DATA-036 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-143 | Active | Nội bộ | BR-03 |
+| DATA-036 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-144 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-037 | Sourcing Channel ID | Mã định danh duy nhất cho Sourcing Channel | Tham chiếu | Bắt buộc | VAL-145 | SOU-8821 | Nội bộ | BR-01 |
+| DATA-037 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-146 | Standard Sourcing Channel | Công khai | BR-02 |
+| DATA-037 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-147 | Active | Nội bộ | BR-03 |
+| DATA-037 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-148 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-038 | Referral ID | Mã định danh duy nhất cho Referral | Tham chiếu | Bắt buộc | VAL-149 | REF-8821 | Nội bộ | BR-01 |
+| DATA-038 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-150 | Standard Referral | Công khai | BR-02 |
+| DATA-038 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-151 | Active | Nội bộ | BR-03 |
+| DATA-038 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-152 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-039 | Screening Form ID | Mã định danh duy nhất cho Screening Form | Tham chiếu | Bắt buộc | VAL-153 | SCR-8821 | Nội bộ | BR-01 |
+| DATA-039 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-154 | Standard Screening Form | Công khai | BR-02 |
+| DATA-039 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-155 | Active | Nội bộ | BR-03 |
+| DATA-039 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-156 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-040 | Shortlist ID | Mã định danh duy nhất cho Shortlist | Tham chiếu | Bắt buộc | VAL-157 | SHO-8821 | Nội bộ | BR-01 |
+| DATA-040 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-158 | Standard Shortlist | Công khai | BR-02 |
+| DATA-040 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-159 | Active | Nội bộ | BR-03 |
+| DATA-040 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-160 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-041 | Interview ID | Mã định danh duy nhất cho Interview | Tham chiếu | Bắt buộc | VAL-161 | INT-8821 | Nội bộ | BR-01 |
+| DATA-041 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-162 | Standard Interview | Công khai | BR-02 |
+| DATA-041 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-163 | Active | Nội bộ | BR-03 |
+| DATA-041 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-164 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-042 | Session ID | Mã định danh duy nhất cho Session | Tham chiếu | Bắt buộc | VAL-165 | SES-8821 | Nội bộ | BR-01 |
+| DATA-042 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-166 | Standard Session | Công khai | BR-02 |
+| DATA-042 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-167 | Active | Nội bộ | BR-03 |
+| DATA-042 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-168 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-043 | Question ID | Mã định danh duy nhất cho Question | Tham chiếu | Bắt buộc | VAL-169 | QUE-8821 | Nội bộ | BR-01 |
+| DATA-043 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-170 | Standard Question | Công khai | BR-02 |
+| DATA-043 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-171 | Active | Nội bộ | BR-03 |
+| DATA-043 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-172 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-044 | Answer ID | Mã định danh duy nhất cho Answer | Tham chiếu | Bắt buộc | VAL-173 | ANS-8821 | Nội bộ | BR-01 |
+| DATA-044 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-174 | Standard Answer | Công khai | BR-02 |
+| DATA-044 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-175 | Active | Nội bộ | BR-03 |
+| DATA-044 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-176 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-045 | Rubric ID | Mã định danh duy nhất cho Rubric | Tham chiếu | Bắt buộc | VAL-177 | RUB-8821 | Nội bộ | BR-01 |
+| DATA-045 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-178 | Standard Rubric | Công khai | BR-02 |
+| DATA-045 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-179 | Active | Nội bộ | BR-03 |
+| DATA-045 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-180 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-046 | Recording ID | Mã định danh duy nhất cho Recording | Tham chiếu | Bắt buộc | VAL-181 | REC-8821 | Nội bộ | BR-01 |
+| DATA-046 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-182 | Standard Recording | Công khai | BR-02 |
+| DATA-046 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-183 | Active | Nội bộ | BR-03 |
+| DATA-046 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-184 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-047 | Transcript ID | Mã định danh duy nhất cho Transcript | Tham chiếu | Bắt buộc | VAL-185 | TRA-8821 | Nội bộ | BR-01 |
+| DATA-047 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-186 | Standard Transcript | Công khai | BR-02 |
+| DATA-047 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-187 | Active | Nội bộ | BR-03 |
+| DATA-047 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-188 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-048 | Interviewer ID | Mã định danh duy nhất cho Interviewer | Tham chiếu | Bắt buộc | VAL-189 | INT-8821 | Nội bộ | BR-01 |
+| DATA-048 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-190 | Standard Interviewer | Công khai | BR-02 |
+| DATA-048 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-191 | Active | Nội bộ | BR-03 |
+| DATA-048 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-192 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-049 | Feedback ID | Mã định danh duy nhất cho Feedback | Tham chiếu | Bắt buộc | VAL-193 | FEE-8821 | Nội bộ | BR-01 |
+| DATA-049 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-194 | Standard Feedback | Công khai | BR-02 |
+| DATA-049 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-195 | Active | Nội bộ | BR-03 |
+| DATA-049 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-196 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-050 | Rating ID | Mã định danh duy nhất cho Rating | Tham chiếu | Bắt buộc | VAL-197 | RAT-8821 | Nội bộ | BR-01 |
+| DATA-050 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-198 | Standard Rating | Công khai | BR-02 |
+| DATA-050 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-199 | Active | Nội bộ | BR-03 |
+| DATA-050 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-200 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-051 | Interview Template ID | Mã định danh duy nhất cho Interview Template | Tham chiếu | Bắt buộc | VAL-201 | INT-8821 | Nội bộ | BR-01 |
+| DATA-051 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-202 | Standard Interview Template | Công khai | BR-02 |
+| DATA-051 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-203 | Active | Nội bộ | BR-03 |
+| DATA-051 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-204 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-052 | Assessment ID | Mã định danh duy nhất cho Assessment | Tham chiếu | Bắt buộc | VAL-205 | ASS-8821 | Nội bộ | BR-01 |
+| DATA-052 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-206 | Standard Assessment | Công khai | BR-02 |
+| DATA-052 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-207 | Active | Nội bộ | BR-03 |
+| DATA-052 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-208 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-053 | Test Case ID | Mã định danh duy nhất cho Test Case | Tham chiếu | Bắt buộc | VAL-209 | TES-8821 | Nội bộ | BR-01 |
+| DATA-053 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-210 | Standard Test Case | Công khai | BR-02 |
+| DATA-053 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-211 | Active | Nội bộ | BR-03 |
+| DATA-053 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-212 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-054 | Submission ID | Mã định danh duy nhất cho Submission | Tham chiếu | Bắt buộc | VAL-213 | SUB-8821 | Nội bộ | BR-01 |
+| DATA-054 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-214 | Standard Submission | Công khai | BR-02 |
+| DATA-054 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-215 | Active | Nội bộ | BR-03 |
+| DATA-054 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-216 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-055 | Score ID | Mã định danh duy nhất cho Score | Tham chiếu | Bắt buộc | VAL-217 | SCO-8821 | Nội bộ | BR-01 |
+| DATA-055 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-218 | Standard Score | Công khai | BR-02 |
+| DATA-055 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-219 | Active | Nội bộ | BR-03 |
+| DATA-055 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-220 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-056 | Skill Gap ID | Mã định danh duy nhất cho Skill Gap | Tham chiếu | Bắt buộc | VAL-221 | SKI-8821 | Nội bộ | BR-01 |
+| DATA-056 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-222 | Standard Skill Gap | Công khai | BR-02 |
+| DATA-056 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-223 | Active | Nội bộ | BR-03 |
+| DATA-056 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-224 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-057 | Proctoring Log ID | Mã định danh duy nhất cho Proctoring Log | Tham chiếu | Bắt buộc | VAL-225 | PRO-8821 | Nội bộ | BR-01 |
+| DATA-057 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-226 | Standard Proctoring Log | Công khai | BR-02 |
+| DATA-057 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-227 | Active | Nội bộ | BR-03 |
+| DATA-057 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-228 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-058 | Code Execution Result ID | Mã định danh duy nhất cho Code Execution Result | Tham chiếu | Bắt buộc | VAL-229 | COD-8821 | Nội bộ | BR-01 |
+| DATA-058 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-230 | Standard Code Execution Result | Công khai | BR-02 |
+| DATA-058 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-231 | Active | Nội bộ | BR-03 |
+| DATA-058 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-232 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-059 | Plagiarism Báo cáo ID | Mã định danh duy nhất cho Plagiarism Báo cáo | Tham chiếu | Bắt buộc | VAL-233 | PLA-8821 | Nội bộ | BR-01 |
+| DATA-059 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-234 | Standard Plagiarism Báo cáo | Công khai | BR-02 |
+| DATA-059 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-235 | Active | Nội bộ | BR-03 |
+| DATA-059 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-236 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-060 | Question Bank ID | Mã định danh duy nhất cho Question Bank | Tham chiếu | Bắt buộc | VAL-237 | QUE-8821 | Nội bộ | BR-01 |
+| DATA-060 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-238 | Standard Question Bank | Công khai | BR-02 |
+| DATA-060 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-239 | Active | Nội bộ | BR-03 |
+| DATA-060 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-240 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-061 | Assessment Template ID | Mã định danh duy nhất cho Assessment Template | Tham chiếu | Bắt buộc | VAL-241 | ASS-8821 | Nội bộ | BR-01 |
+| DATA-061 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-242 | Standard Assessment Template | Công khai | BR-02 |
+| DATA-061 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-243 | Active | Nội bộ | BR-03 |
+| DATA-061 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-244 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-062 | Roadmap ID | Mã định danh duy nhất cho Roadmap | Tham chiếu | Bắt buộc | VAL-245 | ROA-8821 | Nội bộ | BR-01 |
+| DATA-062 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-246 | Standard Roadmap | Công khai | BR-02 |
+| DATA-062 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-247 | Active | Nội bộ | BR-03 |
+| DATA-062 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-248 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-063 | Module ID | Mã định danh duy nhất cho Module | Tham chiếu | Bắt buộc | VAL-249 | MOD-8821 | Nội bộ | BR-01 |
+| DATA-063 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-250 | Standard Module | Công khai | BR-02 |
+| DATA-063 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-251 | Active | Nội bộ | BR-03 |
+| DATA-063 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-252 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-064 | Course ID | Mã định danh duy nhất cho Course | Tham chiếu | Bắt buộc | VAL-253 | COU-8821 | Nội bộ | BR-01 |
+| DATA-064 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-254 | Standard Course | Công khai | BR-02 |
+| DATA-064 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-255 | Active | Nội bộ | BR-03 |
+| DATA-064 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-256 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-065 | Lesson ID | Mã định danh duy nhất cho Lesson | Tham chiếu | Bắt buộc | VAL-257 | LES-8821 | Nội bộ | BR-01 |
+| DATA-065 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-258 | Standard Lesson | Công khai | BR-02 |
+| DATA-065 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-259 | Active | Nội bộ | BR-03 |
+| DATA-065 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-260 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-066 | Progress ID | Mã định danh duy nhất cho Progress | Tham chiếu | Bắt buộc | VAL-261 | PRO-8821 | Nội bộ | BR-01 |
+| DATA-066 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-262 | Standard Progress | Công khai | BR-02 |
+| DATA-066 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-263 | Active | Nội bộ | BR-03 |
+| DATA-066 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-264 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-067 | Certificate ID | Mã định danh duy nhất cho Certificate | Tham chiếu | Bắt buộc | VAL-265 | CER-8821 | Nội bộ | BR-01 |
+| DATA-067 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-266 | Standard Certificate | Công khai | BR-02 |
+| DATA-067 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-267 | Active | Nội bộ | BR-03 |
+| DATA-067 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-268 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-068 | Badge ID | Mã định danh duy nhất cho Badge | Tham chiếu | Bắt buộc | VAL-269 | BAD-8821 | Nội bộ | BR-01 |
+| DATA-068 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-270 | Standard Badge | Công khai | BR-02 |
+| DATA-068 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-271 | Active | Nội bộ | BR-03 |
+| DATA-068 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-272 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-069 | Recommendation ID | Mã định danh duy nhất cho Recommendation | Tham chiếu | Bắt buộc | VAL-273 | REC-8821 | Nội bộ | BR-01 |
+| DATA-069 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-274 | Standard Recommendation | Công khai | BR-02 |
+| DATA-069 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-275 | Active | Nội bộ | BR-03 |
+| DATA-069 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-276 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-070 | Content Resource ID | Mã định danh duy nhất cho Content Resource | Tham chiếu | Bắt buộc | VAL-277 | CON-8821 | Nội bộ | BR-01 |
+| DATA-070 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-278 | Standard Content Resource | Công khai | BR-02 |
+| DATA-070 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-279 | Active | Nội bộ | BR-03 |
+| DATA-070 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-280 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-071 | Learning Path ID | Mã định danh duy nhất cho Learning Path | Tham chiếu | Bắt buộc | VAL-281 | LEA-8821 | Nội bộ | BR-01 |
+| DATA-071 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-282 | Standard Learning Path | Công khai | BR-02 |
+| DATA-071 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-283 | Active | Nội bộ | BR-03 |
+| DATA-071 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-284 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-072 | Transaction ID | Mã định danh duy nhất cho Transaction | Tham chiếu | Bắt buộc | VAL-285 | TRA-8821 | Nội bộ | BR-01 |
+| DATA-072 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-286 | Standard Transaction | Công khai | BR-02 |
+| DATA-072 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-287 | Active | Nội bộ | BR-03 |
+| DATA-072 | Amount | Giá trị tài chính giao dịch | Tiền tệ | Bắt buộc | VAL-288 | $500.00 | Tài chính | BR-06 |
+| DATA-073 | Invoice ID | Mã định danh duy nhất cho Invoice | Tham chiếu | Bắt buộc | VAL-289 | INV-8821 | Nội bộ | BR-01 |
+| DATA-073 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-290 | Standard Invoice | Công khai | BR-02 |
+| DATA-073 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-291 | Active | Nội bộ | BR-03 |
+| DATA-073 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-292 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-074 | Credit Balance ID | Mã định danh duy nhất cho Credit Balance | Tham chiếu | Bắt buộc | VAL-293 | CRE-8821 | Nội bộ | BR-01 |
+| DATA-074 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-294 | Standard Credit Balance | Công khai | BR-02 |
+| DATA-074 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-295 | Active | Nội bộ | BR-03 |
+| DATA-074 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-296 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-075 | Plan ID | Mã định danh duy nhất cho Plan | Tham chiếu | Bắt buộc | VAL-297 | PLA-8821 | Nội bộ | BR-01 |
+| DATA-075 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-298 | Standard Plan | Công khai | BR-02 |
+| DATA-075 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-299 | Active | Nội bộ | BR-03 |
+| DATA-075 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-300 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-076 | Discount ID | Mã định danh duy nhất cho Discount | Tham chiếu | Bắt buộc | VAL-301 | DIS-8821 | Nội bộ | BR-01 |
+| DATA-076 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-302 | Standard Discount | Công khai | BR-02 |
+| DATA-076 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-303 | Active | Nội bộ | BR-03 |
+| DATA-076 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-304 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-077 | Tax Record ID | Mã định danh duy nhất cho Tax Record | Tham chiếu | Bắt buộc | VAL-305 | TAX-8821 | Nội bộ | BR-01 |
+| DATA-077 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-306 | Standard Tax Record | Công khai | BR-02 |
+| DATA-077 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-307 | Active | Nội bộ | BR-03 |
+| DATA-077 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-308 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-078 | Refund ID | Mã định danh duy nhất cho Refund | Tham chiếu | Bắt buộc | VAL-309 | REF-8821 | Nội bộ | BR-01 |
+| DATA-078 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-310 | Standard Refund | Công khai | BR-02 |
+| DATA-078 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-311 | Active | Nội bộ | BR-03 |
+| DATA-078 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-312 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-079 | Payment Method ID | Mã định danh duy nhất cho Payment Method | Tham chiếu | Bắt buộc | VAL-313 | PAY-8821 | Nội bộ | BR-01 |
+| DATA-079 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-314 | Standard Payment Method | Công khai | BR-02 |
+| DATA-079 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-315 | Active | Nội bộ | BR-03 |
+| DATA-079 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-316 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-080 | Billing Cycle ID | Mã định danh duy nhất cho Billing Cycle | Tham chiếu | Bắt buộc | VAL-317 | BIL-8821 | Nội bộ | BR-01 |
+| DATA-080 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-318 | Standard Billing Cycle | Công khai | BR-02 |
+| DATA-080 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-319 | Active | Nội bộ | BR-03 |
+| DATA-080 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-320 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-081 | Receipt ID | Mã định danh duy nhất cho Receipt | Tham chiếu | Bắt buộc | VAL-321 | REC-8821 | Nội bộ | BR-01 |
+| DATA-081 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-322 | Standard Receipt | Công khai | BR-02 |
+| DATA-081 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-323 | Active | Nội bộ | BR-03 |
+| DATA-081 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-324 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-082 | Notification ID | Mã định danh duy nhất cho Notification | Tham chiếu | Bắt buộc | VAL-325 | NOT-8821 | Nội bộ | BR-01 |
+| DATA-082 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-326 | Standard Notification | Công khai | BR-02 |
+| DATA-082 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-327 | Active | Nội bộ | BR-03 |
+| DATA-082 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-328 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-083 | Email Template ID | Mã định danh duy nhất cho Email Template | Tham chiếu | Bắt buộc | VAL-329 | EMA-8821 | Nội bộ | BR-01 |
+| DATA-083 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-330 | Standard Email Template | Công khai | BR-02 |
+| DATA-083 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-331 | Active | Nội bộ | BR-03 |
+| DATA-083 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-332 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-084 | SMS Log ID | Mã định danh duy nhất cho SMS Log | Tham chiếu | Bắt buộc | VAL-333 | SMS-8821 | Nội bộ | BR-01 |
+| DATA-084 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-334 | Standard SMS Log | Công khai | BR-02 |
+| DATA-084 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-335 | Active | Nội bộ | BR-03 |
+| DATA-084 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-336 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-085 | In-App Message ID | Mã định danh duy nhất cho In-App Message | Tham chiếu | Bắt buộc | VAL-337 | IN--8821 | Nội bộ | BR-01 |
+| DATA-085 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-338 | Standard In-App Message | Công khai | BR-02 |
+| DATA-085 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-339 | Active | Nội bộ | BR-03 |
+| DATA-085 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-340 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-086 | Push Notification ID | Mã định danh duy nhất cho Push Notification | Tham chiếu | Bắt buộc | VAL-341 | PUS-8821 | Nội bộ | BR-01 |
+| DATA-086 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-342 | Standard Push Notification | Công khai | BR-02 |
+| DATA-086 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-343 | Active | Nội bộ | BR-03 |
+| DATA-086 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-344 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-087 | Delivery Status ID | Mã định danh duy nhất cho Delivery Status | Tham chiếu | Bắt buộc | VAL-345 | DEL-8821 | Nội bộ | BR-01 |
+| DATA-087 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-346 | Standard Delivery Status | Công khai | BR-02 |
+| DATA-087 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-347 | Active | Nội bộ | BR-03 |
+| DATA-087 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-348 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-088 | Subscription Preference ID | Mã định danh duy nhất cho Subscription Preference | Tham chiếu | Bắt buộc | VAL-349 | SUB-8821 | Nội bộ | BR-01 |
+| DATA-088 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-350 | Standard Subscription Preference | Công khai | BR-02 |
+| DATA-088 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-351 | Active | Nội bộ | BR-03 |
+| DATA-088 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-352 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-089 | Alert ID | Mã định danh duy nhất cho Alert | Tham chiếu | Bắt buộc | VAL-353 | ALE-8821 | Nội bộ | BR-01 |
+| DATA-089 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-354 | Standard Alert | Công khai | BR-02 |
+| DATA-089 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-355 | Active | Nội bộ | BR-03 |
+| DATA-089 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-356 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-090 | Reminder ID | Mã định danh duy nhất cho Reminder | Tham chiếu | Bắt buộc | VAL-357 | REM-8821 | Nội bộ | BR-01 |
+| DATA-090 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-358 | Standard Reminder | Công khai | BR-02 |
+| DATA-090 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-359 | Active | Nội bộ | BR-03 |
+| DATA-090 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-360 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-091 | Digest ID | Mã định danh duy nhất cho Digest | Tham chiếu | Bắt buộc | VAL-361 | DIG-8821 | Nội bộ | BR-01 |
+| DATA-091 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-362 | Standard Digest | Công khai | BR-02 |
+| DATA-091 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-363 | Active | Nội bộ | BR-03 |
+| DATA-091 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-364 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-092 | Audit Log ID | Mã định danh duy nhất cho Audit Log | Tham chiếu | Bắt buộc | VAL-365 | AUD-8821 | Nội bộ | BR-01 |
+| DATA-092 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-366 | Standard Audit Log | Công khai | BR-02 |
+| DATA-092 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-367 | Active | Nội bộ | BR-03 |
+| DATA-092 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-368 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-093 | Access Log ID | Mã định danh duy nhất cho Access Log | Tham chiếu | Bắt buộc | VAL-369 | ACC-8821 | Nội bộ | BR-01 |
+| DATA-093 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-370 | Standard Access Log | Công khai | BR-02 |
+| DATA-093 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-371 | Active | Nội bộ | BR-03 |
+| DATA-093 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-372 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-094 | Change Record ID | Mã định danh duy nhất cho Change Record | Tham chiếu | Bắt buộc | VAL-373 | CHA-8821 | Nội bộ | BR-01 |
+| DATA-094 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-374 | Standard Change Record | Công khai | BR-02 |
+| DATA-094 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-375 | Active | Nội bộ | BR-03 |
+| DATA-094 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-376 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-095 | Error Log ID | Mã định danh duy nhất cho Error Log | Tham chiếu | Bắt buộc | VAL-377 | ERR-8821 | Nội bộ | BR-01 |
+| DATA-095 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-378 | Standard Error Log | Công khai | BR-02 |
+| DATA-095 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-379 | Active | Nội bộ | BR-03 |
+| DATA-095 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-380 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-096 | Compliance Báo cáo ID | Mã định danh duy nhất cho Compliance Báo cáo | Tham chiếu | Bắt buộc | VAL-381 | COM-8821 | Nội bộ | BR-01 |
+| DATA-096 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-382 | Standard Compliance Báo cáo | Công khai | BR-02 |
+| DATA-096 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-383 | Active | Nội bộ | BR-03 |
+| DATA-096 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-384 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-097 | Data Export Request ID | Mã định danh duy nhất cho Data Export Request | Tham chiếu | Bắt buộc | VAL-385 | DAT-8821 | Nội bộ | BR-01 |
+| DATA-097 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-386 | Standard Data Export Request | Công khai | BR-02 |
+| DATA-097 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-387 | Active | Nội bộ | BR-03 |
+| DATA-097 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-388 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-098 | Privacy Request ID | Mã định danh duy nhất cho Privacy Request | Tham chiếu | Bắt buộc | VAL-389 | PRI-8821 | Nội bộ | BR-01 |
+| DATA-098 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-390 | Standard Privacy Request | Công khai | BR-02 |
+| DATA-098 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-391 | Active | Nội bộ | BR-03 |
+| DATA-098 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-392 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-099 | Admin Action ID | Mã định danh duy nhất cho Admin Action | Tham chiếu | Bắt buộc | VAL-393 | ADM-8821 | Nội bộ | BR-01 |
+| DATA-099 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-394 | Standard Admin Action | Công khai | BR-02 |
+| DATA-099 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-395 | Active | Nội bộ | BR-03 |
+| DATA-099 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-396 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-100 | Login Event ID | Mã định danh duy nhất cho Login Event | Tham chiếu | Bắt buộc | VAL-397 | LOG-8821 | Nội bộ | BR-01 |
+| DATA-100 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-398 | Standard Login Event | Công khai | BR-02 |
+| DATA-100 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-399 | Active | Nội bộ | BR-03 |
+| DATA-100 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-400 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-101 | System Alert ID | Mã định danh duy nhất cho System Alert | Tham chiếu | Bắt buộc | VAL-401 | SYS-8821 | Nội bộ | BR-01 |
+| DATA-101 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-402 | Standard System Alert | Công khai | BR-02 |
+| DATA-101 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-403 | Active | Nội bộ | BR-03 |
+| DATA-101 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-404 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-102 | Analytics Snapshot ID | Mã định danh duy nhất cho Analytics Snapshot | Tham chiếu | Bắt buộc | VAL-405 | ANA-8821 | Nội bộ | BR-01 |
+| DATA-102 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-406 | Standard Analytics Snapshot | Công khai | BR-02 |
+| DATA-102 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-407 | Active | Nội bộ | BR-03 |
+| DATA-102 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-408 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-103 | Usage ID Số liệu | Mã định danh duy nhất cho Usage Metric | Tham chiếu | Bắt buộc | VAL-409 | USA-8821 | Nội bộ | BR-01 |
+| DATA-103 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-410 | Standard Usage Metric | Công khai | BR-02 |
+| DATA-103 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-411 | Active | Nội bộ | BR-03 |
+| DATA-103 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-412 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-104 | Performance ID Số liệu | Mã định danh duy nhất cho Performance Metric | Tham chiếu | Bắt buộc | VAL-413 | PER-8821 | Nội bộ | BR-01 |
+| DATA-104 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-414 | Standard Performance Metric | Công khai | BR-02 |
+| DATA-104 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-415 | Active | Nội bộ | BR-03 |
+| DATA-104 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-416 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-105 | Diversity ID Số liệu | Mã định danh duy nhất cho Diversity Metric | Tham chiếu | Bắt buộc | VAL-417 | DIV-8821 | Nội bộ | BR-01 |
+| DATA-105 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-418 | Standard Diversity Metric | Công khai | BR-02 |
+| DATA-105 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-419 | Active | Nội bộ | BR-03 |
+| DATA-105 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-420 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-106 | ROI Báo cáo ID | Mã định danh duy nhất cho ROI Báo cáo | Tham chiếu | Bắt buộc | VAL-421 | ROI-8821 | Nội bộ | BR-01 |
+| DATA-106 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-422 | Standard ROI Báo cáo | Công khai | BR-02 |
+| DATA-106 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-423 | Active | Nội bộ | BR-03 |
+| DATA-106 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-424 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-107 | Ứng viên Funnel ID | Mã định danh duy nhất cho Ứng viên Funnel | Tham chiếu | Bắt buộc | VAL-425 | CAN-8821 | Nội bộ | BR-01 |
+| DATA-107 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-426 | Standard Ứng viên Funnel | Công khai | BR-02 |
+| DATA-107 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-427 | Active | Nội bộ | BR-03 |
+| DATA-107 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-428 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-108 | Drop-off Rate ID | Mã định danh duy nhất cho Drop-off Rate | Tham chiếu | Bắt buộc | VAL-429 | DRO-8821 | Nội bộ | BR-01 |
+| DATA-108 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-430 | Standard Drop-off Rate | Công khai | BR-02 |
+| DATA-108 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-431 | Active | Nội bộ | BR-03 |
+| DATA-108 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-432 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-109 | Satisfaction Score ID | Mã định danh duy nhất cho Satisfaction Score | Tham chiếu | Bắt buộc | VAL-433 | SAT-8821 | Nội bộ | BR-01 |
+| DATA-109 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-434 | Standard Satisfaction Score | Công khai | BR-02 |
+| DATA-109 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-435 | Active | Nội bộ | BR-03 |
+| DATA-109 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-436 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-110 | Time-to-Hire ID | Mã định danh duy nhất cho Time-to-Hire | Tham chiếu | Bắt buộc | VAL-437 | TIM-8821 | Nội bộ | BR-01 |
+| DATA-110 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-438 | Standard Time-to-Hire | Công khai | BR-02 |
+| DATA-110 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-439 | Active | Nội bộ | BR-03 |
+| DATA-110 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-440 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-111 | Cost-per-Hire ID | Mã định danh duy nhất cho Cost-per-Hire | Tham chiếu | Bắt buộc | VAL-441 | COS-8821 | Nội bộ | BR-01 |
+| DATA-111 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-442 | Standard Cost-per-Hire | Công khai | BR-02 |
+| DATA-111 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-443 | Active | Nội bộ | BR-03 |
+| DATA-111 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-444 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-112 | System Configuration ID | Mã định danh duy nhất cho System Configuration | Tham chiếu | Bắt buộc | VAL-445 | SYS-8821 | Nội bộ | BR-01 |
+| DATA-112 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-446 | Standard System Configuration | Công khai | BR-02 |
+| DATA-112 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-447 | Active | Nội bộ | BR-03 |
+| DATA-112 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-448 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-113 | Localization Setting ID | Mã định danh duy nhất cho Localization Setting | Tham chiếu | Bắt buộc | VAL-449 | LOC-8821 | Nội bộ | BR-01 |
+| DATA-113 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-450 | Standard Localization Setting | Công khai | BR-02 |
+| DATA-113 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-451 | Active | Nội bộ | BR-03 |
+| DATA-113 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-452 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-114 | API Key ID | Mã định danh duy nhất cho API Key | Tham chiếu | Bắt buộc | VAL-453 | API-8821 | Nội bộ | BR-01 |
+| DATA-114 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-454 | Standard API Key | Công khai | BR-02 |
+| DATA-114 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-455 | Active | Nội bộ | BR-03 |
+| DATA-114 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-456 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-115 | Webhook ID | Mã định danh duy nhất cho Webhook | Tham chiếu | Bắt buộc | VAL-457 | WEB-8821 | Nội bộ | BR-01 |
+| DATA-115 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-458 | Standard Webhook | Công khai | BR-02 |
+| DATA-115 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-459 | Active | Nội bộ | BR-03 |
+| DATA-115 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-460 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-116 | Integration Profile ID | Mã định danh duy nhất cho Integration Profile | Tham chiếu | Bắt buộc | VAL-461 | INT-8821 | Nội bộ | BR-01 |
+| DATA-116 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-462 | Standard Integration Profile | Công khai | BR-02 |
+| DATA-116 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-463 | Active | Nội bộ | BR-03 |
+| DATA-116 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-464 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-117 | Quy tắc Nghiệp vụ Config ID | Mã định danh duy nhất cho Quy tắc Nghiệp vụ Config | Tham chiếu | Bắt buộc | VAL-465 | BUS-8821 | Nội bộ | BR-01 |
+| DATA-117 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-466 | Standard Quy tắc Nghiệp vụ Config | Công khai | BR-02 |
+| DATA-117 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-467 | Active | Nội bộ | BR-03 |
+| DATA-117 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-468 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-118 | Feature Flag ID | Mã định danh duy nhất cho Feature Flag | Tham chiếu | Bắt buộc | VAL-469 | FEA-8821 | Nội bộ | BR-01 |
+| DATA-118 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-470 | Standard Feature Flag | Công khai | BR-02 |
+| DATA-118 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-471 | Active | Nội bộ | BR-03 |
+| DATA-118 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-472 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
+| DATA-119 | Maintenance Window ID | Mã định danh duy nhất cho Maintenance Window | Tham chiếu | Bắt buộc | VAL-473 | MAI-8821 | Nội bộ | BR-01 |
+| DATA-119 | Name / Title | Nhãn mô tả chính | Văn bản | Bắt buộc | VAL-474 | Standard Maintenance Window | Công khai | BR-02 |
+| DATA-119 | Status | Trạng thái vòng đời hiện tại | Liệt kê | Bắt buộc | VAL-475 | Active | Nội bộ | BR-03 |
+| DATA-119 | Created Date | Dấu thời gian khởi tạo | Ngày giờ | Bắt buộc | VAL-476 | 2026-07-09T10:00:00Z | Nội bộ | BR-04 |
 
 
-## 6. Master Data
-Master Data represents the core business entities that are shared across multiple business processes and domains.
-### Master Data Entities
-- **User / Candidate / Employer:** Core identity and profile records.
-- **Company:** Enterprise client registry.
-- **Skill Taxonomy:** Standardized dictionary of skills and competencies.
-- **Interview Template:** Standardized rubric and question structures.
-### Governance & Ownership
-- **Ownership:** Managed by respective Domain Owners (e.g., VP of HR for Skills).
-- **Update Frequency:** Slow-moving; changes require Data Steward approval.
-- **Versioning:** Strict version control (e.g., Skill Taxonomy v2.1).
-- **Consumers:** Referenced universally by Transactional Data.
+## 11. Data Vòng đời
+Các giai đoạn vòng đời tiêu chuẩn cho các đối tượng dữ liệu kinh doanh:
+1. **Tạo:** Dữ liệu được thu thập qua người dùng nhập, API hoặc hệ thống tạo.
+2. **Xác thực:** System validates against Quy tắc Nghiệp vụs and Kiểu Dữ liệu constraint.
+3. **Hoạt động:** Dữ liệu sẵn sàng cho các giao dịch và báo cáo.
+4. **Lưu trữ:** Dữ liệu được chuyển sang lưu trữ lạnh sau khoảng thời gian lưu giữ hoạt động.
+5. **Xóa/Hủy bỏ:** Dữ liệu bị hủy vĩnh viễn theo Chính sách xóa và tuân thủ GDPR.
 
-## 7. Transactional Data
-Transactional data represents business events that occur at a specific point in time.
-- **Interview Session:** Captures the real-time execution of an interview.
-- **Assessment Submission:** Captures code execution and test results.
-- **Payment Transaction:** Captures billing and financial events.
-- **Audit Event:** Captures user and system actions for compliance.
-
-## 8. Reference Data
-Static or highly stable data used to categorize other data.
-- **Geographical:** Countries, Regions, Time Zones.
-- **Financial:** Currencies, Tax Rates.
-- **System:** Languages, Status Codes, Error Codes.
-- **Business:** Job Levels (Junior, Mid, Senior), Industries, Skill Categories.
-
-## 9. Data Relationships
-Logical relationships mapping the business process flow:
-- A **Company** employs multiple **Recruiters** and owns multiple **Campaigns**.
-- A **Campaign** contains multiple **Job Postings** and aggregates a **Talent Pool**.
-- A **Candidate** maintains one **Profile** and submits multiple **Applications**.
-- An **Application** proceeds through a **Pipeline Stage** and triggers an **Interview** or **Assessment**.
-- An **Interview** utilizes a **Rubric** and produces a **Recording**, **Transcript**, and **Feedback**.
-- An **Assessment** executes **Test Cases** and generates a **Score** and **Skill Gap** report.
-- A **Skill Gap** recommends a **Roadmap** containing multiple **Learning Modules**.
-
-## 10. Data Validation Rules
-Business validation rules ensure data integrity before persistence.
-| Rule ID | Rule Name | Description | Error Message | Trigger | Enforcement Level |
-|---|---|---|---|---|---|
-| VAL-001 | User Completeness | Mandatory fields for User must be populated. | Missing required User fields. | On Save | Strict Block |
-| VAL-002 | Role Completeness | Mandatory fields for Role must be populated. | Missing required Role fields. | On Save | Strict Block |
-| VAL-003 | Permission Completeness | Mandatory fields for Permission must be populated. | Missing required Permission fields. | On Save | Strict Block |
-| VAL-004 | Session Completeness | Mandatory fields for Session must be populated. | Missing required Session fields. | On Save | Strict Block |
-| VAL-005 | MFA Token Completeness | Mandatory fields for MFA Token must be populated. | Missing required MFA Token fields. | On Save | Strict Block |
-| VAL-006 | Consent Record Completeness | Mandatory fields for Consent Record must be populated. | Missing required Consent Record fields. | On Save | Strict Block |
-| VAL-007 | Identity Verification Completeness | Mandatory fields for Identity Verification must be populated. | Missing required Identity Verification fields. | On Save | Strict Block |
-| VAL-008 | Security Profile Completeness | Mandatory fields for Security Profile must be populated. | Missing required Security Profile fields. | On Save | Strict Block |
-| VAL-009 | SSO Configuration Completeness | Mandatory fields for SSO Configuration must be populated. | Missing required SSO Configuration fields. | On Save | Strict Block |
-| VAL-010 | Password History Completeness | Mandatory fields for Password History must be populated. | Missing required Password History fields. | On Save | Strict Block |
-| VAL-011 | Candidate Completeness | Mandatory fields for Candidate must be populated. | Missing required Candidate fields. | On Save | Strict Block |
-| VAL-012 | Profile Completeness | Mandatory fields for Profile must be populated. | Missing required Profile fields. | On Save | Strict Block |
-| VAL-013 | Education Completeness | Mandatory fields for Education must be populated. | Missing required Education fields. | On Save | Strict Block |
-| VAL-014 | Experience Completeness | Mandatory fields for Experience must be populated. | Missing required Experience fields. | On Save | Strict Block |
-| VAL-015 | Skill Claim Completeness | Mandatory fields for Skill Claim must be populated. | Missing required Skill Claim fields. | On Save | Strict Block |
-| VAL-016 | Certification Completeness | Mandatory fields for Certification must be populated. | Missing required Certification fields. | On Save | Strict Block |
-| VAL-017 | Career Goal Completeness | Mandatory fields for Career Goal must be populated. | Missing required Career Goal fields. | On Save | Strict Block |
-| VAL-018 | Language Proficiency Completeness | Mandatory fields for Language Proficiency must be populated. | Missing required Language Proficiency fields. | On Save | Strict Block |
-| VAL-019 | Portfolio Item Completeness | Mandatory fields for Portfolio Item must be populated. | Missing required Portfolio Item fields. | On Save | Strict Block |
-| VAL-020 | Availability Completeness | Mandatory fields for Availability must be populated. | Missing required Availability fields. | On Save | Strict Block |
-| VAL-021 | Employer Completeness | Mandatory fields for Employer must be populated. | Missing required Employer fields. | On Save | Strict Block |
-| VAL-022 | Company Completeness | Mandatory fields for Company must be populated. | Missing required Company fields. | On Save | Strict Block |
-| VAL-023 | Department Completeness | Mandatory fields for Department must be populated. | Missing required Department fields. | On Save | Strict Block |
-| VAL-024 | Team Completeness | Mandatory fields for Team must be populated. | Missing required Team fields. | On Save | Strict Block |
-| VAL-025 | Recruiter Completeness | Mandatory fields for Recruiter must be populated. | Missing required Recruiter fields. | On Save | Strict Block |
-| VAL-026 | Hiring Manager Completeness | Mandatory fields for Hiring Manager must be populated. | Missing required Hiring Manager fields. | On Save | Strict Block |
-| VAL-027 | Billing Profile Completeness | Mandatory fields for Billing Profile must be populated. | Missing required Billing Profile fields. | On Save | Strict Block |
-| VAL-028 | Subscription Completeness | Mandatory fields for Subscription must be populated. | Missing required Subscription fields. | On Save | Strict Block |
-| VAL-029 | Company Address Completeness | Mandatory fields for Company Address must be populated. | Missing required Company Address fields. | On Save | Strict Block |
-| VAL-030 | Employer Setting Completeness | Mandatory fields for Employer Setting must be populated. | Missing required Employer Setting fields. | On Save | Strict Block |
-| VAL-031 | Job Posting Completeness | Mandatory fields for Job Posting must be populated. | Missing required Job Posting fields. | On Save | Strict Block |
-| VAL-032 | Campaign Completeness | Mandatory fields for Campaign must be populated. | Missing required Campaign fields. | On Save | Strict Block |
-| VAL-033 | Application Completeness | Mandatory fields for Application must be populated. | Missing required Application fields. | On Save | Strict Block |
-| VAL-034 | Talent Pool Completeness | Mandatory fields for Talent Pool must be populated. | Missing required Talent Pool fields. | On Save | Strict Block |
-| VAL-035 | Offer Completeness | Mandatory fields for Offer must be populated. | Missing required Offer fields. | On Save | Strict Block |
-| VAL-036 | Pipeline Stage Completeness | Mandatory fields for Pipeline Stage must be populated. | Missing required Pipeline Stage fields. | On Save | Strict Block |
-| VAL-037 | Sourcing Channel Completeness | Mandatory fields for Sourcing Channel must be populated. | Missing required Sourcing Channel fields. | On Save | Strict Block |
-| VAL-038 | Referral Completeness | Mandatory fields for Referral must be populated. | Missing required Referral fields. | On Save | Strict Block |
-| VAL-039 | Screening Form Completeness | Mandatory fields for Screening Form must be populated. | Missing required Screening Form fields. | On Save | Strict Block |
-| VAL-040 | Shortlist Completeness | Mandatory fields for Shortlist must be populated. | Missing required Shortlist fields. | On Save | Strict Block |
-| VAL-041 | Interview Completeness | Mandatory fields for Interview must be populated. | Missing required Interview fields. | On Save | Strict Block |
-| VAL-042 | Session Completeness | Mandatory fields for Session must be populated. | Missing required Session fields. | On Save | Strict Block |
-| VAL-043 | Question Completeness | Mandatory fields for Question must be populated. | Missing required Question fields. | On Save | Strict Block |
-| VAL-044 | Answer Completeness | Mandatory fields for Answer must be populated. | Missing required Answer fields. | On Save | Strict Block |
-| VAL-045 | Rubric Completeness | Mandatory fields for Rubric must be populated. | Missing required Rubric fields. | On Save | Strict Block |
-| VAL-046 | Recording Completeness | Mandatory fields for Recording must be populated. | Missing required Recording fields. | On Save | Strict Block |
-| VAL-047 | Transcript Completeness | Mandatory fields for Transcript must be populated. | Missing required Transcript fields. | On Save | Strict Block |
-| VAL-048 | Interviewer Completeness | Mandatory fields for Interviewer must be populated. | Missing required Interviewer fields. | On Save | Strict Block |
-| VAL-049 | Feedback Completeness | Mandatory fields for Feedback must be populated. | Missing required Feedback fields. | On Save | Strict Block |
-| VAL-050 | Rating Completeness | Mandatory fields for Rating must be populated. | Missing required Rating fields. | On Save | Strict Block |
-| VAL-051 | Interview Template Completeness | Mandatory fields for Interview Template must be populated. | Missing required Interview Template fields. | On Save | Strict Block |
-| VAL-052 | Assessment Completeness | Mandatory fields for Assessment must be populated. | Missing required Assessment fields. | On Save | Strict Block |
-| VAL-053 | Test Case Completeness | Mandatory fields for Test Case must be populated. | Missing required Test Case fields. | On Save | Strict Block |
-| VAL-054 | Submission Completeness | Mandatory fields for Submission must be populated. | Missing required Submission fields. | On Save | Strict Block |
-| VAL-055 | Score Completeness | Mandatory fields for Score must be populated. | Missing required Score fields. | On Save | Strict Block |
-| VAL-056 | Skill Gap Completeness | Mandatory fields for Skill Gap must be populated. | Missing required Skill Gap fields. | On Save | Strict Block |
-| VAL-057 | Proctoring Log Completeness | Mandatory fields for Proctoring Log must be populated. | Missing required Proctoring Log fields. | On Save | Strict Block |
-| VAL-058 | Code Execution Result Completeness | Mandatory fields for Code Execution Result must be populated. | Missing required Code Execution Result fields. | On Save | Strict Block |
-| VAL-059 | Plagiarism Report Completeness | Mandatory fields for Plagiarism Report must be populated. | Missing required Plagiarism Report fields. | On Save | Strict Block |
-| VAL-060 | Question Bank Completeness | Mandatory fields for Question Bank must be populated. | Missing required Question Bank fields. | On Save | Strict Block |
-| VAL-061 | Assessment Template Completeness | Mandatory fields for Assessment Template must be populated. | Missing required Assessment Template fields. | On Save | Strict Block |
-| VAL-062 | Roadmap Completeness | Mandatory fields for Roadmap must be populated. | Missing required Roadmap fields. | On Save | Strict Block |
-| VAL-063 | Module Completeness | Mandatory fields for Module must be populated. | Missing required Module fields. | On Save | Strict Block |
-| VAL-064 | Course Completeness | Mandatory fields for Course must be populated. | Missing required Course fields. | On Save | Strict Block |
-| VAL-065 | Lesson Completeness | Mandatory fields for Lesson must be populated. | Missing required Lesson fields. | On Save | Strict Block |
-| VAL-066 | Progress Completeness | Mandatory fields for Progress must be populated. | Missing required Progress fields. | On Save | Strict Block |
-| VAL-067 | Certificate Completeness | Mandatory fields for Certificate must be populated. | Missing required Certificate fields. | On Save | Strict Block |
-| VAL-068 | Badge Completeness | Mandatory fields for Badge must be populated. | Missing required Badge fields. | On Save | Strict Block |
-| VAL-069 | Recommendation Completeness | Mandatory fields for Recommendation must be populated. | Missing required Recommendation fields. | On Save | Strict Block |
-| VAL-070 | Content Resource Completeness | Mandatory fields for Content Resource must be populated. | Missing required Content Resource fields. | On Save | Strict Block |
-| VAL-071 | Learning Path Completeness | Mandatory fields for Learning Path must be populated. | Missing required Learning Path fields. | On Save | Strict Block |
-| VAL-072 | Transaction Completeness | Mandatory fields for Transaction must be populated. | Missing required Transaction fields. | On Save | Strict Block |
-| VAL-073 | Invoice Completeness | Mandatory fields for Invoice must be populated. | Missing required Invoice fields. | On Save | Strict Block |
-| VAL-074 | Credit Balance Completeness | Mandatory fields for Credit Balance must be populated. | Missing required Credit Balance fields. | On Save | Strict Block |
-| VAL-075 | Plan Completeness | Mandatory fields for Plan must be populated. | Missing required Plan fields. | On Save | Strict Block |
-| VAL-076 | Discount Completeness | Mandatory fields for Discount must be populated. | Missing required Discount fields. | On Save | Strict Block |
-| VAL-077 | Tax Record Completeness | Mandatory fields for Tax Record must be populated. | Missing required Tax Record fields. | On Save | Strict Block |
-| VAL-078 | Refund Completeness | Mandatory fields for Refund must be populated. | Missing required Refund fields. | On Save | Strict Block |
-| VAL-079 | Payment Method Completeness | Mandatory fields for Payment Method must be populated. | Missing required Payment Method fields. | On Save | Strict Block |
-| VAL-080 | Billing Cycle Completeness | Mandatory fields for Billing Cycle must be populated. | Missing required Billing Cycle fields. | On Save | Strict Block |
-| VAL-081 | Receipt Completeness | Mandatory fields for Receipt must be populated. | Missing required Receipt fields. | On Save | Strict Block |
-| VAL-082 | Notification Completeness | Mandatory fields for Notification must be populated. | Missing required Notification fields. | On Save | Strict Block |
-| VAL-083 | Email Template Completeness | Mandatory fields for Email Template must be populated. | Missing required Email Template fields. | On Save | Strict Block |
-| VAL-084 | SMS Log Completeness | Mandatory fields for SMS Log must be populated. | Missing required SMS Log fields. | On Save | Strict Block |
-| VAL-085 | In-App Message Completeness | Mandatory fields for In-App Message must be populated. | Missing required In-App Message fields. | On Save | Strict Block |
-| VAL-086 | Push Notification Completeness | Mandatory fields for Push Notification must be populated. | Missing required Push Notification fields. | On Save | Strict Block |
-| VAL-087 | Delivery Status Completeness | Mandatory fields for Delivery Status must be populated. | Missing required Delivery Status fields. | On Save | Strict Block |
-| VAL-088 | Subscription Preference Completeness | Mandatory fields for Subscription Preference must be populated. | Missing required Subscription Preference fields. | On Save | Strict Block |
-| VAL-089 | Alert Completeness | Mandatory fields for Alert must be populated. | Missing required Alert fields. | On Save | Strict Block |
-| VAL-090 | Reminder Completeness | Mandatory fields for Reminder must be populated. | Missing required Reminder fields. | On Save | Strict Block |
-| VAL-091 | Digest Completeness | Mandatory fields for Digest must be populated. | Missing required Digest fields. | On Save | Strict Block |
-| VAL-092 | Audit Log Completeness | Mandatory fields for Audit Log must be populated. | Missing required Audit Log fields. | On Save | Strict Block |
-| VAL-093 | Access Log Completeness | Mandatory fields for Access Log must be populated. | Missing required Access Log fields. | On Save | Strict Block |
-| VAL-094 | Change Record Completeness | Mandatory fields for Change Record must be populated. | Missing required Change Record fields. | On Save | Strict Block |
-| VAL-095 | Error Log Completeness | Mandatory fields for Error Log must be populated. | Missing required Error Log fields. | On Save | Strict Block |
-| VAL-096 | Compliance Report Completeness | Mandatory fields for Compliance Report must be populated. | Missing required Compliance Report fields. | On Save | Strict Block |
-| VAL-097 | Data Export Request Completeness | Mandatory fields for Data Export Request must be populated. | Missing required Data Export Request fields. | On Save | Strict Block |
-| VAL-098 | Privacy Request Completeness | Mandatory fields for Privacy Request must be populated. | Missing required Privacy Request fields. | On Save | Strict Block |
-| VAL-099 | Admin Action Completeness | Mandatory fields for Admin Action must be populated. | Missing required Admin Action fields. | On Save | Strict Block |
-| VAL-100 | Login Event Completeness | Mandatory fields for Login Event must be populated. | Missing required Login Event fields. | On Save | Strict Block |
-| VAL-101 | System Alert Completeness | Mandatory fields for System Alert must be populated. | Missing required System Alert fields. | On Save | Strict Block |
-| VAL-102 | Analytics Snapshot Completeness | Mandatory fields for Analytics Snapshot must be populated. | Missing required Analytics Snapshot fields. | On Save | Strict Block |
-| VAL-103 | Usage Metric Completeness | Mandatory fields for Usage Metric must be populated. | Missing required Usage Metric fields. | On Save | Strict Block |
-| VAL-104 | Performance Metric Completeness | Mandatory fields for Performance Metric must be populated. | Missing required Performance Metric fields. | On Save | Strict Block |
-| VAL-105 | Diversity Metric Completeness | Mandatory fields for Diversity Metric must be populated. | Missing required Diversity Metric fields. | On Save | Strict Block |
-| VAL-106 | ROI Report Completeness | Mandatory fields for ROI Report must be populated. | Missing required ROI Report fields. | On Save | Strict Block |
-| VAL-107 | Candidate Funnel Completeness | Mandatory fields for Candidate Funnel must be populated. | Missing required Candidate Funnel fields. | On Save | Strict Block |
-| VAL-108 | Drop-off Rate Completeness | Mandatory fields for Drop-off Rate must be populated. | Missing required Drop-off Rate fields. | On Save | Strict Block |
-| VAL-109 | Satisfaction Score Completeness | Mandatory fields for Satisfaction Score must be populated. | Missing required Satisfaction Score fields. | On Save | Strict Block |
-| VAL-110 | Time-to-Hire Completeness | Mandatory fields for Time-to-Hire must be populated. | Missing required Time-to-Hire fields. | On Save | Strict Block |
-| VAL-111 | Cost-per-Hire Completeness | Mandatory fields for Cost-per-Hire must be populated. | Missing required Cost-per-Hire fields. | On Save | Strict Block |
-| VAL-112 | System Configuration Completeness | Mandatory fields for System Configuration must be populated. | Missing required System Configuration fields. | On Save | Strict Block |
-| VAL-113 | Localization Setting Completeness | Mandatory fields for Localization Setting must be populated. | Missing required Localization Setting fields. | On Save | Strict Block |
-| VAL-114 | API Key Completeness | Mandatory fields for API Key must be populated. | Missing required API Key fields. | On Save | Strict Block |
-| VAL-115 | Webhook Completeness | Mandatory fields for Webhook must be populated. | Missing required Webhook fields. | On Save | Strict Block |
-| VAL-116 | Integration Profile Completeness | Mandatory fields for Integration Profile must be populated. | Missing required Integration Profile fields. | On Save | Strict Block |
-| VAL-117 | Business Rule Config Completeness | Mandatory fields for Business Rule Config must be populated. | Missing required Business Rule Config fields. | On Save | Strict Block |
-| VAL-118 | Feature Flag Completeness | Mandatory fields for Feature Flag must be populated. | Missing required Feature Flag fields. | On Save | Strict Block |
-| VAL-119 | Maintenance Window Completeness | Mandatory fields for Maintenance Window must be populated. | Missing required Maintenance Window fields. | On Save | Strict Block |
-
-
-## 11. Data Lifecycle
-Standard lifecycle stages for business data objects:
-1. **Creation:** Data is captured via user input, API, or system generation.
-2. **Validation:** System validates against Business Rules and Data Type constraints.
-3. **Active:** Data is readily available for transactions and reporting.
-4. **Archived:** Data is moved to cold storage after the operational retention period.
-5. **Purge/Deletion:** Data is permanently destroyed per the Deletion Policy and GDPR compliance.
-
-## 12. Data Classification
-| Classification Level | Description | Examples |
+## 12. Phân loại Dữ liệu
+| Mức độ Phân loại | Mô tả | Ví dụ |
 |---|---|---|
-| **Public** | Data freely accessible to the public. | Job Postings, Public Company Profiles |
-| **Internal** | Data restricted to internal employees. | System Configurations, Aggregate Analytics |
-| **Confidential** | Proprietary business data. | Interview Rubrics, Assessment Question Banks |
-| **Restricted (PII)** | Personally Identifiable Information. | Candidate Resumes, Contact Details, Interview Transcripts |
-| **Financial** | Billing and transaction records. | Invoices, Payment Methods, Credit Balances |
+| **Công khai** | Dữ liệu có thể truy cập tự do cho công chúng. | Job Postings, Công khai Company Profiles |
+| **Nội bộ** | Data restricted to internal employee. | Cấu hình hệ thống, Phân tích tổng hợp |
+| **Bảo mật** | Proprietary busines. | Tiêu chí phỏng vấn, Ngân hàng câu hỏi đánh giá |
+| **Restricted (Dữ liệu cá nhân (PII))** | Thông tin cá nhân có thể nhận dạng. | Sơ yếu lý lịch ứng viên, Chi tiết liên hệ, Bản ghi phỏng vấn |
+| **Tài chính** | Billing and transaction record. | Hóa đơn, Phương thức thanh toán, Số dư tín dụng |
 
-## 13. Data Security Requirements
-- **Ownership & Access Control:** Role-Based Access Control (RBAC) enforced across all domains. Strict segregation between Employer data and Candidate data.
-- **Encryption Requirements:** AES-256 for data at rest. TLS 1.3 for data in transit.
-- **Data Masking:** PII and Financial data must be masked in non-production environments and analytics dashboards.
-- **Backup & Recovery:** Daily encrypted backups with a 30-day rolling retention and cross-region replication.
+## 13. Yêu cầu Bảo mật Dữ liệu
+- **Chủ sở hữuship & Access Control:** Role-Based Access Control (RBAC) enforced across all domain. Strict segregation between Employer data and Ứng viên.
+- **Yêu cầu Mã hóa:** AES-256 cho dữ liệu ở trạng thái nghỉ. TLS 1.3 cho dữ liệu đang truyền tải.
+- **Che giấu Dữ liệu:** Dữ liệu cá nhân (PII) and Tài chính data must be masked in non-production environments and analytics dashboard.
+- **Sao lưu & Phục hồi:** Sao lưu được mã hóa hàng ngày với thời gian lưu giữ 30 ngày và sao chép đa vùng.
 
-## 14. Data Governance
-- **Data Owner:** Executive accountable for data domain accuracy (e.g., VP of HR).
-- **Data Steward:** Operational manager responsible for day-to-day data quality.
-- **Custodian:** IT/Platform team responsible for storage, security, and technical architecture.
-- **Metadata Management:** All objects and attributes must be registered in the central Metadata Registry (ISO 11179 compliance).
-- **Lineage & Traceability:** Systems must track the origin and transformation history of critical data (e.g., Assessment Scores).
+## 14. Quản trị Dữ liệu
+- **Chủ sở hữu Dữ liệu:** Người quản lý chịu trách nhiệm về độ chính xác của miền dữ liệu (ví dụ: Phó Chủ tịch Nhân sự).
+- **Người quản lý Dữ liệu:** Người quản lý hoạt động chịu trách nhiệm về chất lượng dữ liệu hàng ngày.
+- **Người trông coi (Custodian):** Đội ngũ CNTT/Nền tảng chịu trách nhiệm về lưu trữ, bảo mật và kiến trúc kỹ thuật.
+- **Quản lý Siêu dữ liệu:** Tất cả objects and attributes must be registered in the central Metadata Registry (ISO 11179 compliance).
+- **Dòng dõi & Nguồn gốc:** Các hệ thống phải theo dõi nguồn gốc và lịch sử biến đổi của dữ liệu quan trọng (ví dụ: Điểm đánh giá).
 
-## 15. Data Quality Requirements
-| Metric ID | Dimension | Description | Measurement Method | Target | Frequency | Owner |
+## 15. Yêu cầu Chất lượng Dữ liệu
+| ID Số liệu | Khía cạnh | Mô tả | Phương pháp Đo lường | Mục tiêu | Tần suất | Chủ sở hữu |
 |---|---|---|---|---|---|---|
-| DQM-001 | Completeness | Essential fields in Identity Data are not null. | Automated Profiling | >98% | Daily | CISO |
-| DQM-002 | Accuracy | Values in Identity Data reflect real-world state. | Sample Audit | >95% | Monthly | CISO |
-| DQM-003 | Uniqueness | No duplicated core entities in Identity Data. | Deduplication Engine | 100% | Real-time | CISO |
-| DQM-004 | Validity | Identity Data values conform to defined reference data. | Constraint Check | 100% | Real-time | CISO |
-| DQM-005 | Completeness | Essential fields in Candidate Data are not null. | Automated Profiling | >98% | Daily | VP of HR |
-| DQM-006 | Accuracy | Values in Candidate Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of HR |
-| DQM-007 | Uniqueness | No duplicated core entities in Candidate Data. | Deduplication Engine | 100% | Real-time | VP of HR |
-| DQM-008 | Validity | Candidate Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of HR |
-| DQM-009 | Completeness | Essential fields in Employer Data are not null. | Automated Profiling | >98% | Daily | VP of Sales |
-| DQM-010 | Accuracy | Values in Employer Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of Sales |
-| DQM-011 | Uniqueness | No duplicated core entities in Employer Data. | Deduplication Engine | 100% | Real-time | VP of Sales |
-| DQM-012 | Validity | Employer Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of Sales |
-| DQM-013 | Completeness | Essential fields in Recruitment Data are not null. | Automated Profiling | >98% | Daily | VP of Recruitment |
-| DQM-014 | Accuracy | Values in Recruitment Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of Recruitment |
-| DQM-015 | Uniqueness | No duplicated core entities in Recruitment Data. | Deduplication Engine | 100% | Real-time | VP of Recruitment |
-| DQM-016 | Validity | Recruitment Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of Recruitment |
-| DQM-017 | Completeness | Essential fields in Interview Data are not null. | Automated Profiling | >98% | Daily | VP of Product |
-| DQM-018 | Accuracy | Values in Interview Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of Product |
-| DQM-019 | Uniqueness | No duplicated core entities in Interview Data. | Deduplication Engine | 100% | Real-time | VP of Product |
-| DQM-020 | Validity | Interview Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of Product |
-| DQM-021 | Completeness | Essential fields in Assessment Data are not null. | Automated Profiling | >98% | Daily | VP of Product |
-| DQM-022 | Accuracy | Values in Assessment Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of Product |
-| DQM-023 | Uniqueness | No duplicated core entities in Assessment Data. | Deduplication Engine | 100% | Real-time | VP of Product |
-| DQM-024 | Validity | Assessment Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of Product |
-| DQM-025 | Completeness | Essential fields in Learning Data are not null. | Automated Profiling | >98% | Daily | Chief Learning Officer |
-| DQM-026 | Accuracy | Values in Learning Data reflect real-world state. | Sample Audit | >95% | Monthly | Chief Learning Officer |
-| DQM-027 | Uniqueness | No duplicated core entities in Learning Data. | Deduplication Engine | 100% | Real-time | Chief Learning Officer |
-| DQM-028 | Validity | Learning Data values conform to defined reference data. | Constraint Check | 100% | Real-time | Chief Learning Officer |
-| DQM-029 | Completeness | Essential fields in Payment Data are not null. | Automated Profiling | >98% | Daily | CFO |
-| DQM-030 | Accuracy | Values in Payment Data reflect real-world state. | Sample Audit | >95% | Monthly | CFO |
-| DQM-031 | Uniqueness | No duplicated core entities in Payment Data. | Deduplication Engine | 100% | Real-time | CFO |
-| DQM-032 | Validity | Payment Data values conform to defined reference data. | Constraint Check | 100% | Real-time | CFO |
-| DQM-033 | Completeness | Essential fields in Notification Data are not null. | Automated Profiling | >98% | Daily | VP of Product |
-| DQM-034 | Accuracy | Values in Notification Data reflect real-world state. | Sample Audit | >95% | Monthly | VP of Product |
-| DQM-035 | Uniqueness | No duplicated core entities in Notification Data. | Deduplication Engine | 100% | Real-time | VP of Product |
-| DQM-036 | Validity | Notification Data values conform to defined reference data. | Constraint Check | 100% | Real-time | VP of Product |
-| DQM-037 | Completeness | Essential fields in Audit Data are not null. | Automated Profiling | >98% | Daily | Data Protection Officer |
-| DQM-038 | Accuracy | Values in Audit Data reflect real-world state. | Sample Audit | >95% | Monthly | Data Protection Officer |
-| DQM-039 | Uniqueness | No duplicated core entities in Audit Data. | Deduplication Engine | 100% | Real-time | Data Protection Officer |
-| DQM-040 | Validity | Audit Data values conform to defined reference data. | Constraint Check | 100% | Real-time | Data Protection Officer |
-| DQM-041 | Completeness | Essential fields in Analytics Data are not null. | Automated Profiling | >98% | Daily | CDO |
-| DQM-042 | Accuracy | Values in Analytics Data reflect real-world state. | Sample Audit | >95% | Monthly | CDO |
-| DQM-043 | Uniqueness | No duplicated core entities in Analytics Data. | Deduplication Engine | 100% | Real-time | CDO |
-| DQM-044 | Validity | Analytics Data values conform to defined reference data. | Constraint Check | 100% | Real-time | CDO |
-| DQM-045 | Completeness | Essential fields in System Configuration Data are not null. | Automated Profiling | >98% | Daily | CTO |
-| DQM-046 | Accuracy | Values in System Configuration Data reflect real-world state. | Sample Audit | >95% | Monthly | CTO |
-| DQM-047 | Uniqueness | No duplicated core entities in System Configuration Data. | Deduplication Engine | 100% | Real-time | CTO |
-| DQM-048 | Validity | System Configuration Data values conform to defined reference data. | Constraint Check | 100% | Real-time | CTO |
+| DQM-001 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Danh tính không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | CISO |
+| DQM-002 | Độ chính xác | Giá trị trong Dữ liệu Danh tính phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | CISO |
+| DQM-003 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Danh tính. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | CISO |
+| DQM-004 | Tính hợp lệ | Dữ liệu Danh tính values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | CISO |
+| DQM-005 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Ứng viên không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of HR |
+| DQM-006 | Độ chính xác | Giá trị trong Dữ liệu Ứng viên phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of HR |
+| DQM-007 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Ứng viên. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of HR |
+| DQM-008 | Tính hợp lệ | Dữ liệu Ứng viên values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of HR |
+| DQM-009 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Nhà tuyển dụng không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of Sales |
+| DQM-010 | Độ chính xác | Giá trị trong Dữ liệu Nhà tuyển dụng phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of Sales |
+| DQM-011 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Nhà tuyển dụng. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of Sales |
+| DQM-012 | Tính hợp lệ | Dữ liệu Nhà tuyển dụng values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of Sales |
+| DQM-013 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Tuyển dụng không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of Recruitment |
+| DQM-014 | Độ chính xác | Giá trị trong Dữ liệu Tuyển dụng phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of Recruitment |
+| DQM-015 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Tuyển dụng. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of Recruitment |
+| DQM-016 | Tính hợp lệ | Dữ liệu Tuyển dụng values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of Recruitment |
+| DQM-017 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Phỏng vấn không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of Product |
+| DQM-018 | Độ chính xác | Giá trị trong Dữ liệu Phỏng vấn phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of Product |
+| DQM-019 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Phỏng vấn. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of Product |
+| DQM-020 | Tính hợp lệ | Dữ liệu Phỏng vấn values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of Product |
+| DQM-021 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Đánh giá không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of Product |
+| DQM-022 | Độ chính xác | Giá trị trong Dữ liệu Đánh giá phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of Product |
+| DQM-023 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Đánh giá. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of Product |
+| DQM-024 | Tính hợp lệ | Dữ liệu Đánh giá values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of Product |
+| DQM-025 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Học tập không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | Chief Learning Officer |
+| DQM-026 | Độ chính xác | Giá trị trong Dữ liệu Học tập phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | Chief Learning Officer |
+| DQM-027 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Học tập. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | Chief Learning Officer |
+| DQM-028 | Tính hợp lệ | Dữ liệu Học tập values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | Chief Learning Officer |
+| DQM-029 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Thanh toán không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | CFO |
+| DQM-030 | Độ chính xác | Giá trị trong Dữ liệu Thanh toán phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | CFO |
+| DQM-031 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Thanh toán. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | CFO |
+| DQM-032 | Tính hợp lệ | Dữ liệu Thanh toán values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | CFO |
+| DQM-033 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Thông báo không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | VP of Product |
+| DQM-034 | Độ chính xác | Giá trị trong Dữ liệu Thông báo phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | VP of Product |
+| DQM-035 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Thông báo. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | VP of Product |
+| DQM-036 | Tính hợp lệ | Dữ liệu Thông báo values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | VP of Product |
+| DQM-037 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Kiểm toán không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | Data Protection Officer |
+| DQM-038 | Độ chính xác | Giá trị trong Dữ liệu Kiểm toán phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | Data Protection Officer |
+| DQM-039 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Kiểm toán. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | Data Protection Officer |
+| DQM-040 | Tính hợp lệ | Dữ liệu Kiểm toán values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | Data Protection Officer |
+| DQM-041 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Phân tích không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | CDO |
+| DQM-042 | Độ chính xác | Giá trị trong Dữ liệu Phân tích phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | CDO |
+| DQM-043 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Phân tích. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | CDO |
+| DQM-044 | Tính hợp lệ | Dữ liệu Phân tích values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | CDO |
+| DQM-045 | - Tính Đầy đủ | Các trường thiết yếu trong Dữ liệu Cấu hình Hệ thống không được rỗng. | Lập hồ sơ tự động | >98% | Hàng ngày | CTO |
+| DQM-046 | Độ chính xác | Giá trị trong Dữ liệu Cấu hình Hệ thống phản ánh trạng thái thực tế. | Kiểm toán Mẫu | >95% | Hàng tháng | CTO |
+| DQM-047 | Tính duy nhất | Không có thực thể cốt lõi trùng lặp trong Dữ liệu Cấu hình Hệ thống. | Công cụ Loại bỏ Trùng lặp | 100% | Thời gian thực | CTO |
+| DQM-048 | Tính hợp lệ | Dữ liệu Cấu hình Hệ thống values conform to defined reference. | Kiểm tra Ràng buộc | 100% | Thời gian thực | CTO |
 
 
-## 16. Data Retention Policy
-| Data Object Category | Operational Retention | Archive Policy | Deletion/Purge Policy | Legal Basis |
+## 16. Data Lưu giữ Policy
+| Hạng mục Đối tượng Dữ liệu | Operational Lưu giữ | Chính sách Lưu trữ | Chính sách Xóa/Hủy | Cơ sở Pháp lý |
 |---|---|---|---|---|
-| Candidate Profile | Active + 2 Years | Archive after 1 year of inactivity | Purge after 2 years unless renewed | GDPR Art. 6 (Consent) |
-| Interview Recording | 6 Months | Archive after 30 days | Purge after 6 months | Legitimate Interest |
-| Assessment Results | 3 Years | Archive after 1 year | Purge after 3 years | Legitimate Interest |
-| Payment / Invoice | 7 Years | Archive after 1 year | Purge after 7 years | Legal / Tax Compliance |
-| Audit Logs | 1 Year | Archive after 3 months | Purge after 1 year | Security Compliance |
-| Support Tickets | 3 Years | Archive after 6 months | Purge after 3 years | Contractual Obligation |
+| Hồ sơ Ứng viên | Active + 2 Năm | Lưu trữ sau 1 năm không hoạt động | Hủy sau 2 năm trừ khi được gia hạn | Điều 6 GDPR (Đồng ý) |
+| Bản ghi Phỏng vấn | 6 Tháng | Lưu trữ sau 30 ngày | Hủy sau 6 tháng | Lợi ích Hợp pháp |
+| Kết quả Đánh giá | 3 Năm | Lưu trữ sau 1 năm | Hủy sau 3 năm | Lợi ích Hợp pháp |
+| Thanh toán / Hóa đơn | 7 Năm | Lưu trữ sau 1 năm | Hủy sau 7 năm | Tuân thủ Thuế / Pháp lý |
+| Nhật ký Kiểm toán | 1 Năm | Lưu trữ sau 3 tháng | Hủy sau 1 năm | Tuân thủ Bảo mật |
+| Phiếu Hỗ trợ | 3 Năm | Lưu trữ sau 6 tháng | Hủy sau 3 năm | Nghĩa vụ Hợp đồng |
 
-## 17. Reporting Data
-Aggregated datasets designed explicitly for analytics and dashboards:
-- **Candidate Analytics:** Skill growth trends, assessment pass rates.
-- **Employer Analytics:** Time-to-hire, cost-per-hire, campaign ROI, interview conversion rates.
-- **Operational Dashboard:** System uptime, concurrent users, API usage.
-- **Compliance Reports:** PII deletion receipts, consent logs, access audits.
+## 17. Dữ liệu Báo cáo
+Các bộ dữ liệu tổng hợp được thiết kế đặc biệt cho phân tích và bảng điều khiển:
+- **Phân tích Ứng viên:** Skill growth trends, assessment pass rate.
+- **Phân tích Nhà tuyển dụng:** Time-to-hire, cost-per-hire, campaign ROI, interview conversion rate.
+- **Bảng điều khiển Hoạt động:** Thời gian hoạt động của hệ thống, người dùng đồng thời, mức sử dụng API.
+- **Báo cáo Tuân thủ:** Dữ liệu cá nhân (PII) deletion receipts, consent logs, access audit.
 
-## 18. Data Traceability Matrix
-| Requirement ID | Business Process | Logical Data Object | Functional Req | Business Rule | Report | User Role |
+## 18. Ma trận Truy xuất Nguồn gốc Dữ liệu
+| ID Yêu cầu | Quy trình Kinh doanh | Đối tượng Dữ liệu Logic | Yêu cầu Chức năng | Quy tắc Nghiệp vụ | Báo cáo | Vai trò Người dùng |
 |---|---|---|---|---|---|---|
-| BR-001 | Candidate Registration | Candidate Profile | FR-USR-01 | VAL-002 (Unique Email) | User Growth | Candidate |
-| BR-002 | Job Campaign Setup | Campaign, Job Posting | FR-EMP-04 | VAL-012 (Budget Valid) | Campaign ROI | Recruiter |
-| BR-003 | AI Video Interview | Interview, Recording | FR-INT-02 | VAL-045 (Format Valid) | Interview Funnel | System, Recruiter |
-| BR-004 | Technical Assessment | Assessment, Score | FR-ASM-01 | VAL-056 (Score Bounds) | Skill Gap | Candidate, Manager |
-| BR-005 | Invoice Generation | Invoice, Transaction | FR-FIN-03 | VAL-088 (Valid Amount) | Monthly Revenue | Finance Admin |
+| BR-001 | Đăng ký Ứng viên | Hồ sơ Ứng viên | FR-USR-01 | VAL-002 (Email Duy nhất) | Tăng trưởng Người dùng | Ứng viên |
+| BR-002 | Thiết lập Chiến dịch Công việc | Chiến dịch, Tin đăng tuyển | FR-EMP-04 | VAL-012 (Ngân sách Hợp lệ) | ROI Chiến dịch | Nhà tuyển dụng |
+| BR-003 | Phỏng vấn Video AI | Phỏng vấn, Ghi hình | FR-INT-02 | VAL-045 (Định dạng Hợp lệ) | Phễu Phỏng vấn | System, Nhà tuyển dụng |
+| BR-004 | Đánh giá Kỹ thuật | Đánh giá, Điểm số | FR-ASM-01 | VAL-056 (Giới hạn Điểm số) | Skill Gap | Ứng viên, Manager |
+| BR-005 | Tạo Hóa đơn | Hóa đơn, Giao dịch | FR-FIN-03 | VAL-088 (Số tiền Hợp lệ) | Hàng tháng Revenue | Quản trị viên Tài chính |
 
-## 19. Data Risks
-| Risk ID | Risk | Impact | Likelihood | Mitigation |
+## 19. Rủi ro Dữ liệu
+| ID Rủi ro | Rủi ro | Tác động | Khả năng | Giảm nhẹ |
 |---|---|---|---|---|
-| RISK-D-01 | Data Loss during migration/processing | High | Low | Automated daily backups, point-in-time recovery. |
-| RISK-D-02 | Privacy Breach (PII exposure) | Critical | Low | Encryption at rest/transit, strict RBAC, data masking. |
-| RISK-D-03 | Inconsistent Master Data | Medium | Medium | Implement Master Data Management (MDM) and strict validation. |
-| RISK-D-04 | Retention Policy Violations | High | Low | Automated purge jobs linked to metadata retention tags. |
-| RISK-D-05 | Poor Candidate Data Quality | Medium | High | Enforce mandatory fields, regex validation, email verification. |
-| RISK-D-06 | Unauthorized AI Bias Data Manipulation | High | Low | Immutable audit logs on all AI rubric updates. |
+| RISK-D-01 | Mất Dữ liệu trong quá trình di chuyển/xử lý | Cao | Thấp | Sao lưu hàng ngày tự động, phục hồi theo thời gian điểm. |
+| RISK-D-02 | Privacy Breach (Dữ liệu cá nhân (PII) exposure) | Đặc biệt quan trọng | Thấp | Mã hóa lúc nghỉ/đang truyền, RBAC nghiêm ngặt, che giấu dữ liệu. |
+| RISK-D-03 | Inconsistent Dữ liệu Chủ | Trung bình | Trung bình | Implement Dữ liệu Chủ Management (MDM) and strict validation. |
+| RISK-D-04 | Lưu giữ Policy Violations | Cao | Thấp | Automated purge jobs linked to metadata retention tag. |
+| RISK-D-05 | Poor Dữ liệu Ứng viên Quality | Trung bình | Cao | Thực thi các trường bắt buộc, xác thực regex, xác minh email. |
+| RISK-D-06 | Thao tác Dữ liệu Sai lệch AI Trái phép | Cao | Thấp | Immutable audit logs on all AI rubric update. |
 
-## 20. Future Data Expansion
-The data architecture is designed to support the following future capabilities:
-- **Multi-Tenant Support:** Seamless physical data isolation for enterprise clients with strict compliance needs.
-- **Data Lake Integration:** Exporting unstructured data (video, code snippets) to a Data Lake for long-term ML model training.
-- **External ATS Integration:** Standardized HR-XML and JSON schemas to push/pull Candidate Data to Workday, Greenhouse, etc.
-- **Predictive Analytics:** Introducing multi-variant statistical datasets for candidate success prediction modeling.
+## 20. Mở rộng Dữ liệu Tương lai
+Kiến trúc dữ liệu được thiết kế để hỗ trợ các khả năng trong tương lai sau:
+- **Hỗ trợ Đa khách thuê (Multi-Tenant):** Seamless physical data isolation for enterprise clients with strict compliance need.
+- **Tích hợp Kho Dữ liệu (Data Lake):** Xuất dữ liệu phi cấu trúc (video, đoạn mã) vào Kho Dữ liệu để đào tạo mô hình ML dài hạn.
+- **Tích hợp ATS Bên ngoài:** Standardized HR-XML and JSON schemas to push/pull Dữ liệu Ứng viên to Workday, Greenhouse, etc.
+- **Phân tích Dự đoán:** Giới thiệu các bộ dữ liệu thống kê đa biến số cho mô hình dự đoán thành công của ứng viên.
 
-## 21. Summary
-This Data Requirements Specification establishes a rigorous, logical framework for the AI-powered Interview & Skill Assessment System. By defining exactly 120 logical business entities across 12 domains, along with strict validation rules, data quality metrics, and governance policies, this architecture ensures high data integrity, strict GDPR compliance, and scalable operations for enterprise usage.
-
+## 21. Tóm tắt
+Bản Đặc tả Yêu cầu Dữ liệu này thiết lập một khuôn khổ logic, nghiêm ngặt cho Hệ thống Phỏng vấn & Đánh giá Kỹ năng tích hợp AI. Bằng cách định nghĩa chính xác 120 thực thể nghiệp vụ logic trong 12 miền, cùng với các quy tắc xác thực nghiêm ngặt, số liệu chất lượng dữ liệu và chính sách quản trị, kiến trúc này đảm bảo tính toàn vẹn dữ liệu cao, tuân thủ GDPR nghiêm ngặt và khả năng mở rộng hoạt động cho sử dụng ở cấp độ doanh nghiệp.
