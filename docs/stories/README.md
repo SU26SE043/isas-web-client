@@ -1,43 +1,50 @@
 # Stories
 
-Stories are work packets. They turn product intent into bounded implementation
-and validation work.
+Work packets that turn BRD intent into bounded implementation. Backlog: [`backlog.md`](./backlog.md).
 
-No story packets are active yet.
-
-## Normal Story
-
-Use `docs/templates/story.md` for normal feature work.
-
-Suggested path:
+## Structure
 
 ```text
-docs/stories/epics/E01-domain-name/US-001-short-story-title.md
+docs/stories/
+  backlog.md                    ← Epic list + active stories
+  epics/
+    E01-foundation/US-001-*.md
+    E02-marketing/US-002-*.md
+    E03-auth/US-003-*.md
+    ...
 ```
 
-## High-Risk Story
+## Normal story
 
-Use `docs/templates/high-risk-story/` when the feature intake classifies work as
-high-risk.
+Use `docs/templates/story.md`. Path: `docs/stories/epics/<Epic>/US-XXX-<slug>.md`.
 
-Suggested path:
+## High-risk story
+
+Use `docs/templates/high-risk-story/` for auth, payment, security changes.
+
+## Status flow
 
 ```text
-docs/stories/epics/E02-risky-domain/US-012-risky-story-title/
-  execplan.md
-  overview.md
-  design.md
-  validation.md
+planned → in_progress → implemented
+              ↓
+           changed → retired
 ```
 
-## Status Flow
+## BRD traceability
 
-```text
-planned -> in_progress -> implemented
-                  |
-                  v
-               changed
-                  |
-                  v
-               retired
+Every story packet should list:
+
+- BRD functional requirement IDs (FR-xxx)
+- Screen IDs (SCR-xxx) when UI work
+- Linked `docs/product/*.md` contract
+
+## Durable layer
+
+Register stories in harness DB:
+
+```bash
+scripts/bin/harness-cli story add --id US-005 --title "Practice interview" --lane normal
+scripts/bin/harness-cli story update --id US-005 --status in_progress
 ```
+
+Query proof: `scripts/bin/harness-cli query matrix`

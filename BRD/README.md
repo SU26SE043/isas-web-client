@@ -174,3 +174,20 @@ Glossary
 # Goal
 
 Mục tiêu của bộ tài liệu BRD là đảm bảo tất cả các bên liên quan có cùng cách hiểu về nghiệp vụ, phạm vi và yêu cầu của hệ thống, từ đó giảm thiểu sai lệch trong quá trình thiết kế, phát triển, kiểm thử và triển khai.
+
+---
+
+# Harness Integration
+
+Repo này dùng **Harness** để agent và dev làm việc từ BRD.
+
+| Layer | Vai trò |
+| --- | --- |
+| **`BRD/`** (folder này) | Source of truth nghiệp vụ — đọc trước khi implement tính năng mới |
+| **`docs/product/`** | Hợp đồng frontend đã distill — cập nhật khi code ship |
+| **`docs/stories/`** | Story backlog + packet — WIP=1 mỗi người/agent |
+| **`src/`** | Implementation |
+
+**Agent đọc theo thứ tự:** `AGENTS.md` → `BRD/README.md` + file BRD liên quan → `docs/product/*` → story packet → code.
+
+**Không** copy toàn bộ FR vào `docs/product/` — chỉ distill phần client cần. Chi tiết intake: `docs/spec-intake.md`.

@@ -1,28 +1,36 @@
 # Product Docs
 
-This directory is intentionally generic and mostly empty in Harness v0.
+Living frontend contracts for **ISAS Web Client**. Distilled from `BRD/` — the full business specification stays in BRD; these files track what the **client actually implements**.
 
-When a user provides a project spec, derive smaller product contract files here
-instead of keeping one large spec as the living plan. Name files by the product
-domains that actually exist in that spec, for example `overview.md`,
-`billing.md`, `workflows.md`, `permissions.md`, or `api-conventions.md`.
+## Source hierarchy
 
-Do not create domain files before the spec just to fill the folder. Empty
-structure is healthier than fake product truth.
+```text
+BRD/                          ← Full product spec (business truth, Vietnamese)
+docs/product/*.md             ← Frontend living contracts (English, agent-readable)
+docs/stories/                 ← Work packets + backlog
+src/                          ← Implementation
+```
 
-## Current Product Contracts
+When BRD and product docs disagree, BRD wins for business intent; product docs win for shipped client behavior until BRD is formally updated.
 
-- `symphony-web-ui-controller.md` - Local Web UI controller for Harness Symphony
-  task execution, review, dependency blocking, Codex event logs, PR review, and
-  sync.
+## Contracts
 
-## Update Rule
+| File | Domain |
+| --- | --- |
+| [overview.md](./overview.md) | Product scope, modules, personas |
+| [frontend-stack.md](./frontend-stack.md) | React/Vite conventions |
+| [auth-profile.md](./auth-profile.md) | Auth, roles, profile |
+| [cv-analysis.md](./cv-analysis.md) | CV upload & analysis |
+| [practice-interview.md](./practice-interview.md) | B2C practice session |
+| [api-gateway.md](./api-gateway.md) | Gateway client conventions |
 
-When behavior changes:
+## UI
 
-1. Update the affected product doc.
-2. Update or create the story packet.
-3. Update durable proof status with `scripts/bin/harness-cli story add` or
-   `scripts/bin/harness-cli story update`.
-4. Record a decision if the change affects architecture, scope, risk, or a
-   previously settled product rule.
+Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
+
+## Update rule
+
+1. Read relevant `BRD/*.md` section.
+2. Update affected `docs/product/*.md`.
+3. Update or create story in `docs/stories/`.
+4. Update proof: `scripts/bin/harness-cli story update`.

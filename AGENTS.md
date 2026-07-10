@@ -18,6 +18,9 @@ The skill is project-scoped; do not use a global copy as the source of truth.
 This repo uses Harness. Before work, read:
 
 - `README.md`
+- `BRD/README.md` (full product spec — business source of truth)
+- `docs/product/README.md` (frontend living contracts)
+- `docs/stories/backlog.md` (active epics and stories)
 - `docs/UI_GUIDE.md` (bắt buộc trước khi generate/sửa giao diện)
 - `docs/HARNESS.md`
 - `docs/FEATURE_INTAKE.md`

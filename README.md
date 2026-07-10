@@ -1,75 +1,58 @@
-# React + TypeScript + Vite
+# ISAS Web Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend for **ISAS** — AI-powered interview simulation and assessment (Capstone SEP490, SU26SE043).
 
-Currently, two official plugins are available:
+Two product lines, one engine:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **B2C:** Personal interview practice from CV/JD.
+- **B2B:** Employer campaigns, magic links, AI scoring, ranking.
 
-## React Compiler
+## Quick start
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Documentation map
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| What | Where |
+| --- | --- |
+| **Product spec (full)** | [`BRD/`](./BRD/README.md) |
+| **Frontend contracts** | [`docs/product/`](./docs/product/README.md) |
+| **Story backlog** | [`docs/stories/backlog.md`](./docs/stories/backlog.md) |
+| **Agent entrypoint** | [`AGENTS.md`](./AGENTS.md) |
+| **Harness workflow** | [`docs/HARNESS.md`](./docs/HARNESS.md) |
+| **UI rules** | [`docs/UI_GUIDE.md`](./docs/UI_GUIDE.md) |
+| **Architecture** | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+
+## Harness CLI (Windows)
+
+```powershell
+.\scripts\bin\harness-cli.exe init
+.\scripts\bin\harness-cli.exe query matrix
+.\scripts\bin\harness-cli.exe query backlog
 ```
+
+## Source hierarchy
+
+```text
+BRD/                 ← Business requirements (source of truth)
+docs/product/        ← Living frontend contracts
+docs/stories/        ← Work packets
+src/                 ← Implementation
+```
+
+## Validation
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Local development |
+| `npm run build` | Production build |
+| `npm test` | Unit tests |
+
+## Tech stack
+
+React 19 · TypeScript · Vite · Tailwind v4 · react-router-dom · axios · zustand

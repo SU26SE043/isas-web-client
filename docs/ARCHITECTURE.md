@@ -1,133 +1,78 @@
-# Architecture
+# Architecture — ISAS Web Client
 
-No application stack is selected yet.
+Frontend monolith for the ISAS platform. Backend is a separate repo (microservices + API Gateway).
 
-No application code exists yet. This document defines generic architecture
-questions and boundary rules that future implementation should adapt after a
-user-provided spec and stack decision exist.
+## Product surfaces
 
-## Discovery Before Shape
-
-Before proposing implementation shape, identify:
-
-- Product surfaces: browser, mobile, desktop, CLI, API, worker, or service.
-- Runtime stack: language, framework, database, queues, providers, and hosting.
-- Core domains: the product concepts that deserve stable names and contracts.
-- Boundary inputs: user input, API requests, webhooks, jobs, files, credentials,
-  provider payloads, and environment configuration.
-- Validation ladder: the smallest checks that can prove the selected stack.
-
-Record stack choices in `docs/decisions/` when they meaningfully constrain
-future work.
-
-## Default Layering
-
-```text
-domain
-  <- application
-      <- infrastructure
-          <- interface
-              <- app surfaces
-```
-
-## Candidate Structure
-
-```text
-app/
-  domain/
-    entities/
-    value-objects/
-    repositories/
-    services/
-
-  application/
-    commands/
-    queries/
-    handlers/
-
-  infrastructure/
-    database/
-    logging/
-    notifications/
-
-  interface/
-    controllers/
-    dto/
-    presenters/
-    routes/
-    middlewares/
-
-surfaces/
-  browser/
-  mobile/
-  desktop/
-  cli/
-```
-
-This is a thinking template, not a scaffold. Create real folders only when a
-story enters implementation and the selected stack needs them.
-
-## Dependency Rule
-
-Inner layers must not depend on outer layers.
-
-| Layer | May depend on | Must not depend on |
+| Surface | Stack | Status |
 | --- | --- | --- |
-| domain | nothing project-external except tiny pure utilities | framework, database, UI, provider, process/env |
-| application | domain | framework, UI, provider, database concrete clients |
-| infrastructure | domain, application | interface controllers or UI |
-| interface | all backend layers | UI state or platform shell assumptions |
-| app surfaces | API contracts and app-facing clients | domain internals directly |
+| Browser SPA | React 19, Vite, TypeScript | Active |
 
-## Parse-First Boundary Rule
+Out of scope per BRD: native mobile, offline mode, CLI.
 
-Unknown data must be parsed at boundaries before it enters inner code.
+## Runtime stack
 
-Boundaries include:
+| Layer | Choice |
+| --- | --- |
+| UI | React 19 + Tailwind v4 |
+| Routing | react-router-dom |
+| State | zustand (auth), react-query (server — preferred) |
+| HTTP | axios → API Gateway |
+| Build | Vite → static assets in Docker/Nginx |
+| CI | GitHub Actions |
 
-- HTTP request bodies, params, and query strings.
-- Session payloads and identity claims.
-- Environment variables.
-- Database rows returned from external clients.
-- Platform shell payloads.
-- Deep links, tokens, and signed URLs.
-- Provider webhooks, events, and async payloads.
+Record stack changes in `docs/decisions/`.
 
-Target flow:
+## Layering (frontend)
 
 ```text
-unknown input
-  -> parser
-  -> typed DTO or command
-  -> application use case
-  -> domain object/value object
+features/          ← domain UI + hooks + services (vertical slices)
+layouts/           ← shell layouts (header, sidebar, footer)
+components/ui/     ← design-system primitives
+shared/            ← api client, i18n, cross-feature utils
+routes/            ← route guards
 ```
 
-Inner layers should work with meaningful product types such as `UserId`,
-`AccountId`, `WorkspaceId`, `Role`, `DateRange`, or domain-specific IDs,
-rather than repeatedly validating raw strings.
+Dependency rule: `components/ui` and `shared` must not import from `features`. Features may import from `shared`, `components/ui`, `layouts`.
 
-## Command/Query Boundary
+## Backend boundary
 
-If the product has both reads and writes, keep command/query separation clear at
-the code level even when the storage layer is simple:
+```text
+Browser
+  → API Gateway (/api/v1/<service>/...)
+      → AuthService | InterviewService | CampaignService | PaymentService | AIService
+```
 
-- Commands mutate state and own audit side effects.
-- Queries read state and format for consumers.
-- Shared domain rules live in domain/application, not controllers.
+- Client never calls `/internal/...` or provider webhooks.
+- JWT validated offline with shared key (no runtime AuthService call).
+- File references store keys/paths, not full URLs.
 
-## Observability Contract
+## Parse-first boundary (client)
 
-The future server should emit one canonical JSON log line per request with:
+Unknown API responses must be parsed at the service layer before entering components:
 
-- timestamp
-- level
-- request_id
-- user_id when known
-- action
-- duration_ms
-- status_code
-- message
+```text
+HTTP response
+  → service parser / zod schema
+  → typed DTO
+  → component props / hook state
+```
 
-Audit logs are product records. Application logs are operational records. Do not
-use one as a substitute for the other.
+## B2C vs B2B
+
+Same interview engine UI; distinguished by `campaign_id`:
+
+- `null` → B2C practice (personal credit wallet).
+- set → B2B campaign session (magic link, org ranking).
+
+Interview room components stay campaign-agnostic (BRD D1).
+
+## Observability (client)
+
+- Log API errors with action context in dev.
+- User-facing errors: graceful copy, no raw stack traces.
+- Future: request_id correlation when gateway exposes it.
+
+## Folder creation rule
+
+Do not add new top-level `src/` folders without a story packet. New features go under `src/features/<name>/`.

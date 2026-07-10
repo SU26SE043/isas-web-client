@@ -1,35 +1,48 @@
 # Documentation Map
 
-This directory holds the project harness and any product contract derived from a
-future user-provided spec.
+Harness + product docs for **ISAS Web Client**.
 
-## Main Files
+## Source hierarchy
 
-- `HARNESS.md`: how humans and agents collaborate.
-- `FEATURE_INTAKE.md`: how prompts become tiny, normal, or high-risk work.
-- `ARCHITECTURE.md`: architecture discovery and boundary rules.
-- `TEST_MATRIX.md`: legacy proof map; current proof status is queried with
-  `scripts/bin/harness-cli query matrix`.
-- `HARNESS_BACKLOG.md`: legacy improvement list; current improvement records
-  are stored with `scripts/bin/harness-cli backlog`.
-- `GLOSSARY.md`: shared terms.
-- `SYMPHONY_QUICKSTART.md`: beginner-facing instructions for running Harness
-  stories through Symphony.
-- `SYMPHONY_SCOPE.md`: detailed scope for the Harness-native agent workbench
-  and orchestration layer.
+```text
+BRD/                    ← Full business specification (Vietnamese)
+docs/product/           ← Frontend living contracts
+docs/stories/           ← Work packets + backlog
+docs/spec-intake.md     ← How BRD entered the harness
+src/                    ← Implementation
+```
+
+## Main files
+
+| File | Purpose |
+| --- | --- |
+| `HARNESS.md` | Agent/human collaboration loop |
+| `FEATURE_INTAKE.md` | Risk lanes: tiny / normal / high-risk |
+| `ARCHITECTURE.md` | Frontend stack and boundaries |
+| `CONTEXT_RULES.md` | What to read per phase and lane |
+| `UI_GUIDE.md` | Dark monochrome design system |
+| `spec-intake.md` | BRD intake record |
 
 ## Folders
 
-- `product/`: current product truth, empty until a spec is derived.
-- `stories/`: feature packets and backlog.
-- `decisions/`: durable decisions and tradeoffs.
-- `demo/`: concrete walkthroughs that show how the harness transforms input
-  into agent-ready work.
-- `templates/`: reusable spec-intake, story, plan, decision, and validation
-  formats.
+| Folder | Purpose |
+| --- | --- |
+| `product/` | Shipped frontend contracts |
+| `stories/` | Epics, backlog, story packets |
+| `decisions/` | Architecture and process decisions |
+| `templates/` | Story, decision, validation templates |
 
-## Current State
+## Harness CLI
 
-Harness v0 exists before implementation. These docs define how the project will
-grow; they do not imply that app code, tests, CI, or deployment automation exist
-yet.
+```bash
+scripts/bin/harness-cli query matrix
+scripts/bin/harness-cli query backlog
+```
+
+On Windows: `.\scripts\bin\harness-cli.exe`
+
+## Current state
+
+- BRD decomposed into product contracts and 5 active stories (US-001–005).
+- App code exists for home, auth, CV analysis, practice interview (partial).
+- E2E and full build pass not yet claimed — see story validation sections.
