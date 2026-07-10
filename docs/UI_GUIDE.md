@@ -85,3 +85,18 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 5. `cn()` từ `src/lib/utils`
 6. Form: `react-hook-form` + `zod`
 7. Data: `@tanstack/react-query`
+8. **Giới hạn 250 dòng / file UI** — pages và components; tách file khi vượt ngưỡng
+
+## File size (bắt buộc)
+
+| Phạm vi | Giới hạn |
+|---------|----------|
+| `src/features/**/*.tsx` | ≤ 250 dòng |
+| `src/layouts/**/*.tsx` | ≤ 250 dòng |
+| `src/components/ui/**/*.tsx` | ≤ 250 dòng |
+
+**Không áp dụng:** `*.test.tsx`, `*.types.ts`, `translations.ts`, hooks/services.
+
+Khi page > 250 dòng: tách thành `components/<feature>/` + `hooks/` + page mỏng điều phối.
+
+Kiểm tra: `npm run check:ui-size`

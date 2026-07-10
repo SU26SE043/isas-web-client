@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "check:ui-size": "node scripts/check-ui-file-length.mjs",
     "vercel:dev": "vercel dev",
     "vercel:deploy": "vercel --prod"
   },
