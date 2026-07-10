@@ -1,7 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { UserRoleType } from '@/features/auth/types/auth.types';
-import { ForbiddenPage } from '@/pages/errors/ErrorPages';
 
 interface RequireRoleProps {
   roles: UserRoleType[];
@@ -16,7 +15,7 @@ export function RequireRole({ roles }: RequireRoleProps) {
   }
 
   if (!roles.includes(user.role)) {
-    return <ForbiddenPage />;
+    return <Navigate to="/access-denied" replace />;
   }
 
   return <Outlet />;

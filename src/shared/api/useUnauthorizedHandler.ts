@@ -12,7 +12,7 @@ export function useUnauthorizedHandler() {
     setUnauthorizedHandler(() => {
       logout();
       authTokenStorage.clear();
-      navigate('/login', { replace: true, state: { reason: 'session-expired' } });
+      navigate('/session-expired', { replace: true });
     });
 
     return clearUnauthorizedHandler;

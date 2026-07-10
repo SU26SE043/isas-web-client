@@ -77,6 +77,14 @@ export const authTranslations: TranslationDictionary = {
     'auth.mfaCodeRequired': 'Vui lòng nhập mã xác thực.',
     'auth.mfaInvalid': 'Mã xác thực không hợp lệ.',
     'auth.mfaSubmit': 'Xác minh',
+    'auth.sessionExpiredTitle': 'Phiên đã hết hạn',
+    'auth.sessionExpiredDescription': 'Phiên đăng nhập của bạn đã hết hạn vì không hoạt động hoặc đã quá thời gian cho phép.',
+    'auth.sessionExpiredAction': 'Đăng nhập lại',
+    'auth.accessDeniedTitle': 'Truy cập bị từ chối',
+    'auth.accessDeniedDescription': 'Bạn không có quyền truy cập trang này.',
+    'auth.accountLockedTitle': 'Tài khoản bị khóa',
+    'auth.accountLockedDescription': 'Tài khoản đã bị khóa sau nhiều lần đăng nhập thất bại.',
+    'auth.accountLockedHint': 'Vui lòng thử lại sau 15 phút hoặc liên hệ hỗ trợ.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -201,6 +209,14 @@ export const authTranslations: TranslationDictionary = {
     'auth.mfaCodeRequired': 'Please enter the authentication code.',
     'auth.mfaInvalid': 'Authentication code is invalid.',
     'auth.mfaSubmit': 'Verify',
+    'auth.sessionExpiredTitle': 'Session expired',
+    'auth.sessionExpiredDescription': 'Your session ended due to inactivity or the maximum session duration.',
+    'auth.sessionExpiredAction': 'Sign in again',
+    'auth.accessDeniedTitle': 'Access denied',
+    'auth.accessDeniedDescription': 'You do not have permission to access this page.',
+    'auth.accountLockedTitle': 'Account locked',
+    'auth.accountLockedDescription': 'Your account was locked after too many failed sign-in attempts.',
+    'auth.accountLockedHint': 'Please try again in 15 minutes or contact support.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
