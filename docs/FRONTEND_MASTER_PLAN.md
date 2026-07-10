@@ -1,16 +1,17 @@
 # ISAS Frontend Master Development Plan
 
-> **Version:** 1.0  
+> **Version:** 1.1  
 > **Source of truth:** `AGENTS.md` + `BRD/` (greenfield — không tham chiếu code hiện tại)  
 > **Audience:** Frontend team, QA, Product Owner  
-> **Last updated:** 2026-07-10
+> **Last updated:** 2026-07-10  
+> **E2E tool:** Playwright (`@playwright/test`)
 
 ---
 
 ## Mục lục
 
 1. [Tóm tắt điều hành](#1-tóm-tắt-điều-hành)
-2. [Hiểu biết hệ thống](#2-hiểu-biết-hệ-thống)
+2. [Hiểu biết hệ thống](#2-hiểu-biết-hệ-thống) (gồm [§2.8 Playwright E2E](#28-e2e-testing-strategy--playwright))
 3. [Tổng quan Phase & Timeline](#3-tổng-quan-phase--timeline)
 4. [Dependency Map](#4-dependency-map)
 5. [Chi tiết từng Phase](#5-chi-tiết-từng-phase)
@@ -34,7 +35,8 @@
 | User Flows | **~60** (UF-001–307) |
 | Business Rules | **70** (BRL-001–070) |
 | Phases triển khai | **15** |
-| Stories dự kiến | **118** |
+| Stories dự kiến | **119** |
+| E2E testing | **Playwright** |
 | Thời gian ước tính | **9–12 tháng** (team 3–4 FE) |
 
 **Hai dòng sản phẩm, một engine phỏng vấn:**
@@ -131,13 +133,49 @@ flowchart LR
 - Surface layers: `surface-base` → `surface-elevated`
 - Left sidebar navigation (role-based); WCAG 2.2 AA
 
+### 2.8 E2E Testing Strategy — Playwright
+
+**Quyết định:** Toàn bộ end-to-end testing dùng **[Playwright](https://playwright.dev)** (`@playwright/test`). Không dùng Cypress hoặc Selenium.
+
+| Khía cạnh | Quy ước |
+|-----------|---------|
+| **Cài đặt** | P0 — scaffold sớm (`e2e/`, `playwright.config.ts`) |
+| **Browsers** | Chromium, Firefox, WebKit (Safari) — khớp BRD constraint Chrome/Edge/Safari |
+| **Cấu trúc thư mục** | `e2e/fixtures/`, `e2e/pages/` (Page Object Model), `e2e/specs/` |
+| **Naming** | `e2e/specs/{domain}/{flow}.spec.ts` — ví dụ `e2e/specs/b2c/practice-interview.spec.ts` |
+| **Auth** | `e2e/fixtures/auth.ts` — `storageState` reuse sau login |
+| **API helpers** | `e2e/fixtures/api.ts` — seed data / cleanup qua Gateway (không bypass UI khi test flow) |
+| **Media mock** | `e2e/fixtures/media.ts` — fake camera/mic cho interview room (WebRTC) |
+| **CI** | `npx playwright test` trên PR; upload `playwright-report` khi fail |
+| **Scripts** | `npm run test:e2e`, `npm run test:e2e:ui`, `npm run test:e2e:headed` |
+
+**Phân tầng test (không nhầm với E2E):**
+
+| Lớp | Tool | Khi nào |
+|-----|------|---------|
+| Unit / component | Vitest + Testing Library | Logic, hooks, UI states đơn lẻ |
+| Integration | Vitest + MSW | API client, form submit handlers |
+| **E2E** | **Playwright** | User flows hoàn chỉnh B2C/B2B (P15 + smoke per milestone) |
+
+**Smoke E2E theo milestone (chạy sớm, mở rộng dần):**
+
+| Milestone | Playwright spec tối thiểu |
+|-----------|---------------------------|
+| M1 | `e2e/specs/smoke/landing.spec.ts`, `auth-login.spec.ts` |
+| M2 | `e2e/specs/b2c/cv-upload.spec.ts`, `interview-happy-path.spec.ts` (mock media) |
+| M3 | `e2e/specs/b2c/payment-credits.spec.ts` (PayOS sandbox) |
+| M4 | `e2e/specs/b2b/campaign-invite-interview.spec.ts` |
+| M5 | Full regression — `e2e/specs/b2c/full-journey.spec.ts`, `e2e/specs/b2b/full-journey.spec.ts` |
+
+**Interview room (P5):** Playwright `context.grantPermissions(['camera', 'microphone'])` + fake media stream fixture — không phụ thuộc hardware thật trong CI.
+
 ---
 
 ## 3. Tổng quan Phase & Timeline
 
 | Phase | Tên | Business Value | Screens | Stories | Ước tính |
 |-------|-----|----------------|---------|---------|----------|
-| **P0** | Foundation | Có thể build & deploy | 0 | 6 | 2 tuần |
+| **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần |
 | **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần |
 | **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần |
 | **P3** | Authentication | Secure access | 11 | 9 | 3 tuần |
@@ -233,9 +271,9 @@ flowchart TB
 | **Vai trò** | Tất cả (infrastructure) |
 | **Screens** | — (chưa có UI nghiệp vụ) |
 | **User Flows** | — |
-| **Features** | App bootstrap, env config, API client, routing shell, error boundary |
+| **Features** | App bootstrap, env config, API client, routing shell, error boundary, **Playwright scaffold** |
 | **Components** | — (dùng P1) |
-| **Shared Modules** | `api-client`, `auth-store`, `query-client`, `router`, `env` |
+| **Shared Modules** | `api-client`, `auth-store`, `query-client`, `router`, `env`, `e2e/` (Playwright) |
 | **State** | React Query global; Zustand/Context cho auth shell |
 | **API** | Health check `GET /api/v1/auth/health`; base axios/fetch với interceptors |
 | **Routing** | React Router v6; route groups: `(public)`, `(auth)`, `(candidate)`, `(employer)`, `(admin)` |
@@ -245,9 +283,9 @@ flowchart TB
 | **Loading** | `Suspense` fallback; route-level loading |
 | **Empty** | — |
 | **Permission** | Route guard HOC skeleton (`RequireAuth`, `RequireRole`) |
-| **Deliverables** | Repo scaffold, CI lint/build, dev server, env template |
-| **DoD** | `npm run build` pass; health API reachable; route `/` renders shell |
-| **Acceptance** | Dev mới clone → `npm install && npm run dev` → thấy blank app + network call health |
+| **Deliverables** | Repo scaffold, CI lint/build, dev server, env template, `playwright.config.ts`, smoke spec |
+| **DoD** | `npm run build` pass; `npm run test:e2e` chạy được (smoke pass hoặc skip có lý do) |
+| **Acceptance** | Dev mới clone → `npm install && npm run dev` → thấy blank app; `npx playwright test` green |
 | **Dependencies** | Gateway URL configured |
 | **Rủi ro** | Gateway chưa sẵn sàng → mock MSW |
 | **Ghi chú** | Harness CLI init; không implement UI nghiệp vụ |
@@ -671,12 +709,12 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | Performance, a11y audit, E2E, security hardening, production deploy |
+| **Mục tiêu** | Performance, a11y audit, **Playwright E2E regression**, security hardening, production deploy |
 | **Business Value** | Ship confidence; SLA compliance |
 | **Vai trò** | Tất cả |
-| **Screens** | Tất cả — regression pass |
-| **User Flows** | E2E: B2C full + B2B full |
-| **Features** | Performance budgets, error monitoring, analytics |
+| **Screens** | Tất cả — Playwright regression pass |
+| **User Flows** | `e2e/specs/b2c/full-journey.spec.ts` + `e2e/specs/b2b/full-journey.spec.ts` |
+| **Features** | Performance budgets, error monitoring, analytics, Playwright CI gate |
 | **Components** | — (harden existing) |
 | **State** | — |
 | **API** | — |
@@ -687,12 +725,12 @@ flowchart TB
 | **Loading** | CLS < 0.1 |
 | **Empty** | — |
 | **Permission** | Pen-test RBAC |
-| **Deliverables** | Lighthouse > 90; E2E suite; deploy runbook |
-| **DoD** | B2C E2E + B2B E2E pass; WCAG audit pass |
+| **Deliverables** | Lighthouse > 90; Playwright full suite; `playwright-report` CI artifact; deploy runbook |
+| **DoD** | `npx playwright test` pass (3 browsers); B2C + B2B journey specs green; WCAG audit pass |
 | **Acceptance** | Acceptance_Criteria.md DEL-001–015 |
 | **Dependencies** | All phases |
 | **Rủi ro** | Scope of 90 reports (RPT) → MVP subset |
-| **Ghi chú** | SUS > 80 target |
+| **Ghi chú** | SUS > 80 target; xem §2.8 Playwright strategy |
 
 ---
 
@@ -1059,7 +1097,7 @@ flowchart TB
 
 > **ID format:** `FS-###` (Frontend Story) · **Priority:** P0=critical path, P1=high, P2=medium, P3=low
 
-### 9.1 Phase 0 — Foundation (FS-001–006)
+### 9.1 Phase 0 — Foundation (FS-001–007)
 
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
@@ -1069,6 +1107,7 @@ flowchart TB
 | FS-004 | Router shell & route groups | P0 | — | — | All | — | P0 | FS-001 | M | 5 route groups | Navigate all groups |
 | FS-005 | Auth guard HOCs | P0 | M01 | — | All | — | P0 | FS-004 | S | RequireAuth/Role | Redirect works |
 | FS-006 | React Query + providers | P0 | — | — | All | — | P0 | FS-003 | S | QueryClient setup | Devtools optional |
+| FS-007 | Playwright scaffold & smoke | P0 | — | — | All | — | P0 | FS-004 | M | §2.8 setup | `test:e2e` green |
 
 ### 9.2 Phase 1 — Design System (FS-010–019)
 
@@ -1271,8 +1310,8 @@ flowchart TB
 
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
-| FS-200 | B2C E2E test suite | P15 | All | — | Candidate | All B2C | P0 | FS-103 | XL | Full B2C flow | Playwright pass |
-| FS-201 | B2B E2E test suite | P15 | All | — | HR | All B2B | P0 | FS-154 | XL | Full B2B flow | Playwright pass |
+| FS-200 | B2C Playwright full journey | P15 | All | — | Candidate | All B2C | P0 | FS-103 | XL | `e2e/specs/b2c/full-journey.spec.ts` | 3 browsers pass |
+| FS-201 | B2B Playwright full journey | P15 | All | — | HR | All B2B | P0 | FS-154 | XL | `e2e/specs/b2b/full-journey.spec.ts` | 3 browsers pass |
 | FS-202 | WCAG 2.2 AA audit fix | P15 | — | — | All | All | P0 | — | L | SUS > 80 | axe clean |
 | FS-203 | Performance optimization | P15 | — | — | All | All | P0 | — | L | LCP, CLS | Lighthouse > 90 |
 | FS-204 | Error monitoring (Sentry) | P15 | — | — | All | — | P1 | FS-003 | S | — | Errors tracked |
@@ -1280,7 +1319,7 @@ flowchart TB
 | FS-206 | Production deploy config | P15 | — | — | All | — | P0 | — | M | — | Deploy runbook |
 | FS-207 | Team management page | P14 | M04 | F-ORG-004 | Organize | EMP-068 | P1 | FS-133 | M | UF-113 | Invite HR |
 
-**Tổng stories:** 118 (FS-001 → FS-207, một số ID nhảy theo nhóm)
+**Tổng stories:** 119 (FS-001 → FS-207, một số ID nhảy theo nhóm)
 
 ---
 
@@ -1327,17 +1366,17 @@ P0 Foundation
 | **P11 phụ thuộc P10 + P5** | Pipeline cần campaigns + interview results |
 | **P13 Admin sau P10** | Admin kiểm duyệt campaigns, users — cần data thật từ B2B track |
 | **P14 sau P5** | Notifications cho assessment complete (NOTI-048) cần interview flow |
-| **P15 cuối cùng** | E2E cần cả B2C + B2B paths hoàn chỉnh |
+| **P15 cuối cùng** | Playwright full regression cần cả B2C + B2B paths hoàn chỉnh |
 
 ### 10.3 Milestone MVP
 
-| Milestone | Phases | Demo được |
-|-----------|--------|-----------|
-| **M1 — Walking Skeleton** | P0–P3 | Landing + register + login |
-| **M2 — B2C Alpha** | +P4, P5, P6 | Self-practice end-to-end (mock payment) |
-| **M3 — B2C Beta** | +P7 | Paid practice live |
-| **M4 — B2B Alpha** | +P9, P10, P11 | Campaign → invite → interview → rank |
-| **M5 — Production** | +P12–P15 | Full product both lines |
+| Milestone | Phases | Demo được | Playwright smoke |
+|-----------|--------|-----------|------------------|
+| **M1 — Walking Skeleton** | P0–P3 | Landing + register + login | `e2e/specs/smoke/*.spec.ts` |
+| **M2 — B2C Alpha** | +P4, P5, P6 | Self-practice end-to-end (mock payment) | `e2e/specs/b2c/interview-happy-path.spec.ts` |
+| **M3 — B2C Beta** | +P7 | Paid practice live | `e2e/specs/b2c/payment-credits.spec.ts` |
+| **M4 — B2B Alpha** | +P9, P10, P11 | Campaign → invite → interview → rank | `e2e/specs/b2b/campaign-invite-interview.spec.ts` |
+| **M5 — Production** | +P12–P15 | Full product both lines | `full-journey.spec.ts` (B2C + B2B, 3 browsers) |
 
 ---
 
@@ -1416,13 +1455,14 @@ P0 Foundation
 
 ### Production Gate (P15)
 
-- [ ] B2C E2E: register → CV → pay → interview → report → history
-- [ ] B2B E2E: org signup → campaign → invite → interview → ranking
+- [ ] **Playwright B2C:** `e2e/specs/b2c/full-journey.spec.ts` — register → CV → pay → interview → report → history
+- [ ] **Playwright B2B:** `e2e/specs/b2b/full-journey.spec.ts` — org signup → campaign → invite → interview → ranking
+- [ ] `npx playwright test` pass trên Chromium + Firefox + WebKit
+- [ ] Playwright CI upload `playwright-report` + trace on failure
 - [ ] WCAG 2.2 AA audit pass
 - [ ] Lighthouse Performance > 90
 - [ ] Error monitoring live
 - [ ] Maintenance mode tested (SCR-SHR-092)
-- [ ] Cross-browser: Chrome, Edge, Safari
 
 ---
 
