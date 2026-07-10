@@ -67,6 +67,10 @@ export const authTranslations: TranslationDictionary = {
     'auth.verifyEmailResend': 'Gửi lại email xác minh',
     'auth.verifyEmailResent': 'Email xác minh đã được gửi lại.',
     'auth.verifyEmailResendFailed': 'Không thể gửi lại email xác minh.',
+    'auth.forgotFailed': 'Không thể gửi liên kết đặt lại mật khẩu.',
+    'auth.otpRequired': 'Vui lòng nhập mã OTP.',
+    'auth.otpInvalid': 'Mã OTP không hợp lệ hoặc đã hết hạn.',
+    'auth.resetFailed': 'Không thể đặt lại mật khẩu.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Chỉnh sửa hồ sơ',
@@ -181,6 +185,10 @@ export const authTranslations: TranslationDictionary = {
     'auth.verifyEmailResend': 'Resend verification email',
     'auth.verifyEmailResent': 'Verification email has been resent.',
     'auth.verifyEmailResendFailed': 'Could not resend verification email.',
+    'auth.forgotFailed': 'Could not send password reset link.',
+    'auth.otpRequired': 'Please enter the OTP code.',
+    'auth.otpInvalid': 'OTP is invalid or has expired.',
+    'auth.resetFailed': 'Could not reset password.',
 
     // Profile Page & Modal
     'profile.editProfile': 'Edit Profile',
