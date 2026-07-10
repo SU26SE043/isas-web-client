@@ -71,9 +71,25 @@ export interface ResetPasswordRequest {
 }
 
 export interface AuthTokensResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  emailVerificationRequired?: boolean;
+  mfaRequired?: boolean;
+  mfaToken?: string;
+}
+
+export interface MfaVerifyRequest {
+  mfaToken: string;
+  code: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
 }
 
 export interface User {

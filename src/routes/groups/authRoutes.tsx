@@ -1,15 +1,16 @@
 import type { RouteObject } from 'react-router-dom';
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { RouteGroupPlaceholder } from '@/routes/RouteGroupPlaceholder';
+import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { PublicRoute } from '@/routes/PublicRoute';
 
 export const authRoutes: RouteObject[] = [
-  { path: '/login', element: <LoginPage /> },
   {
-    element: <AuthLayout />,
+    element: <PublicRoute />,
     children: [
-      { path: '/register', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
-      { path: '/forgot-password', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
+      {
+        element: <AuthLayout />,
+        children: [{ path: '/register', element: <RegisterPage /> }],
+      },
     ],
   },
 ];

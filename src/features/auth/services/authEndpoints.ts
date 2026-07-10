@@ -7,4 +7,7 @@ export const authEndpoints = {
   forgotPassword: '/api/auth/forgot-password',
   verifyOtp: '/api/auth/verify-otp',
   resetPassword: '/api/auth/reset-password',
+  verifyEmail: '/api/auth/verify-email',
+  resendVerification: '/api/auth/resend-verification',
+  verifyMfa: '/api/auth/mfa/verify',
 };
