@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { ServerErrorPage } from '@/pages/errors/ErrorPages';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -22,21 +23,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     if (this.state.hasError) {
-      return (
-        this.props.fallback ?? (
-          <div className="min-h-screen flex items-center justify-center surface-base px-4">
-            <div className="text-center max-w-md">
-              <h1 className="text-2xl font-semibold text-foreground mb-2">Something went wrong</h1>
-              <p className="text-muted-foreground mb-6">
-                An unexpected error occurred. Reload the page or try again later.
-              </p>
-              <button type="button" className="btn-primary px-6 py-2" onClick={() => window.location.reload()}>
-                Reload
-              </button>
-            </div>
-          </div>
-        )
-      );
+      return this.props.fallback ?? <ServerErrorPage />;
     }
 
     return this.props.children;
