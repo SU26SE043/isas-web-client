@@ -5,18 +5,23 @@ interface InterviewHistoryToolbarProps {
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
   onRefresh: () => void;
+  dateFilter?: string;
+  onClearDateFilter?: () => void;
 }
 
 export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = ({
   statusFilter,
   onStatusFilterChange,
   onRefresh,
+  dateFilter,
+  onClearDateFilter,
 }) => {
   const { t } = useLanguage();
 
   return (
-    <div className="flex-shrink-0 flex justify-between items-center mb-5">
-      <div className="w-56 relative">
+    <div className="mb-5 flex flex-shrink-0 items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-56">
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -32,6 +37,20 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
+        </div>
+        {dateFilter && onClearDateFilter ? (
+          <button
+            type="button"
+            onClick={onClearDateFilter}
+            className="inline-flex items-center gap-2 rounded-lg border border-subtle bg-surface-raised px-3 py-2 text-sm text-foreground transition hover:bg-surface-overlay"
+          >
+            <span>{t('practice.history.filterDate')}: {dateFilter}</span>
+            <span className="text-muted-foreground" aria-hidden>
+              ×
+            </span>
+            <span className="sr-only">{t('practice.history.clearDateFilter')}</span>
+          </button>
+        ) : null}
       </div>
       <button
         type="button"

@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { useDashboardSummary } from '../hooks/useDashboardSummary';
 import { useProfile } from '../hooks/useProfile';
+import { InterviewActivitySection } from '../components/dashboard/InterviewActivitySection';
 import { ProfileCompletenessBar } from '../components/ProfileCompletenessBar';
 
 function MetricCard({ label, value, hint, to }: { label: string; value: string; hint?: string; to?: string }) {
@@ -54,13 +55,11 @@ export const CandidateDashboardPage: React.FC = () => {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <MetricCard
-          label={t('profile.dashboard.interviews')}
-          value={String(summary?.recentInterviews ?? 0)}
-          hint={t('profile.dashboard.interviewsHint')}
-          to="/candidate/practice/history"
-        />
+      <div className="mb-8">
+        <InterviewActivitySection />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <MetricCard
           label={t('profile.dashboard.credits')}
           value={String(summary?.creditsRemaining ?? 0)}
