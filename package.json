@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "check:ui-size": "node scripts/check-ui-file-length.mjs",
     "check:i18n": "node scripts/check-i18n-parity.mjs",
     "vercel:dev": "vercel dev",
@@ -37,6 +40,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@playwright/test": "^1.61.1",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.2.4",
     "@testing-library/dom": "^10.4.1",

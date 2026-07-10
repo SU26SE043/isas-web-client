@@ -7,14 +7,14 @@ import { useState } from 'react';
 export function LoginPage() {
   const { isAuthenticated } = useAuthStore();
   const { t } = useLanguage();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center surface-base px-4">
+    <main className="min-h-screen flex items-center justify-center surface-base px-4">
       <div className="text-center max-w-md">
         <h1 className="text-2xl font-semibold text-foreground mb-2">{t('nav.signIn')}</h1>
         <p className="text-muted-foreground mb-6">{t('auth.loginPrompt')}</p>
@@ -23,6 +23,6 @@ export function LoginPage() {
         </button>
       </div>
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-    </div>
+    </main>
   );
 }
