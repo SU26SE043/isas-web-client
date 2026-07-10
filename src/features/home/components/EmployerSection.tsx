@@ -59,7 +59,7 @@ export const EmployerSection: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="employers" className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
+    <section id="enterprise" className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
       {/* Wave Divider */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none transform -translate-y-[99%]">
         <svg 
@@ -104,7 +104,7 @@ export const EmployerSection: React.FC = () => {
                 <p className="text-lg text-white/70">{t('employer.reportDescription')}</p>
               </div>
             </div>
-            <Link to="/employers" className="btn-accent px-10 py-5 text-lg transition-all">
+            <Link to="/enterprise" className="btn-accent px-10 py-5 text-lg transition-all">
               {t('employer.demo')}
             </Link>
           </motion.div>

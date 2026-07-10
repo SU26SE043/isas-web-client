@@ -40,8 +40,8 @@ export const MarketingFooter: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link className="text-muted-foreground transition-colors hover:text-foreground" to="/employers">
-                  {t('footer.employers')}
+                <Link className="text-muted-foreground transition-colors hover:text-foreground" to="/enterprise">
+                  {t('footer.enterprise')}
                 </Link>
               </li>
             </ul>

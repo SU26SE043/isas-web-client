@@ -35,11 +35,11 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.feature2': 'Campaign & magic link',
     'pricing.enterprise.feature3': 'Dashboard HR',
 
-    'employers.pageTitle': 'Enterprise | ISAS',
-    'employers.title': 'Tuyển dụng thông minh với AI',
-    'employers.description': 'Chuẩn hóa sàng lọc ứng viên, giảm thời gian HR và ra quyết định dựa trên dữ liệu.',
-    'employers.cta': 'Đăng ký demo',
-    'employers.ctaSecondary': 'Xem bảng giá',
+    'enterprise.pageTitle': 'Enterprise | ISAS',
+    'enterprise.title': 'Tuyển dụng thông minh với AI',
+    'enterprise.description': 'Chuẩn hóa sàng lọc ứng viên, giảm thời gian HR và ra quyết định dựa trên dữ liệu.',
+    'enterprise.cta': 'Đăng ký demo',
+    'enterprise.ctaSecondary': 'Xem bảng giá',
 
     'legal.lastUpdated': 'Cập nhật lần cuối: 10/07/2026',
     'legal.terms.pageTitle': 'Điều khoản dịch vụ | ISAS',
@@ -95,11 +95,11 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.feature2': 'Campaigns and magic links',
     'pricing.enterprise.feature3': 'HR dashboard',
 
-    'employers.pageTitle': 'Enterprise | ISAS',
-    'employers.title': 'Hire smarter with AI',
-    'employers.description': 'Standardize candidate screening, reduce HR time, and make data-driven hiring decisions.',
-    'employers.cta': 'Book a demo',
-    'employers.ctaSecondary': 'View pricing',
+    'enterprise.pageTitle': 'Enterprise | ISAS',
+    'enterprise.title': 'Hire smarter with AI',
+    'enterprise.description': 'Standardize candidate screening, reduce HR time, and make data-driven hiring decisions.',
+    'enterprise.cta': 'Book a demo',
+    'enterprise.ctaSecondary': 'View pricing',
 
     'legal.lastUpdated': 'Last updated: Jul 10, 2026',
     'legal.terms.pageTitle': 'Terms of Service | ISAS',

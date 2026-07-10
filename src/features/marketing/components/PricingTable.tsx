@@ -82,7 +82,7 @@ export const PricingTable: React.FC = () => {
             ))}
           </ul>
           {plan.contact ? (
-            <Link to="/employers" className="btn-secondary w-full text-center">
+            <Link to="/enterprise" className="btn-secondary w-full text-center">
               {t('pricing.ctaContact')}
             </Link>
           ) : (

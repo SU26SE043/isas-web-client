@@ -12,7 +12,7 @@ const desktopNavLinks = [
   { href: '/', labelKey: 'nav.home', isHash: false },
   { href: '/#features', labelKey: 'nav.features', isHash: true },
   { href: '/pricing', labelKey: 'nav.pricing', isHash: false },
-  { href: '/employers', labelKey: 'nav.employers', isHash: false },
+  { href: '/enterprise', labelKey: 'nav.enterprise', isHash: false },
 ] as const;
 
 export const MarketingHeader: React.FC = () => {

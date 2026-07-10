@@ -2,7 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { MarketingLayout } from '@/layouts/MarketingLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
-import { EmployersPage } from '@/features/marketing/pages/EmployersPage';
+import { EnterprisePage } from '@/features/marketing/pages/EnterprisePage';
 import { PricingPage } from '@/features/marketing/pages/PricingPage';
 import { PrivacyPage } from '@/features/marketing/pages/PrivacyPage';
 import { TermsPage } from '@/features/marketing/pages/TermsPage';
@@ -26,7 +26,7 @@ export const publicRoutes: RouteObject[] = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'pricing', element: <PricingPage /> },
-      { path: 'employers', element: <EmployersPage /> },
+      { path: 'enterprise', element: <EnterprisePage /> },
       { path: 'terms', element: <TermsPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'maintenance', element: <MaintenancePage /> },

@@ -4,23 +4,23 @@ import { useLanguage } from '@/shared/languages';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { EmployerSection } from '@/features/home/components/EmployerSection';
 
-export const EmployersPage: React.FC = () => {
+export const EnterprisePage: React.FC = () => {
   const { t } = useLanguage();
-  usePageTitle(t('employers.pageTitle'));
+  usePageTitle(t('enterprise.pageTitle'));
 
   return (
     <>
       <section className="page-section border-b border-subtle">
         <div className="page-container">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="heading-primary mb-4 text-4xl">{t('employers.title')}</h1>
-            <p className="body-text mb-8 text-lg">{t('employers.description')}</p>
+            <h1 className="heading-primary mb-4 text-4xl">{t('enterprise.title')}</h1>
+            <p className="body-text mb-8 text-lg">{t('enterprise.description')}</p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register" className="btn-primary">
-                {t('employers.cta')}
+                {t('enterprise.cta')}
               </Link>
               <Link to="/pricing" className="btn-secondary">
-                {t('employers.ctaSecondary')}
+                {t('enterprise.ctaSecondary')}
               </Link>
             </div>
           </div>
