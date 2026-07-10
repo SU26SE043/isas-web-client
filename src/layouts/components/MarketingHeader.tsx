@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { AuthModal } from '@/features/auth/components/AuthModal';
 import { AvatarDropdown } from '@/features/auth/components/AvatarDropdown';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/shared/languages';
@@ -17,7 +16,6 @@ const desktopNavLinks = [
 ] as const;
 
 export const MarketingHeader: React.FC = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
@@ -51,13 +49,9 @@ export const MarketingHeader: React.FC = () => {
                 <AvatarDropdown />
               ) : (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="btn-secondary hidden sm:inline-flex"
-                  >
+                  <Link to="/login" className="btn-secondary hidden sm:inline-flex">
                     {t('nav.signIn')}
-                  </button>
+                  </Link>
                   <Link to="/register" className="btn-primary hidden sm:inline-flex">
                     {t('nav.getStarted')}
                   </Link>
@@ -80,12 +74,9 @@ export const MarketingHeader: React.FC = () => {
         <MarketingMobileNav
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          onSignIn={() => setIsAuthModalOpen(true)}
           isAuthenticated={isAuthenticated}
         />
       </header>
-
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 };

@@ -42,7 +42,7 @@ export const layoutTranslations: TranslationDictionary = {
     'common.itemsPerPage': 'Số mục mỗi trang',
 
     'route.authShell': 'Nhóm route xác thực — shell Phase 0',
-    'route.employerShell': 'Nhóm route nhà tuyển dụng — shell Phase 0',
+    'route.enterpriseShell': 'Nhóm route Enterprise — shell Phase 0',
     'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
     'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng PIpraint.',
   },
@@ -87,7 +87,7 @@ export const layoutTranslations: TranslationDictionary = {
     'common.itemsPerPage': 'Items per page',
 
     'route.authShell': 'Auth route group — Phase 0 shell',
-    'route.employerShell': 'Employer route group — Phase 0 shell',
+    'route.enterpriseShell': 'Enterprise route group — Phase 0 shell',
     'route.adminShell': 'Admin route group — Phase 0 shell',
     'auth.loginPrompt': 'Sign in to continue to PIpraint.',
   },

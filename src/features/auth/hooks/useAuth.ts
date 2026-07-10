@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { authService } from '../services/authService';
 import { authTokenStorage } from '../../../shared/api';
+import { sessionManager } from '../utils/sessionManager';
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export const useAuth = () => {
       console.error('Logout error:', error);
     } finally {
       logout();
-      // Redirect to homepage after logout
+      sessionManager.clear();
       navigate('/');
     }
   }, [logout, navigate]);
@@ -63,11 +64,15 @@ export const useAuth = () => {
 
     if (urlAccessToken && urlRefreshToken) {
       authTokenStorage.setTokens(urlAccessToken, urlRefreshToken);
+      sessionManager.markSessionStart();
       // Clean up URL parameters without refreshing page
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const token = authTokenStorage.getAccessToken();
+    if (token && !sessionManager.getSessionStartedAt()) {
+      sessionManager.markSessionStart();
+    }
     // Only fetch user if we have a token and no user data yet
     if (token && !user && !isLoading) {
       fetchUser();

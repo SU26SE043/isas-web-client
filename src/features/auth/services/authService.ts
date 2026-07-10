@@ -1,18 +1,38 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
 import { getApiBaseUrl } from '../../../shared/config';
-import type { AuthTokensResponse, LoginRequest, RegisterRequest, User, UpdateProfileRequest } from '../types/auth.types';
+import type {
+  AuthTokensResponse,
+  LoginRequest,
+  MfaVerifyRequest,
+  RegisterRequest,
+  ResendVerificationRequest,
+  User,
+  UpdateProfileRequest,
+  VerifyEmailRequest,
+} from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
+import { sessionManager } from '../utils/sessionManager';
+
+function storeTokensIfPresent(data: AuthTokensResponse) {
+  if (data.accessToken && data.refreshToken) {
+    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    sessionManager.markSessionStart();
+  }
+}
 
 export const authService = {
   register: async (payload: RegisterRequest) => {
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.register, payload);
-    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    storeTokensIfPresent(data);
     return data;
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.login, payload);
-    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    if (data.mfaRequired) {
+      return data;
+    }
+    storeTokensIfPresent(data);
     return data;
   },
   refresh: async () => {
@@ -21,7 +41,7 @@ export const authService = {
       throw new Error('No refresh token available');
     }
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.refresh, { refreshToken });
-    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    storeTokensIfPresent(data);
     return data;
   },
   logout: async () => {
@@ -32,6 +52,7 @@ export const authService = {
       }
     } finally {
       authTokenStorage.clear();
+      sessionManager.clear();
     }
   },
   me: async () => {
@@ -52,6 +73,19 @@ export const authService = {
   },
   resetPassword: async (payload: { email: string; newPassword: string }) => {
     const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+    return data;
+  },
+  verifyEmail: async (payload: VerifyEmailRequest) => {
+    const { data } = await apiClient.post(authEndpoints.verifyEmail, payload);
+    return data;
+  },
+  resendVerification: async (payload: ResendVerificationRequest) => {
+    const { data } = await apiClient.post(authEndpoints.resendVerification, payload);
+    return data;
+  },
+  verifyMfa: async (payload: MfaVerifyRequest) => {
+    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.verifyMfa, payload);
+    storeTokensIfPresent(data);
     return data;
   },
   loginWithGoogle: () => {

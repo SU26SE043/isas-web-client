@@ -5,7 +5,6 @@ import { useLanguage } from '@/shared/languages';
 interface MarketingMobileNavProps {
   open: boolean;
   onClose: () => void;
-  onSignIn: () => void;
   isAuthenticated: boolean;
 }
 
@@ -19,7 +18,6 @@ const navLinks = [
 export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
   open,
   onClose,
-  onSignIn,
   isAuthenticated,
 }) => {
   const { t } = useLanguage();
@@ -56,9 +54,9 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
         ))}
         {!isAuthenticated && (
           <li className="pt-2">
-            <button type="button" className="btn-secondary w-full" onClick={() => { onSignIn(); onClose(); }}>
+            <Link to="/login" className="btn-secondary w-full" onClick={onClose}>
               {t('nav.signIn')}
-            </button>
+            </Link>
           </li>
         )}
       </ul>

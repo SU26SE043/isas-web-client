@@ -1,48 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
+import { cvAnalysisService } from '../services/cvAnalysis.service';
 
 interface CVUploadFormProps {
   onFileUpload: (file: File) => void;
+  analysisLanguage: 'vi' | 'en';
 }
 
-export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
+export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload, analysisLanguage }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [analysisLanguage, setAnalysisLanguage] = useState<'vi' | 'en'>('en');
+  const [jobDescription, setJobDescription] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      onFileUpload(event.target.files[0]);
+      const file = event.target.files[0];
+      setUploadedFile(file);
+      onFileUpload(file);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!uploadedFile || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await cvAnalysisService.submitAnalysis({
+        file: uploadedFile,
+        jobDescription: jobDescription.trim() || undefined,
+        language: analysisLanguage,
+      });
+      navigate('/cv-analysis/result');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Language Selection */}
-      <div className="bg-surface-raised rounded-xl p-4 lg:px-6 lg:py-5 border border-subtle shadow-sm flex items-center justify-between">
-        <div className="flex items-center space-x-3 text-foreground font-bold">
-          <svg className="w-6 h-6 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-          </svg>
-          <span>{t('cv.analysisLanguage')}</span>
-        </div>
-        <div className="flex bg-surface-overlay p-1.5 rounded-xl">
-          <button
-            onClick={() => setAnalysisLanguage('vi')}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'vi' ? 'bg-surface-elevated text-foreground shadow-md' : 'text-muted-foreground hover:text-muted-foreground'}`}
-          >
-            {t('cv.vietnamese')}
-          </button>
-          <button
-            onClick={() => setAnalysisLanguage('en')}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'en' ? 'bg-surface-elevated text-foreground shadow-md' : 'text-muted-foreground hover:text-muted-foreground'}`}
-          >
-            {t('cv.english')}
-          </button>
-        </div>
-      </div>
-
       {/* Upload Box */}
       <div className="bg-surface-raised rounded-xl border-2 border-dashed border-default hover:border-subtle transition-colors flex flex-col items-center justify-center py-16 px-6 relative group overflow-hidden">
         <input 
@@ -84,16 +82,20 @@ export const CVUploadForm: React.FC<CVUploadFormProps> = ({ onFileUpload }) => {
         <textarea
           className="w-full h-40 bg-surface-base border border-subtle rounded-xl p-5 text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:bg-surface-raised resize-none transition-all placeholder:text-muted-foreground font-medium"
           placeholder={t('cv.jdPlaceholder')}
+          value={jobDescription}
+          onChange={(event) => setJobDescription(event.target.value)}
         />
       </div>
 
       {/* Submit Button */}
       <div className="flex justify-center pt-6">
-        <button 
-          onClick={() => navigate('/cv-analysis/result')}
-          className="bg-surface-overlay text-muted-foreground px-10 py-4 rounded-xl font-bold text-lg uppercase tracking-wider hover:bg-surface-elevated active:scale-95 transition-all shadow-sm  flex items-center space-x-3 group w-full md:w-auto justify-center"
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={!uploadedFile || isSubmitting}
+          className="bg-surface-overlay text-muted-foreground px-10 py-4 rounded-xl font-bold text-lg uppercase tracking-wider hover:bg-surface-elevated active:scale-95 transition-all shadow-sm flex items-center space-x-3 group w-full md:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>{t('cv.startAnalysis')}</span>
+          <span>{isSubmitting ? t('cv.analyzing') : t('cv.startAnalysis')}</span>
           <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
