@@ -2,7 +2,10 @@ import type { RouteObject } from 'react-router-dom';
 import { MarketingLayout } from '@/layouts/MarketingLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
-import { RouteGroupPlaceholder } from '@/routes/RouteGroupPlaceholder';
+import { EmployersPage } from '@/features/marketing/pages/EmployersPage';
+import { PricingPage } from '@/features/marketing/pages/PricingPage';
+import { PrivacyPage } from '@/features/marketing/pages/PrivacyPage';
+import { TermsPage } from '@/features/marketing/pages/TermsPage';
 import { ForbiddenPage, MaintenancePage, NotFoundPage, ServerErrorPage } from '@/pages/errors/ErrorPages';
 import { ComponentHarnessPage } from '@/pages/dev/ComponentHarnessPage';
 
@@ -22,9 +25,10 @@ export const publicRoutes: RouteObject[] = [
     element: <MarketingLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'pricing', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
-      { path: 'terms', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
-      { path: 'privacy', element: <RouteGroupPlaceholder titleKey="route.authShell" /> },
+      { path: 'pricing', element: <PricingPage /> },
+      { path: 'employers', element: <EmployersPage /> },
+      { path: 'terms', element: <TermsPage /> },
+      { path: 'privacy', element: <PrivacyPage /> },
       { path: 'maintenance', element: <MaintenancePage /> },
       ...devRoutes,
     ],
