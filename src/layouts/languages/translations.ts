@@ -34,6 +34,11 @@ export const layoutTranslations: TranslationDictionary = {
     'common.goBack': 'Quay lại',
     'common.perPage': '/ trang',
     'common.itemsPerPage': 'Số mục mỗi trang',
+
+    'route.authShell': 'Nhóm route xác thực — shell Phase 0',
+    'route.employerShell': 'Nhóm route nhà tuyển dụng — shell Phase 0',
+    'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
+    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng ISAS.',
   },
   en: {
     'language.label': 'Language',
@@ -68,5 +73,10 @@ export const layoutTranslations: TranslationDictionary = {
     'common.goBack': 'Go back',
     'common.perPage': 'per page',
     'common.itemsPerPage': 'Items per page',
+
+    'route.authShell': 'Auth route group — Phase 0 shell',
+    'route.employerShell': 'Employer route group — Phase 0 shell',
+    'route.adminShell': 'Admin route group — Phase 0 shell',
+    'auth.loginPrompt': 'Sign in to continue to ISAS.',
   },
 };
