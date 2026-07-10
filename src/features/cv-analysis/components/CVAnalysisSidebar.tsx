@@ -3,9 +3,13 @@ import { useLanguage } from '../../../shared/languages';
 
 interface CVAnalysisSidebarProps {
   uploadedFile: File | null;
+  profileCompletionPercent?: number;
 }
 
-export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFile }) => {
+export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({
+  uploadedFile,
+  profileCompletionPercent = 75,
+}) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const { t } = useLanguage();
   
@@ -119,10 +123,10 @@ export const CVAnalysisSidebar: React.FC<CVAnalysisSidebarProps> = ({ uploadedFi
       <div className="bg-surface-raised rounded-xl p-6 border border-subtle shadow-sm">
         <div className="flex justify-between items-end mb-4">
           <h4 className="text-sm font-extrabold text-foreground">{t('cv.profileCompletion')}</h4>
-          <span className="text-xl font-black text-foreground">75%</span>
+          <span className="text-xl font-black text-foreground">{profileCompletionPercent}%</span>
         </div>
         <div className="w-full bg-surface-overlay rounded-full h-3 mb-5 overflow-hidden ">
-          <div className="bg-surface-overlay h-full rounded-full w-[75%] relative">
+          <div className="bg-surface-overlay h-full rounded-full relative" style={{ width: `${profileCompletionPercent}%` }}>
             <div className="absolute top-0 right-0 bottom-0 left-0 bg-surface-overlay/30 animate-pulse"></div>
           </div>
         </div>
