@@ -1,4 +1,5 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
+import { paymentService } from '@/features/payment/services/payment.service';
 import { MOCK_CANDIDATE_PROFILE, MOCK_DASHBOARD_SUMMARY } from '../mocks/profile.fixtures';
 import type {
   CandidateProfile,
@@ -13,7 +14,6 @@ import type {
 } from '../types/profile.types';
 
 let profileStore: CandidateProfile = structuredClone(MOCK_CANDIDATE_PROFILE);
-let mockCreditsRemaining = MOCK_DASHBOARD_SUMMARY.creditsRemaining;
 const reservedSessionCredits = new Set<string>();
 
 function nextId(prefix: string) {
@@ -34,7 +34,10 @@ export const profileService = {
       throw new Error('Profile API is not wired yet. Keep usesMockData("profile") true.');
     }
     await mockDelay();
-    return { ...MOCK_DASHBOARD_SUMMARY, creditsRemaining: mockCreditsRemaining };
+    return {
+      ...MOCK_DASHBOARD_SUMMARY,
+      creditsRemaining: paymentService.getBalance(),
+    };
   },
 
   async reservePracticeCredit(sessionId: string): Promise<number> {
@@ -42,15 +45,11 @@ export const profileService = {
       throw new Error('Profile API is not wired yet. Keep usesMockData("profile") true.');
     }
     if (reservedSessionCredits.has(sessionId)) {
-      return mockCreditsRemaining;
+      return paymentService.getBalance();
     }
-    if (mockCreditsRemaining <= 0) {
-      throw new Error('no_credits');
-    }
-    await mockDelay(200);
-    mockCreditsRemaining -= 1;
+    const remaining = await paymentService.consumeCredit(sessionId);
     reservedSessionCredits.add(sessionId);
-    return mockCreditsRemaining;
+    return remaining;
   },
 
   async updateCareerGoal(goal: CareerGoal): Promise<CandidateProfile> {

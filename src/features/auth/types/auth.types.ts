@@ -51,6 +51,34 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface RegisterResponse {
+  id: string;
+  email: string;
+}
+
+/** Normalize register payload from Auth API (plain object, ApiResponse wrapper, or legacy string). */
+export function parseRegisterResponse(data: unknown, fallbackEmail: string): RegisterResponse {
+  if (typeof data === 'string') {
+    const match = data.match(/User ID:\s*(\S+)/i);
+    return { id: match?.[1] ?? '', email: fallbackEmail };
+  }
+
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const inner =
+      record.data && typeof record.data === 'object'
+        ? (record.data as Record<string, unknown>)
+        : record;
+
+    return {
+      id: String(inner.id ?? ''),
+      email: String(inner.email ?? fallbackEmail),
+    };
+  }
+
+  return { id: '', email: fallbackEmail };
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

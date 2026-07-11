@@ -64,6 +64,7 @@ export const CandidateDashboardPage: React.FC = () => {
           label={t('profile.dashboard.credits')}
           value={String(summary?.creditsRemaining ?? 0)}
           hint={t('profile.dashboard.creditsHint')}
+          to="/candidate/credits"
         />
         <MetricCard
           label={t('profile.dashboard.practice')}
