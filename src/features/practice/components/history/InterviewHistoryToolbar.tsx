@@ -7,6 +7,8 @@ interface InterviewHistoryToolbarProps {
   onRefresh: () => void;
   dateFilter?: string;
   onClearDateFilter?: () => void;
+  compareMode?: boolean;
+  onToggleCompareMode?: () => void;
 }
 
 export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = ({
@@ -15,6 +17,8 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
   onRefresh,
   dateFilter,
   onClearDateFilter,
+  compareMode = false,
+  onToggleCompareMode,
 }) => {
   const { t } = useLanguage();
 
@@ -52,7 +56,17 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
           </button>
         ) : null}
       </div>
-      <button
+      <div className="flex items-center gap-2">
+        {onToggleCompareMode ? (
+          <button
+            type="button"
+            onClick={onToggleCompareMode}
+            className={compareMode ? 'btn-primary text-sm' : 'btn-secondary text-sm'}
+          >
+            {t('practice.compare.toggle')}
+          </button>
+        ) : null}
+        <button
         type="button"
         onClick={onRefresh}
         className="flex items-center justify-center w-10 h-10 bg-surface-raised border border-subtle text-muted-foreground rounded-lg hover:bg-surface-overlay transition-all shadow-sm"
@@ -68,6 +82,7 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
           />
         </svg>
       </button>
+      </div>
     </div>
   );
 };

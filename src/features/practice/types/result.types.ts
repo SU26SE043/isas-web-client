@@ -18,9 +18,34 @@ export interface GapAnalysisItem {
   actionableStepsVi: string[];
 }
 
+export type AssessmentStatus = 'pending' | 'scoring' | 'scored' | 'failed';
+
+export interface AssessmentStatusResponse {
+  assessmentId: string;
+  status: AssessmentStatus;
+  resultId?: string;
+}
+
+export interface QuestionFeedback {
+  id: string;
+  questionIndex: number;
+  question: string;
+  questionVi: string;
+  score: number;
+  maxScore: number;
+  summary: string;
+  summaryVi: string;
+  strengths: string[];
+  strengthsVi: string[];
+  improvements: string[];
+  improvementsVi: string[];
+  locked: boolean;
+}
+
 export interface InterviewResult {
   id: string;
   candidateId: string;
+  interviewId?: string;
   overallScore: number;
   completedAt: string;
   summary: string;
@@ -31,4 +56,11 @@ export interface InterviewResult {
   strengthsVi: string[];
   weaknesses: string[];
   weaknessesVi: string[];
+  questionFeedback: QuestionFeedback[];
+  certificateId?: string;
+}
+
+export interface CompareResultsResponse {
+  left: InterviewResult;
+  right: InterviewResult;
 }

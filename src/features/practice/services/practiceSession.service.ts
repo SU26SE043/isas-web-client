@@ -1,5 +1,6 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { profileService } from '@/features/profile/services/profile.service';
+import { resultService } from './result.service';
 import {
   DEFAULT_PRACTICE_SESSION,
   MOCK_ASYNC_QUESTIONS,
@@ -104,9 +105,12 @@ export const practiceSessionService = {
     await mockDelay(1200);
     startedSessions.delete(sessionId);
 
+    const assessmentId = `assessment-${sessionId}`;
+    resultService.registerPendingAssessment(assessmentId);
+
     return {
       sessionId,
-      assessmentId: `assessment-${sessionId}`,
+      assessmentId,
       uploadComplete: (chunkCounts.get(sessionId) ?? 0) > 0,
     };
   },

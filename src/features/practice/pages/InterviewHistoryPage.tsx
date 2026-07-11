@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterviewHistory } from '../hooks/useInterviewHistory';
+import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { InterviewHistoryEmptyState } from '../components/history/InterviewHistoryEmptyState';
 import { InterviewHistoryHeader } from '../components/history/InterviewHistoryHeader';
 import { InterviewHistoryListItem } from '../components/history/InterviewHistoryListItem';
@@ -19,6 +20,8 @@ export const InterviewHistoryPage: React.FC = () => {
   const { interviews, isLoading, refresh } = useInterviewHistory();
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const stats = useMemo(() => computeHistoryStats(interviews), [interviews]);
 
@@ -55,6 +58,28 @@ export const InterviewHistoryPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleToggleCompareMode = () => {
+    setCompareMode((value) => !value);
+    setSelectedIds([]);
+  };
+
+  const handleToggleCompare = (id: string) => {
+    setSelectedIds((current) => {
+      if (current.includes(id)) {
+        return current.filter((item) => item !== id);
+      }
+      if (current.length >= 2) {
+        return [current[1], id];
+      }
+      return [...current, id];
+    });
+  };
+
+  const handleCompare = () => {
+    if (selectedIds.length !== 2) return;
+    navigate(`/candidate/practice/history/compare?left=${selectedIds[0]}&right=${selectedIds[1]}`);
+  };
+
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-surface-raised">
@@ -74,7 +99,17 @@ export const InterviewHistoryPage: React.FC = () => {
           onRefresh={handleRefresh}
           dateFilter={dateFilter}
           onClearDateFilter={dateFilter ? handleClearDateFilter : undefined}
+          compareMode={compareMode}
+          onToggleCompareMode={handleToggleCompareMode}
         />
+
+        {compareMode ? (
+          <InterviewHistoryCompareBar
+            selectedCount={selectedIds.length}
+            onCompare={handleCompare}
+            onCancel={handleToggleCompareMode}
+          />
+        ) : null}
 
         <InterviewHistoryStats
           total={stats.total}
@@ -90,6 +125,9 @@ export const InterviewHistoryPage: React.FC = () => {
                 key={interview.id}
                 interview={interview}
                 index={index}
+                compareMode={compareMode}
+                selected={selectedIds.includes(interview.id)}
+                onToggleCompare={handleToggleCompare}
                 onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
               />
             ))

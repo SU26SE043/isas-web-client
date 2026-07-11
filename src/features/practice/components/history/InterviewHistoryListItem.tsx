@@ -52,30 +52,64 @@ interface InterviewHistoryListItemProps {
   interview: InterviewHistoryItem;
   index: number;
   onSelect: (id: string) => void;
+  compareMode?: boolean;
+  selected?: boolean;
+  onToggleCompare?: (id: string) => void;
 }
 
 export const InterviewHistoryListItem: React.FC<InterviewHistoryListItemProps> = ({
   interview,
   index,
   onSelect,
+  compareMode = false,
+  selected = false,
+  onToggleCompare,
 }) => {
   const { t } = useLanguage();
   const status = historyStatusConfig[interview.status];
   const hasScore = interview.overallScore > 0;
 
+  const canCompare = interview.status === 'completed' && interview.overallScore > 0;
+
   return (
     <div
       role="button"
       tabIndex={0}
-      className="flex items-center border border-subtle rounded-xl px-5 py-4 bg-surface-raised hover:shadow-md transition-all cursor-pointer group shrink-0"
-      onClick={() => onSelect(interview.id)}
+      className={[
+        'flex items-center border border-subtle rounded-xl px-5 py-4 bg-surface-raised hover:shadow-md transition-all cursor-pointer group shrink-0',
+        selected ? 'ring-2 ring-[var(--border-focus)]' : '',
+      ].join(' ')}
+      onClick={() => {
+        if (compareMode && canCompare) {
+          onToggleCompare?.(interview.id);
+          return;
+        }
+        onSelect(interview.id);
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          if (compareMode && canCompare) {
+            onToggleCompare?.(interview.id);
+            return;
+          }
           onSelect(interview.id);
         }
       }}
     >
+      {compareMode ? (
+        <div className="mr-4 flex h-5 w-5 items-center justify-center">
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={!canCompare}
+            onChange={() => onToggleCompare?.(interview.id)}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={t('practice.compare.selectItem')}
+            className="h-4 w-4 rounded border-subtle"
+          />
+        </div>
+      ) : null}
       <div className="w-1/3 flex items-center min-w-0 pr-4">
         <div
           className={`flex-shrink-0 w-11 h-11 rounded-xl ${getCompanyColor(index)} flex items-center justify-center text-foreground font-bold text-lg shadow-sm border border-subtle`}
