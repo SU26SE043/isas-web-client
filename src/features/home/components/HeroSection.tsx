@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
+import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 export const HeroSection: React.FC = () => {
   const { t } = useLanguage();
+  const { openAuthModal } = useMarketingAuthModal();
 
   return (
     <section className="bg-gradient-to-b from-surface-raised to-surface-base pt-16 pb-24 overflow-hidden">
@@ -32,9 +33,9 @@ export const HeroSection: React.FC = () => {
               {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/register" className="btn-primary">
+              <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary">
                 {t('hero.getStarted')}
-              </Link>
+              </button>
               <button type="button" className="btn-secondary">
                 {t('hero.watchDemo')}
               </button>

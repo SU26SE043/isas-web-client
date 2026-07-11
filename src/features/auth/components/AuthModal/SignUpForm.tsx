@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
+import { signUpFormVariants } from './authModal.animations';
 
 interface SignUpFormProps {
   isSignUp: boolean;
   onRegisterSuccess: () => void;
+  reducedMotion: boolean | null;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSuccess }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSuccess, reducedMotion }) => {
   const { t } = useLanguage();
   const { fetchUser } = useAuth();
   const [fullName, setFullName] = useState('');
@@ -62,9 +65,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
   };
 
   return (
-    <form
+    <motion.form
       onSubmit={handleSubmit}
-      className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${isSignUp ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}
+      className="absolute inset-0 flex flex-col items-center justify-center px-12"
+      variants={signUpFormVariants(reducedMotion)}
+      initial={false}
+      animate={isSignUp ? 'active' : 'hiddenRight'}
     >
       <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
       
@@ -122,6 +128,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
       >
         {isSubmitting ? t('auth.registering') : t('auth.signUp')}
       </button>
-    </form>
+    </motion.form>
   );
 };

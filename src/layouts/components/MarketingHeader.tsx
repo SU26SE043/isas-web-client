@@ -7,6 +7,7 @@ import { useLanguage } from '@/shared/languages';
 import { BrandLogo } from '@/components/BrandLogo';
 import { LanguageToggle } from '../LanguageToggle';
 import { MarketingMobileNav } from './MarketingMobileNav';
+import { useMarketingAuthModal } from '../MarketingAuthModalProvider';
 
 const desktopNavLinks = [
   { href: '/', labelKey: 'nav.home', isHash: false },
@@ -19,6 +20,7 @@ export const MarketingHeader: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
+  const { openAuthModal } = useMarketingAuthModal();
 
   return (
     <>
@@ -49,12 +51,20 @@ export const MarketingHeader: React.FC = () => {
                 <AvatarDropdown />
               ) : (
                 <>
-                  <Link to="/login" className="btn-secondary hidden sm:inline-flex">
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal('login')}
+                    className="btn-secondary hidden sm:inline-flex"
+                  >
                     {t('nav.signIn')}
-                  </Link>
-                  <Link to="/register" className="btn-primary hidden sm:inline-flex">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal('signup')}
+                    className="btn-primary hidden sm:inline-flex"
+                  >
                     {t('nav.getStarted')}
-                  </Link>
+                  </button>
                 </>
               )}
               <button
@@ -75,6 +85,8 @@ export const MarketingHeader: React.FC = () => {
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
           isAuthenticated={isAuthenticated}
+          onSignInClick={() => openAuthModal('login')}
+          onSignUpClick={() => openAuthModal('signup')}
         />
       </header>
     </>

@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
+import { signInFormVariants } from './authModal.animations';
 
 interface SignInFormProps {
   isSignUp: boolean;
   isForgotPassword: boolean;
   onForgotPasswordClick: () => void;
   onLoginSuccess: () => void;
+  reducedMotion: boolean | null;
 }
 
-export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPassword, onForgotPasswordClick, onLoginSuccess }) => {
+export const SignInForm: React.FC<SignInFormProps> = ({
+  isSignUp,
+  isForgotPassword,
+  onForgotPasswordClick,
+  onLoginSuccess,
+  reducedMotion,
+}) => {
   const { t } = useLanguage();
   const { fetchUser } = useAuth();
   const [email, setEmail] = useState('');
@@ -50,10 +59,15 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
     }
   };
 
+  const isActive = !isSignUp && !isForgotPassword;
+
   return (
-    <form
+    <motion.form
       onSubmit={handleSubmit}
-      className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${(isSignUp || isForgotPassword) ? 'opacity-0 pointer-events-none translate-x-[-10%]' : 'opacity-100 translate-x-0'}`}
+      className="absolute inset-0 flex flex-col items-center justify-center px-12"
+      variants={signInFormVariants(reducedMotion)}
+      initial={false}
+      animate={isActive ? 'active' : 'hiddenLeft'}
     >
       <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signInTitle')}</h1>
       
@@ -111,6 +125,6 @@ export const SignInForm: React.FC<SignInFormProps> = ({ isSignUp, isForgotPasswo
       >
         {isSubmitting ? t('auth.loggingIn') : t('auth.signInTitle')}
       </button>
-    </form>
+    </motion.form>
   );
 };

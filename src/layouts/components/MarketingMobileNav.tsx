@@ -6,6 +6,8 @@ interface MarketingMobileNavProps {
   open: boolean;
   onClose: () => void;
   isAuthenticated: boolean;
+  onSignInClick: () => void;
+  onSignUpClick: () => void;
 }
 
 const navLinks = [
@@ -19,6 +21,8 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
   open,
   onClose,
   isAuthenticated,
+  onSignInClick,
+  onSignUpClick,
 }) => {
   const { t } = useLanguage();
 
@@ -53,10 +57,27 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
           </li>
         ))}
         {!isAuthenticated && (
-          <li className="pt-2">
-            <Link to="/login" className="btn-secondary w-full" onClick={onClose}>
+          <li className="flex flex-col gap-2 pt-2">
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              onClick={() => {
+                onClose();
+                onSignInClick();
+              }}
+            >
               {t('nav.signIn')}
-            </Link>
+            </button>
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={() => {
+                onClose();
+                onSignUpClick();
+              }}
+            >
+              {t('nav.getStarted')}
+            </button>
           </li>
         )}
       </ul>
