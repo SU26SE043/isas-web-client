@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
-import { PracticeInterviewPage } from '@/features/practice/pages/PracticeInterviewPage';
 import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
@@ -16,9 +15,7 @@ import { SkillsPage } from '@/features/profile/pages/SkillsPage';
 import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
 import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
 import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
-import { UserRole } from '@/features/auth/types/auth.types';
 import { RequireAuth } from '@/routes/RequireAuth';
-import { RequireRole } from '@/routes/RequireRole';
 import { LegacyRedirect, PracticeHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
 import { CvUploadLegacyRedirect } from '@/routes/CvUploadLegacyRedirect';
 
@@ -53,14 +50,6 @@ export const candidateRoutes: RouteObject[] = [
       { path: '/cv-analysis/result', element: <LegacyRedirect /> },
       { path: '/practice/history', element: <Navigate to="/candidate/practice/history" replace /> },
       { path: '/practice/history/:id', element: <PracticeHistoryLegacyRedirect /> },
-    ],
-  },
-  {
-    element: <RequireRole roles={[UserRole.CANDIDATE, UserRole.ADMIN]} />,
-    children: [
-      { path: '/practice', element: <PracticeInterviewPage /> },
-      { path: '/practice/result', element: <InterviewResultPage /> },
-      { path: '/practice/interview/:id', element: <InterviewResultPage /> },
     ],
   },
 ];
