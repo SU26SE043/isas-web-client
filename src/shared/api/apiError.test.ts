@@ -59,6 +59,12 @@ describe('apiError', () => {
     expect(getApiErrorMessage(error)).toBe('Email already exists');
   });
 
+  it('returns guidance when the API server is unreachable', () => {
+    const error = new axios.AxiosError('Network Error', 'ERR_NETWORK');
+
+    expect(getApiErrorMessage(error, 'Fallback')).toContain('Cannot reach the API server');
+  });
+
   it('returns fallback for non-axios errors', () => {
     expect(getApiErrorMessage(new Error('boom'), 'Fallback')).toBe('Fallback');
     expect(getApiStatusCode(new Error('boom'))).toBeUndefined();

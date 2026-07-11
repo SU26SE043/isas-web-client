@@ -10,6 +10,10 @@ export const getApiErrorMessage = (error: unknown, fallback = 'Request failed') 
     return fallback;
   }
 
+  if ((error.code === 'ERR_NETWORK' || error.message === 'Network Error') && !error.response) {
+    return 'Cannot reach the API server. Start Auth service (isas-server) and restart npm run dev.';
+  }
+
   const responseData = error.response?.data;
   if (typeof responseData === 'string' && responseData.trim()) {
     return responseData;
