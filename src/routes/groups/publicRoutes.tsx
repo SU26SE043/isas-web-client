@@ -3,6 +3,7 @@ import { MarketingLayout } from '@/layouts/MarketingLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { EnterprisePage } from '@/features/marketing/pages/EnterprisePage';
+import { MagicLinkLandingPage } from '@/features/campaigns/pages/MagicLinkLandingPage';
 import { PricingPage } from '@/features/marketing/pages/PricingPage';
 import { PrivacyPage } from '@/features/marketing/pages/PrivacyPage';
 import { TermsPage } from '@/features/marketing/pages/TermsPage';
@@ -30,6 +31,7 @@ export const publicRoutes: RouteObject[] = [
       { path: 'terms', element: <TermsPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'maintenance', element: <MaintenancePage /> },
+      { path: 'invite/:token', element: <MagicLinkLandingPage /> },
       ...devRoutes,
     ],
   },

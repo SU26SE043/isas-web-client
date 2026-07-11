@@ -14,6 +14,9 @@ import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage
 import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
 import { LeaderboardPage } from '@/features/practice/pages/LeaderboardPage';
 import { AchievementsPage } from '@/features/practice/pages/AchievementsPage';
+import { CampaignBrowsePage } from '@/features/campaigns/pages/CampaignBrowsePage';
+import { CampaignDetailPage } from '@/features/campaigns/pages/CampaignDetailPage';
+import { CampaignEnrollmentPage } from '@/features/campaigns/pages/CampaignEnrollmentPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
 import { ProfileViewPage } from '@/features/profile/pages/ProfileViewPage';
 import { ProfileCompletePage } from '@/features/profile/pages/ProfileCompletePage';
@@ -50,6 +53,9 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'cv/analysis', element: <CVAnalysisPage /> },
           { path: 'cv/analysis/report', element: <CVResultPage /> },
           { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
+          { path: 'campaigns', element: <CampaignBrowsePage /> },
+          { path: 'campaigns/:id', element: <CampaignDetailPage /> },
+          { path: 'campaigns/:id/enroll', element: <CampaignEnrollmentPage /> },
           { path: 'practice/history', element: <InterviewHistoryPage /> },
           { path: 'practice/history/compare', element: <CompareResultsPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },
