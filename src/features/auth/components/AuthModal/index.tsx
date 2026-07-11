@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
 
               <SignUpForm
                 isSignUp={isSignUp}
-                onRegisterSuccess={handleClose}
+                onRegisterSuccess={handleSignInClick}
                 reducedMotion={reducedMotion}
               />
             </motion.div>

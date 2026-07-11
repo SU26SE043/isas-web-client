@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
-import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { signUpFormVariants } from './authModal.animations';
 
@@ -14,7 +13,6 @@ interface SignUpFormProps {
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSuccess, reducedMotion }) => {
   const { t } = useLanguage();
-  const { fetchUser } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,13 +46,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ isSignUp, onRegisterSucc
         fullName: fullName.trim(),
         password,
       });
-      await fetchUser();
       setStatusMessage(t('auth.registerSuccess'));
       onRegisterSuccess();
     } catch (error) {
       const statusCode = getApiStatusCode(error);
-      // Handle email already in use (400 Conflict)
-      if (statusCode === 400) {
+      if (statusCode === 400 || statusCode === 409) {
         setStatusMessage(t('auth.emailAlreadyUsed'));
       } else {
         setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));

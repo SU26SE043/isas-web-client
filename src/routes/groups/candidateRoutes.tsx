@@ -14,6 +14,10 @@ import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage
 import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
 import { LeaderboardPage } from '@/features/practice/pages/LeaderboardPage';
 import { AchievementsPage } from '@/features/practice/pages/AchievementsPage';
+import { CreditsWalletPage } from '@/features/payment/pages/CreditsWalletPage';
+import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
+import { CheckoutPage } from '@/features/payment/pages/CheckoutPage';
+import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
 import { ProfileViewPage } from '@/features/profile/pages/ProfileViewPage';
 import { ProfileCompletePage } from '@/features/profile/pages/ProfileCompletePage';
@@ -60,9 +64,13 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'progress', element: <ProgressDashboardPage /> },
           { path: 'leaderboard', element: <LeaderboardPage /> },
           { path: 'achievements', element: <AchievementsPage /> },
+          { path: 'credits', element: <CreditsWalletPage /> },
+          { path: 'subscription', element: <SubscriptionPlansPage /> },
+          { path: 'payment', element: <CheckoutPage /> },
           { path: 'certificates/:id', element: <CertificateViewerPage /> },
         ],
       },
+      { path: '/payment/callback', element: <PaymentCallbackPage /> },
       { path: '/profile', element: <LegacyRedirect /> },
       { path: '/cv-analysis', element: <LegacyRedirect /> },
       { path: '/cv-analysis/result', element: <LegacyRedirect /> },

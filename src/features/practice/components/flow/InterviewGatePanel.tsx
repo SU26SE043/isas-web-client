@@ -40,6 +40,9 @@ export const InterviewGatePanel: React.FC<InterviewGatePanelProps> = ({
           <p className="mt-1 text-caption text-muted-foreground">
             {t('practice.flow.gate.creditsRemaining').replace('{count}', String(creditsRemaining))}
           </p>
+          <Link to="/candidate/credits" className="btn-primary mt-4 inline-flex">
+            {t('payment.wallet.buyCredits')}
+          </Link>
         </div>
       ) : null}
     </div>
