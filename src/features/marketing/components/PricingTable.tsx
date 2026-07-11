@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 interface PricingPlan {
   id: string;
@@ -48,6 +49,7 @@ const plans: PricingPlan[] = [
 
 export const PricingTable: React.FC = () => {
   const { t } = useLanguage();
+  const { openAuthModal } = useMarketingAuthModal();
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -86,9 +88,13 @@ export const PricingTable: React.FC = () => {
               {t('pricing.ctaContact')}
             </Link>
           ) : (
-            <Link to="/register" className={`w-full text-center ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
+            <button
+              type="button"
+              onClick={() => openAuthModal('signup')}
+              className={`w-full text-center ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}
+            >
               {t('pricing.cta')}
-            </Link>
+            </button>
           )}
         </article>
       ))}

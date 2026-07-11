@@ -36,7 +36,7 @@ export const homeTranslations: TranslationDictionary = {
     'employer.statInterviews': 'Lượt phỏng vấn/tháng',
     'employer.statAccuracy': 'Độ chính xác đánh giá',
     'employer.statSavings': 'Tiết kiệm chi phí',
-    'employer.badge': 'Enterprise',
+    'employer.badge': 'Doanh nghiệp',
     'employer.titleLine1': 'Chuẩn hóa quy trình',
     'employer.titleLine2': 'Tuyển dụng dựa trên dữ liệu',
     'employer.description': 'Giảm 50% thời gian sàng lọc ban đầu với bộ câu hỏi phỏng vấn tự động và báo cáo phân tích ứng viên chi tiết. PIpraint giúp bạn tìm thấy "mảnh ghép hoàn hảo" dựa trên dữ liệu, không phải cảm tính.',

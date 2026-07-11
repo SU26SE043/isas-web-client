@@ -17,8 +17,9 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 | --- | --- | --- |
 | Public marketing | SCR-AUT-001, home | Partial (`/`) |
 | Auth & profile | M01, SCR-AUT-* | Partial (modal auth, `/profile`) |
-| CV analysis | M03, SCR-CAN-021–022 | Partial (`/cv-analysis`) |
-| Practice interview | M05–M06, SCR-CAN-029–048 | In progress (`/practice`, history, result) |
+| CV analysis | M03, SCR-CAN-021–022 | Partial — wizard + report UI (`/candidate/cv/analysis`, `/candidate/cv/analysis/report`; mock) |
+| Candidate dashboard | M02, SCR-CAN-012 | Partial — completeness, heatmap, metrics (`/candidate/dashboard`; mock history) |
+| Practice interview | M05–M06, SCR-CAN-029–048 | In progress (`/practice`, `/candidate/practice/history`, result) |
 | Payment & credits | M08, SCR-CAN-026–028 | Not started |
 | Campaign (B2B) | M04, SCR-EMP-* | Not started |
 | Admin | M11, SCR-ADM-* | Not started |

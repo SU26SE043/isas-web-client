@@ -8,6 +8,7 @@ export type MockDataDomain =
   | 'auth'
   | 'practice'
   | 'cv-analysis'
+  | 'profile'
   | 'enterprise'
   | 'payment'
   | 'admin';

@@ -27,7 +27,7 @@ export const MarketingFooter: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link className="text-muted-foreground transition-colors hover:text-foreground" to="/cv-analysis">
+                <Link className="text-muted-foreground transition-colors hover:text-foreground" to="/candidate/cv/analysis">
                   {t('footer.cvAnalysis')}
                 </Link>
               </li>

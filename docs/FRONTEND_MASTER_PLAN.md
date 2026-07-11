@@ -396,7 +396,7 @@ flowchart TB
 | **Shared** | `ProfileSectionLayout`, CRUD list pattern |
 | **State** | React Query per entity; optimistic updates for profile edits |
 | **API** | Auth profile CRUD; CV upload presign + parse status poll; FR-004–006 |
-| **Routing** | `/candidate/dashboard`, `/candidate/profile`, `/candidate/profile/complete`, `/candidate/profile/{section}`, `/candidate/cv/upload`, `/candidate/cv/analysis` |
+| **Routing** | `/candidate/dashboard`, `/candidate/profile`, `/candidate/profile/complete`, `/candidate/profile/{section}`, `/candidate/cv/analysis`, `/candidate/cv/analysis/report` (`/candidate/cv/upload` → redirect) |
 | **Layout** | `CandidateDashboardLayout` (sidebar) |
 | **Validation** | VR-006–007 CV; BRL-018/046/067; profile 70% rule (BRL-032) |
 | **Error** | ERR-021–025 CV errors |
@@ -758,7 +758,7 @@ flowchart TB
 
 | Screen ID | Name | Feature | Module | Role | Route | Layout | Key Components | Business Rules | User Actions | API | Deps | Phase |
 |-----------|------|---------|--------|------|-------|--------|----------------|----------------|--------------|-----|------|-------|
-| SCR-CAN-012 | Bảng điều khiển | F-PROF-001 | M02 | Candidate | `/candidate/dashboard` | CDL | MetricCards, UpcomingList | — | View summary | dashboard API | P3 | P4 |
+| SCR-CAN-012 | Bảng điều khiển | F-PROF-001 | M02 | Candidate | `/candidate/dashboard` | CDL | ProfileCompletenessBar, InterviewActivityHeatmap, MetricCards | — | View summary, drill to history | dashboard API + history | P3 | P4 |
 | SCR-CAN-013 | Hồ sơ | F-PROF-002 | M02 | Candidate | `/candidate/profile` | CDL | ProfileHeader, SectionNav | BR-001 | View, Edit | profile GET | P3 | P4 |
 | SCR-CAN-014 | Hoàn thiện hồ sơ | F-PROF-003 | M02 | Candidate | `/candidate/profile/complete` | CDL | ProfileWizard | BRL-032 70% | Complete wizard | profile PATCH | P4 | P4 |
 | SCR-CAN-015 | Mục tiêu nghề nghiệp | F-PROF-004 | M02 | Candidate | `/candidate/profile/career-goal` | CDL | CareerGoalForm | — | CRUD | profile section | P4 | P4 |
@@ -767,8 +767,8 @@ flowchart TB
 | SCR-CAN-018 | Kỹ năng | F-PROF-006 | M02 | Candidate | `/candidate/profile/skills` | CDL | SkillsTagInput | FR-050–054 | CRUD | skills API | P4 | P4 |
 | SCR-CAN-019 | Chứng chỉ | F-PROF-005 | M02 | Candidate | `/candidate/profile/certificates` | CDL | CertificateList | FR-035–039 | CRUD | certs API | P4 | P4 |
 | SCR-CAN-020 | Hồ sơ năng lực | F-PROF-007 | M02 | Candidate | `/candidate/profile/portfolio` | CDL | PortfolioGallery | FR-040–044 | CRUD | projects API | P4 | P4 |
-| SCR-CAN-021 | Tải lên CV | F-CV-001 | M03 | Candidate | `/candidate/cv/upload` | CDL | CVUploader | BRL-018, VR-006–007 | Upload | presign + upload | P4 | P4 |
-| SCR-CAN-022 | Phân tích CV | F-CV-002 | M03 | Candidate | `/candidate/cv/analysis` | CDL | CVAnalysisPanel | BRL-051 45s | View, Map to profile | parse status | P4 | P4 |
+| SCR-CAN-021 | Tải lên CV | F-CV-001 | M03 | Candidate | `/candidate/cv/upload` | CDL | CvUploadLegacyRedirect | BRL-018 | Redirect to analysis | — | P4 | P4 |
+| SCR-CAN-022 | Phân tích CV | F-CV-002 | M03 | Candidate | `/candidate/cv/analysis`, `/candidate/cv/analysis/report` | CDL | CvAnalysisStepper, CvAnalysisFlowShell, CvMatchReportHeader | BRL-051 45s | Upload, JD, View report, Map to profile | parse status | P4 | P4 |
 | SCR-CAN-023 | Khám phá chiến dịch | F-CAMP-C-001 | M04 | Candidate | `/candidate/campaigns` | CDL | CampaignCard grid | — | Browse, Filter | campaigns list | P3 | P8 |
 | SCR-CAN-024 | Chi tiết chiến dịch | F-CAMP-C-002 | M04 | Candidate | `/candidate/campaigns/:id` | CDL | CampaignDetail | BRL-059 | View, Enroll CTA | campaign detail | P8 | P8 |
 | SCR-CAN-025 | Tham gia chiến dịch | F-CAMP-C-003 | M04 | Candidate | `/candidate/campaigns/:id/enroll` | CDL | EnrollmentForm | BRL-032, BRL-022 | Enroll | enroll POST | P8 | P8 |
@@ -1155,7 +1155,7 @@ flowchart TB
 
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
-| FS-050 | Candidate dashboard | P4 | M02 | F-PROF-001 | Candidate | CAN-012 | P0 | FS-042 | M | Overview widgets | Loads data |
+| FS-050 | Candidate dashboard | P4 | M02 | F-PROF-001 | Candidate | CAN-012 | P0 | FS-042 | M | Completeness bar, interview heatmap, credits/CV metrics | Loads data (mock ok) |
 | FS-051 | Profile view page | P4 | M02 | F-PROF-002 | Candidate | CAN-013 | P0 | FS-050 | M | UF-027 | Sections linked |
 | FS-052 | Profile completion wizard | P4 | M02 | F-PROF-003 | Candidate | CAN-014 | P0 | FS-051 | L | UF-005, BRL-032 | % shown |
 | FS-053 | Profile completeness bar | P4 | M02 | F-PROF-003 | Candidate | CAN-012–014 | P0 | FS-052 | S | 70% gate | — |
@@ -1166,10 +1166,10 @@ flowchart TB
 | FS-058 | Portfolio/projects CRUD | P4 | M02 | F-PROF-007 | Candidate | CAN-020 | P1 | FS-051 | M | FR-040–044 | — |
 | FS-059 | Skills tag input | P4 | M02 | F-PROF-006 | Candidate | CAN-018 | P0 | FS-051 | M | FR-050–054 | — |
 | FS-060 | Social links section | P4 | M02 | F-PROF-008 | Candidate | CAN-013 | P2 | FS-051 | S | FR-045–049 | — |
-| FS-061 | CV upload page | P4 | M03 | F-CV-001 | Candidate | CAN-021 | P0 | FS-016 | M | UF-006, FR-004 | Upload ok |
-| FS-062 | CV upload validation | P4 | M03 | F-CV-001 | Candidate | CAN-021 | P0 | FS-061 | S | ERR-021–022 | — |
-| FS-063 | CV analysis progress UI | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-061 | M | UF-007, BRL-051 | Poll status |
-| FS-064 | CV analysis results | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-063 | M | FR-005 | Parsed view |
+| FS-061 | CV upload (step 1 in wizard) | P4 | M03 | F-CV-001 | Candidate | CAN-021–022 | P0 | FS-016 | M | UF-006, FR-004 | Upload ok in wizard |
+| FS-062 | CV upload validation | P4 | M03 | F-CV-001 | Candidate | CAN-022 | P0 | FS-061 | S | ERR-021–022 | — |
+| FS-063 | CV analysis progress UI | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-061 | M | UF-007, BRL-051 | Wizard step 3 |
+| FS-064 | CV analysis results | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-063 | M | FR-005 | `/candidate/cv/analysis/report` |
 | FS-065 | CV-to-profile mapping | P4 | M03 | F-CV-003 | Candidate | CAN-022 | P0 | FS-064 | M | FR-006 | Accept mapping |
 | FS-066 | Candidate sidebar nav | P4 | M02 | F-PROF-001 | Candidate | — | P0 | FS-019 | M | All routes | Active state |
 

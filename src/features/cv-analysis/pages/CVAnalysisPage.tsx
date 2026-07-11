@@ -1,60 +1,51 @@
-import React, { useState } from 'react';
-import { CVUploadForm } from '../components/CVUploadForm';
-import { CVAnalysisSidebar } from '../components/CVAnalysisSidebar';
-import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
-import { useLanguage } from '../../../shared/languages';
+import React, { useMemo } from 'react';
+import { useLanguage } from '@/shared/languages';
+import { CvAnalysisFlowShell } from '../components/flow/CvAnalysisFlowShell';
+import { CvUploadStep } from '../components/flow/CvUploadStep';
+import { CvJobDescriptionStep } from '../components/flow/CvJobDescriptionStep';
+import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
+import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
+import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 
 export const CVAnalysisPage: React.FC = () => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [analysisLanguage, setAnalysisLanguage] = useState<'vi' | 'en'>('en');
-  const { result } = useCvAnalysisResult();
   const { t } = useLanguage();
+  const flow = useCvAnalysisFlow();
+
+  const currentStep = useMemo<CvAnalysisStep>(() => {
+    if (flow.step === 3) return 'analysis';
+    if (flow.step === 2) return 'job-description';
+    return 'upload';
+  }, [flow.step]);
 
   return (
-    <div className="bg-surface-base min-h-[calc(100vh-80px)] pb-24 pt-8">
-      <div className="page-container">
-        <div className="mb-10">
-          <h1 className="text-4xl heading-primary mb-3 tracking-tight">{t('cv.title')}</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">{t('cv.description')}</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="mb-6 bg-surface-raised rounded-xl p-4 lg:px-6 lg:py-5 border border-subtle shadow-sm flex items-center justify-between">
-              <div className="flex items-center space-x-3 text-foreground font-bold">
-                <span>{t('cv.analysisLanguage')}</span>
-              </div>
-              <div className="flex bg-surface-overlay p-1.5 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setAnalysisLanguage('vi')}
-                  className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'vi' ? 'bg-surface-elevated text-foreground shadow-md' : 'text-muted-foreground hover:text-muted-foreground'}`}
-                >
-                  {t('cv.vietnamese')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAnalysisLanguage('en')}
-                  className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${analysisLanguage === 'en' ? 'bg-surface-elevated text-foreground shadow-md' : 'text-muted-foreground hover:text-muted-foreground'}`}
-                >
-                  {t('cv.english')}
-                </button>
-              </div>
-            </div>
-            <CVUploadForm
-              onFileUpload={setUploadedFile}
-              analysisLanguage={analysisLanguage}
-            />
-          </div>
-
-          <div className="lg:col-span-1">
-            <CVAnalysisSidebar
-              uploadedFile={uploadedFile}
-              profileCompletionPercent={result?.profileCompletionPercent}
-            />
-          </div>
-        </div>
+    <div className="dashboard-content min-h-full pb-12">
+      <div className="mb-8 space-y-2">
+        <h1 className="heading-primary text-3xl tracking-tight">{t('cv.title')}</h1>
+        <p className="body-text max-w-2xl">{t('cv.description')}</p>
       </div>
+
+      <CvAnalysisFlowShell currentStep={currentStep}>
+        {flow.step === 1 ? (
+          <CvUploadStep
+            file={flow.file}
+            fileError={flow.fileError}
+            onFileSelect={flow.selectFile}
+            onNext={flow.goNext}
+          />
+        ) : null}
+
+        {flow.step === 2 ? (
+          <CvJobDescriptionStep
+            jobDescription={flow.jobDescription}
+            fileName={flow.file?.name}
+            onJobDescriptionChange={flow.setJobDescription}
+            onBack={flow.goBack}
+            onNext={() => void flow.runAnalysis()}
+          />
+        ) : null}
+
+        {flow.step === 3 ? <CvAnalysisProgressStep parseProgress={flow.parseProgress} /> : null}
+      </CvAnalysisFlowShell>
     </div>
   );
 };

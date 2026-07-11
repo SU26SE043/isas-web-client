@@ -10,6 +10,7 @@ The skill is project-scoped; do not use a global copy as the source of truth.
 - **UX/UI Expert Skill**: Bắt buộc tuân thủ các quy chuẩn thiết kế UI/UX chuyên sâu tại `.agents/skills/ux-ui-agent-skills/README.md`.
 - **Frontend Framework Rules**: Đọc kỹ quy tắc code React + Tailwind tại `.agents/skills/ux-ui-agent-skills/frameworks/react-tailwind.md`.
 - **Component Guidelines**: Khi tạo component mới, phải check luật Atomic Design tại `.agents/skills/ux-ui-agent-skills/components/`.
+- **E2E Auto-fix Loop**: Khi user yêu cầu fix E2E hoặc chạy auto-fix loop, đọc và tuân thủ `.agents/skills/e2e-autofix-loop/SKILL.md` (chỉ sửa application code, không sửa `e2e/specs/`, tối đa 5 vòng).
 <!-- 💡 GHI CHÚ CHO BẠN: SAU MỖI LẦN FIX HOẶC CÀI THÊM SKILL MỚI LIÊN QUAN ĐẾN PROJECT (VÍ DỤ NHƯ SKILL TEST, SKILL BACKEND), BẠN CỨ GẠCH ĐẦU DÒNG VÀ GHI TIẾP VÀO KHU VỰC NÀY NHA -->
 
 <!-- HARNESS:BEGIN -->

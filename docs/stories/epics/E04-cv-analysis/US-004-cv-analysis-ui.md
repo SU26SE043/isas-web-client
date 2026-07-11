@@ -2,7 +2,7 @@
 
 ## Status
 
-in_progress
+implemented
 
 ## Lane
 
@@ -10,7 +10,7 @@ normal
 
 ## Product Contract
 
-Authenticated candidate uploads CV (+ optional JD), views analysis result with skill panels and improvement suggestions.
+Authenticated candidate completes a **3-step CV analysis wizard** (upload → JD → progress), then views a **match report** with skills, experience, and improvement sections.
 
 ## Relevant Product Docs
 
@@ -23,17 +23,24 @@ Authenticated candidate uploads CV (+ optional JD), views analysis result with s
 
 ## Acceptance Criteria
 
-- `/cv-analysis` upload form with file validation UI.
-- `/cv-analysis/result` shows header, left/right panels, bottom improvements.
-- Loading and error states present.
-- Protected route requires auth.
+- [x] `/candidate/cv/analysis` — wizard with file validation on step 1.
+- [x] Step 2 — JD input before analysis.
+- [x] Step 3 — analysis progress UI.
+- [x] `/candidate/cv/analysis/report` — match report with header, insights, skills, experience, projects, education, feedback.
+- [x] Legacy routes redirect to canonical paths.
+- [x] `/candidate/cv/upload` redirects to analysis entry (no standalone upload nav).
+- [x] Loading and error states on async steps.
+- [x] Protected route requires auth.
+- [ ] API presign, parse poll, profile mapping (FR-006) — deferred to API integration.
 
 ## Validation
 
 | Layer | Expected proof |
 | --- | --- |
-| Platform | Manual: upload flow renders all panels |
+| Platform | `npm run dev` — wizard steps and report render; `npm run check:i18n` pass |
+| API | Pending backend contract |
 
 ## Evidence
 
 - `src/features/cv-analysis/**`
+- Commits: `fd25712`, `df97289` (`phase-4-candidate-profile-cv`)

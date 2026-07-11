@@ -63,7 +63,7 @@ export function RegisterPage() {
 
       await fetchUser();
       const currentUser = useAuthStore.getState().user;
-      navigate(currentUser ? getPostLoginPath(currentUser.role) : '/profile', { replace: true });
+      navigate(currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard', { replace: true });
     } catch (error) {
       const parsed = parseAuthError(error, t('auth.registerFailed'));
       if (parsed.kind === 'invalidCredentials' || parsed.message.toLowerCase().includes('email')) {

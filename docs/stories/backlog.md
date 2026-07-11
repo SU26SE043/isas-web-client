@@ -9,7 +9,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E01 | Harness foundation + BRD wiring | — | in_progress |
 | E02 | Marketing home & employer section | Public | partial |
 | E03 | Auth modal, session, profile | M01 | partial |
-| E04 | CV upload & analysis UI | M03 | partial |
+| E04 | CV analysis UI (wizard + report) | M03 | partial |
 | E05 | Practice interview, result, history | M05–M06 | in_progress |
 | E06 | Payment, credits, subscription (B2C) | M08 | not_started |
 | E07 | Campaign create, magic link (B2B) | M04 | not_started |
@@ -24,8 +24,9 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-001 | Harness + BRD foundation | E01 | tiny | in_progress | [US-001](./epics/E01-foundation/US-001-harness-brd-foundation.md) |
 | US-002 | Home landing page | E02 | normal | implemented | [US-002](./epics/E02-marketing/US-002-home-landing.md) |
 | US-003 | Auth modal + profile | E03 | high-risk | in_progress | [US-003](./epics/E03-auth/US-003-auth-profile.md) |
-| US-004 | CV analysis flow UI | E04 | normal | in_progress | [US-004](./epics/E04-cv-analysis/US-004-cv-analysis-ui.md) |
+| US-004 | CV analysis flow UI | E04 | normal | implemented | [US-004](./epics/E04-cv-analysis/US-004-cv-analysis-ui.md) |
 | US-005 | Practice interview B2C | E05 | normal | in_progress | [US-005](./epics/E05-practice/US-005-practice-interview.md) |
+| US-006 | Candidate dashboard heatmap | E03 | normal | implemented | [US-006](./epics/E03-auth/US-006-candidate-dashboard.md) |
 
 ## How to pick work
 
@@ -41,5 +42,6 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-003 | FR-001–003 | SCR-AUT-002–005, SCR-CAN-013 |
 | US-004 | FR-004–006 | SCR-CAN-021–022 |
 | US-005 | FR-009–017 | SCR-CAN-029–048 |
+| US-006 | F-PROF-001 | SCR-CAN-012 |
 
 Full FR list: `BRD/Functional_Requirements.md`.

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterviewHistory } from '../hooks/useInterviewHistory';
 import { InterviewHistoryEmptyState } from '../components/history/InterviewHistoryEmptyState';
 import { InterviewHistoryHeader } from '../components/history/InterviewHistoryHeader';
@@ -14,6 +14,8 @@ import {
 
 export const InterviewHistoryPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dateFilter = searchParams.get('date') ?? '';
   const { interviews, isLoading, refresh } = useInterviewHistory();
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
@@ -21,8 +23,13 @@ export const InterviewHistoryPage: React.FC = () => {
   const stats = useMemo(() => computeHistoryStats(interviews), [interviews]);
 
   const filteredInterviews = useMemo(
-    () => interviews.filter((interview) => !statusFilter || interview.status === statusFilter),
-    [interviews, statusFilter],
+    () =>
+      interviews.filter((interview) => {
+        const matchesStatus = !statusFilter || interview.status === statusFilter;
+        const matchesDate = !dateFilter || interview.date.startsWith(dateFilter);
+        return matchesStatus && matchesDate;
+      }),
+    [interviews, statusFilter, dateFilter],
   );
 
   const totalPages = Math.ceil(filteredInterviews.length / HISTORY_ITEMS_PER_PAGE);
@@ -39,6 +46,13 @@ export const InterviewHistoryPage: React.FC = () => {
   const handleRefresh = () => {
     setCurrentPage(1);
     refresh();
+  };
+
+  const handleClearDateFilter = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('date');
+    setSearchParams(nextParams);
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -58,6 +72,8 @@ export const InterviewHistoryPage: React.FC = () => {
           statusFilter={statusFilter}
           onStatusFilterChange={handleStatusFilterChange}
           onRefresh={handleRefresh}
+          dateFilter={dateFilter}
+          onClearDateFilter={dateFilter ? handleClearDateFilter : undefined}
         />
 
         <InterviewHistoryStats
@@ -74,7 +90,7 @@ export const InterviewHistoryPage: React.FC = () => {
                 key={interview.id}
                 interview={interview}
                 index={index}
-                onSelect={(id) => navigate(`/practice/history/${id}`)}
+                onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
               />
             ))
           ) : (

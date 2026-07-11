@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../../../shared/api';
+import { forgotPasswordFormVariants } from './authModal.animations';
 
 interface ForgotPasswordFormProps {
   isSignUp: boolean;
   isForgotPassword: boolean;
   onBackToSignInClick: () => void;
+  reducedMotion: boolean | null;
 }
 
 type ForgotPasswordStep = 'email' | 'otp' | 'reset';
 
-export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ isSignUp, isForgotPassword, onBackToSignInClick }) => {
+export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
+  isSignUp,
+  isForgotPassword,
+  onBackToSignInClick,
+  reducedMotion,
+}) => {
   const { t } = useLanguage();
   const [step, setStep] = useState<ForgotPasswordStep>('email');
   const [email, setEmail] = useState('');
@@ -92,8 +100,15 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ isSignUp
     onBackToSignInClick();
   };
 
+  const isActive = !isSignUp && isForgotPassword;
+
   return (
-    <div className={`absolute inset-0 flex flex-col items-center justify-center px-12 transition-all duration-700 delay-100 ${(!isSignUp && isForgotPassword) ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[10%]'}`}>
+    <motion.div
+      className="absolute inset-0 flex flex-col items-center justify-center px-12"
+      variants={forgotPasswordFormVariants(reducedMotion)}
+      initial={false}
+      animate={isActive ? 'active' : 'hiddenRight'}
+    >
       
       {step === 'email' && (
         <>
@@ -199,6 +214,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ isSignUp
         </svg>
         <span>{t('auth.backToSignIn')}</span>
       </button>
-    </div>
+    </motion.div>
   );
 };

@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
               <Link className="nav-link focus-ring rounded-md" to="/">
                 {t('nav.home')}
               </Link>
-              <Link className="nav-link focus-ring rounded-md" to="/profile">
+              <Link className="nav-link focus-ring rounded-md" to="/candidate/profile">
                 {t('nav.profile')}
               </Link>
             </nav>

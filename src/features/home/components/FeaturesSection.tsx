@@ -117,7 +117,7 @@ export const FeaturesSection: React.FC = () => {
                 {t('features.cvDescription')}
               </p>
               <button
-                onClick={() => navigate('/cv-analysis')}
+                onClick={() => navigate('/candidate/cv/analysis')}
                 className="btn-slice mt-auto px-8 py-4 text-lg"
               >
                 <span className="text">{t('hero.tryNow')} <span className="ml-2">→</span></span>
