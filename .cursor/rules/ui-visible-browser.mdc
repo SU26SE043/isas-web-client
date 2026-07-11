@@ -1,0 +1,35 @@
+---
+description: Show all UI work on screen via Cursor Browser — navigate, interact, screenshot each step
+globs: src/**/*.tsx,src/**/*.css,e2e/**/*.ts
+alwaysApply: false
+---
+
+# Visible UI verification
+
+When generating or modifying UI, the user must **see** operations on screen — not only code diffs.
+
+## Agent workflow (required)
+
+1. **Start dev server** if not running: `npm run dev` (default `http://localhost:5173`).
+2. **Open Cursor Browser** in the Agents Window (docked panel — avoid detached window on Windows).
+3. **Navigate** to the route under work before editing when feasible; re-navigate after meaningful changes.
+4. **Interact visibly**: click buttons/links, fill forms, open modals/menus, scroll, toggle states.
+5. **Responsive check**: resize or verify at ~375px, ~768px, and desktop width.
+6. **Screenshot** after each milestone and attach in chat:
+   - initial page load
+   - after layout/styling change
+   - after primary user action (submit, navigate, toggle)
+   - error/empty/loading states when applicable
+7. **Narrate briefly** in chat what you are doing (e.g. "Opening /login", "Clicking Sign in").
+8. Do **not** claim UI is done without browser verification of the primary flow.
+
+## User setup (one-time)
+
+- `Ctrl+Shift+P` → **Open Agents Window** for UI tasks.
+- Pin the **Browser** panel on the right; keep it docked.
+- **Settings → Agents → Approvals & Execution**: allow browser tools to run without blocking every step (Auto-review or allowlist browser actions).
+- Optional: `Ctrl+Shift+D` for Design Mode when iterating visually.
+
+## Fallback
+
+If browser tools are unavailable, state that explicitly, run `npm run build` + relevant tests, and describe what could not be shown on screen.

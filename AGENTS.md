@@ -64,4 +64,16 @@ Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base`
 - **Max 250 lines per UI file** (`*.tsx` under `src/features/`, `src/layouts/`, `src/components/ui/`). Split into subcomponents when larger. Verify: `npm run check:ui-size`.
 - **Bilingual vi/en (bắt buộc)** — mọi text hiển thị cho user phải qua `useLanguage().t('key')`; mỗi key phải có cả `vi` và `en` trong `src/features/<feature>/languages/translations.ts` (hoặc `src/layouts/languages/translations.ts`). Verify: `npm run check:i18n`.
 
+### Visible UI verification (bắt buộc khi gen/sửa giao diện)
+
+Khi generate hoặc sửa UI, agent **phải** cho user thấy thao tác trên màn hình — không chỉ sửa code rồi báo xong.
+
+1. **Mở Cursor Browser** (pane docked trong Agents Window) trước khi verify; `npm run dev` nếu chưa chạy.
+2. **Navigate + tương tác trực tiếp** trên trang đang làm: click, scroll, điền form, đổi viewport (375 / 768 / desktop).
+3. **Screenshot sau mỗi milestone** (load trang, sau thay đổi layout, sau interaction chính) — đính kèm trong chat.
+4. **Mô tả ngắn** từng bước đang làm (vd: "đang mở /login", "đang click nút Submit").
+5. Không kết luận "UI xong" nếu chưa mở browser và verify flow chính.
+
+Chi tiết: `.cursor/rules/ui-visible-browser.mdc`
+
 <!-- 💡 GHI CHÚ CHO BẠN: SAU NÀY NẾU CHỐT THÊM ĐƯỢC RULE MỚI KHI FIX GIAO DIỆN (Ví dụ: "Không được xài thẻ <div> bọc ngoài cùng mà phải xài Fragment", hay "Luôn phải handle state loading cho nút button"), BẠN HÃY GẠCH ĐẦU DÒNG VÀ CẬP NHẬT TRỰC TIẾP VÀO KHU VỰC NÀY ĐỂ AI NÓ NHỚ LUẬT MỚI -->
