@@ -59,3 +59,8 @@ export interface InterviewResult {
   questionFeedback: QuestionFeedback[];
   certificateId?: string;
 }
+
+export interface CompareResultsResponse {
+  left: InterviewResult;
+  right: InterviewResult;
+}

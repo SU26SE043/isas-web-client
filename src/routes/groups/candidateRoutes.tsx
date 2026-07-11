@@ -8,7 +8,12 @@ import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistory
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
 import { LearningHubPage } from '@/features/practice/pages/LearningHubPage';
 import { LearningModulePage } from '@/features/practice/pages/LearningModulePage';
+import { LearningPracticePage } from '@/features/practice/pages/LearningPracticePage';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
+import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage';
+import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
+import { LeaderboardPage } from '@/features/practice/pages/LeaderboardPage';
+import { AchievementsPage } from '@/features/practice/pages/AchievementsPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
 import { ProfileViewPage } from '@/features/profile/pages/ProfileViewPage';
 import { ProfileCompletePage } from '@/features/profile/pages/ProfileCompletePage';
@@ -46,10 +51,15 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'cv/analysis/report', element: <CVResultPage /> },
           { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
           { path: 'practice/history', element: <InterviewHistoryPage /> },
+          { path: 'practice/history/compare', element: <CompareResultsPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },
           { path: 'roadmap', element: <RoadmapPage /> },
           { path: 'learning', element: <LearningHubPage /> },
+          { path: 'learning/:moduleId/practice', element: <LearningPracticePage /> },
           { path: 'learning/:moduleId', element: <LearningModulePage /> },
+          { path: 'progress', element: <ProgressDashboardPage /> },
+          { path: 'leaderboard', element: <LeaderboardPage /> },
+          { path: 'achievements', element: <AchievementsPage /> },
           { path: 'certificates/:id', element: <CertificateViewerPage /> },
         ],
       },

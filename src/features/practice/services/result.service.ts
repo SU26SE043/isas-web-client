@@ -1,6 +1,7 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import type {
   AssessmentStatusResponse,
+  CompareResultsResponse,
   InterviewResult,
 } from '../types/result.types';
 import { resolveMockResult } from '../mocks/result.fixtures';
@@ -51,5 +52,18 @@ export const resultService = {
 
     await mockDelay(600);
     return resolveMockResult(resultId);
+  },
+
+  async compareResults(leftId: string, rightId: string): Promise<CompareResultsResponse> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice result API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    const [left, right] = await Promise.all([
+      this.getInterviewResult(leftId),
+      this.getInterviewResult(rightId),
+    ]);
+
+    return { left, right };
   },
 };

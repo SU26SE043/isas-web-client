@@ -115,6 +115,9 @@ export const LearningModulePage: React.FC = () => {
               <button type="button" className="btn-primary" disabled={isSaving || completed} onClick={() => void handleMarkProgress()}>
                 {completed ? t('practice.learning.module.completed') : t('practice.learning.module.markProgress')}
               </button>
+              <Link to={`/candidate/learning/${moduleId}/practice`} className="btn-secondary">
+                {t('practice.learning.practice.start')}
+              </Link>
               <Link to="/candidate/roadmap" className="btn-secondary">
                 {t('practice.roadmap.title')}
               </Link>

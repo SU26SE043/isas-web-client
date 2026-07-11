@@ -12,7 +12,10 @@ BRD: FR-009–019, SCR-CAN-029–048, `BRD/User_Flows.md` (practice + results + 
 6. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
 7. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
 8. Certificates at `/candidate/certificates/:id`.
-9. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
+9. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
+10. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
+11. Guided learning practice at `/candidate/learning/:moduleId/practice`.
+12. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
 
 Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
@@ -28,6 +31,11 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 | `/candidate/roadmap` | `RoadmapPage` |
 | `/candidate/learning` | `LearningHubPage` |
 | `/candidate/learning/:moduleId` | `LearningModulePage` |
+| `/candidate/learning/:moduleId/practice` | `LearningPracticePage` |
+| `/candidate/progress` | `ProgressDashboardPage` |
+| `/candidate/leaderboard` | `LeaderboardPage` |
+| `/candidate/achievements` | `AchievementsPage` |
+| `/candidate/practice/history/compare` | `CompareResultsPage` |
 | `/candidate/certificates/:id` | `CertificateViewerPage` |
 
 ## UI contract
@@ -39,6 +47,8 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 - Learning module pass threshold: 80% (BRL-011).
 
 ## Engine reuse
+
+All FS-090 through FS-103 stories are implemented on mock services (P0–P3), including compare results, progress dashboard, guided practice session, leaderboard, and achievements.
 
 Interview room components must stay campaign-agnostic so B2B magic-link flow can reuse them later (BRD D1).
 

@@ -1,8 +1,12 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import type {
+  Achievement,
   CertificateRecord,
+  LeaderboardEntry,
   LearningModule,
   LearningModuleContent,
+  LearningPracticeSession,
+  ProgressDashboardData,
   RoadmapResponse,
 } from '../types/learning.types';
 import {
@@ -11,6 +15,12 @@ import {
   MOCK_MODULE_CONTENT,
   MOCK_ROADMAP,
 } from '../mocks/learning.fixtures';
+import {
+  MOCK_ACHIEVEMENTS,
+  MOCK_LEADERBOARD,
+  MOCK_PRACTICE_SESSIONS,
+  MOCK_PROGRESS_DASHBOARD,
+} from '../mocks/progress.fixtures';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 
@@ -108,5 +118,53 @@ export const learningService = {
       throw new Error('CERTIFICATE_NOT_FOUND');
     }
     return certificate;
+  },
+
+  async getProgressDashboard(): Promise<ProgressDashboardData> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(350);
+    return MOCK_PROGRESS_DASHBOARD;
+  },
+
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(300);
+    return MOCK_LEADERBOARD;
+  },
+
+  async getAchievements(): Promise<Achievement[]> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(300);
+    return MOCK_ACHIEVEMENTS;
+  },
+
+  async startPracticeSession(moduleId: string): Promise<LearningPracticeSession> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(400);
+    const session = MOCK_PRACTICE_SESSIONS[moduleId];
+    if (!session) {
+      throw new Error('PRACTICE_SESSION_NOT_FOUND');
+    }
+    return session;
+  },
+
+  async submitPracticeAnswer(
+    moduleId: string,
+    progressPercent: number,
+  ): Promise<LearningModule> {
+    const boosted = Math.min(progressPercent + 25, 100);
+    return this.completeModule(moduleId, boosted);
   },
 };

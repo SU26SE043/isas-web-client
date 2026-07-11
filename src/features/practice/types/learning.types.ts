@@ -55,3 +55,57 @@ export interface RoadmapResponse {
   regenerateCount: number;
   regenerateLimit: number;
 }
+
+export interface ProgressWeekPoint {
+  weekLabel: string;
+  weekLabelVi: string;
+  sessions: number;
+  averageScore: number;
+}
+
+export interface SkillTrendPoint {
+  skill: string;
+  skillVi: string;
+  current: number;
+  previous: number;
+}
+
+export interface ProgressDashboardData {
+  modulesCompleted: number;
+  totalModules: number;
+  averageScore: number;
+  practiceMinutes: number;
+  weeklyActivity: ProgressWeekPoint[];
+  skillTrends: SkillTrendPoint[];
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  candidateName: string;
+  score: number;
+  sessions: number;
+  isCurrentUser?: boolean;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  titleVi: string;
+  description: string;
+  descriptionVi: string;
+  earned: boolean;
+  earnedAt?: string;
+}
+
+export interface LearningPracticePrompt {
+  id: string;
+  prompt: string;
+  promptVi: string;
+  durationSeconds: number;
+}
+
+export interface LearningPracticeSession {
+  sessionId: string;
+  moduleId: string;
+  prompts: LearningPracticePrompt[];
+}
