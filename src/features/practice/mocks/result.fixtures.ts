@@ -1,10 +1,8 @@
 import type { InterviewResult } from '../types/result.types';
+import { MOCK_QUESTION_FEEDBACK } from './feedback.fixtures';
 
-export const MOCK_INTERVIEW_RESULT: InterviewResult = {
-  id: 'interview-result-001',
+const baseResult = {
   candidateId: 'candidate-123',
-  overallScore: 78,
-  completedAt: '2026-06-13T09:45:00.000Z',
   summary:
     'The candidate demonstrated solid React fundamentals, clear communication, and good cultural fit. There is room to improve system design depth and English fluency under pressure.',
   summaryVi:
@@ -85,4 +83,48 @@ export const MOCK_INTERVIEW_RESULT: InterviewResult = {
   strengthsVi: ['Nền tảng React', 'Giao tiếp rõ ràng', 'Nhận thức văn hóa tốt'],
   weaknesses: ['System design depth', 'English fluency under pressure'],
   weaknessesVi: ['Chiều sâu system design', 'Tiếng Anh khi chịu áp lực'],
+  questionFeedback: MOCK_QUESTION_FEEDBACK,
+} satisfies Omit<InterviewResult, 'id' | 'overallScore' | 'completedAt' | 'interviewId' | 'certificateId'>;
+
+export const MOCK_INTERVIEW_RESULT: InterviewResult = {
+  ...baseResult,
+  id: 'interview-result-001',
+  interviewId: 'interview-3',
+  overallScore: 78,
+  completedAt: '2026-06-13T09:45:00.000Z',
+  certificateId: 'cert-interview-3',
 };
+
+export const MOCK_RESULTS_BY_INTERVIEW_ID: Record<string, InterviewResult> = {
+  'interview-result-001': MOCK_INTERVIEW_RESULT,
+  'interview-1': {
+    ...baseResult,
+    id: 'result-interview-1',
+    interviewId: 'interview-1',
+    overallScore: 85,
+    completedAt: '2026-01-08T10:30:00.000Z',
+    certificateId: 'cert-interview-1',
+  },
+  'interview-2': {
+    ...baseResult,
+    id: 'result-interview-2',
+    interviewId: 'interview-2',
+    overallScore: 72,
+    completedAt: '2026-01-15T14:00:00.000Z',
+    certificateId: 'cert-interview-2',
+  },
+  'interview-3': MOCK_INTERVIEW_RESULT,
+};
+
+export function resolveMockResult(resultId: string): InterviewResult {
+  const direct = MOCK_RESULTS_BY_INTERVIEW_ID[resultId];
+  if (direct) return direct;
+
+  const normalized = resultId.replace(/^assessment-/, '');
+  const fromAssessment = MOCK_RESULTS_BY_INTERVIEW_ID[normalized];
+  if (fromAssessment) {
+    return { ...fromAssessment, id: resultId };
+  }
+
+  return { ...MOCK_INTERVIEW_RESULT, id: resultId };
+}

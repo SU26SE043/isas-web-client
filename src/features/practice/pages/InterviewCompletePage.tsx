@@ -60,7 +60,7 @@ export const InterviewCompletePage: React.FC = () => {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
-                to={`/practice/result?sessionId=${sessionId}`}
+                to={`/practice/result?assessmentId=${encodeURIComponent(assessmentId)}`}
                 className="btn-primary"
                 onClick={handleLeave}
               >
