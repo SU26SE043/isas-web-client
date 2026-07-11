@@ -14,7 +14,7 @@ export const getApiErrorMessage = (error: unknown, fallback = 'Request failed') 
     return 'Cannot reach the API server. Start Auth service (isas-server) and restart npm run dev.';
   }
 
-  const responseData = error.response?.data;
+  const responseData: unknown = error.response?.data;
   if (typeof responseData === 'string' && responseData.trim()) {
     return responseData;
   }
