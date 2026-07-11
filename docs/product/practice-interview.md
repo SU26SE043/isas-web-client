@@ -46,9 +46,11 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 - History toolbar: status filter + optional date filter chip with clear action.
 - Learning module pass threshold: 80% (BRL-011).
 
-## Engine reuse
+## Phase 6 coverage
 
-All FS-090 through FS-103 stories are implemented on mock services (P0–P3), including compare results, progress dashboard, guided practice session, leaderboard, and achievements.
+All FS-090 through FS-103 stories are implemented on mock services (P0-P3), including compare results, progress dashboard, guided practice session, leaderboard, and achievements.
+
+## Engine reuse
 
 Interview room components must stay campaign-agnostic so B2B magic-link flow can reuse them later (BRD D1).
 
