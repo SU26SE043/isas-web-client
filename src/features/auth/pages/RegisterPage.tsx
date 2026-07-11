@@ -9,7 +9,6 @@ import { useLanguage } from '@/shared/languages';
 import { AuthCard } from '../components/AuthCard';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { SocialLoginButton } from '../components/SocialLoginButton';
-import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
 import { parseAuthError } from '../utils/authErrors';
@@ -19,7 +18,6 @@ import { validatePassword } from '../utils/passwordPolicy';
 export function RegisterPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { fetchUser } = useAuth();
   const { isAuthenticated, user } = useAuthStore();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -50,20 +48,12 @@ export function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await authService.register({
+      await authService.register({
         email: email.trim(),
         fullName: fullName.trim(),
         password,
       });
-
-      if (result.emailVerificationRequired) {
-        navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
-        return;
-      }
-
-      await fetchUser();
-      const currentUser = useAuthStore.getState().user;
-      navigate(currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard', { replace: true });
+      navigate('/login', { replace: true, state: { registeredEmail: email.trim() } });
     } catch (error) {
       const parsed = parseAuthError(error, t('auth.registerFailed'));
       if (parsed.kind === 'invalidCredentials' || parsed.message.toLowerCase().includes('email')) {

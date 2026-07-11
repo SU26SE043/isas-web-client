@@ -64,7 +64,7 @@ export const createApiClient = () => {
               throw new Error('No refresh token available');
             }
 
-            const { data } = await client.post('/api/auth/refresh', { refreshToken });
+            const { data } = await client.post('/api/v1/auth/refresh', { refreshToken });
             authTokenStorage.setTokens(data.accessToken, data.refreshToken);
             isRefreshing = false;
             onRefreshed(data.accessToken);

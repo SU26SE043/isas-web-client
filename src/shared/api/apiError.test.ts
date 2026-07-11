@@ -41,6 +41,24 @@ describe('apiError', () => {
     expect(getApiErrorMessage(error)).toBe('Server unavailable');
   });
 
+  it('returns plain string response bodies from axios', () => {
+    const error = new axios.AxiosError(
+      'Request failed',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {} as never,
+        data: 'Email already exists',
+      }
+    );
+
+    expect(getApiErrorMessage(error)).toBe('Email already exists');
+  });
+
   it('returns fallback for non-axios errors', () => {
     expect(getApiErrorMessage(new Error('boom'), 'Fallback')).toBe('Fallback');
     expect(getApiStatusCode(new Error('boom'))).toBeUndefined();

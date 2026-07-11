@@ -5,12 +5,13 @@ import type {
   LoginRequest,
   MfaVerifyRequest,
   RegisterRequest,
+  RegisterResponse,
   ResendVerificationRequest,
   User,
   UpdateProfileRequest,
   VerifyEmailRequest,
 } from '../types/auth.types';
-import { parseUser } from '../types/auth.types';
+import { parseRegisterResponse, parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
 import { sessionManager } from '../utils/sessionManager';
 
@@ -22,10 +23,9 @@ function storeTokensIfPresent(data: AuthTokensResponse) {
 }
 
 export const authService = {
-  register: async (payload: RegisterRequest) => {
-    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.register, payload);
-    storeTokensIfPresent(data);
-    return data;
+  register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
+    const { data } = await apiClient.post(authEndpoints.register, payload);
+    return parseRegisterResponse(data, payload.email);
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.login, payload);
@@ -92,6 +92,6 @@ export const authService = {
     const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    window.location.href = `${normalizedBaseUrl}/api/auth/login-google?returnUrl=${returnUrl}`;
+    window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;
   },
 };
