@@ -21,7 +21,7 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 | Candidate dashboard | M02, SCR-CAN-012 | Partial — completeness, heatmap, metrics (`/candidate/dashboard`; mock history) |
 | Practice interview | M05–M06, SCR-CAN-029–048 | In progress (`/practice`, `/candidate/practice/history`, result) |
 | Payment & credits | M08, SCR-CAN-026–028 | Not started |
-| Campaign (B2B) | M04, SCR-EMP-* | Not started |
+| Campaign management (B2B) | M04, SCR-EMP-055-058 | Implemented - campaign list, wizard, detail, publish, invite (`/employer/campaigns*`; mock) |
 | Admin | M11, SCR-ADM-* | Not started |
 
 ## Key design decisions (from BRD)

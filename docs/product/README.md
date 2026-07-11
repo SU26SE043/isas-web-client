@@ -23,6 +23,7 @@ When BRD and product docs disagree, BRD wins for business intent; product docs w
 | [cv-analysis.md](./cv-analysis.md) | CV analysis wizard & match report |
 | [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
+| [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |
 
 ## UI
