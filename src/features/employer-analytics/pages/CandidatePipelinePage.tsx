@@ -1,0 +1,69 @@
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Download } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/patterns/EmptyState';
+import { useLanguage } from '@/shared/languages';
+import { PHASE11_CAMPAIGN_ID } from '../mocks/employerAnalytics.fixtures';
+import { employerAnalyticsService } from '../services/employerAnalytics.service';
+import { PipelineFilters } from '../components/PipelineFilters';
+import { PipelineTable } from '../components/PipelineTable';
+import { usePipelineCandidates } from '../hooks/useEmployerAnalytics';
+import type { PipelineFilters as PipelineFiltersValue } from '../types/employerAnalytics.types';
+
+export function CandidatePipelinePage() {
+  const { id } = useParams();
+  const { t } = useLanguage();
+  const [message, setMessage] = useState('');
+  const [filters, setFilters] = useState<PipelineFiltersValue>({
+    search: '',
+    stage: 'all',
+    scoreBand: 'all',
+    sortBy: 'rank',
+  });
+  const stableFilters = useMemo(() => filters, [filters]);
+  const { candidates, isLoading } = usePipelineCandidates(id ?? PHASE11_CAMPAIGN_ID, stableFilters);
+
+  const exportCsv = async () => {
+    const result = await employerAnalyticsService.exportAnalytics('csv', candidates.length);
+    setMessage(t(result.messageKey));
+  };
+
+  return (
+    <div className="h-full overflow-y-auto bg-surface-base">
+      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-label text-muted-foreground">{t('employerAnalytics.pipeline.eyebrow')}</p>
+            <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.pipeline.title')}</h1>
+            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employerAnalytics.pipeline.subtitle')}</p>
+          </div>
+          <Button onClick={exportCsv}>
+            <Download className="size-4" aria-hidden /> {t('employerAnalytics.pipeline.export')}
+          </Button>
+        </header>
+
+        <Alert variant="info"><AlertDescription>{t('employerAnalytics.pipeline.blindHint')}</AlertDescription></Alert>
+        {message ? <Alert variant="success"><AlertDescription>{message}</AlertDescription></Alert> : null}
+        <PipelineFilters value={filters} onChange={setFilters} />
+
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-80 w-full" />
+          </div>
+        ) : candidates.length > 0 ? (
+          <PipelineTable candidates={candidates} />
+        ) : (
+          <EmptyState
+            variant="no-results"
+            title={t('employerAnalytics.pipeline.emptyTitle')}
+            description={t('employerAnalytics.pipeline.emptyDescription')}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
