@@ -11,10 +11,13 @@ interface InterviewControlsProps {
   isPaused: boolean;
   micEnabled: boolean;
   cameraEnabled: boolean;
+  isRecording: boolean;
+  chunksUploaded: number;
   onSubmit: () => void;
   onTogglePause: () => void;
   onToggleMic: () => void;
   onToggleCamera: () => void;
+  onToggleRecording: () => void;
 }
 
 export const InterviewControls: React.FC<InterviewControlsProps> = ({
@@ -24,10 +27,13 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   isPaused,
   micEnabled,
   cameraEnabled,
+  isRecording,
+  chunksUploaded,
   onSubmit,
   onTogglePause,
   onToggleMic,
   onToggleCamera,
+  onToggleRecording,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -74,6 +80,17 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </button>
+          <button
+            type="button"
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-colors ${
+              isRecording ? 'bg-error/20 text-red-400' : 'bg-surface-overlay text-foreground hover:bg-surface-elevated'
+            }`}
+            aria-label={isRecording ? t('practice.stopRecording') : t('practice.startRecording')}
+            aria-pressed={isRecording}
+            onClick={onToggleRecording}
+          >
+            <span className={`h-3 w-3 rounded-full ${isRecording ? 'bg-red-500' : 'border-2 border-current'}`} />
+          </button>
           <button type="button" className="btn-secondary px-3 py-2 text-sm" onClick={onTogglePause}>
             {isPaused ? t('practice.room.resume') : t('practice.room.pause')}
           </button>
@@ -86,6 +103,9 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
             </span>
             <span className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-white/70">
               {t('practice.currentQuestionTime')}
+            </span>
+            <span className="mt-1 text-[10px] text-muted-foreground">
+              {t('practice.room.chunksUploaded').replace('{count}', String(chunksUploaded))}
             </span>
           </div>
 

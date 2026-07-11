@@ -17,12 +17,19 @@ export function useInterviewSession(sessionId: string) {
 
   const init = useCallback(async () => {
     setLoading();
+    try {
+      await practiceSessionService.startSession(sessionId);
+    } catch {
+      navigate(`/interview/${sessionId}/prepare`, { replace: true });
+      return;
+    }
+
     const session = await practiceSessionService.getSession(sessionId);
     const questions = session.questions.length
       ? session.questions
       : await practiceSessionService.pollQuestions(sessionId);
     initSession(session.title, questions);
-  }, [initSession, sessionId, setLoading]);
+  }, [initSession, navigate, sessionId, setLoading]);
 
   useEffect(() => {
     void init();
@@ -31,7 +38,7 @@ export function useInterviewSession(sessionId: string) {
 
   const isRoomActive = status !== 'loading' && status !== 'completed';
 
-  useProctoring(isRoomActive);
+  useProctoring(sessionId, isRoomActive);
   useNetworkStatus(isRoomActive);
 
   useEffect(() => {
@@ -94,6 +101,7 @@ export function useInterviewSession(sessionId: string) {
     toggleRecording,
     submitAnswer,
     isLoading: status === 'loading',
+    isRoomActive,
     currentQuestion: questions[currentIndex],
     totalQuestions: questions.length,
   };
