@@ -1,54 +1,129 @@
 import React from 'react';
-import { useLanguage } from '../../../shared/languages';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../../../shared/languages';
+import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
 
-export const InterviewControls: React.FC = () => {
+interface InterviewControlsProps {
+  sessionId: string;
+  remainingSeconds: number;
+  isSubmitting: boolean;
+  isPaused: boolean;
+  micEnabled: boolean;
+  cameraEnabled: boolean;
+  isRecording: boolean;
+  chunksUploaded: number;
+  onSubmit: () => void;
+  onTogglePause: () => void;
+  onToggleMic: () => void;
+  onToggleCamera: () => void;
+  onToggleRecording: () => void;
+}
+
+export const InterviewControls: React.FC<InterviewControlsProps> = ({
+  sessionId,
+  remainingSeconds,
+  isSubmitting,
+  isPaused,
+  micEnabled,
+  cameraEnabled,
+  isRecording,
+  chunksUploaded,
+  onSubmit,
+  onTogglePause,
+  onToggleMic,
+  onToggleCamera,
+  onToggleRecording,
+}) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const timerClass = getTimerColorClass(getTimerSeverity(remainingSeconds));
 
   return (
     <motion.div
       drag
       dragMomentum={false}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center"
-      style={{ touchAction: "none" }}
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center"
+      style={{ touchAction: 'none' }}
     >
-      <div className="bg-surface-raised rounded-lg shadow-sm border-6 border-default px-6 py-3 flex items-center gap-6 cursor-grab active:cursor-grabbing">
-
-        {/* Drag Handle */}
-        <div className="flex flex-col gap-1 pr-2 border-r border-default opacity-50 hover:opacity-100 transition-opacity">
-          <div className="w-1 h-1 rounded-full bg-white"></div>
-          <div className="w-1 h-1 rounded-full bg-white"></div>
-          <div className="w-1 h-1 rounded-full bg-white"></div>
+      <div className="flex cursor-grab items-center gap-6 rounded-lg border-6 border-default bg-surface-raised px-6 py-3 shadow-sm active:cursor-grabbing">
+        <div className="flex flex-col gap-1 border-r border-default pr-2 opacity-50 transition-opacity hover:opacity-100">
+          <div className="h-1 w-1 rounded-full bg-white" />
+          <div className="h-1 w-1 rounded-full bg-white" />
+          <div className="h-1 w-1 rounded-full bg-white" />
         </div>
 
-        {/* Media Controls */}
         <div className="flex items-center gap-3">
-          <button className="w-10 h-10 rounded-full bg-surface-overlay flex items-center justify-center text-foreground hover:bg-surface-elevated transition-colors cursor-pointer shadow-sm">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <button
+            type="button"
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-colors ${
+              micEnabled ? 'bg-surface-overlay text-foreground hover:bg-surface-elevated' : 'bg-red-500/20 text-red-400'
+            }`}
+            aria-label={t('practice.flow.controls.mic')}
+            aria-pressed={!micEnabled}
+            onClick={onToggleMic}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </button>
-          <button className="w-10 h-10 rounded-full bg-surface-overlay flex items-center justify-center text-foreground hover:bg-surface-elevated transition-colors cursor-pointer shadow-sm">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <button
+            type="button"
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-colors ${
+              cameraEnabled ? 'bg-surface-overlay text-foreground hover:bg-surface-elevated' : 'bg-red-500/20 text-red-400'
+            }`}
+            aria-label={t('practice.flow.controls.camera')}
+            aria-pressed={!cameraEnabled}
+            onClick={onToggleCamera}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </button>
+          <button
+            type="button"
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-colors ${
+              isRecording ? 'bg-error/20 text-red-400' : 'bg-surface-overlay text-foreground hover:bg-surface-elevated'
+            }`}
+            aria-label={isRecording ? t('practice.stopRecording') : t('practice.startRecording')}
+            aria-pressed={isRecording}
+            onClick={onToggleRecording}
+          >
+            <span className={`h-3 w-3 rounded-full ${isRecording ? 'bg-red-500' : 'border-2 border-current'}`} />
+          </button>
+          <button type="button" className="btn-secondary px-3 py-2 text-sm" onClick={onTogglePause}>
+            {isPaused ? t('practice.room.resume') : t('practice.room.pause')}
+          </button>
         </div>
 
-
-
-        {/* Timer & Settings */}
-        <div className="flex items-center gap-6 border-l border-default pl-6">
+        <div className="flex items-center gap-4 border-l border-default pl-6">
           <div className="flex flex-col items-center">
-            <span className="text-2xl font-black text-foreground tabular-nums tracking-wider leading-none ">01:23</span>
-            <span className="text-[10px] text-white/70 font-medium mt-1.5 uppercase tracking-wider">{t('practice.currentQuestionTime')}</span>
+            <span className={`text-2xl font-black tabular-nums leading-none tracking-wider ${timerClass}`}>
+              {formatTimerSeconds(remainingSeconds)}
+            </span>
+            <span className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-white/70">
+              {t('practice.currentQuestionTime')}
+            </span>
+            <span className="mt-1 text-[10px] text-muted-foreground">
+              {t('practice.room.chunksUploaded').replace('{count}', String(chunksUploaded))}
+            </span>
           </div>
 
-          <button className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-foreground transition-colors cursor-pointer">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          <button
+            type="button"
+            className="btn-primary px-4 py-2 text-sm"
+            disabled={isSubmitting || isPaused}
+            onClick={onSubmit}
+          >
+            {isSubmitting ? t('practice.room.submitting') : t('practice.room.submitAnswer')}
+          </button>
+
+          <button
+            type="button"
+            className="btn-ghost px-3 py-2 text-sm"
+            onClick={() => navigate(`/interview/${sessionId}/complete`)}
+          >
+            {t('practice.flow.controls.finish')}
           </button>
         </div>
       </div>

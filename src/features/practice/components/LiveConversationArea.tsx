@@ -1,41 +1,65 @@
 import React from 'react';
-import { useLanguage } from '../../../shared/languages';
+import { useLanguage } from '@/shared/languages';
+import type { ConversationMessage } from '../types/interviewSession.types';
 
-export const LiveConversationArea: React.FC = () => {
+interface LiveConversationAreaProps {
+  messages: ConversationMessage[];
+  isGenerating?: boolean;
+}
+
+export const LiveConversationArea: React.FC<LiveConversationAreaProps> = ({
+  messages,
+  isGenerating = false,
+}) => {
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col gap-4 relative bg-surface-raised p-6">
-      <div className="flex items-center justify-end mb-2">
-        <span className="text-xs bg-surface-overlay/30 text-white px-2 py-1 rounded-md">{t('practice.autoScroll')}</span>
+    <div className="relative flex flex-col gap-4 bg-surface-raised p-6">
+      <div className="mb-2 flex items-center justify-end">
+        <span className="rounded-md bg-surface-overlay/30 px-2 py-1 text-xs text-white">
+          {t('practice.autoScroll')}
+        </span>
       </div>
-      
-      {/* Messages */}
-      <div className="flex flex-col gap-4 overflow-y-auto pr-2 max-h-[160px] custom-scrollbar custom-scrollbar-light">
-        {/* AI Message */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-surface-overlay flex items-center justify-center flex-shrink-0 text-foreground text-xs font-bold shadow-sm">
-              AI
-            </div>
-            <div className="bg-surface-raised text-foreground px-4 py-2.5 rounded-xl rounded-tl-sm text-sm max-w-[80%] font-medium shadow-sm">
-              {t('practice.aiSampleMsg')}
-            </div>
-          </div>
-          <span className="text-[10px] text-white/60 ml-11">{t('practice.aiName')} • 10:02 AM</span>
-        </div>
 
-        {/* User Message */}
-        <div className="flex flex-col gap-1 items-end">
-          <div className="flex items-start gap-3 flex-row-reverse">
-            <div className="w-8 h-8 rounded-full bg-surface-overlay flex items-center justify-center flex-shrink-0 text-foreground text-xs font-bold shadow-sm">
-              {t('practice.you')}
+      <div className="custom-scrollbar custom-scrollbar-light flex max-h-[160px] flex-col gap-4 overflow-y-auto pr-2">
+        {messages.map((message) => {
+          const isAi = message.role === 'ai';
+          const content =
+            message.role === 'user' && message.content === '__recorded__'
+              ? t('practice.room.answerRecorded')
+              : message.content;
+
+          return (
+            <div
+              key={message.id}
+              className={`flex flex-col gap-1 ${isAi ? '' : 'items-end'}`}
+            >
+              <div className={`flex items-start gap-3 ${isAi ? '' : 'flex-row-reverse'}`}>
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-surface-overlay text-xs font-bold text-foreground shadow-sm">
+                  {isAi ? 'AI' : t('practice.you')}
+                </div>
+                <div
+                  className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm font-medium text-foreground shadow-sm ${
+                    isAi
+                      ? 'rounded-tl-sm bg-surface-raised'
+                      : 'rounded-tr-sm bg-surface-overlay'
+                  }`}
+                >
+                  {content}
+                </div>
+              </div>
+              {isAi ? (
+                <span className="ml-11 text-[10px] text-white/60">
+                  {t('practice.aiName')} • {message.timestamp}
+                </span>
+              ) : null}
             </div>
-            <div className="bg-surface-raised text-foreground px-4 py-2.5 rounded-xl rounded-tr-sm text-sm max-w-[80%] font-medium shadow-sm">
-              {t('practice.userSampleMsg')}
-            </div>
-          </div>
-        </div>
+          );
+        })}
+
+        {isGenerating ? (
+          <p className="text-sm text-muted-foreground">{t('practice.room.generatingQuestion')}</p>
+        ) : null}
       </div>
     </div>
   );

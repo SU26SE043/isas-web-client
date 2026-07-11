@@ -66,6 +66,12 @@ export const CandidateDashboardPage: React.FC = () => {
           hint={t('profile.dashboard.creditsHint')}
         />
         <MetricCard
+          label={t('profile.dashboard.practice')}
+          value={t('profile.dashboard.practiceAction')}
+          hint={t('profile.dashboard.practiceHint')}
+          to="/practice"
+        />
+        <MetricCard
           label={t('profile.dashboard.cvStatus')}
           value={summary?.hasCv ? t('profile.dashboard.cvUploaded') : t('profile.dashboard.cvMissing')}
           hint={t('profile.dashboard.cvHint')}

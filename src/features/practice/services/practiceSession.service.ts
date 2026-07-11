@@ -1,4 +1,5 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
+import { profileService } from '@/features/profile/services/profile.service';
 import {
   DEFAULT_PRACTICE_SESSION,
   MOCK_ASYNC_QUESTIONS,
@@ -6,8 +7,17 @@ import {
   type PracticeQuestion,
   type PracticeSession,
 } from '../mocks/session.fixtures';
+import type {
+  ChunkUploadResult,
+  ProctoringEventPayload,
+  SessionCompleteResult,
+  SessionStartResult,
+} from '../types/practiceSession.api.types';
 
 let asyncQuestionPollCount = 0;
+const startedSessions = new Set<string>();
+const chunkCounts = new Map<string, number>();
+const proctoringCounts = new Map<string, number>();
 
 export const practiceSessionService = {
   async getSession(sessionId: string): Promise<PracticeSession> {
@@ -17,6 +27,23 @@ export const practiceSessionService = {
 
     await mockDelay(1000);
     return MOCK_PRACTICE_SESSIONS[sessionId] ?? { ...DEFAULT_PRACTICE_SESSION, sessionId };
+  },
+
+  async startSession(sessionId: string): Promise<SessionStartResult> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    const creditsRemaining = await profileService.reservePracticeCredit(sessionId);
+    startedSessions.add(sessionId);
+    chunkCounts.set(sessionId, 0);
+    proctoringCounts.set(sessionId, 0);
+
+    return {
+      sessionId,
+      creditsRemaining,
+      startedAt: new Date().toISOString(),
+    };
   },
 
   async pollQuestions(sessionId: string): Promise<PracticeQuestion[]> {
@@ -38,6 +65,50 @@ export const practiceSessionService = {
 
     asyncQuestionPollCount = 0;
     return MOCK_ASYNC_QUESTIONS;
+  },
+
+  async uploadRecordingChunk(sessionId: string, chunkIndex: number, blob: Blob): Promise<ChunkUploadResult> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(300);
+    chunkCounts.set(sessionId, Math.max(chunkCounts.get(sessionId) ?? 0, chunkIndex + 1));
+    void blob;
+
+    return {
+      chunkIndex,
+      receivedAt: new Date().toISOString(),
+    };
+  },
+
+  async reportProctoringEvent(sessionId: string, event: ProctoringEventPayload): Promise<void> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(100);
+    proctoringCounts.set(sessionId, (proctoringCounts.get(sessionId) ?? 0) + 1);
+    void event;
+  },
+
+  getUploadedChunkCount(sessionId: string): number {
+    return chunkCounts.get(sessionId) ?? 0;
+  },
+
+  async completeSession(sessionId: string): Promise<SessionCompleteResult> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(1200);
+    startedSessions.delete(sessionId);
+
+    return {
+      sessionId,
+      assessmentId: `assessment-${sessionId}`,
+      uploadComplete: (chunkCounts.get(sessionId) ?? 0) > 0,
+    };
   },
 };
 
