@@ -43,6 +43,13 @@ On Windows: `.\scripts\bin\harness-cli.exe`
 
 ## Current state
 
-- BRD decomposed into product contracts and 5 active stories (US-001–005).
-- App code exists for home, auth, CV analysis, practice interview (partial).
+- BRD decomposed into product contracts and **6 active stories** (US-001–006).
+- Shipped UI (mock/partial API): home, auth, **CV analysis wizard + report**, **candidate dashboard heatmap**, practice interview + history.
 - E2E and full build pass not yet claimed — see story validation sections.
+
+## Recent doc sync (2026-07-11)
+
+- `docs/product/cv-analysis.md` — 3-step wizard, `/candidate/cv/analysis/report`
+- `docs/product/dashboard.md` — interview activity heatmap (new)
+- `docs/product/practice-interview.md` — canonical `/candidate/practice/history` routes
+- Stories: US-004, US-006 → `implemented`; US-005 heatmap link documented

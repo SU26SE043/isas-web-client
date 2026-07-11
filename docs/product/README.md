@@ -20,7 +20,8 @@ When BRD and product docs disagree, BRD wins for business intent; product docs w
 | [overview.md](./overview.md) | Product scope, modules, personas |
 | [frontend-stack.md](./frontend-stack.md) | React/Vite conventions |
 | [auth-profile.md](./auth-profile.md) | Auth, roles, profile |
-| [cv-analysis.md](./cv-analysis.md) | CV upload & analysis |
+| [cv-analysis.md](./cv-analysis.md) | CV analysis wizard & match report |
+| [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |
 

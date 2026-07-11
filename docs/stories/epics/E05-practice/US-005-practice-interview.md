@@ -10,11 +10,12 @@ normal
 
 ## Product Contract
 
-Candidate runs AI practice interview at `/practice`, views scored result, browses history at `/practice/history`.
+Candidate runs AI practice interview at `/practice`, views scored result, browses history at `/candidate/practice/history` (with optional `?date=` filter from dashboard heatmap).
 
 ## Relevant Product Docs
 
 - `docs/product/practice-interview.md`
+- `docs/product/dashboard.md`
 
 ## BRD References
 
@@ -25,7 +26,8 @@ Candidate runs AI practice interview at `/practice`, views scored result, browse
 
 - `/practice` interview room with AI panel, camera, controls.
 - Result page: radar chart, gap analysis, error/loading states.
-- History list and detail routes work.
+- `/candidate/practice/history` list and `/candidate/practice/history/:id` detail.
+- History toolbar supports date filter chip when `?date=` is present.
 - Role guard: Candidate + Admin only.
 
 ## Validation
@@ -37,3 +39,4 @@ Candidate runs AI practice interview at `/practice`, views scored result, browse
 ## Evidence
 
 - `src/features/practice/**`
+- Heatmap → history link: commit `286363d`
