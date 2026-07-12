@@ -32,7 +32,7 @@ export function InvoiceTable({ invoices, generatingId, onGenerate }: InvoiceTabl
           <tr>
             <th className="px-4 py-3">{t('employerBilling.invoices.number')}</th>
             <th className="px-4 py-3">{t('employerBilling.invoices.date')}</th>
-            <th className="px-4 py-3">{t('employerBilling.invoices.credits')}</th>
+            <th className="px-4 py-3">{t('employerBilling.invoices.tokenUsage')}</th>
             <th className="px-4 py-3">{t('employerBilling.invoices.amount')}</th>
             <th className="px-4 py-3">{t('employerBilling.invoices.status')}</th>
             <th className="px-4 py-3 text-right">{t('employerBilling.invoices.actions')}</th>
@@ -43,7 +43,7 @@ export function InvoiceTable({ invoices, generatingId, onGenerate }: InvoiceTabl
             <tr key={invoice.id} className="border-b border-subtle last:border-b-0">
               <td className="px-4 py-3 font-medium text-foreground">{invoice.number}</td>
               <td className="px-4 py-3 text-muted-foreground">{formatDate(invoice.issuedAt)}</td>
-              <td className="px-4 py-3 text-foreground">{invoice.credits}</td>
+              <td className="px-4 py-3 text-foreground">{invoice.tokenUsage}</td>
               <td className="px-4 py-3 text-foreground">{formatCurrency(invoice.amount)}</td>
               <td className="px-4 py-3"><InvoiceStatusBadge status={invoice.status} /></td>
               <td className="px-4 py-3 text-right">
@@ -68,7 +68,7 @@ export function InvoiceTable({ invoices, generatingId, onGenerate }: InvoiceTabl
               <InvoiceStatusBadge status={invoice.status} />
             </div>
             <p className="text-sm text-muted-foreground">
-              {t('employerBilling.invoices.credits')}: <span className="text-foreground">{invoice.credits}</span>
+              {t('employerBilling.invoices.tokenUsage')}: <span className="text-foreground">{invoice.tokenUsage}</span>
             </p>
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold text-foreground">{formatCurrency(invoice.amount)}</p>

@@ -37,6 +37,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-011 | Token billing UX (B2C reserve/settle, B2B usage) | E06 | normal | not_started | *packet TBD* - `payment.md`, FS-115-116, FS-160-163 |
 | US-012 | Deprecate public campaign discovery routes | E08 | tiny | not_started | *packet TBD* - FS-123, `module-scope.md` section 5 |
 | US-013 | Shared engagement | E10 | normal | implemented | [US-013](./epics/E10-shared-engagement/US-013-shared-engagement.md) |
+| US-014 | B2B E2E full journey | E08 | normal | implemented | [US-014](./epics/E15-polish/US-014-b2b-e2e-full-journey.md) |
 
 ## How to pick work
 
@@ -59,5 +60,6 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-009 | FR-195-224 | SCR-EMP-059-062 |
 | US-010 | FR-255-289 | SCR-ADM-069-088 |
 | US-013 | FR-225-254 | SCR-CAN-047-051, SCR-EMP-066-068, SCR-SHR-095 |
+| US-014 | FR-095-194 | SCR-CAN-025b-034, SCR-EMP-064-065 |
 
 Full FR list: `BRD/Functional_Requirements.md`.
