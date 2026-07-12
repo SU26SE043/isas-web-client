@@ -38,7 +38,7 @@ function createInvoice(plan: SubscriptionPlan, cycle: BillingCycle): EmployerInv
     number: `ISAS-B2B-${new Date().getFullYear()}-${String(invoices.length + 10).padStart(3, '0')}`,
     issuedAt: new Date().toISOString(),
     amount,
-    credits: plan.campaignCredits,
+    tokenUsage: plan.campaignCredits,
     status: 'paid',
     pdfReady: true,
   };
