@@ -5,8 +5,11 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Building2,
+  CreditCard,
   LayoutDashboard,
   LogOut,
+  ReceiptText,
+  ScrollText,
   Users,
 } from 'lucide-react';
 
@@ -76,6 +79,21 @@ export const EmployerDashboardLayout: React.FC = () => {
         to: '/employer/analytics',
         label: t('employer.nav.analytics'),
         icon: <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/subscription',
+        label: t('employer.nav.subscription'),
+        icon: <CreditCard className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/billing',
+        label: t('employer.nav.billing'),
+        icon: <ReceiptText className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/invoices',
+        label: t('employer.nav.invoices'),
+        icon: <ScrollText className="h-4 w-4 shrink-0" aria-hidden />,
       },
     ],
     [t],
@@ -165,7 +183,7 @@ export const EmployerDashboardLayout: React.FC = () => {
 
           <div className="space-y-3 border-t border-subtle p-3">
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
-              <LanguageToggle compact={isCollapsed} />
+              <LanguageToggle compact />
             </div>
 
             <button
