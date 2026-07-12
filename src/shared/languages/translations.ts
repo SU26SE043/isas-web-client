@@ -7,6 +7,8 @@ import { marketingTranslations } from '../../features/marketing/languages/transl
 import { layoutTranslations } from '../../layouts/languages/translations';
 import { practiceTranslations } from '../../features/practice/languages/translations';
 import { paymentTranslations } from '../../features/payment/languages/translations';
+import { employerTranslations } from '../../features/employer/languages/translations';
+import { employerAnalyticsTranslations } from '../../features/employer-analytics/languages/translations';
 import { designSystemTranslations } from './designSystemTranslations';
 import { mergeTranslations } from './mergeTranslations';
 
@@ -20,5 +22,7 @@ export const translations = mergeTranslations(
   campaignsTranslations,
   practiceTranslations,
   paymentTranslations,
+  employerTranslations,
+  employerAnalyticsTranslations,
   designSystemTranslations,
 );
