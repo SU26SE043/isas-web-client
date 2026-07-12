@@ -22,11 +22,17 @@
 
 ### Candidate side (after click)
 
-1. Candidate opens `/invite/:token`.
-2. Validate invite token.
-3. Branch:
-   - **Account exists (Candidate)** → **Sign in** → interview preparation → interview room.
-   - **No account** → **Register** (Candidate only) → interview preparation → interview room.
+See full flow: [`campaign-assessment.md`](./campaign-assessment.md).
+
+1. Candidate opens `/invite/:token` → **validate magic link**.
+2. **Sign in** or **register** (Candidate only).
+3. **Campaign information** → **instructions**.
+4. **Device check** (camera, microphone, internet).
+5. **Accept terms & privacy**.
+6. **Identity verification** — baseline face photo.
+7. **Interview room** — camera on; sequential questions; proctoring (face interval, tab/focus).
+8. **Violation pause** → warning → **Continue** or **auto-submit** at max violations.
+9. **AI evaluation** → assessment complete.
 
 One email = one role — invite to an HR/Organize/Admin email is rejected at entry time on the employer UI.
 
@@ -49,7 +55,7 @@ Do **not** extend these screens. New B2B candidate work should go through `/invi
 ## Open items
 
 - Profile completeness gate (70%) on magic-link path — confirm in a future story (`employer-analytics.md` / dashboard BRD refs).
-- Whether Candidate sees campaign in their B2C UI before completing interview — **Chưa được đặc tả trong tài liệu.**
+- Campaign assessment (B2B proctoring): [`campaign-assessment.md`](./campaign-assessment.md)
 
 ---
 
@@ -58,4 +64,5 @@ Do **not** extend these screens. New B2B candidate work should go through `/invi
 - B2B employer campaign lifecycle: [`campaign-management.md`](./campaign-management.md)
 - Product scope: [`product-scope.md`](./product-scope.md) §4.5–4.7
 - Pipeline statuses: [`employer-analytics.md`](./employer-analytics.md)
+- Assessment flow: [`campaign-assessment.md`](./campaign-assessment.md)
 - Module reconcile: [`module-scope.md`](./module-scope.md) §5

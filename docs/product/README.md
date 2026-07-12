@@ -34,7 +34,8 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
 | [payment.md](./payment.md) | Token billing, B2C wallet, B2B invoices |
 | [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
-| [campaign-discovery.md](./campaign-discovery.md) | **Deprecated** public browse; magic link only |
+| [campaign-discovery.md](./campaign-discovery.md) | Magic link entry; public browse deprecated |
+| [campaign-assessment.md](./campaign-assessment.md) | B2B assessment interview, proctoring, violations |
 | [organization-onboarding.md](./organization-onboarding.md) | Employer workspace onboarding |
 | [employer-analytics.md](./employer-analytics.md) | Employer candidate pipeline & analytics |
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |

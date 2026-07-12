@@ -150,7 +150,9 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | Candidate selection (upload list, screening UI) | HR | Wizard step or `/employer/campaigns/:id/selection` |
 | Invitation email preview | HR | Publish flow step |
 | Organize HR team management | Organize | `/employer/team` |
-| Roadmap lesson detail | Candidate | `/candidate/roadmap/:id/lessons/:lessonId` |
+| Campaign briefing + terms | Candidate | `/invite/:token` or prepare step |
+| Violation pause overlay | Candidate | Modal on `/interview/:sessionId/room` |
+| Campaign assessment spec | — | [`campaign-assessment.md`](./campaign-assessment.md) |
 
 ---
 

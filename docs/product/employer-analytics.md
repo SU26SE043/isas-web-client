@@ -34,18 +34,24 @@ Candidate pipeline provides:
 - Blind-hiring display mode that replaces names/emails with anonymized candidate codes.
 - Export flow that blocks exports over 10,000 rows and warns that exported PII is masked.
 
-### Pipeline statuses (invite resolution)
+### Pipeline statuses
 
-Product-defined statuses for campaign candidates ([`product-scope.md`](./product-scope.md) BR-B2B-11). Further states after interview (e.g. `in_progress`, `completed`) — **Chưa được đặc tả đầy đủ trong tài liệu.**
+Product-defined statuses ([`product-scope.md`](./product-scope.md), [`campaign-assessment.md`](./campaign-assessment.md)):
 
 | Status | Meaning |
 | --- | --- |
 | `invited` | Email matched existing Candidate; linked to campaign; awaiting interview via magic link |
 | `invite_pending` | Email not registered; row shows email only until candidate registers via link |
+| `in_progress` | Candidate in active assessment |
+| `paused_violation` | Proctoring pause; may resume if under max violations |
+| `auto_submitted` | Max violations reached; forced submit |
+| `completed` | Assessment evaluated |
+
+Post-interview employer review (locked report, etc.) — BRL-054.
+
+### Candidate profile
 
 Candidate profile provides:
-
-- Candidate stage, score, shortlist status, skill tags, experience summary, and contact row.
 - Internal HR notes that are not exposed to candidates.
 - Links to the report view and back to the campaign pipeline.
 

@@ -54,6 +54,12 @@ All FS-090 through FS-103 stories are implemented on mock services (P0-P3), incl
 
 Interview room components must stay campaign-agnostic so B2B magic-link flow can reuse them later (BRD D1).
 
+### B2B campaign assessment (proctoring)
+
+When `campaign_id` is set, the full assessment flow applies: device check, terms, identity baseline photo, camera always on, periodic face match, tab/focus monitoring, violation pause, auto-submit — see [`campaign-assessment.md`](./campaign-assessment.md).
+
+B2C practice (`/practice`, `campaign_id = null`) uses the same interview **routes** where applicable; full proctoring parity with B2B — **Chưa được đặc tả trong tài liệu.**
+
 ## Status
 
 Phase 6 UI on `phase-6-results-learning` — mock data for results, roadmap, learning modules, certificates. Live API integration TBD.

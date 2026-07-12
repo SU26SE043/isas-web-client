@@ -36,7 +36,7 @@ Campaign wizard provides four steps:
 1. Job description: title, company, location, working mode, summary, JD content.
 2. Rubric: weighted criteria must total 100%.
 3. Questions: selected question bank items.
-4. Settings: capacity, deadline, duration, locale, welcome/completion messages.
+4. Settings: capacity, deadline, duration, locale, welcome/completion messages, **proctoring** (face capture interval, similarity threshold, max violations — see [`campaign-assessment.md`](./campaign-assessment.md)).
 
 Campaign detail provides:
 
