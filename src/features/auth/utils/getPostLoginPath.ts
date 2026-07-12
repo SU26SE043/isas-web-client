@@ -6,8 +6,9 @@ export function getPostLoginPath(role: UserRoleType): string {
     case UserRole.ADMIN:
       return '/admin';
     case UserRole.HR:
-    case UserRole.ORGANIZE:
       return '/employer/campaigns';
+    case UserRole.ORGANIZE:
+      return '/employer/dashboard';
     case UserRole.CANDIDATE:
     default:
       return '/candidate/dashboard';

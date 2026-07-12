@@ -4,6 +4,7 @@ export const profileTranslations: TranslationDictionary = {
   vi: {
     'profile.navDashboard': 'Bảng điều khiển',
     'profile.navCvAnalysis': 'Phân tích CV',
+    'profile.navCampaigns': 'Chiến dịch',
     'profile.breadcrumb': 'Hồ sơ ứng viên',
     'profile.completeness.label': 'Độ hoàn thiện hồ sơ',
     'profile.completeness.gateMet': 'Hồ sơ đã đủ điều kiện tham gia phỏng vấn và chiến dịch.',
@@ -180,6 +181,7 @@ export const profileTranslations: TranslationDictionary = {
   en: {
     'profile.navDashboard': 'Dashboard',
     'profile.navCvAnalysis': 'CV Analysis',
+    'profile.navCampaigns': 'Campaigns',
     'profile.breadcrumb': 'Candidate profile',
     'profile.completeness.label': 'Profile completeness',
     'profile.completeness.gateMet': 'Your profile meets the 70% gate for interviews and campaigns.',

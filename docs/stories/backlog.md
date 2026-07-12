@@ -13,7 +13,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E05 | Practice interview, result, history | M05–M06 | in_progress |
 | E06 | Payment, credits, subscription (B2C) | M08 | not_started |
 | E07 | Campaign create, magic link (B2B) | M04 | implemented |
-| E08 | Org dashboard, ranking, shortlist | M04, M09 | not_started |
+| E08 | Campaign discovery, org dashboard, ranking, analytics | M04, M09 | in_progress |
 | E09 | Admin portal & audit | M11–M12 | not_started |
 | E10 | Notifications, reporting, ATS hooks | M09–M10 | not_started |
 
@@ -28,6 +28,9 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-005 | Practice interview B2C | E05 | normal | in_progress | [US-005](./epics/E05-practice/US-005-practice-interview.md) |
 | US-006 | Candidate dashboard heatmap | E03 | normal | implemented | [US-006](./epics/E03-auth/US-006-candidate-dashboard.md) |
 | US-007 | Campaign management employer workflow | E07 | normal | implemented | [US-007](./epics/E07-campaign-management/US-007-campaign-management.md) |
+| US-007 | Campaign discovery candidate entry | E08 | normal | implemented | [US-007](./epics/E08-campaign-discovery/US-007-campaign-discovery.md) |
+| US-008 | Organization onboarding employer entry | E08 | normal | implemented | [US-008](./epics/E08-org-onboarding/US-008-organization-onboarding.md) |
+| US-009 | Employer analytics and candidate pipeline | E08 | normal | implemented | [US-009](./epics/E08-employer-analytics/US-009-employer-analytics.md) |
 
 ## How to pick work
 
@@ -45,5 +48,8 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-005 | FR-009–017 | SCR-CAN-029–048 |
 | US-006 | F-PROF-001 | SCR-CAN-012 |
 | US-007 | FR-095-159 | SCR-EMP-055-058 |
+| US-007 | FR-095-124 (candidate-facing) | SCR-CAN-023-025 |
+| US-008 | FR-060-064 | SCR-EMP-052-054 |
+| US-009 | FR-195-224 | SCR-EMP-059-062 |
 
 Full FR list: `BRD/Functional_Requirements.md`.

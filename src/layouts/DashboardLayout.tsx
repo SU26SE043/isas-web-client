@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { BriefcaseBusiness } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
@@ -15,7 +16,7 @@ type NavItem = {
 const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
   [
     'group relative flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
-    isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 text-left',
+    isCollapsed ? 'justify-center px-0 py-2.5' : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
     isActive
       ? 'bg-surface-elevated text-foreground shadow-sm'
       : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
@@ -61,6 +62,11 @@ export const DashboardLayout: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         ),
+      },
+      {
+        to: '/candidate/campaigns',
+        label: t('profile.navCampaigns'),
+        icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
       },
       {
         to: '/candidate/credits',
@@ -117,12 +123,12 @@ export const DashboardLayout: React.FC = () => {
         <aside
           className={[
             'sticky top-0 flex h-screen shrink-0 flex-col border-r border-subtle bg-surface-sunken transition-[width] duration-300 ease-out',
-            isCollapsed ? 'w-[4.5rem]' : 'w-60',
+            isCollapsed ? 'w-[4.5rem]' : 'w-[4.5rem] sm:w-60',
           ].join(' ')}
         >
-          <div className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-between gap-2'}`}>
+          <div className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}>
             {!isCollapsed ? (
-              <Link to="/" className="focus-ring rounded-md">
+              <Link to="/" className="focus-ring hidden rounded-md sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             ) : null}
@@ -158,7 +164,7 @@ export const DashboardLayout: React.FC = () => {
                   <span
                     className={[
                       'overflow-hidden whitespace-nowrap transition-all duration-300',
-                      isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
+                      isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
                     ].join(' ')}
                     aria-hidden={isCollapsed}
                   >
@@ -191,7 +197,7 @@ export const DashboardLayout: React.FC = () => {
               <span
                 className={[
                   'overflow-hidden whitespace-nowrap transition-all duration-300',
-                  isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
+                  isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
                 ].join(' ')}
                 aria-hidden={isCollapsed}
               >
