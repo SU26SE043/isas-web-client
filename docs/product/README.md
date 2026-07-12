@@ -32,6 +32,7 @@ When BRD and product docs disagree, BRD wins for business intent; product docs w
 | [organization-onboarding.md](./organization-onboarding.md) | Employer workspace onboarding |
 | [employer-analytics.md](./employer-analytics.md) | Employer candidate pipeline & analytics |
 | [employer-billing.md](./employer-billing.md) | Employer subscription, billing, invoices |
+| [shared-engagement.md](./shared-engagement.md) | Notifications, settings, help, support |
 
 
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |

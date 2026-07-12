@@ -3,13 +3,17 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
+  Bell,
   BriefcaseBusiness,
   Building2,
+  CircleHelp,
   CreditCard,
+  LifeBuoy,
   LayoutDashboard,
   LogOut,
   ReceiptText,
   ScrollText,
+  Settings,
   Users,
 } from 'lucide-react';
 
@@ -94,6 +98,31 @@ export const EmployerDashboardLayout: React.FC = () => {
         to: '/employer/invoices',
         label: t('employer.nav.invoices'),
         icon: <ScrollText className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/notifications',
+        label: t('engagement.nav.notifications'),
+        icon: <Bell className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/settings',
+        label: t('engagement.nav.settings'),
+        icon: <Settings className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/team',
+        label: t('engagement.nav.team'),
+        icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/help',
+        label: t('engagement.nav.help'),
+        icon: <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/support',
+        label: t('engagement.nav.support'),
+        icon: <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />,
       },
     ],
     [t],

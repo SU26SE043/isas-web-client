@@ -26,6 +26,7 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 | Employer onboarding | M04, SCR-EMP-052-054 | Implemented — dashboard, company profile, verification (`/employer/dashboard`, `/employer/company*`; mock) |
 | Employer analytics (B2B) | M04/M09, SCR-EMP-059-062 | Implemented — candidate pipeline, employer profile view, AI report, analytics export (`/employer/campaigns/:id/candidates`, `/employer/candidates/:id*`, `/employer/analytics`; mock) |
 | Employer billing (B2B) | M08, SCR-EMP-063-065 | Implemented — subscription plans, billing overview, payment method validation, invoices (`/employer/subscription`, `/employer/billing`, `/employer/invoices`; mock) |
+| Shared engagement | M10, SCR-CAN-047-051, SCR-EMP-066-068, SCR-SHR-095 | Implemented - notifications, settings, help, support, employer team (`/candidate/*`, `/employer/*`, `/admin/*`; mock) |
 | Admin | M11, SCR-ADM-* | Not started |
 
 ## Key design decisions (from BRD)

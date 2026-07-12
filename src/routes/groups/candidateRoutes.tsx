@@ -21,6 +21,10 @@ import { CreditsWalletPage } from '@/features/payment/pages/CreditsWalletPage';
 import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
 import { CheckoutPage } from '@/features/payment/pages/CheckoutPage';
 import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPage';
+import { HelpPage } from '@/features/engagement/pages/HelpPage';
+import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
+import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
+import { SupportPage } from '@/features/engagement/pages/SupportPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
 import { ProfileViewPage } from '@/features/profile/pages/ProfileViewPage';
 import { ProfileCompletePage } from '@/features/profile/pages/ProfileCompletePage';
@@ -74,6 +78,10 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'subscription', element: <SubscriptionPlansPage /> },
           { path: 'payment', element: <CheckoutPage /> },
           { path: 'certificates/:id', element: <CertificateViewerPage /> },
+          { path: 'notifications', element: <NotificationsPage scope="candidate" /> },
+          { path: 'settings', element: <SettingsPage scope="candidate" /> },
+          { path: 'help', element: <HelpPage scope="candidate" /> },
+          { path: 'support', element: <SupportPage scope="candidate" /> },
         ],
       },
       { path: '/payment/callback', element: <PaymentCallbackPage /> },
