@@ -1,11 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
+import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 export const FeaturesSection: React.FC = () => {
-  const navigate = useNavigate();
+  const { openAuthModal } = useMarketingAuthModal();
   const { t } = useLanguage();
 
   return (
@@ -117,10 +117,13 @@ export const FeaturesSection: React.FC = () => {
                 {t('features.cvDescription')}
               </p>
               <button
-                onClick={() => navigate('/candidate/cv/analysis')}
+                type="button"
+                onClick={() => openAuthModal('signup')}
                 className="btn-slice mt-auto px-8 py-4 text-lg"
               >
-                <span className="text">{t('hero.tryNow')} <span className="ml-2">→</span></span>
+                <span className="text">
+                  {t('hero.tryNow')} <span className="ml-2" aria-hidden>→</span>
+                </span>
               </button>
             </div>
           </motion.div>

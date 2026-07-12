@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sparkles } from 'lucide-react';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
@@ -20,7 +21,8 @@ export const HeroSection: React.FC = () => {
             transition={{ duration: 0.7 }}
           >
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-surface-overlay text-muted-foreground text-sm font-bold tracking-wide uppercase mb-8">
-              <span className="mr-2">✦</span> {t('hero.badge')}
+              <Sparkles aria-hidden className="mr-2 size-3.5 shrink-0" />
+              {t('hero.badge')}
             </div>
             <h1 className="text-5xl lg:text-6xl xl:text-[4.5rem] heading-primary text-foreground leading-[1.1] mb-8">
               {t('hero.titleLine1')} <br />

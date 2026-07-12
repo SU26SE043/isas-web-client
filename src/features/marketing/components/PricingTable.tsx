@@ -70,9 +70,9 @@ export const PricingTable: React.FC = () => {
           <div className="mb-6">
             <span className="text-3xl font-bold text-foreground">{t(plan.priceKey)}</span>
             {!plan.contact && (
-              <span className="text-muted-foreground ml-1 text-sm">
-                VND ({t('pricing.oneTime')})
-              </span>
+              <p className="text-muted-foreground mt-1 text-sm">
+                VND ({t('pricing.oneTime')}) · {t('pricing.tokenBudget')}
+              </p>
             )}
           </div>
           <ul className="mb-8 flex-grow space-y-3">

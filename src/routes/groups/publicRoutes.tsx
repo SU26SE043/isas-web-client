@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { MarketingLayout } from '@/layouts/MarketingLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
@@ -28,6 +29,7 @@ export const publicRoutes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'pricing', element: <PricingPage /> },
       { path: 'enterprise', element: <EnterprisePage /> },
+      { path: 'employers', element: <Navigate to="/enterprise" replace /> },
       { path: 'terms', element: <TermsPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'maintenance', element: <MaintenancePage /> },

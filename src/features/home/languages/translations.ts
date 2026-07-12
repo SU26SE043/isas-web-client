@@ -2,6 +2,7 @@ import type { TranslationDictionary } from '../../../shared/languages';
 
 export const homeTranslations: TranslationDictionary = {
   vi: {
+    'home.pageTitle': 'PIpraint — Luyện phỏng vấn AI',
     'hero.badge': 'Hệ thống phỏng vấn ứng dụng AI',
     'hero.titleLine1': 'Luyện phỏng vấn cùng',
     'hero.highlight': 'Trí tuệ nhân tạo',
@@ -39,7 +40,8 @@ export const homeTranslations: TranslationDictionary = {
     'employer.badge': 'Doanh nghiệp',
     'employer.titleLine1': 'Chuẩn hóa quy trình',
     'employer.titleLine2': 'Tuyển dụng dựa trên dữ liệu',
-    'employer.description': 'Giảm 50% thời gian sàng lọc ban đầu với bộ câu hỏi phỏng vấn tự động và báo cáo phân tích ứng viên chi tiết. PIpraint giúp bạn tìm thấy "mảnh ghép hoàn hảo" dựa trên dữ liệu, không phải cảm tính.',
+    'employer.description':
+      'Giảm 50% thời gian sàng lọc với chiến dịch từ JD, magic link cho ứng viên và chấm điểm AI. Thanh toán postpaid theo token tiêu thụ hàng tháng.',
     'employer.jdTitle': 'Tạo bộ câu hỏi JD',
     'employer.jdDescription': 'Tự động sinh câu hỏi theo yêu cầu công việc.',
     'employer.reportTitle': 'Báo cáo so sánh',
@@ -47,6 +49,7 @@ export const homeTranslations: TranslationDictionary = {
     'employer.demo': 'Đăng ký Demo B2B',
   },
   en: {
+    'home.pageTitle': 'PIpraint — AI Interview Practice',
     'hero.badge': 'AI-powered interview system',
     'hero.titleLine1': 'Practice interviews with',
     'hero.highlight': 'Artificial Intelligence',
@@ -84,7 +87,8 @@ export const homeTranslations: TranslationDictionary = {
     'employer.badge': 'Enterprise',
     'employer.titleLine1': 'Standardize hiring',
     'employer.titleLine2': 'with data-driven workflows',
-    'employer.description': 'Reduce initial screening time by 50% with automated interview question sets and detailed candidate analytics. PIpraint helps you find the right fit through data, not guesswork.',
+    'employer.description':
+      'Cut screening time with JD-based campaigns, magic-link invites, and AI scoring. Postpaid monthly billing by tokens consumed.',
     'employer.jdTitle': 'Generate JD questions',
     'employer.jdDescription': 'Automatically create questions from job requirements.',
     'employer.reportTitle': 'Comparison reports',
