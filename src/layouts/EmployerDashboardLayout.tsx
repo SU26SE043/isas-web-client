@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BadgeCheck, Building2, LayoutDashboard, LogOut } from 'lucide-react';
+import { BadgeCheck, BarChart3, Building2, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { PHASE11_CAMPAIGN_ID } from '@/features/employer-analytics/mocks/employerAnalytics.fixtures';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,16 @@ export const EmployerDashboardLayout: React.FC = () => {
         to: '/employer/company/verify',
         label: t('employer.nav.verify'),
         icon: <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: `/employer/campaigns/${PHASE11_CAMPAIGN_ID}/candidates`,
+        label: t('employer.nav.pipeline'),
+        icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/analytics',
+        label: t('employer.nav.analytics'),
+        icon: <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />,
       },
     ],
     [t],
