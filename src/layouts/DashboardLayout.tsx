@@ -67,6 +67,8 @@ export const DashboardLayout: React.FC = () => {
         to: '/candidate/campaigns',
         label: t('profile.navCampaigns'),
         icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
         to: '/candidate/credits',
         label: t('profile.navCredits'),
         icon: (
