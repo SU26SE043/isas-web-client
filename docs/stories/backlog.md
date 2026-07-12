@@ -14,7 +14,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E06 | Payment, credits, subscription (B2C) | M08 | not_started |
 | E07 | Campaign create, magic link (B2B) | M04 | implemented |
 | E08 | Campaign discovery, org dashboard, ranking, analytics | M04, M09 | in_progress |
-| E09 | Admin portal & audit | M11–M12 | not_started |
+| E09 | Admin portal & audit | M11–M12 | implemented |
 | E10 | Notifications, reporting, ATS hooks | M09–M10 | not_started |
 | E11 | Employer billing and subscription | M08 | implemented |
 
@@ -32,7 +32,11 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-007 | Campaign discovery candidate entry | E08 | normal | implemented | [US-007](./epics/E08-campaign-discovery/US-007-campaign-discovery.md) |
 | US-008 | Organization onboarding employer entry | E08 | normal | implemented | [US-008](./epics/E08-org-onboarding/US-008-organization-onboarding.md) |
 | US-009 | Employer analytics and candidate pipeline | E08 | normal | implemented | [US-009](./epics/E08-employer-analytics/US-009-employer-analytics.md) |
+<<<<<<< HEAD
+| US-010 | Admin Platform | E09 | normal | implemented | [US-010](./epics/E09-admin-platform/US-010-admin-platform.md) |
+=======
 | US-010 | Employer billing | E11 | normal | implemented | [US-010](./epics/E11-employer-billing/US-010-employer-billing.md) |
+>>>>>>> upstream/develop
 
 ## How to pick work
 
@@ -53,6 +57,10 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-007 | FR-095-124 (candidate-facing) | SCR-CAN-023-025 |
 | US-008 | FR-060-064 | SCR-EMP-052-054 |
 | US-009 | FR-195-224 | SCR-EMP-059-062 |
+<<<<<<< HEAD
+| US-010 | FR-255-289 | SCR-ADM-069-088 |
+=======
 | US-010 | FR-160-194 | SCR-EMP-063-065 |
+>>>>>>> upstream/develop
 
 Full FR list: `BRD/Functional_Requirements.md`.
