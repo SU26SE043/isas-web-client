@@ -10,7 +10,6 @@ import { DeviceCheckPage } from '@/features/practice/pages/DeviceCheckPage';
 import { IdentityVerifyPage } from '@/features/practice/pages/IdentityVerifyPage';
 import { WaitingRoomPage } from '@/features/practice/pages/WaitingRoomPage';
 import { InterviewCompletePage } from '@/features/practice/pages/InterviewCompletePage';
-import { InviteEntryPage } from '@/features/practice/pages/InviteEntryPage';
 
 export const interviewRoutes: RouteObject[] = [
   {
@@ -19,7 +18,6 @@ export const interviewRoutes: RouteObject[] = [
       { path: '/practice', element: <PracticeEntryPage /> },
       { path: '/practice/result', element: <InterviewResultPage /> },
       { path: '/practice/interview/:id', element: <InterviewResultPage /> },
-      { path: '/invite/:token', element: <InviteEntryPage /> },
       {
         element: <FullscreenLayout />,
         children: [
