@@ -10,11 +10,25 @@
 | --- | --- | --- |
 | `/invite/:token` | `MagicLinkLandingPage` | **Keep** — canonical B2B candidate entry |
 
-**Flow:**
+## Magic link flows
 
-1. Employer publishes campaign → system sends email with magic link.
-2. Candidate opens `/invite/:token`.
-3. Validate invite → register/sign in if needed → interview preparation → interview room.
+### Employer side (before candidate clicks)
+
+1. HR adds emails (candidate selection or invite modal).
+2. System **lookup email** ([`product-scope.md`](./product-scope.md) BR-B2B-06–11).
+3. If email **already registered as Candidate** → row appears **immediately** in campaign candidate list (`invited`).
+4. If email unknown → row `invite_pending` until registration.
+5. Publish → send magic-link email.
+
+### Candidate side (after click)
+
+1. Candidate opens `/invite/:token`.
+2. Validate invite token.
+3. Branch:
+   - **Account exists (Candidate)** → **Sign in** → interview preparation → interview room.
+   - **No account** → **Register** (Candidate only) → interview preparation → interview room.
+
+One email = one role — invite to an HR/Organize/Admin email is rejected at entry time on the employer UI.
 
 ---
 
@@ -32,20 +46,16 @@ Do **not** extend these screens. New B2B candidate work should go through `/invi
 
 ---
 
-## Historical reference (pre-discovery)
+## Open items
 
-Previously documented flow (no longer valid):
-
-1. ~~Candidate opens `/candidate/campaigns`.~~
-2. ~~Search/filter public campaigns.~~
-3. ~~Enroll via `/candidate/campaigns/:id/enroll`.~~
-
-Enrollment profile gate (70% completeness) may still apply in the **magic-link** path if product requires it — confirm in a future story.
+- Profile completeness gate (70%) on magic-link path — confirm in a future story (`employer-analytics.md` / dashboard BRD refs).
+- Whether Candidate sees campaign in their B2C UI before completing interview — **Chưa được đặc tả trong tài liệu.**
 
 ---
 
 ## Related
 
 - B2B employer campaign lifecycle: [`campaign-management.md`](./campaign-management.md)
-- Product scope: [`product-scope.md`](./product-scope.md) §4.7
+- Product scope: [`product-scope.md`](./product-scope.md) §4.5–4.7
+- Pipeline statuses: [`employer-analytics.md`](./employer-analytics.md)
 - Module reconcile: [`module-scope.md`](./module-scope.md) §5

@@ -24,7 +24,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Payment B2B | T1 | Monthly usage, invoices | — | **Missing** |
 | Org onboarding | T1 | Company profile, verify | `/employer/company*` | Implemented (mock) |
 | Campaign management | T1 | List, wizard, detail, publish | `/employer/campaigns*` | Implemented (mock) |
-| Candidate selection | T1 | Upload CV/email, screening, ranking | Partial in wizard/pipeline | Partial |
+| Candidate selection | T1 | Upload CV/email, screening, ranking, **email lookup → immediate list if registered** | Partial in wizard/pipeline | Partial |
 | Employer analytics | T1 | Pipeline, candidate profile, report, export | `/employer/analytics`, candidates | Implemented (mock) |
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
 | **Public campaign discovery** | — | **OUT OF SCOPE** | `/candidate/campaigns*` | **Remove / deprecate** |

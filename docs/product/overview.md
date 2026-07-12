@@ -38,7 +38,7 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 
 - **D1:** Interview room UI reusable for B2B and B2C.
 - **Billing:** Token-based usage — show tokens to users; B2C prepaid reserve/settle; B2B postpaid monthly invoice.
-- **B2B entry:** Magic link only (no public campaign browse).
+- **B2B entry:** Magic link only; **registered email → immediate campaign list row**; existing user signs in via link.
 - **Verify gate:** Unverified org cannot create or publish campaigns.
 - **Accounts:** One email = one role.
 - **D11:** Soft-delete and audit-friendly history surfaces.

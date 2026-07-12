@@ -114,15 +114,27 @@ Employer login → campaign list → create → domain → target level → uplo
 
 ### 4.5 B2B — Candidate selection
 
-Open draft → upload email list or CVs → AI screening → ranking → employer selects → candidate list
+Open draft → upload email list or CVs → **system resolves each email against registered accounts** → AI screening → ranking → employer selects → **candidate list**
+
+**Email resolution (immediate):**
+
+| Email lookup result | Campaign candidate list | Next step |
+| --- | --- | --- |
+| **Already registered as Candidate** | **Appears immediately** — row linked to existing `candidate_id` | Status `invited` until interview completed; magic link → **sign in** |
+| Not registered | Appears as invite pending — row has email only | Status `invite_pending`; magic link → **register** then interview |
+| Registered as HR / Organize / Admin | **Reject** — show validation error on that email | Cannot invite; one email = one role |
+
+Employer may still run AI screening and ranking on uploaded CVs; email resolution runs when emails are added (upload list or invite input).
 
 ### 4.6 B2B — Publish
 
 Draft → invitation email config → preview → publish → magic links → send email → **active**
 
+Candidates already linked by email (registered accounts) **remain visible** in the campaign list before and after publish; publish sends or refreshes magic-link email.
+
 ### 4.7 B2B — Assessment & analytics
 
-Candidate opens magic link → register/sign in if needed → interview → submit → AI evaluation → candidate report → employer ranking → analytics dashboard → export report
+Candidate opens magic link → **sign in** if account exists, **register** if not → interview → submit → AI evaluation → candidate report → employer ranking → analytics dashboard → export report
 
 **Candidate channel:** Magic link only — no public discovery.
 
@@ -152,6 +164,17 @@ Candidate opens magic link → register/sign in if needed → interview → subm
 | BR-B2B-03 | Start of next month: **invoice** = total tokens from prior month |
 | BR-B2B-04 | Organize UI: token usage by campaign / month / session |
 | BR-B2B-05 | Tokens include AI CV screening, rubric gen, question gen, evaluation, analytics AI |
+
+### B2B — Campaign invite & candidate list
+
+| Rule | Description |
+| --- | --- |
+| BR-B2B-06 | On email add (selection upload or invite input), **lookup** email in user registry |
+| BR-B2B-07 | Email matches existing **Candidate** → **link to campaign immediately** and show in employer candidate list (do not wait for magic-link click) |
+| BR-B2B-08 | Linked candidate receives magic link → **sign in** (no new registration) → interview |
+| BR-B2B-09 | Email matches **HR / Organize / Admin** → **reject** with clear error (one email = one role) |
+| BR-B2B-10 | Unknown email → campaign row with `invite_pending`; magic link → **register** as Candidate → interview |
+| BR-B2B-11 | Pipeline status for linked registered candidates starts at **`invited`** until interview is submitted |
 
 ### Payment roles
 
@@ -184,6 +207,7 @@ Both lines are **equal-priority** deliverables for Tier 1.
 | Dual-role accounts | Separate — one email, one role |
 | Learning Hub vs Roadmap | Roadmap Tier 1; Learning Hub Tier 3 |
 | Org verify | No create/publish campaign until verified |
+| Registered email on invite | Immediate campaign list row + link to Candidate account (BR-B2B-07) |
 
 ---
 
@@ -194,6 +218,8 @@ Both lines are **equal-priority** deliverables for Tier 1.
 3. Abandon session (B2C): partial settle vs release reserve
 4. Tier 2 acceptance criteria for marketing, leaderboard, certificate
 5. HR vs Organize screen boundaries for billing vs campaign (detailed in module-scope)
+6. Candidate consent before employer sees full profile for email-matched invites
+7. Full pipeline status enum after `invited` / `invite_pending` (e.g. in_progress, completed)
 
 ---
 
