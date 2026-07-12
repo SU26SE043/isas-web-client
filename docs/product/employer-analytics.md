@@ -30,8 +30,26 @@ Candidate pipeline provides:
 - Status and score-band filters.
 - Sort by rank, score, completion date, and stage.
 - Desktop table and mobile cards.
+- **Invite resolution indicators:** `invited` (linked registered Candidate), `invite_pending` (email only, not registered yet) per [`product-scope.md`](./product-scope.md) BR-B2B-07–11.
 - Blind-hiring display mode that replaces names/emails with anonymized candidate codes.
 - Export flow that blocks exports over 10,000 rows and warns that exported PII is masked.
+
+### Pipeline statuses
+
+Product-defined statuses ([`product-scope.md`](./product-scope.md), [`campaign-assessment.md`](./campaign-assessment.md)):
+
+| Status | Meaning |
+| --- | --- |
+| `invited` | Email matched existing Candidate; linked to campaign; awaiting interview via magic link |
+| `invite_pending` | Email not registered; row shows email only until candidate registers via link |
+| `in_progress` | Candidate in active assessment |
+| `paused_violation` | Proctoring pause; may resume if under max violations |
+| `auto_submitted` | Max violations reached; forced submit |
+| `completed` | Assessment evaluated |
+
+Post-interview employer review (locked report, etc.) — BRL-054.
+
+### Candidate profile
 
 Candidate profile provides:
 

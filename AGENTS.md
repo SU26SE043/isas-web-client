@@ -16,17 +16,20 @@ The skill is project-scoped; do not use a global copy as the source of truth.
 <!-- HARNESS:BEGIN -->
 ## Harness
 
-This repo uses Harness. Before work, read:
+This repo uses Harness. Before work, read (theo thứ bậc — xem `docs/product/README.md`):
 
 - `README.md`
-- `BRD/README.md` (full product spec — business source of truth)
-- `docs/product/README.md` (frontend living contracts)
+- `BRD/README.md` — full business specification (FR, flows, screens); **không thay** `docs/product/*` cho phạm vi frontend đã discovery
+- `docs/product/product-scope.md` — product definition (authoritative cho scope frontend)
+- `docs/product/module-scope.md` — modules, routes, gaps
+- `docs/product/README.md` — index living contracts
+- `docs/FRONTEND_MASTER_PLAN.md` — development phases, stories, E2E
 - `docs/stories/backlog.md` (active epics and stories)
 - `docs/UI_GUIDE.md` (bắt buộc trước khi generate/sửa giao diện)
 - `docs/HARNESS.md`
 - `docs/FEATURE_INTAKE.md`
 - `docs/ARCHITECTURE.md`
-- `docs/CONTEXT_RULES.md`
+- `docs/CONTEXT_RULES.md` — đọc gì theo phase/lane (không cần đọc hết `/docs` mỗi lần)
 - `docs/TOOL_REGISTRY.md`
 - `scripts/bin/harness-cli query matrix` on macOS/Linux, or `.\scripts\bin\harness-cli.exe query matrix` on Windows
 
@@ -36,6 +39,25 @@ step that could use an external tool, run `scripts/bin/harness-cli query tools
 --capability <name> --status present` to see what is equipped; an absent
 capability is a clean skip.
 <!-- HARNESS:END -->
+
+## Development Workflow (Bắt buộc)
+
+Trước khi bắt đầu bất kỳ task nào, Agent phải:
+
+1. Đọc tài liệu **liên quan** trong `/docs` theo `docs/CONTEXT_RULES.md` (Intake + Planning) — gồm `docs/product/*`, story packet nếu có, và `docs/FRONTEND_MASTER_PLAN.md` khi làm theo phase.
+2. Đối chiếu **Documentation** (`/docs`) · **Development Plan** (`FRONTEND_MASTER_PLAN.md`) · **Source code** hiện tại.
+3. Nếu tài liệu, kế hoạch và code **chưa đồng bộ** → báo cáo trước khi triển khai; không tự ý bỏ qua.
+4. Chỉ triển khai đúng **phạm vi Phase hoặc Task** người dùng yêu cầu (WIP=1); không tự mở rộng sang phase/task khác.
+5. Sau khi xong: đối chiếu lại docs · plan · code; chỉ đánh dấu hoàn thành khi yêu cầu trong tài liệu/plan đã **triển khai và xác minh** (build/test/E2E theo story nếu có).
+
+### Khi người dùng yêu cầu "tiếp tục", "làm tiếp", "update Phase", "triển khai Phase"
+
+Không giả định trạng thái dự án. Bắt buộc:
+
+- Đọc lại `docs/product/product-scope.md`, contract domain liên quan, và `docs/FRONTEND_MASTER_PLAN.md` (phase được yêu cầu).
+- Kiểm tra source code và story/backlog cho phase đó.
+- Xác định task **đã xong** vs **còn thiếu**; chỉ làm phần còn thiếu hoặc cần cập nhật.
+- Nếu thay đổi trong `/docs` ảnh hưởng phase đang làm → báo cáo và đề xuất cập nhật plan **trước** khi code tiếp.
 
 ## UI Generation Guardrails
 
