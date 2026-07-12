@@ -24,10 +24,14 @@ When BRD and product docs disagree, BRD wins for business intent; product docs w
 | [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
 
+| [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
+
+
 | [campaign-discovery.md](./campaign-discovery.md) | Candidate B2B campaign discovery |
 
 | [organization-onboarding.md](./organization-onboarding.md) | Employer workspace onboarding |
 | [employer-analytics.md](./employer-analytics.md) | Employer candidate pipeline & analytics |
+
 
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |
 

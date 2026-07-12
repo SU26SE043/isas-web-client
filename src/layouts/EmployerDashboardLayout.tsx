@@ -1,6 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BadgeCheck, BarChart3, Building2, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import {
+  BadgeCheck,
+  BarChart3,
+  BriefcaseBusiness,
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  Users,
+} from 'lucide-react';
+
 import { PHASE11_CAMPAIGN_ID } from '@/features/employer-analytics/mocks/employerAnalytics.fixtures';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -18,7 +27,9 @@ type NavItem = {
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
   return cn(
     'group relative flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
-    isCollapsed ? 'justify-center px-0 py-2.5' : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
+    isCollapsed
+      ? 'justify-center px-0 py-2.5'
+      : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
     isActive
       ? 'bg-surface-elevated text-foreground shadow-sm'
       : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
@@ -29,6 +40,7 @@ export const EmployerDashboardLayout: React.FC = () => {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = useMemo<NavItem[]>(
@@ -49,6 +61,11 @@ export const EmployerDashboardLayout: React.FC = () => {
         to: '/employer/company/verify',
         label: t('employer.nav.verify'),
         icon: <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/employer/campaigns',
+        label: t('employer.campaigns.nav.campaigns'),
+        icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
       },
       {
         to: `/employer/campaigns/${PHASE11_CAMPAIGN_ID}/candidates`,
@@ -78,16 +95,31 @@ export const EmployerDashboardLayout: React.FC = () => {
             isCollapsed ? 'w-[4.5rem]' : 'w-[4.5rem] sm:w-64',
           )}
         >
-          <div className={cn('flex items-center border-b border-subtle px-3 py-4', isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2')}>
-            {!isCollapsed ? (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+          <div
+            className={cn(
+              'flex items-center border-b border-subtle px-3 py-4',
+              isCollapsed
+                ? 'justify-center'
+                : 'justify-center sm:justify-between sm:gap-2',
+            )}
+          >
+            {!isCollapsed && (
+              <Link
+                to="/"
+                className="focus-ring hidden rounded-md sm:block"
+              >
                 <BrandLogo className="h-7" />
               </Link>
-            ) : null}
+            )}
+
             <button
               type="button"
               onClick={() => setIsCollapsed((value) => !value)}
-              aria-label={isCollapsed ? t('employer.nav.collapsed.expand') : t('employer.nav.collapsed.collapse')}
+              aria-label={
+                isCollapsed
+                  ? t('employer.nav.collapsed.expand')
+                  : t('employer.nav.collapsed.collapse')
+              }
               aria-pressed={isCollapsed}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-surface-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             >
@@ -95,22 +127,32 @@ export const EmployerDashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <nav className="flex-1 px-3 py-4" aria-label="Employer">
+          <nav
+            className="flex-1 px-3 py-4"
+            aria-label="Employer"
+          >
             <div className="space-y-1">
               {navItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) => navLinkClassName(isActive, isCollapsed)}
+                  end={item.end}
                   title={isCollapsed ? item.label : undefined}
                   aria-label={item.label}
-                  end={item.end}
+                  className={({ isActive }) =>
+                    navLinkClassName(isActive, isCollapsed)
+                  }
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                    {item.icon}
+                  </span>
+
                   <span
                     className={cn(
                       'overflow-hidden whitespace-nowrap transition-all duration-300',
-                      isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
+                      isCollapsed
+                        ? 'w-0 opacity-0'
+                        : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
                     )}
                     aria-hidden={isCollapsed}
                   >
@@ -125,9 +167,25 @@ export const EmployerDashboardLayout: React.FC = () => {
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
               <LanguageToggle compact={isCollapsed} />
             </div>
-            <button type="button" onClick={handleLogout} className={navLinkClassName(false, isCollapsed)}>
-              <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-              <span className={cn('overflow-hidden whitespace-nowrap transition-all duration-300', isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100')}>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={navLinkClassName(false, isCollapsed)}
+            >
+              <LogOut
+                className="h-4 w-4 shrink-0"
+                aria-hidden
+              />
+
+              <span
+                className={cn(
+                  'overflow-hidden whitespace-nowrap transition-all duration-300',
+                  isCollapsed
+                    ? 'w-0 opacity-0'
+                    : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
+                )}
+              >
                 {t('employer.nav.logout')}
               </span>
             </button>
