@@ -28,6 +28,7 @@ Read to classify the request, find the affected surface, and choose a lane.
 | Relevant `docs/stories/*` | Skip if unrelated | Must if a story exists | Must |
 | `docs/decisions/*` | Skip | Should if architecture or durable rules are touched | Must |
 | `docs/HARNESS_COMPONENTS.md` | Skip | Should for Harness improvements | Must for observability or benchmark work |
+| `docs/FRONTEND_MASTER_PLAN.md` | Skip | Should when changing phases/scope | Must when replanning |
 
 ### Planning Phase
 
@@ -43,6 +44,8 @@ Read to decide the smallest safe approach and expected proof.
 | Relevant decisions | Skip | Should | Must |
 | `docs/HARNESS_MATURITY.md` | Skip | Should for Harness improvements | Must for maturity or process changes |
 | `docs/HARNESS_BACKLOG.md` and `scripts/bin/harness-cli query backlog` | Skip | Should if friction repeats | Must if changing Harness behavior |
+| `docs/FRONTEND_MASTER_PLAN.md` | Skip | Must when scope/phase changes | Must |
+| `docs/product/product-scope.md` | Skip | Must when product behavior changes | Must |
 
 ### Implementation Phase
 

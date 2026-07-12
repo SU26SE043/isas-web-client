@@ -9,6 +9,7 @@ BRD/                          ← Full business spec (business truth, Vietnamese
 docs/product/product-scope.md ← Product definition (discovery — authoritative for product)
 docs/product/module-scope.md  ← Modules, routes, screen inventory
 docs/product/*.md             ← Per-domain living contracts
+docs/FRONTEND_MASTER_PLAN.md  ← Development phases, stories, E2E (sync with product/)
 docs/stories/                 ← Work packets + backlog
 src/                          ← Implementation
 ```
@@ -47,6 +48,6 @@ Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
 ## Update rule
 
 1. Read [`product-scope.md`](./product-scope.md) and relevant `BRD/*.md`.
-2. Update affected `docs/product/*.md` and [`module-scope.md`](./module-scope.md) if routes/modules change.
+2. Update affected `docs/product/*.md`, [`module-scope.md`](./module-scope.md), and [`FRONTEND_MASTER_PLAN.md`](../FRONTEND_MASTER_PLAN.md) if routes/phases change.
 3. Update or create story in `docs/stories/`.
 4. Update proof: `scripts/bin/harness-cli story update`.

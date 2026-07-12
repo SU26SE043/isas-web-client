@@ -52,6 +52,8 @@ Post-interview employer review (locked report, etc.) — BRL-054.
 ### Candidate profile
 
 Candidate profile provides:
+
+- Candidate stage, score, shortlist status, skill tags, experience summary, and contact row.
 - Internal HR notes that are not exposed to candidates.
 - Links to the report view and back to the campaign pipeline.
 

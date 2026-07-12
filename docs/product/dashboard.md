@@ -7,7 +7,7 @@ BRD: F-PROF-001, SCR-CAN-012, `BRD/Functional_Requirements.md` (profile overview
 1. Authenticated candidate lands on **`/candidate/dashboard`** after login.
 2. **Profile completeness** bar with 70% gate CTA when below threshold.
 3. **Interview Activity** — year heatmap (GitHub-contribution style) for practice frequency.
-4. **Quick metrics** — credits remaining, CV analysis status (link to analysis flow).
+4. **Quick metrics** — token wallet balance (reserve/settle), CV analysis status (link to analysis flow).
 
 ## Routes
 
@@ -39,7 +39,7 @@ Data source: `useInterviewHistory()` — mock in `src/features/practice/mocks/hi
 
 **UI implemented** (heatmap + stats + empty state, mock history). Dashboard summary API (`useDashboardSummary`) may still use mock/partial data.
 
-## Evidence
+## Related
 
-- Commit: `286363d` on `phase-4-candidate-profile-cv`
-- Code: `src/features/profile/components/dashboard/**`, `src/features/profile/utils/interviewHeatmapUtils.ts`
+- Token billing: [`payment.md`](./payment.md)
+- Dashboard metrics should reflect **token balance**, not legacy credit count.

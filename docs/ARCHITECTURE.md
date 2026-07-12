@@ -62,10 +62,12 @@ HTTP response
 
 Same interview engine UI; distinguished by `campaign_id`:
 
-- `null` → B2C practice (personal credit wallet).
-- set → B2B campaign session (magic link, org ranking).
+- `null` → B2C practice (prepaid **token** wallet — reserve on create, settle after report). See [`product/payment.md`](./product/payment.md).
+- set → B2B campaign session (magic link only, proctoring, org ranking). See [`product/campaign-assessment.md`](./product/campaign-assessment.md).
 
-Interview room components stay campaign-agnostic (BRD D1).
+Interview room components stay campaign-agnostic (BRD D1). B2B adds proctoring overlay, periodic face capture, violation pause per product contract.
+
+**Product scope:** [`product/product-scope.md`](./product/product-scope.md) · **Module map:** [`product/module-scope.md`](./product/module-scope.md) · **Development plan:** [`FRONTEND_MASTER_PLAN.md`](./FRONTEND_MASTER_PLAN.md).
 
 ## Observability (client)
 

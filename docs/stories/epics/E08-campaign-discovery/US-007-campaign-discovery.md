@@ -2,7 +2,7 @@
 
 ## Status
 
-implemented
+**deprecated (product)** — public browse out of scope 2026-07-12
 
 ## Lane
 
@@ -10,62 +10,56 @@ normal
 
 ## Product Contract
 
-Candidate can browse public active campaigns, inspect campaign details, enroll when profile completeness meets the 70% gate, and enter the magic-link landing path.
+**Superseded by:** [`docs/product/campaign-discovery.md`](../../../product/campaign-discovery.md) · [`docs/product/campaign-assessment.md`](../../../product/campaign-assessment.md)
+
+B2B candidates enter **only via magic link** (`/invite/:token`). Public campaign browse/enroll (`/candidate/campaigns*`) is **out of scope**. Assessment flow after magic link is defined in `campaign-assessment.md`.
+
+Replacement work:
+
+- FS-123 — deprecate public routes
+- FS-124–125 — magic link validate + briefing
+- FS-085–089 — B2B proctoring (P5)
 
 ## Relevant Product Docs
 
 - `docs/product/campaign-discovery.md`
-- `docs/product/practice-interview.md`
+- `docs/product/campaign-assessment.md`
+- `docs/product/module-scope.md` §5
+- `docs/FRONTEND_MASTER_PLAN.md` — Phase 8 (v1.2)
 
-## BRD References
+## BRD References (historical)
 
-- SCR-CAN-023-025
-- BP-006, BP-007
-- UF-008, UF-009
-- BRL-022, BRL-032, BRL-059
-- FR-095-124 candidate-facing campaign discovery and enrollment behavior
+- SCR-CAN-023-025 — **deprecated in product**
+- UF-008, UF-009 — replaced by magic-link + assessment flow
+- UF-106 — retained via `/invite/:token`
 
-## Acceptance Criteria
+## Acceptance Criteria (legacy — do not extend)
 
-- `/candidate/campaigns` renders campaign cards with search and filters.
-- Empty, loading, and no-result states are present.
-- `/candidate/campaigns/:id` renders full campaign detail and enroll CTA.
-- `/candidate/campaigns/:id/enroll` blocks enrollment below 70% profile completeness.
-- Enrollment requires candidate consent and redirects to interview preparation on success.
-- `/invite/:token` validates mock magic-link state and handles expired invites.
-- All visible text is available in Vietnamese and English.
+The following applied to the deprecated public discovery implementation only:
+
+- ~~`/candidate/campaigns` renders campaign cards~~
+- ~~`/candidate/campaigns/:id/enroll` enrollment~~
+
+**Current product acceptance** (new stories):
+
+- `/invite/:token` validates magic link and auth branch (sign in vs register)
+- No navigation to `/candidate/campaigns*` in product UI
+- Full assessment per `campaign-assessment.md` (separate stories)
 
 ## Design Notes
 
-- Commands: `npm run check:ui-size`, `npm run check:i18n`, `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e`.
-- API: mock CampaignService only; live CampaignService integration deferred.
-- Domain rules: show active public campaigns, profile gate 70%, invite expiry messaging, locale indicator.
-- UI surfaces: Candidate dashboard layout for authenticated screens; marketing layout for magic-link landing.
+- Do **not** extend `CampaignBrowsePage`, `CampaignDetailPage`, or `CampaignEnrollmentPage`.
+- Route reconcile: redirect or remove per FS-123.
 
 ## Validation
 
-When updating durable proof status, use numeric booleans:
-`scripts/bin/harness-cli story update --id US-007 --unit 1 --integration 0 --e2e 0 --platform 1`
-
 | Layer | Expected proof |
 | --- | --- |
-| Unit | Existing unit suite remains green |
-| Integration | Pending CampaignService contract |
-| E2E | Smoke suite and manual Phase 8 browser flow |
+| Unit | N/A for deprecated scope |
+| Integration | Magic link + assessment stories |
+| E2E | `e2e/specs/b2b/campaign-invite-interview.spec.ts` (updated flow) |
 | Platform | Build, i18n, UI-size, typecheck |
-| Release | Not in this story |
 
 ## Harness Delta
 
-No Harness policy change expected.
-
-## Evidence
-
-- `npm run check:ui-size` passed.
-- `npm run check:i18n` passed.
-- `npm run typecheck` passed.
-- `npm test` passed: 3 files, 10 tests.
-- `npm run build` passed with existing CSS import, `/history-bg.jpg`, and chunk-size warnings.
-- `npm run test:e2e` passed: 2 Chromium smoke tests.
-- Playwright Phase 8 flow passed: browse campaign, open details, enroll, submit consent, redirect to interview preparation.
-- Screenshots saved under `test-results/phase8-ui/`.
+Mark story deprecated in backlog; track replacement stories US-010, FS-123–125.
