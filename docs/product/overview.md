@@ -1,6 +1,6 @@
 # ISAS Web Client — Product Overview
 
-Living contract distilled from `BRD/Project_Overview.md` and `BRD/Scope_and_Objectives.md`.
+Short summary. **Authoritative scope:** [`product-scope.md`](./product-scope.md) · **Modules & routes:** [`module-scope.md`](./module-scope.md).
 
 ## What this app is
 
@@ -8,39 +8,51 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 
 | Line | `campaign_id` | User | Core value |
 | --- | --- | --- | --- |
-| B2C | `null` | Candidate | Self-serve practice from CV/JD, credit wallet, personal history |
-| B2B | set | HR / Org | Campaign from JD, magic links, AI rubric scoring, candidate ranking |
+| B2C | `null` | Candidate | Practice, learning roadmap, prepaid wallet (token settle) |
+| B2B | set | HR / Organize | Campaigns, magic-link invites, AI scoring, ranking |
+
+**Deliverable:** Production-ready for **limited beta users**.
 
 ## Modules (frontend responsibility)
 
-| Module | BRD refs | Client status |
+| Module | Tier | Client status |
 | --- | --- | --- |
-| Public marketing | SCR-AUT-001, home | Partial (`/`) |
-| Auth & profile | M01, SCR-AUT-* | Partial (modal auth, `/profile`) |
-| CV analysis | M03, SCR-CAN-021–022 | Partial — wizard + report UI (`/candidate/cv/analysis`, `/candidate/cv/analysis/report`; mock) |
-| Candidate dashboard | M02, SCR-CAN-012 | Partial — completeness, heatmap, metrics (`/candidate/dashboard`; mock history) |
-| Practice interview | M05–M06, SCR-CAN-029–048 | In progress (`/practice`, `/candidate/practice/history`, result) |
-| Payment & credits | M08, SCR-CAN-026–028 | Not started |
-| Campaign discovery | M04, SCR-CAN-023-025 | Implemented (`/candidate/campaigns`, mock) |
-| Campaign management (B2B) | M04, SCR-EMP-055-058 | Implemented — campaign list, wizard, detail, publish, invite (`/employer/campaigns*`; mock) |
-| Employer onboarding | M04, SCR-EMP-052-054 | Implemented — dashboard, company profile, verification (`/employer/dashboard`, `/employer/company*`; mock) |
-| Employer analytics (B2B) | M04/M09, SCR-EMP-059-062 | Implemented — candidate pipeline, employer profile view, AI report, analytics export (`/employer/campaigns/:id/candidates`, `/employer/candidates/:id*`, `/employer/analytics`; mock) |
-| Admin | M11, SCR-ADM-* | Not started |
+| Public marketing | T2 | Partial (`/`, `/pricing`, `/enterprise`) |
+| Auth & profile | T1 | Partial |
+| CV analysis | T1 | Partial — `/candidate/cv/analysis*` (mock) |
+| Candidate dashboard | T1 | Partial — `/candidate/dashboard` (mock) |
+| Interview practice | T1 | In progress — `/practice`, `/interview/*`, history |
+| Learning roadmap | T1 | Partial — `/candidate/roadmap` |
+| Payment & token billing | T1 | Routes exist; **token model not implemented** |
+| Magic link (B2B candidate) | T1 | `/invite/:token` |
+| ~~Campaign discovery (public)~~ | — | **Out of scope** — deprecate `/candidate/campaigns*` |
+| Campaign management (B2B) | T1 | `/employer/campaigns*` (mock) |
+| Org onboarding | T1 | `/employer/company*` (mock) |
+| Employer analytics | T1 | `/employer/analytics`, candidates (mock) |
+| B2B billing / invoices | T1 | **Missing routes** |
+| Admin | T1 | Placeholder `/admin` |
+| Learning hub | T3 | Placeholder — backlog |
+| Leaderboard / certificate | T2 | Placeholder |
 
-## Key design decisions (from BRD)
+## Key product decisions (discovery)
 
-- **D1:** Interview room UI is reusable for B2B and B2C.
-- **D4/D15:** Credit-based UX — show credits, not token costs.
+- **D1:** Interview room UI reusable for B2B and B2C.
+- **Billing:** Token-based usage — show tokens to users; B2C prepaid reserve/settle; B2B postpaid monthly invoice.
+- **B2B entry:** Magic link only (no public campaign browse).
+- **Verify gate:** Unverified org cannot create or publish campaigns.
+- **Accounts:** One email = one role.
 - **D11:** Soft-delete and audit-friendly history surfaces.
 
 ## Personas
 
-Guest, Candidate, HR, Organization, Admin — see `BRD/User_Roles_and_Permissions.md`.
+Guest, Candidate, HR, Organize, Admin — see [`product-scope.md`](./product-scope.md) §3.
 
 ## Out of scope (frontend)
 
-Native iOS/Android, offline mode, live human video interviews — see `BRD/Scope_and_Objectives.md` §5.
+- Public campaign discovery (`/candidate/campaigns*`)
+- Native iOS/Android, offline mode, live human video interviews
+- Learning Hub (Tier 3), ATS webhooks (Tier 3)
 
 ## When this doc changes
 
-Update when a module ships new routes, changes API contracts, or alters role access. Link the story packet and BRD section that drove the change.
+Update when product scope or module map changes. Link story packet and BRD section if BRD intent shifts.

@@ -1,39 +1,51 @@
-# Campaign Discovery (Candidate B2B Entry)
+# Campaign Discovery — Status: OUT OF SCOPE (public browse)
 
-BRD: SCR-CAN-023-025, BP-006, BP-007, BRL-022, BRL-032, BRL-059, FR-095-124 candidate-facing discovery.
+> **Product decision (2026-07-12):** B2B candidates enter campaigns **only via magic link**. Public campaign browse/enroll is **not** part of the frontend product. See [`product-scope.md`](./product-scope.md) and [`module-scope.md`](./module-scope.md) §5.
 
-## User Flow
+---
 
-1. Candidate opens `/candidate/campaigns`.
-2. Candidate searches and filters active public campaigns.
-3. Candidate opens `/candidate/campaigns/:id` to review role, company, requirements, process, language, deadline, and capacity.
-4. Candidate starts `/candidate/campaigns/:id/enroll`.
-5. Enrollment checks the 70% profile completeness gate before submit.
-6. Successful enrollment reserves the candidate and routes to interview preparation.
-7. Magic links open `/invite/:token`, validate the invite, and continue into enrollment or the interview preparation path.
+## In scope — magic link only
 
-## Routes
-
-| Path | Component | Notes |
+| Path | Component | Status |
 | --- | --- | --- |
-| `/candidate/campaigns` | `CampaignBrowsePage` | Search, mode, seniority filters |
-| `/candidate/campaigns/:id` | `CampaignDetailPage` | Detail view with enroll CTA |
-| `/candidate/campaigns/:id/enroll` | `CampaignEnrollmentPage` | Profile gate + consent form |
-| `/invite/:token` | `MagicLinkLandingPage` | Public magic-link validation landing |
+| `/invite/:token` | `MagicLinkLandingPage` | **Keep** — canonical B2B candidate entry |
 
-## UI Contract
+**Flow:**
 
-- Structural UI stays dark monochrome per `docs/UI_GUIDE.md`.
-- Status, capacity, and fit indicators may use semantic colors.
-- List page includes loading skeleton, empty state, search, filters, and campaign cards.
-- Detail page includes hero, facts, skills, requirements, responsibilities, benefits, process, and enrollment CTA.
-- Enrollment page blocks submit when profile completeness is below 70%.
-- All user-visible copy is bilingual through `campaignsTranslations`.
+1. Employer publishes campaign → system sends email with magic link.
+2. Candidate opens `/invite/:token`.
+3. Validate invite → register/sign in if needed → interview preparation → interview room.
 
-## API
+---
 
-CampaignService endpoints are not wired yet. Mock fixtures live under `src/features/campaigns/mocks/`.
+## Out of scope — public discovery (deprecated)
 
-## Status
+The following were implemented during an earlier phase but **contradict** current product scope:
 
-Phase 8 UI implemented on mock data. Live CampaignService integration, payment-gated campaigns, and employer-side campaign creation remain future stories.
+| Path | Component | Action |
+| --- | --- | --- |
+| `/candidate/campaigns` | `CampaignBrowsePage` | Deprecate — remove nav links; redirect or remove route |
+| `/candidate/campaigns/:id` | `CampaignDetailPage` | Deprecate |
+| `/candidate/campaigns/:id/enroll` | `CampaignEnrollmentPage` | Deprecate |
+
+Do **not** extend these screens. New B2B candidate work should go through `/invite/:token` and the shared interview engine.
+
+---
+
+## Historical reference (pre-discovery)
+
+Previously documented flow (no longer valid):
+
+1. ~~Candidate opens `/candidate/campaigns`.~~
+2. ~~Search/filter public campaigns.~~
+3. ~~Enroll via `/candidate/campaigns/:id/enroll`.~~
+
+Enrollment profile gate (70% completeness) may still apply in the **magic-link** path if product requires it — confirm in a future story.
+
+---
+
+## Related
+
+- B2B employer campaign lifecycle: [`campaign-management.md`](./campaign-management.md)
+- Product scope: [`product-scope.md`](./product-scope.md) §4.7
+- Module reconcile: [`module-scope.md`](./module-scope.md) §5

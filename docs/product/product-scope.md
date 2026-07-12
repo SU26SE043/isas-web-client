@@ -1,0 +1,208 @@
+# ISAS Frontend — Product Scope Document
+
+**Status:** Approved v2 (Product Discovery)  
+**Date:** 2026-07-12  
+**Source:** Product Discovery Rounds 1–5; supersedes scattered BRD assumptions where noted below.
+
+Living contract for **what the frontend product is**. Module and screen mapping: [`module-scope.md`](./module-scope.md).
+
+---
+
+## 1. Product definition
+
+**ISAS** is an AI interview simulation and assessment platform. One shared **Interview Engine** serves two product lines:
+
+| Line | `campaign_id` | Primary users | Core value |
+| --- | --- | --- | --- |
+| **B2C** | `null` | Candidate | Self-serve practice, learning roadmap, prepaid wallet (token settle) |
+| **B2B** | set | HR, Organize | Campaigns from JD, AI screening, magic-link invites, ranking, analytics |
+
+**Deliverable:** Production-ready for **limited real beta users** (not demo-only).
+
+**Account rule:** One email = one role (no dual Candidate + HR).
+
+**Deploy target:** Beta with real users (limited cohort).
+
+---
+
+## 2. Scope tiers
+
+### Tier 1 — Required for production
+
+| ID | Module / flow |
+| --- | --- |
+| T1-01 | B2C — Interview Practice |
+| T1-02 | B2C — Learning Roadmap |
+| T1-03 | B2B — Org onboarding + verify + billing setup |
+| T1-04 | B2B — Campaign creation |
+| T1-05 | B2B — Candidate selection (upload email/CV, AI screening, ranking, select) |
+| T1-06 | B2B — Publish campaign (email config, magic link, send email) |
+| T1-07 | B2B — Assessment & analytics (interview, report, ranking, export) |
+| T1-08 | Payment B2C (prepaid wallet, PayOS — reserve + settle tokens) |
+| T1-09 | Payment B2B (postpaid monthly by tokens) |
+| T1-10 | Reports (candidate + employer views) |
+| T1-11 | Admin full (user mgmt, tenant, audit, AI config) — **internal ops only** |
+| T1-12 | Transactional email (invite, results, payment, invoice) |
+| T1-13 | Usage & billing UI (token usage, history, invoices) |
+
+### Tier 2 — Present; may be simplified
+
+- Guest / marketing landing
+- Leaderboard
+- Certificate
+
+### Tier 3 — Post-capstone backlog
+
+- Learning Hub (standalone module — distinct from Roadmap)
+- ATS webhook integration
+
+### Explicitly out of scope
+
+- **Public campaign discovery** (candidate self-browse `/candidate/campaigns`) — **magic link only** for B2B candidates
+- Native iOS/Android, offline mode, live human video interview
+- See [`module-scope.md`](./module-scope.md) for route-level reconcile
+
+---
+
+## 3. Personas & role split
+
+| Role | Frontend responsibility |
+| --- | --- |
+| **Guest** | Marketing (Tier 2), sign up / sign in |
+| **Candidate** | B2C practice, roadmap, prepaid wallet, token usage, history |
+| **HR** | Campaign lifecycle, screening, select candidates, publish, ranking/analytics |
+| **Organize** | Org onboard, company verify, **billing/payment**, HR management |
+| **Admin** | Platform ops — tenant, audit, AI config (internal) |
+
+**Decisions:**
+
+- **Payment = Organize**
+- **Campaign = HR + Organize** (both participate in campaign lifecycle)
+- **Verify gate:** Org **not verified** → **cannot create or publish campaigns**
+
+---
+
+## 4. End-to-end workflows
+
+### 4.1 B2C — Interview Practice (Tier 1)
+
+1. Register / sign in
+2. Top up prepaid wallet if balance insufficient
+3. **Create practice session** (reserve estimated tokens)
+4. Choose domain
+5. Upload CV (optional) → AI CV analysis
+6. Configure interview (question count, difficulty, …)
+7. AI generates questions
+8. Start interview → answer each question → submit
+9. AI evaluation → report
+10. **Settle actual tokens** used
+11. Save to history → view history
+
+### 4.2 B2C — Learning Roadmap (Tier 1)
+
+Sign in → Roadmap → choose domain → select one or more prior session reports → target level (Fresher / Junior / Middle / Senior) → AI generates roadmap → milestones → **lessons** (AI-generated + external theory links) → complete lesson → unlock practice → interview practice → report → milestone assessment → unlock next milestone → complete roadmap
+
+### 4.3 B2B — Pre-campaign
+
+Organize: onboard org → verify company → set up postpaid monthly billing
+
+### 4.4 B2B — Campaign creation
+
+Employer login → campaign list → create → domain → target level → upload JD → AI generates rubric → edit/upload rubric → configure questions → **save draft**
+
+*Blocked if org not verified.*
+
+### 4.5 B2B — Candidate selection
+
+Open draft → upload email list or CVs → AI screening → ranking → employer selects → candidate list
+
+### 4.6 B2B — Publish
+
+Draft → invitation email config → preview → publish → magic links → send email → **active**
+
+### 4.7 B2B — Assessment & analytics
+
+Candidate opens magic link → register/sign in if needed → interview → submit → AI evaluation → candidate report → employer ranking → analytics dashboard → export report
+
+**Candidate channel:** Magic link only — no public discovery.
+
+---
+
+## 5. Business rules — token-based monetization
+
+**Principle:** Both B2C and B2B bill by **AI tokens consumed**. Users **see token usage** on the frontend. Legacy rule “1 credit = 1 session” is **retired**.
+
+### B2C — Prepaid wallet + reserve/settle
+
+| Rule | Description |
+| --- | --- |
+| BR-B2C-01 | Top up prepaid wallet via PayOS (balance maps to token budget) |
+| BR-B2C-02 | Check sufficient balance before creating a session |
+| BR-B2C-03 | **Reserve** estimated tokens on **create practice session** |
+| BR-B2C-04 | **Settle** actual tokens after report is available |
+| BR-B2C-05 | Tokens count all AI steps (CV analysis, question gen, evaluation, roadmap steps when applicable) |
+| BR-B2C-06 | UI shows per-session token usage + usage history |
+
+### B2B — Postpaid monthly by tokens
+
+| Rule | Description |
+| --- | --- |
+| BR-B2B-01 | No prepaid deduction at publish — usage accrues through the month |
+| BR-B2B-02 | **Accumulate tokens per session** (each AI interview/screening in a campaign) |
+| BR-B2B-03 | Start of next month: **invoice** = total tokens from prior month |
+| BR-B2B-04 | Organize UI: token usage by campaign / month / session |
+| BR-B2B-05 | Tokens include AI CV screening, rubric gen, question gen, evaluation, analytics AI |
+
+### Payment roles
+
+| Rule | Description |
+| --- | --- |
+| BR-PAY-01 | Only **Organize** manages B2B billing and invoices |
+| BR-PAY-02 | B2C Candidate tops up own prepaid wallet |
+
+### BRD divergence (record for BRD update)
+
+- BRD D4/D15 stated “show credits, hide tokens” — **reversed** by discovery: show token usage.
+
+---
+
+## 6. B2C vs B2B parity
+
+Both lines are **equal-priority** deliverables for Tier 1.
+
+---
+
+## 7. Resolved contradictions
+
+| Topic | Resolution |
+| --- | --- |
+| MVP vs extended features | Tiers 1 / 2 / 3 defined |
+| B2C billing | Prepaid reserve → settle actual tokens after report |
+| B2B billing | Accumulate tokens per session → invoice at month start |
+| Credit vs token UX | Show tokens; flat per-session credit retired |
+| Public discovery vs magic link | Magic link only |
+| Dual-role accounts | Separate — one email, one role |
+| Learning Hub vs Roadmap | Roadmap Tier 1; Learning Hub Tier 3 |
+| Org verify | No create/publish campaign until verified |
+
+---
+
+## 8. Open items (product — not blocking module map)
+
+1. Token → VND conversion rate (fixed vs dynamic)
+2. Reserve estimate formula (questions, difficulty, CV analysis flag)
+3. Abandon session (B2C): partial settle vs release reserve
+4. Tier 2 acceptance criteria for marketing, leaderboard, certificate
+5. HR vs Organize screen boundaries for billing vs campaign (detailed in module-scope)
+
+---
+
+## 9. Related docs
+
+| Doc | Purpose |
+| --- | --- |
+| [`module-scope.md`](./module-scope.md) | Modules, routes, screen inventory, gaps |
+| [`overview.md`](./overview.md) | Short module status summary |
+| [`payment.md`](./payment.md) | Payment UX contract (token billing) |
+| [`campaign-discovery.md`](./campaign-discovery.md) | Public discovery **deprecated**; magic link retained |
+| `BRD/` | Full business spec (update when discovery changes BRD intent) |
