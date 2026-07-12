@@ -39,6 +39,15 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 | [campaign-assessment.md](./campaign-assessment.md) | B2B assessment interview, proctoring, violations |
 | [organization-onboarding.md](./organization-onboarding.md) | Employer workspace onboarding |
 | [employer-analytics.md](./employer-analytics.md) | Employer candidate pipeline & analytics |
+
+
+| [admin-platform.md](./admin-platform.md) | Admin platform, RBAC, audit, operations |
+
+| [employer-billing.md](./employer-billing.md) | Employer subscription, billing, invoices |
+
+
+
+
 | [api-gateway.md](./api-gateway.md) | Gateway client conventions |
 
 ## UI

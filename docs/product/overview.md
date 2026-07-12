@@ -41,6 +41,13 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 - **B2B entry:** Magic link only; **registered email → immediate campaign list row**; existing user signs in via link.
 - **Verify gate:** Unverified org cannot create or publish campaigns.
 - **Accounts:** One email = one role.
+| Admin | M11-M12, SCR-ADM-069-088 | Implemented - Admin dashboard, users, RBAC, audit, AI/system config, flags, health, maintenance, support queues (`/admin/*`; mock) |
+
+## Key design decisions (from BRD)
+
+- **D1:** Interview room UI is reusable for B2B and B2C.
+- **D4/D15:** Credit-based UX — show credits, not token costs.
+
 - **D11:** Soft-delete and audit-friendly history surfaces.
 
 ## Personas
