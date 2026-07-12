@@ -98,4 +98,3 @@ Khi generate hoặc sửa UI, agent **phải** cho user thấy thao tác trên m
 
 Chi tiết: `.cursor/rules/ui-visible-browser.mdc`
 
-<!-- 💡 GHI CHÚ CHO BẠN: SAU NÀY NẾU CHỐT THÊM ĐƯỢC RULE MỚI KHI FIX GIAO DIỆN (Ví dụ: "Không được xài thẻ <div> bọc ngoài cùng mà phải xài Fragment", hay "Luôn phải handle state loading cho nút button"), BẠN HÃY GẠCH ĐẦU DÒNG VÀ CẬP NHẬT TRỰC TIẾP VÀO KHU VỰC NÀY ĐỂ AI NÓ NHỚ LUẬT MỚI -->
