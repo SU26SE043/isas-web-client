@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BriefcaseBusiness } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CircleHelp, LifeBuoy, Settings } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
@@ -113,6 +113,26 @@ export const DashboardLayout: React.FC = () => {
           </svg>
         ),
       },
+      {
+        to: '/candidate/notifications',
+        label: t('engagement.nav.notifications'),
+        icon: <Bell className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/candidate/settings',
+        label: t('engagement.nav.settings'),
+        icon: <Settings className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/candidate/help',
+        label: t('engagement.nav.help'),
+        icon: <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />,
+      },
+      {
+        to: '/candidate/support',
+        label: t('engagement.nav.support'),
+        icon: <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />,
+      },
     ],
     [t],
   );
@@ -182,7 +202,7 @@ export const DashboardLayout: React.FC = () => {
 
           <div className="border-t border-subtle p-3 space-y-3">
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
-              <LanguageToggle compact={isCollapsed} />
+              <LanguageToggle compact />
             </div>
             <button
               type="button"
