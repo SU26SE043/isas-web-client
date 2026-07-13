@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ServerErrorPage } from '@/pages/errors/ErrorPages';
+import { captureError } from '@/shared/monitoring/errorMonitoring';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -18,7 +19,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Unhandled UI error:', error, info.componentStack);
+    captureError(error, { componentStack: info.componentStack });
   }
 
   render() {

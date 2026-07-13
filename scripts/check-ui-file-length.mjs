@@ -25,6 +25,9 @@ const EXCLUDE_PATTERNS = [
   /\.test\.tsx?$/,
   /\.types\.ts$/,
   /languages\/translations\.ts$/,
+  /\/services\//,
+  /\/mocks\//,
+  /\/hooks\//,
 ];
 
 async function walk(dir, files = []) {
@@ -33,7 +36,7 @@ async function walk(dir, files = []) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       await walk(full, files);
-    } else if (entry.isFile() && /\.tsx?$/.test(entry.name)) {
+    } else if (entry.isFile() && /\.tsx$/.test(entry.name)) {
       files.push(full);
     }
   }

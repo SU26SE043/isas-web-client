@@ -11,6 +11,11 @@ const envSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value === 'true' || value === '1'),
+  VITE_SENTRY_DSN: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value ?? ''),
   MODE: z.enum(['development', 'production', 'test']),
   DEV: z.boolean(),
   PROD: z.boolean(),
@@ -20,6 +25,7 @@ function parseEnv() {
   const result = envSchema.safeParse({
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_ENABLE_ENTERPRISE_SSO: import.meta.env.VITE_ENABLE_ENTERPRISE_SSO,
+    VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
     MODE: import.meta.env.MODE,
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,

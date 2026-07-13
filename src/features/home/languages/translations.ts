@@ -3,6 +3,8 @@ import type { TranslationDictionary } from '../../../shared/languages';
 export const homeTranslations: TranslationDictionary = {
   vi: {
     'home.pageTitle': 'PIpraint — Luyện phỏng vấn AI',
+    'home.metaDescription':
+      'Luyện phỏng vấn AI, phân tích CV và nhận phản hồi tức thì. Nền tảng đánh giá năng lực cho ứng viên và nhà tuyển dụng.',
     'hero.badge': 'Hệ thống phỏng vấn ứng dụng AI',
     'hero.titleLine1': 'Luyện phỏng vấn cùng',
     'hero.highlight': 'Trí tuệ nhân tạo',
@@ -50,6 +52,8 @@ export const homeTranslations: TranslationDictionary = {
   },
   en: {
     'home.pageTitle': 'PIpraint — AI Interview Practice',
+    'home.metaDescription':
+      'AI interview practice, CV analysis, and instant feedback. Competency assessment for candidates and employers.',
     'hero.badge': 'AI-powered interview system',
     'hero.titleLine1': 'Practice interviews with',
     'hero.highlight': 'Artificial Intelligence',

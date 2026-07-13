@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-type E2ERole = 'candidate' | 'organize' | 'hr';
+type E2ERole = 'candidate' | 'organize' | 'hr' | 'admin';
 
 const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: string; title: string }> = {
   candidate: {
@@ -20,6 +20,12 @@ const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: strin
     fullName: 'E2E HR',
     email: 'hr@isas.dev',
     title: 'Recruiter',
+  },
+  admin: {
+    id: 'e2e-admin',
+    fullName: 'E2E Admin',
+    email: 'admin@isas.dev',
+    title: 'Platform Administrator',
   },
 };
 
@@ -64,7 +70,13 @@ export async function loginAs(page: Page, role: E2ERole) {
   await page.getByLabel(/e-mail/i).fill(roleProfiles[role].email);
   await page.getByLabel(/password/i).fill('Password123!');
   await page.getByRole('button', { name: /^Sign in$/i }).click();
-  await page.waitForURL(role === 'candidate' ? /\/candidate\/dashboard/ : /\/employer\/dashboard/);
+  const destination =
+    role === 'candidate'
+      ? /\/candidate\/dashboard/
+      : role === 'admin'
+        ? /\/admin(\/dashboard)?/
+        : /\/employer\/dashboard/;
+  await page.waitForURL(destination);
 }
 
 export async function logoutForRoleSwitch(page: Page) {

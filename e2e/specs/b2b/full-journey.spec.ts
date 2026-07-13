@@ -60,6 +60,9 @@ test.describe('B2B full journey', () => {
 
     await logoutForRoleSwitch(page);
     await loginAs(page, 'organize');
+    await page.goto('/employer/campaigns/frontend-engineer-remote/candidates');
+    await expect(page.getByRole('heading', { name: /^Candidate pipeline$/i })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: /^Rank$/i })).toBeVisible();
     await page.goto('/employer/invoices');
     await expect(page.getByRole('heading', { name: /^Invoices$/i })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: /Token usage/i })).toBeVisible();
