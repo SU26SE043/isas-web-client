@@ -40,3 +40,12 @@ export interface SubmitCvAnalysisInput {
   jobDescription?: string;
   language: 'vi' | 'en';
 }
+
+export interface UploadedCvFile {
+  id: string;
+  fileName: string;
+  fileSizeBytes: number;
+  mimeType: string;
+  uploadedAt: string;
+  analysisId: string;
+}

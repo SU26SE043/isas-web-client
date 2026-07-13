@@ -1,6 +1,8 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { MOCK_CV_ANALYSIS_RESULT } from '../mocks/cvAnalysis.fixtures';
-import type { CvAnalysisResult, SubmitCvAnalysisInput } from '../types/cvAnalysis.types';
+import { MOCK_CV_ANALYSIS_RESULT, MOCK_UPLOADED_CV_FILES } from '../mocks/cvAnalysis.fixtures';
+import type { CvAnalysisResult, SubmitCvAnalysisInput, UploadedCvFile } from '../types/cvAnalysis.types';
+
+const UPLOADED_CV_STORAGE_KEY = 'isas-uploaded-cvs';
 
 export class CvAnalysisError extends Error {
   readonly code: 'passwordProtected' | 'corruptFile' | 'parseFailed';
@@ -12,6 +14,29 @@ export class CvAnalysisError extends Error {
   }
 }
 
+function readUploadedCvStore(): UploadedCvFile[] {
+  if (typeof sessionStorage !== 'undefined') {
+    const raw = sessionStorage.getItem(UPLOADED_CV_STORAGE_KEY);
+    if (raw) {
+      try {
+        return JSON.parse(raw) as UploadedCvFile[];
+      } catch {
+        sessionStorage.removeItem(UPLOADED_CV_STORAGE_KEY);
+      }
+    }
+  }
+  return structuredClone(MOCK_UPLOADED_CV_FILES);
+}
+
+function writeUploadedCvStore(files: UploadedCvFile[]) {
+  uploadedCvStore = files;
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem(UPLOADED_CV_STORAGE_KEY, JSON.stringify(files));
+  }
+}
+
+let uploadedCvStore = readUploadedCvStore();
+
 function detectMockFailure(file: File): CvAnalysisError | null {
   const name = file.name.toLowerCase();
   if (name.includes('locked') || name.includes('protected')) {
@@ -21,6 +46,28 @@ function detectMockFailure(file: File): CvAnalysisError | null {
     return new CvAnalysisError('corruptFile');
   }
   return null;
+}
+
+function registerUploadedCv(file: File, analysisId: string): UploadedCvFile {
+  const entry: UploadedCvFile = {
+    id: `cv-file-${crypto.randomUUID().slice(0, 8)}`,
+    fileName: file.name,
+    fileSizeBytes: file.size,
+    mimeType: file.type || 'application/octet-stream',
+    uploadedAt: new Date().toISOString(),
+    analysisId,
+  };
+
+  const existingIndex = uploadedCvStore.findIndex(
+    (item) => item.fileName.toLowerCase() === entry.fileName.toLowerCase(),
+  );
+  const nextStore =
+    existingIndex >= 0
+      ? uploadedCvStore.map((item, index) => (index === existingIndex ? entry : item))
+      : [entry, ...uploadedCvStore];
+
+  writeUploadedCvStore(nextStore);
+  return entry;
 }
 
 export const cvAnalysisService = {
@@ -35,7 +82,18 @@ export const cvAnalysisService = {
     }
 
     await mockDelay(800);
-    return { analysisId: MOCK_CV_ANALYSIS_RESULT.id };
+    const analysisId = `cv-analysis-${crypto.randomUUID().slice(0, 8)}`;
+    registerUploadedCv(input.file, analysisId);
+    return { analysisId };
+  },
+
+  async listUploadedCvs(): Promise<UploadedCvFile[]> {
+    if (!usesMockData('cv-analysis')) {
+      throw new Error('CV analysis API is not wired yet. Keep usesMockData("cv-analysis") true.');
+    }
+
+    await mockDelay(250);
+    return structuredClone(uploadedCvStore);
   },
 
   async getAnalysisResult(analysisId?: string): Promise<CvAnalysisResult> {

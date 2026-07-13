@@ -49,3 +49,14 @@ export const MOCK_CV_ANALYSIS_RESULT: CvAnalysisResult = {
     period: '2014 - 2018',
   },
 };
+
+export const MOCK_UPLOADED_CV_FILES = [
+  {
+    id: 'cv-file-001',
+    fileName: 'nguyen-van-a-cv.pdf',
+    fileSizeBytes: 248_320,
+    mimeType: 'application/pdf',
+    uploadedAt: '2026-07-10T09:30:00.000Z',
+    analysisId: 'cv-analysis-001',
+  },
+];
