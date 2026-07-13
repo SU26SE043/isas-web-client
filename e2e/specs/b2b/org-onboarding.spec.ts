@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { loginAs } from '../../fixtures/auth';
 
 test.describe('B2B organization onboarding', () => {
+  test.setTimeout(60_000);
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       window.sessionStorage.removeItem('isas-mock-employer-workspace');

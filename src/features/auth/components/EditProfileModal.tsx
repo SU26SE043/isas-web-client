@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/authService';
 import type { UpdateProfileRequest } from '../types/auth.types';
@@ -39,7 +40,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             onClose();
         } catch (error) {
             console.error('Failed to update profile:', error);
-            // TODO: Show error message to user
+            toast.error(t('profile.updateError'));
         } finally {
             setIsLoading(false);
         }
