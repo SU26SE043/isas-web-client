@@ -163,13 +163,12 @@ export const useInterviewSessionStore = create<InterviewSessionState>((set, get)
   },
   toggleMic: () => set((state) => ({ micEnabled: !state.micEnabled })),
   toggleCamera: () => {
-    const { proctoringConfig } = get();
-    if (proctoringConfig.cameraAlwaysOn) return;
-    set((state) => ({ cameraEnabled: !state.cameraEnabled }));
+    // Camera is immutable during interviews (B2C and B2B).
   },
   toggleRecording: () => set((state) => ({ isRecording: !state.isRecording })),
   registerViolation: (type) => {
     const state = get();
+    if (!state.proctoringConfig.antiCheatEnabled) return;
     if (state.status === 'completed' || state.status === 'auto_submitted') return;
 
     const nextCount = state.violationCount + 1;

@@ -19,7 +19,7 @@ import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { useInterviewSession } from '../hooks/useInterviewSession';
 import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
-import { usePeriodicFaceCapture } from '../hooks/usePeriodicFaceCapture';
+import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring';
 import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
@@ -31,21 +31,21 @@ export const PracticeInterviewPage: React.FC = () => {
   useInterviewFlowSession(sessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const session = useInterviewSession(sessionId);
-  const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
+  const media = useInterviewMedia(session.micEnabled, true);
   const [questionListOpen, setQuestionListOpen] = useState(false);
-  const isCampaignSession = session.proctoringConfig.isCampaignSession;
+
+  const { antiCheatEnabled } = useInterviewRoomProctoring({
+    sessionId,
+    roomActive: session.isRoomActive,
+    violationPaused: session.isViolationPaused,
+    videoRef: media.videoRef,
+  });
 
   const recording = useInterviewRecording({
     sessionId,
     stream: media.stream,
     enabled: session.isRecording && session.isRoomActive,
     paused: session.isManualPaused || session.isViolationPaused,
-  });
-
-  usePeriodicFaceCapture({
-    sessionId,
-    enabled: session.isRoomActive && !session.isViolationPaused,
-    videoRef: media.videoRef,
   });
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export const PracticeInterviewPage: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={session.isRecording} />
-      {isCampaignSession ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
+      {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
       {paymentService.hasReservation(sessionId) ? (
         <div className="px-6 pt-4">
           <ReserveSettleBanner
@@ -81,7 +81,7 @@ export const PracticeInterviewPage: React.FC = () => {
         </div>
       ) : null}
 
-      {isCampaignSession && session.isAutoSubmitted ? (
+      {antiCheatEnabled && session.isAutoSubmitted ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
           {t('practice.room.autoSubmitted')}
         </div>
@@ -106,7 +106,7 @@ export const PracticeInterviewPage: React.FC = () => {
           <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col gap-6 lg:col-span-4">
             <CandidateCameraPanel
               videoRef={media.videoRef}
-              cameraEnabled={session.cameraEnabled}
+              cameraEnabled
               micEnabled={session.micEnabled}
               mediaReady={media.state === 'ready'}
             />
@@ -126,16 +126,13 @@ export const PracticeInterviewPage: React.FC = () => {
         remainingSeconds={session.remainingSeconds}
         isSubmitting={session.status === 'submitting'}
         isPaused={session.isManualPaused}
-        isLocked={(isCampaignSession && session.isViolationPaused) || session.isAutoSubmitted}
-        cameraLocked={session.proctoringConfig.cameraAlwaysOn}
+        isLocked={(antiCheatEnabled && session.isViolationPaused) || session.isAutoSubmitted}
         micEnabled={session.micEnabled}
-        cameraEnabled={session.cameraEnabled}
         isRecording={session.isRecording}
         chunksUploaded={recording.chunksUploaded}
         onSubmit={() => void session.submitAnswer()}
         onTogglePause={session.togglePause}
         onToggleMic={session.toggleMic}
-        onToggleCamera={session.toggleCamera}
         onToggleRecording={session.toggleRecording}
       />
 
@@ -145,10 +142,10 @@ export const PracticeInterviewPage: React.FC = () => {
         currentIndex={session.currentIndex}
         onClose={() => setQuestionListOpen(false)}
       />
-      {isCampaignSession ? <TabLockOverlay visible={session.isTabHidden} /> : null}
+      {antiCheatEnabled ? <TabLockOverlay visible={session.isTabHidden} /> : null}
       <NetworkLossDialog open={session.isOffline} />
       <PauseOverlay visible={session.isManualPaused} onResume={session.togglePause} />
-      {isCampaignSession ? (
+      {antiCheatEnabled ? (
         <ViolationPauseOverlay
           visible={session.isViolationPaused && !session.isTabHidden}
           reason={session.violationReason}

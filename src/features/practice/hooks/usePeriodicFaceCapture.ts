@@ -14,7 +14,7 @@ export function usePeriodicFaceCapture({ sessionId, enabled, videoRef }: UsePeri
   const captureCountRef = useRef(0);
 
   useEffect(() => {
-    if (!enabled || !proctoringConfig.isCampaignSession || proctoringConfig.faceCaptureIntervalSec <= 0) {
+    if (!enabled || !proctoringConfig.antiCheatEnabled || proctoringConfig.faceCaptureIntervalSec <= 0) {
       return undefined;
     }
 
@@ -43,8 +43,8 @@ export function usePeriodicFaceCapture({ sessionId, enabled, videoRef }: UsePeri
     return () => window.clearInterval(timerId);
   }, [
     enabled,
+    proctoringConfig.antiCheatEnabled,
     proctoringConfig.faceCaptureIntervalSec,
-    proctoringConfig.isCampaignSession,
     registerViolation,
     sessionId,
     videoRef,

@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { useInterviewSessionStore } from '../stores/interviewSessionStore';
-import { useProctoring } from './useProctoring';
 import { useNetworkStatus } from './useNetworkStatus';
 
 export function useInterviewSession(sessionId: string) {
@@ -40,7 +39,6 @@ export function useInterviewSession(sessionId: string) {
   const isRoomActive =
     status !== 'loading' && status !== 'completed' && status !== 'auto_submitted';
 
-  useProctoring(sessionId, isRoomActive);
   useNetworkStatus(isRoomActive);
 
   useEffect(() => {
@@ -86,7 +84,6 @@ export function useInterviewSession(sessionId: string) {
   const togglePause = useInterviewSessionStore((state) => state.togglePause);
   const continueAfterViolation = useInterviewSessionStore((state) => state.continueAfterViolation);
   const toggleMic = useInterviewSessionStore((state) => state.toggleMic);
-  const toggleCamera = useInterviewSessionStore((state) => state.toggleCamera);
   const toggleRecording = useInterviewSessionStore((state) => state.toggleRecording);
 
   return {
@@ -111,7 +108,6 @@ export function useInterviewSession(sessionId: string) {
     togglePause,
     continueAfterViolation,
     toggleMic,
-    toggleCamera,
     toggleRecording,
     submitAnswer,
     isLoading: status === 'loading',

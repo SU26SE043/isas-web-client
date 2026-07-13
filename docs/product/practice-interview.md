@@ -89,13 +89,22 @@ Live API integration TBD.
 
 Interview room components must stay campaign-agnostic so B2B magic-link flow can reuse them later (BRD D1).
 
+### Interview room — camera & proctoring split
+
+| Rule | B2C practice | B2B campaign |
+| --- | --- | --- |
+| Camera during room | **Forced ON** — no disable control | **Forced ON** — no disable control |
+| Anti-cheat (`visibilitychange`, focus loss) | **Off** — no listeners registered | **Strict** — violations logged + pause UI |
+| Periodic webcam snapshots | **Off** — no intervals | **On** — interval from campaign proctoring config |
+| Implementation | `useInterviewRoomProctoring` + `ProctoringConfig.antiCheatEnabled` | same hook, strict mode |
+
 ### B2B campaign assessment (proctoring)
 
-When `campaign_id` is set (session id prefix `campaign-`), the full assessment flow applies: device check, **terms** (`/interview/:sessionId/terms`), identity baseline photo, camera always on, periodic face capture (mock), tab/focus monitoring, violation pause overlay, auto-submit at max violations — see [`campaign-assessment.md`](./campaign-assessment.md).
+When `campaign_id` is set (session id prefix `campaign-`), the full assessment flow applies: device check, **terms** (`/interview/:sessionId/terms`), identity baseline photo, **camera always on**, periodic face capture (mock), tab/focus monitoring, violation pause overlay, auto-submit at max violations — see [`campaign-assessment.md`](./campaign-assessment.md).
 
 Flow progress is persisted per session in `sessionStorage` (`isas-interview-flow:{sessionId}`).
 
-B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** the terms step and **without anti-cheat / proctoring** (no tab lock, violation pause, or auto-submit on focus loss). Recording consent covers capture only; camera may be toggled off during the session.
+B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** the terms step and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera remains mandatory** for the entire session; the disable-camera control is not shown.
 
 ## Status
 

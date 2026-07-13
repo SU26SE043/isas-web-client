@@ -10,7 +10,7 @@ function mapProctoringEvent(type: ViolationType) {
 }
 
 export function useProctoring(sessionId: string, enabled: boolean) {
-  const antiCheatEnabled = useInterviewSessionStore((state) => state.proctoringConfig.isCampaignSession);
+  const antiCheatEnabled = useInterviewSessionStore((state) => state.proctoringConfig.antiCheatEnabled);
   const registerViolation = useInterviewSessionStore((state) => state.registerViolation);
   const setTabHidden = useInterviewSessionStore((state) => state.setTabHidden);
   const dismissTabLockWarning = useInterviewSessionStore((state) => state.dismissTabLockWarning);
