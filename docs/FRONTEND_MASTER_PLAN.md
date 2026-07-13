@@ -385,7 +385,7 @@ flowchart TB
 | **Loading** | Submit button loading; SSO redirect spinner |
 | **Empty** | — |
 | **Permission** | Post-login redirect by role; email verify gate (BR-01) |
-| **Deliverables** | Full auth flows B2C + B2B SSO entry |
+| **Deliverables** | Full auth flows B2C + B2B SSO entry; E2E auth coverage in B2C/B2B journeys |
 | **DoD** | Register → verify email → login → dashboard redirect; MFA for admin |
 | **Acceptance** | FR-001–003; BRL-019 admin MFA; SEC-018/019 timeouts |
 | **Dependencies** | P1, P2; AuthService API |
