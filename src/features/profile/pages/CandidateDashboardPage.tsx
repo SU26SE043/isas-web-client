@@ -61,9 +61,16 @@ export const CandidateDashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <MetricCard
-          label={t('profile.dashboard.credits')}
-          value={String(summary?.creditsRemaining ?? 0)}
-          hint={t('profile.dashboard.creditsHint')}
+          label={t('profile.dashboard.tokens')}
+          value={(summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0).toLocaleString()}
+          hint={
+            (summary?.tokenReserved ?? 0) > 0
+              ? t('profile.dashboard.tokensReservedHint').replace(
+                  '{reserved}',
+                  (summary?.tokenReserved ?? 0).toLocaleString(),
+                )
+              : t('profile.dashboard.tokensHint')
+          }
           to="/candidate/credits"
         />
         <MetricCard

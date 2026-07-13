@@ -50,7 +50,8 @@ export const InterviewPrepPage: React.FC = () => {
             meetsProfileGate={gate.meetsProfileGate}
             hasCredits={gate.hasCredits}
             completenessPercent={gate.completenessPercent}
-            creditsRemaining={gate.creditsRemaining}
+            creditsRemaining={gate.tokenAvailable}
+            reserveEstimate={gate.reserveEstimate}
           />
 
           <div className="rounded-xl border border-subtle bg-surface-raised p-6">

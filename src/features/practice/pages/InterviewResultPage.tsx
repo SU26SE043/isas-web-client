@@ -11,6 +11,9 @@ import { ReportTabs, type ReportTabId } from '../components/result/ReportTabs';
 import { ResultScoringPanel } from '../components/result/ResultScoringPanel';
 import { RoadmapTimeline } from '../components/learning/RoadmapTimeline';
 import { learningService } from '../services/learning.service';
+import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
+import { useTokenSettlement } from '@/features/payment/hooks/useTokenSettlement';
+import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
 import type { RoadmapResponse } from '../types/learning.types';
 
 export const InterviewResultPage: React.FC = () => {
@@ -29,9 +32,20 @@ export const InterviewResultPage: React.FC = () => {
   const isPostInterview = Boolean(assessmentId || sessionId) && !isFromHistory;
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
+  const settleSessionId = useMemo(() => {
+    if (sessionId) return sessionId;
+    if (assessmentId?.startsWith('assessment-')) return assessmentId.replace('assessment-', '');
+    return null;
+  }, [assessmentId, sessionId]);
+
   const { result, state, error } = useInterviewResult({
     resultId: resultId ?? '',
     pollWhenScoring: isPostInterview,
+  });
+
+  useTokenSettlement({
+    sessionId: settleSessionId,
+    enabled: isPostInterview && state === 'ready',
   });
 
   useEffect(() => {
@@ -152,6 +166,13 @@ export const InterviewResultPage: React.FC = () => {
 
         {state === 'ready' && result ? (
           <div className="space-y-8">
+            {isPostInterview ? (
+              <ReserveSettleBanner
+                mode="settled"
+                reservedTokens={PRACTICE_RESERVE_ESTIMATE}
+                actualTokens={MOCK_SETTLE_ACTUAL_TOKENS}
+              />
+            ) : null}
             <ReportTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
             {activeTab === 'overview' ? (

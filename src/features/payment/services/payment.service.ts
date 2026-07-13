@@ -1,46 +1,125 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
+import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
 import type {
   CompleteOrderResult,
   CreateOrderResult,
-  CreditPackage,
+  ReserveTokensResult,
+  SettleTokensResult,
   PaymentOrder,
   SubscriptionPlan,
+  TokenPackage,
+  TokenUsageRecord,
   WalletSnapshot,
 } from '../types/payment.types';
 import {
   INITIAL_WALLET_BALANCE,
-  MOCK_CREDIT_PACKAGES,
+  MOCK_TOKEN_PACKAGES,
   MOCK_SUBSCRIPTION_PLANS,
+  MOCK_TOKEN_USAGE,
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks/payment.fixtures';
 
+const STORAGE_KEY = 'isas-mock-payment-wallet';
+
+interface PersistedPaymentState {
+  walletBalance: number;
+  transactions: typeof MOCK_WALLET_TRANSACTIONS;
+  tokenUsageRecords: TokenUsageRecord[];
+  sessionReserves: Record<string, number>;
+  settledSessions: string[];
+  pendingOrders: PaymentOrder[];
+}
+
 let walletBalance = INITIAL_WALLET_BALANCE;
 const transactions = [...MOCK_WALLET_TRANSACTIONS];
+const tokenUsageRecords = [...MOCK_TOKEN_USAGE];
 const pendingOrders = new Map<string, PaymentOrder>();
-const consumedSessions = new Set<string>();
+const sessionReserves = new Map<string, number>();
+const settledSessions = new Set<string>();
+
+function persistState(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  const payload: PersistedPaymentState = {
+    walletBalance,
+    transactions,
+    tokenUsageRecords,
+    sessionReserves: Object.fromEntries(sessionReserves),
+    settledSessions: [...settledSessions],
+    pendingOrders: [...pendingOrders.values()],
+  };
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function hydrateState(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw) as PersistedPaymentState;
+    walletBalance = data.walletBalance;
+    transactions.splice(0, transactions.length, ...data.transactions);
+    tokenUsageRecords.splice(0, tokenUsageRecords.length, ...data.tokenUsageRecords);
+    sessionReserves.clear();
+    for (const [sessionId, amount] of Object.entries(data.sessionReserves)) {
+      sessionReserves.set(sessionId, amount);
+    }
+    settledSessions.clear();
+    for (const sessionId of data.settledSessions) {
+      settledSessions.add(sessionId);
+    }
+    pendingOrders.clear();
+    for (const order of data.pendingOrders) {
+      pendingOrders.set(order.orderId, order);
+    }
+  } catch {
+    // Ignore corrupt mock wallet snapshots.
+  }
+}
+
+hydrateState();
+
+function sumReserved(): number {
+  let total = 0;
+  for (const amount of sessionReserves.values()) {
+    total += amount;
+  }
+  return total;
+}
+
+function buildSnapshot(): WalletSnapshot {
+  const reserved = sumReserved();
+  return {
+    balance: walletBalance,
+    reserved,
+    available: walletBalance - reserved,
+    transactions: [...transactions].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    ),
+  };
+}
 
 function buildCheckoutUrl(orderId: string): string {
   return `/payment/callback?orderId=${encodeURIComponent(orderId)}&status=PAID`;
 }
 
-function findPackage(packageId: string): CreditPackage | SubscriptionPlan | undefined {
+function findPackage(packageId: string): TokenPackage | SubscriptionPlan | undefined {
   return (
-    MOCK_CREDIT_PACKAGES.find((item) => item.id === packageId) ??
+    MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId) ??
     MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId)
   );
 }
 
-function resolveCredits(packageId: string): number {
-  const creditPackage = MOCK_CREDIT_PACKAGES.find((item) => item.id === packageId);
-  if (creditPackage) return creditPackage.credits;
+function resolveTokens(packageId: string): number {
+  const tokenPackage = MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId);
+  if (tokenPackage) return tokenPackage.tokens;
   const subscription = MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId);
-  if (subscription) return subscription.creditsPerMonth;
+  if (subscription) return subscription.tokensPerMonth;
   return 0;
 }
 
 function resolvePrice(packageId: string): number {
-  const creditPackage = MOCK_CREDIT_PACKAGES.find((item) => item.id === packageId);
-  if (creditPackage) return creditPackage.priceUsd;
+  const tokenPackage = MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId);
+  if (tokenPackage) return tokenPackage.priceUsd;
   const subscription = MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId);
   if (subscription) return subscription.priceUsdMonthly;
   return 0;
@@ -59,25 +138,36 @@ export const paymentService = {
     }
 
     await mockDelay(300);
-    return {
-      balance: walletBalance,
-      transactions: [...transactions].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
-    };
+    return buildSnapshot();
   },
 
   getBalance(): number {
     return walletBalance;
   },
 
-  async listPackages(): Promise<CreditPackage[]> {
+  getAvailableBalance(): number {
+    return walletBalance - sumReserved();
+  },
+
+  getReservedBalance(): number {
+    return sumReserved();
+  },
+
+  hasReservation(sessionId: string): boolean {
+    return sessionReserves.has(sessionId);
+  },
+
+  getReservationAmount(sessionId: string): number {
+    return sessionReserves.get(sessionId) ?? 0;
+  },
+
+  async listPackages(): Promise<TokenPackage[]> {
     if (!usesMockData('payment')) {
       throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
     }
 
     await mockDelay(250);
-    return MOCK_CREDIT_PACKAGES;
+    return MOCK_TOKEN_PACKAGES;
   },
 
   async listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
@@ -89,16 +179,27 @@ export const paymentService = {
     return MOCK_SUBSCRIPTION_PLANS;
   },
 
+  async listTokenUsage(): Promise<TokenUsageRecord[]> {
+    if (!usesMockData('payment')) {
+      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
+    }
+
+    await mockDelay(300);
+    return [...tokenUsageRecords].sort(
+      (a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime(),
+    );
+  },
+
   async createOrder(packageId: string): Promise<CreateOrderResult> {
     if (!usesMockData('payment')) {
       throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
     }
 
-    const credits = resolveCredits(packageId);
+    const tokens = resolveTokens(packageId);
     const amountUsd = resolvePrice(packageId);
     const names = resolveNames(packageId);
 
-    if (credits <= 0) {
+    if (tokens <= 0) {
       throw new Error('PACKAGE_NOT_FOUND');
     }
 
@@ -110,7 +211,7 @@ export const paymentService = {
       packageId,
       packageName: names.name,
       packageNameVi: names.nameVi,
-      credits,
+      tokens,
       amountUsd,
       status: 'pending',
       checkoutUrl: buildCheckoutUrl(orderId),
@@ -145,24 +246,19 @@ export const paymentService = {
     if (status !== 'PAID') {
       order.status = status === 'FAILED' ? 'failed' : 'cancelled';
       pendingOrders.set(orderId, order);
-      return {
-        order,
-        wallet: {
-          balance: walletBalance,
-          transactions: [...transactions],
-        },
-      };
+      persistState();
+      return { order, wallet: buildSnapshot() };
     }
 
     order.status = 'paid';
-    walletBalance += order.credits;
+    walletBalance += order.tokens;
     const isSubscription = order.packageId.startsWith('sub-');
 
     transactions.unshift({
       id: `tx-${crypto.randomUUID().slice(0, 8)}`,
       type: isSubscription ? 'subscription' : 'purchase',
       amount: order.amountUsd,
-      creditsDelta: order.credits,
+      tokensDelta: order.tokens,
       description: `${order.packageName} purchase`,
       descriptionVi: `Mua ${order.packageNameVi}`,
       createdAt: new Date().toISOString(),
@@ -170,44 +266,118 @@ export const paymentService = {
     });
 
     pendingOrders.delete(orderId);
-
-    return {
-      order,
-      wallet: {
-        balance: walletBalance,
-        transactions: [...transactions],
-      },
-    };
+    persistState();
+    return { order, wallet: buildSnapshot() };
   },
 
-  async consumeCredit(sessionId: string): Promise<number> {
+  async reserveTokens(
+    sessionId: string,
+    amount: number = PRACTICE_RESERVE_ESTIMATE,
+  ): Promise<ReserveTokensResult> {
     if (!usesMockData('payment')) {
       throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
     }
 
-    if (consumedSessions.has(sessionId)) {
-      return walletBalance;
-    }
-
-    if (walletBalance <= 0) {
-      throw new Error('no_credits');
-    }
-
     await mockDelay(200);
-    walletBalance -= 1;
-    consumedSessions.add(sessionId);
+
+    if (sessionReserves.has(sessionId)) {
+      return { wallet: buildSnapshot(), reservedAmount: sessionReserves.get(sessionId) ?? amount };
+    }
+
+    if (buildSnapshot().available < amount) {
+      throw new Error('INSUFFICIENT_BALANCE');
+    }
+
+    sessionReserves.set(sessionId, amount);
 
     transactions.unshift({
       id: `tx-${crypto.randomUUID().slice(0, 8)}`,
-      type: 'consumption',
+      type: 'reserve',
       amount: 0,
-      creditsDelta: -1,
-      description: 'Practice interview session',
-      descriptionVi: 'Phien luyen phong van',
+      tokensDelta: 0,
+      description: `Reserved ${amount} tokens for practice session`,
+      descriptionVi: `Giữ ${amount} token cho phiên luyện tập`,
       createdAt: new Date().toISOString(),
       status: 'completed',
+      sessionId,
     });
 
-    return walletBalance;
+    tokenUsageRecords.unshift({
+      id: `usage-${crypto.randomUUID().slice(0, 8)}`,
+      sessionId,
+      sessionTitle: 'Practice interview',
+      sessionTitleVi: 'Phien luyen phong van',
+      reservedTokens: amount,
+      actualTokens: 0,
+      settledAt: new Date().toISOString(),
+      status: 'reserved',
+    });
+
+    persistState();
+    return { wallet: buildSnapshot(), reservedAmount: amount };
+  },
+
+  async settleTokens(
+    sessionId: string,
+    actualTokens: number = MOCK_SETTLE_ACTUAL_TOKENS,
+  ): Promise<SettleTokensResult> {
+    if (!usesMockData('payment')) {
+      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
+    }
+
+    await mockDelay(300);
+
+    if (settledSessions.has(sessionId)) {
+      const existing = tokenUsageRecords.find(
+        (item) => item.sessionId === sessionId && item.status === 'settled',
+      );
+      if (existing) {
+        return { wallet: buildSnapshot(), usage: existing };
+      }
+    }
+
+    const reserved = sessionReserves.get(sessionId);
+    if (!reserved) {
+      throw new Error('NO_RESERVATION');
+    }
+
+    sessionReserves.delete(sessionId);
+    walletBalance -= actualTokens;
+    settledSessions.add(sessionId);
+
+    const usage: TokenUsageRecord = {
+      id: `usage-${crypto.randomUUID().slice(0, 8)}`,
+      sessionId,
+      sessionTitle: 'Practice interview',
+      sessionTitleVi: 'Phien luyen phong van',
+      reservedTokens: reserved,
+      actualTokens,
+      settledAt: new Date().toISOString(),
+      status: 'settled',
+    };
+
+    const reservedIndex = tokenUsageRecords.findIndex(
+      (item) => item.sessionId === sessionId && item.status === 'reserved',
+    );
+    if (reservedIndex >= 0) {
+      tokenUsageRecords[reservedIndex] = usage;
+    } else {
+      tokenUsageRecords.unshift(usage);
+    }
+
+    transactions.unshift({
+      id: `tx-${crypto.randomUUID().slice(0, 8)}`,
+      type: 'settlement',
+      amount: 0,
+      tokensDelta: -actualTokens,
+      description: `Settled ${actualTokens} tokens (reserved ${reserved})`,
+      descriptionVi: `Quyet toan ${actualTokens} token (giu ${reserved})`,
+      createdAt: new Date().toISOString(),
+      status: 'completed',
+      sessionId,
+    });
+
+    persistState();
+    return { wallet: buildSnapshot(), usage };
   },
 };

@@ -10,6 +10,8 @@ const typeLabelKey: Record<TransactionType, string> = {
   consumption: 'payment.transactions.consumption',
   subscription: 'payment.transactions.subscription',
   refund: 'payment.transactions.refund',
+  reserve: 'payment.transactions.reserve',
+  settlement: 'payment.transactions.settlement',
 };
 
 export function TransactionHistoryTable({ transactions }: TransactionHistoryTableProps) {
@@ -32,7 +34,7 @@ export function TransactionHistoryTable({ transactions }: TransactionHistoryTabl
             <th className="px-4 py-3">{t('payment.transactions.date')}</th>
             <th className="px-4 py-3">{t('payment.transactions.type')}</th>
             <th className="px-4 py-3">{t('payment.transactions.description')}</th>
-            <th className="px-4 py-3">{t('payment.transactions.credits')}</th>
+            <th className="px-4 py-3">{t('payment.transactions.tokens')}</th>
             <th className="px-4 py-3">{t('payment.transactions.amount')}</th>
           </tr>
         </thead>
@@ -51,10 +53,10 @@ export function TransactionHistoryTable({ transactions }: TransactionHistoryTabl
               <td
                 className={[
                   'px-4 py-3 font-semibold',
-                  tx.creditsDelta > 0 ? 'text-success' : tx.creditsDelta < 0 ? 'text-error' : 'text-foreground',
+                  tx.tokensDelta > 0 ? 'text-success' : tx.tokensDelta < 0 ? 'text-error' : 'text-foreground',
                 ].join(' ')}
               >
-                {tx.creditsDelta > 0 ? `+${tx.creditsDelta}` : tx.creditsDelta}
+                {tx.tokensDelta > 0 ? `+${tx.tokensDelta.toLocaleString()}` : tx.tokensDelta === 0 ? '-' : tx.tokensDelta.toLocaleString()}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {tx.amount > 0 ? `$${tx.amount.toFixed(2)}` : '-'}

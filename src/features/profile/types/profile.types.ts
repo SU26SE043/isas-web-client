@@ -85,6 +85,10 @@ export interface ProfileCompleteness {
 export interface DashboardSummary {
   profileCompleteness: number;
   recentInterviews: number;
+  tokenBalance: number;
+  tokenReserved: number;
+  tokenAvailable: number;
+  /** @deprecated Use tokenAvailable */
   creditsRemaining: number;
   hasCv: boolean;
 }

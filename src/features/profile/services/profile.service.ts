@@ -15,7 +15,6 @@ import type {
 
 let profileStore: CandidateProfile = structuredClone(MOCK_CANDIDATE_PROFILE);
 let hasCvUploaded = MOCK_DASHBOARD_SUMMARY.hasCv;
-const reservedSessionCredits = new Set<string>();
 
 function mergeByKey<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
   const seen = new Set(existing.map((item) => item.id));
@@ -63,7 +62,10 @@ export const profileService = {
     return {
       ...MOCK_DASHBOARD_SUMMARY,
       hasCv: hasCvUploaded,
-      creditsRemaining: paymentService.getBalance(),
+      tokenBalance: paymentService.getBalance(),
+      tokenReserved: paymentService.getReservedBalance(),
+      tokenAvailable: paymentService.getAvailableBalance(),
+      creditsRemaining: paymentService.getAvailableBalance(),
     };
   },
 
@@ -72,16 +74,12 @@ export const profileService = {
     hasCvUploaded = true;
   },
 
-  async reservePracticeCredit(sessionId: string): Promise<number> {
+  async reservePracticeTokens(sessionId: string): Promise<number> {
     if (!usesMockData('profile')) {
       throw new Error('Profile API is not wired yet. Keep usesMockData("profile") true.');
     }
-    if (reservedSessionCredits.has(sessionId)) {
-      return paymentService.getBalance();
-    }
-    const remaining = await paymentService.consumeCredit(sessionId);
-    reservedSessionCredits.add(sessionId);
-    return remaining;
+    const result = await paymentService.reserveTokens(sessionId);
+    return result.wallet.available;
   },
 
   async updateCareerGoal(goal: CareerGoal): Promise<CandidateProfile> {

@@ -76,8 +76,8 @@ export const CheckoutPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">{t('payment.checkout.credits')}</span>
-                <span className="font-medium text-foreground">{order.credits}</span>
+                <span className="text-muted-foreground">{t('payment.checkout.tokens')}</span>
+                <span className="font-medium text-foreground">{order.tokens.toLocaleString()}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">{t('payment.checkout.total')}</span>

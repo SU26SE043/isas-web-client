@@ -1,5 +1,5 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { profileService } from '@/features/profile/services/profile.service';
+import { paymentService } from '@/features/payment/services/payment.service';
 import { resultService } from './result.service';
 import { isCampaignSessionId } from '../types/interviewFlow.types';
 import {
@@ -53,14 +53,18 @@ export const practiceSessionService = {
       throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
     }
 
-    const creditsRemaining = await profileService.reservePracticeCredit(sessionId);
+    if (!isCampaignSessionId(sessionId) && !paymentService.hasReservation(sessionId)) {
+      throw new Error('no_reservation');
+    }
+
     startedSessions.add(sessionId);
     chunkCounts.set(sessionId, 0);
     proctoringCounts.set(sessionId, 0);
 
     return {
       sessionId,
-      creditsRemaining,
+      tokensAvailable: paymentService.getAvailableBalance(),
+      reservedTokens: paymentService.getReservationAmount(sessionId),
       startedAt: new Date().toISOString(),
     };
   },

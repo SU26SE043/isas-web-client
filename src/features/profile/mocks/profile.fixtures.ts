@@ -73,6 +73,9 @@ export const MOCK_CANDIDATE_PROFILE: CandidateProfile = {
 export const MOCK_DASHBOARD_SUMMARY: DashboardSummary = {
   profileCompleteness: 72,
   recentInterviews: 3,
-  creditsRemaining: 5,
+  creditsRemaining: 2500,
+  tokenBalance: 2500,
+  tokenReserved: 0,
+  tokenAvailable: 2500,
   hasCv: true,
 };

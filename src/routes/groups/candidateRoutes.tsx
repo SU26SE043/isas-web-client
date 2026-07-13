@@ -18,6 +18,7 @@ import { CampaignBrowsePage } from '@/features/campaigns/pages/CampaignBrowsePag
 import { CampaignDetailPage } from '@/features/campaigns/pages/CampaignDetailPage';
 import { CampaignEnrollmentPage } from '@/features/campaigns/pages/CampaignEnrollmentPage';
 import { CreditsWalletPage } from '@/features/payment/pages/CreditsWalletPage';
+import { TokenUsagePage } from '@/features/payment/pages/TokenUsagePage';
 import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
 import { CheckoutPage } from '@/features/payment/pages/CheckoutPage';
 import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPage';
@@ -77,6 +78,7 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'leaderboard', element: <LeaderboardPage /> },
           { path: 'achievements', element: <AchievementsPage /> },
           { path: 'credits', element: <CreditsWalletPage /> },
+          { path: 'usage', element: <TokenUsagePage /> },
           { path: 'subscription', element: <SubscriptionPlansPage /> },
           { path: 'payment', element: <CheckoutPage /> },
           { path: 'certificates/:id', element: <CertificateViewerPage /> },

@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { PaymentStatusBanner } from '../components/PaymentStatusBanner';
 import { paymentService } from '../services/payment.service';
+import { useInvalidateTokenWallet } from '../hooks/useTokenWallet';
 
 type CallbackState = 'processing' | 'success' | 'failed' | 'cancelled';
 
@@ -13,7 +14,8 @@ export const PaymentCallbackPage: React.FC = () => {
   const status = (searchParams.get('status') ?? 'FAILED').toUpperCase();
   const { t } = useLanguage();
   const [state, setState] = useState<CallbackState>('processing');
-  const [creditsAdded, setCreditsAdded] = useState(0);
+  const [tokensAdded, setTokensAdded] = useState(0);
+  const invalidateWallet = useInvalidateTokenWallet();
 
   useEffect(() => {
     if (!orderId) {
@@ -28,7 +30,8 @@ export const PaymentCallbackPage: React.FC = () => {
     void paymentService.completeOrder(orderId, normalizedStatus).then((result) => {
       if (!active) return;
       if (result.order.status === 'paid') {
-        setCreditsAdded(result.order.credits);
+        setTokensAdded(result.order.tokens);
+        invalidateWallet();
         setState('success');
         return;
       }
@@ -56,7 +59,7 @@ export const PaymentCallbackPage: React.FC = () => {
           <>
             <PaymentStatusBanner
               variant="success"
-              description={t('payment.callback.successDescription').replace('{count}', String(creditsAdded))}
+              description={t('payment.callback.successDescription').replace('{count}', tokensAdded.toLocaleString())}
             />
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link to="/candidate/credits" className="btn-primary text-center">

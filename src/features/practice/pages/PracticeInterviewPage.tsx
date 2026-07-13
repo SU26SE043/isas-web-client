@@ -20,6 +20,9 @@ import { useInterviewSession } from '../hooks/useInterviewSession';
 import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
 import { usePeriodicFaceCapture } from '../hooks/usePeriodicFaceCapture';
+import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
+import { paymentService } from '@/features/payment/services/payment.service';
+import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
@@ -68,6 +71,14 @@ export const PracticeInterviewPage: React.FC = () => {
     <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={session.isRecording} />
       <ProctoringAlertBanner violationCount={session.tabViolationCount} />
+      {paymentService.hasReservation(sessionId) ? (
+        <div className="px-6 pt-4">
+          <ReserveSettleBanner
+            mode="reserved"
+            reservedTokens={paymentService.getReservationAmount(sessionId) || PRACTICE_RESERVE_ESTIMATE}
+          />
+        </div>
+      ) : null}
 
       {session.isAutoSubmitted ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">

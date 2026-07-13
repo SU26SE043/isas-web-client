@@ -8,6 +8,7 @@ interface InterviewGatePanelProps {
   hasCredits: boolean;
   completenessPercent: number;
   creditsRemaining: number;
+  reserveEstimate?: number;
 }
 
 export const InterviewGatePanel: React.FC<InterviewGatePanelProps> = ({
@@ -15,6 +16,7 @@ export const InterviewGatePanel: React.FC<InterviewGatePanelProps> = ({
   hasCredits,
   completenessPercent,
   creditsRemaining,
+  reserveEstimate = 0,
 }) => {
   const { t } = useLanguage();
 
@@ -36,12 +38,14 @@ export const InterviewGatePanel: React.FC<InterviewGatePanelProps> = ({
 
       {!hasCredits ? (
         <div className="mt-4 rounded-lg border border-subtle bg-surface-overlay p-4">
-          <p className="text-sm text-foreground">{t('practice.flow.gate.noCredits')}</p>
+          <p className="text-sm text-foreground">{t('practice.flow.gate.noTokens')}</p>
           <p className="mt-1 text-caption text-muted-foreground">
-            {t('practice.flow.gate.creditsRemaining').replace('{count}', String(creditsRemaining))}
+            {t('practice.flow.gate.tokensAvailable')
+              .replace('{available}', creditsRemaining.toLocaleString())
+              .replace('{reserve}', reserveEstimate.toLocaleString())}
           </p>
           <Link to="/candidate/credits" className="btn-primary mt-4 inline-flex">
-            {t('payment.wallet.buyCredits')}
+            {t('payment.wallet.buyTokens')}
           </Link>
         </div>
       ) : null}

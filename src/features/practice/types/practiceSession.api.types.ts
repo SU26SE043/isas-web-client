@@ -8,7 +8,8 @@ export interface ProctoringEventPayload {
 
 export interface SessionStartResult {
   sessionId: string;
-  creditsRemaining: number;
+  tokensAvailable: number;
+  reservedTokens: number;
   startedAt: string;
 }
 
