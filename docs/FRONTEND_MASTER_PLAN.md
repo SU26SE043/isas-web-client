@@ -461,6 +461,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | AI report, feedback, **learning roadmap (T1)**, history; Learning Hub **T3 backlog** |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — results tabs, history, learning modules; E2E `results-learning.spec.ts` |
 | **Business Value** | Retention & skill development; 100% candidates get AI feedback |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-036–048 (Report, Learning, Progress, History) |
