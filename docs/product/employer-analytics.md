@@ -31,7 +31,7 @@ Candidate pipeline provides:
 - Sort by rank, score, completion date, and stage.
 - Desktop table and mobile cards.
 - **Invite resolution indicators:** `invited` (linked registered Candidate), `invite_pending` (email only, not registered yet) per [`product-scope.md`](./product-scope.md) BR-B2B-07–11.
-- Blind-hiring display mode that replaces names/emails with anonymized candidate codes.
+- Blind-hiring display mode (toggle on pipeline) that replaces names/emails with anonymized candidate codes; persists in session for profile/report views.
 - Export flow that blocks exports over 10,000 rows and warns that exported PII is masked.
 
 ### Pipeline statuses

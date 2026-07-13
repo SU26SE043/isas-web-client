@@ -10,6 +10,7 @@ import { PHASE11_CAMPAIGN_ID } from '../mocks/employerAnalytics.fixtures';
 import { employerAnalyticsService } from '../services/employerAnalytics.service';
 import { PipelineFilters } from '../components/PipelineFilters';
 import { PipelineTable } from '../components/PipelineTable';
+import { useBlindHiringMode } from '../hooks/useBlindHiringMode';
 import { usePipelineCandidates } from '../hooks/useEmployerAnalytics';
 import type { PipelineFilters as PipelineFiltersValue } from '../types/employerAnalytics.types';
 
@@ -23,6 +24,7 @@ export function CandidatePipelinePage() {
     scoreBand: 'all',
     sortBy: 'rank',
   });
+  const { blindHiringEnabled, setBlindHiringEnabled } = useBlindHiringMode();
   const stableFilters = useMemo(() => filters, [filters]);
   const { candidates, isLoading } = usePipelineCandidates(id ?? PHASE11_CAMPAIGN_ID, stableFilters);
 
@@ -45,7 +47,20 @@ export function CandidatePipelinePage() {
           </Button>
         </header>
 
-        <Alert variant="info"><AlertDescription>{t('employerAnalytics.pipeline.blindHint')}</AlertDescription></Alert>
+        <div className="flex flex-col gap-3 rounded-xl border border-subtle bg-surface-raised p-4 sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-foreground">
+            <input
+              type="checkbox"
+              checked={blindHiringEnabled}
+              onChange={(event) => setBlindHiringEnabled(event.target.checked)}
+              className="size-4 rounded border border-input accent-foreground"
+            />
+            {t('employerAnalytics.pipeline.blindToggle')}
+          </label>
+          <p className="text-sm text-muted-foreground">
+            {t(blindHiringEnabled ? 'employerAnalytics.pipeline.blindHint' : 'employerAnalytics.pipeline.blindOffHint')}
+          </p>
+        </div>
         {message ? <Alert variant="success"><AlertDescription>{message}</AlertDescription></Alert> : null}
         <PipelineFilters value={filters} onChange={setFilters} />
 
@@ -55,7 +70,7 @@ export function CandidatePipelinePage() {
             <Skeleton className="h-80 w-full" />
           </div>
         ) : candidates.length > 0 ? (
-          <PipelineTable candidates={candidates} />
+          <PipelineTable candidates={candidates} blindHiringEnabled={blindHiringEnabled} />
         ) : (
           <EmptyState
             variant="no-results"

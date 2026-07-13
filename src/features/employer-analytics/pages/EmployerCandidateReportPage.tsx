@@ -6,11 +6,13 @@ import { useLanguage } from '@/shared/languages';
 import { AnalyticsBars } from '../components/AnalyticsBars';
 import { ScoreOverrideForm } from '../components/ScoreOverrideForm';
 import { getCandidateDisplay } from '../components/PipelineTable';
+import { useBlindHiringMode } from '../hooks/useBlindHiringMode';
 import { useEmployerCandidate } from '../hooks/useEmployerAnalytics';
 
 export function EmployerCandidateReportPage() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { blindHiringEnabled } = useBlindHiringMode();
   const { candidate, report, isLoading, overrideScore } = useEmployerCandidate(id);
 
   if (isLoading || !candidate || !report) {
@@ -32,7 +34,7 @@ export function EmployerCandidateReportPage() {
         <header className="space-y-2">
           <p className="text-label text-muted-foreground">{t('employerAnalytics.report.eyebrow')}</p>
           <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.report.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{getCandidateDisplay(candidate)} · {t(`employerAnalytics.recommendation.${report.recommendation}`)}</p>
+          <p className="body-text text-sm text-muted-foreground">{getCandidateDisplay(candidate, blindHiringEnabled)} · {t(`employerAnalytics.recommendation.${report.recommendation}`)}</p>
         </header>
 
         <div className="grid gap-4 md:grid-cols-3">

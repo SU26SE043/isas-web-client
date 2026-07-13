@@ -8,11 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { PipelineStatusBadge } from '../components/PipelineStageBadge';
 import { getCandidateContact, getCandidateDisplay } from '../components/PipelineTable';
+import { useBlindHiringMode } from '../hooks/useBlindHiringMode';
 import { useEmployerCandidate } from '../hooks/useEmployerAnalytics';
 
 export function EmployerCandidateProfilePage() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { blindHiringEnabled } = useBlindHiringMode();
   const { candidate, isLoading } = useEmployerCandidate(id);
 
   if (isLoading || !candidate) {
@@ -33,10 +35,10 @@ export function EmployerCandidateProfilePage() {
           <div className="space-y-2">
             <p className="text-label text-muted-foreground">{t('employerAnalytics.profile.eyebrow')}</p>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="heading-primary text-3xl text-foreground">{getCandidateDisplay(candidate)}</h1>
+              <h1 className="heading-primary text-3xl text-foreground">{getCandidateDisplay(candidate, blindHiringEnabled)}</h1>
               <PipelineStatusBadge status={candidate.status} />
             </div>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{getCandidateContact(candidate)}</p>
+            <p className="body-text max-w-3xl text-sm text-muted-foreground">{getCandidateContact(candidate, blindHiringEnabled)}</p>
           </div>
           <Button render={<Link to={`/employer/candidates/${candidate.id}/report`} />}>
             {t('employerAnalytics.profile.report')} <ArrowRight className="size-4" aria-hidden />
@@ -45,7 +47,7 @@ export function EmployerCandidateProfilePage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <Info icon={<Timer className="size-4" aria-hidden />} label={t('employerAnalytics.pipeline.score')} value={candidate.score || '-'} />
-          <Info icon={<MapPin className="size-4" aria-hidden />} label={t('employerAnalytics.profile.location')} value={candidate.location} />
+          <Info icon={<MapPin className="size-4" aria-hidden />} label={t('employerAnalytics.profile.location')} value={blindHiringEnabled ? t('employerAnalytics.profile.masked') : candidate.location} />
           <Info icon={<NotebookText className="size-4" aria-hidden />} label={t('employerAnalytics.profile.experience')} value={`${candidate.experienceYears} ${t('employerAnalytics.profile.years')}`} />
         </div>
 

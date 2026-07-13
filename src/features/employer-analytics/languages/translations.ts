@@ -44,6 +44,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.pipeline.emptyTitle': 'Chưa có ứng viên phù hợp',
     'employerAnalytics.pipeline.emptyDescription': 'Thử đổi bộ lọc hoặc mời thêm ứng viên từ chiến dịch.',
     'employerAnalytics.pipeline.blindHint': 'Blind-hiring đang bật: tên và email được che theo BRL-064.',
+    'employerAnalytics.pipeline.blindOffHint': 'Blind-hiring đang tắt: thông tin nhận dạng hiển thị cho HR đã xem xét.',
+    'employerAnalytics.pipeline.blindToggle': 'Bật blind-hiring (che PII)',
 
     'employerAnalytics.profile.eyebrow': 'SCR-EMP-060',
     'employerAnalytics.profile.title': 'Hồ sơ ứng viên',
@@ -52,6 +54,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.profile.summary': 'Tóm tắt',
     'employerAnalytics.profile.experience': 'Kinh nghiệm',
     'employerAnalytics.profile.location': 'Địa điểm',
+    'employerAnalytics.profile.masked': 'Đã che',
     'employerAnalytics.profile.skills': 'Kỹ năng',
     'employerAnalytics.profile.notes': 'Ghi chú nội bộ',
     'employerAnalytics.profile.notesHint': 'Chỉ HR/Organize thấy phần này theo BR-004.',
@@ -143,6 +146,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.pipeline.emptyTitle': 'No matching candidates',
     'employerAnalytics.pipeline.emptyDescription': 'Try different filters or invite more candidates from the campaign.',
     'employerAnalytics.pipeline.blindHint': 'Blind hiring is enabled: names and emails are masked by BRL-064.',
+    'employerAnalytics.pipeline.blindOffHint': 'Blind hiring is off: identifying information is visible for reviewed HR access.',
+    'employerAnalytics.pipeline.blindToggle': 'Enable blind hiring (mask PII)',
 
     'employerAnalytics.profile.eyebrow': 'SCR-EMP-060',
     'employerAnalytics.profile.title': 'Candidate profile',
@@ -151,6 +156,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.profile.summary': 'Summary',
     'employerAnalytics.profile.experience': 'Experience',
     'employerAnalytics.profile.location': 'Location',
+    'employerAnalytics.profile.masked': 'Masked',
     'employerAnalytics.profile.skills': 'Skills',
     'employerAnalytics.profile.notes': 'Internal notes',
     'employerAnalytics.profile.notesHint': 'Only HR/Organization can see this section under BR-004.',

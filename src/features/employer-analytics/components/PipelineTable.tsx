@@ -7,19 +7,20 @@ import { useLanguage } from '@/shared/languages';
 import type { PipelineCandidate } from '../types/employerAnalytics.types';
 import { PipelineStatusBadge } from './PipelineStageBadge';
 
+export function getCandidateDisplay(candidate: PipelineCandidate, blindMode = true) {
+  return blindMode ? candidate.candidateCode : candidate.name;
+}
+
+export function getCandidateContact(candidate: PipelineCandidate, blindMode = true) {
+  return blindMode ? candidate.role : candidate.email;
+}
+
 interface PipelineTableProps {
   candidates: PipelineCandidate[];
+  blindHiringEnabled?: boolean;
 }
 
-export function getCandidateDisplay(candidate: PipelineCandidate) {
-  return candidate.blindHiring ? candidate.candidateCode : candidate.name;
-}
-
-export function getCandidateContact(candidate: PipelineCandidate) {
-  return candidate.blindHiring ? candidate.role : candidate.email;
-}
-
-export function PipelineTable({ candidates }: PipelineTableProps) {
+export function PipelineTable({ candidates, blindHiringEnabled = true }: PipelineTableProps) {
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
@@ -44,8 +45,8 @@ export function PipelineTable({ candidates }: PipelineTableProps) {
                   <TableCell className="font-semibold text-foreground">#{candidate.rank}</TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-foreground">{getCandidateDisplay(candidate)}</p>
-                      <p className="text-xs text-muted-foreground">{getCandidateContact(candidate)} · {candidate.skills.slice(0, 2).join(', ')}</p>
+                      <p className="font-medium text-foreground">{getCandidateDisplay(candidate, blindHiringEnabled)}</p>
+                      <p className="text-xs text-muted-foreground">{getCandidateContact(candidate, blindHiringEnabled)} · {candidate.skills.slice(0, 2).join(', ')}</p>
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold text-foreground">{candidate.score || '-'}</TableCell>
@@ -77,8 +78,8 @@ export function PipelineTable({ candidates }: PipelineTableProps) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">#{candidate.rank}</p>
-                  <h2 className="mt-1 text-base font-semibold text-foreground">{getCandidateDisplay(candidate)}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{getCandidateContact(candidate)}</p>
+                  <h2 className="mt-1 text-base font-semibold text-foreground">{getCandidateDisplay(candidate, blindHiringEnabled)}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{getCandidateContact(candidate, blindHiringEnabled)}</p>
                 </div>
                 <PipelineStatusBadge status={candidate.status} />
               </div>
