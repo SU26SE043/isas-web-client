@@ -14,7 +14,33 @@ import type {
 } from '../types/profile.types';
 
 let profileStore: CandidateProfile = structuredClone(MOCK_CANDIDATE_PROFILE);
+let hasCvUploaded = MOCK_DASHBOARD_SUMMARY.hasCv;
 const reservedSessionCredits = new Set<string>();
+
+function mergeByKey<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const seen = new Set(existing.map((item) => item.id));
+  const merged = [...existing];
+  for (const item of incoming) {
+    if (!seen.has(item.id)) {
+      merged.push(item);
+      seen.add(item.id);
+    }
+  }
+  return merged;
+}
+
+function mergeSkills(existing: Skill[], incoming: Skill[]): Skill[] {
+  const seen = new Set(existing.map((item) => item.name.toLowerCase()));
+  const merged = [...existing];
+  for (const item of incoming) {
+    const key = item.name.toLowerCase();
+    if (!seen.has(key)) {
+      merged.push(item);
+      seen.add(key);
+    }
+  }
+  return merged;
+}
 
 function nextId(prefix: string) {
   return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
@@ -36,8 +62,14 @@ export const profileService = {
     await mockDelay();
     return {
       ...MOCK_DASHBOARD_SUMMARY,
+      hasCv: hasCvUploaded,
       creditsRemaining: paymentService.getBalance(),
     };
+  },
+
+  async markCvUploaded(): Promise<void> {
+    if (!usesMockData('profile')) return;
+    hasCvUploaded = true;
   },
 
   async reservePracticeCredit(sessionId: string): Promise<number> {
@@ -181,17 +213,44 @@ export const profileService = {
     return structuredClone(profileStore);
   },
 
-  async applyCvMapping(mapping: Partial<CandidateProfile>): Promise<CandidateProfile> {
+  async applyCvMapping(
+    mapping: Partial<CandidateProfile>,
+    options?: { merge?: boolean },
+  ): Promise<CandidateProfile> {
     await mockDelay();
+    const merge = options?.merge ?? true;
+
     profileStore = {
       ...profileStore,
-      ...mapping,
-      education: mapping.education ?? profileStore.education,
-      experiences: mapping.experiences ?? profileStore.experiences,
-      skills: mapping.skills ?? profileStore.skills,
-      portfolio: mapping.portfolio ?? profileStore.portfolio,
       careerGoal: mapping.careerGoal ?? profileStore.careerGoal,
+      socialLinks: mapping.socialLinks ?? profileStore.socialLinks,
+      education: mapping.education
+        ? merge
+          ? mergeByKey(profileStore.education, mapping.education)
+          : mapping.education
+        : profileStore.education,
+      experiences: mapping.experiences
+        ? merge
+          ? mergeByKey(profileStore.experiences, mapping.experiences)
+          : mapping.experiences
+        : profileStore.experiences,
+      skills: mapping.skills
+        ? merge
+          ? mergeSkills(profileStore.skills, mapping.skills)
+          : mapping.skills
+        : profileStore.skills,
+      portfolio: mapping.portfolio
+        ? merge
+          ? mergeByKey(profileStore.portfolio, mapping.portfolio)
+          : mapping.portfolio
+        : profileStore.portfolio,
+      certificates: mapping.certificates
+        ? merge
+          ? mergeByKey(profileStore.certificates, mapping.certificates)
+          : mapping.certificates
+        : profileStore.certificates,
     };
+    hasCvUploaded = true;
     return structuredClone(profileStore);
   },
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { CvProfileMappingPanel } from '@/features/profile/components/CvProfileMappingPanel';
@@ -10,11 +11,14 @@ import { CvReportExperienceSection } from '../components/report/CvReportExperien
 import { CvReportProjectsSection } from '../components/report/CvReportProjectsSection';
 import { CvReportEducationSection } from '../components/report/CvReportEducationSection';
 import { CvReportActionsBar, CvReportFeedbackSection } from '../components/report/CvReportFeedbackSection';
+import { CV_ANALYSIS_ID_KEY } from '../hooks/useCvAnalysisFlow';
 import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
 
 export const CVResultPage: React.FC = () => {
   const { t } = useLanguage();
-  const { result, isLoading, error } = useCvAnalysisResult();
+  const analysisId =
+    typeof window !== 'undefined' ? sessionStorage.getItem(CV_ANALYSIS_ID_KEY) ?? undefined : undefined;
+  const { result, isLoading, error } = useCvAnalysisResult(analysisId);
 
   if (isLoading) {
     return (
@@ -27,8 +31,11 @@ export const CVResultPage: React.FC = () => {
 
   if (error || !result) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center px-4">
-        <p className="body-text text-center">{t('cv.analysisFailed')}</p>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="body-text">{t('cv.analysisFailed')}</p>
+        <Link to="/candidate/cv/analysis" className="btn-primary">
+          {t('cv.retryUpload')}
+        </Link>
       </div>
     );
   }

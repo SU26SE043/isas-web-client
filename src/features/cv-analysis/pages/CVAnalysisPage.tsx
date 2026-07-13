@@ -44,7 +44,13 @@ export const CVAnalysisPage: React.FC = () => {
           />
         ) : null}
 
-        {flow.step === 3 ? <CvAnalysisProgressStep parseProgress={flow.parseProgress} /> : null}
+        {flow.step === 3 ? (
+          <CvAnalysisProgressStep
+            parseProgress={flow.parseProgress}
+            parseError={flow.parseErrorMessage}
+            onRetry={flow.parseError ? flow.retryFromUpload : undefined}
+          />
+        ) : null}
       </CvAnalysisFlowShell>
     </div>
   );

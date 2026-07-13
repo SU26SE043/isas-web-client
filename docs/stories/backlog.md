@@ -11,7 +11,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E01 | Harness foundation + BRD wiring | - | in_progress |
 | E02 | Marketing home & employer section | Public | partial |
 | E03 | Auth modal, session, profile | M01 | implemented |
-| E04 | CV analysis UI (wizard + report) | M03 | partial |
+| E04 | CV analysis UI + profile CRUD | M02–M03 | implemented |
 | E05 | Practice interview, result, history | M05-M06 | in_progress |
 | E06 | Payment, **token wallet**, subscription (B2C) | M08 | not_started |
 | E07 | Campaign create, magic link, **proctoring config** (B2B) | M04 | implemented (mock) |
