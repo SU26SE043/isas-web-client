@@ -1,13 +1,13 @@
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useLanguage } from '@/shared/languages';
-import { AuthModal } from '../components/AuthModal';
+import { AuthCard } from '../components/AuthCard';
+import { RegisterForm } from '../components/RegisterForm';
 import { useAuthStore } from '../stores/authStore';
 import { getPostLoginPath } from '../utils/getPostLoginPath';
 
 export function RegisterPage() {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
 
   usePageTitle(t('auth.signUpTitle'));
@@ -17,10 +17,19 @@ export function RegisterPage() {
   }
 
   return (
-    <AuthModal
-      isOpen
-      onClose={() => navigate('/', { replace: true })}
-      initialView="signup"
-    />
+    <AuthCard
+      title={t('auth.signUpTitle')}
+      description={t('auth.signUpSubtitle')}
+      footer={
+        <span className="text-muted-foreground">
+          {t('auth.haveAccount')}{' '}
+          <Link to="/login" className="text-foreground underline-offset-4 hover:underline">
+            {t('auth.signInTitle')}
+          </Link>
+        </span>
+      }
+    >
+      <RegisterForm />
+    </AuthCard>
   );
 }

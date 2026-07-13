@@ -11,7 +11,9 @@ import { SessionExpiredPage } from '@/features/auth/pages/SessionExpiredPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
 import { PublicRoute } from '@/routes/PublicRoute';
 
-const authLayoutChildren: RouteObject[] = [
+const publicAuthChildren: RouteObject[] = [
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/forgot-password/verify', element: <ForgotPasswordOtpPage /> },
@@ -26,11 +28,9 @@ export const authRoutes: RouteObject[] = [
   {
     element: <PublicRoute />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
       {
         element: <AuthLayout />,
-        children: authLayoutChildren,
+        children: publicAuthChildren,
       },
     ],
   },

@@ -1,84 +1,56 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { XIcon } from 'lucide-react';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
-import { AuthModalTabs, type AuthTab } from './AuthModalTabs';
+import { AuthOverlay } from './AuthOverlay';
 import { useLanguage } from '../../../../shared/languages';
-import { cn } from '@/lib/utils';
 import {
   backdropVariants,
-  contentSlideVariants,
-  heightTransition,
-  modalOpenTransition,
   modalShellVariants,
+  modalTransition,
+  panelTransition,
 } from './authModal.animations';
-import { useAuthModalFocusTrap } from './useAuthModalFocusTrap';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialView?: 'login' | 'signup';
-  redirectFrom?: string;
-  sessionExpired?: boolean;
-  registeredEmail?: string;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  initialView = 'login',
-  redirectFrom,
-  sessionExpired = false,
-  registeredEmail,
-}) => {
-  const [activeTab, setActiveTab] = useState<AuthTab>('login');
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login' }) => {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [direction, setDirection] = useState(0);
-  const [autoFocusOnOpen, setAutoFocusOnOpen] = useState(true);
-  const modalRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
   const reducedMotion = useReducedMotion();
-
-  const isSignUp = activeTab === 'signup';
-  const showTabs = !isForgotPassword;
-  const contentKey = isForgotPassword ? 'forgot' : activeTab;
 
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  const handleTabChange = useCallback((tab: AuthTab) => {
-    setAutoFocusOnOpen(false);
-    setDirection(tab === 'signup' ? 1 : -1);
-    setActiveTab(tab);
+  const handleSignUpClick = useCallback(() => {
+    setIsSignUp(true);
     setIsForgotPassword(false);
   }, []);
 
-  const handleSignInTab = useCallback(() => {
-    setAutoFocusOnOpen(false);
-    setDirection(-1);
-    setActiveTab('login');
+  const handleSignInClick = useCallback(() => {
+    setIsSignUp(false);
     setIsForgotPassword(false);
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(initialView === 'signup' ? 'signup' : 'login');
+      setIsSignUp(initialView === 'signup');
       setIsForgotPassword(false);
-      setDirection(0);
-      setAutoFocusOnOpen(true);
     }
   }, [isOpen, initialView]);
 
   useEffect(() => {
     if (!isOpen) {
       const timer = window.setTimeout(() => {
-        setActiveTab('login');
+        setIsSignUp(false);
         setIsForgotPassword(false);
-        setDirection(0);
-      }, reducedMotion ? 0 : 450);
+      }, reducedMotion ? 0 : 550);
       return () => window.clearTimeout(timer);
     }
     return undefined;
@@ -103,111 +75,82 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
   }, [isOpen, handleClose]);
 
-  useAuthModalFocusTrap(modalRef, isOpen, autoFocusOnOpen);
-
-  const dialogLabel = isForgotPassword
-    ? t('auth.forgotTitle')
-    : isSignUp
-      ? t('auth.signUpTitle')
-      : t('auth.signInTitle');
-
   return (
     <AnimatePresence>
       {isOpen ? (
         <>
           <motion.div
             key="auth-modal-backdrop"
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md"
             variants={backdropVariants(reducedMotion)}
             initial="hidden"
             animate="visible"
             exit="hidden"
-            transition={modalOpenTransition(reducedMotion)}
+            transition={modalTransition(reducedMotion)}
             onClick={handleClose}
             aria-hidden="true"
           />
 
-          <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
-              ref={modalRef}
               key="auth-modal-shell"
               role="dialog"
               aria-modal="true"
-              aria-label={dialogLabel}
-              className={cn(
-                'pointer-events-auto relative w-full max-w-[460px] overflow-hidden',
-                'rounded-2xl border border-default bg-surface-elevated/95 shadow-lg backdrop-blur-xl',
-              )}
+              aria-label={isSignUp ? t('auth.signUpTitle') : t('auth.signInTitle')}
+              className="pointer-events-auto relative flex h-[550px] w-full max-w-[800px] overflow-hidden rounded-xl surface-elevated"
               variants={modalShellVariants(reducedMotion)}
               initial="hidden"
               animate="visible"
-              exit="exit"
-              transition={modalOpenTransition(reducedMotion)}
+              exit="hidden"
+              transition={modalTransition(reducedMotion)}
               onClick={(event) => event.stopPropagation()}
             >
-              <button
-                type="button"
-                onClick={handleClose}
-                className="absolute top-4 right-4 z-20 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-surface-overlay hover:text-foreground focus-ring"
-                aria-label={t('auth.close')}
-              >
-                <XIcon className="size-5" aria-hidden />
-              </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              className={`absolute top-4 right-4 z-50 rounded-full p-2 transition-colors focus-ring ${
+                isSignUp ? 'text-muted-foreground hover:text-foreground' : 'text-white/80 hover:text-foreground'
+              }`}
+              aria-label={t('auth.close')}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-              <div className="px-6 pt-10 pb-8 sm:px-10 sm:pt-12 sm:pb-10">
-                {showTabs ? (
-                  <AuthModalTabs
-                    activeTab={activeTab}
-                    onTabChange={handleTabChange}
-                    reducedMotion={reducedMotion}
-                  />
-                ) : null}
+            <motion.div
+              className="absolute top-0 left-0 z-10 h-full w-1/2 bg-surface-raised"
+              animate={{ x: isSignUp ? '100%' : '0%' }}
+              transition={panelTransition(reducedMotion)}
+            >
+              <SignInForm
+                isSignUp={isSignUp}
+                isForgotPassword={isForgotPassword}
+                onForgotPasswordClick={() => setIsForgotPassword(true)}
+                onLoginSuccess={handleClose}
+                reducedMotion={reducedMotion}
+              />
 
-                <motion.div
-                  layout
-                  transition={heightTransition(reducedMotion)}
-                  className="grid overflow-hidden [&>*]:col-start-1 [&>*]:row-start-1"
-                >
-                  <AnimatePresence initial={false} custom={direction} mode="sync">
-                    <motion.div
-                      key={contentKey}
-                      custom={direction}
-                      variants={contentSlideVariants(reducedMotion)}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      role="tabpanel"
-                      id={`auth-panel-${contentKey}`}
-                      aria-labelledby={showTabs ? `auth-tab-${activeTab}` : undefined}
-                      className="col-start-1 row-start-1"
-                    >
-                        {isForgotPassword ? (
-                          <ForgotPasswordForm
-                            onBackToSignInClick={handleSignInTab}
-                            reducedMotion={reducedMotion}
-                          />
-                        ) : isSignUp ? (
-                          <SignUpForm
-                            onRegisterSuccess={handleSignInTab}
-                            reducedMotion={reducedMotion}
-                          />
-                        ) : (
-                          <SignInForm
-                            onForgotPasswordClick={() => {
-                              setAutoFocusOnOpen(false);
-                              setIsForgotPassword(true);
-                            }}
-                            onLoginSuccess={handleClose}
-                            reducedMotion={reducedMotion}
-                            redirectFrom={redirectFrom}
-                            sessionExpired={sessionExpired}
-                            registeredEmail={registeredEmail}
-                          />
-                        )}
-                    </motion.div>
-                  </AnimatePresence>
-                </motion.div>
-              </div>
+              <ForgotPasswordForm
+                isSignUp={isSignUp}
+                isForgotPassword={isForgotPassword}
+                onBackToSignInClick={() => setIsForgotPassword(false)}
+                reducedMotion={reducedMotion}
+              />
+
+              <SignUpForm
+                isSignUp={isSignUp}
+                onRegisterSuccess={handleSignInClick}
+                reducedMotion={reducedMotion}
+              />
+            </motion.div>
+
+            <AuthOverlay
+              isSignUp={isSignUp}
+              onSignUpClick={handleSignUpClick}
+              onSignInClick={handleSignInClick}
+              reducedMotion={reducedMotion}
+            />
             </motion.div>
           </div>
         </>

@@ -9,7 +9,6 @@ import { LanguageToggle } from './LanguageToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalView, setAuthModalView] = useState<'login' | 'signup'>('login');
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
 
@@ -39,20 +38,14 @@ export const Header: React.FC = () => {
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthModalView('login');
-                      setIsAuthModalOpen(true);
-                    }}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="btn-secondary hidden sm:inline-flex"
                   >
                     {t('nav.signIn')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthModalView('signup');
-                      setIsAuthModalOpen(true);
-                    }}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="btn-primary"
                   >
                     {t('nav.getStarted')}
@@ -67,7 +60,6 @@ export const Header: React.FC = () => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        initialView={authModalView}
       />
     </>
   );

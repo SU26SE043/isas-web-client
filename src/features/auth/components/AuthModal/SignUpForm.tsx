@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
 import { validatePassword } from '../../utils/passwordPolicy';
 import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
 import { SocialLoginButton } from '../SocialLoginButton';
-import { AuthFormStatus } from './AuthFormStatus';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { signUpFormVariants } from './authModal.animations';
 
 interface SignUpFormProps {
+  isSignUp: boolean;
   onRegisterSuccess: () => void;
   reducedMotion: boolean | null;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({
+  isSignUp,
   onRegisterSuccess,
   reducedMotion,
 }) => {
@@ -66,89 +66,62 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   };
 
-  const statusVariant =
-    statusMessage === t('auth.registerSuccess')
-      ? 'success'
-      : statusMessage
-        ? 'error'
-        : 'neutral';
-
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <header className="space-y-1 text-center sm:text-left">
-        <h2 className="heading-secondary text-xl tracking-tight">{t('auth.signUpTitle')}</h2>
-        <p className="text-sm text-muted-foreground">{t('auth.signUpSubtitle')}</p>
-      </header>
+    <motion.form
+      onSubmit={handleSubmit}
+      className="absolute inset-0 flex flex-col items-center justify-center px-12"
+      variants={signUpFormVariants(reducedMotion)}
+      initial={false}
+      animate={isSignUp ? 'active' : 'hiddenRight'}
+    >
+      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
 
-      <SocialLoginButton />
-
-      <div className="relative py-1">
-        <div className="absolute inset-0 flex items-center" aria-hidden>
-          <span className="w-full border-t border-subtle" />
-        </div>
-        <p className="relative mx-auto w-fit bg-surface-elevated/95 px-3 text-xs text-muted-foreground">
-          {t('auth.orContinueWithEmail')}
-        </p>
+      <div className="w-full mb-6">
+        <SocialLoginButton />
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="auth-signup-name">{t('auth.fullNamePlaceholder')}</Label>
-          <Input
-            id="auth-signup-name"
-            className="h-10 bg-surface-overlay border-default"
-            placeholder={t('auth.fullNamePlaceholder')}
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            autoComplete="name"
-            aria-invalid={statusVariant === 'error' || undefined}
-          />
-        </div>
+      <span className="text-xs text-muted-foreground mb-6 font-medium">{t('auth.signUpSubtitle')}</span>
 
-        <div className="space-y-2">
-          <Label htmlFor="auth-signup-email">{t('auth.emailPlaceholder')}</Label>
-          <Input
-            id="auth-signup-email"
-            className="h-10 bg-surface-overlay border-default"
-            placeholder={t('auth.emailPlaceholder')}
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-            aria-invalid={statusVariant === 'error' || undefined}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="auth-signup-password">{t('auth.password')}</Label>
-          <Input
-            id="auth-signup-password"
-            className="h-10 bg-surface-overlay border-default"
-            type="password"
-            placeholder={t('auth.password')}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="new-password"
-            aria-invalid={statusVariant === 'error' || undefined}
-          />
-          <PasswordStrengthMeter password={password} />
-        </div>
-      </div>
-
-      <AuthFormStatus
-        message={statusMessage}
-        variant={statusVariant}
-        reducedMotion={reducedMotion}
+      <input
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
+        placeholder={t('auth.fullNamePlaceholder')}
+        value={fullName}
+        onChange={(event) => setFullName(event.target.value)}
+        autoComplete="name"
       />
+      <input
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
+        placeholder={t('auth.emailPlaceholder')}
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        autoComplete="email"
+      />
+      <input
+        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
+        type="password"
+        placeholder={t('auth.password')}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete="new-password"
+      />
+      <div className="w-full mb-4">
+        <PasswordStrengthMeter password={password} />
+      </div>
 
-      <Button
+      <p
+        className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-foreground' : 'text-error'}`}
+      >
+        {statusMessage}
+      </p>
+
+      <button
         type="submit"
-        size="lg"
-        loading={isSubmitting}
-        className="h-10 w-full bg-primary text-primary-foreground font-semibold"
+        disabled={isSubmitting}
+        className="btn-primary w-full uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? t('auth.registering') : t('auth.signUp')}
-      </Button>
-    </form>
+      </button>
+    </motion.form>
   );
 };
