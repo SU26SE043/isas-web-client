@@ -492,6 +492,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | B2C prepaid **token** wallet, reserve on session create, settle after report, PayOS top-up |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — wallet, reserve/settle on `/practice`, usage history; US-011 `implemented` |
 | **Business Value** | B2C monetization; token gate trước phỏng vấn — [`payment.md`](./product/payment.md) |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-026–028, **SCR-CAN-028b** (token usage) |

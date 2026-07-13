@@ -12,8 +12,8 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E02 | Marketing home & employer section | Public | partial |
 | E03 | Auth modal, session, profile | M01 | implemented |
 | E04 | CV analysis UI + profile CRUD | M02–M03 | implemented |
-| E05 | Practice interview, result, history | M05-M06 | in_progress |
-| E06 | Payment, **token wallet**, subscription (B2C) | M08 | not_started |
+| E05 | Practice interview, result, history | M05-M06 | implemented |
+| E06 | Payment, **token wallet**, subscription (B2C) | M08 | implemented (mock) |
 | E07 | Campaign create, magic link, **proctoring config** (B2B) | M04 | implemented (mock) |
 | E08 | Magic link entry, org dashboard, **assessment proctoring**, analytics | M04, M09 | in_progress |
 | E09 | Admin portal & audit | M11-M12 | implemented |
