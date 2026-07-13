@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
+import { CampaignCandidateTable } from '../components/CampaignCandidateTable';
 import { CampaignManagementStatusBadge } from '../components/CampaignManagementStatusBadge';
 import { InviteCandidatesDialog } from '../components/InviteCandidatesDialog';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
@@ -54,7 +55,7 @@ export function CampaignDetailPage() {
               </Button>
             ) : null}
             <Button onClick={handlePublish} disabled={campaign.status !== 'draft'}>{t('employer.campaigns.detail.publish')}</Button>
-            <InviteCandidatesDialog onInvite={(emails) => invite(campaign.id, emails).then(() => undefined)} />
+            <InviteCandidatesDialog onInvite={(emails) => invite(campaign.id, emails)} />
           </div>
         </header>
 
@@ -77,11 +78,8 @@ export function CampaignDetailPage() {
               <p>{campaign.jobDescription}</p>
               <div className="grid gap-3 md:grid-cols-3">
                 <Info label={t('employer.campaigns.list.capacity')} value={`${campaign.applicants}/${campaign.capacity}`} />
-                <Info
-                  label={t('employer.campaigns.detail.duration')}
-                  value={`${campaign.durationMinutes} ${t('employer.campaigns.detail.minutes')}`}
-                />
-                <Info label={t('employer.campaigns.detail.invited')} value={campaign.invitedEmails.length} />
+                <Info label={t('employer.campaigns.detail.duration')} value={`${campaign.durationMinutes} ${t('employer.campaigns.detail.minutes')}`} />
+                <Info label={t('employer.campaigns.detail.invited')} value={campaign.candidates.length} />
               </div>
             </CardContent>
           </Card>
@@ -92,9 +90,16 @@ export function CampaignDetailPage() {
               <Info label={t('employer.campaigns.form.location')} value={campaign.location} />
               <Info label={t('employer.campaigns.form.deadline')} value={campaign.deadline} />
               <Info label={t('employer.campaigns.detail.locale')} value={campaign.locale.toUpperCase()} />
+              <Info label={t('employer.campaigns.form.faceInterval')} value={`${campaign.proctoring.faceCaptureIntervalSeconds}s`} />
+              <Info label={t('employer.campaigns.form.maxViolations')} value={campaign.proctoring.maxViolations} />
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border border-subtle bg-surface-raised">
+          <CardHeader><CardTitle>{t('employer.campaigns.detail.candidates')}</CardTitle></CardHeader>
+          <CardContent><CampaignCandidateTable candidates={campaign.candidates} /></CardContent>
+        </Card>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="border border-subtle bg-surface-raised">

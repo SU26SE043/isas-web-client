@@ -30,8 +30,10 @@ HR users can manage B2B assessment campaigns from draft creation through publish
 - `/employer/campaigns/new` renders a multi-step campaign wizard.
 - Rubric weights must sum to 100% before saving/publishing.
 - `/employer/campaigns/:id` renders campaign detail and publish/invite actions.
-- Publish validates readiness and max active campaign limit before setting active status.
-- Invite modal accepts candidate emails and records mock invitations.
+- Publish validates readiness, org verification, and max active campaign limit before setting active status.
+- Invite modal resolves emails: registered candidates appear as `invited`, unknown as `invite_pending`, HR/Organize/Admin emails rejected inline.
+- Campaign detail shows candidate table and proctoring settings summary.
+- Wizard step Settings includes proctoring config (face interval, similarity threshold, max violations).
 - `/employer/campaigns/:id/edit` allows editing draft campaigns.
 - All visible text is bilingual through `useLanguage().t()`.
 

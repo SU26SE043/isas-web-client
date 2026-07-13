@@ -134,7 +134,7 @@ Frontend will need (via Gateway — **endpoints Chưa được đặc tả trong
 
 ## Status
 
-**Product definition only** — interview routes exist partially (`device-check`, `identity`, `room`); campaign briefing, terms gate, proctoring pause overlay, periodic face capture, and auto-submit **not implemented** in current client contract.
+**Implemented (mock)** — magic link gate, invite-only campaigns hub, briefing, B2B terms/identity/proctoring flow in shared interview engine. Proctoring params come from campaign wizard (Phase 10).
 
 ## Related
 

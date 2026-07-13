@@ -1,6 +1,6 @@
 import type { CandidateReport, PipelineCandidate, PipelineStage } from '../types/employerAnalytics.types';
 
-export const PHASE11_CAMPAIGN_ID = 'frontend-engineer-assessment';
+export const PHASE11_CAMPAIGN_ID = 'frontend-engineer-remote';
 
 export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
   {

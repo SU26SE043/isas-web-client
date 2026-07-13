@@ -13,9 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
+import type { InviteResolution } from '../types/campaignManagement.types';
 
 interface InviteCandidatesDialogProps {
-  onInvite: (emails: string[]) => Promise<void>;
+  onInvite: (emails: string[]) => Promise<InviteResolution>;
 }
 
 function parseEmails(value: string) {
@@ -29,15 +30,15 @@ export function InviteCandidatesDialog({ onInvite }: InviteCandidatesDialogProps
   const { t } = useLanguage();
   const [emails, setEmails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [result, setResult] = useState<InviteResolution | null>(null);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setSuccess(false);
+    setResult(null);
     try {
-      await onInvite(parseEmails(emails));
-      setEmails('');
-      setSuccess(true);
+      const resolution = await onInvite(parseEmails(emails));
+      setResult(resolution);
+      if (resolution.rejected.length === 0) setEmails('');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,10 +53,37 @@ export function InviteCandidatesDialog({ onInvite }: InviteCandidatesDialogProps
           <DialogDescription>{t('employer.campaigns.invite.description')}</DialogDescription>
         </DialogHeader>
 
-        {success ? (
-          <Alert variant="success">
-            <AlertDescription>{t('employer.campaigns.invite.success')}</AlertDescription>
-          </Alert>
+        {result ? (
+          <div className="space-y-3">
+            {result.linked.length > 0 ? (
+              <Alert variant="success">
+                <AlertDescription>
+                  {t('employer.campaigns.invite.linked').replace('{count}', String(result.linked.length))}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {result.pending.length > 0 ? (
+              <Alert>
+                <AlertDescription>
+                  {t('employer.campaigns.invite.pending').replace('{count}', String(result.pending.length))}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {result.rejected.length > 0 ? (
+              <Alert variant="warning">
+                <AlertDescription>
+                  <p className="font-medium">{t('employer.campaigns.invite.rejectedTitle')}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {result.rejected.map((item) => (
+                      <li key={item.email}>
+                        {item.email}: {t(`employer.campaigns.invite.rejected.${item.reason}`)}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="space-y-2">

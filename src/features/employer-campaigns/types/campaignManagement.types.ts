@@ -1,6 +1,20 @@
 export type EmployerCampaignStatus = 'draft' | 'active' | 'paused' | 'closed';
 export type EmployerCampaignMode = 'remote' | 'hybrid' | 'onsite';
 export type CampaignLocale = 'vi' | 'en';
+export type CampaignCandidateStatus = 'invited' | 'invite_pending';
+
+export interface CampaignProctoringConfig {
+  faceCaptureIntervalSeconds: number;
+  faceSimilarityThreshold: number;
+  maxViolations: number;
+}
+
+export interface CampaignCandidateRow {
+  email: string;
+  displayName?: string;
+  candidateId?: string;
+  status: CampaignCandidateStatus;
+}
 
 export interface RubricCriterion {
   id: string;
@@ -33,6 +47,8 @@ export interface EmployerCampaign {
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
   invitedEmails: string[];
+  candidates: CampaignCandidateRow[];
+  proctoring: CampaignProctoringConfig;
   welcomeMessage: string;
   completionMessage: string;
   updatedAt: string;
@@ -46,7 +62,7 @@ export interface CampaignFilters {
 
 export type CampaignDraftInput = Omit<
   EmployerCampaign,
-  'id' | 'status' | 'applicants' | 'invitedEmails' | 'updatedAt' | 'createdAt'
+  'id' | 'status' | 'applicants' | 'invitedEmails' | 'candidates' | 'updatedAt' | 'createdAt'
 >;
 
 export interface PublishResult {
@@ -54,7 +70,14 @@ export interface PublishResult {
   warnings: string[];
 }
 
-export interface InviteResult {
+export interface InviteRejectedEmail {
+  email: string;
+  reason: 'EMPLOYER_EMAIL' | 'INVALID_EMAIL';
+}
+
+export interface InviteResolution {
   campaign: EmployerCampaign;
-  invited: string[];
+  linked: CampaignCandidateRow[];
+  pending: CampaignCandidateRow[];
+  rejected: InviteRejectedEmail[];
 }

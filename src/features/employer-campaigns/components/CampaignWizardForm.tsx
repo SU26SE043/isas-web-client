@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import { DEFAULT_RUBRIC } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_PROCTORING, DEFAULT_RUBRIC } from '../mocks/campaignManagement.fixtures';
+import { ProctoringSettingsFields } from './ProctoringSettingsFields';
 import type {
   CampaignDraftInput,
+  CampaignProctoringConfig,
   CampaignQuestion,
   EmployerCampaign,
   EmployerCampaignMode,
@@ -23,7 +25,7 @@ interface CampaignWizardFormProps {
   onSave: (input: CampaignDraftInput) => Promise<EmployerCampaign>;
 }
 
-type WizardValues = Omit<CampaignDraftInput, 'rubric' | 'questions'>;
+type WizardValues = Omit<CampaignDraftInput, 'rubric' | 'questions' | 'proctoring'>;
 
 const steps = [
   'employer.campaigns.wizard.stepJob',
@@ -42,6 +44,7 @@ export function CampaignWizardForm({ campaign, questions, onSave }: CampaignWiza
   const [saved, setSaved] = useState(false);
   const [rubric, setRubric] = useState<RubricCriterion[]>(campaign?.rubric ?? DEFAULT_RUBRIC);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>(campaign?.questions.map((item) => item.id) ?? []);
+  const [proctoring, setProctoring] = useState<CampaignProctoringConfig>(campaign?.proctoring ?? DEFAULT_PROCTORING);
   const schema = useMemo(
     () =>
       z.object({
@@ -84,7 +87,7 @@ export function CampaignWizardForm({ campaign, questions, onSave }: CampaignWiza
 
   const save = form.handleSubmit(async (values) => {
     setSaved(false);
-    await onSave({ ...values, rubric, questions: chosenQuestions });
+    await onSave({ ...values, rubric, questions: chosenQuestions, proctoring });
     setSaved(true);
   });
 
@@ -209,6 +212,9 @@ export function CampaignWizardForm({ campaign, questions, onSave }: CampaignWiza
           </label>
           {renderInput('welcomeMessage', t('employer.campaigns.form.welcome'))}
           {renderInput('completionMessage', t('employer.campaigns.form.completion'))}
+          <div className="md:col-span-2">
+            <ProctoringSettingsFields value={proctoring} onChange={setProctoring} />
+          </div>
         </section>
       ) : null}
 

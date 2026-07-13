@@ -191,7 +191,7 @@ flowchart LR
 | **P7** | Candidate Payments & Tokens | B2C monetization (reserve/settle) | 4 | 7 | 3 tuần | ✅ Done (mock) |
 | **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần | ✅ Done (mock) |
 | **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần | ✅ Done (mock) |
-| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | — |
+| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
 | **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần |
 | **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần |
 | **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần |
@@ -581,7 +581,8 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | CRUD chiến dịch, rubric, **candidate selection**, invite + email preview, publish với proctoring config |
+| **Mục tiêu** | CRUD chiến dịch, rubric, invite resolution, publish với proctoring config |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — wizard + proctoring settings, candidate list (`invited`/`invite_pending`), org verify gate; E07 `implemented` |
 | **Business Value** | **B2B core** — assessment campaign từ JD; invite resolution ngay khi thêm email |
 | **Vai trò** | HR (ROL-003), Organize (campaign lifecycle) |
 | **Screens** | SCR-EMP-055–058, **selection step**, **email preview** |
@@ -1521,7 +1522,8 @@ P0 Foundation
 - [x] P0–P1, P3–P9: implemented with mock services; see §5 **Trạng thái triển khai** per phase
 - [x] P2: landing/pricing/legal partial (E02 `partial`)
 - [x] Product docs aligned: `practice-interview.md`, `profile.md`, `campaign-discovery.md`
-- [ ] P10+: not in scope of this sync
+- [x] P10: campaign wizard, proctoring config, invite resolution, org verify gate on publish
+- [ ] P11+: not in scope of this sync
 
 ### Per-Phase Gate (áp dụng mọi phase)
 
