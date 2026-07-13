@@ -32,3 +32,7 @@ export function CandidateResultsLegacyRedirect() {
 export function CandidateHistoryLegacyRedirect() {
   return <Navigate to="/candidate/practice/history" replace />;
 }
+
+export function CampaignDiscoveryLegacyRedirect() {
+  return <Navigate to="/candidate/dashboard" replace />;
+}

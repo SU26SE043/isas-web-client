@@ -14,9 +14,6 @@ import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage
 import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
 import { LeaderboardPage } from '@/features/practice/pages/LeaderboardPage';
 import { AchievementsPage } from '@/features/practice/pages/AchievementsPage';
-import { CampaignBrowsePage } from '@/features/campaigns/pages/CampaignBrowsePage';
-import { CampaignDetailPage } from '@/features/campaigns/pages/CampaignDetailPage';
-import { CampaignEnrollmentPage } from '@/features/campaigns/pages/CampaignEnrollmentPage';
 import { CreditsWalletPage } from '@/features/payment/pages/CreditsWalletPage';
 import { TokenUsagePage } from '@/features/payment/pages/TokenUsagePage';
 import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
@@ -37,7 +34,7 @@ import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
 import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
 import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
 import { RequireAuth } from '@/routes/RequireAuth';
-import { LegacyRedirect, PracticeHistoryLegacyRedirect, CandidateResultsLegacyRedirect, CandidateHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
+import { LegacyRedirect, PracticeHistoryLegacyRedirect, CandidateResultsLegacyRedirect, CandidateHistoryLegacyRedirect, CampaignDiscoveryLegacyRedirect } from '@/routes/LegacyRedirect';
 import { CvUploadLegacyRedirect } from '@/routes/CvUploadLegacyRedirect';
 
 export const candidateRoutes: RouteObject[] = [
@@ -62,9 +59,9 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'cv/analysis', element: <CVAnalysisPage /> },
           { path: 'cv/analysis/report', element: <CVResultPage /> },
           { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
-          { path: 'campaigns', element: <CampaignBrowsePage /> },
-          { path: 'campaigns/:id', element: <CampaignDetailPage /> },
-          { path: 'campaigns/:id/enroll', element: <CampaignEnrollmentPage /> },
+          { path: 'campaigns', element: <CampaignDiscoveryLegacyRedirect /> },
+          { path: 'campaigns/:id', element: <CampaignDiscoveryLegacyRedirect /> },
+          { path: 'campaigns/:id/enroll', element: <CampaignDiscoveryLegacyRedirect /> },
           { path: 'practice/history', element: <InterviewHistoryPage /> },
           { path: 'practice/history/compare', element: <CompareResultsPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },

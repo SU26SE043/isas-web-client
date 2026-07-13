@@ -35,7 +35,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-009 | Employer analytics and candidate pipeline | E08 | normal | implemented | [US-009](./epics/E08-employer-analytics/US-009-employer-analytics.md) |
 | US-010 | Admin Platform | E09 | normal | implemented | [US-010](./epics/E09-admin-platform/US-010-admin-platform.md) |
 | US-011 | Token billing UX (B2C reserve/settle, B2B usage) | E06 | normal | implemented | *Phase 7 mock — `payment.md`, FS-110-116* |
-| US-012 | Deprecate public campaign discovery routes | E08 | tiny | not_started | *packet TBD* - FS-123, `module-scope.md` section 5 |
+| US-012 | Deprecate public campaign discovery routes | E08 | tiny | implemented | FS-123 — redirect `/candidate/campaigns*` to dashboard |
 | US-013 | Shared engagement | E10 | normal | implemented | [US-013](./epics/E10-shared-engagement/US-013-shared-engagement.md) |
 | US-014 | B2B E2E full journey | E08 | normal | implemented | [US-014](./epics/E15-polish/US-014-b2b-e2e-full-journey.md) |
 

@@ -1,14 +1,18 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { MOCK_CAMPAIGNS, MOCK_INVITES } from '../mocks/campaign.fixtures';
+import { MOCK_BRIEFINGS, MOCK_CAMPAIGNS, MOCK_INVITES } from '../mocks/campaign.fixtures';
 import type {
   Campaign,
+  CampaignBriefing,
   CampaignFilters,
   CampaignInvite,
   EnrollmentInput,
   EnrollmentResult,
+  InviteAuthResolution,
 } from '../types/campaign.types';
 
 const enrolledCampaigns = new Set<string>();
+
+const BLOCKED_INVITE_EMAILS = new Set(['organize@isas.dev', 'hr@isas.dev', 'admin@isas.dev']);
 
 function assertMockMode() {
   if (!usesMockData('enterprise')) {
@@ -35,6 +39,13 @@ function withEnrollment(campaign: Campaign): Campaign {
     hasEnrolled: enrolledCampaigns.has(campaign.id),
     status: enrolledCampaigns.has(campaign.id) ? 'enrolled' : campaign.status,
   };
+}
+
+function findInvite(token: string): (CampaignInvite & { campaign: Campaign }) | null {
+  const invite = MOCK_INVITES.find((item) => item.token === token);
+  if (!invite) return null;
+  const campaign = MOCK_CAMPAIGNS.find((item) => item.id === invite.campaignId);
+  return campaign ? { ...invite, campaign: withEnrollment(campaign) } : null;
 }
 
 export const campaignService = {
@@ -68,9 +79,48 @@ export const campaignService = {
   async validateInvite(token: string): Promise<(CampaignInvite & { campaign: Campaign }) | null> {
     assertMockMode();
     await mockDelay(300);
-    const invite = MOCK_INVITES.find((item) => item.token === token);
-    if (!invite) return null;
-    const campaign = MOCK_CAMPAIGNS.find((item) => item.id === invite.campaignId);
-    return campaign ? { ...invite, campaign: withEnrollment(campaign) } : null;
+    return findInvite(token);
+  },
+
+  async validateMagicLink(token: string): Promise<(CampaignInvite & { campaign: Campaign }) | null> {
+    return this.validateInvite(token);
+  },
+
+  async resolveInviteAuth(token: string): Promise<InviteAuthResolution> {
+    assertMockMode();
+    await mockDelay(200);
+    const invite = findInvite(token);
+    if (!invite) return { mode: 'invalid' };
+    if (invite.status === 'expired') return { mode: 'invalid', invite };
+
+    const email = invite.candidateEmail.toLowerCase();
+    if (BLOCKED_INVITE_EMAILS.has(email)) {
+      return { mode: 'role_blocked', invite, candidateEmail: email };
+    }
+
+    const authMode = invite.authMode ?? (email === 'candidate@isas.dev' ? 'sign_in' : 'register');
+    return {
+      mode: authMode,
+      invite,
+      candidateEmail: email,
+    };
+  },
+
+  async getCampaignBriefing(token: string): Promise<CampaignBriefing | null> {
+    assertMockMode();
+    await mockDelay(250);
+    const invite = findInvite(token);
+    if (!invite || invite.status !== 'valid') return null;
+
+    const template = MOCK_BRIEFINGS[invite.campaignId];
+    if (!template) return null;
+
+    return {
+      token,
+      sessionId: `campaign-${invite.campaignId}`,
+      campaignId: invite.campaignId,
+      candidateEmail: invite.candidateEmail,
+      ...template,
+    };
   },
 };

@@ -1,4 +1,4 @@
-import type { Campaign, CampaignInvite } from '../types/campaign.types';
+import type { Campaign, CampaignBriefing, CampaignInvite } from '../types/campaign.types';
 
 export const MOCK_CAMPAIGNS: Campaign[] = [
   {
@@ -134,6 +134,7 @@ export const MOCK_INVITES: CampaignInvite[] = [
     candidateEmail: 'candidate@isas.dev',
     expiresAt: '2026-08-01',
     status: 'valid',
+    authMode: 'sign_in',
   },
   {
     token: 'phase8-expired',
@@ -141,5 +142,57 @@ export const MOCK_INVITES: CampaignInvite[] = [
     candidateEmail: 'candidate@isas.dev',
     expiresAt: '2026-07-01',
     status: 'expired',
+    authMode: 'sign_in',
+  },
+  {
+    token: 'phase8-register',
+    campaignId: 'frontend-engineer-remote',
+    candidateEmail: 'new.candidate@example.com',
+    expiresAt: '2026-08-15',
+    status: 'valid',
+    authMode: 'register',
   },
 ];
+
+export const MOCK_BRIEFINGS: Record<string, Omit<CampaignBriefing, 'token' | 'sessionId' | 'campaignId' | 'candidateEmail'>> = {
+  'frontend-engineer-remote': {
+    title: 'Frontend Engineer Assessment',
+    titleVi: 'Đánh giá Frontend Engineer',
+    company: 'NovaWorks AI',
+    estimatedMinutes: 45,
+    instructions: [
+      'You will complete a timed AI interview with sequential questions.',
+      'Keep your camera on and stay in this browser tab for the full session.',
+      'Read each question carefully before recording your answer.',
+    ],
+    instructionsVi: [
+      'Bạn sẽ hoàn thành phỏng vấn AI theo thời gian với các câu hỏi tuần tự.',
+      'Giữ camera bật và ở lại tab trình duyệt này trong suốt phiên.',
+      'Đọc kỹ từng câu hỏi trước khi ghi âm câu trả lời.',
+    ],
+    proctoringNotice:
+      'This assessment uses camera monitoring, periodic face capture, and tab-focus checks. Violations pause the session and may auto-submit at the configured limit.',
+    proctoringNoticeVi:
+      'Bài đánh giá sử dụng giám sát camera, chụp khuôn mặt định kỳ và kiểm tra focus tab. Vi phạm sẽ tạm dừng phiên và có thể tự nộp bài khi đạt giới hạn.',
+    assessmentSteps: ['Device check', 'Terms acceptance', 'Identity photo', 'AI interview room'],
+    assessmentStepsVi: ['Kiểm tra thiết bị', 'Chấp nhận điều khoản', 'Ảnh định danh', 'Phòng phỏng vấn AI'],
+  },
+  'data-analyst-hybrid': {
+    title: 'Data Analyst Screening',
+    titleVi: 'Sàng lọc Data Analyst',
+    company: 'Mekong Retail Group',
+    estimatedMinutes: 40,
+    instructions: [
+      'Prepare a quiet space with stable internet before starting.',
+      'Answer in Vietnamese unless the question asks otherwise.',
+    ],
+    instructionsVi: [
+      'Chuẩn bị không gian yên tĩnh và mạng ổn định trước khi bắt đầu.',
+      'Trả lời bằng tiếng Việt trừ khi câu hỏi yêu cầu khác.',
+    ],
+    proctoringNotice: 'Camera must remain on. Tab switches are recorded as violations.',
+    proctoringNoticeVi: 'Camera phải bật trong suốt phiên. Chuyển tab sẽ được ghi nhận là vi phạm.',
+    assessmentSteps: ['Device check', 'Terms acceptance', 'Identity photo', 'AI interview room'],
+    assessmentStepsVi: ['Kiểm tra thiết bị', 'Chấp nhận điều khoản', 'Ảnh định danh', 'Phòng phỏng vấn AI'],
+  },
+};

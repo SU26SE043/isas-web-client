@@ -52,6 +52,20 @@ Do **not** extend these screens. New B2B candidate work should go through `/invi
 
 ---
 
+## Phase 8 coverage (FS-123–125)
+
+Implemented on mock services:
+
+- **FS-123:** Removed candidate sidebar link to `/candidate/campaigns`; routes redirect to dashboard via `CampaignDiscoveryLegacyRedirect`.
+- **FS-124:** `MagicLinkLandingPage` validates token, `AuthBranch` (sign in vs register), email/role checks (BR-B2B-08–10).
+- **FS-125:** `CampaignBriefingPanel` with instructions, proctoring notice, assessment steps; handoff to `/interview/campaign-{id}/prepare`.
+
+Components: `InviteExpiredState`, `AuthBranch`, `CampaignBriefingPanel`, `InviteLandingPanel`.
+
+E2E: `e2e/specs/b2b/campaign-invite-interview.spec.ts`, updated `full-journey.spec.ts`.
+
+---
+
 ## Open items
 
 - Profile completeness gate (70%) on magic-link path — confirm in a future story (`employer-analytics.md` / dashboard BRD refs).
