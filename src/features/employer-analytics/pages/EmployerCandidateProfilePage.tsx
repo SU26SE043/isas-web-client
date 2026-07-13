@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
-import { PipelineStageBadge } from '../components/PipelineStageBadge';
+import { PipelineStatusBadge } from '../components/PipelineStageBadge';
 import { getCandidateContact, getCandidateDisplay } from '../components/PipelineTable';
 import { useEmployerCandidate } from '../hooks/useEmployerAnalytics';
 
@@ -34,7 +34,7 @@ export function EmployerCandidateProfilePage() {
             <p className="text-label text-muted-foreground">{t('employerAnalytics.profile.eyebrow')}</p>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="heading-primary text-3xl text-foreground">{getCandidateDisplay(candidate)}</h1>
-              <PipelineStageBadge stage={candidate.stage} />
+              <PipelineStatusBadge status={candidate.status} />
             </div>
             <p className="body-text max-w-3xl text-sm text-muted-foreground">{getCandidateContact(candidate)}</p>
           </div>

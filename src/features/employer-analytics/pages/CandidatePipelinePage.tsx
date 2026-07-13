@@ -19,7 +19,7 @@ export function CandidatePipelinePage() {
   const [message, setMessage] = useState('');
   const [filters, setFilters] = useState<PipelineFiltersValue>({
     search: '',
-    stage: 'all',
+    status: 'all',
     scoreBand: 'all',
     sortBy: 'rank',
   });

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { PipelineCandidate } from '../types/employerAnalytics.types';
-import { PipelineStageBadge } from './PipelineStageBadge';
+import { PipelineStatusBadge } from './PipelineStageBadge';
 
 interface PipelineTableProps {
   candidates: PipelineCandidate[];
@@ -33,7 +33,7 @@ export function PipelineTable({ candidates }: PipelineTableProps) {
                 <TableHead>{t('employerAnalytics.pipeline.rank')}</TableHead>
                 <TableHead>{t('employerAnalytics.pipeline.candidate')}</TableHead>
                 <TableHead>{t('employerAnalytics.pipeline.score')}</TableHead>
-                <TableHead>{t('employerAnalytics.pipeline.stage')}</TableHead>
+                <TableHead>{t('employerAnalytics.pipeline.status')}</TableHead>
                 <TableHead>{t('employerAnalytics.pipeline.completed')}</TableHead>
                 <TableHead className="text-right">{t('employerAnalytics.pipeline.actions')}</TableHead>
               </TableRow>
@@ -49,7 +49,7 @@ export function PipelineTable({ candidates }: PipelineTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold text-foreground">{candidate.score || '-'}</TableCell>
-                  <TableCell><PipelineStageBadge stage={candidate.stage} /></TableCell>
+                  <TableCell><PipelineStatusBadge status={candidate.status} /></TableCell>
                   <TableCell className="text-muted-foreground">
                     {candidate.completedAt ? new Date(candidate.completedAt).toLocaleDateString(locale) : '-'}
                   </TableCell>
@@ -80,7 +80,7 @@ export function PipelineTable({ candidates }: PipelineTableProps) {
                   <h2 className="mt-1 text-base font-semibold text-foreground">{getCandidateDisplay(candidate)}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{getCandidateContact(candidate)}</p>
                 </div>
-                <PipelineStageBadge stage={candidate.stage} />
+                <PipelineStatusBadge status={candidate.status} />
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <span>{t('employerAnalytics.pipeline.score')}: {candidate.score || '-'}</span>

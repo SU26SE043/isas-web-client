@@ -7,11 +7,12 @@ export const MOCK_ANALYTICS: AnalyticsSnapshot = {
   timeToHireDays: 18,
   exportableRows: 128,
   funnel: [
-    { stage: 'applied', count: 128 },
-    { stage: 'interviewed', count: 94 },
-    { stage: 'reviewed', count: 68 },
-    { stage: 'shortlisted', count: 18 },
-    { stage: 'rejected', count: 50 },
+    { status: 'invited', count: 22 },
+    { status: 'invite_pending', count: 18 },
+    { status: 'in_progress', count: 14 },
+    { status: 'paused_violation', count: 4 },
+    { status: 'auto_submitted', count: 6 },
+    { status: 'completed', count: 64 },
   ],
   scoreDistribution: [
     { band: '90-100', count: 14 },

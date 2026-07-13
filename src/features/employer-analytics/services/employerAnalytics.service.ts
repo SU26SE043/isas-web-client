@@ -1,6 +1,6 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_ANALYTICS } from '../mocks/employerAnalytics.analytics.fixture';
-import { MOCK_PIPELINE_CANDIDATES, MOCK_REPORTS, STAGE_ORDER } from '../mocks/employerAnalytics.fixtures';
+import { MOCK_PIPELINE_CANDIDATES, MOCK_REPORTS, STATUS_ORDER } from '../mocks/employerAnalytics.fixtures';
 import type {
   AnalyticsFilters,
   AnalyticsSnapshot,
@@ -35,7 +35,7 @@ function sortCandidates(items: PipelineCandidate[], sortBy: PipelineFilters['sor
   return [...items].sort((a, b) => {
     if (sortBy === 'score') return b.score - a.score;
     if (sortBy === 'completedAt') return (b.completedAt || '').localeCompare(a.completedAt || '');
-    if (sortBy === 'stage') return STAGE_ORDER.indexOf(a.stage) - STAGE_ORDER.indexOf(b.stage);
+    if (sortBy === 'status') return STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
     return a.rank - b.rank;
   });
 }
@@ -51,13 +51,13 @@ export const employerAnalyticsService = {
         candidate.name,
         candidate.email,
         candidate.role,
-        candidate.stage,
+        candidate.status,
         candidate.location,
         ...candidate.skills,
       ].join(' ').toLowerCase();
       return (
         candidate.campaignId === campaignId &&
-        (filters.stage === 'all' || candidate.stage === filters.stage) &&
+        (filters.status === 'all' || candidate.status === filters.status) &&
         inScoreBand(candidate.score, filters.scoreBand) &&
         (!search || haystack.includes(search))
       );

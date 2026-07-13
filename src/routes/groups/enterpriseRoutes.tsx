@@ -4,6 +4,7 @@ import { EmployerDashboardLayout } from '@/layouts/EmployerDashboardLayout';
 import { CampaignDetailPage } from '@/features/employer-campaigns/pages/CampaignDetailPage';
 import { CampaignListPage } from '@/features/employer-campaigns/pages/CampaignListPage';
 import { CampaignWizardPage } from '@/features/employer-campaigns/pages/CampaignWizardPage';
+import { CampaignSelectionPage } from '@/features/employer-campaigns/pages/CampaignSelectionPage';
 import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
 import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
@@ -58,6 +59,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'campaigns', element: <CampaignListPage /> },
               { path: 'campaigns/new', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id/candidates', element: <CandidatePipelinePage /> },
+              { path: 'campaigns/:id/selection', element: <CampaignSelectionPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id', element: <CampaignDetailPage /> },
               { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },

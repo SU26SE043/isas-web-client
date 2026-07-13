@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { CampaignCandidateTable } from '../components/CampaignCandidateTable';
+import { CandidateSelectionPanel } from '../components/CandidateSelectionPanel';
 import { CampaignManagementStatusBadge } from '../components/CampaignManagementStatusBadge';
 import { InviteCandidatesDialog } from '../components/InviteCandidatesDialog';
+import { PublishCampaignDialog } from '../components/PublishCampaignDialog';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 
 export function CampaignDetailPage() {
@@ -50,11 +52,20 @@ export function CampaignDetailPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {campaign.status === 'draft' ? (
-              <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
-                {t('employer.campaigns.detail.edit')}
+              <>
+                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
+                  {t('employer.campaigns.detail.edit')}
+                </Button>
+                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/selection`} />}>
+                  {t('employer.campaigns.selection.open')}
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}>
+                {t('employer.campaigns.detail.pipeline')}
               </Button>
-            ) : null}
-            <Button onClick={handlePublish} disabled={campaign.status !== 'draft'}>{t('employer.campaigns.detail.publish')}</Button>
+            )}
+            <PublishCampaignDialog campaign={campaign} onPublish={handlePublish} disabled={campaign.status !== 'draft'} />
             <InviteCandidatesDialog onInvite={(emails) => invite(campaign.id, emails)} />
           </div>
         </header>
@@ -69,6 +80,10 @@ export function CampaignDetailPage() {
               </ul>
             </AlertDescription>
           </Alert>
+        ) : null}
+
+        {campaign.status === 'draft' ? (
+          <CandidateSelectionPanel onImport={(emails) => invite(campaign.id, emails)} />
         ) : null}
 
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">

@@ -192,7 +192,7 @@ flowchart LR
 | **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần | ✅ Done (mock) |
 | **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần | ✅ Done (mock) |
 | **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
-| **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần |
+| **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần | ✅ Done (mock) |
 | **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần |
 | **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần |
 | **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần |
@@ -582,7 +582,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | CRUD chiến dịch, rubric, invite resolution, publish với proctoring config |
-| **Trạng thái triển khai** | ✅ **Done (mock)** — wizard + proctoring settings, candidate list (`invited`/`invite_pending`), org verify gate; E07 `implemented` |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — wizard, proctoring, `/selection` upload, email preview, invite resolution, org verify gate |
 | **Business Value** | **B2B core** — assessment campaign từ JD; invite resolution ngay khi thêm email |
 | **Vai trò** | HR (ROL-003), Organize (campaign lifecycle) |
 | **Screens** | SCR-EMP-055–058, **selection step**, **email preview** |
@@ -591,7 +591,7 @@ flowchart TB
 | **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
 | **State** | Multi-step wizard state; draft autosave |
 | **API** | Campaign CRUD, publish, invite, rubric, question bank; FR-095–124, FR-125–159 |
-| **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit` |
+| **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit`, `/employer/campaigns/:id/selection` |
 | **Layout** | `EmployerDashboardLayout` |
 | **Validation** | Rubric weights sum 100% (BRL-036); publish rules (BRL-012); max 5 active (BRL-031); **org verified**; proctoring params; invite email lookup (BR-B2B-06–09) |
 | **Error** | Publish validation errors inline |
@@ -612,6 +612,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Pipeline ứng viên, AI reports, ranking, analytics |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — product pipeline statuses, blind hiring, report override, analytics export; US-009 `implemented` |
 | **Business Value** | Hiring decisions; time-to-hire KPI |
 | **Vai trò** | HR, Organize |
 | **Screens** | SCR-EMP-059–062 |
@@ -1517,13 +1518,13 @@ P0 Foundation
 
 ## 12. Checklist triển khai
 
-### Phases 0–9 (mock client — synced 2026-07-13)
+### Phases 0–11 (mock client — synced 2026-07-13)
 
-- [x] P0–P1, P3–P9: implemented with mock services; see §5 **Trạng thái triển khai** per phase
+- [x] P0–P1, P3–P11: implemented with mock services; see §5 **Trạng thái triển khai** per phase
 - [x] P2: landing/pricing/legal partial (E02 `partial`)
-- [x] Product docs aligned: `practice-interview.md`, `profile.md`, `campaign-discovery.md`
-- [x] P10: campaign wizard, proctoring config, invite resolution, org verify gate on publish
-- [ ] P11+: not in scope of this sync
+- [x] P10: selection upload, email preview, invite resolution complete
+- [x] P11: pipeline statuses aligned with `employer-analytics.md`
+- [ ] P12+: not in scope of this sync
 
 ### Per-Phase Gate (áp dụng mọi phase)
 

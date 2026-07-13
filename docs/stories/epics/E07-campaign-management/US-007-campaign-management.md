@@ -34,6 +34,8 @@ HR users can manage B2B assessment campaigns from draft creation through publish
 - Invite modal resolves emails: registered candidates appear as `invited`, unknown as `invite_pending`, HR/Organize/Admin emails rejected inline.
 - Campaign detail shows candidate table and proctoring settings summary.
 - Wizard step Settings includes proctoring config (face interval, similarity threshold, max violations).
+- `/employer/campaigns/:id/selection` bulk email import with file upload.
+- Publish opens invitation email preview before confirming.
 - `/employer/campaigns/:id/edit` allows editing draft campaigns.
 - All visible text is bilingual through `useLanguage().t()`.
 

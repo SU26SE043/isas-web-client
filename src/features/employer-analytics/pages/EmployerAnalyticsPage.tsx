@@ -8,14 +8,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { AnalyticsBars } from '../components/AnalyticsBars';
 import { useEmployerAnalytics } from '../hooks/useEmployerAnalytics';
-import type { AnalyticsFilters, ExportFormat, PipelineStage } from '../types/employerAnalytics.types';
+import type { AnalyticsFilters, ExportFormat, PipelineStatus } from '../types/employerAnalytics.types';
 
-const stages: Array<PipelineStage | 'all'> = ['all', 'applied', 'interviewed', 'reviewed', 'shortlisted', 'rejected'];
+const statuses: Array<PipelineStatus | 'all'> = [
+  'all',
+  'invited',
+  'invite_pending',
+  'in_progress',
+  'paused_violation',
+  'auto_submitted',
+  'completed',
+];
 
 export function EmployerAnalyticsPage() {
   const { t } = useLanguage();
   const [message, setMessage] = useState('');
-  const [filters, setFilters] = useState<AnalyticsFilters>({ dateRange: '30d', stage: 'all' });
+  const [filters, setFilters] = useState<AnalyticsFilters>({ dateRange: '30d', status: 'all' });
   const stableFilters = useMemo(() => filters, [filters]);
   const { analytics, isLoading, exportAnalytics } = useEmployerAnalytics(stableFilters);
 
@@ -44,8 +52,8 @@ export function EmployerAnalyticsPage() {
           <Select label={t('employerAnalytics.analytics.dateRange')} value={filters.dateRange} onChange={(dateRange) => setFilters({ ...filters, dateRange: dateRange as AnalyticsFilters['dateRange'] })}>
             {(['30d', '90d', 'ytd'] as const).map((range) => <option key={range} value={range}>{t(`employerAnalytics.analytics.dateRange.${range}`)}</option>)}
           </Select>
-          <Select label={t('employerAnalytics.pipeline.stage')} value={filters.stage} onChange={(stage) => setFilters({ ...filters, stage: stage as AnalyticsFilters['stage'] })}>
-            {stages.map((stage) => <option key={stage} value={stage}>{t(`employerAnalytics.stage.${stage}`)}</option>)}
+          <Select label={t('employerAnalytics.pipeline.status')} value={filters.status} onChange={(status) => setFilters({ ...filters, status: status as AnalyticsFilters['status'] })}>
+            {statuses.map((status) => <option key={status} value={status}>{t(`employerAnalytics.status.${status}`)}</option>)}
           </Select>
         </div>
 
@@ -60,7 +68,7 @@ export function EmployerAnalyticsPage() {
               <Metric label={t('employerAnalytics.analytics.timeToHire')} value={analytics.timeToHireDays} hint={t('employerAnalytics.analytics.dateRange.30d')} />
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <AnalyticsBars title={t('employerAnalytics.analytics.funnel')} items={analytics.funnel.map((item) => ({ label: t(`employerAnalytics.stage.${item.stage}`), value: item.count }))} />
+              <AnalyticsBars title={t('employerAnalytics.analytics.funnel')} items={analytics.funnel.map((item) => ({ label: t(`employerAnalytics.status.${item.status}`), value: item.count }))} />
               <AnalyticsBars title={t('employerAnalytics.analytics.scoreDistribution')} items={analytics.scoreDistribution.map((item) => ({ label: item.band, value: item.count }))} />
               <AnalyticsBars title={t('employerAnalytics.analytics.topSkills')} items={analytics.topSkills.map((item) => ({ label: item.skill, value: item.demand, hint: '%' }))} max={100} />
               <AnalyticsBars title={t('employerAnalytics.analytics.weeklyTrend')} items={analytics.weeklyTrend.map((item) => ({ label: item.week, value: item.completed }))} />

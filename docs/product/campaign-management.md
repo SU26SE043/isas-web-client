@@ -4,9 +4,7 @@ Frontend contract for Phase 10: HR campaign lifecycle.
 
 ## Status
 
-**Implemented (mock)** — employer list/wizard/detail/edit, proctoring settings in wizard, invite email resolution (`invited` / `invite_pending` / rejected employer emails), candidate table on detail, org verification gate on publish. Campaign id aligned with candidate hub: `frontend-engineer-remote`.
-
-**Backlog (P1):** candidate selection upload step (FS-149), invitation email preview (FS-149b).
+**Implemented (mock)** — employer list/wizard/detail/edit/selection, proctoring settings, invite email resolution, candidate table, org verification gate on publish, invitation email preview before publish.
 
 ## Scope
 

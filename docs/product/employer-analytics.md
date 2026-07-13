@@ -2,7 +2,7 @@
 
 Frontend contract for Phase 11: HR hiring decisions after candidates complete campaign interviews.
 
-Status: implemented with mock data/service.
+Status: **Implemented (mock)** — pipeline uses product statuses (`invited`, `invite_pending`, `in_progress`, `paused_violation`, `auto_submitted`, `completed`); blind hiring, score override, analytics export.
 
 ## Scope
 

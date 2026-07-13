@@ -3,16 +3,24 @@ import type { ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
-import type { PipelineFilters as PipelineFiltersValue, PipelineSortKey, PipelineStage, ScoreBand } from '../types/employerAnalytics.types';
+import type { PipelineFilters as PipelineFiltersValue, PipelineSortKey, PipelineStatus, ScoreBand } from '../types/employerAnalytics.types';
 
 interface PipelineFiltersProps {
   value: PipelineFiltersValue;
   onChange: (value: PipelineFiltersValue) => void;
 }
 
-const stages: Array<PipelineStage | 'all'> = ['all', 'applied', 'interviewed', 'reviewed', 'shortlisted', 'rejected'];
+const statuses: Array<PipelineStatus | 'all'> = [
+  'all',
+  'invited',
+  'invite_pending',
+  'in_progress',
+  'paused_violation',
+  'auto_submitted',
+  'completed',
+];
 const scoreBands: ScoreBand[] = ['all', 'top', 'mid', 'risk'];
-const sortKeys: PipelineSortKey[] = ['rank', 'score', 'completedAt', 'stage'];
+const sortKeys: PipelineSortKey[] = ['rank', 'score', 'completedAt', 'status'];
 
 export function PipelineFilters({ value, onChange }: PipelineFiltersProps) {
   const { t } = useLanguage();
@@ -32,8 +40,8 @@ export function PipelineFilters({ value, onChange }: PipelineFiltersProps) {
           />
         </div>
       </div>
-      <SelectField label={t('employerAnalytics.pipeline.stage')} value={value.stage} onChange={(stage) => onChange({ ...value, stage: stage as PipelineFiltersValue['stage'] })}>
-        {stages.map((stage) => <option key={stage} value={stage}>{t(`employerAnalytics.stage.${stage}`)}</option>)}
+      <SelectField label={t('employerAnalytics.pipeline.status')} value={value.status} onChange={(status) => onChange({ ...value, status: status as PipelineFiltersValue['status'] })}>
+        {statuses.map((status) => <option key={status} value={status}>{t(`employerAnalytics.status.${status}`)}</option>)}
       </SelectField>
       <SelectField label={t('employerAnalytics.pipeline.scoreBand')} value={value.scoreBand} onChange={(scoreBand) => onChange({ ...value, scoreBand: scoreBand as ScoreBand })}>
         {scoreBands.map((band) => <option key={band} value={band}>{t(`employerAnalytics.scoreBand.${band}`)}</option>)}

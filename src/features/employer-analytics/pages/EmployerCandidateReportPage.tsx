@@ -38,7 +38,7 @@ export function EmployerCandidateReportPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Metric label={t('employerAnalytics.report.score')} value={visibleScore} />
           <Metric label={t('employerAnalytics.report.recommendation')} value={t(`employerAnalytics.recommendation.${report.recommendation}`)} />
-          <Metric label={t('employerAnalytics.pipeline.stage')} value={t(`employerAnalytics.stage.${candidate.stage}`)} />
+          <Metric label={t('employerAnalytics.pipeline.status')} value={t(`employerAnalytics.status.${candidate.status}`)} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
