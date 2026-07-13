@@ -306,6 +306,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Xây bộ component primitives monochrome dark theo AGENTS.md + UI_GUIDE |
+| **Trạng thái triển khai** | ✅ **Done** — `src/components/ui/*`, 5 layouts, toast/modal stack; monochrome dark only |
 | **Business Value** | Nhất quán thương hiệu; giảm 60% thời gian build screen sau |
 | **Vai trò** | Tất cả |
 | **Screens** | SCR-SHR-089–100 (error, loading, empty, dialogs) |
