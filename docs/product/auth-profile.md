@@ -19,8 +19,8 @@ Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
 
 | Route | Screen ID | Status |
 | --- | --- | --- |
-| `/login` | SCR-AUT-002 | Implemented — `LoginPage`, `LoginForm` |
-| `/register` | SCR-AUT-003 | Implemented — `RegisterPage`, `RegisterForm` |
+| `/login` | SCR-AUT-002 | Implemented — `LoginPage`, `AuthCard` + `LoginForm` (**UI frozen**) |
+| `/register` | SCR-AUT-003 | Implemented — `RegisterPage`, `AuthCard` + `RegisterForm` (**UI frozen**) |
 | `/verify-email` | SCR-AUT-004 | Implemented — token query + resend |
 | `/forgot-password` | SCR-AUT-005 | Implemented — OTP flow |
 | `/forgot-password/verify` | SCR-AUT-005 | Implemented — OTP step |
@@ -30,9 +30,25 @@ Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
 | `/session-expired` | SCR-AUT-008 | Implemented |
 | `/access-denied` | SCR-AUT-009 | Implemented |
 | `/account-locked` | SCR-AUT-010 | Implemented |
-| Auth modal (overlay) | SCR-AUT-002–005 | Implemented — shares validation with pages |
+| Auth modal (overlay) | SCR-AUT-002–005 | Implemented — split-panel `AuthModal` + `AuthOverlay` (**UI frozen**) |
 | `/profile` | SCR-CAN-013 | Partial |
 | Session timeout modal | SHR-100 | Implemented — `SessionTimeoutModal` |
+
+## UI freeze (login / sign-up) — default, do not redesign
+
+**Status:** Locked as of 2026-07-14. Decision: [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](../decisions/0009-auth-login-signup-ui-freeze.md).
+
+The current login and sign-up UI is the **product default**. Do not change layout, chrome, or visual language unless product explicitly supersedes decision 0009.
+
+| Surface | Baseline to keep |
+| --- | --- |
+| `/login` | `AuthLayout` → centered `AuthCard` (BrandLogo, title, subtitle, footer link to register) + `LoginForm` |
+| `/register` | Same `AuthCard` shell + `RegisterForm` + footer link to login |
+| Marketing modal | Split-panel `AuthModal`: form pane + sliding `AuthOverlay` welcome/CTA; `SignInForm` / `SignUpForm` / `ForgotPasswordForm` |
+
+**Not allowed without reopening 0009:** tabbed single-panel redesigns, different page shells for login/register, merging pages into the modal layout (or the reverse), or other “refresh” redesigns.
+
+**Allowed:** i18n copy, validation/error states, MFA / lockout / verify-email gates, API wiring, a11y and security bugfixes that keep the frozen composition.
 
 ## Behavior contract
 

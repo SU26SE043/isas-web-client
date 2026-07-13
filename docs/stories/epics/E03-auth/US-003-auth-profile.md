@@ -37,6 +37,7 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - High-risk: auth, authorization, public session contract.
 - Shared components: `LoginForm`, `RegisterForm`, `MFAChallenge`, `SSOButton`, `PasswordStrengthMeter`.
 - Enterprise SSO gated by `VITE_ENABLE_ENTERPRISE_SSO=true`.
+- **UI freeze:** `/login`, `/register`, and marketing `AuthModal` keep the current default layout — see decision [`0009-auth-login-signup-ui-freeze`](../../../decisions/0009-auth-login-signup-ui-freeze.md) and `docs/product/auth-profile.md`. Do not redesign unless that decision is superseded.
 
 ## Validation
 

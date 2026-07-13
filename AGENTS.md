@@ -75,6 +75,8 @@ Giao diện **luôn dark mode**, chỉ dùng **White, Black, Gray** cho UI cấu
 
 Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base` → `surface-elevated`. Primitives: `src/components/ui`.
 
+**UI freeze — login / sign-up:** `/login`, `/register`, and marketing `AuthModal` keep the current baseline (`AuthCard` + forms; split-panel modal). Do not redesign unless decision [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](docs/decisions/0009-auth-login-signup-ui-freeze.md) is superseded. See `docs/product/auth-profile.md`.
+
 ### Code conventions
 
 - Prefer components from `src/components/ui` first.

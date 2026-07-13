@@ -18,6 +18,20 @@ scripts/bin/harness-cli decision add \
 Trace fields such as `--decisions` summarize task-level choices. They do not
 count as the Harness decision log.
 
+## Index
+
+| ID | Title | Doc |
+| --- | --- | --- |
+| 0001 | Harness-first development | [0001-harness-first-development.md](./0001-harness-first-development.md) |
+| 0002 | Post-spec product lifecycle | [0002-post-spec-product-lifecycle.md](./0002-post-spec-product-lifecycle.md) |
+| 0003 | Generic spec intake harness | [0003-generic-spec-intake-harness.md](./0003-generic-spec-intake-harness.md) |
+| 0004 | SQLite durable layer | [0004-sqlite-durable-layer.md](./0004-sqlite-durable-layer.md) |
+| 0005 | Prebuilt Rust Harness CLI | [0005-prebuilt-rust-harness-cli.md](./0005-prebuilt-rust-harness-cli.md) |
+| 0006 | Phase 4 benchmark triage | [0006-phase-4-benchmark-triage.md](./0006-phase-4-benchmark-triage.md) |
+| 0007 | Improvement proposal rules | [0007-improvement-proposal-rules.md](./0007-improvement-proposal-rules.md) |
+| 0008 | BRD + Harness foundation | [0008-brd-harness-foundation.md](./0008-brd-harness-foundation.md) |
+| 0009 | Auth login / sign-up UI freeze | [0009-auth-login-signup-ui-freeze.md](./0009-auth-login-signup-ui-freeze.md) |
+
 Add a decision when:
 
 - A locked technical choice changes.

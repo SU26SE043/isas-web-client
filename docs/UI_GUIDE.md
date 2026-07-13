@@ -76,6 +76,15 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 | `src/index.css` | Tailwind theme + utilities |
 | `src/components/ui/*` | shadcn primitives |
 
+## Frozen UI surfaces (không redesign)
+
+| Surface | Baseline | Decision |
+|---------|----------|----------|
+| Login `/login`, Sign up `/register` | `AuthCard` + `LoginForm` / `RegisterForm` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+| Marketing auth modal | Split-panel `AuthModal` + `AuthOverlay` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+
+Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/security — **không** đổi layout/chrome trừ khi product mở lại decision 0009. Chi tiết: `docs/product/auth-profile.md`.
+
 ## Agent rules
 
 1. Đọc file này trước khi sửa UI
@@ -86,6 +95,7 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 6. Form: `react-hook-form` + `zod`
 7. Data: `@tanstack/react-query`
 8. **Giới hạn 250 dòng / file UI** — pages và components; tách file khi vượt ngưỡng
+9. **Không redesign login / sign-up / auth modal** — xem Frozen UI surfaces ở trên
 
 ## File size (bắt buộc)
 
