@@ -8,7 +8,7 @@ Phase 12 implements organization billing UI only. Phase 15 covers the B2B
 billing invoice path with Playwright regression:
 
 - `/employer/subscription` lets Organize/Admin users compare and select B2B subscription plans.
-- `/employer/billing` shows subscription status, org credit pool, seat usage, renewal/grace-period state, and payment method management.
+- `/employer/billing` shows subscription status, org credit pool, seat usage, monthly postpaid token accrual, usage by campaign with per-session drill-down, renewal/grace-period state, and payment method management.
 - `/employer/invoices` lists postpaid token usage invoices and simulates timestamped PDF generation inside the BRL-024 60-second SLA.
 
 Candidate wallet/payment screens stay in `docs/product/payment.md`; this contract is B2B employer billing.

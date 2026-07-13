@@ -45,7 +45,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Guest | `/`, `/pricing`, `/enterprise` | Register, login |
 | Candidate | `/candidate/dashboard` | **Practice**, **Campaigns** (invited only), roadmap, credits, history, profile |
 | HR | `/employer/dashboard` | Campaigns, candidates, analytics |
-| Organize | `/employer/dashboard`, `/employer/company` | Verify, billing (TBD routes), HR mgmt (TBD) |
+| Organize | `/employer/dashboard`, `/employer/company` | Verify, billing (`/employer/subscription`, `/employer/billing`, `/employer/invoices`), HR mgmt (`/employer/team`) |
 | Admin | `/admin` | Internal ops only |
 | B2B candidate | `/invite/:token` → `/candidate/campaigns` | Auth gate → my campaigns hub → briefing → interview |
 
@@ -240,7 +240,7 @@ BRD `Screen_Inventory.md` lists 100+ screens. Frontend product scope **does not*
 | SCR-CAN-040–041 (learning hub) | Tier 3 |
 | SCR-CAN-044–045 (leaderboard, achievements) | Tier 2 |
 | SCR-ADM-069+ | Tier 1 but mostly **not built** |
-| SCR-EMP-063–068 (billing, team) | Tier 1 — **routes missing** |
+| SCR-EMP-063–068 (billing, team) | Tier 1 — **implemented (mock)** |
 
 Use this file + [`product-scope.md`](./product-scope.md) as frontend product truth until BRD is formally updated.
 

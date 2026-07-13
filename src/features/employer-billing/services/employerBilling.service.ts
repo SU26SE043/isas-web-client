@@ -1,13 +1,23 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { MOCK_EMPLOYER_BILLING_ACCOUNT, MOCK_EMPLOYER_INVOICES, ORG_SUBSCRIPTION_PLANS } from '../mocks/employerBilling.fixtures';
+import {
+  MOCK_CAMPAIGN_TOKEN_USAGE,
+  MOCK_EMPLOYER_BILLING_ACCOUNT,
+  MOCK_EMPLOYER_INVOICES,
+  MOCK_MONTHLY_USAGE,
+  MOCK_SESSION_TOKEN_USAGE,
+  ORG_SUBSCRIPTION_PLANS,
+} from '../mocks/employerBilling.fixtures';
 import type {
   BillingCheckoutResult,
   BillingCycle,
+  CampaignTokenUsage,
   EmployerBillingAccount,
   EmployerInvoice,
   InvoiceGenerationResult,
+  MonthlyUsagePeriod,
   OrgPlanId,
   PaymentMethodInput,
+  SessionTokenUsage,
   SubscriptionPlan,
 } from '../types/employerBilling.types';
 
@@ -111,5 +121,23 @@ export const employerBillingService = {
       generatedAt: new Date().toISOString(),
       messageKey: 'employerBilling.invoices.generated',
     };
+  },
+
+  async getCampaignUsage(): Promise<CampaignTokenUsage[]> {
+    ensureMock();
+    await mockDelay(200);
+    return structuredClone(MOCK_CAMPAIGN_TOKEN_USAGE);
+  },
+
+  async getSessionUsage(campaignId: string): Promise<SessionTokenUsage[]> {
+    ensureMock();
+    await mockDelay(180);
+    return structuredClone(MOCK_SESSION_TOKEN_USAGE.filter((item) => item.campaignId === campaignId));
+  },
+
+  async getMonthlyUsage(): Promise<MonthlyUsagePeriod[]> {
+    ensureMock();
+    await mockDelay(200);
+    return structuredClone(MOCK_MONTHLY_USAGE);
   },
 };

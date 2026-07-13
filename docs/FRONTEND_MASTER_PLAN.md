@@ -641,6 +641,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — subscription, billing overview, token usage by campaign/month/session, invoices + PDF; US-010 `implemented` |
 | **Mục tiêu** | B2B **postpaid monthly** token usage, invoices — **Organize only** |
 | **Business Value** | B2B monetization; usage accrues per AI session — [`payment.md`](./product/payment.md) |
 | **Vai trò** | Organize |
@@ -1524,7 +1525,8 @@ P0 Foundation
 - [x] P2: landing/pricing/legal partial (E02 `partial`)
 - [x] P10: selection upload, email preview, invite resolution complete
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
-- [ ] P12+: not in scope of this sync
+- [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
+- [ ] P13+: not in scope of this sync
 
 ### Per-Phase Gate (áp dụng mọi phase)
 
