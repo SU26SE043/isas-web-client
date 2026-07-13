@@ -15,7 +15,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E05 | Practice interview, result, history | M05-M06 | implemented |
 | E06 | Payment, **token wallet**, subscription (B2C) | M08 | implemented (mock) |
 | E07 | Campaign create, magic link, **proctoring config** (B2B) | M04 | implemented (mock) |
-| E08 | Magic link entry, org dashboard, **assessment proctoring**, analytics | M04, M09 | in_progress |
+| E08 | Magic link entry, org dashboard, **assessment proctoring**, analytics | M04, M09 | implemented (mock) |
 | E09 | Admin portal & audit | M11-M12 | implemented |
 | E10 | Notifications, reporting, ATS hooks | M09-M10 | implemented |
 

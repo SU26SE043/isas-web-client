@@ -523,6 +523,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Magic link auth gate + **my campaigns hub** — **không** public browse |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `/invite` → auth → `/candidate/campaigns`; briefing at `/candidate/campaigns/:token/briefing`; E2E `campaign-invite-interview` |
 | **Business Value** | Email → `/candidate/campaigns` → briefing → shared assessment engine |
 | **Vai trò** | Candidate |
 | **Screens** | `/invite/:token`, `/candidate/campaigns`, `/candidate/campaigns/:token/briefing`; sidebar **Practice** (`/practice`) |
@@ -1478,7 +1479,7 @@ P0 Foundation
 
 ### 11.5 Out of Scope (product + BRD) — Không đưa vào roadmap
 
-- **Public campaign discovery** (`/candidate/campaigns*`) — [`product-scope.md`](./product/product-scope.md), [`campaign-discovery.md`](./product/campaign-discovery.md)
+- **Public campaign browse/enroll** (unauthenticated listing) — [`product-scope.md`](./product/product-scope.md), [`campaign-discovery.md`](./product/campaign-discovery.md). **Invite-only hub** at `/candidate/campaigns` is **in scope**.
 - **Learning Hub** standalone (`/candidate/learning*`) — Tier 3
 - Native iOS/Android (OUT-001)
 - Offline interviews (OUT-002)
