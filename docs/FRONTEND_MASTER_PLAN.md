@@ -429,29 +429,30 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | End-to-end AI interview room — core engine dùng chung B2C & B2B; B2B thêm proctoring theo [`campaign-assessment.md`](./product/campaign-assessment.md) |
+| **Mục tiêu** | End-to-end AI interview room — core engine dùng chung B2C & B2B; **proctoring chỉ B2B**; B2C camera bắt buộc, không anti-cheat |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `useInterviewRoomProctoring`; B2C skip identity; live camera preview; E2E `interview-happy-path`, `campaign-invite-interview` |
 | **Business Value** | **Heart of product** — phỏng vấn AI async, proctoring (B2B), recording |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-029–035 (Prep → Session → Complete) |
 | **User Flows** | UF-011–017 (UF-014 P0 critical path) |
 | **Features** | F-INT-001–009, **F-B2B-ASSESS-001–004** (proctoring B2B) |
-| **Components** | InterviewPrepChecklist, DeviceCheckPanel, IdentityVerifyCamera, **TermsAcceptanceGate**, WaitingRoom, **InterviewRoom** (video, AI avatar, timer, question panel, record controls), **ViolationPauseOverlay** (reason, count, max, Continue), PauseOverlay, ProctoringAlertBanner, **PeriodicFaceCapture**, NetworkLossDialog, ConsentModal |
+| **Components** | InterviewPrepChecklist, DeviceCheckPanel, IdentityVerifyCamera (B2B), **TermsAcceptanceGate** (B2B), WaitingRoom, **InterviewRoom** (`CandidateCameraPanel` live mirror), **ViolationPauseOverlay** (B2B), PauseOverlay, **PeriodicFaceCapture** (B2B), NetworkLossDialog, ConsentModal |
 | **Shared** | `useMediaDevices`, `useInterviewSession`, WebRTC recorder |
-| **State** | Session state machine: `preparing → device_check → terms_pending → identity_capture → waiting → active → paused_violation → auto_submitted → completing → done`; Zustand for realtime UI; violation counter per campaign config |
+| **State** | Session state machine: B2C `preparing → device_check → waiting → active → completing → done`; B2B adds `terms_pending → identity_capture → paused_violation → auto_submitted`; `useInterviewRoomProctoring` gates anti-cheat by `campaign_id` |
 | **API** | Interview: create session, device check, **acceptTerms**, identity baseline, start/pause/**continue**/complete, upload chunks, question poll, **reportViolation**, **periodic face capture**, proctoring events |
-| **Routing** | `/interview/:sessionId/prepare`, `/device-check`, `/identity`, `/waiting`, `/room` (fullscreen), `/complete` |
+| **Routing** | `/interview/:sessionId/prepare`, `/device-check`, `/identity` (B2B), `/waiting`, `/room`, `/complete`; B2C `/practice` entry |
 | **Layout** | `FullscreenLayout` (no sidebar; lock tab) |
 | **Validation** | Camera/mic required (BRL-025); consent (SEC-025) |
 | **Error** | ERR-011–020 interview errors |
 | **Loading** | "Generating next question..." (ERR-015) |
 | **Empty** | — |
 | **Permission** | Email verified (BR-01); B2C: token reserve sufficient (BR-B2C-02–03); B2B: magic link valid (BR-B2B-23); one active session (BRL-005) |
-| **Deliverables** | Reusable interview room (D1); B2C practice; B2B assessment với camera always on, sequential Q&A, face match, tab/focus pause, auto-submit at max violations |
-| **DoD** | B2C: UF-014 full loop. B2B: magic link → briefing → device → terms → baseline photo → room → violation pause → complete/auto-submit per BR-B2B-12–23 |
+| **Deliverables** | Shared interview room; B2C practice (no identity, no anti-cheat, camera forced + live preview); B2B assessment (terms, identity, strict proctoring) |
+| **DoD** | B2C: device → waiting → room E2E. B2B: magic link → briefing → device → terms → identity → room → violation pause |
 | **Acceptance** | FR-009–013; KPI-003 completion > 75%; abandonment < 10% |
 | **Dependencies** | P4; InterviewService + file storage |
 | **Rủi ro** | WebRTC browser compat → Chromium/Safari only; dual-camera (BRL-049) Phase 5.1 |
-| **Ghi chú** | B2C full proctoring parity — **Chưa được đặc tả trong tài liệu** (`practice-interview.md`). Timer: orange 2min, red 30s; auto-submit on timeout (BRL-042) |
+| **Ghi chú** | B2C **không** anti-cheat per [`practice-interview.md`](./product/practice-interview.md); camera always on, no toggle. B2B proctoring per [`campaign-assessment.md`](./product/campaign-assessment.md). Timer: orange 2min, red 30s |
 
 ---
 
@@ -911,12 +912,12 @@ flowchart TB
 | **F-CV-003** | Profile Mapping | Auto-fill | Candidate | CAN-022 | MappingReview | FR-006 | FS-066 |
 | **F-INT-001** | Interview Prep | Consent & checklist | Candidate | CAN-029 | PrepChecklist | UF-011 | FS-070–071 |
 | **F-INT-002** | Device Check | Hardware verify | Candidate | CAN-031 | DeviceCheckPanel | UF-013, FR-009 | FS-072 |
-| **F-INT-003** | Identity Verify | Anti-fraud ID | Candidate | CAN-030 | IdentityCamera | UF-012, FR-010 | FS-073 |
+| **F-INT-003** | Identity Verify | Anti-fraud ID (B2B) | Candidate | CAN-030 | IdentityCamera | UF-012, FR-010 | FS-073 |
 | **F-INT-004** | Waiting Room | Pre-session | Candidate | CAN-032 | WaitingRoom | — | FS-074 |
 | **F-INT-005** | Interview Room | Core AI session | Candidate | CAN-033 | InterviewRoom | UF-014, FR-011–013 | FS-075–080 |
 | **F-INT-006** | Interview Pause | Pause/resume | Candidate | CAN-034 | PauseOverlay | UF-015–016 | FS-081 |
 | **F-INT-007** | Interview Complete | Submit session | Candidate | CAN-035 | CompletionSummary | UF-017 | FS-082 |
-| **F-INT-008** | Proctoring | Real-time monitor | System | CAN-033 | ProctoringBanner | FR-013, BRL-003 | FS-083 |
+| **F-INT-008** | Proctoring | Real-time monitor (B2B) | System | CAN-033 | ProctoringBanner | FR-013, BRL-003 | FS-083 |
 | **F-INT-009** | Magic Link Entry | B2B invite | Candidate | /invite/:token | MagicLinkLanding | UF-106, FR-008 | FS-084 |
 | **F-RESULT-001** | AI Report | Score overview | Candidate | CAN-036 | ScoreDial, Tabs | UF-018, FR-017 | FS-090–091 |
 | **F-RESULT-002** | Detailed Feedback | Per-question | Candidate | CAN-037 | FeedbackAccordion | BRL-023 | FS-092 |
@@ -1207,17 +1208,17 @@ flowchart TB
 | FS-070 | Interview prep & consent | P5 | M05 | F-INT-001 | Candidate | CAN-029 | P0 | FS-053 | M | UF-011, SEC-025 | Consent required |
 | FS-071 | Token reserve gate before practice | P5 | M08 | F-INT-001 | Candidate | CAN-029 | P0 | FS-070 | S | BR-B2C-02–03 | Block if insufficient |
 | FS-072 | Device check page | P5 | M05 | F-INT-002 | Candidate | CAN-031 | P0 | FS-070 | L | UF-013, FR-009 | Pass/fail |
-| FS-073 | Identity verification | P5 | M05 | F-INT-003 | Candidate | CAN-030 | P0 | FS-072 | L | UF-012, FR-010 | Camera capture |
-| FS-074 | Waiting room | P5 | M05 | F-INT-004 | Candidate | CAN-032 | P0 | FS-073 | S | BRL-005 | Start enabled |
-| FS-075 | Interview room shell | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-074 | XL | Fullscreen | Layout ok |
+| FS-073 | Identity verification (B2B only) | P5 | M05 | F-INT-003 | Candidate | CAN-030 | P0 | FS-072 | L | UF-012, FR-010 | B2C skips → waiting |
+| FS-074 | Waiting room | P5 | M05 | F-INT-004 | Candidate | CAN-032 | P0 | FS-072 | S | BRL-005 | B2C after device; B2B after identity |
+| FS-075 | Interview room shell | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-074 | XL | Fullscreen + live camera mirror | Layout ok |
 | FS-076 | Question display + timer | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | L | FR-011, BRL-042 | Timer colors |
 | FS-077 | Audio/video recording | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | XL | FR-012 | WebRTC works |
 | FS-078 | Answer submit + next Q | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-076 | L | UF-014 steps 4–7 | Loop works |
-| FS-079 | Proctoring alerts (tab/focus) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | Pause on focus loss |
+| FS-079 | Proctoring alerts (tab/focus, B2B) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | B2C off |
 | FS-080 | Network loss dialog | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | M | ERR-013, BRL-035 | Auto resume |
 | FS-081 | Pause/resume overlay | P5 | M05 | F-INT-006 | Candidate | CAN-034 | P1 | FS-075 | M | UF-015–016 | State preserved |
 | FS-082 | Interview completion | P5 | M05 | F-INT-007 | Candidate | CAN-035 | P0 | FS-078 | M | UF-017 | Upload done |
-| FS-083 | Anti-cheat tab lock | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | Warning + pause |
+| FS-083 | Anti-cheat tab lock (B2B) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | B2C off |
 | FS-084 | Magic link interview entry | P5 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-070 | M | BR-B2B-08–10 | B2B auth branch |
 | FS-085 | Campaign briefing + instructions | P8 | M04 | F-B2B-ENTRY-001 | Candidate | CAN-025c | P0 | FS-084 | M | `campaign-assessment` | After validate |
 | FS-086 | B2B terms acceptance gate | P5 | M05 | F-B2B-ASSESS-001 | Candidate | prepare | P0 | FS-072 | S | BR-B2B-21 | Before identity |

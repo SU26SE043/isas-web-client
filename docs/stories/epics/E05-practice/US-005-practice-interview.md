@@ -10,7 +10,7 @@ normal
 
 ## Product Contract
 
-Candidate runs AI practice interview via `/practice` → full flow (`prepare` → `device-check` → `identity` → `waiting` → `room` → `complete`), views scored result, browses history at `/candidate/practice/history` (with optional `?date=` filter from dashboard heatmap).
+Candidate runs AI practice interview via `/practice` → B2C flow (`prepare` → `device-check` → `waiting` → `room` → `complete`) — **no identity step**, **no anti-cheat**. Camera is mandatory for the full session with live mirror preview in the room. B2B campaign sessions reuse the engine with terms, identity, and strict proctoring (see `campaign-assessment.md`).
 
 ## Relevant Product Docs
 
@@ -26,10 +26,10 @@ Candidate runs AI practice interview via `/practice` → full flow (`prepare` �
 ## Acceptance Criteria
 
 - `/practice` redirects to interview prepare flow with profile/credit gate.
-- Full flow: prepare consent, device check, identity photo, waiting room, interview room.
-- Interview room: AI panel, camera, timer (orange ≤120s, red ≤30s), submit, pause, proctoring banner.
-- Violation pause overlay with continue; auto-submit at max violations.
-- B2B campaign sessions: terms gate, camera always on, periodic face capture (mock).
+- B2C flow: prepare consent → device check → waiting room → interview room (skip `/identity`).
+- Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
+- B2C: **no** proctoring banner, tab listeners, periodic snapshots, or violation pause.
+- B2B campaign sessions: terms gate → identity → camera always on → periodic face capture (mock) → violation pause → auto-submit at max violations.
 - Flow progress persisted per session in `sessionStorage`.
 - Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap via `learningService`, error/loading states.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
@@ -47,7 +47,7 @@ Candidate runs AI practice interview via `/practice` → full flow (`prepare` �
 
 ## Evidence
 
-- `src/features/practice/**` — flow pages, proctoring store, ViolationPauseOverlay, TermsAcceptanceGate
+- `src/features/practice/**` — flow pages, `useInterviewRoomProctoring`, `CandidateCameraPanel`, `useInterviewMedia`
 - E2E: `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts`
 - Phase 6: `HistoryTable`, `certificatePdf`, `SkillBreakdownAccordion`, learning module `getModule` API
-- B2B reuse: `e2e/specs/b2b/full-journey.spec.ts` (terms + violation pause)
+- B2B reuse: `e2e/specs/b2b/campaign-invite-interview.spec.ts`, `e2e/specs/b2b/full-journey.spec.ts`
