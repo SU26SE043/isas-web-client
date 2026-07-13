@@ -31,9 +31,10 @@ Candidate runs AI practice interview via `/practice` â†’ full flow (`prepare` â†
 - Violation pause overlay with continue; auto-submit at max violations.
 - B2B campaign sessions: terms gate, camera always on, periodic face capture (mock).
 - Flow progress persisted per session in `sessionStorage`.
-- Result page: radar chart, gap analysis, error/loading states.
-- `/candidate/practice/history` list and `/candidate/practice/history/:id` detail.
-- History toolbar supports date filter chip when `?date=` is present.
+- Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap via `learningService`, error/loading states.
+- `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
+- Learning hub, module viewer (`passThreshold`), guided practice, progress dashboard.
+- Certificate viewer with PDF download; route aliases `/candidate/results/:id`, `/candidate/history`.
 - Role guard: Candidate + Admin only.
 
 ## Validation
@@ -42,10 +43,11 @@ Candidate runs AI practice interview via `/practice` â†’ full flow (`prepare` â†
 | --- | --- |
 | Platform | `npm run build` |
 | i18n | `npm run check:i18n` |
-| E2E | `e2e/specs/b2c/interview-happy-path.spec.ts` (Chromium) |
+| E2E | `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts` (Chromium) |
 
 ## Evidence
 
 - `src/features/practice/**` â€” flow pages, proctoring store, ViolationPauseOverlay, TermsAcceptanceGate
-- E2E: `e2e/specs/b2c/interview-happy-path.spec.ts`
+- E2E: `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts`
+- Phase 6: `HistoryTable`, `certificatePdf`, `SkillBreakdownAccordion`, learning module `getModule` API
 - B2B reuse: `e2e/specs/b2b/full-journey.spec.ts` (terms + violation pause)

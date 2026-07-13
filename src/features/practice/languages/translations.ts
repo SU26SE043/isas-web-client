@@ -45,6 +45,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.loading': 'Đang tải kết quả...',
     'practice.result.error': 'Không thể tải kết quả phỏng vấn. Vui lòng thử lại sau.',
     'practice.result.errorTitle': 'Đã xảy ra lỗi',
+    'practice.result.missingId': 'Thiếu mã kết quả phỏng vấn. Mở từ lịch sử hoặc sau khi hoàn tất phiên.',
     'practice.result.skillOverview': 'Tổng quan năng lực',
     'practice.result.skillOverviewDesc':
       'Biểu đồ radar so sánh mức hiện tại và mục tiêu cho từng kỹ năng.',
@@ -95,6 +96,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.module.completed': 'Đã hoàn thành module',
     'practice.learning.module.passHint': 'Cần đạt ít nhất {percent}% để hoàn thành.',
     'practice.learning.module.error': 'Không thể tải module. Vui lòng thử lại.',
+    'practice.learning.error': 'Không thể tải danh sách module học tập.',
+    'practice.learning.emptyTitle': 'Chưa có module học tập',
+    'practice.learning.emptyDescription': 'Hoàn thành phỏng vấn để nhận lộ trình và module được đề xuất.',
 
     'practice.certificate.issued': 'Chứng nhận đã cấp',
     'practice.certificate.score': 'Điểm tổng',
@@ -115,6 +119,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.compare.noChange': 'Không đổi',
     'practice.compare.missingSelection': 'Chọn đúng hai phiên để so sánh.',
     'practice.compare.error': 'Không thể tải dữ liệu so sánh.',
+    'practice.compare.disabledHint': 'Chỉ phiên đã hoàn thành có điểm mới so sánh được.',
 
     'practice.progress.title': 'Bảng tiến độ',
     'practice.progress.subtitle': 'Theo dõi module, điểm số và hoạt động luyện tập.',
@@ -183,6 +188,14 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.status.inProgress': 'Đang thực hiện',
      'practice.history.status.pending': 'Chưa bắt đầu',
      'practice.history.pagination': 'Trang',
+     'practice.history.errorTitle': 'Không thể tải lịch sử',
+     'practice.history.errorDescription': 'Kiểm tra kết nối và thử làm mới trang.',
+     'practice.history.hide': 'Ẩn',
+     'practice.history.restore': 'Khôi phục',
+     'practice.history.showHidden': 'Mục đã ẩn',
+     'practice.history.showActive': 'Phiên đang hoạt động',
+     'practice.history.columns.role': 'Vai trò',
+     'practice.history.columns.actions': 'Thao tác',
 
     'practice.aiState.speaking': 'Đang nói',
     'practice.aiState.thinking': 'Đang suy nghĩ...',
@@ -334,6 +347,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.loading': 'Loading result...',
     'practice.result.error': 'Unable to load the interview result. Please try again later.',
     'practice.result.errorTitle': 'Something went wrong',
+    'practice.result.missingId': 'Missing interview result id. Open from history or after completing a session.',
     'practice.result.skillOverview': 'Skill Overview',
     'practice.result.skillOverviewDesc':
       'Radar chart comparing current and target levels across key skills.',
@@ -384,6 +398,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.module.completed': 'Module completed',
     'practice.learning.module.passHint': 'Reach at least {percent}% to complete.',
     'practice.learning.module.error': 'Could not load this module. Please try again.',
+    'practice.learning.error': 'Could not load learning modules.',
+    'practice.learning.emptyTitle': 'No learning modules yet',
+    'practice.learning.emptyDescription': 'Complete an interview to unlock your roadmap and recommended modules.',
 
     'practice.certificate.issued': 'Certificate issued',
     'practice.certificate.score': 'Overall score',
@@ -404,6 +421,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.compare.noChange': 'No change',
     'practice.compare.missingSelection': 'Select exactly two sessions to compare.',
     'practice.compare.error': 'Could not load comparison data.',
+    'practice.compare.disabledHint': 'Only completed scored sessions can be compared.',
 
     'practice.progress.title': 'Progress dashboard',
     'practice.progress.subtitle': 'Track modules, scores, and practice activity.',
@@ -472,6 +490,14 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.status.inProgress': 'In Progress',
      'practice.history.status.pending': 'Pending',
      'practice.history.pagination': 'Page',
+     'practice.history.errorTitle': 'Could not load history',
+     'practice.history.errorDescription': 'Check your connection and try refreshing.',
+     'practice.history.hide': 'Hide',
+     'practice.history.restore': 'Restore',
+     'practice.history.showHidden': 'Hidden items',
+     'practice.history.showActive': 'Active sessions',
+     'practice.history.columns.role': 'Role',
+     'practice.history.columns.actions': 'Actions',
 
     'practice.aiState.speaking': 'Speaking',
     'practice.aiState.thinking': 'Thinking...',

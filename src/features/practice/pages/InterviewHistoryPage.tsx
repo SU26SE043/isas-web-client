@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLanguage } from '@/shared/languages';
 import { useInterviewHistory } from '../hooks/useInterviewHistory';
+import { HistoryTable } from '../components/history/HistoryTable';
 import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { InterviewHistoryEmptyState } from '../components/history/InterviewHistoryEmptyState';
 import { InterviewHistoryHeader } from '../components/history/InterviewHistoryHeader';
-import { InterviewHistoryListItem } from '../components/history/InterviewHistoryListItem';
 import { InterviewHistoryPagination } from '../components/history/InterviewHistoryPagination';
 import { InterviewHistoryStats } from '../components/history/InterviewHistoryStats';
 import { InterviewHistoryToolbar } from '../components/history/InterviewHistoryToolbar';
@@ -15,13 +17,17 @@ import {
 
 export const InterviewHistoryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date') ?? '';
-  const { interviews, isLoading, refresh } = useInterviewHistory();
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showHidden, setShowHidden] = useState(false);
+
+  const { interviews, isLoading, error, refresh, hideInterview, restoreHiddenInterview } =
+    useInterviewHistory({ includeDeleted: showHidden });
 
   const stats = useMemo(() => computeHistoryStats(interviews), [interviews]);
 
@@ -35,7 +41,7 @@ export const InterviewHistoryPage: React.FC = () => {
     [interviews, statusFilter, dateFilter],
   );
 
-  const totalPages = Math.ceil(filteredInterviews.length / HISTORY_ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredInterviews.length / HISTORY_ITEMS_PER_PAGE));
   const paginatedInterviews = filteredInterviews.slice(
     (currentPage - 1) * HISTORY_ITEMS_PER_PAGE,
     currentPage * HISTORY_ITEMS_PER_PAGE,
@@ -82,17 +88,30 @@ export const InterviewHistoryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-surface-raised">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-subtle" />
+      <div className="flex h-screen items-center justify-center bg-surface-raised">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-subtle" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-surface-raised px-6 text-center">
+        <AlertCircle className="h-10 w-10 text-error" aria-hidden />
+        <h2 className="heading-secondary mt-4 text-xl text-foreground">{t('practice.history.errorTitle')}</h2>
+        <p className="body-text mt-2 text-sm text-muted-foreground">{t('practice.history.errorDescription')}</p>
+        <button type="button" className="btn-primary mt-6" onClick={handleRefresh}>
+          {t('practice.history.refresh')}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-surface-raised overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-surface-raised">
       <InterviewHistoryHeader />
 
-      <div className="flex-1 flex flex-col min-h-0 px-8 py-5 max-w-[1400px] w-full mx-auto">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-8 py-5 min-h-0">
         <InterviewHistoryToolbar
           statusFilter={statusFilter}
           onStatusFilterChange={handleStatusFilterChange}
@@ -101,6 +120,11 @@ export const InterviewHistoryPage: React.FC = () => {
           onClearDateFilter={dateFilter ? handleClearDateFilter : undefined}
           compareMode={compareMode}
           onToggleCompareMode={handleToggleCompareMode}
+          showHidden={showHidden}
+          onToggleShowHidden={() => {
+            setShowHidden((value) => !value);
+            setCurrentPage(1);
+          }}
         />
 
         {compareMode ? (
@@ -118,19 +142,18 @@ export const InterviewHistoryPage: React.FC = () => {
           inProgress={stats.inProgress}
         />
 
-        <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-3">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-2 custom-scrollbar">
           {paginatedInterviews.length > 0 ? (
-            paginatedInterviews.map((interview, index) => (
-              <InterviewHistoryListItem
-                key={interview.id}
-                interview={interview}
-                index={index}
-                compareMode={compareMode}
-                selected={selectedIds.includes(interview.id)}
-                onToggleCompare={handleToggleCompare}
-                onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
-              />
-            ))
+            <HistoryTable
+              interviews={paginatedInterviews}
+              compareMode={compareMode}
+              selectedIds={selectedIds}
+              showHidden={showHidden}
+              onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
+              onToggleCompare={handleToggleCompare}
+              onHide={(id) => void hideInterview(id)}
+              onRestore={(id) => void restoreHiddenInterview(id)}
+            />
           ) : (
             <InterviewHistoryEmptyState />
           )}

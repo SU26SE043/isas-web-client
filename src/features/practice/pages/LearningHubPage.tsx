@@ -9,15 +9,22 @@ export const LearningHubPage: React.FC = () => {
   const { t } = useLanguage();
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    void learningService.listModules().then((data) => {
-      if (active) {
+    void learningService
+      .listModules()
+      .then((data) => {
+        if (!active) return;
         setModules(data);
-        setIsLoading(false);
-      }
-    });
+      })
+      .catch(() => {
+        if (active) setError('load_failed');
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -38,11 +45,25 @@ export const LearningHubPage: React.FC = () => {
           <h1 className="heading-primary text-3xl text-foreground">{t('practice.learning.title')}</h1>
           <p className="body-text text-sm text-muted-foreground">{t('practice.learning.subtitle')}</p>
         </header>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {modules.map((module) => (
-            <LearningModuleCard key={module.id} module={module} />
-          ))}
-        </div>
+
+        {error ? (
+          <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
+            {t('practice.learning.error')}
+          </p>
+        ) : null}
+
+        {modules.length === 0 ? (
+          <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">
+            <h2 className="heading-secondary text-lg text-foreground">{t('practice.learning.emptyTitle')}</h2>
+            <p className="body-text mt-2 text-sm text-muted-foreground">{t('practice.learning.emptyDescription')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {modules.map((module) => (
+              <LearningModuleCard key={module.id} module={module} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

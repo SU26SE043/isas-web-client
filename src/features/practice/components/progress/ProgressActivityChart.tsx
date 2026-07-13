@@ -28,17 +28,17 @@ export function ProgressActivityChart({ data }: ProgressActivityChartProps) {
       <div className="mt-4 h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis dataKey="label" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-            <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+            <CartesianGrid stroke="var(--border-subtle)" vertical={false} />
+            <XAxis dataKey="label" tick={{ fill: 'var(--isas-gray-400)', fontSize: 12 }} />
+            <YAxis tick={{ fill: 'var(--isas-gray-400)', fontSize: 12 }} />
             <Tooltip
               contentStyle={{
-                background: '#141416',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border-default)',
                 borderRadius: 12,
               }}
             />
-            <Bar dataKey="sessions" fill="#fafafa" radius={[6, 6, 0, 0]} name={t('practice.progress.sessions')} />
+            <Bar dataKey="sessions" fill="var(--isas-gray-50)" radius={[6, 6, 0, 0]} name={t('practice.progress.sessions')} />
           </BarChart>
         </ResponsiveContainer>
       </div>

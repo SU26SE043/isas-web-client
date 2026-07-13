@@ -40,5 +40,10 @@ test.describe('B2C interview happy path', () => {
     await expect(page).toHaveURL(/\/complete/, { timeout: 12_000 });
     await expect(page.getByRole('heading', { name: /Interview complete/i })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/Assessment ID: assessment-session-123/i)).toBeVisible();
+
+    await page.getByRole('link', { name: /View result/i }).click();
+    await expect(page).toHaveURL(/assessmentId=assessment-session-123/);
+    await expect(page.getByRole('tab', { name: /^Overview$/i })).toBeVisible({ timeout: 25_000 });
+    await expect(page.getByText(/Overall score/i)).toBeVisible();
   });
 });

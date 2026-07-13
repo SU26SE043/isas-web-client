@@ -65,7 +65,20 @@ export const learningService = {
     }
 
     await mockDelay(350);
-    return MOCK_LEARNING_MODULES;
+    return MOCK_LEARNING_MODULES.map((module) => ({ ...module }));
+  },
+
+  async getModule(moduleId: string): Promise<LearningModule> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(250);
+    const module = MOCK_LEARNING_MODULES.find((item) => item.id === moduleId);
+    if (!module) {
+      throw new Error('MODULE_NOT_FOUND');
+    }
+    return { ...module };
   },
 
   async getModuleContent(moduleId: string): Promise<LearningModuleContent> {

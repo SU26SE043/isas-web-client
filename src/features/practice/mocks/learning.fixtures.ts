@@ -104,6 +104,25 @@ export const MOCK_LEARNING_MODULES: LearningModule[] = [
 ];
 
 export const MOCK_MODULE_CONTENT: Record<string, LearningModuleContent> = {
+  'module-react-arch': {
+    id: 'module-react-arch',
+    sections: [
+      {
+        id: 's1',
+        title: 'Component boundaries',
+        titleVi: 'Ranh giới component',
+        body: 'Split UI by responsibility and keep state as close to usage as possible.',
+        bodyVi: 'Tách UI theo trách nhiệm và giữ state gần nơi sử dụng nhất.',
+      },
+      {
+        id: 's2',
+        title: 'Rendering strategies',
+        titleVi: 'Chiến lược render',
+        body: 'Choose client, server, or hybrid rendering based on interactivity and SEO needs.',
+        bodyVi: 'Chọn client, server hoặc hybrid render theo nhu cầu tương tác và SEO.',
+      },
+    ],
+  },
   'module-system-design': {
     id: 'module-system-design',
     sections: [
@@ -139,6 +158,18 @@ export const MOCK_MODULE_CONTENT: Record<string, LearningModuleContent> = {
         titleVi: 'Luyện trả lời 60 giây',
         body: 'Pick one interview question and answer aloud with a timer. Review clarity and pace.',
         bodyVi: 'Chọn một câu hỏi phỏng vấn và trả lời to với timer. Tự đánh giá độ rõ và nhịp nói.',
+      },
+    ],
+  },
+  'module-debugging': {
+    id: 'module-debugging',
+    sections: [
+      {
+        id: 's1',
+        title: 'Reproduce reliably',
+        titleVi: 'Tái hiện ổn định',
+        body: 'Capture exact steps, environment, and inputs before changing code.',
+        bodyVi: 'Ghi lại bước, môi trường và input trước khi sửa code.',
       },
     ],
   },

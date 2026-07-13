@@ -36,7 +36,7 @@ import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
 import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
 import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
 import { RequireAuth } from '@/routes/RequireAuth';
-import { LegacyRedirect, PracticeHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
+import { LegacyRedirect, PracticeHistoryLegacyRedirect, CandidateResultsLegacyRedirect, CandidateHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
 import { CvUploadLegacyRedirect } from '@/routes/CvUploadLegacyRedirect';
 
 export const candidateRoutes: RouteObject[] = [
@@ -67,6 +67,8 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'practice/history', element: <InterviewHistoryPage /> },
           { path: 'practice/history/compare', element: <CompareResultsPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },
+          { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },
+          { path: 'history', element: <CandidateHistoryLegacyRedirect /> },
           { path: 'roadmap', element: <RoadmapPage /> },
           { path: 'learning', element: <LearningHubPage /> },
           { path: 'learning/:moduleId/practice', element: <LearningPracticePage /> },

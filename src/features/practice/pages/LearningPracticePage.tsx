@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningService } from '../services/learning.service';
-import type { LearningPracticeSession } from '../types/learning.types';
+import type { LearningModule, LearningPracticeSession } from '../types/learning.types';
 
 export const LearningPracticePage: React.FC = () => {
   const { moduleId = '' } = useParams();
   const { t, language } = useLanguage();
+  const [moduleMeta, setModuleMeta] = useState<LearningModule | null>(null);
   const [session, setSession] = useState<LearningPracticeSession | null>(null);
   const [promptIndex, setPromptIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -18,18 +19,19 @@ export const LearningPracticePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const currentPrompt = session?.prompts[promptIndex];
+  const passThreshold = moduleMeta?.passThreshold ?? 80;
 
   useEffect(() => {
     let active = true;
-    void learningService
-      .startPracticeSession(moduleId)
-      .then((data) => {
+    void Promise.all([learningService.getModule(moduleId), learningService.startPracticeSession(moduleId)])
+      .then(([meta, data]) => {
         if (!active) return;
+        setModuleMeta(meta);
         setSession(data);
         setSecondsLeft(data.prompts[0]?.durationSeconds ?? 60);
       })
       .catch(() => {
-        if (active) setError(t('practice.learning.practice.error'));
+        if (active) setError('load_failed');
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -37,7 +39,7 @@ export const LearningPracticePage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [moduleId, t]);
+  }, [moduleId]);
 
   useEffect(() => {
     if (!currentPrompt || done) return;
@@ -61,7 +63,7 @@ export const LearningPracticePage: React.FC = () => {
     try {
       const nextIndex = promptIndex + 1;
       if (nextIndex >= session.prompts.length) {
-        await learningService.submitPracticeAnswer(moduleId, 80);
+        await learningService.submitPracticeAnswer(moduleId, passThreshold);
         setDone(true);
         return;
       }
@@ -89,13 +91,21 @@ export const LearningPracticePage: React.FC = () => {
       <div className="page-container page-section mx-auto max-w-3xl space-y-6">
         <nav className="text-sm text-muted-foreground">
           <Link to={`/candidate/learning/${moduleId}`} className="hover:text-foreground hover:underline">
-            {t('practice.learning.module.title')}
+            {moduleMeta
+              ? language === 'vi'
+                ? moduleMeta.titleVi
+                : moduleMeta.title
+              : t('practice.learning.module.title')}
           </Link>
           <span className="mx-2">{'>'}</span>
           <span>{t('practice.learning.practice.title')}</span>
         </nav>
 
-        {error ? <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
+            {t('practice.learning.practice.error')}
+          </p>
+        ) : null}
 
         {done ? (
           <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">

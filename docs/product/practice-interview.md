@@ -40,6 +40,8 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 | `/practice/result` | `InterviewResultPage` (query: `assessmentId`) |
 | `/practice/interview/:id` | `InterviewResultPage` |
 | `/candidate/practice/history` | `InterviewHistoryPage` |
+| `/candidate/results/:id` | Redirect → `/candidate/practice/history/:id` |
+| `/candidate/history` | Redirect → `/candidate/practice/history` |
 | `/candidate/practice/history/:id` | `InterviewResultPage` |
 | `/candidate/roadmap` | `RoadmapPage` |
 | `/candidate/learning` | `LearningHubPage` |
@@ -61,7 +63,18 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
 ## Phase 6 coverage
 
-All FS-090 through FS-103 stories are implemented on mock services (P0-P3), including compare results, progress dashboard, guided practice session, leaderboard, and achievements.
+FS-090 through FS-103 implemented on mock services:
+
+- **Results:** scoring poll, tabbed report (`ReportTabs`), `ScoreDial`, `SkillRadarChart`, `SkillBreakdownAccordion` (alias), question feedback, roadmap preview via `learningService.getRoadmap()`.
+- **History:** `HistoryTable`, pagination, status/date filters, compare mode, soft-delete (hide/restore).
+- **Learning:** roadmap page with regen limit, learning hub, module viewer with `passThreshold`, guided practice session.
+- **Progress:** dashboard, leaderboard, achievements.
+- **Certificates:** viewer with PDF download (minimal PDF blob).
+- **Route aliases:** `/candidate/results/:id` and `/candidate/history` redirect to practice history routes.
+
+E2E: `e2e/specs/b2c/results-learning.spec.ts`, extended `interview-happy-path.spec.ts` (view result after complete).
+
+Live API integration TBD.
 
 ## Engine reuse
 
@@ -77,7 +90,7 @@ B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes 
 
 ## Status
 
-Phase 5 interview engine implemented on mock services — prepare → device → identity → waiting → room → complete; B2B terms gate + proctoring overlays. Phase 6 results/learning on mock. Live Interview API integration TBD.
+Phase 5 interview engine + Phase 6 results/learning on mock services. Live Interview API integration TBD.
 
 ## Related
 

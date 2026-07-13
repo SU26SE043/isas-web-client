@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Download, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningService } from '../services/learning.service';
+import { buildCertificatePdfBlob } from '../utils/certificatePdf';
 import type { CertificateRecord } from '../types/learning.types';
 
 export const CertificateViewerPage: React.FC = () => {
@@ -20,7 +21,7 @@ export const CertificateViewerPage: React.FC = () => {
         if (active) setCertificate(data);
       })
       .catch(() => {
-        if (active) setError(t('practice.certificate.error'));
+        if (active) setError('load_failed');
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -28,21 +29,24 @@ export const CertificateViewerPage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [id, t]);
+  }, [id]);
 
   const handleDownload = () => {
     if (!certificate) return;
     const title = language === 'vi' ? certificate.titleVi : certificate.title;
-    const blob = new Blob(
-      [
-        `${title}\n${certificate.candidateName}\n${t('practice.certificate.score')}: ${certificate.score}\n${certificate.issuedAt}`,
-      ],
-      { type: 'text/plain' },
-    );
+    const issued = new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
+      dateStyle: 'long',
+    }).format(new Date(certificate.issuedAt));
+    const blob = buildCertificatePdfBlob([
+      title,
+      certificate.candidateName,
+      `${t('practice.certificate.score')}: ${certificate.score}`,
+      issued,
+    ]);
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${certificate.id}.txt`;
+    anchor.download = `${certificate.id}.pdf`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -58,7 +62,11 @@ export const CertificateViewerPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-2xl space-y-6">
-        {error ? <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
+            {t('practice.certificate.error')}
+          </p>
+        ) : null}
 
         {certificate ? (
           <article className="rounded-2xl border border-subtle bg-surface-raised p-8 text-center shadow-sm">
