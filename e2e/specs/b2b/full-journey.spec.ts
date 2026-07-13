@@ -10,6 +10,9 @@ test.describe('B2B full journey', () => {
     await loginAs(page, 'candidate');
 
     await page.goto('/invite/phase8-valid');
+    await expect(page).toHaveURL(/\/candidate\/campaigns\?highlight=phase8-valid/);
+    await page.getByRole('link', { name: /Start assessment/i }).click();
+    await expect(page).toHaveURL(/\/candidate\/campaigns\/phase8-valid\/briefing/);
     await expect(page.getByRole('heading', { name: /^Campaign briefing$/i })).toBeVisible();
     await page.getByRole('button', { name: /Start assessment/i }).click();
 

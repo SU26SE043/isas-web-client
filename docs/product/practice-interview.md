@@ -2,6 +2,16 @@
 
 BRD: FR-009–019, SCR-CAN-029–048, `BRD/User_Flows.md` (practice + results + learning flows).
 
+## Candidate sidebar (B2C + B2B entry)
+
+| Item | Route | Role |
+| --- | --- | --- |
+| **Practice** | `/practice` | B2C — create practice session (token reserve) |
+| **Campaigns** | `/candidate/campaigns` | B2B — my invited assessments only |
+| **Interview history** | `/candidate/practice/history` | Completed sessions (both lines) |
+
+Legacy `/practice/history` redirects to `/candidate/practice/history`.
+
 ## User flow
 
 1. Candidate starts session at `/practice` (role-guarded: Candidate + Admin) → redirects to `/interview/:sessionId/prepare`.
@@ -11,17 +21,16 @@ BRD: FR-009–019, SCR-CAN-029–048, `BRD/User_Flows.md` (practice + results + 
 5. **Identity** — `/interview/:sessionId/identity` — baseline face photo capture.
 6. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
 7. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, timer, controls, recording.
-8. **Proctoring** — tab/focus violations pause session (`ViolationPauseOverlay`); max violations → auto-submit.
-9. Session completes → upload → `/interview/:sessionId/complete` → result/history.
-10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
-11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
-12. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
-13. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
-14. Certificates at `/candidate/certificates/:id`.
-15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
-16. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
-17. Guided learning practice at `/candidate/learning/:moduleId/practice`.
-18. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
+8. Session completes → upload → `/interview/:sessionId/complete` → result/history.
+9. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
+10. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
+11. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
+12. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
+13. Certificates at `/candidate/certificates/:id`.
+14. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
+15. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
+16. Guided learning practice at `/candidate/learning/:moduleId/practice`.
+17. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
 
 Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
@@ -86,7 +95,7 @@ When `campaign_id` is set (session id prefix `campaign-`), the full assessment f
 
 Flow progress is persisted per session in `sessionStorage` (`isas-interview-flow:{sessionId}`).
 
-B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes without the terms step; lighter proctoring defaults (higher max violations, camera toggle allowed).
+B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** the terms step and **without anti-cheat / proctoring** (no tab lock, violation pause, or auto-submit on focus loss). Recording consent covers capture only; camera may be toggled off during the session.
 
 ## Status
 

@@ -34,5 +34,5 @@ export function CandidateHistoryLegacyRedirect() {
 }
 
 export function CampaignDiscoveryLegacyRedirect() {
-  return <Navigate to="/candidate/dashboard" replace />;
+  return <Navigate to="/candidate/campaigns" replace />;
 }

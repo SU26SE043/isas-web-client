@@ -4,6 +4,7 @@ export const profileTranslations: TranslationDictionary = {
   vi: {
     'profile.navDashboard': 'Bảng điều khiển',
     'profile.navCvAnalysis': 'Phân tích CV',
+    'profile.navPractice': 'Luyện phỏng vấn',
     'profile.navCampaigns': 'Chiến dịch',
     'profile.breadcrumb': 'Hồ sơ ứng viên',
     'profile.completeness.label': 'Độ hoàn thiện hồ sơ',
@@ -193,6 +194,7 @@ export const profileTranslations: TranslationDictionary = {
   en: {
     'profile.navDashboard': 'Dashboard',
     'profile.navCvAnalysis': 'CV Analysis',
+    'profile.navPractice': 'Practice interview',
     'profile.navCampaigns': 'Campaigns',
     'profile.breadcrumb': 'Candidate profile',
     'profile.completeness.label': 'Profile completeness',

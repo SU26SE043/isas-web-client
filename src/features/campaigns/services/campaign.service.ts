@@ -5,6 +5,8 @@ import type {
   CampaignBriefing,
   CampaignFilters,
   CampaignInvite,
+  CandidateCampaignInvite,
+  CandidateInviteStatus,
   EnrollmentInput,
   EnrollmentResult,
   InviteAuthResolution,
@@ -46,6 +48,20 @@ function findInvite(token: string): (CampaignInvite & { campaign: Campaign }) | 
   if (!invite) return null;
   const campaign = MOCK_CAMPAIGNS.find((item) => item.id === invite.campaignId);
   return campaign ? { ...invite, campaign: withEnrollment(campaign) } : null;
+}
+
+function resolveInviteStatus(invite: CampaignInvite): CandidateInviteStatus {
+  if (invite.status === 'expired') return 'expired';
+  if (invite.status !== 'valid') return 'expired';
+
+  if (typeof sessionStorage !== 'undefined') {
+    const stored = sessionStorage.getItem(`isas-invite-status-${invite.token}`);
+    if (stored === 'completed' || stored === 'in_progress') {
+      return stored as CandidateInviteStatus;
+    }
+  }
+
+  return 'invited';
 }
 
 export const campaignService = {
@@ -122,5 +138,29 @@ export const campaignService = {
       candidateEmail: invite.candidateEmail,
       ...template,
     };
+  },
+
+  async listMyInvitedCampaigns(candidateEmail: string): Promise<CandidateCampaignInvite[]> {
+    assertMockMode();
+    await mockDelay(300);
+    const email = candidateEmail.trim().toLowerCase();
+    if (!email) return [];
+
+    return MOCK_INVITES.filter((invite) => invite.candidateEmail.toLowerCase() === email)
+      .map((invite) => {
+        const campaign = MOCK_CAMPAIGNS.find((item) => item.id === invite.campaignId);
+        if (!campaign) return null;
+
+        return {
+          inviteToken: invite.token,
+          campaignId: invite.campaignId,
+          title: campaign.title,
+          company: campaign.company,
+          deadline: invite.expiresAt,
+          status: resolveInviteStatus(invite),
+          sessionId: `campaign-${invite.campaignId}`,
+        } satisfies CandidateCampaignInvite;
+      })
+      .filter((item): item is CandidateCampaignInvite => item !== null);
   },
 };

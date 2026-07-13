@@ -27,7 +27,8 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Candidate selection | T1 | Upload CV/email, screening, ranking, **email lookup → immediate list if registered** | Partial in wizard/pipeline | Partial |
 | Employer analytics | T1 | Pipeline, candidate profile, report, export | `/employer/analytics`, candidates | Implemented (mock) |
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
-| **Public campaign discovery** | — | **OUT OF SCOPE** | `/candidate/campaigns*` | **Remove / deprecate** |
+| **Public campaign browse** (self-serve catalog of all open campaigns) | — | **OUT OF SCOPE** |
+| **My invited campaigns** | T1 | Employer-invited list only | `/candidate/campaigns` | Required |
 | Learning hub | T3 | Standalone content library | `/candidate/learning*` | Placeholder — backlog |
 | Leaderboard | T2 | Rankings | `/candidate/leaderboard` | Placeholder |
 | Certificate | T2 | Certificate viewer | `/candidate/certificates/:id` | Placeholder |
@@ -42,13 +43,21 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Persona | Primary entry | Key navigation |
 | --- | --- | --- |
 | Guest | `/`, `/pricing`, `/enterprise` | Register, login |
-| Candidate | `/candidate/dashboard` | Practice, roadmap, credits, history, profile |
+| Candidate | `/candidate/dashboard` | **Practice**, **Campaigns** (invited only), roadmap, credits, history, profile |
 | HR | `/employer/dashboard` | Campaigns, candidates, analytics |
 | Organize | `/employer/dashboard`, `/employer/company` | Verify, billing (TBD routes), HR mgmt (TBD) |
 | Admin | `/admin` | Internal ops only |
-| B2B candidate | `/invite/:token` | Auth → interview prep → room |
+| B2B candidate | `/invite/:token` → `/candidate/campaigns` | Auth gate → my campaigns hub → briefing → interview |
 
-**Navigation rule:** No link to public campaign browse for B2B candidates. Employer distributes magic links only.
+**Navigation (candidate sidebar):**
+
+| Item | Route | Notes |
+| --- | --- | --- |
+| Luyện phỏng vấn / Practice | `/practice` | B2C session create (token reserve) |
+| Chiến dịch / Campaigns | `/candidate/campaigns` | B2B invites only; empty if none |
+| Lịch sử phỏng vấn / History | `/candidate/practice/history` | Completed B2C + B2B sessions |
+
+**Navigation rule:** No public campaign catalog. Magic link emails land on `/candidate/campaigns` after auth.
 
 ---
 
@@ -64,7 +73,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/pricing` | Pricing | T2 | |
 | `/enterprise` | Enterprise marketing | T2 | |
 | `/terms`, `/privacy` | Legal | T2 | |
-| `/invite/:token` | Magic link landing | **T1** | B2B candidate entry — **keep** |
+| `/invite/:token` | Magic link auth gate | **T1** | Redirect → `/candidate/campaigns` |
 | `/403`, `/404`, `/500`, `/maintenance` | Errors | T1/T2 | |
 
 ### Auth (T1)
@@ -93,9 +102,10 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/subscription` | Plans | T1 | Review vs token model |
 | `/candidate/payment` | Checkout | T1 | Keep |
 | `/payment/callback` | PayOS callback | T1 | Keep |
-| `/candidate/campaigns` | Campaign browse | — | **OUT OF SCOPE — deprecate** |
-| `/candidate/campaigns/:id` | Campaign detail | — | **OUT OF SCOPE — deprecate** |
-| `/candidate/campaigns/:id/enroll` | Enrollment | — | **OUT OF SCOPE — deprecate** |
+| `/candidate/campaigns` | **My invited campaigns** | T1 | Invite-only list; empty state |
+| `/candidate/campaigns/:token/briefing` | Campaign briefing | T1 | Before assessment start |
+| `/candidate/campaigns/:id` | Legacy detail | — | Redirect → `/candidate/campaigns` |
+| `/candidate/campaigns/:id/enroll` | Legacy enroll | — | Redirect → `/candidate/campaigns` |
 | `/candidate/learning` | Learning hub | T3 | Backlog |
 | `/candidate/learning/:moduleId` | Learning module | T3 | Backlog |
 | `/candidate/progress` | Progress dashboard | T2 | Simplify |
@@ -203,20 +213,20 @@ flowchart TB
 
 ---
 
-## 5. Reconcile — public campaign discovery
+## 5. Reconcile — campaigns vs public browse
 
-**Product decision:** B2B candidates enter **only via magic link** ([`product-scope.md`](./product-scope.md) §4.7).
+**Product decision (2026-07-13):** [`campaign-discovery.md`](./campaign-discovery.md)
 
 | Item | Action |
 | --- | --- |
-| `/candidate/campaigns` | **Deprecate** — remove from nav; route → redirect or 404 with message |
-| `/candidate/campaigns/:id` | **Deprecate** |
-| `/candidate/campaigns/:id/enroll` | **Deprecate** |
-| `/invite/:token` | **Keep** — canonical B2B candidate entry |
-| `docs/product/campaign-discovery.md` | Mark public browse out of scope |
-| Sidebar / dashboard links to “Browse campaigns” | Remove when implementing reconcile story |
+| `/candidate/campaigns` | **Keep** — **my invited campaigns** (sidebar); empty if no invites |
+| `/candidate/campaigns/:token/briefing` | **Add** — briefing before assessment |
+| `/candidate/campaigns/:id`, `.../enroll` | **Deprecate** — redirect to `/candidate/campaigns` |
+| `/invite/:token` | **Keep** — auth gate only → redirect `/candidate/campaigns?highlight={token}` |
+| `/practice` | **Sidebar** — B2C practice entry |
+| Public browse (`CampaignBrowsePage`, filters, self-enroll) | **Out of scope** — do not restore |
 
-**Rationale:** Implemented discovery flow contradicts product scope; magic link flow already exists on public routes.
+**Rationale:** Employers invite by email; candidates see only linked campaigns. Magic link is not the interview UI.
 
 ---
 

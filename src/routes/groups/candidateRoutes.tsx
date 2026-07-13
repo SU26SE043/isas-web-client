@@ -33,8 +33,10 @@ import { SkillsPage } from '@/features/profile/pages/SkillsPage';
 import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
 import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
 import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
+import { CandidateCampaignsPage } from '@/features/campaigns/pages/CandidateCampaignsPage';
+import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/CandidateCampaignBriefingPage';
 import { RequireAuth } from '@/routes/RequireAuth';
-import { LegacyRedirect, PracticeHistoryLegacyRedirect, CandidateResultsLegacyRedirect, CandidateHistoryLegacyRedirect, CampaignDiscoveryLegacyRedirect } from '@/routes/LegacyRedirect';
+import { LegacyRedirect, PracticeHistoryLegacyRedirect, CandidateResultsLegacyRedirect, CandidateHistoryLegacyRedirect } from '@/routes/LegacyRedirect';
 import { CvUploadLegacyRedirect } from '@/routes/CvUploadLegacyRedirect';
 
 export const candidateRoutes: RouteObject[] = [
@@ -59,9 +61,10 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'cv/analysis', element: <CVAnalysisPage /> },
           { path: 'cv/analysis/report', element: <CVResultPage /> },
           { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
-          { path: 'campaigns', element: <CampaignDiscoveryLegacyRedirect /> },
-          { path: 'campaigns/:id', element: <CampaignDiscoveryLegacyRedirect /> },
-          { path: 'campaigns/:id/enroll', element: <CampaignDiscoveryLegacyRedirect /> },
+          { path: 'campaigns', element: <CandidateCampaignsPage /> },
+          { path: 'campaigns/:token/briefing', element: <CandidateCampaignBriefingPage /> },
+          { path: 'campaigns/:id', element: <Navigate to="/candidate/campaigns" replace /> },
+          { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
           { path: 'practice/history', element: <InterviewHistoryPage /> },
           { path: 'practice/history/compare', element: <CompareResultsPage /> },
           { path: 'practice/history/:id', element: <InterviewResultPage /> },

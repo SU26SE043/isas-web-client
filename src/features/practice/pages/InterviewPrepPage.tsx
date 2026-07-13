@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
 import { useInterviewGate } from '../hooks/useInterviewGate';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
@@ -32,6 +33,10 @@ export const InterviewPrepPage: React.FC = () => {
   }, [sessionId]);
 
   const canContinue = gate.canStart && consentAccepted && !loadingSession;
+  const isCampaignSession = isCampaignSessionId(sessionId);
+  const consentKey = isCampaignSession
+    ? 'practice.flow.prepare.consent'
+    : 'practice.flow.prepare.consentPractice';
 
   return (
     <InterviewFlowShell
@@ -70,7 +75,7 @@ export const InterviewPrepPage: React.FC = () => {
                 disabled={!gate.canStart}
                 onChange={(event) => setConsentAccepted(sessionId, event.target.checked)}
               />
-              <span className="text-sm text-foreground">{t('practice.flow.prepare.consent')}</span>
+              <span className="text-sm text-foreground">{t(consentKey)}</span>
             </label>
 
             <div className="mt-6 flex flex-wrap gap-3">

@@ -76,3 +76,15 @@ export interface CampaignBriefing {
   assessmentSteps: string[];
   assessmentStepsVi: string[];
 }
+
+export type CandidateInviteStatus = 'invited' | 'in_progress' | 'completed' | 'expired';
+
+export interface CandidateCampaignInvite {
+  inviteToken: string;
+  campaignId: string;
+  title: string;
+  company: string;
+  deadline: string;
+  status: CandidateInviteStatus;
+  sessionId: string;
+}

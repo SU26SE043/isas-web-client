@@ -58,7 +58,8 @@ Living contract for **what the frontend product is**. Module and screen mapping:
 
 ### Explicitly out of scope
 
-- **Public campaign discovery** (candidate self-browse `/candidate/campaigns`) — **magic link only** for B2B candidates
+- **Public campaign browse** (open catalog at `/candidate/campaigns`) — **out of scope**
+- **My invited campaigns** (`/candidate/campaigns`) — **in scope**; magic link email lands here after auth
 - Native iOS/Android, offline mode, live human video interview
 - See [`module-scope.md`](./module-scope.md) for route-level reconcile
 
@@ -120,8 +121,8 @@ Open draft → upload email list or CVs → **system resolves each email against
 
 | Email lookup result | Campaign candidate list | Next step |
 | --- | --- | --- |
-| **Already registered as Candidate** | **Appears immediately** — row linked to existing `candidate_id` | Status `invited` until interview completed; magic link → **sign in** |
-| Not registered | Appears as invite pending — row has email only | Status `invite_pending`; magic link → **register** then interview |
+| **Already registered as Candidate** | **Appears immediately** — row linked to existing `candidate_id` | Status `invited`; magic link → sign in → **`/candidate/campaigns`** |
+| Not registered | Appears as invite pending — row has email only | Status `invite_pending`; magic link → register → **`/candidate/campaigns`** |
 | Registered as HR / Organize / Admin | **Reject** — show validation error on that email | Cannot invite; one email = one role |
 
 Employer may still run AI screening and ranking on uploaded CVs; email resolution runs when emails are added (upload list or invite input).
@@ -138,14 +139,14 @@ Full candidate assessment flow: [`campaign-assessment.md`](./campaign-assessment
 
 Summary:
 
-1. Magic link → validate → sign in or register
-2. Campaign info → instructions → device check → terms acceptance
+1. Magic link → validate → sign in or register → **`/candidate/campaigns`**
+2. Card CTA → campaign briefing → device check → terms acceptance
 3. Identity verification (baseline face photo)
 4. Interview (camera on, sequential questions, proctoring)
 5. Violations → pause → warning → continue or auto-submit at max violations
 6. AI evaluation → complete → employer ranking, analytics, export
 
-**Candidate channel:** Magic link only — no public discovery.
+**Candidate channel:** Magic link email → campaigns hub (`/candidate/campaigns`). **No** public catalog browse.
 
 ---
 
@@ -180,9 +181,9 @@ Summary:
 | --- | --- |
 | BR-B2B-06 | On email add (selection upload or invite input), **lookup** email in user registry |
 | BR-B2B-07 | Email matches existing **Candidate** → **link to campaign immediately** and show in employer candidate list (do not wait for magic-link click) |
-| BR-B2B-08 | Linked candidate receives magic link → **sign in** (no new registration) → interview |
+| BR-B2B-08 | Linked candidate receives magic link → **sign in** → **`/candidate/campaigns`** → start assessment |
 | BR-B2B-09 | Email matches **HR / Organize / Admin** → **reject** with clear error (one email = one role) |
-| BR-B2B-10 | Unknown email → campaign row with `invite_pending`; magic link → **register** as Candidate → interview |
+| BR-B2B-10 | Unknown email → `invite_pending`; magic link → **register** → **`/candidate/campaigns`** → start assessment |
 | BR-B2B-11 | Pipeline status for linked registered candidates starts at **`invited`** until interview is submitted |
 | BR-B2B-12–23 | B2B assessment proctoring & integrity — see [`campaign-assessment.md`](./campaign-assessment.md) |
 
@@ -213,7 +214,7 @@ Both lines are **equal-priority** deliverables for Tier 1.
 | B2C billing | Prepaid reserve → settle actual tokens after report |
 | B2B billing | Accumulate tokens per session → invoice at month start |
 | Credit vs token UX | Show tokens; flat per-session credit retired |
-| Public discovery vs magic link | Magic link only |
+| Public browse vs my campaigns | Browse **out**; invite-only list **in**; magic link → campaigns hub |
 | Dual-role accounts | Separate — one email, one role |
 | Learning Hub vs Roadmap | Roadmap Tier 1; Learning Hub Tier 3 |
 | Org verify | No create/publish campaign until verified |
@@ -231,7 +232,7 @@ Both lines are **equal-priority** deliverables for Tier 1.
 5. HR vs Organize screen boundaries for billing vs campaign (detailed in module-scope)
 6. Candidate consent before employer sees full profile for email-matched invites
 7. Full pipeline status enum after `invited` / `invite_pending` (partially in `campaign-assessment.md`)
-8. B2C practice proctoring parity with B2B campaign assessment
+8. ~~B2C practice proctoring parity with B2B campaign assessment~~ — **Out of scope:** B2C has no anti-cheat; B2B proctoring per `campaign-assessment.md`.
 9. Default values for face interval, similarity threshold, max violations
 
 ---

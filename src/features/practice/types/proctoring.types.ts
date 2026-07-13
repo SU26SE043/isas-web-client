@@ -10,7 +10,7 @@ export interface ProctoringConfig {
 
 export const B2C_PROCTORING_CONFIG: ProctoringConfig = {
   isCampaignSession: false,
-  maxViolations: 5,
+  maxViolations: 0,
   faceCaptureIntervalSec: 0,
   faceSimilarityThreshold: 0.85,
   cameraAlwaysOn: false,

@@ -33,6 +33,7 @@ export const PracticeInterviewPage: React.FC = () => {
   const session = useInterviewSession(sessionId);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
   const [questionListOpen, setQuestionListOpen] = useState(false);
+  const isCampaignSession = session.proctoringConfig.isCampaignSession;
 
   const recording = useInterviewRecording({
     sessionId,
@@ -70,7 +71,7 @@ export const PracticeInterviewPage: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={session.isRecording} />
-      <ProctoringAlertBanner violationCount={session.tabViolationCount} />
+      {isCampaignSession ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
       {paymentService.hasReservation(sessionId) ? (
         <div className="px-6 pt-4">
           <ReserveSettleBanner
@@ -80,7 +81,7 @@ export const PracticeInterviewPage: React.FC = () => {
         </div>
       ) : null}
 
-      {session.isAutoSubmitted ? (
+      {isCampaignSession && session.isAutoSubmitted ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
           {t('practice.room.autoSubmitted')}
         </div>
@@ -125,7 +126,7 @@ export const PracticeInterviewPage: React.FC = () => {
         remainingSeconds={session.remainingSeconds}
         isSubmitting={session.status === 'submitting'}
         isPaused={session.isManualPaused}
-        isLocked={session.isViolationPaused || session.isAutoSubmitted}
+        isLocked={(isCampaignSession && session.isViolationPaused) || session.isAutoSubmitted}
         cameraLocked={session.proctoringConfig.cameraAlwaysOn}
         micEnabled={session.micEnabled}
         cameraEnabled={session.cameraEnabled}
@@ -144,16 +145,18 @@ export const PracticeInterviewPage: React.FC = () => {
         currentIndex={session.currentIndex}
         onClose={() => setQuestionListOpen(false)}
       />
-      <TabLockOverlay visible={session.isTabHidden} />
+      {isCampaignSession ? <TabLockOverlay visible={session.isTabHidden} /> : null}
       <NetworkLossDialog open={session.isOffline} />
       <PauseOverlay visible={session.isManualPaused} onResume={session.togglePause} />
-      <ViolationPauseOverlay
-        visible={session.isViolationPaused && !session.isTabHidden}
-        reason={session.violationReason}
-        violationCount={session.violationCount}
-        maxViolations={session.maxViolations}
-        onContinue={session.continueAfterViolation}
-      />
+      {isCampaignSession ? (
+        <ViolationPauseOverlay
+          visible={session.isViolationPaused && !session.isTabHidden}
+          reason={session.violationReason}
+          violationCount={session.violationCount}
+          maxViolations={session.maxViolations}
+          onContinue={session.continueAfterViolation}
+        />
+      ) : null}
     </div>
   );
 };

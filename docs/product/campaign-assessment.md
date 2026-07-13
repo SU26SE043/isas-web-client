@@ -15,8 +15,8 @@ Frontend contract for the **candidate assessment session** after opening a campa
 1. Candidate opens **magic link** (`/invite/:token`).
 2. **Validate magic link** (token valid, not expired, campaign active).
 3. **Authenticate** — sign in if Candidate exists; register if not ([`product-scope.md`](./product-scope.md) BR-B2B-08–10).
-4. **Display campaign information** — role, company, duration, rules summary.
-5. **Read instructions** — how the assessment works, proctoring notice.
+4. **Redirect** to **`/candidate/campaigns`** (optional `?highlight={token}` from email).
+5. **Campaign card** → **briefing** (`/candidate/campaigns/:token/briefing`) — role, company, duration, instructions, proctoring notice.
 6. **Device check** — camera, microphone, internet connectivity.
 7. **Accept terms & privacy** — required before continuing.
 8. **Identity verification** — capture **baseline face photo**.
@@ -40,8 +40,9 @@ Frontend contract for the **candidate assessment session** after opening a campa
 
 | Step | Route / surface | Notes |
 | --- | --- | --- |
-| Magic link landing | `/invite/:token` | Validate token; auth branch |
-| Campaign briefing | `/invite/:token` or `/interview/:sessionId/prepare` | Campaign info + instructions — **exact route TBD** |
+| Magic link gate | `/invite/:token` | Validate; auth; redirect to campaigns |
+| My campaigns | `/candidate/campaigns` | Invite-only list; empty state |
+| Campaign briefing | `/candidate/campaigns/:token/briefing` | Info + instructions + Start assessment |
 | Device check | `/interview/:sessionId/device-check` | Camera, mic, network |
 | Terms acceptance | Prepare step or dedicated gate | Before identity capture |
 | Identity verification | `/interview/:sessionId/identity` | Baseline face photo |

@@ -10,12 +10,13 @@ function mapProctoringEvent(type: ViolationType) {
 }
 
 export function useProctoring(sessionId: string, enabled: boolean) {
+  const antiCheatEnabled = useInterviewSessionStore((state) => state.proctoringConfig.isCampaignSession);
   const registerViolation = useInterviewSessionStore((state) => state.registerViolation);
   const setTabHidden = useInterviewSessionStore((state) => state.setTabHidden);
   const dismissTabLockWarning = useInterviewSessionStore((state) => state.dismissTabLockWarning);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !antiCheatEnabled) return;
 
     const report = (type: ViolationType) => {
       const status = useInterviewSessionStore.getState().status;
@@ -58,5 +59,5 @@ export function useProctoring(sessionId: string, enabled: boolean) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [dismissTabLockWarning, enabled, registerViolation, sessionId, setTabHidden]);
+  }, [antiCheatEnabled, dismissTabLockWarning, enabled, registerViolation, sessionId, setTabHidden]);
 }

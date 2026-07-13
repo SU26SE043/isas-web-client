@@ -10,8 +10,13 @@ test.describe('B2B magic link interview', () => {
     await loginAs(page, 'candidate');
 
     await page.goto('/invite/phase8-valid');
-    await expect(page.getByRole('heading', { name: /^Campaign briefing$/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/candidate\/campaigns\?highlight=phase8-valid/);
+    await expect(page.getByRole('heading', { name: /^Invited campaigns$/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Frontend Engineer Assessment/i })).toBeVisible();
+
+    await page.getByRole('link', { name: /Start assessment/i }).click();
+    await expect(page).toHaveURL(/\/candidate\/campaigns\/phase8-valid\/briefing/);
+    await expect(page.getByRole('heading', { name: /^Campaign briefing$/i })).toBeVisible();
     await expect(page.getByText(/Camera required/i)).toBeVisible();
 
     await page.getByRole('button', { name: /Start assessment/i }).click();

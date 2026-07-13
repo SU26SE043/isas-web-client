@@ -514,28 +514,27 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | Canonical B2B candidate entry qua `/invite/:token` — **không** public campaign browse |
-| **Business Value** | B2B candidate funnel; handoff vào assessment flow ([`campaign-assessment.md`](./product/campaign-assessment.md)) |
+| **Mục tiêu** | Magic link auth gate + **my campaigns hub** — **không** public browse |
+| **Business Value** | Email → `/candidate/campaigns` → briefing → shared assessment engine |
 | **Vai trò** | Candidate |
-| **Screens** | `/invite/:token`, **campaign briefing** (route TBD), ~~SCR-CAN-023–025~~ **deprecated** |
+| **Screens** | `/invite/:token`, `/candidate/campaigns`, `/candidate/campaigns/:token/briefing`; sidebar **Practice** (`/practice`) |
 | **User Flows** | UF-106; `product-scope.md` §4.7 |
 | **Features** | F-INT-009, **F-B2B-ENTRY-001–002** |
-| **Components** | MagicLinkLanding, **CampaignBriefingPanel**, AuthBranch (sign in vs register), InviteExpiredState |
-| **State** | Token validation; auth branch by email lookup (BR-B2B-08–10) |
-| **API** | `validateMagicLink`, `GET campaignBriefing`; auth register/login |
-| **Routing** | `/invite/:token` → briefing → `/interview/:sessionId/*` (P5). **Deprecate:** `/candidate/campaigns`, `/candidate/campaigns/:id`, `/candidate/campaigns/:id/enroll` |
-| **Layout** | `AuthLayout` / `MarketingLayout` for magic link; then `FullscreenLayout` (P5) |
+| **Components** | MagicLinkLanding, `CandidateCampaignsPage`, `InvitedCampaignCard`, `CampaignBriefingPanel`, AuthBranch, InviteExpiredState |
+| **State** | Token validation; auth branch; invite list scoped to candidate email |
+| **API** | `validateMagicLink`, `listMyInvitedCampaigns`, `getCampaignBriefing` |
+| **Routing** | `/invite/:token` → auth → `/candidate/campaigns` → briefing → `/interview/:sessionId/*` (P5) |
+| **Layout** | `DashboardLayout` (campaigns + practice nav); then `FullscreenLayout` (P5) |
 | **Validation** | Invite expiry (BRL-022); one email = one role (BR-B2B-09) |
-| **Error** | Expired/invalid invite; HR/Organize email rejected at employer UI |
-| **Loading** | Token validation skeleton |
-| **Empty** | — |
-| **Permission** | Magic link public; auth required before assessment steps |
-| **Deliverables** | Magic link → validate → sign in/register → campaign info + instructions → P5 device/terms/identity/room |
-| **DoD** | No nav to public campaign browse; `/invite/:token` end-to-end to interview prep |
+| **Error** | Expired/invalid invite; email mismatch on magic link |
+| **Loading** | Token validation skeleton; campaigns list skeleton |
+| **Empty** | `/candidate/campaigns` empty state when no invites (pure B2C) |
+| **Permission** | Magic link public; campaigns + assessment require Candidate auth |
+| **Deliverables** | Sidebar Practice + Campaigns; magic link redirects; card → briefing → P5 |
+| **DoD** | B2C-only candidate: empty campaigns; invited candidate: card → assessment E2E |
 | **Acceptance** | BR-B2B-06–11, BR-B2B-23; [`campaign-discovery.md`](./product/campaign-discovery.md) |
-| **Dependencies** | P3, P5 (interview routes), P10 (published campaign + invite) |
-| **Rủi ro** | Briefing route TBD — coordinate with P5 prepare step |
-| **Ghi chú** | **Public discovery OUT OF SCOPE** — remove sidebar links; redirect deprecated routes |
+| **Dependencies** | P3, P5, P10 (publish + invite) |
+| **Ghi chú** | Public browse **OUT**; invite-only list **IN** |
 
 ---
 
@@ -1256,9 +1255,10 @@ flowchart TB
 
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
-| FS-123 | Deprecate public campaign routes | P8 | M04 | F-B2B-ENTRY-002 | Candidate | CAN-023–025 | P0 | FS-066 | S | `module-scope` §5 | No nav links; redirect |
-| FS-124 | Magic link validate + auth branch | P8 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-084 | M | BR-B2B-08–10 | Sign in vs register |
-| FS-125 | Campaign briefing screen | P8 | M04 | F-B2B-ENTRY-001 | Candidate | CAN-025c | P0 | FS-124 | M | Steps 4–5 assessment | Handoff to P5 |
+| FS-123 | Candidate sidebar Practice + Campaigns | P8 | M04 | F-B2B-ENTRY-002 | Candidate | CAN-023–025 | P0 | FS-066 | S | Sidebar nav | `/practice` + invite-only list |
+| FS-124 | Magic link validate + auth → campaigns | P8 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-084 | M | BR-B2B-08–10 | Redirect hub |
+| FS-125 | Campaign briefing (from card) | P8 | M04 | F-B2B-ENTRY-001 | Candidate | /campaigns/:token/briefing | P0 | FS-124 | M | Proctoring notice | Handoff to P5 |
+| FS-126 | My invited campaigns list | P8 | M04 | F-B2B-ENTRY-001 | Candidate | /candidate/campaigns | P0 | FS-124 | M | BR-B2B-07 | Empty if no invites |
 
 ~~FS-120–122 (public campaign browse/enroll) — **removed from plan** (out of scope).~~
 
