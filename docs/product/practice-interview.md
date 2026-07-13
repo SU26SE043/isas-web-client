@@ -14,23 +14,30 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
 ## User flow
 
-1. Candidate starts session at `/practice` (role-guarded: Candidate + Admin) → redirects to `/interview/:sessionId/prepare`.
-2. **Prepare** — profile/credit gate, checklist, recording consent.
-3. **Device check** — `/interview/:sessionId/device-check` — camera/mic preview.
-4. **Terms** (B2B campaign sessions only) — `/interview/:sessionId/terms` — assessment terms acceptance.
-5. **Identity** (B2B campaign sessions only) — `/interview/:sessionId/identity` — baseline face photo capture.
-6. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
-7. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, timer, controls, recording.
-8. Session completes → upload → `/interview/:sessionId/complete` → result/history.
-9. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
-10. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
-11. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
-12. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
-13. Certificates at `/candidate/certificates/:id`.
-14. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
-15. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
-16. Guided learning practice at `/candidate/learning/:moduleId/practice`.
-17. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
+1. Candidate opens **Practice** at `/practice` (role-guarded: Candidate + Admin).
+2. **Pre-session wizard** (steps 1–6 on `/practice`):
+   1. **Chọn Domain** — field/industry for the session.
+   2. **Chọn Level** — Intern, Fresher, Junior, Middle, Senior.
+   3. **Upload CV** — upload new or select an existing uploaded CV.
+   4. **Chọn số lượng câu hỏi** — question count for the session (3 / 5 / 7 / 10).
+   5. **Rubric chấm điểm** — AI-generated rubric; user can view and edit weights (must total 100%).
+   6. **Confirm** — review summary → **create practice session** + **reserve tokens** → navigate to `/interview/:sessionId/prepare`.
+3. **Prepare** — profile/credit gate, checklist, recording consent.
+4. **Device check** — `/interview/:sessionId/device-check` — camera/mic preview.
+5. **Terms** (B2B campaign sessions only) — `/interview/:sessionId/terms` — assessment terms acceptance.
+6. **Identity** (B2B campaign sessions only) — `/interview/:sessionId/identity` — baseline face photo capture.
+7. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
+8. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, timer, controls, recording.
+9. Session completes → upload → `/interview/:sessionId/complete` → result/history.
+10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
+11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
+12. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
+13. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
+14. Certificates at `/candidate/certificates/:id`.
+15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
+16. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
+17. Guided learning practice at `/candidate/learning/:moduleId/practice`.
+18. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
 
 Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
@@ -38,7 +45,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
 | Path | Component |
 | --- | --- |
-| `/practice` | `PracticeEntryPage` → `/interview/session-123/prepare` |
+| `/practice` | `PracticeWizardPage` — 6-step pre-session wizard → create session → `/interview/:sessionId/prepare` |
 | `/interview/:sessionId/prepare` | `InterviewPrepPage` |
 | `/interview/:sessionId/device-check` | `DeviceCheckPage` |
 | `/interview/:sessionId/terms` | `TermsAcceptancePage` (B2B campaign sessions) |

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { loginAs } from '../../fixtures/auth';
+import { completePracticeSetupWizard } from '../../fixtures/practiceWizard';
 
 test.describe('B2C token wallet and checkout', () => {
   test.setTimeout(90_000);
@@ -21,8 +22,7 @@ test.describe('B2C token wallet and checkout', () => {
     await page.getByRole('link', { name: /View token wallet/i }).click();
     await expect(page.locator('.heading-primary.text-5xl')).toHaveText('17,500', { timeout: 10_000 });
 
-    await page.goto('/practice');
-    await expect(page).toHaveURL(/\/interview\/session-123\/prepare/);
+    await completePracticeSetupWizard(page);
 
     await page.goto('/candidate/credits');
     await expect(page.getByText('Reserved', { exact: true })).toBeVisible();

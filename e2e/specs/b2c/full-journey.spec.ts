@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installMockMedia } from '../../fixtures/media';
 import { loginAs } from '../../fixtures/auth';
+import { completePracticeSetupWizard } from '../../fixtures/practiceWizard';
 
 test.describe('B2C full journey', () => {
   test.setTimeout(120_000);
@@ -47,8 +48,7 @@ test.describe('B2C full journey', () => {
     await expect(page.getByText(/Payment successful/i)).toBeVisible({ timeout: 15_000 });
 
     await installMockMedia(page);
-    await page.goto('/practice');
-    await expect(page).toHaveURL(/\/interview\/session-123\/prepare/);
+    await completePracticeSetupWizard(page);
     await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
     await page.getByRole('button', { name: /^Continue$/i }).click();
     await expect(page).toHaveURL(/\/device-check/);

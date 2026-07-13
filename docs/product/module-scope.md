@@ -54,7 +54,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 
 | Item | Route | Notes |
 | --- | --- | --- |
-| Luyện phỏng vấn / Practice | `/practice` | B2C session create (token reserve) |
+| Luyện phỏng vấn / Practice | `/practice` | B2C pre-session wizard (domain → level → CV → questions → rubric → confirm) + token reserve on create |
 | Chiến dịch / Campaigns | `/candidate/campaigns` | B2B invites only; empty if none |
 | Lịch sử phỏng vấn / History | `/candidate/practice/history` | Completed B2C + B2B sessions |
 
@@ -118,7 +118,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 
 | Route | Screen |
 | --- | --- |
-| `/practice` | Practice entry / session create |
+| `/practice` | Practice wizard + session create |
 | `/practice/result` | Result (legacy path) |
 | `/interview/:sessionId/prepare` | Preparation |
 | `/interview/:sessionId/device-check` | Device check |

@@ -20,6 +20,7 @@ import type {
   SessionCompleteResult,
   SessionStartResult,
 } from '../types/practiceSession.api.types';
+import { getDynamicPracticeSession } from './practiceSetup.service';
 
 let asyncQuestionPollCount = 0;
 const startedSessions = new Set<string>();
@@ -45,7 +46,11 @@ export const practiceSessionService = {
     }
 
     await mockDelay(1000);
-    return MOCK_PRACTICE_SESSIONS[sessionId] ?? { ...DEFAULT_PRACTICE_SESSION, sessionId };
+    return (
+      getDynamicPracticeSession(sessionId) ??
+      MOCK_PRACTICE_SESSIONS[sessionId] ??
+      { ...DEFAULT_PRACTICE_SESSION, sessionId }
+    );
   },
 
   async startSession(sessionId: string): Promise<SessionStartResult> {
@@ -75,6 +80,11 @@ export const practiceSessionService = {
     }
 
     await mockDelay(800);
+
+    const dynamicSession = getDynamicPracticeSession(sessionId);
+    if (dynamicSession && dynamicSession.questions.length > 0) {
+      return dynamicSession.questions;
+    }
 
     const session = MOCK_PRACTICE_SESSIONS[sessionId];
     if (session?.status === 'ready') {

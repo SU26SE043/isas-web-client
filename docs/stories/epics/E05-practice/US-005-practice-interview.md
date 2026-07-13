@@ -10,7 +10,7 @@ normal
 
 ## Product Contract
 
-Candidate runs AI practice interview via `/practice` → B2C flow (`prepare` → `device-check` → `waiting` → `room` → `complete`) — **no identity step**, **no anti-cheat**. Camera is mandatory for the full session with live mirror preview in the room. B2B campaign sessions reuse the engine with terms, identity, and strict proctoring (see `campaign-assessment.md`).
+Candidate runs AI practice interview via `/practice` **pre-session wizard** (domain → level → CV → question count → rubric → confirm) then B2C flow (`prepare` → `device-check` → `waiting` → `room` → `complete`) — **no identity step**, **no anti-cheat**. Camera is mandatory for the full session with live mirror preview in the room. B2B campaign sessions reuse the engine with terms, identity, and strict proctoring (see `campaign-assessment.md`).
 
 ## Relevant Product Docs
 
@@ -25,8 +25,8 @@ Candidate runs AI practice interview via `/practice` → B2C flow (`prepare` →
 
 ## Acceptance Criteria
 
-- `/practice` redirects to interview prepare flow with profile/credit gate.
-- B2C flow: prepare consent → device check → waiting room → interview room (skip `/identity`).
+- `/practice` shows a 6-step setup wizard before the interview engine; confirm creates session + reserves tokens then navigates to prepare.
+- B2C flow after confirm: prepare consent → device check → waiting room → interview room (skip `/identity`).
 - Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
 - B2C: **no** proctoring banner, tab listeners, periodic snapshots, or violation pause.
 - B2B campaign sessions: terms gate → identity → camera always on → periodic face capture (mock) → violation pause → auto-submit at max violations.
