@@ -1,11 +1,11 @@
 # ISAS Frontend Master Development Plan
 
-> **Version:** 1.2  
+> **Version:** 1.3  
 > **Source of truth:** `docs/product/*` ([`product-scope.md`](./product/product-scope.md), [`module-scope.md`](./product/module-scope.md), [`payment.md`](./product/payment.md), [`campaign-assessment.md`](./product/campaign-assessment.md)) + `BRD/` + `AGENTS.md`  
 > **Audience:** Frontend team, QA, Product Owner  
-> **Last updated:** 2026-07-12  
+> **Last updated:** 2026-07-13  
 > **E2E tool:** Playwright (`@playwright/test`)  
-> **Sync note:** v1.2 aligns plan with Product Discovery (2026-07-12) — token billing, magic-link-only B2B entry, assessment proctoring, invite resolution.
+> **Sync note:** v1.3 syncs phases 0–9 with implemented mock client — invite-only B2B hub, B2C no identity/anti-cheat, simplified profile, forced camera, token wallet.
 
 ---
 
@@ -275,6 +275,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Khởi tạo monolith web client có thể build, route, gọi API, quản lý session shell |
+| **Trạng thái triển khai** | ✅ **Done** — Vite+React+TS, route groups, API client, Playwright scaffold; `npm run build` + `npm run test:e2e` smoke |
 | **Business Value** | Nền tảng kỹ thuật — mọi feature sau đứng trên cùng một skeleton |
 | **Vai trò** | Tất cả (infrastructure) |
 | **Screens** | — (chưa có UI nghiệp vụ) |
