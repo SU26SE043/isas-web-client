@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useLanguage } from '../../../../shared/languages';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
@@ -9,27 +8,33 @@ import { parseAuthError } from '../../utils/authErrors';
 import { getPostLoginPath } from '../../utils/getPostLoginPath';
 import { SocialLoginButton } from '../SocialLoginButton';
 import { SSOButton } from '../SSOButton';
-import { signInFormVariants } from './authModal.animations';
+import { AuthFormStatus } from './AuthFormStatus';
+import { Alert } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface SignInFormProps {
-  isSignUp: boolean;
-  isForgotPassword: boolean;
   onForgotPasswordClick: () => void;
   onLoginSuccess: () => void;
   reducedMotion: boolean | null;
+  redirectFrom?: string;
+  sessionExpired?: boolean;
+  registeredEmail?: string;
 }
 
 export const SignInForm: React.FC<SignInFormProps> = ({
-  isSignUp,
-  isForgotPassword,
   onForgotPasswordClick,
   onLoginSuccess,
   reducedMotion,
+  redirectFrom,
+  sessionExpired = false,
+  registeredEmail,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { fetchUser } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(registeredEmail ?? '');
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +60,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
         onLoginSuccess();
         navigate('/mfa', {
           replace: true,
-          state: { mfaToken: result.mfaToken, email: email.trim() },
+          state: { mfaToken: result.mfaToken, email: email.trim(), from: redirectFrom },
         });
         return;
       }
@@ -71,7 +76,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       onLoginSuccess();
       const currentUser = useAuthStore.getState().user;
       if (currentUser) {
-        navigate(getPostLoginPath(currentUser.role), { replace: true });
+        navigate(redirectFrom ?? getPostLoginPath(currentUser.role), { replace: true });
       }
     } catch (error) {
       const parsed = parseAuthError(error, t('auth.loginFailed'));
@@ -84,7 +89,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
         onLoginSuccess();
         navigate('/mfa', {
           replace: true,
-          state: { mfaToken: parsed.mfaToken, email: email.trim() },
+          state: { mfaToken: parsed.mfaToken, email: email.trim(), from: redirectFrom },
         });
         return;
       }
@@ -96,67 +101,94 @@ export const SignInForm: React.FC<SignInFormProps> = ({
     }
   };
 
-  const isActive = !isSignUp && !isForgotPassword;
+  const statusVariant =
+    statusMessage === t('auth.loginSuccess')
+      ? 'success'
+      : statusMessage
+        ? 'error'
+        : 'neutral';
 
   return (
-    <motion.form
-      onSubmit={handleSubmit}
-      className="absolute inset-0 flex flex-col items-center justify-center px-12"
-      variants={signInFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenLeft'}
-    >
-      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signInTitle')}</h1>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {sessionExpired ? <Alert variant="warning">{t('auth.sessionExpiredBanner')}</Alert> : null}
+      {registeredEmail ? (
+        <Alert variant="info">
+          {t('auth.registerCheckEmail').replace('{email}', registeredEmail)}
+        </Alert>
+      ) : null}
 
-      <div className="w-full mb-4">
+      <header className="space-y-1 text-center sm:text-left">
+        <h2 className="heading-secondary text-xl tracking-tight">{t('auth.signInTitle')}</h2>
+        <p className="text-sm text-muted-foreground">{t('auth.signInSubtitle')}</p>
+      </header>
+
+      <div className="space-y-3">
         <SocialLoginButton />
-      </div>
-      <div className="w-full mb-6">
         <SSOButton />
       </div>
 
-      <span className="text-xs text-muted-foreground mb-6 font-medium">{t('auth.signInSubtitle')}</span>
+      <div className="relative py-1">
+        <div className="absolute inset-0 flex items-center" aria-hidden>
+          <span className="w-full border-t border-subtle" />
+        </div>
+        <p className="relative mx-auto w-fit bg-surface-elevated/95 px-3 text-xs text-muted-foreground">
+          {t('auth.orContinueWithEmail')}
+        </p>
+      </div>
 
-      <input
-        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
-        placeholder={t('auth.emailPlaceholder')}
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        autoComplete="email"
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="auth-signin-email">{t('auth.emailPlaceholder')}</Label>
+          <Input
+            id="auth-signin-email"
+            className="h-10 bg-surface-overlay border-default"
+            placeholder={t('auth.emailPlaceholder')}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            aria-invalid={statusVariant === 'error' || undefined}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="auth-signin-password">{t('auth.passwordPlaceholder')}</Label>
+            <button
+              type="button"
+              onClick={onForgotPasswordClick}
+              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-ring rounded-sm"
+            >
+              {t('auth.forgotPassword')}
+            </button>
+          </div>
+          <Input
+            id="auth-signin-password"
+            className="h-10 bg-surface-overlay border-default"
+            type="password"
+            placeholder={t('auth.passwordPlaceholder')}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            aria-invalid={statusVariant === 'error' || undefined}
+          />
+        </div>
+      </div>
+
+      <AuthFormStatus
+        message={statusMessage}
+        variant={statusVariant}
+        reducedMotion={reducedMotion}
       />
-      <input
-        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
-        type="password"
-        placeholder={t('auth.passwordPlaceholder')}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        autoComplete="current-password"
-      />
 
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          onForgotPasswordClick();
-        }}
-        className="text-sm font-medium text-muted-foreground mb-8 hover:text-foreground transition-colors"
-      >
-        {t('auth.forgotPassword')}
-      </button>
-
-      <p
-        className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.loginSuccess') ? 'text-foreground' : 'text-error'}`}
-      >
-        {statusMessage}
-      </p>
-
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="btn-primary w-full uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
+        size="lg"
+        loading={isSubmitting}
+        className="h-10 w-full bg-primary text-primary-foreground font-semibold"
       >
         {isSubmitting ? t('auth.loggingIn') : t('auth.signInTitle')}
-      </button>
-    </motion.form>
+      </Button>
+    </form>
   );
 };

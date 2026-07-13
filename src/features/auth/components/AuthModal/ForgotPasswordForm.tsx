@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { ArrowLeftIcon } from 'lucide-react';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../../../shared/api';
 import { validatePassword } from '../../utils/passwordPolicy';
 import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
-import { forgotPasswordFormVariants } from './authModal.animations';
+import { AuthFormStatus } from './AuthFormStatus';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface ForgotPasswordFormProps {
-  isSignUp: boolean;
-  isForgotPassword: boolean;
   onBackToSignInClick: () => void;
   reducedMotion: boolean | null;
 }
@@ -17,8 +18,6 @@ interface ForgotPasswordFormProps {
 type ForgotPasswordStep = 'email' | 'otp' | 'reset';
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  isSignUp,
-  isForgotPassword,
   onBackToSignInClick,
   reducedMotion,
 }) => {
@@ -27,7 +26,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -98,125 +96,140 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     onBackToSignInClick();
   };
 
-  const isActive = !isSignUp && isForgotPassword;
+  const statusMessage = success || error;
+  const statusVariant = success ? 'success' : error ? 'error' : 'neutral';
 
   return (
-    <motion.div
-      className="absolute inset-0 flex flex-col items-center justify-center px-12"
-      variants={forgotPasswordFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenRight'}
-    >
-      {step === 'email' && (
-        <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.forgotTitle')}</h1>
-          <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
-            {t('auth.forgotDescription')}
-          </p>
-
-          <input
-            className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
-            placeholder={t('auth.emailPlaceholder')}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
-          />
-          {error && <p className="text-xs text-error w-full mb-4 font-medium">{error}</p>}
-          {!error && <div className="h-6"></div>}
-
-          <button
-            onClick={handleSendEmail}
-            disabled={isLoading}
-            className="btn-primary w-full uppercase tracking-wider mb-6 disabled:opacity-70"
-          >
-            {isLoading ? t('auth.sendingLink') : t('auth.sendLink')}
-          </button>
-        </>
-      )}
-
-      {step === 'otp' && (
-        <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.verifyOtpTitle')}</h1>
-          <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
-            {t('auth.verifyOtpDescription')}
-          </p>
-
-          <input
-            className="bg-surface-overlay border border-default px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-muted-foreground focus:outline-none"
-            value={email}
-            disabled
-          />
-
-          <input
-            className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
-            placeholder={t('auth.otpPlaceholder')}
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            disabled={isLoading}
-          />
-          {error && <p className="text-xs text-error w-full mb-4 font-medium">{error}</p>}
-          {!error && <div className="h-6"></div>}
-
-          <button
-            onClick={handleVerifyOtp}
-            disabled={isLoading}
-            className="btn-primary w-full uppercase tracking-wider mb-6 disabled:opacity-70"
-          >
-            {isLoading ? t('auth.verifying') : t('auth.verify')}
-          </button>
-        </>
-      )}
-
-      {step === 'reset' && (
-        <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.resetPasswordTitle')}</h1>
-          <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
-            {t('auth.resetPasswordDescription')}
-          </p>
-
-          <input
-            className="bg-surface-overlay border border-default px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-muted-foreground focus:outline-none"
-            value={email}
-            disabled
-          />
-
-          <input
-            type="password"
-            className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
-            placeholder={t('auth.newPasswordPlaceholder')}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            disabled={isLoading || !!success}
-          />
-          <div className="w-full mb-2">
-            <PasswordStrengthMeter password={newPassword} />
-          </div>
-          {error && <p className="text-xs text-error w-full mb-4 font-medium">{error}</p>}
-          {success && <p className="text-xs text-foreground w-full mb-4 font-medium">{success}</p>}
-          {!error && !success && <div className="h-6"></div>}
-
-          <button
-            onClick={handleResetPassword}
-            disabled={isLoading || !!success}
-            className="btn-primary w-full uppercase tracking-wider mb-6 disabled:opacity-70"
-          >
-            {isLoading ? t('auth.resetting') : t('auth.reset')}
-          </button>
-        </>
-      )}
-
+    <div className="flex flex-col gap-5">
       <button
-        onClick={(e) => {
-          e.preventDefault();
-          handleBack();
-        }}
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-2 mt-4"
+        type="button"
+        onClick={handleBack}
+        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-ring rounded-sm"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <ArrowLeftIcon className="size-4" aria-hidden />
         <span>{t('auth.backToSignIn')}</span>
       </button>
-    </motion.div>
+
+      {step === 'email' ? (
+        <>
+          <header className="space-y-2">
+            <h2 className="heading-secondary text-xl tracking-tight">{t('auth.forgotTitle')}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t('auth.forgotDescription')}</p>
+          </header>
+
+          <div className="space-y-2">
+            <Label htmlFor="auth-forgot-email">{t('auth.emailPlaceholder')}</Label>
+            <Input
+              id="auth-forgot-email"
+              className="h-10 bg-surface-overlay border-default"
+              placeholder={t('auth.emailPlaceholder')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              aria-invalid={!!error || undefined}
+            />
+          </div>
+
+          <AuthFormStatus message={statusMessage} variant={statusVariant} reducedMotion={reducedMotion} />
+
+          <Button
+            type="button"
+            size="lg"
+            loading={isLoading}
+            onClick={handleSendEmail}
+            className="h-10 w-full bg-primary text-primary-foreground font-semibold"
+          >
+            {isLoading ? t('auth.sendingLink') : t('auth.sendLink')}
+          </Button>
+        </>
+      ) : null}
+
+      {step === 'otp' ? (
+        <>
+          <header className="space-y-2">
+            <h2 className="heading-secondary text-xl tracking-tight">{t('auth.verifyOtpTitle')}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t('auth.verifyOtpDescription')}</p>
+          </header>
+
+          <Input
+            className="h-10 bg-surface-overlay/60 border-default text-muted-foreground"
+            value={email}
+            disabled
+            aria-label={t('auth.emailPlaceholder')}
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="auth-forgot-otp">{t('auth.otpPlaceholder')}</Label>
+            <Input
+              id="auth-forgot-otp"
+              className="h-10 bg-surface-overlay border-default"
+              placeholder={t('auth.otpPlaceholder')}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              disabled={isLoading}
+              aria-invalid={!!error || undefined}
+            />
+          </div>
+
+          <AuthFormStatus message={statusMessage} variant={statusVariant} reducedMotion={reducedMotion} />
+
+          <Button
+            type="button"
+            size="lg"
+            loading={isLoading}
+            onClick={handleVerifyOtp}
+            className="h-10 w-full bg-primary text-primary-foreground font-semibold"
+          >
+            {isLoading ? t('auth.verifying') : t('auth.verify')}
+          </Button>
+        </>
+      ) : null}
+
+      {step === 'reset' ? (
+        <>
+          <header className="space-y-2">
+            <h2 className="heading-secondary text-xl tracking-tight">{t('auth.resetPasswordTitle')}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t('auth.resetPasswordDescription')}
+            </p>
+          </header>
+
+          <Input
+            className="h-10 bg-surface-overlay/60 border-default text-muted-foreground"
+            value={email}
+            disabled
+            aria-label={t('auth.emailPlaceholder')}
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="auth-forgot-new-password">{t('auth.newPasswordPlaceholder')}</Label>
+            <Input
+              id="auth-forgot-new-password"
+              type="password"
+              className="h-10 bg-surface-overlay border-default"
+              placeholder={t('auth.newPasswordPlaceholder')}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isLoading || !!success}
+              aria-invalid={!!error || undefined}
+            />
+            <PasswordStrengthMeter password={newPassword} />
+          </div>
+
+          <AuthFormStatus message={statusMessage} variant={statusVariant} reducedMotion={reducedMotion} />
+
+          <Button
+            type="button"
+            size="lg"
+            loading={isLoading}
+            disabled={!!success}
+            onClick={handleResetPassword}
+            className="h-10 w-full bg-primary text-primary-foreground font-semibold"
+          >
+            {isLoading ? t('auth.resetting') : t('auth.reset')}
+          </Button>
+        </>
+      ) : null}
+    </div>
   );
 };
