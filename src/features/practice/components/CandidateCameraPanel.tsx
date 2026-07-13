@@ -1,40 +1,72 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '@/shared/languages';
 
 interface CandidateCameraPanelProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  cameraEnabled: boolean;
+  setVideoElement?: (node: HTMLVideoElement | null) => void;
+  stream: MediaStream | null;
   micEnabled: boolean;
-  mediaReady: boolean;
 }
 
 export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
   videoRef,
-  cameraEnabled,
+  setVideoElement,
+  stream,
   micEnabled,
-  mediaReady,
 }) => {
   const { t } = useLanguage();
+  const [hasVideoFrame, setHasVideoFrame] = useState(false);
+
+  const handleVideoRef = useCallback(
+    (node: HTMLVideoElement | null) => {
+      videoRef.current = node;
+      setVideoElement?.(node);
+    },
+    [setVideoElement, videoRef],
+  );
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) {
+      setHasVideoFrame(false);
+      return undefined;
+    }
+
+    const syncFrameState = () => {
+      setHasVideoFrame(video.readyState >= 2 && !video.paused);
+    };
+
+    video.addEventListener('loadeddata', syncFrameState);
+    video.addEventListener('playing', syncFrameState);
+    video.addEventListener('emptied', syncFrameState);
+    syncFrameState();
+
+    const pollId = window.setInterval(syncFrameState, 250);
+
+    return () => {
+      window.clearInterval(pollId);
+      video.removeEventListener('loadeddata', syncFrameState);
+      video.removeEventListener('playing', syncFrameState);
+      video.removeEventListener('emptied', syncFrameState);
+    };
+  }, [stream, videoRef]);
 
   return (
     <div className="relative overflow-hidden rounded-lg border border-subtle bg-surface-raised shadow-sm">
       <div className="relative aspect-video w-full bg-surface-base">
         <video
-          ref={videoRef}
-          className={`h-full w-full object-cover ${cameraEnabled ? '' : 'opacity-0'}`}
+          ref={handleVideoRef}
+          className="h-full w-full scale-x-[-1] object-cover"
           playsInline
+          autoPlay
           muted
           aria-label={t('practice.candidateCamera')}
         />
-        {!mediaReady ? (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-            {t('practice.room.cameraStarting')}
-          </div>
-        ) : null}
-        {mediaReady && !cameraEnabled ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-base text-sm text-muted-foreground">
-            {t('practice.room.cameraOff')}
-          </div>
+        {!hasVideoFrame ? (
+          <div
+            className="pointer-events-none absolute inset-0 animate-pulse bg-surface-overlay"
+            aria-hidden
+          />
         ) : null}
       </div>
       <div className="flex items-center justify-between border-t border-subtle px-3 py-2 text-xs text-muted-foreground">

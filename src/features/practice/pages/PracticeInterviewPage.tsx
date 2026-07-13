@@ -23,6 +23,7 @@ import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring'
 import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
+import { requiresIdentityVerification } from '../types/interviewFlow.types';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
@@ -30,8 +31,9 @@ export const PracticeInterviewPage: React.FC = () => {
   const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
+  const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
   const session = useInterviewSession(sessionId);
-  const media = useInterviewMedia(session.micEnabled, true);
+  const media = useInterviewMedia(session.micEnabled);
   const [questionListOpen, setQuestionListOpen] = useState(false);
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
@@ -49,15 +51,21 @@ export const PracticeInterviewPage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!identityVerified) {
-      navigate(`/interview/${sessionId}/prepare`, { replace: true });
+    if (requiresIdentityVerification(sessionId)) {
+      if (!identityVerified) {
+        navigate(`/interview/${sessionId}/identity`, { replace: true });
+      }
+      return;
     }
-  }, [identityVerified, navigate, sessionId]);
+    if (!deviceCheckPassed) {
+      navigate(`/interview/${sessionId}/device-check`, { replace: true });
+    }
+  }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
 
   useEffect(() => {
     if (session.isLoading || session.status === 'completed') return;
     void media.startMedia();
-  }, [media, session.isLoading, session.status]);
+  }, [media.startMedia, session.isLoading, session.status]);
 
   if (session.isLoading) {
     return (
@@ -106,9 +114,9 @@ export const PracticeInterviewPage: React.FC = () => {
           <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col gap-6 lg:col-span-4">
             <CandidateCameraPanel
               videoRef={media.videoRef}
-              cameraEnabled
+              setVideoElement={media.setVideoElement}
+              stream={media.stream}
               micEnabled={session.micEnabled}
-              mediaReady={media.state === 'ready'}
             />
             <InterviewInfoCard
               sessionTitle={session.sessionTitle}

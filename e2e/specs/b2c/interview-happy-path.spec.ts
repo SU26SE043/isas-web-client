@@ -19,11 +19,6 @@ test.describe('B2C interview happy path', () => {
     await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
-    await expect(page).toHaveURL(/\/identity/);
-    await page.getByRole('button', { name: /Capture photo/i }).click();
-    await expect(page.getByRole('img', { name: /Identity verification photo/i })).toBeVisible();
-    await page.getByRole('button', { name: /^Continue$/i }).click();
-
     await expect(page).toHaveURL(/\/waiting/);
     await expect(page).toHaveURL(/\/room/, { timeout: 8_000 });
     await expect(page.getByRole('heading', { name: /Mock Interview/i })).toBeVisible();

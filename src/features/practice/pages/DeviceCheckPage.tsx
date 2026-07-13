@@ -30,9 +30,7 @@ export const DeviceCheckPage: React.FC = () => {
   const handleContinue = () => {
     if (state !== 'ready') return;
     setDeviceCheckPassed(sessionId, true);
-    navigate(
-      isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/identity`,
-    );
+    navigate(isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/waiting`);
   };
 
   return (

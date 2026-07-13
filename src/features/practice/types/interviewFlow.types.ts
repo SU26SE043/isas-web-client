@@ -20,7 +20,6 @@ export const INTERVIEW_FLOW_STEPS: InterviewFlowStep[] = [
 export const B2C_FLOW_STEPS: InterviewFlowStep[] = [
   'prepare',
   'device-check',
-  'identity',
   'waiting',
   'room',
   'complete',
@@ -38,4 +37,8 @@ export interface InterviewFlowProgress {
 
 export function isCampaignSessionId(sessionId: string) {
   return sessionId.startsWith('campaign-');
+}
+
+export function requiresIdentityVerification(sessionId: string) {
+  return isCampaignSessionId(sessionId);
 }

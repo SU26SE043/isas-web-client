@@ -18,7 +18,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 2. **Prepare** — profile/credit gate, checklist, recording consent.
 3. **Device check** — `/interview/:sessionId/device-check` — camera/mic preview.
 4. **Terms** (B2B campaign sessions only) — `/interview/:sessionId/terms` — assessment terms acceptance.
-5. **Identity** — `/interview/:sessionId/identity` — baseline face photo capture.
+5. **Identity** (B2B campaign sessions only) — `/interview/:sessionId/identity` — baseline face photo capture.
 6. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
 7. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, timer, controls, recording.
 8. Session completes → upload → `/interview/:sessionId/complete` → result/history.
@@ -42,7 +42,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 | `/interview/:sessionId/prepare` | `InterviewPrepPage` |
 | `/interview/:sessionId/device-check` | `DeviceCheckPage` |
 | `/interview/:sessionId/terms` | `TermsAcceptancePage` (B2B campaign sessions) |
-| `/interview/:sessionId/identity` | `IdentityVerifyPage` |
+| `/interview/:sessionId/identity` | `IdentityVerifyPage` (B2B campaign sessions only) |
 | `/interview/:sessionId/waiting` | `WaitingRoomPage` |
 | `/interview/:sessionId/room` | `PracticeInterviewPage` |
 | `/interview/:sessionId/complete` | `InterviewCompletePage` |
@@ -104,7 +104,7 @@ When `campaign_id` is set (session id prefix `campaign-`), the full assessment f
 
 Flow progress is persisted per session in `sessionStorage` (`isas-interview-flow:{sessionId}`).
 
-B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** the terms step and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera remains mandatory** for the entire session; the disable-camera control is not shown.
+B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** terms, **without identity verification**, and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera remains mandatory** for the entire session; the disable-camera control is not shown.
 
 ## Status
 

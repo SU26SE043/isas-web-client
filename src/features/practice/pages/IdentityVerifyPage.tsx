@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
-import { isCampaignSessionId } from '../types/interviewFlow.types';
+import { isCampaignSessionId, requiresIdentityVerification } from '../types/interviewFlow.types';
 import { useMediaDevices } from '../hooks/useMediaDevices';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
@@ -19,6 +19,10 @@ export const IdentityVerifyPage: React.FC = () => {
   const [preview, setPreview] = useState(identitySnapshot ?? '');
 
   useEffect(() => {
+    if (!requiresIdentityVerification(sessionId)) {
+      navigate(`/interview/${sessionId}/waiting`, { replace: true });
+      return;
+    }
     if (!deviceCheckPassed) {
       navigate(`/interview/${sessionId}/device-check`, { replace: true });
       return;
