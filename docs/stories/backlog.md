@@ -10,7 +10,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | --- | --- | --- | --- |
 | E01 | Harness foundation + BRD wiring | - | in_progress |
 | E02 | Marketing home & employer section | Public | partial |
-| E03 | Auth modal, session, profile | M01 | partial |
+| E03 | Auth modal, session, profile | M01 | implemented |
 | E04 | CV analysis UI (wizard + report) | M03 | partial |
 | E05 | Practice interview, result, history | M05-M06 | in_progress |
 | E06 | Payment, **token wallet**, subscription (B2C) | M08 | not_started |
@@ -25,7 +25,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | --- | --- | --- | --- | --- | --- |
 | US-001 | Harness + BRD foundation | E01 | tiny | in_progress | [US-001](./epics/E01-foundation/US-001-harness-brd-foundation.md) |
 | US-002 | Home landing page | E02 | normal | implemented | [US-002](./epics/E02-marketing/US-002-home-landing.md) |
-| US-003 | Auth modal + profile | E03 | high-risk | in_progress | [US-003](./epics/E03-auth/US-003-auth-profile.md) |
+| US-003 | Auth modal + profile | E03 | high-risk | implemented | [US-003](./epics/E03-auth/US-003-auth-profile.md) |
 | US-004 | CV analysis flow UI | E04 | normal | implemented | [US-004](./epics/E04-cv-analysis/US-004-cv-analysis-ui.md) |
 | US-005 | Practice interview B2C | E05 | normal | in_progress | [US-005](./epics/E05-practice/US-005-practice-interview.md) |
 | US-006 | Candidate dashboard heatmap | E03 | normal | implemented | [US-006](./epics/E03-auth/US-006-candidate-dashboard.md) |

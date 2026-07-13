@@ -94,4 +94,14 @@ export const authService = {
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;
   },
+  loginWithSso: () => {
+    const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    const baseUrl = getApiBaseUrl();
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    window.location.href = `${normalizedBaseUrl}${authEndpoints.loginSso}?returnUrl=${returnUrl}`;
+  },
+  resetPasswordWithToken: async (payload: { token: string; newPassword: string }) => {
+    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+    return data;
+  },
 };
