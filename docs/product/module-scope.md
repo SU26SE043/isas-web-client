@@ -20,8 +20,8 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | In progress |
 | Learning roadmap | T1 | Roadmap, milestones, lessons | `/candidate/roadmap` | Partial |
 | Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, payment | Not started / mock |
-| Usage & billing UI | T1 | Token history, estimates, settle display | — | **Missing** |
-| Payment B2B | T1 | Monthly usage, invoices | — | **Missing** |
+| Usage & billing UI | T1 | Token history, estimates, settle display | Candidate route missing; employer invoices implemented | Partial |
+| Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
 | Org onboarding | T1 | Company profile, verify | `/employer/company*` | Implemented (mock) |
 | Campaign management | T1 | List, wizard, detail, publish | `/employer/campaigns*` | Implemented (mock) |
 | Candidate selection | T1 | Upload CV/email, screening, ranking, **email lookup → immediate list if registered** | Partial in wizard/pipeline | Partial |
@@ -145,8 +145,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 
 | Needed screen | Persona | Suggested area |
 | --- | --- | --- |
-| Token usage history | Candidate | `/candidate/usage` or wallet tab |
-| B2B monthly usage / invoice list | Organize | `/employer/billing` |
+| Candidate token usage history | Candidate | `/candidate/usage` or wallet tab |
 | Candidate selection (upload list, screening UI) | HR | Wizard step or `/employer/campaigns/:id/selection` |
 | Invitation email preview | HR | Publish flow step |
 | Organize HR team management | Organize | `/employer/team` |

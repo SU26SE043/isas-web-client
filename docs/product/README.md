@@ -44,6 +44,7 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 | [admin-platform.md](./admin-platform.md) | Admin platform, RBAC, audit, operations |
 
 | [employer-billing.md](./employer-billing.md) | Employer subscription, billing, invoices |
+| [shared-engagement.md](./shared-engagement.md) | Notifications, settings, help, support |
 
 
 

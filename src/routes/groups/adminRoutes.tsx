@@ -13,6 +13,10 @@ import { AdminResourcePage } from '@/features/admin/pages/AdminResourcePage';
 import { AdminRolesPage } from '@/features/admin/pages/AdminRolesPage';
 import { AdminSystemConfigPage } from '@/features/admin/pages/AdminSystemConfigPage';
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
+import { HelpPage } from '@/features/engagement/pages/HelpPage';
+import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
+import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
+import { SupportPage } from '@/features/engagement/pages/SupportPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -49,6 +53,10 @@ export const adminRoutes: RouteObject[] = [
               { path: 'backups', element: <AdminResourcePage resourceKey="backups" /> },
               { path: 'maintenance', element: <AdminMaintenancePage /> },
               { path: 'support-tickets', element: <AdminResourcePage resourceKey="supportTickets" /> },
+              { path: 'notifications', element: <NotificationsPage scope="admin" /> },
+              { path: 'settings', element: <SettingsPage scope="admin" /> },
+              { path: 'help', element: <HelpPage scope="admin" /> },
+              { path: 'support', element: <SupportPage scope="admin" /> },
             ],
           },
         ],

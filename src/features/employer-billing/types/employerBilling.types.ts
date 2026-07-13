@@ -26,7 +26,7 @@ export interface EmployerInvoice {
   number: string;
   issuedAt: string;
   amount: number;
-  credits: number;
+  tokenUsage: number;
   status: InvoiceStatus;
   pdfReady: boolean;
 }

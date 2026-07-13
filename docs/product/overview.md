@@ -1,10 +1,10 @@
-# ISAS Web Client — Product Overview
+# ISAS Web Client - Product Overview
 
-Short summary. **Authoritative scope:** [`product-scope.md`](./product-scope.md) · **Modules & routes:** [`module-scope.md`](./module-scope.md).
+Short summary. **Authoritative scope:** [`product-scope.md`](./product-scope.md) . **Modules & routes:** [`module-scope.md`](./module-scope.md).
 
-## What this app is
+## What This App Is
 
-Frontend monolith for **ISAS** — AI interview simulation and assessment. One shared interview engine serves two product lines:
+Frontend monolith for **ISAS** - AI interview simulation and assessment. One shared interview engine serves two product lines:
 
 | Line | `campaign_id` | User | Core value |
 | --- | --- | --- | --- |
@@ -13,53 +13,47 @@ Frontend monolith for **ISAS** — AI interview simulation and assessment. One s
 
 **Deliverable:** Production-ready for **limited beta users**.
 
-## Modules (frontend responsibility)
+## Modules
 
 | Module | Tier | Client status |
 | --- | --- | --- |
 | Public marketing | T2 | Partial (`/`, `/pricing`, `/enterprise`) |
 | Auth & profile | T1 | Partial |
-| CV analysis | T1 | Partial — `/candidate/cv/analysis*` (mock) |
-| Candidate dashboard | T1 | Partial — `/candidate/dashboard` (mock) |
-| Interview practice | T1 | In progress — `/practice`, `/interview/*`, history |
-| Learning roadmap | T1 | Partial — `/candidate/roadmap` |
-| Payment & token billing | T1 | Routes exist; **token model not implemented** |
+| CV analysis | T1 | Partial - `/candidate/cv/analysis*` (mock) |
+| Candidate dashboard | T1 | Partial - `/candidate/dashboard` (mock) |
+| Interview practice | T1 | In progress - `/practice`, `/interview/*`, history |
+| Learning roadmap | T1 | Partial - `/candidate/roadmap` |
+| Payment & token billing | T1 | Routes exist; token model not implemented |
 | Magic link (B2B candidate) | T1 | `/invite/:token` |
-| ~~Campaign discovery (public)~~ | — | **Out of scope** — deprecate `/candidate/campaigns*` |
+| Campaign discovery (public) | - | Out of scope - deprecate `/candidate/campaigns*` |
 | Campaign management (B2B) | T1 | `/employer/campaigns*` (mock) |
 | Org onboarding | T1 | `/employer/company*` (mock) |
 | Employer analytics | T1 | `/employer/analytics`, candidates (mock) |
-| B2B billing / invoices | T1 | **Missing routes** |
-| Admin | T1 | Placeholder `/admin` |
-| Learning hub | T3 | Placeholder — backlog |
+| B2B billing / invoices | T1 | Routes exist in current codebase |
+| Admin | T1 | Implemented - Admin dashboard, users, RBAC, audit, AI/system config, flags, health, maintenance, support queues (`/admin/*`; mock) |
+| Shared engagement | T1 | Implemented - notifications, settings, help, support, employer team (`/candidate/*`, `/employer/*`, `/admin/*`; mock) |
+| Learning hub | T3 | Placeholder - backlog |
 | Leaderboard / certificate | T2 | Placeholder |
 
-## Key product decisions (discovery)
+## Key Product Decisions
 
 - **D1:** Interview room UI reusable for B2B and B2C.
-- **Billing:** Token-based usage — show tokens to users; B2C prepaid reserve/settle; B2B postpaid monthly invoice.
-- **B2B entry:** Magic link only; **registered email → immediate campaign list row**; existing user signs in via link.
+- **Billing:** Token-based usage - show tokens to users; B2C prepaid reserve/settle; B2B postpaid monthly invoice.
+- **B2B entry:** Magic link only; registered email -> immediate campaign list row; existing user signs in via link.
 - **Verify gate:** Unverified org cannot create or publish campaigns.
 - **Accounts:** One email = one role.
-| Admin | M11-M12, SCR-ADM-069-088 | Implemented - Admin dashboard, users, RBAC, audit, AI/system config, flags, health, maintenance, support queues (`/admin/*`; mock) |
-
-## Key design decisions (from BRD)
-
-- **D1:** Interview room UI is reusable for B2B and B2C.
-- **D4/D15:** Credit-based UX — show credits, not token costs.
-
 - **D11:** Soft-delete and audit-friendly history surfaces.
 
 ## Personas
 
-Guest, Candidate, HR, Organize, Admin — see [`product-scope.md`](./product-scope.md) §3.
+Guest, Candidate, HR, Organize, Admin - see [`product-scope.md`](./product-scope.md) section 3.
 
-## Out of scope (frontend)
+## Out Of Scope
 
 - Public campaign discovery (`/candidate/campaigns*`)
 - Native iOS/Android, offline mode, live human video interviews
 - Learning Hub (Tier 3), ATS webhooks (Tier 3)
 
-## When this doc changes
+## When This Doc Changes
 
 Update when product scope or module map changes. Link story packet and BRD section if BRD intent shifts.
