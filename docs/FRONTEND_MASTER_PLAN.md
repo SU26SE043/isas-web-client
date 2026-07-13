@@ -179,19 +179,19 @@ flowchart LR
 
 ## 3. Tổng quan Phase & Timeline
 
-| Phase | Tên | Business Value | Screens | Stories | Ước tính |
-|-------|-----|----------------|---------|---------|----------|
-| **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần |
-| **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần |
-| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần |
-| **P3** | Authentication | Secure access | 11 | 9 | 3 tuần |
-| **P4** | Candidate Profile & CV | Data foundation B2C/B2B | 11 | 10 | 4 tuần |
-| **P5** | Interview Engine | Core product value | 8 | 12 | 6 tuần |
-| **P6** | Results & Learning | Post-interview value | 12 | 9 | 4 tuần |
-| **P7** | Candidate Payments & Tokens | B2C monetization (reserve/settle) | 4 | 7 | 3 tuần |
-| **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần |
-| **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần |
-| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần |
+| Phase | Tên | Business Value | Screens | Stories | Ước tính | **Trạng thái (2026-07-13)** |
+|-------|-----|----------------|---------|---------|----------|---------------------------|
+| **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần | ✅ Done |
+| **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần | ✅ Done |
+| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần | ⚠ Partial |
+| **P3** | Authentication | Secure access | 11 | 9 | 3 tuần | ✅ Done |
+| **P4** | Candidate Profile & CV | Data foundation B2C/B2B | 11 | 10 | 4 tuần | ✅ Done (mock) |
+| **P5** | Interview Engine | Core product value | 8 | 12 | 6 tuần | ✅ Done (mock) |
+| **P6** | Results & Learning | Post-interview value | 12 | 9 | 4 tuần | ✅ Done (mock) |
+| **P7** | Candidate Payments & Tokens | B2C monetization (reserve/settle) | 4 | 7 | 3 tuần | ✅ Done (mock) |
+| **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần | ✅ Done (mock) |
+| **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần | ✅ Done (mock) |
+| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | — |
 | **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần |
 | **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần |
 | **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần |
@@ -552,6 +552,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Employer registration, company profile, verification |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — company profile, verification upload, HR post-login routing; E2E `org-onboarding`; US-008 `implemented` |
 | **Business Value** | B2B tenant activation |
 | **Vai trò** | Organize (ROL-004), HR (ROL-003) |
 | **Screens** | SCR-EMP-052–054 |
@@ -1496,8 +1497,8 @@ P0 Foundation
 | 3 | Abandon session: partial settle vs release reserve | P7 |
 | 4 | Proctoring defaults (interval, threshold, max violations) | P5, P10 |
 | 5 | Shared vs separate violation counters | P5 |
-| 6 | Campaign briefing exact route | P8 |
-| 7 | B2C proctoring parity with B2B | P5 |
+| 6 | Campaign briefing exact route | P8 | **Chốt:** `/candidate/campaigns/:token/briefing` |
+| 7 | B2C proctoring parity with B2B | P5 | **Out of scope** — B2C: camera on, no anti-cheat (`practice-interview.md`) |
 | 8 | B2B assessment API endpoints | P5, P8 |
 | 9 | Candidate consent for email-matched invites | P10, P11 |
 | 10 | Profile 70% gate on magic-link path | P8 |
@@ -1514,6 +1515,13 @@ P0 Foundation
 ---
 
 ## 12. Checklist triển khai
+
+### Phases 0–9 (mock client — synced 2026-07-13)
+
+- [x] P0–P1, P3–P9: implemented with mock services; see §5 **Trạng thái triển khai** per phase
+- [x] P2: landing/pricing/legal partial (E02 `partial`)
+- [x] Product docs aligned: `practice-interview.md`, `profile.md`, `campaign-discovery.md`
+- [ ] P10+: not in scope of this sync
 
 ### Per-Phase Gate (áp dụng mọi phase)
 
