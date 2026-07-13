@@ -1,23 +1,29 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
-import { INTERVIEW_FLOW_STEPS, type InterviewFlowStep } from '../../types/interviewFlow.types';
+import {
+  B2C_FLOW_STEPS,
+  INTERVIEW_FLOW_STEPS,
+  type InterviewFlowStep,
+} from '../../types/interviewFlow.types';
+
+type PrepFlowStep = Exclude<InterviewFlowStep, 'room' | 'complete'>;
 
 interface InterviewFlowShellProps {
   sessionId: string;
-  currentStep: InterviewFlowStep;
+  currentStep: PrepFlowStep;
   title: string;
   description?: string;
+  isCampaignSession?: boolean;
   children: React.ReactNode;
 }
 
-const STEP_LABEL_KEYS: Record<InterviewFlowStep, string> = {
+const STEP_LABEL_KEYS: Record<PrepFlowStep, string> = {
   prepare: 'practice.flow.steps.prepare',
   'device-check': 'practice.flow.steps.deviceCheck',
+  terms: 'practice.flow.steps.terms',
   identity: 'practice.flow.steps.identity',
   waiting: 'practice.flow.steps.waiting',
-  room: 'practice.flow.steps.room',
-  complete: 'practice.flow.steps.complete',
 };
 
 export const InterviewFlowShell: React.FC<InterviewFlowShellProps> = ({
@@ -25,17 +31,20 @@ export const InterviewFlowShell: React.FC<InterviewFlowShellProps> = ({
   currentStep,
   title,
   description,
+  isCampaignSession = false,
   children,
 }) => {
   const { t } = useLanguage();
-  const currentIndex = INTERVIEW_FLOW_STEPS.indexOf(currentStep);
+  const steps = isCampaignSession ? INTERVIEW_FLOW_STEPS : B2C_FLOW_STEPS;
+  const prepSteps = steps.filter((step): step is PrepFlowStep => step !== 'room' && step !== 'complete');
+  const currentIndex = prepSteps.indexOf(currentStep);
 
   return (
     <div className="page-container page-section min-h-screen">
       <div className="mx-auto max-w-3xl">
         <nav aria-label={t('practice.flow.stepperLabel')} className="mb-8">
           <ol className="flex flex-wrap gap-2">
-            {INTERVIEW_FLOW_STEPS.slice(0, 4).map((step, index) => {
+            {prepSteps.map((step, index) => {
               const isActive = step === currentStep;
               const isComplete = index < currentIndex;
               return (

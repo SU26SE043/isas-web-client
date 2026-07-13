@@ -1,4 +1,4 @@
-export type ProctoringEventType = 'tab_switch' | 'face_missing' | 'multiple_faces';
+export type ProctoringEventType = 'tab_switch' | 'focus_loss' | 'face_missing' | 'face_mismatch' | 'multiple_faces';
 
 export interface ProctoringEventPayload {
   type: ProctoringEventType;

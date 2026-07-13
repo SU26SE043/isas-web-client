@@ -5,6 +5,7 @@ import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { useInterviewGate } from '../hooks/useInterviewGate';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
 
@@ -12,6 +13,7 @@ export const InterviewPrepPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useInterviewFlowSession(sessionId);
   const gate = useInterviewGate();
   const { consentAccepted, setConsentAccepted } = useInterviewFlowStore();
   const [sessionTitle, setSessionTitle] = useState('');
@@ -65,7 +67,7 @@ export const InterviewPrepPage: React.FC = () => {
                 className="mt-1 size-4 rounded border-default bg-surface-overlay"
                 checked={consentAccepted}
                 disabled={!gate.canStart}
-                onChange={(event) => setConsentAccepted(event.target.checked)}
+                onChange={(event) => setConsentAccepted(sessionId, event.target.checked)}
               />
               <span className="text-sm text-foreground">{t('practice.flow.prepare.consent')}</span>
             </label>

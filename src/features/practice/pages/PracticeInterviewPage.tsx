@@ -12,16 +12,20 @@ import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner'
 import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
 import { PauseOverlay } from '../components/room/PauseOverlay';
+import { ViolationPauseOverlay } from '../components/room/ViolationPauseOverlay';
 import { QuestionListDialog } from '../components/room/QuestionListDialog';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { useInterviewSession } from '../hooks/useInterviewSession';
 import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
+import { usePeriodicFaceCapture } from '../hooks/usePeriodicFaceCapture';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useInterviewFlowSession(sessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const session = useInterviewSession(sessionId);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
@@ -31,7 +35,13 @@ export const PracticeInterviewPage: React.FC = () => {
     sessionId,
     stream: media.stream,
     enabled: session.isRecording && session.isRoomActive,
-    paused: session.status === 'paused',
+    paused: session.isManualPaused || session.isViolationPaused,
+  });
+
+  usePeriodicFaceCapture({
+    sessionId,
+    enabled: session.isRoomActive && !session.isViolationPaused,
+    videoRef: media.videoRef,
   });
 
   useEffect(() => {
@@ -58,6 +68,12 @@ export const PracticeInterviewPage: React.FC = () => {
     <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={session.isRecording} />
       <ProctoringAlertBanner violationCount={session.tabViolationCount} />
+
+      {session.isAutoSubmitted ? (
+        <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
+          {t('practice.room.autoSubmitted')}
+        </div>
+      ) : null}
 
       {recording.recorderError ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
@@ -97,7 +113,9 @@ export const PracticeInterviewPage: React.FC = () => {
         sessionId={sessionId}
         remainingSeconds={session.remainingSeconds}
         isSubmitting={session.status === 'submitting'}
-        isPaused={session.status === 'paused'}
+        isPaused={session.isManualPaused}
+        isLocked={session.isViolationPaused || session.isAutoSubmitted}
+        cameraLocked={session.proctoringConfig.cameraAlwaysOn}
         micEnabled={session.micEnabled}
         cameraEnabled={session.cameraEnabled}
         isRecording={session.isRecording}
@@ -117,7 +135,14 @@ export const PracticeInterviewPage: React.FC = () => {
       />
       <TabLockOverlay visible={session.isTabHidden} />
       <NetworkLossDialog open={session.isOffline} />
-      <PauseOverlay visible={session.status === 'paused'} onResume={session.togglePause} />
+      <PauseOverlay visible={session.isManualPaused} onResume={session.togglePause} />
+      <ViolationPauseOverlay
+        visible={session.isViolationPaused && !session.isTabHidden}
+        reason={session.violationReason}
+        violationCount={session.violationCount}
+        maxViolations={session.maxViolations}
+        onContinue={session.continueAfterViolation}
+      />
     </div>
   );
 };

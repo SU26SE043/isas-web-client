@@ -4,12 +4,14 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 
 export const WaitingRoomPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useInterviewFlowSession(sessionId);
   const { identityVerified } = useInterviewFlowStore();
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [questionCount, setQuestionCount] = useState(0);

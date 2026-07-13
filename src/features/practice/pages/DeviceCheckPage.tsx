@@ -1,16 +1,20 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
 import { useMediaDevices } from '../hooks/useMediaDevices';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 
 export const DeviceCheckPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useInterviewFlowSession(sessionId);
   const { consentAccepted, deviceCheckPassed, setDeviceCheckPassed } = useInterviewFlowStore();
   const { videoRef, state, errorKey, startPreview, stopStream } = useMediaDevices();
+  const isCampaign = isCampaignSessionId(sessionId);
 
   useEffect(() => {
     if (!consentAccepted) {
@@ -25,8 +29,10 @@ export const DeviceCheckPage: React.FC = () => {
 
   const handleContinue = () => {
     if (state !== 'ready') return;
-    setDeviceCheckPassed(true);
-    navigate(`/interview/${sessionId}/identity`);
+    setDeviceCheckPassed(sessionId, true);
+    navigate(
+      isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/identity`,
+    );
   };
 
   return (
@@ -35,6 +41,7 @@ export const DeviceCheckPage: React.FC = () => {
       currentStep="device-check"
       title={t('practice.flow.device.title')}
       description={t('practice.flow.device.description')}
+      isCampaignSession={isCampaign}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-6">
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-base">

@@ -32,7 +32,7 @@ export const InterviewCompletePage: React.FC = () => {
     };
   }, [sessionId]);
 
-  const handleLeave = () => resetFlow();
+  const handleLeave = () => resetFlow(sessionId);
 
   return (
     <div className="page-container page-section flex min-h-screen items-center justify-center">

@@ -28,7 +28,8 @@ export function useInterviewSession(sessionId: string) {
     const questions = session.questions.length
       ? session.questions
       : await practiceSessionService.pollQuestions(sessionId);
-    initSession(session.title, questions);
+    const proctoringConfig = practiceSessionService.getProctoringConfig(sessionId);
+    initSession(session.title, questions, proctoringConfig);
   }, [initSession, navigate, sessionId, setLoading]);
 
   useEffect(() => {
@@ -36,7 +37,8 @@ export function useInterviewSession(sessionId: string) {
     return () => reset();
   }, [init, reset]);
 
-  const isRoomActive = status !== 'loading' && status !== 'completed';
+  const isRoomActive =
+    status !== 'loading' && status !== 'completed' && status !== 'auto_submitted';
 
   useProctoring(sessionId, isRoomActive);
   useNetworkStatus(isRoomActive);
@@ -56,7 +58,7 @@ export function useInterviewSession(sessionId: string) {
   }, [navigate, remainingSeconds, sessionId, status, submitCurrentAnswer]);
 
   useEffect(() => {
-    if (status !== 'completed') return;
+    if (status !== 'completed' && status !== 'auto_submitted') return;
     navigate(`/interview/${sessionId}/complete`);
   }, [navigate, sessionId, status]);
 
@@ -73,10 +75,16 @@ export function useInterviewSession(sessionId: string) {
   const isRecording = useInterviewSessionStore((state) => state.isRecording);
   const micEnabled = useInterviewSessionStore((state) => state.micEnabled);
   const cameraEnabled = useInterviewSessionStore((state) => state.cameraEnabled);
+  const violationCount = useInterviewSessionStore((state) => state.violationCount);
   const tabViolationCount = useInterviewSessionStore((state) => state.tabViolationCount);
+  const violationReason = useInterviewSessionStore((state) => state.violationReason);
+  const maxViolations = useInterviewSessionStore((state) => state.maxViolations);
   const isTabHidden = useInterviewSessionStore((state) => state.isTabHidden);
+  const showTabLockWarning = useInterviewSessionStore((state) => state.showTabLockWarning);
   const isOffline = useInterviewSessionStore((state) => state.isOffline);
+  const proctoringConfig = useInterviewSessionStore((state) => state.proctoringConfig);
   const togglePause = useInterviewSessionStore((state) => state.togglePause);
+  const continueAfterViolation = useInterviewSessionStore((state) => state.continueAfterViolation);
   const toggleMic = useInterviewSessionStore((state) => state.toggleMic);
   const toggleCamera = useInterviewSessionStore((state) => state.toggleCamera);
   const toggleRecording = useInterviewSessionStore((state) => state.toggleRecording);
@@ -92,16 +100,25 @@ export function useInterviewSession(sessionId: string) {
     isRecording,
     micEnabled,
     cameraEnabled,
+    violationCount,
     tabViolationCount,
+    violationReason,
+    maxViolations,
     isTabHidden,
+    showTabLockWarning,
     isOffline,
+    proctoringConfig,
     togglePause,
+    continueAfterViolation,
     toggleMic,
     toggleCamera,
     toggleRecording,
     submitAnswer,
     isLoading: status === 'loading',
     isRoomActive,
+    isViolationPaused: status === 'paused_violation',
+    isManualPaused: status === 'paused',
+    isAutoSubmitted: status === 'auto_submitted',
     currentQuestion: questions[currentIndex],
     totalQuestions: questions.length,
   };

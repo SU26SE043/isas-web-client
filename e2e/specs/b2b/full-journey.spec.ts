@@ -27,6 +27,10 @@ test.describe('B2B full journey', () => {
     await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
+    await expect(page).toHaveURL(/\/terms/);
+    await page.getByRole('checkbox', { name: /accept the assessment terms/i }).check();
+    await page.getByRole('button', { name: /^Continue$/i }).click();
+
     await expect(page).toHaveURL(/\/identity/);
     await page.getByRole('button', { name: /Capture photo/i }).click();
     await expect(page.getByRole('img', { name: /Identity verification photo/i })).toBeVisible();
@@ -41,6 +45,9 @@ test.describe('B2B full journey', () => {
     await expect(page.getByRole('heading', { name: /Return to the interview window/i })).toBeVisible();
     await restoreVisibleTab(page);
     await expect(page.getByRole('heading', { name: /Return to the interview window/i })).toBeHidden();
+    await page.getByRole('button', { name: /Continue interview/i }).evaluate((button) => {
+      (button as HTMLButtonElement).click();
+    });
 
     await page.getByRole('button', { name: /Submit answer/i }).evaluate((button) => {
       (button as HTMLButtonElement).click();

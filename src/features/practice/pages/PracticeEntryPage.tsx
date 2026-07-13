@@ -8,7 +8,7 @@ export function PracticeEntryPage() {
   const reset = useInterviewFlowStore((state) => state.reset);
 
   useEffect(() => {
-    reset();
+    reset(DEFAULT_SESSION_ID);
   }, [reset]);
 
   return <Navigate to={`/interview/${DEFAULT_SESSION_ID}/prepare`} replace />;

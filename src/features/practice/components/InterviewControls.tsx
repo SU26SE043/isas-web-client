@@ -9,6 +9,8 @@ interface InterviewControlsProps {
   remainingSeconds: number;
   isSubmitting: boolean;
   isPaused: boolean;
+  isLocked: boolean;
+  cameraLocked: boolean;
   micEnabled: boolean;
   cameraEnabled: boolean;
   isRecording: boolean;
@@ -25,6 +27,8 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   remainingSeconds,
   isSubmitting,
   isPaused,
+  isLocked,
+  cameraLocked,
   micEnabled,
   cameraEnabled,
   isRecording,
@@ -74,6 +78,7 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
             }`}
             aria-label={t('practice.flow.controls.camera')}
             aria-pressed={!cameraEnabled}
+            disabled={cameraLocked}
             onClick={onToggleCamera}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
@@ -91,7 +96,7 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           >
             <span className={`h-3 w-3 rounded-full ${isRecording ? 'bg-red-500' : 'border-2 border-current'}`} />
           </button>
-          <button type="button" className="btn-secondary px-3 py-2 text-sm" onClick={onTogglePause}>
+          <button type="button" className="btn-secondary px-3 py-2 text-sm" disabled={isLocked} onClick={onTogglePause}>
             {isPaused ? t('practice.room.resume') : t('practice.room.pause')}
           </button>
         </div>
@@ -112,7 +117,7 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           <button
             type="button"
             className="btn-primary px-4 py-2 text-sm"
-            disabled={isSubmitting || isPaused}
+            disabled={isSubmitting || isPaused || isLocked}
             onClick={onSubmit}
           >
             {isSubmitting ? t('practice.room.submitting') : t('practice.room.submitAnswer')}

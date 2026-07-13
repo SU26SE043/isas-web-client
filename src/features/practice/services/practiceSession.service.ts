@@ -1,6 +1,12 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { profileService } from '@/features/profile/services/profile.service';
 import { resultService } from './result.service';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
+import {
+  B2B_PROCTORING_CONFIG,
+  B2C_PROCTORING_CONFIG,
+  type ProctoringConfig,
+} from '../types/proctoring.types';
 import {
   DEFAULT_PRACTICE_SESSION,
   MOCK_ASYNC_QUESTIONS,
@@ -21,6 +27,18 @@ const chunkCounts = new Map<string, number>();
 const proctoringCounts = new Map<string, number>();
 
 export const practiceSessionService = {
+  getProctoringConfig(sessionId: string): ProctoringConfig {
+    return isCampaignSessionId(sessionId) ? B2B_PROCTORING_CONFIG : B2C_PROCTORING_CONFIG;
+  },
+
+  async acceptTerms(sessionId: string): Promise<void> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+    }
+    await mockDelay(200);
+    void sessionId;
+  },
+
   async getSession(sessionId: string): Promise<PracticeSession> {
     if (!usesMockData('practice')) {
       throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
