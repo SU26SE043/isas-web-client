@@ -337,6 +337,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Landing marketing + employer section cho acquisition |
+| **Trạng thái triển khai** | ✅ **Partial** — `/`, `/pricing`, `/terms`, `/privacy`, `/employers`; E02 backlog `partial` |
 | **Business Value** | Conversion funnel; KPI-001 registration > 40% |
 | **Vai trò** | Guest (ROL-001) |
 | **Screens** | SCR-AUT-001 (Welcome/Landing), SCR-AUT-011 (Terms & Privacy) |
@@ -367,6 +368,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Toàn bộ identity lifecycle: register, login, SSO, MFA, password reset, session |
+| **Trạng thái triển khai** | ✅ **Done** — full auth pages, `AuthProvider`, role redirect, session timeout; E03 `implemented` |
 | **Business Value** | Secure gate cho mọi giá trị phía sau; tenant isolation |
 | **Vai trò** | Guest → Candidate/HR/Admin |
 | **Screens** | SCR-AUT-002–010 (11 screens auth) |
@@ -396,13 +398,14 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | Hồ sơ ứng viên đầy đủ + upload/phân tích CV |
+| **Mục tiêu** | Hồ sơ ứng viên + upload/phân tích CV — **main profile** lightweight (basic info + uploaded CV list) |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `ProfileViewPage` simplified; wizard/section CRUD legacy routes retained; E2E `cv-upload.spec.ts` |
 | **Business Value** | Data foundation cho phỏng vấn AI; auto-fill từ CV (FR-006) |
 | **Vai trò** | Candidate (ROL-002) |
 | **Screens** | SCR-CAN-012–022 (Dashboard, Profile sections, CV) |
 | **User Flows** | UF-005–007, UF-027 |
 | **Features** | F-PROF-001–008, F-CV-001–003 |
-| **Components** | ProfileWizard, EducationForm, ExperienceForm, SkillsTagInput, CertificateCard, PortfolioGallery, CVUploader, CVAnalysisPanel, ProfileCompletenessBar |
+| **Components** | `ProfileBasicInfoCard`, `ProfileUploadedCvSection`, `EditProfileModal`, CVUploader, CVAnalysisPanel; legacy: ProfileWizard, section CRUD forms |
 | **Shared** | `ProfileSectionLayout`, CRUD list pattern |
 | **State** | React Query per entity; optimistic updates for profile edits |
 | **API** | Auth profile CRUD; CV upload presign + parse status poll; FR-004–006 |
@@ -413,12 +416,12 @@ flowchart TB
 | **Loading** | CV parse progress (45s SLA BRL-051) |
 | **Empty** | No CV → guided upload; incomplete profile CTA |
 | **Permission** | Candidate owns data only (BR-001) |
-| **Deliverables** | Profile CRUD all sections; CV upload + analysis UI |
-| **DoD** | Upload CV → see parsed fields → map to profile; completeness % shown |
+| **Deliverables** | `/candidate/profile` basic view + uploaded CV list; CV upload/analysis wizard; legacy section routes for completeness gate |
+| **DoD** | Upload CV → analysis report → file appears on profile; basic fields editable via modal |
 | **Acceptance** | FR-004–006, FR-020–059 (profile entities); UF-005–007 |
 | **Dependencies** | P3; Interview file API |
 | **Rủi ro** | Parse fail rate → manual edit fallback UI |
-| **Ghi chú** | Progressive disclosure — wizard for first-time |
+| **Ghi chú** | Main profile intentionally lightweight per [`profile.md`](./product/profile.md); wizard/sections legacy until backend profile APIs |
 
 ---
 
@@ -1180,7 +1183,7 @@ flowchart TB
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
 | FS-050 | Candidate dashboard | P4 | M02 | F-PROF-001 | Candidate | CAN-012 | P0 | FS-042 | M | Completeness bar, interview heatmap, credits/CV metrics | Loads data (mock ok) |
-| FS-051 | Profile view page | P4 | M02 | F-PROF-002 | Candidate | CAN-013 | P0 | FS-050 | M | UF-027 | Sections linked |
+| FS-051 | Profile view page | P4 | M02 | F-PROF-002 | Candidate | CAN-013 | P0 | FS-050 | M | UF-027 | Basic info + uploaded CV list (`profile.md`) |
 | FS-052 | Profile completion wizard | P4 | M02 | F-PROF-003 | Candidate | CAN-014 | P0 | FS-051 | L | UF-005, BRL-032 | % shown |
 | FS-053 | Profile completeness bar | P4 | M02 | F-PROF-003 | Candidate | CAN-012–014 | P0 | FS-052 | S | 70% gate | — |
 | FS-054 | Career goal section | P4 | M02 | F-PROF-004 | Candidate | CAN-015 | P1 | FS-051 | S | CRUD | — |
