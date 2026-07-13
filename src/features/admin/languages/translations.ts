@@ -23,6 +23,8 @@ export const adminTranslations: TranslationDictionary = {
     'admin.nav.maintenance': 'Bao tri',
     'admin.nav.support': 'Ho tro',
     'admin.nav.logout': 'Dang xuat',
+    'admin.layout.mfaRequired': 'Cua admin yeu cau MFA moi lan dang nhap theo BRL-019.',
+    'admin.layout.singleSession': 'Chi mot phien admin hoat dong tai mot thoi diem theo BRL-033.',
 
     'admin.status.active': 'Dang hoat dong',
     'admin.status.pending': 'Cho xu ly',
@@ -189,6 +191,8 @@ export const adminTranslations: TranslationDictionary = {
     'admin.nav.maintenance': 'Maintenance',
     'admin.nav.support': 'Support',
     'admin.nav.logout': 'Logout',
+    'admin.layout.mfaRequired': 'Admin portal requires MFA on every login under BRL-019.',
+    'admin.layout.singleSession': 'Only one active admin session is allowed at a time under BRL-033.',
 
     'admin.status.active': 'Active',
     'admin.status.pending': 'Pending',

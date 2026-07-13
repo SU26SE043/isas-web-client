@@ -694,7 +694,6 @@ flowchart TB
 | **Dependencies** | P3; all services admin APIs |
 | **Rủi ro** | Scope creep → prioritize P13.0: users, audit, AI config |
 | **Ghi chú** | Impersonation (FR-280) audit-logged |
-| **Trạng thái triển khai** | ✅ **Done (mock)** — admin portal routes, RBAC shell, audit, AI config, maintenance; US admin stories in `src/features/admin` |
 
 ---
 
@@ -725,7 +724,6 @@ flowchart TB
 | **Dependencies** | P3, P6, P10 |
 | **Rủi ro** | 137 notification types → phase rollout by category |
 | **Ghi chú** | Quiet hours + dedupe per Notifications.md |
-| **Trạng thái triển khai** | ✅ **Done (mock)** — `src/features/engagement`: notifications, settings, help, support, team; `NotificationBell` dropdown (SCR-SHR-095); US-013 `implemented` |
 
 ---
 
@@ -1531,7 +1529,7 @@ P0 Foundation
 - [x] P10: selection upload, email preview, invite resolution complete
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
-- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock)
+- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
 - [x] P14: shared engagement — NotificationBell dropdown, notifications/settings/help/support pages, employer team (mock); US-013 `implemented`
 - [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 
