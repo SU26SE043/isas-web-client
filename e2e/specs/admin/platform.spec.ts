@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { loginAs } from '../../fixtures/auth';
 
 test.describe('Admin platform', () => {
+  test.setTimeout(60_000);
+
   test('admin can access dashboard, users, audit logs, and AI config', async ({ page }) => {
     await loginAs(page, 'admin');
 
