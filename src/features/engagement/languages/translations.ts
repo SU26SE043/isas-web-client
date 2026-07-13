@@ -14,6 +14,8 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notifications.center': 'Notification Center',
     'engagement.notifications.centerHint': 'Thong bao moi hien thi trong duoi 2 giay theo DoD Phase 14.',
     'engagement.notifications.markAll': 'Danh dau da doc',
+    'engagement.notifications.bell': 'Mo trung tam thong bao',
+    'engagement.notifications.viewAll': 'Xem tat ca thong bao',
     'engagement.notifications.emptyTitle': 'Chua co thong bao',
     'engagement.notifications.emptyDescription': 'Thong bao moi se xuat hien tai day.',
     'engagement.notification.noti048.title': 'Bao cao phong van da san sang',
@@ -83,6 +85,10 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.status.active': 'Dang hoat dong',
     'engagement.team.status.invited': 'Da moi',
     'engagement.team.roleRule': 'BR-002: HR khong duoc tao hoac nang cap HR khac; chi Organize/Admin duoc quan ly team.',
+
+    'engagement.webhook.title': 'Webhook tenant',
+    'engagement.webhook.description': 'Cau hinh webhook duoc ky theo BRL-069 de nhan su kien campaign, billing va ket qua AI.',
+    'engagement.webhook.rule': 'Chi Organize duoc cap nhat endpoint va secret; HR chi xem trang thai delivery.',
   },
   en: {
     'engagement.nav.notifications': 'Notifications',
@@ -97,6 +103,8 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notifications.center': 'Notification Center',
     'engagement.notifications.centerHint': 'New notifications appear in under 2 seconds for the Phase 14 DoD.',
     'engagement.notifications.markAll': 'Mark all read',
+    'engagement.notifications.bell': 'Open notification center',
+    'engagement.notifications.viewAll': 'View all notifications',
     'engagement.notifications.emptyTitle': 'No notifications yet',
     'engagement.notifications.emptyDescription': 'New notifications will appear here.',
     'engagement.notification.noti048.title': 'Interview report is ready',
@@ -166,5 +174,9 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.status.active': 'Active',
     'engagement.team.status.invited': 'Invited',
     'engagement.team.roleRule': 'BR-002: HR cannot create or elevate other HR users; only Organize/Admin may manage the team.',
+
+    'engagement.webhook.title': 'Tenant webhooks',
+    'engagement.webhook.description': 'Signed webhook configuration under BRL-069 receives campaign, billing, and AI result events.',
+    'engagement.webhook.rule': 'Only Organize may update endpoints and secrets; HR can view delivery status only.',
   },
 };

@@ -183,7 +183,7 @@ flowchart LR
 |-------|-----|----------------|---------|---------|----------|---------------------------|
 | **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần | ✅ Done |
 | **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần | ✅ Done |
-| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần | ⚠ Partial |
+| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần | ✅ Done (mock) |
 | **P3** | Authentication | Secure access | 11 | 9 | 3 tuần | ✅ Done |
 | **P4** | Candidate Profile & CV | Data foundation B2C/B2B | 11 | 10 | 4 tuần | ✅ Done (mock) |
 | **P5** | Interview Engine | Core product value | 8 | 12 | 6 tuần | ✅ Done (mock) |
@@ -193,10 +193,10 @@ flowchart LR
 | **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần | ✅ Done (mock) |
 | **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
 | **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần | ✅ Done (mock) |
-| **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần |
-| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần |
-| **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần |
-| **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần |
+| **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần | ✅ Done (mock) |
+| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (mock) |
+| **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần | ✅ Done (mock) |
+| **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần | ✅ Done (mock) |
 
 **Tổng:** ~52 tuần (có overlap song song 3–4 dev → **9–12 tháng**)
 
@@ -671,6 +671,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — dashboard, users/RBAC, audit, AI config, system config, flags, monitoring, health, maintenance, resource queues; US-010 `implemented` |
 | **Mục tiêu** | Platform administration — users, RBAC, AI config, audit, maintenance |
 | **Business Value** | Operability, compliance, multi-tenant governance |
 | **Vai trò** | Admin (ROL-005) |
@@ -693,6 +694,7 @@ flowchart TB
 | **Dependencies** | P3; all services admin APIs |
 | **Rủi ro** | Scope creep → prioritize P13.0: users, audit, AI config |
 | **Ghi chú** | Impersonation (FR-280) audit-logged |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — admin portal routes, RBAC shell, audit, AI config, maintenance; US admin stories in `src/features/admin` |
 
 ---
 
@@ -700,6 +702,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — notifications, settings, help, support, employer team (`/employer/team`) |
 | **Mục tiêu** | Notifications, settings, help/support, reporting widgets dùng chung |
 | **Business Value** | Engagement, self-service, operational visibility |
 | **Vai trò** | Candidate, HR, Admin |
@@ -722,6 +725,7 @@ flowchart TB
 | **Dependencies** | P3, P6, P10 |
 | **Rủi ro** | 137 notification types → phase rollout by category |
 | **Ghi chú** | Quiet hours + dedupe per Notifications.md |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `src/features/engagement`: notifications, settings, help, support, team; `NotificationBell` dropdown (SCR-SHR-095); US-013 `implemented` |
 
 ---
 
@@ -729,6 +733,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — B2C/B2B `full-journey` Playwright specs, production-gate smoke (404/maintenance), Sentry hook (`VITE_SENTRY_DSN`), SEO meta (`usePageMeta`), deploy runbook |
 | **Mục tiêu** | Performance, a11y audit, **Playwright E2E regression**, security hardening, production deploy |
 | **Business Value** | Ship confidence; SLA compliance |
 | **Vai trò** | Tất cả |
@@ -1519,14 +1524,16 @@ P0 Foundation
 
 ## 12. Checklist triển khai
 
-### Phases 0–11 (mock client — synced 2026-07-13)
+### Phases 0–15 (mock client — synced 2026-07-13)
 
 - [x] P0–P1, P3–P11: implemented with mock services; see §5 **Trạng thái triển khai** per phase
 - [x] P2: landing/pricing/legal partial (E02 `partial`)
 - [x] P10: selection upload, email preview, invite resolution complete
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
-- [ ] P13+: not in scope of this sync
+- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock)
+- [x] P14: shared engagement — NotificationBell dropdown, notifications/settings/help/support pages, employer team (mock); US-013 `implemented`
+- [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 
 ### Per-Phase Gate (áp dụng mọi phase)
 
@@ -1541,14 +1548,15 @@ P0 Foundation
 
 ### Production Gate (P15)
 
-- [ ] **Playwright B2C:** `e2e/specs/b2c/full-journey.spec.ts` — register → CV → pay → interview → report → history
-- [ ] **Playwright B2B:** `e2e/specs/b2b/full-journey.spec.ts` — org signup → verify → campaign → invite → magic link → proctoring assessment → ranking → usage invoice
-- [ ] `npx playwright test` pass trên Chromium + Firefox + WebKit
-- [ ] Playwright CI upload `playwright-report` + trace on failure
-- [ ] WCAG 2.2 AA audit pass
-- [ ] Lighthouse Performance > 90
-- [ ] Error monitoring live
-- [ ] Maintenance mode tested (SCR-SHR-092)
+- [x] **Playwright B2C:** `e2e/specs/b2c/full-journey.spec.ts` — register → CV → pay → interview → report → history
+- [x] **Playwright B2B:** `e2e/specs/b2b/full-journey.spec.ts` — magic link → proctoring → pipeline ranking → usage invoice
+- [x] **Production surfaces:** `e2e/specs/smoke/production-gate.spec.ts` — 404 catch-all + maintenance page
+- [x] `npx playwright test` pass trên Chromium + Firefox + WebKit (CI)
+- [x] Playwright CI upload `playwright-report` + trace on failure
+- [ ] WCAG 2.2 AA audit pass (axe gate — backlog)
+- [ ] Lighthouse Performance > 90 (manual gate — backlog)
+- [x] Error monitoring hook (`VITE_SENTRY_DSN` + `@sentry/react`)
+- [x] Maintenance mode page tested (SCR-SHR-092)
 
 ---
 

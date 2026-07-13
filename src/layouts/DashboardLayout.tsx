@@ -5,6 +5,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
+import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 
 type NavItem = {
   to: string;
@@ -241,6 +242,7 @@ export const DashboardLayout: React.FC = () => {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+          <DashboardEngagementBar scope="candidate" />
           <Outlet />
         </main>
       </div>

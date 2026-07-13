@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
 import { LanguageToggle } from './LanguageToggle';
+import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
   return cn(
@@ -116,6 +117,7 @@ export const EmployerDashboardLayout: React.FC = () => {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+          <DashboardEngagementBar scope="employer" />
           <Outlet />
         </main>
       </div>

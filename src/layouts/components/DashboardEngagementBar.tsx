@@ -1,0 +1,14 @@
+import { NotificationBell } from '@/features/engagement/components/NotificationBell';
+import type { EngagementScope } from '@/features/engagement/types/engagement.types';
+
+interface DashboardEngagementBarProps {
+  scope: EngagementScope;
+}
+
+export function DashboardEngagementBar({ scope }: DashboardEngagementBarProps) {
+  return (
+    <div className="flex items-center justify-end border-b border-subtle bg-surface-base px-4 py-3 sm:px-6">
+      <NotificationBell scope={scope} />
+    </div>
+  );
+}

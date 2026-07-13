@@ -6,6 +6,7 @@ import {
   BookOpen,
   Bot,
   Briefcase,
+  CircleHelp,
   ClipboardCheck,
   DatabaseBackup,
   FileText,
@@ -20,11 +21,13 @@ import {
   Users,
   Wrench,
 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { LanguageToggle } from './LanguageToggle';
+import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 
 type NavItem = { to: string; label: string; icon: React.ReactNode; end?: boolean };
 
@@ -62,6 +65,10 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/backups', label: t('admin.nav.backups'), icon: <DatabaseBackup className="h-4 w-4" aria-hidden /> },
       { to: '/admin/maintenance', label: t('admin.nav.maintenance'), icon: <Wrench className="h-4 w-4" aria-hidden /> },
       { to: '/admin/support-tickets', label: t('admin.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/notifications', label: t('engagement.nav.notifications'), icon: <Bell className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/settings', label: t('engagement.nav.settings'), icon: <Settings className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/help', label: t('engagement.nav.help'), icon: <CircleHelp className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/support', label: t('engagement.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
     ],
     [t],
   );
@@ -97,7 +104,17 @@ export const AdminDashboardLayout: React.FC = () => {
             </button>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base"><Outlet /></main>
+        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+          <div className="border-b border-subtle bg-surface-sunken px-4 py-3 sm:px-6">
+            <Alert variant="info">
+              <AlertDescription>
+                {t('admin.layout.mfaRequired')} {t('admin.layout.singleSession')}
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DashboardEngagementBar scope="admin" />
+          <Outlet />
+        </main>
       </div>
     </div>
   );

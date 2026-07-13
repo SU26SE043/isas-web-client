@@ -11,16 +11,16 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 
 | Product module | Tier | Product contract | Route group | Implementation status |
 | --- | --- | --- | --- | --- |
-| Public marketing | T2 | Home, pricing, enterprise story | `publicRoutes` | Partial |
+| Public marketing | T2 | Home, pricing, enterprise story | `publicRoutes` | Implemented (mock) |
 | Auth & session | T1 | Login, register, verify, reset, MFA, errors | `authRoutes` | Implemented |
 | Auth modal (shell) | T1 | Marketing layout modal flow | `MarketingLayout` | Implemented |
 | Candidate profile | T1 | Profile basics + uploaded CV list; legacy wizard/sections | `candidateRoutes` `/candidate/profile*` | Implemented (mock) |
 | Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Implemented (mock) |
 | CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
-| Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | In progress |
-| Learning roadmap | T1 | Roadmap, milestones, lessons | `/candidate/roadmap` | Partial |
-| Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, payment | Not started / mock |
-| Usage & billing UI | T1 | Token history, estimates, settle display | Candidate route missing; employer invoices implemented | Partial |
+| Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | Implemented (mock) |
+| Learning roadmap | T1 | Roadmap, milestones, lessons | `/candidate/roadmap` | Implemented (mock) |
+| Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, `/candidate/usage`, payment | Implemented (mock) |
+| Usage & billing UI | T1 | Token history, estimates, settle display | `/candidate/usage`, employer invoices | Implemented (mock) |
 | Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
 | Org onboarding | T1 | Company profile, verify | `/employer/company*` | Implemented (mock) |
 | Campaign management | T1 | List, wizard, detail, publish | `/employer/campaigns*` | Implemented (mock) |
@@ -28,12 +28,13 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Employer analytics | T1 | Pipeline, candidate profile, report, export | `/employer/analytics`, candidates | Implemented (mock) |
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
 | **Public campaign browse** (self-serve catalog of all open campaigns) | — | **OUT OF SCOPE** |
-| **My invited campaigns** | T1 | Employer-invited list only | `/candidate/campaigns` | Required |
+| **My invited campaigns** | T1 | Employer-invited list only | `/candidate/campaigns` | Implemented (mock) |
 | Learning hub | T3 | Standalone content library | `/candidate/learning*` | Placeholder — backlog |
 | Leaderboard | T2 | Rankings | `/candidate/leaderboard` | Placeholder |
 | Certificate | T2 | Certificate viewer | `/candidate/certificates/:id` | Placeholder |
 | Achievements / progress | T2/T3 | Gamification | `/candidate/achievements`, `progress` | Placeholder |
-| Admin portal | T1 | Users, tenant, audit, AI config | `/admin/*` | Placeholder only |
+| Admin portal | T1 | Users, tenant, audit, AI config | `/admin/*` | Implemented (mock) |
+| Shared engagement | T1 | Notifications, settings, help, support, team | `/*/notifications`, `/*/settings`, `/*/help`, `/*/support`, `/employer/team` | Implemented (mock) |
 | Transactional email | T1 | Backend-driven; frontend triggers only | — | Not started |
 
 ---
@@ -141,15 +142,51 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/employer/candidates/:id` | Candidate profile | HR, Organize |
 | `/employer/candidates/:id/report` | AI report | HR, Organize |
 | `/employer/analytics` | Analytics + export | HR, Organize |
+| `/employer/notifications` | Notifications | HR, Organize |
+| `/employer/settings` | Notification settings + webhook note | HR, Organize |
+| `/employer/help` | Help center | HR, Organize |
+| `/employer/support` | Support tickets | HR, Organize |
+| `/employer/team` | Team management | Organize |
+
+### Shared engagement (T1 — per role)
+
+| Route | Screen | Role |
+| --- | --- | --- |
+| `/candidate/notifications` | Notification list | Candidate |
+| `/candidate/settings` | Notification preferences | Candidate |
+| `/candidate/help` | Help center | Candidate |
+| `/candidate/support` | Support tickets | Candidate |
+| `/admin/notifications` | Notification list | Admin |
+| `/admin/settings` | Notification preferences | Admin |
+| `/admin/help` | Help center | Admin |
+| `/admin/support` | Support tickets | Admin |
 
 ### Admin (T1 — internal)
 
 | Route | Screen | Status |
 | --- | --- | --- |
-| `/admin` | Dashboard shell | Placeholder |
-| `/admin/users` | User management | Placeholder |
+| `/admin/dashboard` | Admin dashboard | Implemented (mock) |
+| `/admin/users` | User management | Implemented (mock) |
+| `/admin/roles` | Role management | Implemented (mock) |
+| `/admin/permissions` | Permission matrix | Implemented (mock) |
+| `/admin/approvals` | HR approval queue | Implemented (mock) |
+| `/admin/candidates` | Candidate admin list | Implemented (mock) |
+| `/admin/campaigns` | Campaign moderation | Implemented (mock) |
+| `/admin/content` | Content management | Implemented (mock) |
+| `/admin/learning` | Learning content admin | Implemented (mock) |
+| `/admin/ai-config` | AI configuration | Implemented (mock) |
+| `/admin/notification-templates` | Notification templates | Implemented (mock) |
+| `/admin/reports` | Admin reports catalog | Implemented (mock) |
+| `/admin/audit-logs` | Audit log viewer | Implemented (mock) |
+| `/admin/system-config` | System config | Implemented (mock) |
+| `/admin/feature-flags` | Feature flags | Implemented (mock) |
+| `/admin/monitoring` | Monitoring | Implemented (mock) |
+| `/admin/health` | System health | Implemented (mock) |
+| `/admin/backups` | Backup management | Implemented (mock) |
+| `/admin/maintenance` | Maintenance scheduler | Implemented (mock) |
+| `/admin/support-tickets` | Support ticket queue | Implemented (mock) |
 
-**Missing admin screens (Tier 1):** tenant mgmt, audit logs, AI config, role/permission mgmt, financial overview.
+**Deferred admin capabilities:** live Admin APIs, MFA re-auth modal, impersonation, real report/export and backup restore.
 
 ### Missing routes (Tier 1 — product required, not in router)
 
