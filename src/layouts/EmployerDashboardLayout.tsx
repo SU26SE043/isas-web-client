@@ -1,35 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import {
-  BadgeCheck,
-  BarChart3,
-  Bell,
-  BriefcaseBusiness,
-  Building2,
-  CircleHelp,
-  CreditCard,
-  LifeBuoy,
-  LayoutDashboard,
-  LogOut,
-  ReceiptText,
-  ScrollText,
-  Settings,
-  Users,
-} from 'lucide-react';
-
-import { PHASE11_CAMPAIGN_ID } from '@/features/employer-analytics/mocks/employerAnalytics.fixtures';
+import { LogOut } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { UserRole } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
+import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
 import { LanguageToggle } from './LanguageToggle';
-
-type NavItem = {
-  to: string;
-  label: string;
-  icon: React.ReactNode;
-  end?: boolean;
-};
 
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
   return cn(
@@ -44,88 +22,15 @@ function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
 }
 
 export const EmployerDashboardLayout: React.FC = () => {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
-
+  const role = user?.role ?? UserRole.HR;
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const navItems = useMemo<NavItem[]>(
-    () => [
-      {
-        to: '/employer/dashboard',
-        label: t('employer.nav.dashboard'),
-        end: true,
-        icon: <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/company',
-        label: t('employer.nav.company'),
-        end: true,
-        icon: <Building2 className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/company/verify',
-        label: t('employer.nav.verify'),
-        icon: <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/campaigns',
-        label: t('employer.campaigns.nav.campaigns'),
-        icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: `/employer/campaigns/${PHASE11_CAMPAIGN_ID}/candidates`,
-        label: t('employer.nav.pipeline'),
-        icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/analytics',
-        label: t('employer.nav.analytics'),
-        icon: <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/subscription',
-        label: t('employer.nav.subscription'),
-        icon: <CreditCard className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/billing',
-        label: t('employer.nav.billing'),
-        icon: <ReceiptText className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/invoices',
-        label: t('employer.nav.invoices'),
-        icon: <ScrollText className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/notifications',
-        label: t('engagement.nav.notifications'),
-        icon: <Bell className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/settings',
-        label: t('engagement.nav.settings'),
-        icon: <Settings className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/team',
-        label: t('engagement.nav.team'),
-        icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/help',
-        label: t('engagement.nav.help'),
-        icon: <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-      {
-        to: '/employer/support',
-        label: t('engagement.nav.support'),
-        icon: <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />,
-      },
-    ],
-    [t],
+  const navItems = useMemo(
+    () => filterEmployerNavItems(buildEmployerNavItems(t), role),
+    [role, t],
   );
 
   const handleLogout = () => {
@@ -145,16 +50,11 @@ export const EmployerDashboardLayout: React.FC = () => {
           <div
             className={cn(
               'flex items-center border-b border-subtle px-3 py-4',
-              isCollapsed
-                ? 'justify-center'
-                : 'justify-center sm:justify-between sm:gap-2',
+              isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2',
             )}
           >
             {!isCollapsed && (
-              <Link
-                to="/"
-                className="focus-ring hidden rounded-md sm:block"
-              >
+              <Link to="/" className="focus-ring hidden rounded-md sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             )}
@@ -162,11 +62,7 @@ export const EmployerDashboardLayout: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCollapsed((value) => !value)}
-              aria-label={
-                isCollapsed
-                  ? t('employer.nav.collapsed.expand')
-                  : t('employer.nav.collapsed.collapse')
-              }
+              aria-label={isCollapsed ? t('employer.nav.collapsed.expand') : t('employer.nav.collapsed.collapse')}
               aria-pressed={isCollapsed}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-surface-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             >
@@ -174,10 +70,7 @@ export const EmployerDashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <nav
-            className="flex-1 px-3 py-4"
-            aria-label="Employer"
-          >
+          <nav className="flex-1 px-3 py-4" aria-label="Employer">
             <div className="space-y-1">
               {navItems.map((item) => (
                 <NavLink
@@ -186,20 +79,13 @@ export const EmployerDashboardLayout: React.FC = () => {
                   end={item.end}
                   title={isCollapsed ? item.label : undefined}
                   aria-label={item.label}
-                  className={({ isActive }) =>
-                    navLinkClassName(isActive, isCollapsed)
-                  }
+                  className={({ isActive }) => navLinkClassName(isActive, isCollapsed)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    {item.icon}
-                  </span>
-
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>
                   <span
                     className={cn(
                       'overflow-hidden whitespace-nowrap transition-all duration-300',
-                      isCollapsed
-                        ? 'w-0 opacity-0'
-                        : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
+                      isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
                     )}
                     aria-hidden={isCollapsed}
                   >
@@ -215,22 +101,12 @@ export const EmployerDashboardLayout: React.FC = () => {
               <LanguageToggle compact />
             </div>
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              className={navLinkClassName(false, isCollapsed)}
-            >
-              <LogOut
-                className="h-4 w-4 shrink-0"
-                aria-hidden
-              />
-
+            <button type="button" onClick={handleLogout} className={navLinkClassName(false, isCollapsed)}>
+              <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span
                 className={cn(
                   'overflow-hidden whitespace-nowrap transition-all duration-300',
-                  isCollapsed
-                    ? 'w-0 opacity-0'
-                    : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
+                  isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
                 )}
               >
                 {t('employer.nav.logout')}

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-type E2ERole = 'candidate' | 'organize';
+type E2ERole = 'candidate' | 'organize' | 'hr';
 
 const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: string; title: string }> = {
   candidate: {
@@ -14,6 +14,12 @@ const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: strin
     fullName: 'E2E Organize',
     email: 'organize@isas.dev',
     title: 'Organization Owner',
+  },
+  hr: {
+    id: 'e2e-hr',
+    fullName: 'E2E HR',
+    email: 'hr@isas.dev',
+    title: 'Recruiter',
   },
 };
 
@@ -66,5 +72,6 @@ export async function logoutForRoleSwitch(page: Page) {
     window.localStorage.removeItem('auth-storage');
     window.localStorage.removeItem('accessToken');
     window.localStorage.removeItem('refreshToken');
+    window.sessionStorage.removeItem('isas-mock-employer-workspace');
   });
 }

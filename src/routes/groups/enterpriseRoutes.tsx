@@ -24,7 +24,6 @@ import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
 
 export const enterpriseRoutes: RouteObject[] = [
-  { path: '/enterprise', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/dashboard', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/campaigns', element: <Navigate to="/employer/campaigns" replace /> },
   { path: '/enterprise/company', element: <Navigate to="/employer/company" replace /> },
@@ -49,8 +48,13 @@ export const enterpriseRoutes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <EmployerDashboardPage /> },
-              { path: 'company', element: <CompanyProfilePage /> },
-              { path: 'company/verify', element: <CompanyVerificationPage /> },
+              {
+                element: <RequireRole roles={[UserRole.ORGANIZE, UserRole.ADMIN]} />,
+                children: [
+                  { path: 'company', element: <CompanyProfilePage /> },
+                  { path: 'company/verify', element: <CompanyVerificationPage /> },
+                ],
+              },
               { path: 'campaigns', element: <CampaignListPage /> },
               { path: 'campaigns/new', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id/candidates', element: <CandidatePipelinePage /> },

@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
@@ -40,6 +41,13 @@ export function CompanyVerificationPage() {
                 <CardTitle>{t('employer.verify.title')}</CardTitle>
               </CardHeader>
               <CardContent>
+                {workspace.verification.status === 'rejected' && workspace.verification.reviewerNote ? (
+                  <Alert variant="error" className="mb-5">
+                    <AlertDescription>
+                      {t('employer.verify.reviewerNote').replace('{note}', workspace.verification.reviewerNote)}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
                 <VerificationUploadForm verification={workspace.verification} onSubmit={handleSubmit} />
               </CardContent>
             </Card>
