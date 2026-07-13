@@ -14,7 +14,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Public marketing | T2 | Home, pricing, enterprise story | `publicRoutes` | Partial |
 | Auth & session | T1 | Login, register, verify, reset, MFA, errors | `authRoutes` | Implemented |
 | Auth modal (shell) | T1 | Marketing layout modal flow | `MarketingLayout` | Implemented |
-| Candidate profile | T1 | Profile, completeness, career data | `candidateRoutes` `/candidate/profile*` | Implemented (mock) |
+| Candidate profile | T1 | Profile basics + uploaded CV list; legacy wizard/sections | `candidateRoutes` `/candidate/profile*` | Implemented (mock) |
 | Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Implemented (mock) |
 | CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
 | Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | In progress |
