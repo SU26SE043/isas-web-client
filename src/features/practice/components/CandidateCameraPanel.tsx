@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Maximize2, MoreHorizontal } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 
 interface CandidateCameraPanelProps {
@@ -52,8 +53,8 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
   }, [stream, videoRef]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-subtle bg-surface-raised shadow-sm">
-      <div className="relative aspect-video w-full bg-surface-base">
+    <div className="relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised shadow-[var(--satin-inset)]">
+      <div className="relative min-h-0 w-full flex-1 bg-surface-base">
         <video
           ref={handleVideoRef}
           className="h-full w-full scale-x-[-1] object-cover"
@@ -68,10 +69,21 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
             aria-hidden
           />
         ) : null}
-      </div>
-      <div className="flex items-center justify-between border-t border-subtle px-3 py-2 text-xs text-muted-foreground">
-        <span>{t('practice.candidateCamera')}</span>
-        <span>{micEnabled ? t('practice.room.micOn') : t('practice.room.micOff')}</span>
+
+        <div className="absolute right-3 top-3 flex gap-1.5">
+          <span className="flex size-8 items-center justify-center rounded-lg border border-satin bg-black/45 text-white/80 backdrop-blur-md">
+            <Maximize2 className="size-3.5" aria-hidden />
+            <span className="sr-only">{t('practice.room.expandCamera')}</span>
+          </span>
+          <span className="flex size-8 items-center justify-center rounded-lg border border-satin bg-black/45 text-white/80 backdrop-blur-md">
+            <MoreHorizontal className="size-3.5" aria-hidden />
+            <span className="sr-only">{t('practice.room.cameraMore')}</span>
+          </span>
+        </div>
+
+        <div className="absolute bottom-3 left-3 rounded-md border border-satin bg-black/45 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
+          {micEnabled ? t('practice.room.micOn') : t('practice.room.micOff')}
+        </div>
       </div>
     </div>
   );

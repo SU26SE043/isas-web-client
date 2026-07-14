@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { InterviewHeader } from '../components/InterviewHeader';
 import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
 import { CandidateCameraPanel } from '../components/CandidateCameraPanel';
-import { InterviewInfoCard } from '../components/InterviewInfoCard';
-import { PersonalNotes } from '../components/PersonalNotes';
+import { InterviewQuestionPanel } from '../components/InterviewQuestionPanel';
 import { InterviewControls } from '../components/InterviewControls';
 import { LearningLiveFeedbackPanel } from '../components/learning-path/LearningLiveFeedbackPanel';
 import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner';
@@ -14,7 +13,6 @@ import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
 import { PauseOverlay } from '../components/room/PauseOverlay';
 import { ViolationPauseOverlay } from '../components/room/ViolationPauseOverlay';
-import { QuestionListDialog } from '../components/room/QuestionListDialog';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { useInterviewSession } from '../hooks/useInterviewSession';
@@ -36,7 +34,6 @@ export const PracticeInterviewPage: React.FC = () => {
   const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
   const session = useInterviewSession(sessionId);
   const media = useInterviewMedia(session.micEnabled);
-  const [questionListOpen, setQuestionListOpen] = useState(false);
   const learning = useLearningLiveFeedback(sessionId, session.isLearning);
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
@@ -93,9 +90,11 @@ export const PracticeInterviewPage: React.FC = () => {
   }
 
   const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
+  const questionText =
+    session.currentQuestion?.content ?? t('practice.room.generatingQuestion');
 
   return (
-    <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
+    <div className="flex min-h-screen flex-col surface-base pb-28 font-sans">
       <InterviewHeader
         sessionId={sessionId}
         isRecording={session.isRecording}
@@ -124,32 +123,27 @@ export const PracticeInterviewPage: React.FC = () => {
         </div>
       ) : null}
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-6 py-6">
-        <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="h-[calc(100vh-140px)] min-h-[600px] lg:col-span-8">
-            <AIInterviewerPanel
-              aiState={session.aiState}
-              messages={session.messages}
-              isGenerating={session.status === 'generating'}
-            />
+      <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+          <div className="min-h-[240px] lg:col-span-8 lg:min-h-[320px]">
+            <AIInterviewerPanel aiState={session.aiState} />
           </div>
-
-          <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col gap-6 lg:col-span-4">
+          <div className="min-h-[220px] lg:col-span-4 lg:min-h-[320px]">
             <CandidateCameraPanel
               videoRef={media.videoRef}
               setVideoElement={media.setVideoElement}
               stream={media.stream}
               micEnabled={session.micEnabled}
             />
-            <InterviewInfoCard
-              sessionTitle={session.sessionTitle}
-              currentIndex={session.currentIndex}
-              totalQuestions={session.totalQuestions}
-              onViewQuestions={() => setQuestionListOpen(true)}
-            />
-            <PersonalNotes />
           </div>
         </div>
+
+        <InterviewQuestionPanel
+          questionText={questionText}
+          currentIndex={session.currentIndex}
+          totalQuestions={session.totalQuestions}
+          remainingSeconds={session.remainingSeconds}
+        />
       </main>
 
       {session.isLearning && learning.feedback ? (
@@ -178,12 +172,6 @@ export const PracticeInterviewPage: React.FC = () => {
         exitHref={learning.exitHref}
       />
 
-      <QuestionListDialog
-        open={questionListOpen}
-        questions={session.questions}
-        currentIndex={session.currentIndex}
-        onClose={() => setQuestionListOpen(false)}
-      />
       {antiCheatEnabled ? <TabLockOverlay visible={session.isTabHidden} /> : null}
       <NetworkLossDialog open={session.isOffline} />
       <PauseOverlay visible={session.isManualPaused} onResume={session.togglePause} />
