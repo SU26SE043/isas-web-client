@@ -1,10 +1,12 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
+import { cn } from '@/lib/utils';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
+import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
 interface PracticeRubricStepProps {
   rubric: PracticeRubricCriterion[];
@@ -29,22 +31,26 @@ export const PracticeRubricStep: React.FC<PracticeRubricStepProps> = ({
     onChange(rubric.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-subtle bg-surface-raised">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-      </div>
-    );
-  }
-
   return (
-    <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-      <h2 className="heading-secondary text-lg">{t('practice.wizard.rubric.title')}</h2>
-      <p className="body-text mt-1 text-sm">{t('practice.wizard.rubric.description')}</p>
-
-      <div className="mt-5 space-y-4">
+    <PracticeWizardStepCard
+      icon={<ClipboardList className="size-4" aria-hidden />}
+      title={t('practice.wizard.rubric.title')}
+      description={t('practice.wizard.rubric.description')}
+      isLoading={isLoading}
+      footer={
+        <PracticeWizardNav
+          onBack={onBack}
+          onNext={onNext}
+          nextDisabled={!weightValid || rubric.length === 0}
+        />
+      }
+    >
+      <div className="space-y-3">
         {rubric.map((criterion, index) => (
-          <div key={criterion.id} className="rounded-lg border border-subtle bg-surface-overlay p-4">
+          <div
+            key={criterion.id}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
+          >
             <div className="grid gap-3 sm:grid-cols-[1fr_96px]">
               <div>
                 <Label htmlFor={`rubric-name-${criterion.id}`}>{t('practice.wizard.rubric.name')}</Label>
@@ -81,15 +87,9 @@ export const PracticeRubricStep: React.FC<PracticeRubricStepProps> = ({
         ))}
       </div>
 
-      <p className={`mt-4 text-sm ${weightValid ? 'text-muted-foreground' : 'text-warning'}`}>
+      <p className={cn('mt-4 text-sm', weightValid ? 'text-muted-foreground' : 'text-warning')}>
         {t('practice.wizard.rubric.weightTotal').replace('{total}', String(totalWeight))}
       </p>
-
-      <PracticeWizardNav
-        onBack={onBack}
-        onNext={onNext}
-        nextDisabled={!weightValid || rubric.length === 0}
-      />
-    </section>
+    </PracticeWizardStepCard>
   );
 };

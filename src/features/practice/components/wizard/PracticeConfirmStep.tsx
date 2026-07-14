@@ -1,9 +1,11 @@
 import React from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
 import type { PracticeDomain, PracticeLevel, PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
+import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
 interface PracticeConfirmStepProps {
   domain?: PracticeDomain;
@@ -29,51 +31,41 @@ export const PracticeConfirmStep: React.FC<PracticeConfirmStepProps> = ({
   const { language, t } = useLanguage();
   const domainLabel = domain ? (language === 'vi' ? domain.nameVi : domain.name) : '—';
 
+  const rows = [
+    { label: t('practice.wizard.confirm.domain'), value: domainLabel },
+    { label: t('practice.wizard.confirm.level'), value: level ? t(`practice.wizard.level.${level}`) : '—' },
+    { label: t('practice.wizard.confirm.cv'), value: cvFile?.fileName ?? '—' },
+    { label: t('practice.wizard.confirm.questions'), value: String(questionCount) },
+    { label: t('practice.wizard.confirm.rubric'), value: rubric.map((item) => item.name).join(', ') || '—' },
+    { label: t('practice.wizard.confirm.tokens'), value: PRACTICE_RESERVE_ESTIMATE.toLocaleString() },
+  ];
+
   return (
-    <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-      <h2 className="heading-secondary text-lg">{t('practice.wizard.confirm.title')}</h2>
-      <p className="body-text mt-1 text-sm">{t('practice.wizard.confirm.description')}</p>
-
-      <dl className="mt-5 space-y-3 text-sm">
-        <div className="flex justify-between gap-4 border-b border-subtle pb-3">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.domain')}</dt>
-          <dd className="text-right font-medium text-foreground">{domainLabel}</dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle pb-3">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.level')}</dt>
-          <dd className="text-right font-medium text-foreground">
-            {level ? t(`practice.wizard.level.${level}`) : '—'}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle pb-3">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.cv')}</dt>
-          <dd className="text-right font-medium text-foreground">{cvFile?.fileName ?? '—'}</dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle pb-3">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.questions')}</dt>
-          <dd className="text-right font-medium text-foreground">{questionCount}</dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle pb-3">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.rubric')}</dt>
-          <dd className="text-right font-medium text-foreground">
-            {rubric.map((item) => item.name).join(', ')}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{t('practice.wizard.confirm.tokens')}</dt>
-          <dd className="text-right font-medium text-foreground">
-            {PRACTICE_RESERVE_ESTIMATE.toLocaleString()}
-          </dd>
-        </div>
+    <PracticeWizardStepCard
+      icon={<CheckCircle2 className="size-4" aria-hidden />}
+      title={t('practice.wizard.confirm.title')}
+      description={t('practice.wizard.confirm.description')}
+      footer={
+        <PracticeWizardNav
+          onBack={onBack}
+          onNext={onConfirm}
+          nextLabel={t('practice.wizard.confirm.start')}
+          nextDisabled={isSubmitting}
+          isLoading={isSubmitting}
+        />
+      }
+    >
+      <dl className="space-y-3">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm"
+          >
+            <dt className="text-muted-foreground">{row.label}</dt>
+            <dd className="max-w-[60%] text-right font-medium text-foreground">{row.value}</dd>
+          </div>
+        ))}
       </dl>
-
-      <PracticeWizardNav
-        onBack={onBack}
-        onNext={onConfirm}
-        nextLabel={t('practice.wizard.confirm.start')}
-        nextDisabled={isSubmitting}
-        isLoading={isSubmitting}
-      />
-    </section>
+    </PracticeWizardStepCard>
   );
 };

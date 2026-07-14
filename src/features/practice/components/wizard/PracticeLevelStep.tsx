@@ -1,7 +1,18 @@
 import React from 'react';
+import { Award, Briefcase, GraduationCap, Sparkles, Target } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeLevel } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
+import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
+import { PracticeWizardStepCard } from './PracticeWizardStepCard';
+
+const LEVEL_ICONS: Record<PracticeLevel, React.ReactNode> = {
+  intern: <GraduationCap className="size-4" aria-hidden />,
+  fresher: <Sparkles className="size-4" aria-hidden />,
+  junior: <Briefcase className="size-4" aria-hidden />,
+  middle: <Target className="size-4" aria-hidden />,
+  senior: <Award className="size-4" aria-hidden />,
+};
 
 interface PracticeLevelStepProps {
   levels: PracticeLevel[];
@@ -21,37 +32,24 @@ export const PracticeLevelStep: React.FC<PracticeLevelStepProps> = ({
   const { t } = useLanguage();
 
   return (
-    <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-      <h2 className="heading-secondary text-lg">{t('practice.wizard.level.title')}</h2>
-      <p className="body-text mt-1 text-sm">{t('practice.wizard.level.description')}</p>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {levels.map((level) => {
-          const isSelected = level === selectedLevel;
-          return (
-            <button
-              key={level}
-              type="button"
-              onClick={() => onSelect(level)}
-              className={[
-                'rounded-xl border px-4 py-3 text-left font-medium transition',
-                isSelected
-                  ? 'border-default bg-surface-elevated text-foreground'
-                  : 'border-subtle bg-surface-overlay text-foreground hover:border-default',
-              ].join(' ')}
-              aria-pressed={isSelected}
-            >
-              {t(`practice.wizard.level.${level}`)}
-            </button>
-          );
-        })}
+    <PracticeWizardStepCard
+      icon={<Award className="size-4" aria-hidden />}
+      title={t('practice.wizard.level.title')}
+      description={t('practice.wizard.level.description')}
+      footer={<PracticeWizardNav onBack={onBack} onNext={onNext} nextDisabled={!selectedLevel} />}
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        {levels.map((level) => (
+          <PracticeWizardOptionCard
+            key={level}
+            title={t(`practice.wizard.level.${level}`)}
+            description={t(`practice.wizard.level.${level}.desc`)}
+            icon={LEVEL_ICONS[level]}
+            selected={level === selectedLevel}
+            onClick={() => onSelect(level)}
+          />
+        ))}
       </div>
-
-      <PracticeWizardNav
-        onBack={onBack}
-        onNext={onNext}
-        nextDisabled={!selectedLevel}
-      />
-    </section>
+    </PracticeWizardStepCard>
   );
 };

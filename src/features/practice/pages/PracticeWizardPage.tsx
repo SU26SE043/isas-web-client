@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
@@ -20,8 +20,18 @@ const STEP_TITLES = [
   'practice.wizard.confirm.title',
 ] as const;
 
+const STEP_DESCRIPTIONS = [
+  'practice.wizard.domain.heroDescription',
+  'practice.wizard.subtitle',
+  'practice.wizard.subtitle',
+  'practice.wizard.subtitle',
+  'practice.wizard.subtitle',
+  'practice.wizard.subtitle',
+] as const;
+
 export function PracticeWizardPage() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const flow = usePracticeWizardFlow();
 
   if (flow.submitError === 'insufficient') {
@@ -44,7 +54,7 @@ export function PracticeWizardPage() {
     <PracticeWizardShell
       currentStep={flow.step}
       title={t(STEP_TITLES[flow.step])}
-      description={t('practice.wizard.subtitle')}
+      description={t(STEP_DESCRIPTIONS[flow.step])}
     >
       {flow.submitError === 'generic' ? (
         <p className="mb-4 text-sm text-error" role="alert">
@@ -59,6 +69,7 @@ export function PracticeWizardPage() {
           isLoading={flow.loadingDomains}
           onSelect={flow.setDomainId}
           onNext={() => flow.goToStep(1)}
+          onBack={() => navigate('/candidate/dashboard')}
         />
       ) : null}
 
