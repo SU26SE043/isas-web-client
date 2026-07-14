@@ -36,7 +36,7 @@ export function SelectionOption({
         'group flex items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
         selected
           ? 'frame-satin bg-white/[0.08]'
-          : 'frame-satin-interactive bg-white/[0.03]',
+          : 'frame-satin-interactive bg-black/20',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}

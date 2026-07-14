@@ -29,8 +29,7 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
     <CvFlowSectionCard title={t('cv.step.upload')} description={t('cv.stepDesc.upload')}>
       <label
         className={cn(
-          'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-satin bg-black/20 px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
-          'hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03]',
+          'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl glass-well px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
           file ? 'border-[var(--satin-border-hover)] bg-white/[0.03] shadow-[var(--satin-inset)]' : null,
         )}
       >

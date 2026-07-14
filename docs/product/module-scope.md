@@ -81,7 +81,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 
 | Route | Screen |
 | --- | --- |
-| `/login`, `/register` | Login, register — **UI frozen** (`AuthCard` + forms; see `auth-profile.md` / decision 0009) |
+| `/login`, `/register` | Login, register — **shared system templates** + UI frozen (`AuthCard` + forms; decision 0009 / `auth-profile.md`) |
 | `/verify-email` | Email verification |
 | `/forgot-password`, `/forgot-password/verify`, `/reset-password` | Password recovery |
 | `/mfa` | Two-factor |

@@ -34,9 +34,9 @@
   --surface-elevated: #2a2a30;
   --surface-highlight: #34343c;
 
-  /* Glass overlays */
-  --glass-bg: rgb(28 28 32 / 0.78);
-  --glass-bg-strong: rgb(36 36 42 / 0.88);
+  /* Glass overlays — soft translucent charcoal (screenshot glass cards) */
+  --glass-bg: rgb(36 36 40 / 0.55);
+  --glass-bg-strong: rgb(40 40 46 / 0.72);
   --glass-border: color-mix(in srgb, var(--isas-silver-200) 22%, transparent);
   --glass-highlight: rgb(255 255 255 / 0.05);
   --blur-sm: 8px;

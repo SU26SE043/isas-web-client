@@ -76,7 +76,7 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
                 onSignUpClick();
               }}
             >
-              {t('nav.getStarted')}
+              {t('nav.signUp')}
             </button>
           </li>
         )}

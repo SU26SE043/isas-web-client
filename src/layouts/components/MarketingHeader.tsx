@@ -63,7 +63,7 @@ export const MarketingHeader: React.FC = () => {
                     onClick={() => openAuthModal('signup')}
                     className="btn-primary hidden sm:inline-flex"
                   >
-                    {t('nav.getStarted')}
+                    {t('nav.signUp')}
                   </button>
                 </>
               )}

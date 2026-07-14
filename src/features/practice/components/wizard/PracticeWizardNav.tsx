@@ -38,7 +38,12 @@ export const PracticeWizardNav: React.FC<PracticeWizardNavProps> = ({
       </button>
       <button
         type="button"
-        className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5"
+        className={cn(
+          'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-[background-color,border-color,opacity] duration-200 ease-out',
+          nextDisabled || isLoading
+            ? 'frame-satin cursor-not-allowed bg-white/[0.04] text-muted-foreground opacity-70'
+            : 'btn-primary',
+        )}
         disabled={nextDisabled || isLoading}
         onClick={onNext}
       >

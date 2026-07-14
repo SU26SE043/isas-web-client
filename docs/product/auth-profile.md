@@ -34,11 +34,13 @@ Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
 | `/profile` | SCR-CAN-013 | Partial |
 | Session timeout modal | SHR-100 | Implemented — `SessionTimeoutModal` |
 
-## UI freeze (login / sign-up) — default, do not redesign
+## UI freeze (login / sign-up) — shared system templates
 
 **Status:** Locked as of 2026-07-14. Decision: [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](../decisions/0009-auth-login-signup-ui-freeze.md).
 
-The current login and sign-up UI is the **product default**. Do not change layout, chrome, or visual language unless product explicitly supersedes decision 0009.
+Login and Sign Up are **system-wide shared auth templates**. Any feature, module, or business flow that needs sign-in or sign-up **must reuse these templates** — do not design or ship a module-specific login/register UI.
+
+The current login and sign-up UI is also the **frozen product default**. Do not change layout, chrome, or visual language unless product explicitly supersedes decision 0009.
 
 | Surface | Baseline to keep |
 | --- | --- |
@@ -46,9 +48,11 @@ The current login and sign-up UI is the **product default**. Do not change layou
 | `/register` | Same `AuthCard` shell + `RegisterForm` + footer link to login |
 | Marketing modal | Split-panel `AuthModal`: form pane + sliding `AuthOverlay` welcome/CTA; `SignInForm` / `SignUpForm` / `ForgotPasswordForm` |
 
-**Not allowed without reopening 0009:** tabbed single-panel redesigns, different page shells for login/register, merging pages into the modal layout (or the reverse), or other “refresh” redesigns.
+**How other modules integrate:** redirect unauthenticated users to `/login` (with return `from`) for route guards; marketing header / mobile nav / guest CTAs open the shared split-panel `AuthModal`. Wire API / guards only — never fork forms under `src/features/<module>/`.
 
-**Allowed:** i18n copy, validation/error states, MFA / lockout / verify-email gates, API wiring, a11y and security bugfixes that keep the frozen composition.
+**Not allowed without reopening 0009:** tabbed single-panel redesigns, different page shells for login/register, merging pages into the modal layout (or the reverse), per-module auth screens, or other “refresh” redesigns.
+
+**Allowed:** i18n copy, validation/error states, MFA / lockout / verify-email gates, API wiring, a11y and security bugfixes that keep the frozen composition, and new call sites that still land on these templates.
 
 ## Behavior contract
 

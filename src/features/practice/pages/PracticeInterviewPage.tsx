@@ -14,6 +14,7 @@ import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
 import { PauseOverlay } from '../components/room/PauseOverlay';
 import { ViolationPauseOverlay } from '../components/room/ViolationPauseOverlay';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewSessionStore } from '../stores/interviewSessionStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { useInterviewSession } from '../hooks/useInterviewSession';
 import { useInterviewMedia } from '../hooks/useInterviewMedia';
@@ -33,6 +34,7 @@ export const PracticeInterviewPage: React.FC = () => {
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
   const session = useInterviewSession(sessionId);
+  const setAiState = useInterviewSessionStore((state) => state.setAiState);
   const media = useInterviewMedia(session.micEnabled);
   const learning = useLearningLiveFeedback(sessionId, session.isLearning);
 
@@ -90,8 +92,6 @@ export const PracticeInterviewPage: React.FC = () => {
   }
 
   const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
-  const questionText =
-    session.currentQuestion?.content ?? t('practice.room.generatingQuestion');
 
   return (
     <div className="flex min-h-screen flex-col surface-base pb-28 font-sans">
@@ -139,10 +139,11 @@ export const PracticeInterviewPage: React.FC = () => {
         </div>
 
         <InterviewQuestionPanel
-          questionText={questionText}
           currentIndex={session.currentIndex}
           totalQuestions={session.totalQuestions}
           remainingSeconds={session.remainingSeconds}
+          onSpeakAgain={() => setAiState('speaking')}
+          speakAgainDisabled={session.isManualPaused || session.isViolationPaused}
         />
       </main>
 

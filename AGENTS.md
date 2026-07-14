@@ -75,7 +75,7 @@ Giao diện **luôn dark mode**, dùng **bright black** surfaces + **White / Gra
 
 Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base` → `surface-elevated`. Primitives: `src/components/ui`.
 
-**UI freeze — login / sign-up:** `/login`, `/register`, and marketing `AuthModal` keep the current baseline (`AuthCard` + forms; split-panel modal). Do not redesign unless decision [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](docs/decisions/0009-auth-login-signup-ui-freeze.md) is superseded. See `docs/product/auth-profile.md`.
+**UI freeze — login / sign-up (shared templates):** `/login`, `/register`, and marketing `AuthModal` are the **only** auth entry UIs for the whole product (`AuthCard` + forms; split-panel modal). Every module that needs sign-in/sign-up must reuse them (redirect or open modal) — never ship a feature-local login/register screen. Do not redesign unless decision [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](docs/decisions/0009-auth-login-signup-ui-freeze.md) is superseded. See `docs/product/auth-profile.md`.
 
 ### Code conventions
 

@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { FileText, Upload } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { cn } from '@/lib/utils';
 import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -69,7 +70,12 @@ export const PracticeCvStep: React.FC<PracticeCvStepProps> = ({
         />
       }
     >
-      <label className="flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-8 text-center transition-[border-color,background-color] duration-200 ease-out hover:border-white/25 hover:bg-white/[0.05]">
+      <label
+        className={cn(
+          'glass-well group relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl px-6 py-10 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
+          isUploading ? 'pointer-events-none opacity-70' : null,
+        )}
+      >
         <input
           ref={inputRef}
           type="file"
@@ -78,13 +84,18 @@ export const PracticeCvStep: React.FC<PracticeCvStepProps> = ({
           className="sr-only"
           disabled={isUploading}
         />
-        <span className="flex size-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-foreground">
-          <Upload className="size-4" aria-hidden />
+        <span className="frame-satin-soft mb-4 flex size-12 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
+          <Upload className="size-5" aria-hidden />
         </span>
-        <p className="mt-3 text-sm font-medium text-foreground">
+        <p className="text-sm font-medium text-foreground">
           {isUploading ? t('practice.wizard.loading') : t('practice.wizard.cv.upload')}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">{t('practice.wizard.cv.uploadHint')}</p>
+        <p className="mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">
+          {t('practice.wizard.cv.uploadHint')}
+        </p>
+        <span className="btn-secondary mt-5 inline-flex rounded-xl px-4 py-2 text-sm">
+          {t('practice.wizard.cv.chooseFile')}
+        </span>
       </label>
 
       {errorMessage ? (

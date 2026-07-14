@@ -386,6 +386,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.wizard.cv.description': 'Tải CV hoặc chọn file đã upload để AI cá nhân hóa câu hỏi.',
     'practice.wizard.cv.footerHint': 'CV giúp câu hỏi bám sát kinh nghiệm của bạn.',
     'practice.wizard.cv.upload': 'Tải CV mới',
+    'practice.wizard.cv.chooseFile': 'Chọn từ máy tính',
     'practice.wizard.cv.uploadHint': 'PDF, DOC hoặc DOCX — tối đa 10 MB.',
     'practice.wizard.cv.empty': 'Chưa có CV. Tải file để tiếp tục.',
     'practice.wizard.cv.uploadError': 'Không thể tải CV. Vui lòng thử lại.',
@@ -580,6 +581,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.room.hintLabel': 'Gợi ý',
     'practice.room.questionHint':
       'Hãy tập trung vào các dự án, quy trình bạn đã tham gia và vai trò của bạn.',
+    'practice.room.speakAgain': 'Nói lại',
     'practice.room.answerTime': 'Thời gian trả lời',
     'practice.room.progressLabel': 'Tiến độ câu hỏi',
     'practice.room.screenShare': 'Chia sẻ màn hình',
@@ -980,6 +982,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.wizard.cv.description': 'Upload a CV or pick an existing file so AI can personalize questions.',
     'practice.wizard.cv.footerHint': 'Your CV helps tailor questions to your experience.',
     'practice.wizard.cv.upload': 'Upload new CV',
+    'practice.wizard.cv.chooseFile': 'Choose from computer',
     'practice.wizard.cv.uploadHint': 'PDF, DOC, or DOCX — up to 10 MB.',
     'practice.wizard.cv.empty': 'No CV yet. Upload a file to continue.',
     'practice.wizard.cv.uploadError': 'Could not upload CV. Please try again.',
@@ -1174,6 +1177,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.room.hintLabel': 'Hint',
     'practice.room.questionHint':
       'Focus on projects and processes you took part in, and your role in them.',
+    'practice.room.speakAgain': 'Speak again',
     'practice.room.answerTime': 'Answer time',
     'practice.room.progressLabel': 'Question progress',
     'practice.room.screenShare': 'Share screen',

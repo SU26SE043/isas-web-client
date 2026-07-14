@@ -1,15 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  CircleHelp,
-  Mic,
-  MicOff,
-  MonitorUp,
-  Play,
-  Send,
-  Settings,
-  Video,
-} from 'lucide-react';
+import { Mic, MicOff, Send, Video } from 'lucide-react';
 import { useLanguage } from '../../../shared/languages';
 import { cn } from '@/lib/utils';
 import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
@@ -83,7 +74,6 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   micEnabled,
   chunksUploaded,
   onSubmit,
-  onTogglePause,
   onToggleMic,
   learningMode = false,
   feedbackVisible = false,
@@ -170,19 +160,6 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           <ControlIconButton label={t('practice.flow.controls.camera')} pressed disabled>
             <Video className="size-5" aria-hidden />
           </ControlIconButton>
-
-          <ControlIconButton label={t('practice.room.screenShare')} disabled>
-            <MonitorUp className="size-5" aria-hidden />
-          </ControlIconButton>
-
-          <ControlIconButton
-            label={isPaused ? t('practice.room.resume') : t('practice.room.settings')}
-            pressed={!isPaused}
-            disabled={isLocked}
-            onClick={onTogglePause}
-          >
-            {isPaused ? <Play className="size-5" aria-hidden /> : <Settings className="size-5" aria-hidden />}
-          </ControlIconButton>
         </div>
 
         <div className="flex min-w-[7rem] flex-col items-center">
@@ -223,17 +200,6 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
               </kbd>
             </button>
           ) : null}
-
-          <a
-            href="/candidate/help"
-            className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
-            aria-label={t('practice.room.help')}
-          >
-            <span className="flex size-11 items-center justify-center rounded-full border border-satin bg-surface-overlay/80">
-              <CircleHelp className="size-5" aria-hidden />
-            </span>
-            <span className="hidden text-[10px] font-medium sm:block">{t('practice.room.help')}</span>
-          </a>
         </div>
       </div>
     </div>

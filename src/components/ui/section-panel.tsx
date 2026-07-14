@@ -31,7 +31,7 @@ export function SectionPanel({
     return (
       <div
         className={cn(
-          'frame-satin flex min-h-[280px] items-center justify-center rounded-2xl bg-white/[0.03] backdrop-blur-xl',
+          'frame-satin flex min-h-[280px] items-center justify-center rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
           className,
         )}
       >
@@ -42,11 +42,11 @@ export function SectionPanel({
 
   return (
     <section
-      className={cn(
-        'frame-satin overflow-hidden rounded-2xl bg-[rgb(28_28_32/0.62)] backdrop-blur-xl',
-        className,
-      )}
-    >
+        className={cn(
+          'frame-satin overflow-hidden rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
+          className,
+        )}
+      >
       <div className="border-b border-satin px-5 py-5 sm:px-7 sm:py-6">
         <div className={icon ? 'flex items-start gap-3' : undefined}>
           {icon ? (

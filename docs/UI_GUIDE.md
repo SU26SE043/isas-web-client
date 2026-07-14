@@ -157,12 +157,14 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 | `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
 | `src/components/ui/selection-option.tsx` | Selectable option tile |
 
-## Frozen UI surfaces (không redesign)
+## Frozen UI surfaces (không redesign) — template auth dùng chung
 
 | Surface | Baseline | Decision |
 |---------|----------|----------|
 | Login `/login`, Sign up `/register` | `AuthCard` + `LoginForm` / `RegisterForm` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
 | Marketing auth modal | Split-panel `AuthModal` + `AuthOverlay` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+
+Đây là **template xác thực dùng chung toàn hệ thống**. Mọi module/luồng cần đăng nhập hoặc đăng ký phải **reuse** các surface này (redirect `/login`·`/register`, hoặc mở `AuthModal`) — **cấm** thiết kế UI login/sign-up riêng trong từng feature.
 
 Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/security — **không** đổi layout/chrome trừ khi product mở lại decision 0009. Chi tiết: `docs/product/auth-profile.md`.
 
@@ -176,7 +178,7 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 6. Form: `react-hook-form` + `zod`
 7. Data: `@tanstack/react-query`
 8. **Giới hạn 250 dòng / file UI** — pages và components; tách file khi vượt ngưỡng
-9. **Không redesign login / sign-up / auth modal** — xem Frozen UI surfaces ở trên
+9. **Không redesign login / sign-up / auth modal** — và **không fork** UI auth theo module; luôn reuse template dùng chung (Frozen UI surfaces / decision 0009)
 10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
 11. **Bright black + satin silver** — nền `#141416` family; viền brushed aluminum low-contrast
 

@@ -30,7 +30,7 @@ count as the Harness decision log.
 | 0006 | Phase 4 benchmark triage | [0006-phase-4-benchmark-triage.md](./0006-phase-4-benchmark-triage.md) |
 | 0007 | Improvement proposal rules | [0007-improvement-proposal-rules.md](./0007-improvement-proposal-rules.md) |
 | 0008 | BRD + Harness foundation | [0008-brd-harness-foundation.md](./0008-brd-harness-foundation.md) |
-| 0009 | Auth login / sign-up UI freeze | [0009-auth-login-signup-ui-freeze.md](./0009-auth-login-signup-ui-freeze.md) |
+| 0009 | Auth login / sign-up shared templates + UI freeze | [0009-auth-login-signup-ui-freeze.md](./0009-auth-login-signup-ui-freeze.md) |
 
 Add a decision when:
 
