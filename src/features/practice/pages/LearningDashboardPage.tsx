@@ -6,6 +6,7 @@ import { LearningDashboardToolbar } from '../components/learning-path/LearningDa
 import { LearningRoadmapCardView } from '../components/learning-path/LearningRoadmapCardView';
 import { learningPathService } from '../services/learningPath.service';
 import type { LearningDashboardQuery, LearningRoadmapCard } from '../types/learningPath.types';
+import { continueLearningPath } from '../utils/learningPathNavigation';
 
 export function LearningDashboardPage() {
   const { t } = useLanguage();
@@ -58,7 +59,7 @@ export function LearningDashboardPage() {
             {continueTarget.name}
           </p>
           <Link
-            to={`/candidate/learning/roadmaps/${continueTarget.id}`}
+            to={continueLearningPath(continueTarget)}
             className="btn-primary mt-4 inline-flex"
           >
             {t('practice.learningPath.continueLearning')}

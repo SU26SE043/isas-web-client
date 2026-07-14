@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { LearningRoadmapCard } from '../../types/learningPath.types';
+import { continueLearningPath } from '../../utils/learningPathNavigation';
 
 interface LearningRoadmapCardViewProps {
   roadmap: LearningRoadmapCard;
@@ -67,7 +68,7 @@ export const LearningRoadmapCardView: React.FC<LearningRoadmapCardViewProps> = (
 
       <div className="mt-5 flex flex-wrap gap-3">
         {!roadmap.readOnly ? (
-          <Link to={`/candidate/learning/roadmaps/${roadmap.id}`} className="btn-primary inline-flex">
+          <Link to={continueLearningPath(roadmap)} className="btn-primary inline-flex">
             {t('practice.learningPath.continue')}
           </Link>
         ) : null}

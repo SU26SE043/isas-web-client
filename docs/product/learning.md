@@ -18,9 +18,20 @@ Learning supports:
 
 ## UI principles
 
-Coursera-inspired **learning UX** (dashboard, continue learning, progress, filters) — **not** a 1:1 clone.
+Coursera / Roadmap.sh–inspired **learning workspace** (dashboard, continue learning, progress, lesson tree) — **not** a 1:1 clone.
 
 Visual system remains project Design System: dark monochrome, surface layers, minimal luxury tech (see `docs/UI_GUIDE.md`).
+
+### Learning Workspace chrome (required)
+
+While on Learning routes (`/candidate/learning/**`), hide the **candidate system sidebar** (Dashboard, Profile, CV, Campaigns, etc.).
+
+| Surface | Chrome |
+| --- | --- |
+| Learning Dashboard + Roadmap Detail | `LearningLayout` only (logo, Learning label, language toggle, Exit Learning) — no system sidebar, no Learning lesson sidebar |
+| Theory / Practice launchers / Report | `LearningLayout` + **Learning Sidebar** (roadmap name, progress, collapsible milestones → lessons, status, Back to Roadmap) |
+
+Continue Learning opens the **current lesson Theory** (reader mode), not the system dashboard.
 
 ### Practice Session UI consistency (required)
 
@@ -39,6 +50,8 @@ Learning only changes **business logic**. Allowed differences vs interview pract
 2. **End CTA** — **Complete Practice Session** (not Submit Interview / Finish).
 3. **Purpose** — post-theory drill with instant feedback, not a full interview simulation.
 
+After practice, return to Learning Report (still in Learning workspace + Learning Sidebar) with **Next Lesson** when available.
+
 ## Learning Dashboard
 
 Default entry when opening **Học tập**.
@@ -46,6 +59,8 @@ Default entry when opening **Học tập**.
 Shows **Roadmap cards** with: name, domain, target level, overall progress %, current milestone, current lesson, estimated remaining time, last updated, **Continue Learning**, **View Details**.
 
 Toolbar: search, filter by domain, filter by status, sort by time or progress.
+
+**Continue Learning** → current lesson Theory (`.../lessons/:lessonId/theory`).
 
 ## Roadmap Detail
 
@@ -59,10 +74,14 @@ Only the **current** milestone is open; later milestones stay locked until the c
 
 Each milestone has many lessons. Each lesson has exactly two parts, in order:
 
-1. **Theory** — in-app HTML article reader (`title` + `content` from backend); footer **Mark as Completed** unlocks Practice.
+1. **Theory** — in-app HTML article reader (`title` + `content` from backend); footer **Mark as Completed** unlocks Practice. Does **not** auto-navigate: after complete, show **Completed** + **Continue to Practice →** (or **Next Lesson** if practice already done / unavailable).
 2. **Practice** — shared interview flow after Theory (`sessionId` prefix `learning-`).
 
 Cannot skip Theory, Practice, lessons, or milestones.
+
+## Learning flow
+
+Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed → Continue to Practice → Practice (shared interview) → Report → Next Lesson.
 
 ## Practice flow
 
@@ -86,15 +105,15 @@ Cannot skip Theory, Practice, lessons, or milestones.
 
 ## Routes (client)
 
-| Path | Screen |
-| --- | --- |
-| `/candidate/learning` | Learning Dashboard |
-| `/candidate/learning/roadmaps/:roadmapId` | Roadmap Detail |
-| `.../lessons/:lessonId/theory` | Theory |
-| `.../lessons/:lessonId/practice/device-check` | Launcher → shared `/interview/:sessionId/prepare` |
-| `.../lessons/:lessonId/practice` | Redirect → device-check launcher |
-| `.../lessons/:lessonId/report` | Practice Report |
-| `/interview/learning-.../prepare` → `device-check` → `waiting` → room | Shared Practice Session UI |
+| Path | Screen | Layout |
+| --- | --- | --- |
+| `/candidate/learning` | Learning Dashboard | `LearningLayout` (no system sidebar) |
+| `/candidate/learning/roadmaps/:roadmapId` | Roadmap Detail | `LearningLayout` |
+| `.../lessons/:lessonId/theory` | Theory reader | `LearningLayout` + Learning Sidebar |
+| `.../lessons/:lessonId/practice/device-check` | Launcher → shared `/interview/:sessionId/prepare` | Learning Sidebar until redirect |
+| `.../lessons/:lessonId/practice` | Redirect → device-check launcher | Learning Sidebar until redirect |
+| `.../lessons/:lessonId/report` | Practice Report | Learning Sidebar |
+| `/interview/learning-.../prepare` → `device-check` → `waiting` → room | Shared Practice Session UI | `FullscreenLayout` |
 
 ## Related
 

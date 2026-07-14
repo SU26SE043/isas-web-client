@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
 import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
@@ -12,6 +13,7 @@ import { LearningTheoryPage } from '@/features/practice/pages/LearningTheoryPage
 import { LearningPracticeDeviceCheckPage } from '@/features/practice/pages/LearningPracticeDeviceCheckPage';
 import { LearningLessonPracticePage } from '@/features/practice/pages/LearningLessonPracticePage';
 import { LearningPracticeReportPage } from '@/features/practice/pages/LearningPracticeReportPage';
+import { LearningReaderLayout } from '@/features/practice/components/learning-path/LearningReaderLayout';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
 import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage';
 import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
@@ -47,6 +49,29 @@ export const candidateRoutes: RouteObject[] = [
     element: <RequireAuth />,
     children: [
       {
+        path: '/candidate/learning',
+        element: <LearningLayout />,
+        children: [
+          { index: true, element: <LearningHubPage /> },
+          { path: 'roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
+          {
+            path: 'roadmaps/:roadmapId/lessons/:lessonId',
+            element: <LearningReaderLayout />,
+            children: [
+              { path: 'theory', element: <LearningTheoryPage /> },
+              {
+                path: 'practice/device-check',
+                element: <LearningPracticeDeviceCheckPage />,
+              },
+              { path: 'practice', element: <LearningLessonPracticePage /> },
+              { path: 'report', element: <LearningPracticeReportPage /> },
+            ],
+          },
+          { path: ':moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
+          { path: ':moduleId', element: <Navigate to="/candidate/learning" replace /> },
+        ],
+      },
+      {
         path: '/candidate',
         element: <DashboardLayout />,
         children: [
@@ -74,26 +99,6 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },
           { path: 'history', element: <CandidateHistoryLegacyRedirect /> },
           { path: 'roadmap', element: <RoadmapPage /> },
-          { path: 'learning', element: <LearningHubPage /> },
-          {
-            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/theory',
-            element: <LearningTheoryPage />,
-          },
-          {
-            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/practice/device-check',
-            element: <LearningPracticeDeviceCheckPage />,
-          },
-          {
-            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/practice',
-            element: <LearningLessonPracticePage />,
-          },
-          {
-            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/report',
-            element: <LearningPracticeReportPage />,
-          },
-          { path: 'learning/roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
-          { path: 'learning/:moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
-          { path: 'learning/:moduleId', element: <Navigate to="/candidate/learning" replace /> },
           { path: 'progress', element: <ProgressDashboardPage /> },
           { path: 'leaderboard', element: <LeaderboardPage /> },
           { path: 'achievements', element: <AchievementsPage /> },

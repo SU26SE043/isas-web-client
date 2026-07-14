@@ -87,8 +87,10 @@ export interface LearningRoadmapCard {
   targetLevel: string;
   status: LearningPathStatus;
   progressPercent: number;
+  currentMilestoneId: string;
   currentMilestoneTitle: string;
   currentMilestoneTitleVi: string;
+  currentLessonId: string;
   currentLessonTitle: string;
   currentLessonTitleVi: string;
   estimatedRemainingHours: number;

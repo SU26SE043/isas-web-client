@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningPathService } from '../services/learningPath.service';
-import type { LearningPracticeReport } from '../types/learningPath.types';
+import type { LearningPracticeReport, LearningRoadmapDetail } from '../types/learningPath.types';
+import { findNextLesson, theoryPath } from '../utils/learningPathNavigation';
 
 export function LearningPracticeReportPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
@@ -11,6 +12,7 @@ export function LearningPracticeReportPage() {
   const reportId = params.get('reportId');
   const { language, t } = useLanguage();
   const [report, setReport] = useState<LearningPracticeReport | null>(null);
+  const [roadmap, setRoadmap] = useState<LearningRoadmapDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -18,20 +20,23 @@ export function LearningPracticeReportPage() {
     let active = true;
     void (async () => {
       try {
+        const roadmapData = await learningPathService.getRoadmap(roadmapId);
         let resolvedId: string | null = reportId;
         if (!resolvedId) {
-          const roadmap = await learningPathService.getRoadmap(roadmapId);
-          const lesson = roadmap.milestones
+          const lesson = roadmapData.milestones
             .flatMap((item) => item.lessons)
             .find((item) => item.id === lessonId);
           resolvedId =
             lesson?.practiceReportId ??
-            roadmap.reports.find((item) => item.lessonId === lessonId)?.id ??
+            roadmapData.reports.find((item) => item.lessonId === lessonId)?.id ??
             null;
         }
         if (!resolvedId) throw new Error('missing');
         const data = await learningPathService.getReport(roadmapId, resolvedId);
-        if (active) setReport(data);
+        if (active) {
+          setReport(data);
+          setRoadmap(roadmapData);
+        }
       } catch {
         if (active) setError(true);
       } finally {
@@ -55,16 +60,11 @@ export function LearningPracticeReportPage() {
     return <p className="page-container page-section text-sm text-error">{t('practice.learningPath.error')}</p>;
   }
 
-  return (
-    <div className="page-container page-section min-h-screen">
-      <Link
-        to={`/candidate/learning/roadmaps/${roadmapId}`}
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        {t('practice.learningPath.backToRoadmap')}
-      </Link>
+  const nextLesson = roadmap ? findNextLesson(roadmap, lessonId) : null;
 
-      <header className="mt-4 space-y-2">
+  return (
+    <div className="page-container page-section min-h-full py-8">
+      <header className="space-y-2">
         <h1 className="heading-primary text-3xl text-foreground">{t('practice.learningPath.reportTitle')}</h1>
         <p className="text-sm text-muted-foreground">{t('practice.learningPath.reportSubtitle')}</p>
       </header>
@@ -100,6 +100,17 @@ export function LearningPracticeReportPage() {
           items={language === 'vi' ? report.nextActionsVi : report.nextActions}
         />
       </section>
+
+      <div className="mt-8 flex flex-wrap gap-3 border-t border-subtle pt-6">
+        {nextLesson ? (
+          <Link to={theoryPath(roadmapId, nextLesson.id)} className="btn-primary inline-flex">
+            {t('practice.learningPath.nextLesson')}
+          </Link>
+        ) : null}
+        <Link to={`/candidate/learning/roadmaps/${roadmapId}`} className="btn-secondary inline-flex">
+          {t('practice.learningPath.backToRoadmap')}
+        </Link>
+      </div>
     </div>
   );
 }
