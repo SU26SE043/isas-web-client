@@ -35,10 +35,10 @@ test.describe('landing smoke', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
-  test('login route is reachable', async ({ page }) => {
+  test('login route opens homepage auth modal', async ({ page }) => {
     await page.goto('/login');
 
-    await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('main').getByRole('heading', { level: 1, name: /sign in|đăng nhập/i })).toBeVisible();
+    await expect(page).toHaveURL(/auth=login/);
+    await expect(page.getByRole('dialog').getByRole('heading', { level: 1, name: /sign in|đăng nhập/i })).toBeVisible();
   });
 });

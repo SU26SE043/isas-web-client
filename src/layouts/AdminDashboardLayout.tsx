@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
   Bell,
@@ -23,11 +23,11 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BrandLogo } from '@/components/BrandLogo';
-import { useAuthStore } from '@/features/auth/stores/authStore';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 import { DashboardEngagementBar } from './components/DashboardEngagementBar';
+import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
 type NavItem = { to: string; label: string; icon: React.ReactNode; end?: boolean };
 
@@ -41,8 +41,6 @@ function navLinkClassName(isActive: boolean) {
 }
 
 export const AdminDashboardLayout: React.FC = () => {
-  const { logout } = useAuthStore();
-  const navigate = useNavigate();
   const { t } = useLanguage();
 
   const navItems = useMemo<NavItem[]>(
@@ -75,11 +73,6 @@ export const AdminDashboardLayout: React.FC = () => {
     [t],
   );
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
     <div className="min-h-screen surface-base">
       <div className="flex min-h-screen">
@@ -100,10 +93,10 @@ export const AdminDashboardLayout: React.FC = () => {
           </nav>
           <div className="space-y-3 border-t border-subtle p-3">
             <div className="hidden sm:flex sm:justify-start"><LanguageToggle compact /></div>
-            <button type="button" onClick={handleLogout} className={navLinkClassName(false)}>
+            <SidebarLogoutButton className={navLinkClassName(false)} aria-label={t('admin.nav.logout')}>
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">{t('admin.nav.logout')}</span>
-            </button>
+            </SidebarLogoutButton>
           </div>
         </aside>
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">

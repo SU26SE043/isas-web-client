@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
-import { useAuthStore } from '../features/auth/stores/authStore';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 import { DashboardEngagementBar } from './components/DashboardEngagementBar';
+import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 import { buildCandidateDashboardNav } from './candidateDashboardNav';
 
 const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
@@ -17,15 +17,8 @@ const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
   ].join(' ');
 
 export const DashboardLayout: React.FC = () => {
-  const { logout } = useAuthStore();
-  const navigate = useNavigate();
   const { t } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   const navItems = useMemo(() => buildCandidateDashboardNav(t), [t]);
 
@@ -96,9 +89,7 @@ export const DashboardLayout: React.FC = () => {
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
               <LanguageToggle compact />
             </div>
-            <button
-              type="button"
-              onClick={handleLogout}
+            <SidebarLogoutButton
               title={isCollapsed ? t('profile.logout') : undefined}
               aria-label={t('profile.logout')}
               className={navLinkClassName(false, isCollapsed)}
@@ -115,7 +106,7 @@ export const DashboardLayout: React.FC = () => {
               >
                 {t('profile.logout')}
               </span>
-            </button>
+            </SidebarLogoutButton>
           </div>
         </aside>
 

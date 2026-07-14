@@ -10,7 +10,7 @@ normal
 
 ## Product Contract
 
-Candidate opens `/candidate/progress` and sees a Learning Analytics dashboard with all 18 sections (overall, readiness, domain, score history, skills, strengths/weaknesses, trends, timeline, heatmap, goals, roadmaps, achievements preview, AI insights, recommendations, comparative stats, session analytics, export stub). Progress is read-only; practice CTAs navigate to Practice or Learning.
+Candidate opens `/candidate/progress` and sees a **minimal** Progress dashboard with exactly three charts: Overall Roadmap Completion (donut), Skill Completion Breakdown (stacked bar), and Practice Score Improvement (line). Each section has a title and one short caption. No KPI cards, filters, tables, timelines, insights, CTAs, or export on this page.
 
 ## Relevant Product Docs
 
@@ -20,27 +20,28 @@ Candidate opens `/candidate/progress` and sees a Learning Analytics dashboard wi
 
 ## Acceptance Criteria
 
-- [x] All 18 sections render with mock data under domain + time-range filters.
-- [x] Practice Now / Continue Learning / Continue Practice leave Progress (no interview room embedded).
-- [x] Score history / timeline points with `reportId` open `/candidate/practice/history/:id`.
-- [x] Export downloads stub JSON/text for each report kind (no PDF library).
+- [x] Exactly three chart sections render with mock data (donut, stacked bar, line).
+- [x] No filters, KPI cards, timelines, AI insights, recommendations, or export on Progress.
+- [x] Donut center shows overall roadmap completion percent.
+- [x] Stacked bar shows Completed + In Progress per skill.
+- [x] Line chart shows practice session scores on 0–100 Y-axis.
 - [x] Bilingual `practice.progress.*` keys (vi/en); `check:i18n` / `check:ui-size` / typecheck pass.
 
 ## Design Notes
 
-- Commands: `progressService.getDashboard({ domain?, range? })`, `exportReport(kind)`
+- Commands: `progressService.getDashboard()`
 - API: mock until progress API exists
-- UI: section components under `src/features/practice/components/progress/`
-- Charts: recharts; heatmap CSS grid
+- UI: `ProgressDashboardPage` + chart components under `src/features/practice/components/progress/`
+- Charts: recharts, monochrome design system
 
 ## Validation
 
 | Layer | Expected proof |
 | --- | --- |
 | Unit / static | `npm run typecheck`, `check:i18n`, `check:ui-size` |
-| Integration | Manual: filter + CTA + export on `/candidate/progress` |
+| Integration | Manual: three charts visible on `/candidate/progress` |
 | E2E | Optional smoke when Playwright browsers available |
 
 ## Trace
 
-Implements FS-100 / SCR-CAN-043 (mock analytics).
+Implements FS-100 / SCR-CAN-043 (minimal progress dashboard).

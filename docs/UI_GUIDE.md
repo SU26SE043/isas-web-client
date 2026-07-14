@@ -161,7 +161,7 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 
 | Surface | Baseline | Decision |
 |---------|----------|----------|
-| Login `/login`, Sign up `/register` | `AuthCard` + `LoginForm` / `RegisterForm` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+| Login `/login`, Sign up `/register` | Redirect → homepage `AuthModal` (`SignInForm` / `SignUpForm`) | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
 | Marketing auth modal | Split-panel `AuthModal` + `AuthOverlay` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
 
 Đây là **template xác thực dùng chung toàn hệ thống**. Mọi module/luồng cần đăng nhập hoặc đăng ký phải **reuse** các surface này (redirect `/login`·`/register`, hoặc mở `AuthModal`) — **cấm** thiết kế UI login/sign-up riêng trong từng feature.

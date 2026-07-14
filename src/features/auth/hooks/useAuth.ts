@@ -44,16 +44,17 @@ export const useAuth = () => {
     }
   }, [setUser, setLoading, logout]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
+  const handleLogout = useCallback(() => {
+    // Snapshot token, clear local auth, and leave protected UI immediately.
+    const refreshToken = authTokenStorage.getRefreshToken();
+    logout();
+    authTokenStorage.clear();
+    sessionManager.clear();
+    navigate('/', { replace: true });
+
+    void authService.logout(refreshToken).catch((error) => {
       console.error('Logout error:', error);
-    } finally {
-      logout();
-      sessionManager.clear();
-      navigate('/');
-    }
+    });
   }, [logout, navigate]);
 
   useEffect(() => {

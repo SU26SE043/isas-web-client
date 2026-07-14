@@ -44,8 +44,9 @@ export const authService = {
     storeTokensIfPresent(data);
     return data;
   },
-  logout: async () => {
-    const refreshToken = authTokenStorage.getRefreshToken();
+  logout: async (refreshTokenOverride?: string | null) => {
+    const refreshToken =
+      refreshTokenOverride !== undefined ? refreshTokenOverride : authTokenStorage.getRefreshToken();
     try {
       if (refreshToken) {
         await apiClient.post(authEndpoints.logout, { refreshToken });

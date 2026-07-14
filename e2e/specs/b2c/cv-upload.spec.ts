@@ -39,9 +39,11 @@ async function loginAsCandidate(page: import('@playwright/test').Page) {
     window.localStorage.setItem('language', 'en');
   });
   await page.goto('/login');
-  await page.getByLabel(/e-mail/i).fill('candidate@isas.dev');
-  await page.getByLabel(/password/i).fill('Password123!Secure');
-  await page.getByRole('button', { name: /^Sign in$/i }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.waitFor({ state: 'visible' });
+  await dialog.getByLabel(/e-mail/i).fill('candidate@isas.dev');
+  await dialog.getByLabel(/password/i).fill('Password123!Secure');
+  await dialog.getByRole('button', { name: /^Sign in$/i }).click();
   await page.waitForURL(/\/candidate\/dashboard/);
 }
 

@@ -43,6 +43,13 @@ async function mockLoginApi(
   });
 }
 
+async function openAuthDialog(page: import('@playwright/test').Page, path: '/login' | '/register') {
+  await page.goto(path);
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
 test.describe('auth login smoke', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -52,12 +59,12 @@ test.describe('auth login smoke', () => {
 
   test('successful login redirects candidate to dashboard', async ({ page }) => {
     await mockLoginApi(page);
-    await page.goto('/login');
+    const dialog = await openAuthDialog(page, '/login');
 
-    await expect(page.getByRole('main').getByRole('heading', { level: 1, name: /^Sign in$/i })).toBeVisible();
-    await page.getByLabel(/e-mail/i).fill('candidate@isas.dev');
-    await page.getByLabel(/password/i).fill('Password123!Secure');
-    await page.getByRole('button', { name: /^Sign in$/i }).click();
+    await expect(dialog.getByRole('heading', { level: 1, name: /^Sign in$/i })).toBeVisible();
+    await dialog.getByLabel(/e-mail/i).fill('candidate@isas.dev');
+    await dialog.getByLabel(/password/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign in$/i }).click();
 
     await page.waitForURL(/\/candidate\/dashboard/);
     await expect(page).toHaveURL(/\/candidate\/dashboard/);
@@ -65,14 +72,14 @@ test.describe('auth login smoke', () => {
 
   test('invalid credentials show error message', async ({ page }) => {
     await mockLoginApi(page, { status: 401, body: { message: 'Invalid email or password' } });
-    await page.goto('/login');
+    const dialog = await openAuthDialog(page, '/login');
 
-    await page.getByLabel(/e-mail/i).fill('wrong@isas.dev');
-    await page.getByLabel(/password/i).fill('wrong-password');
-    await page.getByRole('button', { name: /^Sign in$/i }).click();
+    await dialog.getByLabel(/e-mail/i).fill('wrong@isas.dev');
+    await dialog.getByLabel(/password/i).fill('wrong-password');
+    await dialog.getByRole('button', { name: /^Sign in$/i }).click();
 
-    await expect(page.getByText(/email or password is incorrect/i)).toBeVisible();
-    await expect(page).toHaveURL(/\/login/);
+    await expect(dialog.getByText(/email or password is incorrect/i)).toBeVisible();
+    await expect(page).toHaveURL(/auth=login/);
   });
 
   test('account lockout redirects to locked page', async ({ page }) => {
@@ -85,10 +92,10 @@ test.describe('auth login smoke', () => {
       });
     });
 
-    await page.goto('/login');
-    await page.getByLabel(/e-mail/i).fill('locked@isas.dev');
-    await page.getByLabel(/password/i).fill('Password123!Secure');
-    await page.getByRole('button', { name: /^Sign in$/i }).click();
+    const dialog = await openAuthDialog(page, '/login');
+    await dialog.getByLabel(/e-mail/i).fill('locked@isas.dev');
+    await dialog.getByLabel(/password/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign in$/i }).click();
 
     await page.waitForURL(/\/account-locked/);
     await expect(page.getByRole('heading', { level: 1, name: /account locked/i })).toBeVisible();
@@ -104,11 +111,12 @@ test.describe('auth login smoke', () => {
       });
     });
 
-    await page.goto('/register');
-    await page.getByLabel(/full name/i).fill('New User');
-    await page.getByLabel(/e-mail/i).fill('new@isas.dev');
-    await page.getByLabel(/^password$/i).fill('Password123!Secure');
-    await page.getByRole('button', { name: /^Sign up$/i }).click();
+    const dialog = await openAuthDialog(page, '/register');
+    await expect(dialog.getByRole('heading', { level: 1, name: /Create account/i })).toBeVisible();
+    await dialog.getByLabel(/full name/i).fill('New User');
+    await dialog.getByLabel(/e-mail/i).fill('new@isas.dev');
+    await dialog.getByLabel(/^password$/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign up$/i }).click();
 
     await page.waitForURL(/\/verify-email\?email=new%40isas\.dev/);
     await expect(page.getByRole('heading', { level: 1, name: /verify email/i })).toBeVisible();

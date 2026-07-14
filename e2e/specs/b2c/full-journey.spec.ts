@@ -20,10 +20,12 @@ test.describe('B2C full journey', () => {
     });
 
     await page.goto('/register');
-    await page.getByLabel(/full name/i).fill('Journey Candidate');
-    await page.getByLabel(/e-mail/i).fill('journey@isas.dev');
-    await page.getByLabel(/^password$/i).fill('Password123!Secure');
-    await page.getByRole('button', { name: /^Sign up$/i }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/full name/i).fill('Journey Candidate');
+    await dialog.getByLabel(/e-mail/i).fill('journey@isas.dev');
+    await dialog.getByLabel(/^password$/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign up$/i }).click();
     await expect(page).toHaveURL(/\/verify-email/);
     await expect(page.getByRole('heading', { name: /^Verify email$/i })).toBeVisible();
 

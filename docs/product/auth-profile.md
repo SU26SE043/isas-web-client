@@ -19,8 +19,8 @@ Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
 
 | Route | Screen ID | Status |
 | --- | --- | --- |
-| `/login` | SCR-AUT-002 | Implemented — `LoginPage`, `AuthCard` + `LoginForm` (**UI frozen**) |
-| `/register` | SCR-AUT-003 | Implemented — `RegisterPage`, `AuthCard` + `RegisterForm` (**UI frozen**) |
+| `/login` | SCR-AUT-002 | Implemented — redirects to `/?auth=login` + shared `AuthModal` / `SignInForm` (**UI frozen**) |
+| `/register` | SCR-AUT-003 | Implemented — redirects to `/?auth=signup` + shared `AuthModal` / `SignUpForm` (**UI frozen**) |
 | `/verify-email` | SCR-AUT-004 | Implemented — token query + resend |
 | `/forgot-password` | SCR-AUT-005 | Implemented — OTP flow |
 | `/forgot-password/verify` | SCR-AUT-005 | Implemented — OTP step |
@@ -44,8 +44,8 @@ The current login and sign-up UI is also the **frozen product default**. Do not 
 
 | Surface | Baseline to keep |
 | --- | --- |
-| `/login` | `AuthLayout` → centered `AuthCard` (BrandLogo, title, subtitle, footer link to register) + `LoginForm` |
-| `/register` | Same `AuthCard` shell + `RegisterForm` + footer link to login |
+| `/login` | Homepage `?auth=login` → split-panel `AuthModal` (`SignInForm` + `AuthOverlay`) |
+| `/register` | Homepage `?auth=signup` → same `AuthModal` (`SignUpForm` + `AuthOverlay`) |
 | Marketing modal | Split-panel `AuthModal`: form pane + sliding `AuthOverlay` welcome/CTA; `SignInForm` / `SignUpForm` / `ForgotPasswordForm` |
 
 **How other modules integrate:** redirect unauthenticated users to `/login` (with return `from`) for route guards; marketing header / mobile nav / guest CTAs open the shared split-panel `AuthModal`. Wire API / guards only — never fork forms under `src/features/<module>/`.

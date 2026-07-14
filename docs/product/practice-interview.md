@@ -36,7 +36,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 14. Roadmap creation wizard at `/candidate/roadmap` then redirect to Learning. Detail create flow: [`learning-roadmap.md`](./learning-roadmap.md).
 14. Certificates at `/candidate/certificates/:id`.
 15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
-16. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
+16. Minimal Progress dashboard (3 charts) at `/candidate/progress`; leaderboard and achievements linked from elsewhere.
 17. Guided learning practice at `/candidate/learning/:moduleId/practice`.
 18. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
 

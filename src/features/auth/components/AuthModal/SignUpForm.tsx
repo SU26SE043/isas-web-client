@@ -80,11 +80,10 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         <SocialLoginButton />
       </div>
 
-      <span className="text-xs text-muted-foreground mb-6 font-medium">{t('auth.signUpSubtitle')}</span>
-
       <input
         className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
         placeholder={t('auth.fullNamePlaceholder')}
+        aria-label={t('auth.fullNamePlaceholder')}
         value={fullName}
         onChange={(event) => setFullName(event.target.value)}
         autoComplete="name"
@@ -92,6 +91,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       <input
         className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
         placeholder={t('auth.emailPlaceholder')}
+        aria-label={t('auth.emailPlaceholder')}
         type="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
@@ -101,6 +101,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
         type="password"
         placeholder={t('auth.password')}
+        aria-label={t('auth.password')}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="new-password"

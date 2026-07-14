@@ -67,9 +67,12 @@ export async function loginAs(page: Page, role: E2ERole) {
     window.localStorage.setItem('language', 'en');
   });
   await page.goto('/login');
-  await page.getByLabel(/e-mail/i).fill(roleProfiles[role].email);
-  await page.getByLabel(/password/i).fill('Password123!');
-  await page.getByRole('button', { name: /^Sign in$/i }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.waitFor({ state: 'visible' });
+  await dialog.getByRole('heading', { level: 1, name: /^Sign in$/i }).waitFor({ state: 'visible' });
+  await dialog.getByLabel(/e-mail/i).fill(roleProfiles[role].email);
+  await dialog.getByLabel(/password/i).fill('Password123!');
+  await dialog.getByRole('button', { name: /^Sign in$/i }).click();
   const destination =
     role === 'candidate'
       ? /\/candidate\/dashboard/

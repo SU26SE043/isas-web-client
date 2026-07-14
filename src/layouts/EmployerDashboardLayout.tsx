@@ -1,14 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
-import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
 import { LanguageToggle } from './LanguageToggle';
 import { DashboardEngagementBar } from './components/DashboardEngagementBar';
+import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
   return cn(
@@ -23,8 +24,7 @@ function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
 }
 
 export const EmployerDashboardLayout: React.FC = () => {
-  const { logout, user } = useAuthStore();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const role = user?.role ?? UserRole.HR;
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -33,11 +33,6 @@ export const EmployerDashboardLayout: React.FC = () => {
     () => filterEmployerNavItems(buildEmployerNavItems(t), role),
     [role, t],
   );
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   return (
     <div className="min-h-screen surface-base">
@@ -102,7 +97,11 @@ export const EmployerDashboardLayout: React.FC = () => {
               <LanguageToggle compact />
             </div>
 
-            <button type="button" onClick={handleLogout} className={navLinkClassName(false, isCollapsed)}>
+            <SidebarLogoutButton
+              className={navLinkClassName(false, isCollapsed)}
+              aria-label={t('employer.nav.logout')}
+              title={isCollapsed ? t('employer.nav.logout') : undefined}
+            >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span
                 className={cn(
@@ -112,7 +111,7 @@ export const EmployerDashboardLayout: React.FC = () => {
               >
                 {t('employer.nav.logout')}
               </span>
-            </button>
+            </SidebarLogoutButton>
           </div>
         </aside>
 

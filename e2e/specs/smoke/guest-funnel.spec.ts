@@ -18,13 +18,17 @@ test.describe('Guest acquisition funnel', () => {
     await expect(page.getByRole('heading', { name: /Hire smarter with AI/i })).toBeVisible();
 
     await page.goto('/register');
-    await expect(page.getByRole('heading', { name: /Create account/i })).toBeVisible();
-    await expect(page.getByLabel(/e-mail/i)).toBeVisible();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: /Create account/i })).toBeVisible();
+    await expect(dialog.getByLabel(/e-mail/i)).toBeVisible();
   });
 
   test('guest can reach login from marketing home', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^Sign up$/i })).toBeVisible();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: /sign in/i })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: /^Sign up$/i })).toBeVisible();
   });
 });

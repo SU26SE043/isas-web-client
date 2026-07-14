@@ -82,9 +82,10 @@ export const AvatarDropdown: React.FC = () => {
             <div className="border-t border-subtle my-1"></div>
             
             <button
+              type="button"
               onClick={() => {
-                logout();
                 setIsOpen(false);
+                logout();
               }}
               className="flex items-center w-full px-4 py-2 text-sm text-error hover:bg-error-bg transition-colors"
             >
