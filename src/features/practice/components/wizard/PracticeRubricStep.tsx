@@ -1,10 +1,9 @@
-import React from 'react';
-import { ClipboardList } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
+import { CheckCircle2, ClipboardList, PieChart } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
+import { PracticeRubricCriterionCard } from './PracticeRubricCriterionCard';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
@@ -24,6 +23,7 @@ export const PracticeRubricStep: React.FC<PracticeRubricStepProps> = ({
   onNext,
 }) => {
   const { t } = useLanguage();
+  const [editingId, setEditingId] = useState<string | null>(null);
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
   const weightValid = totalWeight === 100;
 
@@ -47,49 +47,41 @@ export const PracticeRubricStep: React.FC<PracticeRubricStepProps> = ({
     >
       <div className="space-y-3">
         {rubric.map((criterion, index) => (
-          <div
+          <PracticeRubricCriterionCard
             key={criterion.id}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
-          >
-            <div className="grid gap-3 sm:grid-cols-[1fr_96px]">
-              <div>
-                <Label htmlFor={`rubric-name-${criterion.id}`}>{t('practice.wizard.rubric.name')}</Label>
-                <Input
-                  id={`rubric-name-${criterion.id}`}
-                  value={criterion.name}
-                  onChange={(event) => updateCriterion(index, { name: event.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor={`rubric-weight-${criterion.id}`}>{t('practice.wizard.rubric.weight')}</Label>
-                <Input
-                  id={`rubric-weight-${criterion.id}`}
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={criterion.weight}
-                  onChange={(event) => updateCriterion(index, { weight: Number(event.target.value) })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="mt-3">
-              <Label htmlFor={`rubric-desc-${criterion.id}`}>{t('practice.wizard.rubric.criterionDesc')}</Label>
-              <Input
-                id={`rubric-desc-${criterion.id}`}
-                value={criterion.description}
-                onChange={(event) => updateCriterion(index, { description: event.target.value })}
-                className="mt-1"
-              />
-            </div>
-          </div>
+            criterion={criterion}
+            index={index}
+            isEditing={editingId === criterion.id}
+            onToggleEdit={() =>
+              setEditingId((current) => (current === criterion.id ? null : criterion.id))
+            }
+            onChange={(patch) => updateCriterion(index, patch)}
+          />
         ))}
       </div>
 
-      <p className={cn('mt-4 text-sm', weightValid ? 'text-muted-foreground' : 'text-warning')}>
-        {t('practice.wizard.rubric.weightTotal').replace('{total}', String(totalWeight))}
-      </p>
+      <div
+        className={cn(
+          'mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3',
+          weightValid
+            ? 'border-white/12 bg-white/[0.04]'
+            : 'border-warning/30 bg-warning/5',
+        )}
+      >
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <PieChart className="size-4 text-muted-foreground" aria-hidden />
+          {t('practice.wizard.rubric.totalLabel').replace('{total}', String(totalWeight))}
+        </div>
+        <div
+          className={cn(
+            'flex items-center gap-2 text-sm',
+            weightValid ? 'text-success' : 'text-warning',
+          )}
+        >
+          {weightValid ? <CheckCircle2 className="size-4 shrink-0" aria-hidden /> : null}
+          <span>{t('practice.wizard.rubric.mustEqual100')}</span>
+        </div>
+      </div>
     </PracticeWizardStepCard>
   );
 };

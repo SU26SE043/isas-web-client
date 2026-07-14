@@ -58,6 +58,8 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 
 Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
 
+Shared selection/section templates: `SectionPanel` + `SelectionOption` under `src/components/ui/` — see UI Guide § “Section & selection templates”.
+
 ## Update rule
 
 1. Read [`product-scope.md`](./product-scope.md) and relevant `BRD/*.md`.

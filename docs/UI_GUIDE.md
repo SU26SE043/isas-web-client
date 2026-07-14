@@ -62,12 +62,59 @@ Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
 |-----------|---------|
 | Header | `h-16`, `bg-surface-base/80 backdrop-blur-xl border-subtle` |
 | Sidebar | `bg-surface-sunken border-subtle`, active `bg-surface-elevated` |
-| Card | `surface-raised rounded-xl` |
+| Card | `surface-raised rounded-xl` / shadcn `Card` |
+| **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
+| **SelectionOption** | Glass selectable tile — **default** for choice grids |
 | Modal | `bg-surface-elevated border-default shadow-lg` |
 | Input | `bg-surface-overlay border-default rounded-lg text-sm` |
 | Primary button | `btn-primary` (white bg, black text) |
 | Secondary button | `btn-secondary` (outline) |
 | Ghost button | `btn-ghost` |
+
+## Section & selection templates (bắt buộc khi gen UI lựa chọn)
+
+Hai primitive dùng chung toàn project — **không** dựng lại border/glass/ô chọn ad-hoc trong feature.
+
+| Template | File | Khi dùng |
+|----------|------|----------|
+| `SectionPanel` | `src/components/ui/section-panel.tsx` | Khung section/wizard: header (icon tùy chọn + title + description), body, footer nav, optional footer hint, loading state |
+| `SelectionOption` | `src/components/ui/selection-option.tsx` | Ô chọn trong lưới: icon tròn + title + description + chevron; state `selected` / hover / disabled |
+
+### Quy tắc dùng
+
+1. Multi-step setup, form section, pick-list → bọc bằng `SectionPanel`.
+2. Lựa chọn domain / level / file / gói / … trong grid → `SelectionOption` (thường `grid gap-3 sm:grid-cols-2`).
+3. Icon trên `SectionPanel`/`SelectionOption` chỉ monochrome (`currentColor` / lucide), **không** accent purple/blue.
+4. Nav Quay lại / Tiếp theo nằm trong `footer` của `SectionPanel` (hoặc slot tương đương) — không sticky ngoài khung trừ khi layout fullscreen phòng phỏng vấn.
+5. Feature wrapper cũ (ví dụ `PracticeWizardStepCard`, `PracticeWizardOptionCard`, `CvFlowSectionCard`) chỉ được **re-export / thin wrap** sang 2 template trên — không fork style.
+
+### Ví dụ tối thiểu
+
+```tsx
+import { SectionPanel } from '@/components/ui/section-panel';
+import { SelectionOption } from '@/components/ui/selection-option';
+
+<SectionPanel icon={<Icon />} title={title} description={description} footer={nav}>
+  <div className="grid gap-3 sm:grid-cols-2">
+    {items.map((item) => (
+      <SelectionOption
+        key={item.id}
+        title={item.title}
+        description={item.description}
+        icon={item.icon}
+        selected={item.id === selectedId}
+        onClick={() => onSelect(item.id)}
+      />
+    ))}
+  </div>
+</SectionPanel>
+```
+
+### Phạm vi áp dụng
+
+- Practice wizard, roadmap wizard, CV analysis sections, và mọi màn chọn/cấu hình mới
+- **Không** áp dụng cho auth frozen surfaces (decision 0009)
+- **Không** thay chart / data table / interview room chrome bằng `SelectionOption`
 
 ## Semantic colors (NGOẠI LỆ)
 
@@ -79,7 +126,9 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 |------|---------|
 | `src/styles/colors.css` | CSS variables |
 | `src/index.css` | Tailwind theme + utilities |
-| `src/components/ui/*` | shadcn primitives |
+| `src/components/ui/*` | shadcn primitives + shared templates |
+| `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
+| `src/components/ui/selection-option.tsx` | Selectable option tile |
 
 ## Frozen UI surfaces (không redesign)
 
@@ -93,7 +142,7 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 ## Agent rules
 
 1. Đọc file này trước khi sửa UI
-2. Dùng `src/components/ui` — không tạo button/input mới
+2. Dùng `src/components/ui` — không tạo button/input mới; lựa chọn/section dùng `SelectionOption` + `SectionPanel`
 3. Dùng surface tokens — không hardcode hex
 4. Không thêm màu accent vào layout
 5. `cn()` từ `src/lib/utils`
@@ -101,6 +150,7 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 7. Data: `@tanstack/react-query`
 8. **Giới hạn 250 dòng / file UI** — pages và components; tách file khi vượt ngưỡng
 9. **Không redesign login / sign-up / auth modal** — xem Frozen UI surfaces ở trên
+10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
 
 ## File size (bắt buộc)
 

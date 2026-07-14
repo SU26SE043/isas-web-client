@@ -10,7 +10,7 @@ Living contract for how the ISAS web client is built.
 | Build | Vite |
 | Routing | react-router-dom v7 |
 | Styling | Tailwind CSS v4 + design tokens (`src/styles/colors.css`) |
-| UI primitives | shadcn-style components in `src/components/ui/` |
+| UI primitives | shadcn-style in `src/components/ui/` + shared templates `SectionPanel`, `SelectionOption` |
 | Forms | react-hook-form + zod (preferred) |
 | Server state | @tanstack/react-query (preferred) |
 | Client state | zustand (`authStore`) |
@@ -21,7 +21,7 @@ Living contract for how the ISAS web client is built.
 
 ```text
 src/
-  components/ui/     # Reusable primitives (Button, Input, Card, …)
+  components/ui/     # Reusable primitives + SectionPanel / SelectionOption
   features/          # Domain slices (auth, home, cv-analysis, practice, …)
   layouts/           # MainLayout, DashboardLayout, Header, Footer
   routes/            # ProtectedRoute, PublicRoute
@@ -45,6 +45,15 @@ Configure base URL via environment. Auth uses JWT stored client-side; gateway va
 ## UI rules
 
 Read `docs/UI_GUIDE.md` before any UI work — dark monochrome only, semantic colors for status.
+
+**Shared templates (project-wide):**
+
+| Component | Path | Use |
+| --- | --- | --- |
+| `SectionPanel` | `src/components/ui/section-panel.tsx` | Wizard/setup section shell |
+| `SelectionOption` | `src/components/ui/selection-option.tsx` | Selectable option tiles in grids |
+
+Do not invent alternate glass option cards in feature folders; wrap or re-export these.
 
 ## Validation
 
