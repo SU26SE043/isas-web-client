@@ -22,9 +22,9 @@ BRD: FR-020–059, SCR-CAN-012–020, BRL-032 (70% gate).
 The main profile screen is intentionally lightweight:
 
 1. **Basic account info** from Auth API (`GET /api/v1/auth/me`) — full name, email, title, location, member since.
-2. **Uploaded CV files** from CV service (`listUploadedCvs` mock today) — file name, size, upload time, link to match report.
+2. **Uploaded CV files** from CV service (`listUploadedCvs` mock today) — file name, size, upload time, `pdfUrl` opens the original PDF in a new tab.
 
-Edit basic fields via `EditProfileModal` (Auth update profile). New uploads flow through `/candidate/cv/analysis` and appear in the profile list after analysis completes.
+Edit basic fields via `EditProfileModal` (Auth update profile). New uploads flow through `/candidate/cv/analysis` (or Practice wizard) and appear at the top of the profile CV list. Match reports are opened from the CV Analysis module, not from Profile.
 
 ## Components
 

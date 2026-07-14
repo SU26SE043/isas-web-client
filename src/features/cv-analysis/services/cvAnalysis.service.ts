@@ -3,6 +3,7 @@ import { MOCK_CV_ANALYSIS_RESULT, MOCK_UPLOADED_CV_FILES } from '../mocks/cvAnal
 import type { CvAnalysisResult, SubmitCvAnalysisInput, UploadedCvFile } from '../types/cvAnalysis.types';
 
 const UPLOADED_CV_STORAGE_KEY = 'isas-uploaded-cvs';
+const MOCK_PDF_URL = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
 
 export class CvAnalysisError extends Error {
   readonly code: 'passwordProtected' | 'corruptFile' | 'parseFailed';
@@ -14,12 +15,20 @@ export class CvAnalysisError extends Error {
   }
 }
 
+function normalizeUploadedCv(file: UploadedCvFile): UploadedCvFile {
+  return {
+    ...file,
+    pdfUrl: file.pdfUrl || MOCK_PDF_URL,
+  };
+}
+
 function readUploadedCvStore(): UploadedCvFile[] {
   if (typeof sessionStorage !== 'undefined') {
     const raw = sessionStorage.getItem(UPLOADED_CV_STORAGE_KEY);
     if (raw) {
       try {
-        return JSON.parse(raw) as UploadedCvFile[];
+        const parsed = JSON.parse(raw) as UploadedCvFile[];
+        return parsed.map(normalizeUploadedCv);
       } catch {
         sessionStorage.removeItem(UPLOADED_CV_STORAGE_KEY);
       }
@@ -55,6 +64,7 @@ function registerUploadedCv(file: File, analysisId: string): UploadedCvFile {
     fileSizeBytes: file.size,
     mimeType: file.type || 'application/octet-stream',
     uploadedAt: new Date().toISOString(),
+    pdfUrl: MOCK_PDF_URL,
     analysisId,
   };
 
@@ -93,7 +103,7 @@ export const cvAnalysisService = {
     }
 
     await mockDelay(250);
-    return structuredClone(uploadedCvStore);
+    return structuredClone(uploadedCvStore).map(normalizeUploadedCv);
   },
 
   async getAnalysisResult(analysisId?: string): Promise<CvAnalysisResult> {

@@ -47,5 +47,8 @@ export interface UploadedCvFile {
   fileSizeBytes: number;
   mimeType: string;
   uploadedAt: string;
-  analysisId: string;
+  /** Direct URL to the original PDF (open in new tab from Profile). */
+  pdfUrl: string;
+  /** Present when the file was produced via CV Analysis flow. */
+  analysisId?: string;
 }
