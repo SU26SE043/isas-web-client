@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authTokenStorage } from '@/shared/api';
 import { SessionTimeoutModal } from '../components/SessionTimeoutModal';
 import { useAuth } from '../hooks/useAuth';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
@@ -14,15 +12,11 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
 
   const handleExpire = useCallback(() => {
     logout();
-    sessionManager.clear();
-    authTokenStorage.clear();
-    navigate('/session-expired', { replace: true });
-  }, [logout, navigate]);
+  }, [logout]);
 
   const { showWarning, secondsLeft, extendSession } = useSessionTimeout({
     enabled: isAuthenticated,
@@ -42,7 +36,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const handleLogout = useCallback(() => {
     void logout();
-    sessionManager.clear();
   }, [logout]);
 
   return (

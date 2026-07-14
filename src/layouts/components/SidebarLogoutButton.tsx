@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { LogOut } from 'lucide-react';
 import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/shared/languages';
@@ -34,6 +35,7 @@ export function SidebarLogoutButton({
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
+        icon={<LogOut className="size-5" aria-hidden />}
         title={t('auth.logoutConfirmTitle')}
         description={t('auth.logoutConfirmDescription')}
         confirmLabel={t('auth.logoutConfirmOk')}

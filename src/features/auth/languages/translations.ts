@@ -196,7 +196,7 @@ export const authTranslations: TranslationDictionary = {
     'auth.haveAccount': 'Already have an account?',
     'auth.noAccount': "Don't have an account?",
     'auth.logoutConfirmTitle': 'Log out?',
-    'auth.logoutConfirmDescription': 'You will return to the homepage. Continue logging out?',
+    'auth.logoutConfirmDescription': 'You will be taken to the homepage. Continue logging out?',
     'auth.logoutConfirmOk': 'Log out',
     'auth.logoutConfirmCancel': 'Cancel',
     'auth.sessionExpiredInline': 'Your session has expired. Please sign in again.',
