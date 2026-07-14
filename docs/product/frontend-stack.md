@@ -46,14 +46,15 @@ Configure base URL via environment. Auth uses JWT stored client-side; gateway va
 
 Read `docs/UI_GUIDE.md` before any UI work — dark monochrome only, semantic colors for status.
 
-**Shared templates (project-wide):**
+**Visual system (project-wide):**
 
-| Component | Path | Use |
-| --- | --- | --- |
-| `SectionPanel` | `src/components/ui/section-panel.tsx` | Wizard/setup section shell |
-| `SelectionOption` | `src/components/ui/selection-option.tsx` | Selectable option tiles in grids |
+| Token / pattern | Rule |
+| --- | --- |
+| Bright black | Page base `#141416` (`--surface-base`) — not pure `#000` |
+| Satin silver frames | Tables, cards, panels, inputs, dialogs use `frame-satin` / `--satin-*` |
+| Shared templates | `SectionPanel` + `SelectionOption` |
 
-Do not invent alternate glass option cards in feature folders; wrap or re-export these.
+Do not invent alternate chrome borders (glossy / colored glow) in feature folders.
 
 ## Validation
 

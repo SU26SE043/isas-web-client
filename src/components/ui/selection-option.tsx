@@ -33,10 +33,10 @@ export function SelectionOption({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'group flex items-center gap-3 rounded-2xl border px-4 py-4 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
+        'group flex items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
         selected
-          ? 'border-white/25 bg-white/[0.08] shadow-[var(--shadow-xs)]'
-          : 'border-white/10 bg-white/[0.03] hover:border-white/18 hover:bg-white/[0.05]',
+          ? 'frame-satin bg-white/[0.08]'
+          : 'frame-satin-interactive bg-white/[0.03]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}
@@ -47,8 +47,8 @@ export function SelectionOption({
           className={cn(
             'flex size-10 shrink-0 items-center justify-center rounded-full border transition-colors',
             selected
-              ? 'border-white/30 bg-white text-black'
-              : 'border-white/12 bg-white/[0.06] text-foreground',
+              ? 'border-satin bg-white text-black'
+              : 'border-satin bg-white/[0.06] text-foreground',
           )}
         >
           {icon}

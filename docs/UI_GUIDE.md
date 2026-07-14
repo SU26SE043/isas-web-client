@@ -7,34 +7,59 @@
 ## Nguyên tắc
 
 - **Dark mode only** — không light mode, không theme switcher
-- **Monochrome** — White, Black, Gray cho UI cấu trúc
-- **Depth qua surface layers** — không dùng màu accent, không flat pure black
-- **Inspiration:** Linear, Vercel Dashboard, GitHub Dark, Stripe Dashboard (spacing/hierarchy only)
+- **Monochrome** — White, Black, Gray + **satin silver** cho khung (structural chrome)
+- **Bright black base** — nền page không dùng pure `#000`; dùng charcoal sáng (#141416)
+- **Satin silver frames** — mọi table/card/panel/input dùng viền brushed aluminum (low contrast), **không** glossy chrome, **không** accent hue
+- **Depth** qua surface layers + glass + satin edge highlight
+- **Inspiration:** Linear, Vercel Dashboard, GitHub Dark, Stripe (spacing/hierarchy) + industrial satin metal edges
 - **Semantic colors** chỉ cho trạng thái (success/error/warning/info)
 
-## Surface elevation (depth)
+## Surface elevation (bright black)
 
 | Token / Class | Hex | Dùng cho |
 |---------------|-----|----------|
-| `surface-base` / `bg-surface-base` | `#070709` | Page background |
-| `surface-sunken` | `#0a0a0c` | Sidebar base |
-| `surface-raised` | `#121214` | Cards, panels |
-| `surface-overlay` | `#1a1a1d` | Inputs, hover, nested |
-| `surface-elevated` | `#222226` | Modals, dropdowns, active nav |
-| `surface-highlight` | `#2c2c31` | Strong hover |
-| `glass-panel` | white-alpha + blur | Elevated glass cards |
+| `surface-base` / `bg-surface-base` | `#141416` | Page background (bright black) |
+| `surface-sunken` | `#101012` | Sidebar base |
+| `surface-raised` | `#1c1c20` | Cards, panels |
+| `surface-overlay` | `#222228` | Inputs, hover, nested |
+| `surface-elevated` | `#2a2a30` | Modals, dropdowns, active nav |
+| `surface-highlight` | `#34343c` | Strong hover |
+| `glass-panel` | glass + satin edge | Elevated glass cards |
 | `glass-sidebar` | sunken + blur | Dashboard sidebars |
 | `glass-topbar` | base + blur | Sticky engagement / top chrome |
 
-Depth ưu tiên **surface layers + glass**, không dùng màu accent trên layout.
+Không flat pure black cho page chrome. Auth frozen surfaces vẫn inherit token — **không** đổi layout auth (decision 0009).
 
-## Borders (white alpha)
+## Satin silver borders (bắt buộc cho khung)
 
-| Class | Opacity |
+Viền mặc định toàn project: **thin satin silver**, soft brushed aluminum, subtle metallic reflection, elegant silver glow, **not glossy chrome**.
+
+| Token / Class | Vai trò |
+|---------------|---------|
+| `--satin-border` / `border-satin` | Màu viền mặc định |
+| `--satin-inset` | Highlight mép trên + depth dưới |
+| `--satin-glow` | Quầng bạc rất nhẹ (1px), low contrast |
+| `--satin-reflection` | Gradient kim loại cho `frame-satin-metallic` |
+| `.frame-satin` | **Default** cho card, panel, table frame |
+| `.frame-satin-soft` | Nested chips / icon wells |
+| `.frame-satin-interactive` | Ô chọn / tile có hover |
+| `.frame-satin-metallic` | Khung cần reflection wash rõ hơn |
+
+### Quy tắc
+
+1. Table, Card, SectionPanel, Dialog, Input, dropzone, wizard option → dùng `frame-satin` / `border-satin` (hoặc token `--satin-*`), **không** hardcode `border-white/10` mới.
+2. Không dùng purple/blue/ice edge cho UI cấu trúc.
+3. Semantic border (error/success) vẫn dùng màu semantic.
+
+Tokens nằm ở `src/styles/colors.css`. Utilities ở `src/index.css`.
+
+## Borders (legacy alias)
+
+| Class | Maps to |
 |-------|---------|
-| `border-subtle` | 6% |
-| `border-default` | 10% |
-| `--border-focus` | 24% (focus ring) |
+| `border-subtle` | soft silver alpha |
+| `border-default` | default satin alpha |
+| `--border-focus` | stronger silver focus |
 
 ## Typography
 
@@ -60,15 +85,16 @@ Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
 
 | Component | Pattern |
 |-----------|---------|
-| Header | `h-16`, `bg-surface-base/80 backdrop-blur-xl border-subtle` |
-| Sidebar | `bg-surface-sunken border-subtle`, active `bg-surface-elevated` |
-| Card | `surface-raised rounded-xl` / shadcn `Card` |
+| Header | `h-16`, glass-topbar + satin edge |
+| Sidebar | `glass-sidebar`, active `bg-surface-elevated` |
+| Card | `frame-satin` + `Card` primitive |
+| Table | container `frame-satin rounded-2xl` |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
-| **SelectionOption** | Glass selectable tile — **default** for choice grids |
-| Modal | `bg-surface-elevated border-default shadow-lg` |
-| Input | `bg-surface-overlay border-default rounded-lg text-sm` |
+| **SelectionOption** | Satin selectable tile — **default** for choice grids |
+| Modal | Dialog + `border-satin` |
+| Input | `border-satin` + satin inset |
 | Primary button | `btn-primary` (white bg, black text) |
-| Secondary button | `btn-secondary` (outline) |
+| Secondary button | `btn-secondary` (satin outline) |
 | Ghost button | `btn-ghost` |
 
 ## Section & selection templates (bắt buộc khi gen UI lựa chọn)
@@ -87,6 +113,7 @@ Hai primitive dùng chung toàn project — **không** dựng lại border/glass
 3. Icon trên `SectionPanel`/`SelectionOption` chỉ monochrome (`currentColor` / lucide), **không** accent purple/blue.
 4. Nav Quay lại / Tiếp theo nằm trong `footer` của `SectionPanel` (hoặc slot tương đương) — không sticky ngoài khung trừ khi layout fullscreen phòng phỏng vấn.
 5. Feature wrapper cũ (ví dụ `PracticeWizardStepCard`, `PracticeWizardOptionCard`, `CvFlowSectionCard`) chỉ được **re-export / thin wrap** sang 2 template trên — không fork style.
+6. Mọi khung mới phải dùng **satin silver** (`frame-satin` / tokens), không invent border glow khác.
 
 ### Ví dụ tối thiểu
 
@@ -112,9 +139,9 @@ import { SelectionOption } from '@/components/ui/selection-option';
 
 ### Phạm vi áp dụng
 
-- Practice wizard, roadmap wizard, CV analysis sections, và mọi màn chọn/cấu hình mới
-- **Không** áp dụng cho auth frozen surfaces (decision 0009)
-- **Không** thay chart / data table / interview room chrome bằng `SelectionOption`
+- Practice wizard, roadmap wizard, CV analysis sections, tables, cards, và mọi màn chọn/cấu hình mới
+- **Không** áp dụng redesign layout cho auth frozen surfaces (decision 0009) — token nền/viền vẫn inherit
+- **Không** thay chart / interview room chrome bằng `SelectionOption`
 
 ## Semantic colors (NGOẠI LỆ)
 
@@ -124,8 +151,8 @@ Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, re
 
 | File | Vai trò |
 |------|---------|
-| `src/styles/colors.css` | CSS variables |
-| `src/index.css` | Tailwind theme + utilities |
+| `src/styles/colors.css` | Surface + satin silver tokens |
+| `src/index.css` | Tailwind theme + `frame-satin*` utilities |
 | `src/components/ui/*` | shadcn primitives + shared templates |
 | `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
 | `src/components/ui/selection-option.tsx` | Selectable option tile |
@@ -143,14 +170,15 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 
 1. Đọc file này trước khi sửa UI
 2. Dùng `src/components/ui` — không tạo button/input mới; lựa chọn/section dùng `SelectionOption` + `SectionPanel`
-3. Dùng surface tokens — không hardcode hex
-4. Không thêm màu accent vào layout
+3. Dùng surface + satin tokens — không hardcode hex / `border-white/*` mới cho khung
+4. Không thêm màu accent vào layout; khung dùng `frame-satin` / `border-satin`
 5. `cn()` từ `src/lib/utils`
 6. Form: `react-hook-form` + `zod`
 7. Data: `@tanstack/react-query`
 8. **Giới hạn 250 dòng / file UI** — pages và components; tách file khi vượt ngưỡng
 9. **Không redesign login / sign-up / auth modal** — xem Frozen UI surfaces ở trên
 10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
+11. **Bright black + satin silver** — nền `#141416` family; viền brushed aluminum low-contrast
 
 ## File size (bắt buộc)
 

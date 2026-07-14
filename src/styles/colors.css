@@ -1,4 +1,4 @@
-/* ISAS Premium Dark Monochrome — glass elevation (Linear / Vercel / Stripe inspired) */
+/* ISAS Premium Dark Monochrome — bright-black base + satin silver frames */
 
 :root {
   color-scheme: dark;
@@ -19,28 +19,49 @@
   --isas-gray-900: #18181b;
   --isas-gray-950: #09090b;
 
-  /* === SURFACE ELEVATION (depth via grayscale + glass, not brand color) === */
-  --surface-base: #070709;
-  --surface-sunken: #0a0a0c;
-  --surface-raised: #121214;
-  --surface-overlay: #1a1a1d;
-  --surface-elevated: #222226;
-  --surface-highlight: #2c2c31;
+  /* Silver metal (structural chrome only — never hue accents) */
+  --isas-silver-50: #f3f5f7;
+  --isas-silver-100: #e6eaef;
+  --isas-silver-200: #cfd6df;
+  --isas-silver-300: #b6bfcb;
+  --isas-silver-400: #9aa5b4;
 
-  /* Glass overlays (white alpha — monochrome only) */
-  --glass-bg: rgb(18 18 20 / 0.72);
-  --glass-bg-strong: rgb(26 26 29 / 0.82);
-  --glass-border: rgb(255 255 255 / 0.08);
-  --glass-highlight: rgb(255 255 255 / 0.04);
+  /* === SURFACE ELEVATION — bright black (not pure #000) === */
+  --surface-base: #141416;
+  --surface-sunken: #101012;
+  --surface-raised: #1c1c20;
+  --surface-overlay: #222228;
+  --surface-elevated: #2a2a30;
+  --surface-highlight: #34343c;
+
+  /* Glass overlays */
+  --glass-bg: rgb(28 28 32 / 0.78);
+  --glass-bg-strong: rgb(36 36 42 / 0.88);
+  --glass-border: color-mix(in srgb, var(--isas-silver-200) 22%, transparent);
+  --glass-highlight: rgb(255 255 255 / 0.05);
   --blur-sm: 8px;
   --blur-md: 16px;
   --blur-lg: 24px;
 
-  /* === BORDERS (subtle white alpha — premium SaaS pattern) === */
-  --border-subtle: rgb(255 255 255 / 0.06);
-  --border-default: rgb(255 255 255 / 0.1);
-  --border-strong: rgb(255 255 255 / 0.16);
-  --border-focus: rgb(255 255 255 / 0.28);
+  /* === SATIN SILVER BORDERS (brushed aluminum — low contrast, not chrome) === */
+  --border-subtle: color-mix(in srgb, var(--isas-silver-200) 16%, transparent);
+  --border-default: color-mix(in srgb, var(--isas-silver-200) 26%, transparent);
+  --border-strong: color-mix(in srgb, var(--isas-silver-100) 34%, transparent);
+  --border-focus: color-mix(in srgb, var(--isas-silver-50) 48%, transparent);
+
+  /* Metallic edge: soft top highlight + quiet depth (no glossy bloom) */
+  --satin-border: color-mix(in srgb, var(--isas-silver-200) 28%, transparent);
+  --satin-border-hover: color-mix(in srgb, var(--isas-silver-100) 36%, transparent);
+  --satin-glow: 0 0 0 1px color-mix(in srgb, var(--isas-silver-300) 10%, transparent);
+  --satin-inset: inset 0 1px 0 color-mix(in srgb, var(--isas-silver-50) 14%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--isas-black) 45%, transparent);
+  --satin-reflection: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--isas-silver-50) 34%, transparent) 0%,
+    color-mix(in srgb, var(--isas-silver-300) 8%, transparent) 38%,
+    color-mix(in srgb, var(--isas-silver-400) 4%, transparent) 62%,
+    color-mix(in srgb, var(--isas-silver-100) 22%, transparent) 100%
+  );
 
   /* === SEMANTIC COLORS (status only) === */
   --isas-success: #22c55e;
@@ -71,7 +92,7 @@
   --destructive-foreground: var(--isas-white);
   --border: var(--border-default);
   --input: var(--border-default);
-  --ring: rgb(255 255 255 / 0.35);
+  --ring: color-mix(in srgb, var(--isas-silver-100) 42%, transparent);
   --radius: 0.75rem;
 
   /* === TYPOGRAPHY === */
@@ -115,14 +136,14 @@
   --radius-2xl: 1.25rem;
   --radius-full: 9999px;
 
-  /* === ELEVATION (soft depth, no glow) === */
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.28);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.36), 0 1px 2px rgb(0 0 0 / 0.28);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
-  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.48), 0 0 0 1px rgb(255 255 255 / 0.04);
-  --shadow-xl: 0 28px 56px rgb(0 0 0 / 0.56), 0 0 0 1px rgb(255 255 255 / 0.05);
+  /* === ELEVATION === */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.34), var(--satin-glow);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.38), var(--satin-glow);
+  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.44), var(--satin-glow);
+  --shadow-xl: 0 28px 56px rgb(0 0 0 / 0.5), var(--satin-glow);
 
-  /* === MOTION (ease-out 150–300ms) === */
+  /* === MOTION === */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast: 150ms var(--ease-out);
   --transition-normal: 220ms var(--ease-out);

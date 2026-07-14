@@ -107,8 +107,8 @@ select {
 
   .surface-raised {
     background-color: var(--surface-raised);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--shadow-xs);
   }
 
   .surface-overlay {
@@ -118,22 +118,57 @@ select {
 
   .surface-elevated {
     background-color: var(--surface-elevated);
-    border: 1px solid var(--border-default);
-    box-shadow: var(--shadow-md);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--shadow-md);
   }
 
-  /* Glass panels — monochrome white-alpha + blur */
+  /* Satin silver frame — project default for tables, cards, panels */
+  .frame-satin {
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--satin-glow);
+  }
+
+  .frame-satin-soft {
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--satin-inset);
+  }
+
+  .frame-satin-interactive {
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--satin-glow);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .frame-satin-interactive:hover {
+    border-color: var(--satin-border-hover);
+  }
+
+  /* Optional top edge reflection wash (keep low contrast) */
+  .frame-satin-metallic {
+    border: 1px solid transparent;
+    background-image:
+      linear-gradient(var(--surface-raised), var(--surface-raised)),
+      var(--satin-reflection);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: var(--satin-inset), var(--satin-glow);
+  }
+
+  /* Glass panels — bright-black glass + satin edge */
   .glass-panel {
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--shadow-sm);
     backdrop-filter: blur(var(--blur-md));
     -webkit-backdrop-filter: blur(var(--blur-md));
   }
 
   .glass-sidebar {
     background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
-    border-color: var(--glass-border);
+    border-color: var(--satin-border);
     backdrop-filter: blur(var(--blur-lg));
     -webkit-backdrop-filter: blur(var(--blur-lg));
   }
@@ -151,6 +186,10 @@ select {
 
   .border-default {
     border-color: var(--border-default);
+  }
+
+  .border-satin {
+    border-color: var(--satin-border);
   }
 
   /* === LAYOUT === */
@@ -264,12 +303,13 @@ select {
     gap: 0.5rem;
     background-color: transparent;
     color: var(--foreground);
-    border: 1px solid var(--border-default);
+    border: 1px solid var(--satin-border);
     border-radius: var(--radius-lg);
     padding: 0.5625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
+    box-shadow: var(--satin-inset);
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
@@ -278,8 +318,8 @@ select {
 
   .btn-secondary:hover {
     background-color: var(--glass-highlight);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-xs);
+    border-color: var(--satin-border-hover);
+    box-shadow: var(--satin-inset), var(--satin-glow);
   }
 
   .btn-accent {

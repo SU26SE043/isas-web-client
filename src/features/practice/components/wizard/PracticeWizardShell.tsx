@@ -23,8 +23,8 @@ export const PracticeWizardShell: React.FC<PracticeWizardShellProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-surface-base px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-5 lg:items-start lg:gap-10">
+    <div className="flex min-h-screen justify-center bg-surface-base px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-5 lg:items-start lg:gap-10">
         <nav
           aria-label={t('practice.wizard.stepperLabel')}
           className="lg:sticky lg:top-8 lg:col-span-1"

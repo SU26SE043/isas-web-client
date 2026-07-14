@@ -31,7 +31,7 @@ export function SectionPanel({
     return (
       <div
         className={cn(
-          'flex min-h-[280px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl',
+          'frame-satin flex min-h-[280px] items-center justify-center rounded-2xl bg-white/[0.03] backdrop-blur-xl',
           className,
         )}
       >
@@ -43,14 +43,14 @@ export function SectionPanel({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-2xl border border-white/10 bg-[rgb(18_18_20/0.55)] shadow-[var(--shadow-md)] backdrop-blur-xl',
+        'frame-satin overflow-hidden rounded-2xl bg-[rgb(28_28_32/0.62)] backdrop-blur-xl',
         className,
       )}
     >
-      <div className="border-b border-white/8 px-5 py-5 sm:px-7 sm:py-6">
+      <div className="border-b border-satin px-5 py-5 sm:px-7 sm:py-6">
         <div className={icon ? 'flex items-start gap-3' : undefined}>
           {icon ? (
-            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-foreground">
+            <span className="frame-satin-soft mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
               {icon}
             </span>
           ) : null}
@@ -71,7 +71,7 @@ export function SectionPanel({
       </div>
 
       {footerHint ? (
-        <p className="border-t border-white/8 px-5 py-4 text-center text-xs text-muted-foreground sm:px-7">
+        <p className="border-t border-satin px-5 py-4 text-center text-xs text-muted-foreground sm:px-7">
           {footerHint}
         </p>
       ) : null}

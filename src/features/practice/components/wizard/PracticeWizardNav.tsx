@@ -23,11 +23,11 @@ export const PracticeWizardNav: React.FC<PracticeWizardNavProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-6">
+    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-satin pt-6">
       <button
         type="button"
         className={cn(
-          'inline-flex items-center gap-2 rounded-xl border border-white/12 bg-transparent px-4 py-2.5 text-sm font-medium text-foreground transition-[background-color,border-color,opacity] duration-200 ease-out hover:bg-white/[0.04]',
+          'inline-flex items-center gap-2 rounded-xl border border-satin bg-transparent px-4 py-2.5 text-sm font-medium text-foreground shadow-[var(--satin-inset)] transition-[background-color,border-color,opacity] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-white/[0.04]',
           backDisabled ? 'cursor-not-allowed opacity-40' : null,
         )}
         disabled={backDisabled || !onBack}

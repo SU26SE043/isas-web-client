@@ -58,7 +58,9 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 
 Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
 
-Shared selection/section templates: `SectionPanel` + `SelectionOption` under `src/components/ui/` — see UI Guide § “Section & selection templates”.
+Shared selection/section templates: `SectionPanel` + `SelectionOption` under `src/components/ui/`.
+
+Global look: **bright black** surfaces + **satin silver** frames (`frame-satin`) — see UI Guide § “Surface elevation” and “Satin silver borders”.
 
 ## Update rule
 

@@ -29,9 +29,9 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
     <CvFlowSectionCard title={t('cv.step.upload')} description={t('cv.stepDesc.upload')}>
       <label
         className={cn(
-          'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/20 px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
-          'hover:border-white/25 hover:bg-white/[0.03]',
-          file ? 'border-white/20 bg-white/[0.03]' : null,
+          'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-satin bg-black/20 px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
+          'hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03]',
+          file ? 'border-[var(--satin-border-hover)] bg-white/[0.03] shadow-[var(--satin-inset)]' : null,
         )}
       >
         <input
@@ -41,7 +41,7 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
           className="sr-only"
           aria-invalid={fileError ? true : undefined}
         />
-        <span className="mb-5 flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
+        <span className="frame-satin-soft mb-5 flex size-14 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
           <Upload className="size-7" aria-hidden />
         </span>
         <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
@@ -56,7 +56,7 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
       </label>
 
       {file ? (
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+        <div className="frame-satin mt-4 flex items-center gap-3 rounded-xl bg-white/[0.04] px-4 py-3">
           <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0 flex-1 text-left">
             <p className="truncate text-sm font-medium text-foreground">{file.name}</p>
@@ -80,7 +80,7 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
             'inline-flex min-w-[7.5rem] items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-[background-color,border-color,opacity,transform] duration-200 ease-out',
             canNext
               ? 'btn-primary'
-              : 'cursor-not-allowed border border-white/10 bg-white/[0.04] text-muted-foreground opacity-70',
+              : 'frame-satin cursor-not-allowed bg-white/[0.04] text-muted-foreground opacity-70',
           )}
           disabled={!canNext}
           onClick={onNext}
