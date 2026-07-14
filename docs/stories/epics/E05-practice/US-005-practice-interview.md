@@ -33,6 +33,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - Flow progress persisted per session in `sessionStorage`.
 - Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap preview via `learningService`, error/loading states.
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
+- Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
 - Learning hub, module viewer (`passThreshold`), guided practice, progress dashboard.
 - Certificate viewer with PDF download; route aliases `/candidate/results/:id`, `/candidate/history`.

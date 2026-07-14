@@ -16,7 +16,7 @@ Roadmap is **not** created from the Learning Hub (`/candidate/learning`).
 
 Menu **Roadmap** → `/candidate/roadmap` opens the **Roadmap Creation Wizard** immediately.
 
-Do **not** show a roadmap list or existing timeline as the default entry. After successful create, navigate to **Learning** (`/candidate/learning`) — do not stay on the wizard.
+After successful create, navigate to **Learning** (`/candidate/learning`) dashboard — do not stay on the wizard. Detail study UX: [`learning.md`](./learning.md).
 
 ## Creation wizard
 

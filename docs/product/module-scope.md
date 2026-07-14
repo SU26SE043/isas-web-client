@@ -29,7 +29,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
 | **Public campaign browse** (self-serve catalog of all open campaigns) | — | **OUT OF SCOPE** |
 | **My invited campaigns** | T1 | Employer-invited list only | `/candidate/campaigns` | Implemented (mock) |
-| Learning hub | T3 | Standalone content library | `/candidate/learning*` | Placeholder — backlog |
+| Learning hub | T1 | Dashboard of created roadmaps; milestones / theory / practice | `/candidate/learning*` | Implemented (mock) |
 | Leaderboard | T2 | Rankings | `/candidate/leaderboard` | Placeholder |
 | Certificate | T2 | Certificate viewer | `/candidate/certificates/:id` | Placeholder |
 | Achievements / progress | T2/T3 | Gamification | `/candidate/achievements`, `progress` | Placeholder |
@@ -107,8 +107,9 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/campaigns/:token/briefing` | Campaign briefing | T1 | Before assessment start |
 | `/candidate/campaigns/:id` | Legacy detail | — | Redirect → `/candidate/campaigns` |
 | `/candidate/campaigns/:id/enroll` | Legacy enroll | — | Redirect → `/candidate/campaigns` |
-| `/candidate/learning` | Learning hub | T3 | Backlog |
-| `/candidate/learning/:moduleId` | Learning module | T3 | Backlog |
+| `/candidate/learning` | Learning dashboard (roadmaps) | T1 | Keep — see `learning.md` |
+| `/candidate/learning/roadmaps/:id` | Roadmap detail | T1 | Keep |
+| `/candidate/learning/roadmaps/:id/lessons/...` | Theory / device-check / practice / report | T1 | Keep |
 | `/candidate/progress` | Progress dashboard | T2 | Simplify |
 | `/candidate/leaderboard` | Leaderboard | T2 | Simplify |
 | `/candidate/achievements` | Achievements | T2 | Simplify |
@@ -274,7 +275,7 @@ BRD `Screen_Inventory.md` lists 100+ screens. Frontend product scope **does not*
 | BRD area | Product stance |
 | --- | --- |
 | SCR-CAN-023–025 (public discovery) | Out of scope |
-| SCR-CAN-040–041 (learning hub) | Tier 3 |
+| SCR-CAN-040–041 (learning hub) | Tier 1 dashboard — see `learning.md` |
 | SCR-CAN-044–045 (leaderboard, achievements) | Tier 2 |
 | SCR-ADM-069+ | Tier 1 but mostly **not built** |
 | SCR-EMP-063–068 (billing, team) | Tier 1 — **implemented (mock)** |

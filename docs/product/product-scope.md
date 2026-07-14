@@ -224,7 +224,7 @@ Both lines are **equal-priority** deliverables for Tier 1.
 | Credit vs token UX | Show tokens; flat per-session credit retired |
 | Public browse vs my campaigns | Browse **out**; invite-only list **in**; magic link → campaigns hub |
 | Dual-role accounts | Separate — one email, one role |
-| Learning Hub vs Roadmap | Roadmap Tier 1; Learning Hub Tier 3 |
+| Learning Hub vs Roadmap | Create at `/candidate/roadmap`; study at `/candidate/learning` (dashboard) — see `learning.md` |
 | Org verify | No create/publish campaign until verified |
 | Registered email on invite | Immediate campaign list row + link to Candidate account (BR-B2B-07) |
 | B2B assessment proctoring | Documented in `campaign-assessment.md` (face match, tab/focus, auto-submit) |

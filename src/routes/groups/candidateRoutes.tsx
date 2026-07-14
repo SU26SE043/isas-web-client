@@ -7,8 +7,11 @@ import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPa
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
 import { LearningHubPage } from '@/features/practice/pages/LearningHubPage';
-import { LearningModulePage } from '@/features/practice/pages/LearningModulePage';
-import { LearningPracticePage } from '@/features/practice/pages/LearningPracticePage';
+import { LearningRoadmapDetailPage } from '@/features/practice/pages/LearningRoadmapDetailPage';
+import { LearningTheoryPage } from '@/features/practice/pages/LearningTheoryPage';
+import { LearningPracticeDeviceCheckPage } from '@/features/practice/pages/LearningPracticeDeviceCheckPage';
+import { LearningLessonPracticePage } from '@/features/practice/pages/LearningLessonPracticePage';
+import { LearningPracticeReportPage } from '@/features/practice/pages/LearningPracticeReportPage';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
 import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage';
 import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
@@ -72,8 +75,25 @@ export const candidateRoutes: RouteObject[] = [
           { path: 'history', element: <CandidateHistoryLegacyRedirect /> },
           { path: 'roadmap', element: <RoadmapPage /> },
           { path: 'learning', element: <LearningHubPage /> },
-          { path: 'learning/:moduleId/practice', element: <LearningPracticePage /> },
-          { path: 'learning/:moduleId', element: <LearningModulePage /> },
+          {
+            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/theory',
+            element: <LearningTheoryPage />,
+          },
+          {
+            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/practice/device-check',
+            element: <LearningPracticeDeviceCheckPage />,
+          },
+          {
+            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/practice',
+            element: <LearningLessonPracticePage />,
+          },
+          {
+            path: 'learning/roadmaps/:roadmapId/lessons/:lessonId/report',
+            element: <LearningPracticeReportPage />,
+          },
+          { path: 'learning/roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
+          { path: 'learning/:moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
+          { path: 'learning/:moduleId', element: <Navigate to="/candidate/learning" replace /> },
           { path: 'progress', element: <ProgressDashboardPage /> },
           { path: 'leaderboard', element: <LeaderboardPage /> },
           { path: 'achievements', element: <AchievementsPage /> },

@@ -31,8 +31,9 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 9. Session completes → upload → `/interview/:sessionId/complete` → result/history.
 10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
 11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
-12. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
-13. Roadmap creation wizard at `/candidate/roadmap` (domain → reports → target level → confirm → AI → Learning). Detail: [`learning-roadmap.md`](./learning-roadmap.md).
+12. Learning dashboard at `/candidate/learning` (roadmap cards, search/filter/sort) — see [`learning.md`](./learning.md).
+13. Roadmap detail + Theory → Practice (device check, live feedback, Complete Practice Session, Practice Report).
+14. Roadmap creation wizard at `/candidate/roadmap` then redirect to Learning. Detail create flow: [`learning-roadmap.md`](./learning-roadmap.md).
 14. Certificates at `/candidate/certificates/:id`.
 15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
 16. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.

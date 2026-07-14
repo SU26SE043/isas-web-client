@@ -22,7 +22,7 @@ Frontend monolith for **ISAS** - AI interview simulation and assessment. One sha
 | CV analysis | T1 | Partial - `/candidate/cv/analysis*` (mock) |
 | Candidate dashboard | T1 | Partial - `/candidate/dashboard` (mock) |
 | Interview practice | T1 | In progress - `/practice`, `/interview/*`, history |
-| Learning roadmap | T1 | Wizard at `/candidate/roadmap` → Learning (`learning-roadmap.md`) |
+| Learning roadmap / Learning study | T1 | Wizard create + dashboard study (`learning-roadmap.md`, `learning.md`) |
 | Payment & token billing | T1 | Routes exist; token model not implemented |
 | Magic link (B2B candidate) | T1 | `/invite/:token` |
 | Campaign discovery (public) | - | Out of scope - deprecate `/candidate/campaigns*` |

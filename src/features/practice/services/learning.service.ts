@@ -22,6 +22,7 @@ import {
   MOCK_PRACTICE_SESSIONS,
   MOCK_PROGRESS_DASHBOARD,
 } from '../mocks/progress.fixtures';
+import { learningPathService } from './learningPath.service';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 let latestCreatedRoadmap: RoadmapResponse | null = null;
@@ -72,6 +73,7 @@ export const learningService = {
 
     latestCreatedRoadmap = created;
     roadmapRegenerateCount = 0;
+    await learningPathService.registerCreatedRoadmap(input);
     return created;
   },
 
