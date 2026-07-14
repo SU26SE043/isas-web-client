@@ -15,6 +15,7 @@ import {
   MOCK_LEARNING_PATH_ROADMAPS,
   createPracticeReportStub,
 } from '../mocks/learningPath.fixtures';
+import { buildLessonHtml } from '../mocks/lessonContent.fixtures';
 import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
 import { registerLearningPracticeSession } from './learningPracticeSession.registry';
 
@@ -366,15 +367,19 @@ function milestoneSeed(
     order,
     status: order === 1 ? 'current' : 'locked',
     progressPercent: 0,
-    lessons: lessons.map(([en, vi], index) => ({
-      id: `${id}-l${index + 1}`,
-      title: en,
-      titleVi: vi,
-      order: index + 1,
-      theoryStatus: order === 1 && index === 0 ? 'available' : 'locked',
-      practiceStatus: 'locked',
-      contentUrl: `https://example.com/learn/${id}-l${index + 1}`,
-      status: 'not_started',
-    })),
+    lessons: lessons.map(([en, vi], index) => {
+      const html = buildLessonHtml(en, vi);
+      return {
+        id: `${id}-l${index + 1}`,
+        title: en,
+        titleVi: vi,
+        order: index + 1,
+        theoryStatus: order === 1 && index === 0 ? 'available' : 'locked',
+        practiceStatus: 'locked',
+        content: html.content,
+        contentVi: html.contentVi,
+        status: 'not_started' as const,
+      };
+    }),
   };
 }

@@ -5,6 +5,7 @@ import type {
   LearningPracticeReport,
   LearningRoadmapDetail,
 } from '../types/learningPath.types';
+import { buildLessonHtml } from './lessonContent.fixtures';
 
 export const LEARNING_PRACTICE_QUESTIONS: LearningPracticeQuestion[] = [
   {
@@ -38,6 +39,7 @@ function lesson(
       : theory === 'completed' || practice === 'completed' || theory === 'available'
         ? 'in_progress'
         : 'not_started';
+  const html = buildLessonHtml(title, titleVi);
   return {
     id,
     title,
@@ -45,7 +47,8 @@ function lesson(
     order,
     theoryStatus: theory,
     practiceStatus: practice,
-    contentUrl: `https://example.com/learn/${id}`,
+    content: html.content,
+    contentVi: html.contentVi,
     status,
   };
 }

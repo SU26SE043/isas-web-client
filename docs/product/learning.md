@@ -59,7 +59,7 @@ Only the **current** milestone is open; later milestones stay locked until the c
 
 Each milestone has many lessons. Each lesson has exactly two parts, in order:
 
-1. **Theory** — embed Learning Content URL from backend; footer **Mark as Completed** unlocks Practice.
+1. **Theory** — in-app HTML article reader (`title` + `content` from backend); footer **Mark as Completed** unlocks Practice.
 2. **Practice** — shared interview flow after Theory (`sessionId` prefix `learning-`).
 
 Cannot skip Theory, Practice, lessons, or milestones.

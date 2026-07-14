@@ -1,27 +1,31 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { Check, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { LessonHtmlContent } from '../components/learning-path/LessonHtmlContent';
 import { learningPathService } from '../services/learningPath.service';
 import type { LearningLesson, LearningRoadmapDetail } from '../types/learningPath.types';
-import {
-  launchLearningInterviewPractice,
-  learningInterviewPreparePath,
-} from '../utils/launchLearningInterviewPractice';
 
 export function LearningTheoryPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
-  const navigate = useNavigate();
   const { language, t } = useLanguage();
   const [roadmap, setRoadmap] = useState<LearningRoadmapDetail | null>(null);
   const [lesson, setLesson] = useState<LearningLesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState(false);
+
+  const reload = async () => {
+    const data = await learningPathService.getRoadmap(roadmapId);
+    const found = data.milestones.flatMap((item) => item.lessons).find((item) => item.id === lessonId);
+    setRoadmap(data);
+    setLesson(found ?? null);
+    setError(!found);
+  };
 
   useEffect(() => {
     let active = true;
+    setIsLoading(true);
     void learningPathService
       .getRoadmap(roadmapId)
       .then((data) => {
@@ -42,30 +46,15 @@ export function LearningTheoryPage() {
     };
   }, [lessonId, roadmapId]);
 
-  const startPractice = async (title: string) => {
-    setIsLaunching(true);
-    try {
-      const sessionId = await launchLearningInterviewPractice({
-        roadmapId,
-        lessonId,
-        title,
-      });
-      navigate(learningInterviewPreparePath(sessionId));
-    } catch {
-      setError(true);
-      setIsLaunching(false);
-    }
-  };
-
   const handleComplete = async () => {
     if (!lesson || lesson.theoryStatus === 'completed' || roadmap?.readOnly) return;
     setIsSaving(true);
     try {
       await learningPathService.markTheoryCompleted(roadmapId, lessonId);
-      const title = language === 'vi' ? lesson.titleVi : lesson.title;
-      await startPractice(title);
+      await reload();
     } catch {
       setError(true);
+    } finally {
       setIsSaving(false);
     }
   };
@@ -74,6 +63,7 @@ export function LearningTheoryPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+        <span className="sr-only">{t('practice.learningPath.loading')}</span>
       </div>
     );
   }
@@ -83,57 +73,45 @@ export function LearningTheoryPage() {
   }
 
   const title = language === 'vi' ? lesson.titleVi : lesson.title;
+  const html = language === 'vi' ? lesson.contentVi : lesson.content;
+  const isCompleted = lesson.theoryStatus === 'completed' || roadmap.readOnly;
 
   return (
-    <div className="page-container page-section min-h-screen">
-      <Link
-        to={`/candidate/learning/roadmaps/${roadmapId}`}
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        {t('practice.learningPath.backToRoadmap')}
-      </Link>
+    <div className="min-h-full overflow-y-auto bg-surface-base">
+      <div className="mx-auto max-w-[900px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <Link
+          to={`/candidate/learning/roadmaps/${roadmapId}`}
+          className="text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          {t('practice.learningPath.backToRoadmap')}
+        </Link>
 
-      <header className="mt-4 space-y-1">
-        <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}</p>
-        <h1 className="heading-primary text-3xl text-foreground">{title}</h1>
-      </header>
+        <header className="mt-5 space-y-2 border-b border-subtle pb-6">
+          <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}</p>
+          <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{title}</h1>
+        </header>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-subtle bg-surface-raised">
-        <iframe
-          title={title}
-          srcDoc={`<!doctype html><html><body style="font-family:system-ui;padding:24px;background:#0c0c0e;color:#e8e8ea;line-height:1.6"><h1>${title}</h1><p>${language === 'vi' ? 'Nội dung lý thuyết được tải từ Learning Content URL do backend cung cấp.' : 'Theory content is loaded from the Learning Content URL provided by the backend.'}</p><p style="opacity:.7">${lesson.contentUrl}</p></body></html>`}
-          className="h-[420px] w-full bg-surface-base"
-          sandbox="allow-same-origin"
-        />
-        <p className="border-t border-subtle px-4 py-3 text-caption text-muted-foreground">
-          {t('practice.learningPath.contentUrlHint')} · {lesson.contentUrl}
-        </p>
-      </div>
+        <article className="frame-satin mt-8 rounded-2xl border border-subtle bg-surface-raised p-6 sm:p-8 lg:p-10">
+          <LessonHtmlContent html={html} />
+        </article>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {lesson.theoryStatus !== 'completed' && !roadmap.readOnly ? (
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={isSaving || isLaunching || lesson.theoryStatus === 'locked'}
-            onClick={() => void handleComplete()}
-          >
-            {isSaving || isLaunching
-              ? t('practice.learningPath.saving')
-              : t('practice.learningPath.markCompleted')}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="btn-primary inline-flex"
-            disabled={isLaunching || lesson.practiceStatus === 'locked'}
-            onClick={() => void startPractice(title)}
-          >
-            {isLaunching
-              ? t('practice.learningPath.saving')
-              : t('practice.learningPath.openPractice')}
-          </button>
-        )}
+        <div className="mt-8 flex justify-start border-t border-subtle pt-6">
+          {isCompleted ? (
+            <p className="inline-flex items-center gap-2 rounded-xl border border-subtle bg-surface-overlay px-4 py-2.5 text-sm font-medium text-foreground">
+              <Check className="size-4 text-success" aria-hidden />
+              {t('practice.learningPath.theoryCompleted')}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={isSaving || lesson.theoryStatus === 'locked'}
+              onClick={() => void handleComplete()}
+            >
+              {isSaving ? t('practice.learningPath.saving') : t('practice.learningPath.markCompleted')}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

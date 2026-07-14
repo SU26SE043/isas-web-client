@@ -59,7 +59,10 @@ export interface LearningLesson {
   order: number;
   theoryStatus: LessonPartStatus;
   practiceStatus: LessonPartStatus;
-  contentUrl: string;
+  /** Lesson body HTML (English). */
+  content: string;
+  /** Lesson body HTML (Vietnamese). */
+  contentVi: string;
   status: LearningPathStatus;
   practiceReportId?: string;
 }
