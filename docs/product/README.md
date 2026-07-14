@@ -33,6 +33,7 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 | [cv-analysis.md](./cv-analysis.md) | CV analysis wizard & match report |
 | [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
+| [learning-roadmap.md](./learning-roadmap.md) | Roadmap creation wizard → Learning |
 | [payment.md](./payment.md) | Token billing, B2C wallet, B2B invoices |
 | [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
 | [campaign-discovery.md](./campaign-discovery.md) | Magic link entry; public browse deprecated |

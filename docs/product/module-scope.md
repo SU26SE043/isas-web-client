@@ -18,7 +18,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Implemented (mock) |
 | CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
 | Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | Implemented (mock) |
-| Learning roadmap | T1 | Roadmap, milestones, lessons | `/candidate/roadmap` | Implemented (mock) |
+| Learning roadmap | T1 | Creation wizard → AI path → Learning | `/candidate/roadmap` | Implemented (mock wizard) |
 | Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, `/candidate/usage`, payment | Implemented (mock) |
 | Usage & billing UI | T1 | Token history, estimates, settle display | `/candidate/usage`, employer invoices | Implemented (mock) |
 | Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
@@ -98,7 +98,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/practice/history` | Interview history | T1 | Keep |
 | `/candidate/practice/history/:id` | Result detail | T1 | Keep |
 | `/candidate/practice/history/compare` | Compare results | T1 | Keep |
-| `/candidate/roadmap` | Learning roadmap | T1 | Keep |
+| `/candidate/roadmap` | Roadmap creation wizard (then Learning) | T1 | Keep — see `learning-roadmap.md` |
 | `/candidate/credits` | Wallet | T1 | Update for tokens |
 | `/candidate/subscription` | Plans | T1 | Review vs token model |
 | `/candidate/payment` | Checkout | T1 | Keep |

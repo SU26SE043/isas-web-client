@@ -54,6 +54,15 @@ export interface RoadmapResponse {
   steps: RoadmapStep[];
   regenerateCount: number;
   regenerateLimit: number;
+  domainId?: string;
+  targetLevel?: string;
+  sourceReportIds?: string[];
+}
+
+export interface CreateRoadmapInput {
+  domainId: string;
+  targetLevel: string;
+  reportIds: string[];
 }
 
 export interface ProgressWeekPoint {

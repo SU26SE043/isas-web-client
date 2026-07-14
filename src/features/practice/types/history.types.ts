@@ -1,3 +1,11 @@
+export type InterviewHistoryLevel =
+  | 'intern'
+  | 'fresher'
+  | 'junior'
+  | 'middle'
+  | 'senior'
+  | 'lead';
+
 export interface InterviewHistoryItem {
   id: string;
   jobTitle: string;
@@ -6,6 +14,9 @@ export interface InterviewHistoryItem {
   status: 'completed' | 'in-progress' | 'pending';
   overallScore: number;
   duration: number;
+  /** Practice setup domain id — used to filter roadmap report selection */
+  domainId: string;
+  level: InterviewHistoryLevel;
   deletedAt?: string | null;
 }
 

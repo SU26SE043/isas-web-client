@@ -32,7 +32,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
 11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
 12. Learning hub at `/candidate/learning`, module viewer `/candidate/learning/:moduleId`.
-13. Full roadmap at `/candidate/roadmap` (regenerate limit BRL-026).
+13. Roadmap creation wizard at `/candidate/roadmap` (domain → reports → target level → confirm → AI → Learning). Detail: [`learning-roadmap.md`](./learning-roadmap.md).
 14. Certificates at `/candidate/certificates/:id`.
 15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
 16. Progress dashboard at `/candidate/progress`, leaderboard and achievements linked from there.
@@ -59,7 +59,7 @@ Legacy `/practice/history` redirects to `/candidate/practice/history`.
 | `/candidate/results/:id` | Redirect → `/candidate/practice/history/:id` |
 | `/candidate/history` | Redirect → `/candidate/practice/history` |
 | `/candidate/practice/history/:id` | `InterviewResultPage` |
-| `/candidate/roadmap` | `RoadmapPage` |
+| `/candidate/roadmap` | `RoadmapPage` → creation wizard (`RoadmapWizardPage`) |
 | `/candidate/learning` | `LearningHubPage` |
 | `/candidate/learning/:moduleId` | `LearningModulePage` |
 | `/candidate/learning/:moduleId/practice` | `LearningPracticePage` |
@@ -83,7 +83,7 @@ FS-090 through FS-103 implemented on mock services:
 
 - **Results:** scoring poll, tabbed report (`ReportTabs`), `ScoreDial`, `SkillRadarChart`, `SkillBreakdownAccordion` (alias), question feedback, roadmap preview via `learningService.getRoadmap()`.
 - **History:** `HistoryTable`, pagination, status/date filters, compare mode, soft-delete (hide/restore).
-- **Learning:** roadmap page with regen limit, learning hub, module viewer with `passThreshold`, guided practice session.
+- **Learning:** roadmap **creation wizard** (not list-first); Learning Hub catalog; module viewer with `passThreshold`; guided practice. Regen of an existing path is secondary to create flow (`learning-roadmap.md`).
 - **Progress:** dashboard, leaderboard, achievements.
 - **Certificates:** viewer with PDF download (minimal PDF blob).
 - **Route aliases:** `/candidate/results/:id` and `/candidate/history` redirect to practice history routes.

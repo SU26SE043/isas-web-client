@@ -101,7 +101,15 @@ Living contract for **what the frontend product is**. Module and screen mapping:
 
 ### 4.2 B2C — Learning Roadmap (Tier 1)
 
-Sign in → Roadmap → choose domain → select one or more prior session reports → target level (Fresher / Junior / Middle / Senior) → AI generates roadmap → milestones → **lessons** (AI-generated + external theory links) → complete lesson → unlock practice → interview practice → report → milestone assessment → unlock next milestone → complete roadmap
+Sign in → menu **Roadmap** → **Creation Wizard** (not a roadmap list):
+
+1. Choose domain (**Frontend / Backend / Business Analyst** only)  
+2. Multi-select completed Interview Practice reports **for that domain** (UI shows up to 3; need ≥3 eligible; Select all / Unselect all)  
+3. Choose target level (Intern / Fresher / Junior / Middle / Senior / Lead)  
+4. Confirm  
+5. Create Roadmap → AI generates path (strengths, gaps, milestones, lessons, practice) → **redirect to Learning**
+
+Roadmap is **not** created from the Learning Hub. Contract: [`learning-roadmap.md`](./learning-roadmap.md).
 
 ### 4.3 B2B — Pre-campaign
 

@@ -49,6 +49,46 @@ export const PRACTICE_DOMAINS: PracticeDomain[] = [
   },
 ];
 
+/** Domains available in Roadmap Creation Wizard only */
+export const ROADMAP_DOMAINS: PracticeDomain[] = [
+  {
+    id: 'frontend',
+    name: 'Frontend',
+    nameVi: 'Frontend',
+    description: 'UI engineering, React, accessibility, and web performance.',
+    descriptionVi: 'Kỹ thuật UI, React, accessibility và hiệu năng web.',
+  },
+  {
+    id: 'backend',
+    name: 'Backend',
+    nameVi: 'Backend',
+    description: 'API design, databases, distributed systems, and reliability.',
+    descriptionVi: 'Thiết kế API, cơ sở dữ liệu, hệ thống phân tán và độ tin cậy.',
+  },
+  {
+    id: 'business-analyst',
+    name: 'Business Analyst',
+    nameVi: 'Business Analyst',
+    description: 'Requirements, stakeholder alignment, and process analysis.',
+    descriptionVi: 'Phân tích yêu cầu, stakeholder và quy trình nghiệp vụ.',
+  },
+];
+
+export const ROADMAP_TARGET_LEVELS = [
+  'intern',
+  'fresher',
+  'junior',
+  'middle',
+  'senior',
+  'lead',
+] as const;
+
+export type RoadmapTargetLevel = (typeof ROADMAP_TARGET_LEVELS)[number];
+
+/** Minimum completed reports required to create a roadmap; UI preview lists up to this many */
+export const ROADMAP_MIN_REPORTS = 3;
+export const ROADMAP_REPORT_PREVIEW_LIMIT = 3;
+
 export const DEFAULT_PRACTICE_RUBRIC: PracticeRubricCriterion[] = [
   {
     id: 'technical-depth',
