@@ -7,7 +7,7 @@ interface DashboardEngagementBarProps {
 
 export function DashboardEngagementBar({ scope }: DashboardEngagementBarProps) {
   return (
-    <div className="flex items-center justify-end border-b border-subtle bg-surface-base px-4 py-3 sm:px-6">
+    <div className="glass-topbar sticky top-0 z-30 flex items-center justify-end border-b px-4 py-3 sm:px-6">
       <NotificationBell scope={scope} />
     </div>
   );

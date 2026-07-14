@@ -33,8 +33,10 @@ type NavItem = { to: string; label: string; icon: React.ReactNode; end?: boolean
 
 function navLinkClassName(isActive: boolean) {
   return cn(
-    'group flex items-center justify-center rounded-lg px-0 py-2.5 text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)] sm:justify-start sm:gap-3 sm:px-3',
-    isActive ? 'bg-surface-elevated text-foreground shadow-sm' : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
+    'group flex items-center justify-center rounded-xl px-0 py-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)] sm:justify-start sm:gap-3 sm:px-3',
+    isActive
+      ? 'bg-surface-elevated text-foreground shadow-sm ring-1 ring-white/8'
+      : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
   );
 }
 
@@ -81,7 +83,7 @@ export const AdminDashboardLayout: React.FC = () => {
   return (
     <div className="min-h-screen surface-base">
       <div className="flex min-h-screen">
-        <aside className="sticky top-0 flex h-screen w-[4.5rem] shrink-0 flex-col border-r border-subtle bg-surface-sunken sm:w-72">
+        <aside className="glass-sidebar sticky top-0 flex h-screen w-[4.5rem] shrink-0 flex-col border-r sm:w-72">
           <div className="flex items-center justify-center border-b border-subtle px-3 py-4 sm:justify-between">
             <Link to="/" className="focus-ring hidden rounded-md sm:block"><BrandLogo className="h-7" /></Link>
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:hidden">AD</span>
@@ -105,7 +107,7 @@ export const AdminDashboardLayout: React.FC = () => {
           </div>
         </aside>
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
-          <div className="border-b border-subtle bg-surface-sunken px-4 py-3 sm:px-6">
+          <div className="glass-topbar border-b px-4 py-3 sm:px-6">
             <Alert variant="info">
               <AlertDescription>
                 {t('admin.layout.mfaRequired')} {t('admin.layout.singleSession')}

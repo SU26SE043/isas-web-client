@@ -16,12 +16,17 @@
 
 | Token / Class | Hex | Dùng cho |
 |---------------|-----|----------|
-| `surface-base` / `bg-surface-base` | `#09090b` | Page background |
-| `surface-sunken` | `#0c0c0e` | Sidebar, footer |
-| `surface-raised` | `#141416` | Cards, panels |
-| `surface-overlay` | `#1c1c1f` | Inputs, hover, nested |
-| `surface-elevated` | `#232326` | Modals, dropdowns, active nav |
-| `surface-highlight` | `#2a2a2e` | Strong hover |
+| `surface-base` / `bg-surface-base` | `#070709` | Page background |
+| `surface-sunken` | `#0a0a0c` | Sidebar base |
+| `surface-raised` | `#121214` | Cards, panels |
+| `surface-overlay` | `#1a1a1d` | Inputs, hover, nested |
+| `surface-elevated` | `#222226` | Modals, dropdowns, active nav |
+| `surface-highlight` | `#2c2c31` | Strong hover |
+| `glass-panel` | white-alpha + blur | Elevated glass cards |
+| `glass-sidebar` | sunken + blur | Dashboard sidebars |
+| `glass-topbar` | base + blur | Sticky engagement / top chrome |
+
+Depth ưu tiên **surface layers + glass**, không dùng màu accent trên layout.
 
 ## Borders (white alpha)
 

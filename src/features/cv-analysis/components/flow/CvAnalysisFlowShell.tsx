@@ -8,8 +8,10 @@ interface CvAnalysisFlowShellProps {
 
 export const CvAnalysisFlowShell: React.FC<CvAnalysisFlowShellProps> = ({ currentStep, children }) => {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6">
-      <CvAnalysisStepper currentStep={currentStep} />
+    <div className="mx-auto w-full max-w-4xl space-y-8">
+      <div className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
+        <CvAnalysisStepper currentStep={currentStep} />
+      </div>
       {children}
     </div>
   );

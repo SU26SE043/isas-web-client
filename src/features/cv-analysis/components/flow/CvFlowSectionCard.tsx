@@ -14,11 +14,18 @@ export const CvFlowSectionCard: React.FC<CvFlowSectionCardProps> = ({
   children,
   className,
 }) => (
-  <section className={cn('rounded-xl border border-subtle bg-surface-raised', className)}>
-    <div className="border-b border-subtle px-4 py-4 sm:px-6">
-      <h2 className="heading-secondary text-base sm:text-lg">{title}</h2>
-      {description ? <p className="body-text mt-1 text-sm">{description}</p> : null}
+  <section
+    className={cn(
+      'overflow-hidden rounded-2xl border border-white/10 bg-[rgb(18_18_20/0.55)] shadow-[var(--shadow-md)] backdrop-blur-xl',
+      className,
+    )}
+  >
+    <div className="border-b border-white/8 px-5 py-5 sm:px-7 sm:py-6">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
+      {description ? (
+        <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+      ) : null}
     </div>
-    <div className="px-4 py-5 sm:px-6">{children}</div>
+    <div className="px-5 py-6 sm:px-7 sm:py-7">{children}</div>
   </section>
 );

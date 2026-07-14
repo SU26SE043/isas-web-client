@@ -12,13 +12,13 @@ import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
   return cn(
-    'group relative flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
+    'group relative flex items-center rounded-xl text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
     isCollapsed
       ? 'justify-center px-0 py-2.5'
       : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
     isActive
-      ? 'bg-surface-elevated text-foreground shadow-sm'
-      : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
+      ? 'bg-surface-elevated text-foreground shadow-sm ring-1 ring-white/8'
+      : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
   );
 }
 
@@ -44,7 +44,7 @@ export const EmployerDashboardLayout: React.FC = () => {
       <div className="flex min-h-screen">
         <aside
           className={cn(
-            'sticky top-0 flex h-screen shrink-0 flex-col border-r border-subtle bg-surface-sunken transition-[width] duration-300 ease-out',
+            'glass-sidebar sticky top-0 flex h-screen shrink-0 flex-col border-r transition-[width] duration-300 ease-out',
             isCollapsed ? 'w-[4.5rem]' : 'w-[4.5rem] sm:w-64',
           )}
         >

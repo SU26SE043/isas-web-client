@@ -12,7 +12,7 @@ export function ProgressSection({
   action?: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-subtle bg-surface-raised p-5 sm:p-6">
+    <section className="glass-panel rounded-2xl p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="heading-secondary text-lg text-foreground">{title}</h2>
