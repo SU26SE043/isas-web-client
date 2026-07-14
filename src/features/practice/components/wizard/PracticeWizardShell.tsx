@@ -23,11 +23,11 @@ export const PracticeWizardShell: React.FC<PracticeWizardShellProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-screen justify-center bg-surface-base px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-5 lg:items-start lg:gap-10">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] justify-center overflow-y-auto bg-surface-base px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
         <nav
           aria-label={t('practice.wizard.stepperLabel')}
-          className="lg:sticky lg:top-8 lg:col-span-1"
+          className="shrink-0 lg:sticky lg:top-8 lg:w-[240px] lg:self-start"
         >
           <h1 className="sr-only">
             {t('practice.wizard.stepOf')
@@ -68,10 +68,10 @@ export const PracticeWizardShell: React.FC<PracticeWizardShellProps> = ({
                       />
                     ) : null}
                   </div>
-                  <div className={cn('pt-1.5', !isLast && 'lg:pb-6')}>
+                  <div className={cn('min-w-0 pt-1.5', !isLast && 'lg:pb-6')}>
                     <span
                       className={cn(
-                        'block text-sm font-medium',
+                        'block text-sm font-medium leading-snug',
                         isActive ? 'text-foreground' : 'text-muted-foreground',
                       )}
                     >
@@ -84,7 +84,7 @@ export const PracticeWizardShell: React.FC<PracticeWizardShellProps> = ({
           </ol>
         </nav>
 
-        <div className="min-w-0 lg:col-span-4">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </div>
   );

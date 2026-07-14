@@ -28,24 +28,25 @@ export const CvAnalysisStepper: React.FC<CvAnalysisStepperProps> = ({ currentSte
 
   return (
     <nav aria-label={t('cv.flowLabel')} className={cn('w-full', className)}>
-      <ol className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-0">
+      <ol className="flex gap-3 overflow-x-auto pb-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:pb-0">
         {STEP_ORDER.map((step, index) => {
           const isComplete = index < activeIndex;
           const isCurrent = index === activeIndex;
           const isLast = index === STEP_ORDER.length - 1;
 
           return (
-            <li key={step} className="flex flex-1 gap-3 sm:flex-col sm:gap-3">
-              <div className="flex items-center sm:w-full">
+            <li key={step} className="flex shrink-0 items-stretch gap-3 lg:w-full">
+              <div className="flex flex-col items-center">
                 <span
                   className={cn(
-                    'relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-[background-color,border-color,box-shadow,color] duration-200 ease-out',
+                    'flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-[background-color,border-color,color] duration-200 ease-out',
                     isCurrent
-                      ? 'border-white/80 bg-white text-black shadow-[0_0_0_4px_rgb(255_255_255/0.08)]'
+                      ? 'border-white bg-white text-black'
                       : isComplete
-                        ? 'border-white/25 bg-white/10 text-foreground'
-                        : 'border-white/10 bg-surface-overlay text-muted-foreground',
+                        ? 'border-white/30 bg-white/10 text-foreground'
+                        : 'border-white/15 bg-transparent text-muted-foreground',
                   )}
+                  aria-current={isCurrent ? 'step' : undefined}
                   aria-hidden
                 >
                   {index + 1}
@@ -53,25 +54,24 @@ export const CvAnalysisStepper: React.FC<CvAnalysisStepperProps> = ({ currentSte
                 {!isLast ? (
                   <div
                     className={cn(
-                      'mx-3 hidden h-px flex-1 sm:block',
-                      isComplete ? 'bg-white/30' : 'bg-white/10',
+                      'mt-1 hidden w-px flex-1 min-h-6 lg:block',
+                      isComplete ? 'bg-white/25' : 'bg-white/10',
                     )}
                     aria-hidden
                   />
                 ) : null}
               </div>
 
-              <div className="min-w-0 pr-2">
+              <div className={cn('min-w-0 pt-1.5', !isLast && 'lg:pb-6')}>
                 <p
                   className={cn(
-                    'text-sm font-semibold tracking-tight',
+                    'text-sm font-medium leading-snug',
                     isCurrent ? 'text-foreground' : 'text-muted-foreground',
                   )}
-                  aria-current={isCurrent ? 'step' : undefined}
                 >
                   {t(STEP_KEYS[step])}
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-1 hidden text-xs leading-relaxed text-muted-foreground lg:block">
                   {t(`cv.stepDesc.${step}`)}
                 </p>
               </div>

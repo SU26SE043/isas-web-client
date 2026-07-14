@@ -31,7 +31,7 @@ export function SectionPanel({
     return (
       <div
         className={cn(
-          'frame-satin flex min-h-[280px] items-center justify-center rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
+          'frame-satin flex min-h-[280px] flex-1 items-center justify-center rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
           className,
         )}
       >
@@ -42,22 +42,22 @@ export function SectionPanel({
 
   return (
     <section
-        className={cn(
-          'frame-satin overflow-hidden rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
-          className,
-        )}
-      >
-      <div className="border-b border-satin px-5 py-5 sm:px-7 sm:py-6">
-        <div className={icon ? 'flex items-start gap-3' : undefined}>
+      className={cn(
+        'frame-satin flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl',
+        className,
+      )}
+    >
+      <div className="shrink-0 border-b border-satin px-6 py-6 sm:px-8 sm:py-7">
+        <div className={icon ? 'flex items-start gap-4' : undefined}>
           {icon ? (
-            <span className="frame-satin-soft mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
+            <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
               {icon}
             </span>
           ) : null}
-          <div>
+          <div className="min-w-0">
             <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
             {description ? (
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                 {description}
               </p>
             ) : null}
@@ -65,13 +65,13 @@ export function SectionPanel({
         </div>
       </div>
 
-      <div className="px-5 py-6 sm:px-7 sm:py-7">
-        {children}
+      <div className="flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8">
+        <div className="min-h-0 flex-1">{children}</div>
         {footer}
       </div>
 
       {footerHint ? (
-        <p className="border-t border-satin px-5 py-4 text-center text-xs text-muted-foreground sm:px-7">
+        <p className="shrink-0 border-t border-satin px-6 py-4 text-center text-xs text-muted-foreground sm:px-8">
           {footerHint}
         </p>
       ) : null}

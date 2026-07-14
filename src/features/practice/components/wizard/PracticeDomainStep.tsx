@@ -14,12 +14,12 @@ import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
-  frontend: <Monitor className="size-4" aria-hidden />,
-  backend: <Server className="size-4" aria-hidden />,
-  fullstack: <Layers className="size-4" aria-hidden />,
-  mobile: <Smartphone className="size-4" aria-hidden />,
-  data: <Database className="size-4" aria-hidden />,
-  qa: <ShieldCheck className="size-4" aria-hidden />,
+  frontend: <Monitor className="size-5" aria-hidden />,
+  backend: <Server className="size-5" aria-hidden />,
+  fullstack: <Layers className="size-5" aria-hidden />,
+  mobile: <Smartphone className="size-5" aria-hidden />,
+  data: <Database className="size-5" aria-hidden />,
+  qa: <ShieldCheck className="size-5" aria-hidden />,
 };
 
 interface PracticeDomainStepProps {
@@ -49,7 +49,7 @@ export const PracticeDomainStep: React.FC<PracticeDomainStepProps> = ({
       isLoading={isLoading}
       footer={<PracticeWizardNav nextDisabled={!selectedId} onNext={onNext} onBack={onBack} />}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         {domains.map((domain) => {
           const label = language === 'vi' ? domain.nameVi : domain.name;
           const description = language === 'vi' ? domain.descriptionVi : domain.description;
@@ -58,7 +58,7 @@ export const PracticeDomainStep: React.FC<PracticeDomainStepProps> = ({
               key={domain.id}
               title={label}
               description={description}
-              icon={DOMAIN_ICONS[domain.id] ?? <Layers className="size-4" aria-hidden />}
+              icon={DOMAIN_ICONS[domain.id] ?? <Layers className="size-5" aria-hidden />}
               selected={domain.id === selectedId}
               onClick={() => onSelect(domain.id)}
             />

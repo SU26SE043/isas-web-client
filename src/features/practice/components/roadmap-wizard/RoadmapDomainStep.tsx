@@ -31,7 +31,7 @@ export const RoadmapDomainStep: React.FC<RoadmapDomainStepProps> = ({
       isLoading={isLoading}
       footer={<RoadmapWizardNav nextDisabled={!selectedId} onNext={onNext} backDisabled />}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         {domains.map((domain) => {
           const label = language === 'vi' ? domain.nameVi : domain.name;
           const description = language === 'vi' ? domain.descriptionVi : domain.description;

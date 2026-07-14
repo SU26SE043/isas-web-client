@@ -33,7 +33,7 @@ export function SelectionOption({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'group flex items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
+        'group flex items-center gap-4 rounded-2xl px-5 py-5 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
         selected
           ? 'frame-satin bg-white/[0.08]'
           : 'frame-satin-interactive bg-black/20',
@@ -45,7 +45,7 @@ export function SelectionOption({
       {icon ? (
         <span
           className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-full border transition-colors',
+            'flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors',
             selected
               ? 'border-satin bg-white text-black'
               : 'border-satin bg-white/[0.06] text-foreground',
@@ -55,9 +55,9 @@ export function SelectionOption({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <span className="block font-medium text-foreground">{title}</span>
+        <span className="block text-base font-medium leading-snug text-foreground">{title}</span>
         {description ? (
-          <span className="mt-1 block text-sm leading-snug text-muted-foreground">{description}</span>
+          <span className="mt-1.5 block text-sm leading-relaxed text-muted-foreground">{description}</span>
         ) : null}
       </span>
       {showChevron ? (

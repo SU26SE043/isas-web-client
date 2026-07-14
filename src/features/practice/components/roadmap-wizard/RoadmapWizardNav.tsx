@@ -21,7 +21,7 @@ export const RoadmapWizardNav: React.FC<RoadmapWizardNavProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="mt-6 flex flex-wrap justify-between gap-3">
+    <div className="mt-auto flex flex-wrap justify-between gap-3 border-t border-satin pt-6">
       <button type="button" className="btn-secondary" disabled={backDisabled} onClick={onBack}>
         {t('practice.roadmapWizard.back')}
       </button>

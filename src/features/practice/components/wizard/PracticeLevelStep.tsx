@@ -38,7 +38,7 @@ export const PracticeLevelStep: React.FC<PracticeLevelStepProps> = ({
       description={t('practice.wizard.level.description')}
       footer={<PracticeWizardNav onBack={onBack} onNext={onNext} nextDisabled={!selectedLevel} />}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         {levels.map((level) => (
           <PracticeWizardOptionCard
             key={level}

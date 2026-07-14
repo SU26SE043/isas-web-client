@@ -23,7 +23,7 @@ export const PracticeWizardNav: React.FC<PracticeWizardNavProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-satin pt-6">
+    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-satin pt-6">
       <button
         type="button"
         className={cn(

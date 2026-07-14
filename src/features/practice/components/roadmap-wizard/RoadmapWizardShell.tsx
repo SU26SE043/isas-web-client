@@ -28,11 +28,11 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
   const showIntro = currentStep === 0 && Boolean(introTitle);
 
   return (
-    <div className="flex min-h-full justify-center bg-surface-base px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <div className="flex w-full max-w-6xl items-start gap-5 sm:gap-8 lg:gap-10">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] justify-center overflow-y-auto bg-surface-base px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
         <nav
           aria-label={t('practice.roadmapWizard.stepperLabel')}
-          className="sticky top-8 w-[5.5rem] shrink-0 sm:w-40 lg:w-44"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[240px] lg:self-start"
         >
           <h1 className="sr-only">
             {t('practice.roadmapWizard.stepOf')
@@ -89,8 +89,8 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
           </ol>
         </nav>
 
-        <div className="min-w-0 flex-1 space-y-6">
-          <div>
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <div className="shrink-0">
             <Link
               to="/candidate/dashboard"
               className="text-sm text-muted-foreground transition hover:text-foreground"
@@ -102,13 +102,13 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
               <>
                 <h2 className="heading-primary mt-4 text-3xl text-foreground sm:text-4xl">{introTitle}</h2>
                 {introDescription ? (
-                  <p className="body-text mt-2 max-w-2xl">{introDescription}</p>
+                  <p className="body-text mt-2 max-w-3xl">{introDescription}</p>
                 ) : null}
               </>
             ) : null}
           </div>
 
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </div>
       </div>
     </div>

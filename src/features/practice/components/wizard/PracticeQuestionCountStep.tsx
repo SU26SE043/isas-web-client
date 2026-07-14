@@ -28,7 +28,7 @@ export const PracticeQuestionCountStep: React.FC<PracticeQuestionCountStepProps>
       description={t('practice.wizard.questions.description')}
       footer={<PracticeWizardNav onBack={onBack} onNext={onNext} />}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         {PRACTICE_QUESTION_COUNTS.map((count) => (
           <PracticeWizardOptionCard
             key={count}

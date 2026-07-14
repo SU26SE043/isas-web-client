@@ -26,7 +26,7 @@ export const RoadmapTargetLevelStep: React.FC<RoadmapTargetLevelStepProps> = ({
       <h2 className="heading-secondary text-lg">{t('practice.roadmapWizard.level.title')}</h2>
       <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.level.description')}</p>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-6 sm:grid-cols-2">
         {ROADMAP_TARGET_LEVELS.map((level) => {
           const isSelected = level === selectedLevel;
           return (

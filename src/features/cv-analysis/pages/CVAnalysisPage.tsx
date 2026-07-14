@@ -18,8 +18,8 @@ export const CVAnalysisPage: React.FC = () => {
   }, [flow.step]);
 
   return (
-    <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <div className="mx-auto mb-10 max-w-4xl space-y-3">
+    <div className="min-h-full px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
+      <div className="mx-auto mb-8 w-full max-w-[1600px] space-y-3 lg:mb-10">
         <h1 className="heading-primary text-3xl tracking-tight sm:text-4xl">{t('cv.title')}</h1>
         <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
           {t('cv.description')}
