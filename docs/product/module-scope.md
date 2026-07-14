@@ -32,7 +32,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Learning hub | T1 | Dashboard of created roadmaps; milestones / theory / practice | `/candidate/learning*` | Implemented (mock) |
 | Leaderboard | T2 | Rankings | `/candidate/leaderboard` | Placeholder |
 | Certificate | T2 | Certificate viewer | `/candidate/certificates/:id` | Placeholder |
-| Achievements / progress | T2/T3 | Gamification | `/candidate/achievements`, `progress` | Placeholder |
+| Achievements / progress | T1/T2 | Analytics + gamification | `/candidate/progress`, `achievements`, `leaderboard` | Progress analytics Keep; leaderboard/achievements Simplify |
 | Admin portal | T1 | Users, tenant, audit, AI config | `/admin/*` | Implemented (mock) |
 | Shared engagement | T1 | Notifications, settings, help, support, team | `/*/notifications`, `/*/settings`, `/*/help`, `/*/support`, `/employer/team` | Implemented (mock) |
 | Transactional email | T1 | Backend-driven; frontend triggers only | — | Not started |
@@ -110,7 +110,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/learning` | Learning dashboard (roadmaps) | T1 | Keep — see `learning.md` |
 | `/candidate/learning/roadmaps/:id` | Roadmap detail | T1 | Keep |
 | `/candidate/learning/roadmaps/:id/lessons/...` | Theory / practice launcher → shared `/interview/learning-...` room / report | T1 | Keep |
-| `/candidate/progress` | Progress dashboard | T2 | Simplify |
+| `/candidate/progress` | Progress analytics dashboard (18 sections, mock) | T1 | Keep — see `progress.md` |
 | `/candidate/leaderboard` | Leaderboard | T2 | Simplify |
 | `/candidate/achievements` | Achievements | T2 | Simplify |
 | `/candidate/certificates/:id` | Certificate | T2 | Simplify |

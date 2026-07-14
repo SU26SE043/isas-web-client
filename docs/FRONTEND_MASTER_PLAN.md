@@ -1250,7 +1250,7 @@ flowchart TB
 | FS-097 | Roadmap regenerate limit | P6 | M07 | F-LEARN-001 | Candidate | CAN-039 | P2 | FS-096 | S | BRL-026 | Error shown |
 | FS-098 | Learning hub catalog | P6 | M07 | F-LEARN-002 | Candidate | CAN-040 | P1 | FS-096 | M | UF-021 | Module grid |
 | FS-099 | Learning module viewer | P6 | M07 | F-LEARN-003 | Candidate | CAN-041 | P1 | FS-098 | L | BRL-011 | Complete 80% |
-| FS-100 | Progress dashboard | P6 | M07 | F-LEARN-002 | Candidate | CAN-043 | P2 | FS-098 | M | UF-023 | Charts |
+| FS-100 | Progress dashboard | P6 | M07 | F-LEARN-002 | Candidate | CAN-043 | P2 | FS-098 | M | UF-023 | Mock analytics dashboard (`progress.md`) |
 | FS-101 | Practice session room | P6 | M07 | F-LEARN-004 | Candidate | CAN-042 | P2 | FS-098 | L | UF-022 | — |
 | FS-102 | Leaderboard & achievements | P6 | M07 | F-LEARN-002 | Candidate | CAN-044–045 | P3 | FS-098 | M | — | — |
 | FS-103 | Session history table | P6 | M05 | F-HIST-001 | Candidate | CAN-048 | P0 | FS-090 | M | UF-026 | Paginated |

@@ -1,33 +1,81 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import { ProgressActivityChart } from '../components/progress/ProgressActivityChart';
-import { learningService } from '../services/learning.service';
-import type { ProgressDashboardData } from '../types/learning.types';
+import { progressService } from '../services/progress.service';
+import type {
+  ProgressAnalyticsDashboard,
+  ProgressDomainId,
+  ProgressExportKind,
+  ProgressTimeRange,
+} from '../types/progress.types';
+import { ProgressOverallSummary } from '../components/progress/ProgressOverallSummary';
+import { ProgressInterviewReadiness } from '../components/progress/ProgressInterviewReadiness';
+import { ProgressDomainGrid } from '../components/progress/ProgressDomainGrid';
+import { ProgressScoreHistoryChart } from '../components/progress/ProgressScoreHistoryChart';
+import {
+  ProgressSkillBreakdown,
+  ProgressStrengths,
+  ProgressWeaknesses,
+} from '../components/progress/ProgressSkillsPanels';
+import {
+  ProgressGoalTracking,
+  ProgressImprovementTrend,
+  ProgressLearningHeatmap,
+  ProgressPracticeTimeline,
+  ProgressRoadmapProgress,
+} from '../components/progress/ProgressMoreSections';
+import {
+  ProgressAchievementsPreview,
+  ProgressAiInsights,
+  ProgressComparativeStats,
+  ProgressExportPanel,
+  ProgressRecommendations,
+  ProgressSessionAnalytics,
+} from '../components/progress/ProgressInsightsSections';
+
+const RANGES: ProgressTimeRange[] = ['7d', '30d', '90d', '6m', '1y', 'all'];
 
 export const ProgressDashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
-  const [data, setData] = useState<ProgressDashboardData | null>(null);
+  const [domain, setDomain] = useState<ProgressDomainId>('all');
+  const [range, setRange] = useState<ProgressTimeRange>('30d');
+  const [data, setData] = useState<ProgressAnalyticsDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [exporting, setExporting] = useState<ProgressExportKind | null>(null);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [goalMessage, setGoalMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await progressService.getDashboard({ domain, range });
+      setData(response);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [domain, range]);
 
   useEffect(() => {
-    let active = true;
-    void learningService.getProgressDashboard().then((response) => {
-      if (active) {
-        setData(response);
-        setIsLoading(false);
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+    void load();
+  }, [load]);
 
-  if (isLoading) {
+  const handleExport = async (kind: ProgressExportKind) => {
+    if (!data) return;
+    setExporting(kind);
+    setExportMessage(null);
+    try {
+      await progressService.exportReport(kind, data);
+      setExportMessage(t('practice.progress.export.done'));
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  if (isLoading && !data) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
+        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+        <span className="sr-only">{t('practice.progress.loading')}</span>
       </div>
     );
   }
@@ -36,61 +84,71 @@ export const ProgressDashboardPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="heading-primary text-3xl text-foreground">{t('practice.progress.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('practice.progress.subtitle')}</p>
+      <div className="page-container page-section mx-auto max-w-6xl space-y-6 pb-12">
+        <header className="space-y-4">
+          <div>
+            <h1 className="heading-primary text-3xl text-foreground">{t('practice.progress.title')}</h1>
+            <p className="body-text mt-1 text-sm text-muted-foreground">{t('practice.progress.subtitle')}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+              {t('practice.progress.filters.domain')}
+              <select
+                className="min-w-[160px] rounded-lg border border-default bg-surface-raised px-3 py-2 text-sm text-foreground"
+                value={domain}
+                onChange={(event) => setDomain(event.target.value as ProgressDomainId)}
+              >
+                {data.availableDomains.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {language === 'vi' ? option.nameVi : option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+              {t('practice.progress.filters.range')}
+              <select
+                className="min-w-[140px] rounded-lg border border-default bg-surface-raised px-3 py-2 text-sm text-foreground"
+                value={range}
+                onChange={(event) => setRange(event.target.value as ProgressTimeRange)}
+              >
+                {RANGES.map((item) => (
+                  <option key={item} value={item}>
+                    {t(`practice.progress.range.${item}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {isLoading ? (
+              <Loader2 className="mt-6 size-4 animate-spin text-muted-foreground" aria-hidden />
+            ) : null}
+          </div>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('practice.progress.modules')}</p>
-            <p className="heading-primary mt-2 text-3xl text-foreground">
-              {data.modulesCompleted}/{data.totalModules}
-            </p>
-          </div>
-          <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('practice.progress.averageScore')}</p>
-            <p className="heading-primary mt-2 text-3xl text-foreground">{data.averageScore}</p>
-          </div>
-          <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('practice.progress.practiceTime')}</p>
-            <p className="heading-primary mt-2 text-3xl text-foreground">{data.practiceMinutes}</p>
-          </div>
-          <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('practice.progress.latestTrend')}</p>
-            <p className="heading-primary mt-2 text-3xl text-success">
-              +{data.skillTrends[0] ? data.skillTrends[0].current - data.skillTrends[0].previous : 0}
-            </p>
-          </div>
+        <ProgressOverallSummary data={data.overall} />
+        <ProgressInterviewReadiness data={data.readiness} />
+        <ProgressDomainGrid domains={data.domains} />
+        <ProgressScoreHistoryChart points={data.scoreHistory} />
+        <ProgressSkillBreakdown skills={data.skills} />
+        <ProgressStrengths items={data.strengths} />
+        <ProgressWeaknesses items={data.weaknesses} />
+        <ProgressImprovementTrend items={data.improvementTrends} />
+        <ProgressPracticeTimeline items={data.timeline} />
+        <ProgressLearningHeatmap days={data.heatmap} />
+        <div>
+          <ProgressGoalTracking
+            goals={data.goals}
+            onCreateStub={() => setGoalMessage(t('practice.progress.goals.stub'))}
+          />
+          {goalMessage ? <p className="mt-2 text-sm text-muted-foreground">{goalMessage}</p> : null}
         </div>
-
-        <ProgressActivityChart data={data} />
-
-        <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-          <h2 className="heading-secondary text-lg text-foreground">{t('practice.progress.skillTrends')}</h2>
-          <div className="mt-4 space-y-3">
-            {data.skillTrends.map((trend) => (
-              <div key={trend.skill} className="flex items-center justify-between rounded-lg bg-surface-base px-4 py-3 text-sm">
-                <span className="font-medium text-foreground">
-                  {language === 'vi' ? trend.skillVi : trend.skill}
-                </span>
-                <span className="text-muted-foreground">
-                  {trend.previous}% {'->'} {trend.current}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="flex flex-wrap gap-3">
-          <Link to="/candidate/leaderboard" className="btn-secondary">
-            {t('practice.leaderboard.title')}
-          </Link>
-          <Link to="/candidate/achievements" className="btn-secondary">
-            {t('practice.achievements.title')}
-          </Link>
-        </div>
+        <ProgressRoadmapProgress items={data.roadmaps} />
+        <ProgressAchievementsPreview items={data.achievements} />
+        <ProgressAiInsights items={data.insights} />
+        <ProgressRecommendations items={data.recommendations} />
+        <ProgressComparativeStats items={data.comparative} />
+        <ProgressSessionAnalytics data={data.sessionAnalytics} />
+        <ProgressExportPanel exporting={exporting} onExport={(kind) => void handleExport(kind)} message={exportMessage} />
       </div>
     </div>
   );
