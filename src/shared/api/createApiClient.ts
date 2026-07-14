@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getApiBaseUrl } from '../config';
+import { parseAuthTokens } from './authPayload';
 import { authTokenStorage } from './authTokenStorage';
 import { notifyUnauthorized } from './unauthorizedHandler';
 
@@ -65,9 +66,13 @@ export const createApiClient = () => {
             }
 
             const { data } = await client.post('/api/v1/auth/refresh', { refreshToken });
-            authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+            const tokens = parseAuthTokens(data);
+            if (!tokens.accessToken || !tokens.refreshToken) {
+              throw new Error('Refresh response missing tokens');
+            }
+            authTokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
             isRefreshing = false;
-            onRefreshed(data.accessToken);
+            onRefreshed(tokens.accessToken);
           } catch (refreshError) {
             isRefreshing = false;
             handleSessionExpired();

@@ -1,4 +1,9 @@
 /** BRD ROL-001 … ROL-005 — see BRD/User_Roles_and_Permissions.md */
+import { unwrapAuthPayload } from '@/shared/api/authPayload';
+
+export { parseAuthTokens, unwrapAuthPayload } from '@/shared/api/authPayload';
+export type { AuthTokensResponse } from '@/shared/api/authPayload';
+
 export const UserRole = {
   GUEST: 'guest',
   CANDIDATE: 'candidate',
@@ -63,13 +68,8 @@ export function parseRegisterResponse(data: unknown, fallbackEmail: string): Reg
     return { id: match?.[1] ?? '', email: fallbackEmail };
   }
 
-  if (data && typeof data === 'object') {
-    const record = data as Record<string, unknown>;
-    const inner =
-      record.data && typeof record.data === 'object'
-        ? (record.data as Record<string, unknown>)
-        : record;
-
+  const inner = unwrapAuthPayload<Record<string, unknown>>(data);
+  if (inner && typeof inner === 'object') {
     return {
       id: String(inner.id ?? ''),
       email: String(inner.email ?? fallbackEmail),
@@ -98,15 +98,6 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface AuthTokensResponse {
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  emailVerificationRequired?: boolean;
-  mfaRequired?: boolean;
-  mfaToken?: string;
-}
-
 export interface MfaVerifyRequest {
   mfaToken: string;
   code: string;
@@ -130,10 +121,31 @@ export interface User {
   createdAt: string;
 }
 
-export function parseUser(raw: User): User {
-  const role = normalizeUserRole(raw.role as unknown as string);
-  if (!role || role === UserRole.GUEST) {
-    throw new Error(`Invalid user role from API: ${String(raw.role)}`);
+export function parseUser(raw: unknown): User {
+  const inner = unwrapAuthPayload<Record<string, unknown>>(raw);
+  if (!inner || typeof inner !== 'object') {
+    throw new Error('Invalid user payload from API');
   }
-  return { ...raw, role };
+
+  const role = normalizeUserRole(
+    typeof inner.role === 'string' ? inner.role : String(inner.role ?? ''),
+  );
+  if (!role || role === UserRole.GUEST) {
+    throw new Error(`Invalid user role from API: ${String(inner.role)}`);
+  }
+
+  return {
+    id: String(inner.id ?? ''),
+    fullName: String(inner.fullName ?? ''),
+    email: String(inner.email ?? ''),
+    location: inner.location == null ? '' : String(inner.location),
+    title: inner.title == null ? '' : String(inner.title),
+    role,
+    createdAt:
+      typeof inner.createdAt === 'string'
+        ? inner.createdAt
+        : inner.createdAt != null
+          ? String(inner.createdAt)
+          : '',
+  };
 }
