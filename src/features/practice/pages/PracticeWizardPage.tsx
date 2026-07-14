@@ -11,24 +11,6 @@ import { PracticeRubricStep } from '../components/wizard/PracticeRubricStep';
 import { PracticeConfirmStep } from '../components/wizard/PracticeConfirmStep';
 import { usePracticeWizardFlow } from '../hooks/usePracticeWizardFlow';
 
-const STEP_TITLES = [
-  'practice.wizard.domain.title',
-  'practice.wizard.level.title',
-  'practice.wizard.cv.title',
-  'practice.wizard.questions.title',
-  'practice.wizard.rubric.title',
-  'practice.wizard.confirm.title',
-] as const;
-
-const STEP_DESCRIPTIONS = [
-  'practice.wizard.domain.heroDescription',
-  'practice.wizard.subtitle',
-  'practice.wizard.subtitle',
-  'practice.wizard.subtitle',
-  'practice.wizard.subtitle',
-  'practice.wizard.subtitle',
-] as const;
-
 export function PracticeWizardPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -51,11 +33,7 @@ export function PracticeWizardPage() {
   }
 
   return (
-    <PracticeWizardShell
-      currentStep={flow.step}
-      title={t(STEP_TITLES[flow.step])}
-      description={t(STEP_DESCRIPTIONS[flow.step])}
-    >
+    <PracticeWizardShell currentStep={flow.step}>
       {flow.submitError === 'generic' ? (
         <p className="mb-4 text-sm text-error" role="alert">
           {t('practice.wizard.confirm.error')}
