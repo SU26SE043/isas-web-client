@@ -1,7 +1,7 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { resultService } from './result.service';
-import { isCampaignSessionId } from '../types/interviewFlow.types';
+import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
 import {
   B2B_PROCTORING_CONFIG,
   B2C_PROCTORING_CONFIG,
@@ -21,6 +21,10 @@ import type {
   SessionStartResult,
 } from '../types/practiceSession.api.types';
 import { getDynamicPracticeSession } from './practiceSetup.service';
+import {
+  getLearningPracticeSession,
+  toPracticeSession,
+} from './learningPracticeSession.registry';
 
 let asyncQuestionPollCount = 0;
 const startedSessions = new Set<string>();
@@ -46,6 +50,10 @@ export const practiceSessionService = {
     }
 
     await mockDelay(1000);
+    const learning = getLearningPracticeSession(sessionId);
+    if (learning) {
+      return toPracticeSession(learning);
+    }
     return (
       getDynamicPracticeSession(sessionId) ??
       MOCK_PRACTICE_SESSIONS[sessionId] ??
@@ -58,7 +66,11 @@ export const practiceSessionService = {
       throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
     }
 
-    if (!isCampaignSessionId(sessionId) && !paymentService.hasReservation(sessionId)) {
+    if (
+      !isCampaignSessionId(sessionId) &&
+      !isLearningSessionId(sessionId) &&
+      !paymentService.hasReservation(sessionId)
+    ) {
       throw new Error('no_reservation');
     }
 
@@ -80,6 +92,11 @@ export const practiceSessionService = {
     }
 
     await mockDelay(800);
+
+    const learning = getLearningPracticeSession(sessionId);
+    if (learning) {
+      return learning.questions;
+    }
 
     const dynamicSession = getDynamicPracticeSession(sessionId);
     if (dynamicSession && dynamicSession.questions.length > 0) {

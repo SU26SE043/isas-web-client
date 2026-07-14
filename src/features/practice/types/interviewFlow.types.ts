@@ -39,6 +39,10 @@ export function isCampaignSessionId(sessionId: string) {
   return sessionId.startsWith('campaign-');
 }
 
+export function isLearningSessionId(sessionId: string) {
+  return sessionId.startsWith('learning-');
+}
+
 export function requiresIdentityVerification(sessionId: string) {
   return isCampaignSessionId(sessionId);
 }

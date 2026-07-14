@@ -3,19 +3,20 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
-import { isCampaignSessionId } from '../types/interviewFlow.types';
+import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
 import { useInterviewGate } from '../hooks/useInterviewGate';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
+import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
 
 export const InterviewPrepPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
-  const gate = useInterviewGate();
+  const gate = useInterviewGate(sessionId);
   const { consentAccepted, setConsentAccepted } = useInterviewFlowStore();
   const [sessionTitle, setSessionTitle] = useState('');
   const [loadingSession, setLoadingSession] = useState(true);
@@ -34,6 +35,11 @@ export const InterviewPrepPage: React.FC = () => {
 
   const canContinue = gate.canStart && consentAccepted && !loadingSession;
   const isCampaignSession = isCampaignSessionId(sessionId);
+  const isLearningSession = isLearningSessionId(sessionId);
+  const learningMeta = isLearningSession ? getLearningPracticeSession(sessionId) : undefined;
+  const cancelHref = learningMeta
+    ? `/candidate/learning/roadmaps/${learningMeta.roadmapId}`
+    : '/candidate/dashboard';
   const consentKey = isCampaignSession
     ? 'practice.flow.prepare.consent'
     : 'practice.flow.prepare.consentPractice';
@@ -51,13 +57,15 @@ export const InterviewPrepPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          <InterviewGatePanel
-            meetsProfileGate={gate.meetsProfileGate}
-            hasCredits={gate.hasCredits}
-            completenessPercent={gate.completenessPercent}
-            creditsRemaining={gate.tokenAvailable}
-            reserveEstimate={gate.reserveEstimate}
-          />
+          {!isLearningSession ? (
+            <InterviewGatePanel
+              meetsProfileGate={gate.meetsProfileGate}
+              hasCredits={gate.hasCredits}
+              completenessPercent={gate.completenessPercent}
+              creditsRemaining={gate.tokenAvailable}
+              reserveEstimate={gate.reserveEstimate}
+            />
+          ) : null}
 
           <div className="rounded-xl border border-subtle bg-surface-raised p-6">
             <h2 className="heading-secondary text-lg">{t('practice.flow.prepare.checklistTitle')}</h2>
@@ -87,7 +95,7 @@ export const InterviewPrepPage: React.FC = () => {
               >
                 {t('practice.flow.continue')}
               </button>
-              <Link to="/candidate/dashboard" className="btn-secondary">
+              <Link to={cancelHref} className="btn-secondary">
                 {t('practice.flow.cancel')}
               </Link>
             </div>

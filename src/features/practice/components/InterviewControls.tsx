@@ -17,6 +17,14 @@ interface InterviewControlsProps {
   onTogglePause: () => void;
   onToggleMic: () => void;
   onToggleRecording: () => void;
+  /** Learning practice: shared room UI with live feedback CTAs */
+  learningMode?: boolean;
+  feedbackVisible?: boolean;
+  isLastQuestion?: boolean;
+  isEvaluating?: boolean;
+  onNextQuestion?: () => void;
+  onCompleteSession?: () => void;
+  exitHref?: string;
 }
 
 export const InterviewControls: React.FC<InterviewControlsProps> = ({
@@ -32,10 +40,19 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   onTogglePause,
   onToggleMic,
   onToggleRecording,
+  learningMode = false,
+  feedbackVisible = false,
+  isLastQuestion = false,
+  isEvaluating = false,
+  onNextQuestion,
+  onCompleteSession,
+  exitHref,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const timerClass = getTimerColorClass(getTimerSeverity(remainingSeconds));
+
+  const finishHref = exitHref ?? `/interview/${sessionId}/complete`;
 
   return (
     <motion.div
@@ -94,22 +111,52 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
             </span>
           </div>
 
-          <button
-            type="button"
-            className="btn-primary px-4 py-2 text-sm"
-            disabled={isSubmitting || isPaused || isLocked}
-            onClick={onSubmit}
-          >
-            {isSubmitting ? t('practice.room.submitting') : t('practice.room.submitAnswer')}
-          </button>
+          {learningMode && feedbackVisible ? (
+            isLastQuestion ? (
+              <button
+                type="button"
+                className="btn-primary px-4 py-2 text-sm"
+                disabled={isSubmitting || isPaused || isLocked}
+                onClick={onCompleteSession}
+              >
+                {isSubmitting
+                  ? t('practice.learningPath.completing')
+                  : t('practice.learningPath.completeSession')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn-primary px-4 py-2 text-sm"
+                disabled={isSubmitting || isPaused || isLocked}
+                onClick={onNextQuestion}
+              >
+                {t('practice.learningPath.nextQuestion')}
+              </button>
+            )
+          ) : (
+            <button
+              type="button"
+              className="btn-primary px-4 py-2 text-sm"
+              disabled={isSubmitting || isEvaluating || isPaused || isLocked}
+              onClick={onSubmit}
+            >
+              {isEvaluating || isSubmitting
+                ? learningMode
+                  ? t('practice.learningPath.evaluating')
+                  : t('practice.room.submitting')
+                : t('practice.room.submitAnswer')}
+            </button>
+          )}
 
-          <button
-            type="button"
-            className="btn-ghost px-3 py-2 text-sm"
-            onClick={() => navigate(`/interview/${sessionId}/complete`)}
-          >
-            {t('practice.flow.controls.finish')}
-          </button>
+          {!learningMode ? (
+            <button
+              type="button"
+              className="btn-ghost px-3 py-2 text-sm"
+              onClick={() => navigate(finishHref)}
+            >
+              {t('practice.flow.controls.finish')}
+            </button>
+          ) : null}
         </div>
       </div>
     </motion.div>

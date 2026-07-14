@@ -109,7 +109,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/campaigns/:id/enroll` | Legacy enroll | — | Redirect → `/candidate/campaigns` |
 | `/candidate/learning` | Learning dashboard (roadmaps) | T1 | Keep — see `learning.md` |
 | `/candidate/learning/roadmaps/:id` | Roadmap detail | T1 | Keep |
-| `/candidate/learning/roadmaps/:id/lessons/...` | Theory / device-check / practice / report | T1 | Keep |
+| `/candidate/learning/roadmaps/:id/lessons/...` | Theory / practice launcher → shared `/interview/learning-...` room / report | T1 | Keep |
 | `/candidate/progress` | Progress dashboard | T2 | Simplify |
 | `/candidate/leaderboard` | Leaderboard | T2 | Simplify |
 | `/candidate/achievements` | Achievements | T2 | Simplify |

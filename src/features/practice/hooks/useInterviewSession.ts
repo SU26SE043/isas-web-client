@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { useInterviewSessionStore } from '../stores/interviewSessionStore';
 import { useNetworkStatus } from './useNetworkStatus';
+import { isLearningSessionId } from '../types/interviewFlow.types';
 
 export function useInterviewSession(sessionId: string) {
   const navigate = useNavigate();
+  const isLearning = isLearningSessionId(sessionId);
   const status = useInterviewSessionStore((state) => state.status);
   const remainingSeconds = useInterviewSessionStore((state) => state.remainingSeconds);
   const setLoading = useInterviewSessionStore((state) => state.setLoading);
@@ -48,22 +50,27 @@ export function useInterviewSession(sessionId: string) {
   }, [status, tickTimer]);
 
   useEffect(() => {
+    if (isLearning) return;
     if (status !== 'active' || remainingSeconds > 0) return;
     void (async () => {
       const completed = await submitCurrentAnswer();
       if (completed) navigate(`/interview/${sessionId}/complete`);
     })();
-  }, [navigate, remainingSeconds, sessionId, status, submitCurrentAnswer]);
+  }, [isLearning, navigate, remainingSeconds, sessionId, status, submitCurrentAnswer]);
 
   useEffect(() => {
+    if (isLearning) return;
     if (status !== 'completed' && status !== 'auto_submitted') return;
     navigate(`/interview/${sessionId}/complete`);
-  }, [navigate, sessionId, status]);
+  }, [isLearning, navigate, sessionId, status]);
 
   const submitAnswer = useCallback(async () => {
     const completed = await submitCurrentAnswer();
-    if (completed) navigate(`/interview/${sessionId}/complete`);
-  }, [navigate, sessionId, submitCurrentAnswer]);
+    if (!isLearning && completed) {
+      navigate(`/interview/${sessionId}/complete`);
+    }
+    return completed;
+  }, [isLearning, navigate, sessionId, submitCurrentAnswer]);
 
   const sessionTitle = useInterviewSessionStore((state) => state.sessionTitle);
   const questions = useInterviewSessionStore((state) => state.questions);
@@ -110,6 +117,8 @@ export function useInterviewSession(sessionId: string) {
     toggleMic,
     toggleRecording,
     submitAnswer,
+    submitCurrentAnswer,
+    isLearning,
     isLoading: status === 'loading',
     isRoomActive,
     isViolationPaused: status === 'paused_violation',

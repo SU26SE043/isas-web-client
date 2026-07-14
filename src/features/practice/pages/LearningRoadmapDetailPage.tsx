@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, Lock } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningPathService } from '../services/learningPath.service';
 import type { LearningRoadmapDetail } from '../types/learningPath.types';
+import {
+  launchLearningInterviewPractice,
+  learningInterviewPreparePath,
+} from '../utils/launchLearningInterviewPractice';
 
 export function LearningRoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
+  const navigate = useNavigate();
   const { language, t } = useLanguage();
   const [roadmap, setRoadmap] = useState<LearningRoadmapDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [launchingLessonId, setLaunchingLessonId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -47,6 +53,21 @@ export function LearningRoadmapDetailPage() {
   }
 
   const title = language === 'vi' ? roadmap.nameVi : roadmap.name;
+
+  const openPractice = async (lessonId: string, lessonTitle: string) => {
+    setLaunchingLessonId(lessonId);
+    try {
+      const sessionId = await launchLearningInterviewPractice({
+        roadmapId: roadmap.id,
+        lessonId,
+        title: lessonTitle,
+      });
+      navigate(learningInterviewPreparePath(sessionId));
+    } catch {
+      setError(true);
+      setLaunchingLessonId(null);
+    }
+  };
 
   return (
     <div className="page-container page-section min-h-screen">
@@ -138,12 +159,16 @@ export function LearningRoadmapDetailPage() {
                             </Link>
                           ) : null}
                           {canOpenPractice ? (
-                            <Link
-                              to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/practice/device-check`}
+                            <button
+                              type="button"
                               className="btn-primary inline-flex text-xs"
+                              disabled={launchingLessonId === lessonItem.id}
+                              onClick={() => void openPractice(lessonItem.id, lessonTitle)}
                             >
-                              {t('practice.learningPath.openPractice')}
-                            </Link>
+                              {launchingLessonId === lessonItem.id
+                                ? t('practice.learningPath.saving')
+                                : t('practice.learningPath.openPractice')}
+                            </button>
                           ) : null}
                           {reportLink ? (
                             <Link to={reportLink} className="btn-ghost inline-flex text-xs">

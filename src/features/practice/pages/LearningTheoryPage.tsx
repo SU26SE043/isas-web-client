@@ -4,6 +4,10 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningPathService } from '../services/learningPath.service';
 import type { LearningLesson, LearningRoadmapDetail } from '../types/learningPath.types';
+import {
+  launchLearningInterviewPractice,
+  learningInterviewPreparePath,
+} from '../utils/launchLearningInterviewPractice';
 
 export function LearningTheoryPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
@@ -13,6 +17,7 @@ export function LearningTheoryPage() {
   const [lesson, setLesson] = useState<LearningLesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -37,14 +42,28 @@ export function LearningTheoryPage() {
     };
   }, [lessonId, roadmapId]);
 
+  const startPractice = async (title: string) => {
+    setIsLaunching(true);
+    try {
+      const sessionId = await launchLearningInterviewPractice({
+        roadmapId,
+        lessonId,
+        title,
+      });
+      navigate(learningInterviewPreparePath(sessionId));
+    } catch {
+      setError(true);
+      setIsLaunching(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (!lesson || lesson.theoryStatus === 'completed' || roadmap?.readOnly) return;
     setIsSaving(true);
     try {
       await learningPathService.markTheoryCompleted(roadmapId, lessonId);
-      navigate(
-        `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/practice/device-check`,
-      );
+      const title = language === 'vi' ? lesson.titleVi : lesson.title;
+      await startPractice(title);
     } catch {
       setError(true);
       setIsSaving(false);
@@ -96,18 +115,24 @@ export function LearningTheoryPage() {
           <button
             type="button"
             className="btn-primary"
-            disabled={isSaving || lesson.theoryStatus === 'locked'}
+            disabled={isSaving || isLaunching || lesson.theoryStatus === 'locked'}
             onClick={() => void handleComplete()}
           >
-            {isSaving ? t('practice.learningPath.saving') : t('practice.learningPath.markCompleted')}
+            {isSaving || isLaunching
+              ? t('practice.learningPath.saving')
+              : t('practice.learningPath.markCompleted')}
           </button>
         ) : (
-          <Link
-            to={`/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/practice/device-check`}
+          <button
+            type="button"
             className="btn-primary inline-flex"
+            disabled={isLaunching || lesson.practiceStatus === 'locked'}
+            onClick={() => void startPractice(title)}
           >
-            {t('practice.learningPath.openPractice')}
-          </Link>
+            {isLaunching
+              ? t('practice.learningPath.saving')
+              : t('practice.learningPath.openPractice')}
+          </button>
         )}
       </div>
     </div>

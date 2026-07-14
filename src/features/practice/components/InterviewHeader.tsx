@@ -6,11 +6,19 @@ import { useLanguage } from '../../../shared/languages';
 interface InterviewHeaderProps {
   sessionId: string;
   isRecording: boolean;
+  exitHref?: string;
+  titleKey?: string;
 }
 
-export const InterviewHeader: React.FC<InterviewHeaderProps> = ({ sessionId, isRecording }) => {
+export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
+  sessionId,
+  isRecording,
+  exitHref,
+  titleKey,
+}) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const to = exitHref ?? `/interview/${sessionId}/complete`;
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between bg-surface-raised px-6 py-3 shadow-md">
@@ -19,7 +27,7 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({ sessionId, isR
           <BrandLogo />
         </Link>
         <div className="h-6 w-px bg-surface-raised/30" />
-        <h1 className="text-lg font-bold text-white">{t('practice.title')}</h1>
+        <h1 className="text-lg font-bold text-white">{t(titleKey ?? 'practice.title')}</h1>
       </div>
 
       <div className="flex items-center gap-5">
@@ -32,7 +40,7 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({ sessionId, isR
         <button
           type="button"
           className="cursor-pointer rounded-lg bg-surface-overlay px-4 py-2 text-sm font-black text-foreground shadow-sm transition-colors hover:bg-surface-elevated"
-          onClick={() => navigate(`/interview/${sessionId}/complete`)}
+          onClick={() => navigate(to)}
         >
           {t('practice.exit')}
         </button>

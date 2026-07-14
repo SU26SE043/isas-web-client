@@ -16,6 +16,7 @@ import {
   createPracticeReportStub,
 } from '../mocks/learningPath.fixtures';
 import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
+import { registerLearningPracticeSession } from './learningPracticeSession.registry';
 
 let store: LearningRoadmapDetail[] = structuredClone(MOCK_LEARNING_PATH_ROADMAPS);
 
@@ -279,6 +280,15 @@ export const learningPathService = {
   async getPracticeQuestions() {
     await mockDelay(200);
     return structuredClone(LEARNING_PRACTICE_QUESTIONS);
+  },
+
+  async beginSharedInterviewPractice(input: {
+    roadmapId: string;
+    lessonId: string;
+    title: string;
+  }) {
+    await mockDelay(150);
+    return registerLearningPracticeSession(input);
   },
 
   async evaluateAnswer(questionId: string): Promise<LearningPracticeQuestionFeedback> {

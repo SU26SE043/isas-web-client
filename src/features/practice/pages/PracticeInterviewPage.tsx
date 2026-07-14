@@ -8,6 +8,7 @@ import { CandidateCameraPanel } from '../components/CandidateCameraPanel';
 import { InterviewInfoCard } from '../components/InterviewInfoCard';
 import { PersonalNotes } from '../components/PersonalNotes';
 import { InterviewControls } from '../components/InterviewControls';
+import { LearningLiveFeedbackPanel } from '../components/learning-path/LearningLiveFeedbackPanel';
 import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner';
 import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
@@ -20,6 +21,7 @@ import { useInterviewSession } from '../hooks/useInterviewSession';
 import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
 import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring';
+import { useLearningLiveFeedback } from '../hooks/useLearningLiveFeedback';
 import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
@@ -28,13 +30,14 @@ import { requiresIdentityVerification } from '../types/interviewFlow.types';
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   useInterviewFlowSession(sessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
   const session = useInterviewSession(sessionId);
   const media = useInterviewMedia(session.micEnabled);
   const [questionListOpen, setQuestionListOpen] = useState(false);
+  const learning = useLearningLiveFeedback(sessionId, session.isLearning);
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
     sessionId,
@@ -67,6 +70,19 @@ export const PracticeInterviewPage: React.FC = () => {
     void media.startMedia();
   }, [media.startMedia, session.isLoading, session.status]);
 
+  const handleSubmit = () => {
+    if (session.isLearning) {
+      void learning.evaluateAnswer(session.currentQuestion);
+      return;
+    }
+    void session.submitAnswer();
+  };
+
+  const handleNextQuestion = async () => {
+    learning.clearFeedback();
+    await session.submitCurrentAnswer();
+  };
+
   if (session.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">
@@ -76,11 +92,18 @@ export const PracticeInterviewPage: React.FC = () => {
     );
   }
 
+  const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
+
   return (
     <div className="flex min-h-screen flex-col surface-base pb-24 font-sans">
-      <InterviewHeader sessionId={sessionId} isRecording={session.isRecording} />
+      <InterviewHeader
+        sessionId={sessionId}
+        isRecording={session.isRecording}
+        exitHref={learning.exitHref}
+        titleKey={session.isLearning ? 'practice.learningPath.practiceSession' : undefined}
+      />
       {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
-      {paymentService.hasReservation(sessionId) ? (
+      {!session.isLearning && paymentService.hasReservation(sessionId) ? (
         <div className="px-6 pt-4">
           <ReserveSettleBanner
             mode="reserved"
@@ -129,19 +152,30 @@ export const PracticeInterviewPage: React.FC = () => {
         </div>
       </main>
 
+      {session.isLearning && learning.feedback ? (
+        <LearningLiveFeedbackPanel feedback={learning.feedback} language={language} />
+      ) : null}
+
       <InterviewControls
         sessionId={sessionId}
         remainingSeconds={session.remainingSeconds}
-        isSubmitting={session.status === 'submitting'}
+        isSubmitting={session.status === 'submitting' || learning.isCompleting}
         isPaused={session.isManualPaused}
         isLocked={(antiCheatEnabled && session.isViolationPaused) || session.isAutoSubmitted}
         micEnabled={session.micEnabled}
         isRecording={session.isRecording}
         chunksUploaded={recording.chunksUploaded}
-        onSubmit={() => void session.submitAnswer()}
+        onSubmit={handleSubmit}
         onTogglePause={session.togglePause}
         onToggleMic={session.toggleMic}
         onToggleRecording={session.toggleRecording}
+        learningMode={session.isLearning}
+        feedbackVisible={Boolean(learning.feedback)}
+        isLastQuestion={isLastQuestion}
+        isEvaluating={learning.isEvaluating}
+        onNextQuestion={() => void handleNextQuestion()}
+        onCompleteSession={() => void learning.completeSession(session.submitCurrentAnswer)}
+        exitHref={learning.exitHref}
       />
 
       <QuestionListDialog
