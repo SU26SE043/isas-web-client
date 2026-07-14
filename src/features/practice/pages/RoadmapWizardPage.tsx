@@ -7,13 +7,6 @@ import { RoadmapTargetLevelStep } from '../components/roadmap-wizard/RoadmapTarg
 import { RoadmapConfirmStep } from '../components/roadmap-wizard/RoadmapConfirmStep';
 import { useRoadmapWizardFlow } from '../hooks/useRoadmapWizardFlow';
 
-const STEP_TITLES = [
-  'practice.roadmapWizard.domain.title',
-  'practice.roadmapWizard.reports.title',
-  'practice.roadmapWizard.level.title',
-  'practice.roadmapWizard.confirm.title',
-] as const;
-
 export function RoadmapWizardPage() {
   const { t } = useLanguage();
   const flow = useRoadmapWizardFlow();
@@ -21,8 +14,8 @@ export function RoadmapWizardPage() {
   return (
     <RoadmapWizardShell
       currentStep={flow.step}
-      title={t(STEP_TITLES[flow.step])}
-      description={t('practice.roadmapWizard.subtitle')}
+      introTitle={flow.step === 0 ? t('practice.roadmapWizard.createTitle') : undefined}
+      introDescription={flow.step === 0 ? t('practice.roadmapWizard.subtitle') : undefined}
     >
       {flow.submitError ? (
         <p className="mb-4 text-sm text-error" role="alert">
