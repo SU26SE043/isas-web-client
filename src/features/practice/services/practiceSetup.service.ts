@@ -89,18 +89,15 @@ export const practiceSetupService = {
       return response.data;
     }
 
-    const { analysisId } = await cvAnalysisService.submitAnalysis({
-      file,
-      language,
-      domain: 'frontend',
-      jobDescription: 'Practice interview CV context',
-    });
-    const files = await cvAnalysisService.listUploadedCvs();
-    const uploaded = files.find((item) => item.analysisId === analysisId);
-    if (!uploaded) {
-      throw new Error('cv_upload_failed');
-    }
-    return uploaded;
+    const record = await cvAnalysisService.uploadCv(file);
+    return {
+      id: record.id,
+      fileName: record.originalName,
+      fileSizeBytes: record.fileSize,
+      mimeType: record.mimeType,
+      uploadedAt: record.createdAt,
+      pdfUrl: '',
+    };
   },
 
   async generateRubric(input: GenerateRubricInput): Promise<PracticeRubricCriterion[]> {

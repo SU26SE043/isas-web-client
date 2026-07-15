@@ -1,77 +1,67 @@
 import type { CvAnalysisDomain } from './cvDomain.types';
 
-export interface CvSkill {
-  name: string;
-  highlight?: boolean;
-}
+/** Numeric jobCategory sent to analyze API (FE=1, BE=2, BA=3). */
+export type JobCategoryCode = 1 | 2 | 3;
 
-/** Radar axes for CV match competency overview. */
-export interface CvSkillDimension {
+export const DOMAIN_TO_JOB_CATEGORY: Record<CvAnalysisDomain, JobCategoryCode> = {
+  frontend: 1,
+  backend: 2,
+  'business-analyst': 3,
+};
+
+export type FileParseStatus = 'pending' | 'done' | 'failed';
+export type CampaignFileType = 'cv' | 'jd';
+
+/** Upload response from POST .../files/upload */
+export interface FileRecord {
   id: string;
-  labelEn: string;
-  labelVi: string;
+  fileType: CampaignFileType | string;
+  originalName: string;
+  mimeType: string;
+  fileSize: number;
+  parseStatus: FileParseStatus | string;
+  createdAt: string;
+}
+
+export interface JdMatch {
   score: number;
-  target: number;
+  matchedSkills: string[];
+  missingSkills: string[];
 }
 
-/** Horizontal bar dimensions on the match report. */
-export interface CvDimensionScore {
-  id: string;
-  labelEn: string;
-  labelVi: string;
-  score: number;
-}
-
-export interface CvProject {
-  title: string;
-  description: string;
-  techStack: string;
-}
-
-export interface CvExperience {
-  period: string;
-  title: string;
-  company: string;
-  description: string;
-  highlight?: boolean;
-}
-
-export interface CvEducation {
-  degree: string;
-  school: string;
-  period: string;
-}
-
+/** Analyze + history item — render only API fields. */
 export interface CvAnalysisResult {
   id: string;
-  fullName: string;
-  jobTitle: string;
-  profileCompletionPercent: number;
-  matchScore: number;
-  domain?: CvAnalysisDomain;
-  skillDimensions: CvSkillDimension[];
-  dimensionScores: CvDimensionScore[];
-  skills: CvSkill[];
-  projects: CvProject[];
-  experiences: CvExperience[];
-  education: CvEducation;
+  cvId: string;
+  jdId: string | null;
+  jobCategory: string;
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  suggestions: string[];
+  jdMatch: JdMatch | null;
+  createdAt: string;
 }
 
-export interface SubmitCvAnalysisInput {
-  file: File;
-  jobDescription?: string;
-  domain: CvAnalysisDomain;
-  language: 'vi' | 'en';
+export interface AnalyzeCvRequest {
+  cvId: string;
+  jdId: string | null;
+  jobCategory: JobCategoryCode;
 }
 
+/** Local UI attachment metadata (not computed scores). */
+export interface AnalysisFileMeta {
+  cvFileName?: string;
+  jdFileName?: string | null;
+}
+
+/** Profile / practice list shape mapped from FileRecord. */
 export interface UploadedCvFile {
   id: string;
   fileName: string;
   fileSizeBytes: number;
   mimeType: string;
   uploadedAt: string;
-  /** Direct URL to the original PDF (open in new tab from Profile). */
   pdfUrl: string;
-  /** Present when the file was produced via CV Analysis flow. */
   analysisId?: string;
 }

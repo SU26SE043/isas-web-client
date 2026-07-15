@@ -1,23 +1,15 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useLanguage } from '@/shared/languages';
 import { CvAnalysisFlowShell } from '../components/flow/CvAnalysisFlowShell';
 import { CvDomainStep } from '../components/flow/CvDomainStep';
-import { CvUploadStep } from '../components/flow/CvUploadStep';
-import { CvJobDescriptionStep } from '../components/flow/CvJobDescriptionStep';
+import { UploadCV } from '../components/flow/UploadCV';
+import { UploadJD } from '../components/flow/UploadJD';
 import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
-import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
 import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 
 export const CVAnalysisPage: React.FC = () => {
   const { t } = useLanguage();
   const flow = useCvAnalysisFlow();
-
-  const currentStep = useMemo<CvAnalysisStep>(() => {
-    if (flow.step === 4) return 'analysis';
-    if (flow.step === 3) return 'job-description';
-    if (flow.step === 2) return 'upload';
-    return 'domain';
-  }, [flow.step]);
 
   return (
     <div className="min-h-full px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
@@ -29,8 +21,9 @@ export const CVAnalysisPage: React.FC = () => {
       </div>
 
       <CvAnalysisFlowShell
-        currentStep={currentStep}
-        failedStep={flow.parseError ? 'analysis' : undefined}
+        currentStep={flow.currentTimelineStep}
+        statuses={flow.timelineStatuses}
+        failedStep={flow.failedStep ?? undefined}
       >
         {flow.step === 1 ? (
           <CvDomainStep
@@ -41,31 +34,41 @@ export const CVAnalysisPage: React.FC = () => {
         ) : null}
 
         {flow.step === 2 ? (
-          <CvUploadStep
-            file={flow.file}
+          <UploadCV
+            file={flow.cvFile}
             fileError={flow.fileError}
-            onFileSelect={flow.selectFile}
-            onNext={flow.goNext}
+            isUploading={flow.isUploading}
+            onFileSelect={flow.selectCvFile}
+            onNext={() => void flow.goNextFromUpload()}
             onBack={flow.goBack}
           />
         ) : null}
 
         {flow.step === 3 ? (
-          <CvJobDescriptionStep
-            jobDescription={flow.jobDescription}
-            fileName={flow.file?.name}
+          <UploadJD
+            jdFile={flow.jdFile}
+            jdFileError={flow.jdFileError}
+            isUploading={flow.isUploading}
+            fileName={flow.cvFile?.name}
             domain={flow.domain}
-            onJobDescriptionChange={flow.setJobDescription}
+            onJdFileSelect={flow.selectJdFile}
             onBack={flow.goBack}
-            onNext={() => void flow.runAnalysis()}
+            onNext={() => void flow.goNextFromJd()}
           />
         ) : null}
 
         {flow.step === 4 ? (
           <CvAnalysisProgressStep
             parseProgress={flow.parseProgress}
-            parseError={flow.parseErrorMessage}
-            onRetry={flow.parseError ? flow.retryFromUpload : undefined}
+            isAnalyzing={flow.isAnalyzing}
+            parseError={flow.analyzeError}
+            fileName={flow.cvFile?.name}
+            jdFileName={flow.jdFile?.name}
+            domain={flow.domain}
+            hasJd={Boolean(flow.jdId)}
+            onAnalyze={() => void flow.runAnalysis()}
+            onBack={flow.goBack}
+            onRetryUpload={flow.analyzeError ? flow.retryFromUpload : undefined}
           />
         ) : null}
       </CvAnalysisFlowShell>

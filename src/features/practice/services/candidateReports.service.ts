@@ -4,10 +4,10 @@ import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.se
 import type { CandidateReportsHub } from '../types/candidateReports.types';
 
 export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
-  const [history, learningReports, cvs] = await Promise.all([
+  const [history, learningReports, analyses] = await Promise.all([
     fetchInterviewHistory({ pageSize: 50 }),
     learningPathService.listAllPracticeReports(),
-    cvAnalysisService.listUploadedCvs(),
+    cvAnalysisService.listAnalyses().catch(() => []),
   ]);
 
   const interview = history.interviews
@@ -36,16 +36,16 @@ export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
     score: report.overallScore,
   }));
 
-  const withAnalysis = cvs.filter((file) => Boolean(file.analysisId));
-  const cv = withAnalysis.map((file) => ({
-    id: file.id,
+  const cv = analyses.map((item) => ({
+    id: item.id,
     category: 'cv' as const,
-    title: file.fileName,
-    titleVi: file.fileName,
-    subtitle: undefined,
-    subtitleVi: undefined,
-    href: `/candidate/cv/analysis/report?analysisId=${encodeURIComponent(file.analysisId!)}`,
-    createdAt: file.uploadedAt,
+    title: item.jobCategory || 'CV Analysis',
+    titleVi: item.jobCategory || 'Phân tích CV',
+    subtitle: item.jdId ? 'With JD' : 'No JD',
+    subtitleVi: item.jdId ? 'Có JD' : 'Không có JD',
+    href: `/candidate/cv/analysis/report?analysisId=${encodeURIComponent(item.id)}`,
+    createdAt: item.createdAt,
+    score: item.jdMatch?.score,
   }));
 
   return { interview, learning, cv };
