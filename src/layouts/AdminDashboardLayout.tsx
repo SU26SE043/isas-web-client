@@ -25,8 +25,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
+import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { LanguageToggle } from './LanguageToggle';
-import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
 type NavItem = { to: string; label: string; icon: React.ReactNode; end?: boolean };
@@ -92,6 +92,12 @@ export const AdminDashboardLayout: React.FC = () => {
             </div>
           </nav>
           <div className="space-y-3 border-t border-subtle p-3">
+            <div className="flex items-center justify-center gap-2 sm:justify-start">
+              <NotificationBell scope="admin" panelPlacement="sidebar" />
+              <span className="hidden text-sm text-muted-foreground sm:inline">
+                {t('engagement.nav.notifications')}
+              </span>
+            </div>
             <div className="hidden sm:flex sm:justify-start"><LanguageToggle compact /></div>
             <SidebarLogoutButton className={navLinkClassName(false)} aria-label={t('admin.nav.logout')}>
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
@@ -107,7 +113,6 @@ export const AdminDashboardLayout: React.FC = () => {
               </AlertDescription>
             </Alert>
           </div>
-          <DashboardEngagementBar scope="admin" />
           <Outlet />
         </main>
       </div>

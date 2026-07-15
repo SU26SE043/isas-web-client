@@ -14,6 +14,7 @@ The implementation is mock-first and API-ready for future notification, settings
 
 ## Key Behaviors
 
+- `NotificationBell` (unread badge + dropdown) lives in the **dashboard sidebar** for candidate, employer, and admin layouts — not in a main-content top bar.
 - Notification center shows unread count, empty state, mark-all-read, and a mock live trigger for NOTI-048-style delivery under 2 seconds.
 - Settings form manages email, in-app, marketing opt-out, and quiet hours.
 - Marketing opt-out copy is tied to BRL-040.

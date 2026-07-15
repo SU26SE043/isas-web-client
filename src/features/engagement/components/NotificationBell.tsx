@@ -15,9 +15,16 @@ const listPathByScope: Record<EngagementScope, string> = {
 
 interface NotificationBellProps {
   scope: EngagementScope;
+  /** Where the dropdown panel anchors relative to the trigger. */
+  panelPlacement?: 'bottom-end' | 'sidebar';
+  className?: string;
 }
 
-export function NotificationBell({ scope }: NotificationBellProps) {
+export function NotificationBell({
+  scope,
+  panelPlacement = 'bottom-end',
+  className,
+}: NotificationBellProps) {
   const { t, language } = useLanguage();
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -42,7 +49,7 @@ export function NotificationBell({ scope }: NotificationBellProps) {
   };
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={cn('relative', className)}>
       <button
         type="button"
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-subtle bg-surface-overlay text-muted-foreground transition hover:bg-surface-elevated hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
@@ -64,7 +71,12 @@ export function NotificationBell({ scope }: NotificationBellProps) {
           id={panelId}
           role="region"
           aria-label={t('engagement.notifications.center')}
-          className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-subtle bg-surface-raised p-4 shadow-lg"
+          className={cn(
+            'z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-subtle bg-surface-raised p-4 shadow-lg',
+            panelPlacement === 'sidebar'
+              ? 'absolute bottom-0 left-full ml-2'
+              : 'absolute right-0 mt-2',
+          )}
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-foreground">{t('engagement.notifications.center')}</p>
@@ -86,13 +98,18 @@ export function NotificationBell({ scope }: NotificationBellProps) {
                   key={notification.id}
                   className={cn(
                     'rounded-lg border p-3',
-                    notification.status === 'unread' ? 'border-info/30 bg-info/10' : 'border-subtle bg-surface-overlay',
+                    notification.status === 'unread'
+                      ? 'border-info/30 bg-info/10'
+                      : 'border-subtle bg-surface-overlay',
                   )}
                 >
                   <p className="text-sm font-medium text-foreground">{t(notification.titleKey)}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{t(notification.bodyKey)}</p>
                   <p className="mt-2 text-[11px] text-muted-foreground">
-                    {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(notification.createdAt))}
+                    {new Intl.DateTimeFormat(locale, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    }).format(new Date(notification.createdAt))}
                   </p>
                 </article>
               ))

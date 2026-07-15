@@ -7,8 +7,8 @@ import { UserRole } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
+import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { LanguageToggle } from './LanguageToggle';
-import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
 function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
@@ -93,6 +93,14 @@ export const EmployerDashboardLayout: React.FC = () => {
           </nav>
 
           <div className="space-y-3 border-t border-subtle p-3">
+            <div className={isCollapsed ? 'flex justify-center' : 'flex items-center gap-2 px-0.5'}>
+              <NotificationBell scope="employer" panelPlacement="sidebar" />
+              {!isCollapsed ? (
+                <span className="hidden text-sm text-muted-foreground sm:inline">
+                  {t('engagement.nav.notifications')}
+                </span>
+              ) : null}
+            </div>
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
               <LanguageToggle compact />
             </div>
@@ -116,7 +124,6 @@ export const EmployerDashboardLayout: React.FC = () => {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
-          <DashboardEngagementBar scope="employer" />
           <Outlet />
         </main>
       </div>

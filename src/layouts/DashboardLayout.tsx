@@ -1,16 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
+import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
-import { DashboardEngagementBar } from './components/DashboardEngagementBar';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 import { buildCandidateDashboardNav } from './candidateDashboardNav';
 
 const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
   [
     'group relative flex items-center rounded-xl text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
-    isCollapsed ? 'justify-center px-0 py-2.5' : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
+    isCollapsed
+      ? 'justify-center px-0 py-2.5'
+      : 'justify-center px-0 py-2.5 sm:justify-start sm:gap-3 sm:px-3 sm:text-left',
     isActive
       ? 'bg-surface-elevated text-foreground shadow-sm ring-1 ring-white/8'
       : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
@@ -31,7 +33,9 @@ export const DashboardLayout: React.FC = () => {
             isCollapsed ? 'w-[4.5rem]' : 'w-[4.5rem] sm:w-60',
           ].join(' ')}
         >
-          <div className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}>
+          <div
+            className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
+          >
             {!isCollapsed ? (
               <Link to="/" className="focus-ring hidden rounded-md sm:block">
                 <BrandLogo className="h-7" />
@@ -85,7 +89,15 @@ export const DashboardLayout: React.FC = () => {
             </div>
           </nav>
 
-          <div className="border-t border-subtle p-3 space-y-3">
+          <div className="space-y-3 border-t border-subtle p-3">
+            <div className={isCollapsed ? 'flex justify-center' : 'flex items-center gap-2 px-0.5'}>
+              <NotificationBell scope="candidate" panelPlacement="sidebar" />
+              {!isCollapsed ? (
+                <span className="hidden text-sm text-muted-foreground sm:inline">
+                  {t('engagement.nav.notifications')}
+                </span>
+              ) : null}
+            </div>
             <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
               <LanguageToggle compact />
             </div>
@@ -95,7 +107,12 @@ export const DashboardLayout: React.FC = () => {
               className={navLinkClassName(false, isCollapsed)}
             >
               <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
               <span
                 className={[
@@ -111,7 +128,6 @@ export const DashboardLayout: React.FC = () => {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
-          <DashboardEngagementBar scope="candidate" />
           <Outlet />
         </main>
       </div>
