@@ -1,3 +1,6 @@
+[submodule ".agents/skills/build-webapp-skill"]
+	path = .agents/skills/build-webapp-skill
+	url = https://github.com/shushiha/build-webapp-skill
 [submodule ".agents/skills/ux-ui-agent-skills"]
 	path = .agents/skills/ux-ui-agent-skills
 	url = https://github.com/plugin87/ux-ui-agent-skills
