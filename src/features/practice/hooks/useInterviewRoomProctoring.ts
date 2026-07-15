@@ -12,7 +12,7 @@ interface UseInterviewRoomProctoringOptions {
 
 /**
  * B2B strict anti-cheat only: tab/focus listeners + periodic webcam snapshots.
- * B2C practice sessions skip all listeners and intervals (camera still forced on globally).
+ * B2C practice / learning can toggle camera; B2B exam keeps camera always on.
  */
 export function useInterviewRoomProctoring({
   sessionId,

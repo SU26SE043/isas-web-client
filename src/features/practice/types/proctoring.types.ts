@@ -8,7 +8,7 @@ export interface ProctoringConfig {
   maxViolations: number;
   faceCaptureIntervalSec: number;
   faceSimilarityThreshold: number;
-  /** Camera must stay on for the entire interview (B2C and B2B). */
+  /** When true (B2B exam), camera stays on and the toggle control is hidden. */
   cameraAlwaysOn: boolean;
 }
 
@@ -18,7 +18,7 @@ export const B2C_PROCTORING_CONFIG: ProctoringConfig = {
   maxViolations: 0,
   faceCaptureIntervalSec: 0,
   faceSimilarityThreshold: 0.85,
-  cameraAlwaysOn: true,
+  cameraAlwaysOn: false,
 };
 
 export const B2B_PROCTORING_CONFIG: ProctoringConfig = {

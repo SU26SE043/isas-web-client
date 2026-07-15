@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type InterviewMediaState = 'idle' | 'starting' | 'ready' | 'error';
 
-export function useInterviewMedia(micEnabled: boolean) {
+export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraEnabledRef = useRef(cameraEnabled);
   const [state, setState] = useState<InterviewMediaState>('idle');
   const [stream, setStream] = useState<MediaStream | null>(null);
+
+  cameraEnabledRef.current = cameraEnabled;
 
   const attachStreamToVideo = useCallback(async () => {
     const video = videoRef.current;
@@ -54,7 +57,7 @@ export function useInterviewMedia(micEnabled: boolean) {
       setStream(mediaStream);
 
       mediaStream.getVideoTracks().forEach((track) => {
-        track.enabled = true;
+        track.enabled = cameraEnabledRef.current;
       });
 
       const attached = await attachStreamToVideo();
@@ -84,6 +87,12 @@ export function useInterviewMedia(micEnabled: boolean) {
       track.enabled = micEnabled;
     });
   }, [micEnabled]);
+
+  useEffect(() => {
+    streamRef.current?.getVideoTracks().forEach((track) => {
+      track.enabled = cameraEnabled;
+    });
+  }, [cameraEnabled]);
 
   useEffect(() => () => stopMedia(), [stopMedia]);
 

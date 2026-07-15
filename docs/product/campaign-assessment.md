@@ -6,7 +6,7 @@
 
 Frontend contract for the **candidate assessment session** after opening a campaign magic link. Includes identity verification, proctoring, and violation handling.
 
-**Scope:** B2B campaigns (`campaign_id` set). B2C practice has **no anti-cheat**; both lines require **camera on** for the full interview room session.
+**Scope:** B2B campaigns (`campaign_id` set). B2C practice / learning have **no anti-cheat** and may toggle camera; B2B exam keeps **camera on** for the full interview room session.
 
 ---
 

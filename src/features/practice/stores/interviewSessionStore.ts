@@ -170,7 +170,9 @@ export const useInterviewSessionStore = create<InterviewSessionState>((set, get)
   },
   toggleMic: () => set((state) => ({ micEnabled: !state.micEnabled })),
   toggleCamera: () => {
-    // Camera is immutable during interviews (B2C and B2B).
+    const { proctoringConfig } = get();
+    if (proctoringConfig.cameraAlwaysOn) return;
+    set((state) => ({ cameraEnabled: !state.cameraEnabled }));
   },
   toggleRecording: () => set((state) => ({ isRecording: !state.isRecording })),
   registerViolation: (type) => {

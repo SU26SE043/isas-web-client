@@ -7,6 +7,7 @@ interface CandidateCameraPanelProps {
   setVideoElement?: (node: HTMLVideoElement | null) => void;
   stream: MediaStream | null;
   micEnabled: boolean;
+  cameraEnabled?: boolean;
 }
 
 export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
@@ -14,6 +15,7 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
   setVideoElement,
   stream,
   micEnabled,
+  cameraEnabled = true,
 }) => {
   const { t } = useLanguage();
   const [hasVideoFrame, setHasVideoFrame] = useState(false);
@@ -34,7 +36,7 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
     }
 
     const syncFrameState = () => {
-      setHasVideoFrame(video.readyState >= 2 && !video.paused);
+      setHasVideoFrame(cameraEnabled && video.readyState >= 2 && !video.paused);
     };
 
     video.addEventListener('loadeddata', syncFrameState);
@@ -50,24 +52,27 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
       video.removeEventListener('playing', syncFrameState);
       video.removeEventListener('emptied', syncFrameState);
     };
-  }, [stream, videoRef]);
+  }, [cameraEnabled, stream, videoRef]);
 
   return (
     <div className="relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised shadow-[var(--satin-inset)]">
       <div className="relative min-h-0 w-full flex-1 bg-surface-base">
         <video
           ref={handleVideoRef}
-          className="h-full w-full scale-x-[-1] object-cover"
+          className={`h-full w-full scale-x-[-1] object-cover ${cameraEnabled ? '' : 'invisible'}`}
           playsInline
           autoPlay
           muted
           aria-label={t('practice.candidateCamera')}
         />
         {!hasVideoFrame ? (
-          <div
-            className="pointer-events-none absolute inset-0 animate-pulse bg-surface-overlay"
-            aria-hidden
-          />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-surface-overlay">
+            {!cameraEnabled ? (
+              <span className="text-sm text-muted-foreground">{t('practice.room.cameraOff')}</span>
+            ) : (
+              <span className="absolute inset-0 animate-pulse bg-surface-overlay" aria-hidden />
+            )}
+          </div>
         ) : null}
 
         <div className="absolute right-3 top-3 flex gap-1.5">

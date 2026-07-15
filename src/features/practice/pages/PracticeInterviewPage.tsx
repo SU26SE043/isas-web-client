@@ -30,11 +30,12 @@ export const PracticeInterviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
+  const hydratedSessionId = useInterviewFlowStore((state) => state.hydratedSessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
   const session = useInterviewSession(sessionId);
   const setAiState = useInterviewSessionStore((state) => state.setAiState);
-  const media = useInterviewMedia(session.micEnabled);
+  const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
   const learning = useLearningLiveFeedback(sessionId, session.isLearning);
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
@@ -52,6 +53,7 @@ export const PracticeInterviewPage: React.FC = () => {
   });
 
   useEffect(() => {
+    if (!sessionId || hydratedSessionId !== sessionId) return;
     if (requiresIdentityVerification(sessionId)) {
       if (!identityVerified) {
         navigate(`/interview/${sessionId}/identity`, { replace: true });
@@ -61,7 +63,7 @@ export const PracticeInterviewPage: React.FC = () => {
     if (!deviceCheckPassed) {
       navigate(`/interview/${sessionId}/device-check`, { replace: true });
     }
-  }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
+  }, [deviceCheckPassed, hydratedSessionId, identityVerified, navigate, sessionId]);
 
   useEffect(() => {
     if (session.isLoading || session.status === 'completed') return;
@@ -132,6 +134,7 @@ export const PracticeInterviewPage: React.FC = () => {
               setVideoElement={media.setVideoElement}
               stream={media.stream}
               micEnabled={session.micEnabled}
+              cameraEnabled={session.cameraEnabled}
             />
           </div>
         </div>
@@ -152,11 +155,14 @@ export const PracticeInterviewPage: React.FC = () => {
         isPaused={session.isManualPaused}
         isLocked={(antiCheatEnabled && session.isViolationPaused) || session.isAutoSubmitted}
         micEnabled={session.micEnabled}
+        cameraEnabled={session.cameraEnabled}
+        cameraAlwaysOn={session.proctoringConfig.cameraAlwaysOn}
         isRecording={session.isRecording}
         chunksUploaded={recording.chunksUploaded}
         onSubmit={handleSubmit}
         onTogglePause={session.togglePause}
         onToggleMic={session.toggleMic}
+        onToggleCamera={session.toggleCamera}
         onToggleRecording={session.toggleRecording}
         learningMode={session.isLearning}
         isLastQuestion={isLastQuestion}

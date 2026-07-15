@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Send, Video } from 'lucide-react';
+import { Mic, MicOff, Send, Video, VideoOff } from 'lucide-react';
 import { useLanguage } from '../../../shared/languages';
 import { cn } from '@/lib/utils';
 import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
@@ -12,11 +12,15 @@ interface InterviewControlsProps {
   isPaused: boolean;
   isLocked: boolean;
   micEnabled: boolean;
+  cameraEnabled: boolean;
+  /** When true (B2B exam), hide the camera toggle — camera stays on. */
+  cameraAlwaysOn?: boolean;
   isRecording: boolean;
   chunksUploaded: number;
   onSubmit: () => void;
   onTogglePause: () => void;
   onToggleMic: () => void;
+  onToggleCamera: () => void;
   onToggleRecording: () => void;
   learningMode?: boolean;
   isLastQuestion?: boolean;
@@ -69,9 +73,12 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   isPaused,
   isLocked,
   micEnabled,
+  cameraEnabled,
+  cameraAlwaysOn = false,
   chunksUploaded,
   onSubmit,
   onToggleMic,
+  onToggleCamera,
   learningMode = false,
   isLastQuestion = false,
   isEvaluating = false,
@@ -137,9 +144,20 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
             {micEnabled ? <Mic className="size-5" aria-hidden /> : <MicOff className="size-5" aria-hidden />}
           </ControlIconButton>
 
-          <ControlIconButton label={t('practice.flow.controls.camera')} pressed disabled>
-            <Video className="size-5" aria-hidden />
-          </ControlIconButton>
+          {!cameraAlwaysOn ? (
+            <ControlIconButton
+              label={t('practice.flow.controls.camera')}
+              pressed={cameraEnabled}
+              disabled={isLocked}
+              onClick={onToggleCamera}
+            >
+              {cameraEnabled ? (
+                <Video className="size-5" aria-hidden />
+              ) : (
+                <VideoOff className="size-5" aria-hidden />
+              )}
+            </ControlIconButton>
+          ) : null}
         </div>
 
         <div className="flex min-w-[7rem] flex-col items-center">

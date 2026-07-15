@@ -93,6 +93,7 @@ export function useInterviewSession(sessionId: string) {
   const togglePause = useInterviewSessionStore((state) => state.togglePause);
   const continueAfterViolation = useInterviewSessionStore((state) => state.continueAfterViolation);
   const toggleMic = useInterviewSessionStore((state) => state.toggleMic);
+  const toggleCamera = useInterviewSessionStore((state) => state.toggleCamera);
   const toggleRecording = useInterviewSessionStore((state) => state.toggleRecording);
 
   return {
@@ -117,6 +118,7 @@ export function useInterviewSession(sessionId: string) {
     togglePause,
     continueAfterViolation,
     toggleMic,
+    toggleCamera,
     toggleRecording,
     submitAnswer,
     submitCurrentAnswer,

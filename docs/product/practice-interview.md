@@ -99,12 +99,12 @@ Interview room components must stay campaign-agnostic so B2B magic-link flow can
 
 ### Interview room — camera & proctoring split
 
-| Rule | B2C practice | B2B campaign |
+| Rule | B2C practice / learning | B2B campaign exam |
 | --- | --- | --- |
-| Camera during room | **Forced ON** — no disable control | **Forced ON** — no disable control |
+| Camera during room | **Toggle allowed** — user may turn camera on/off | **Forced ON** — no disable control |
 | Anti-cheat (`visibilitychange`, focus loss) | **Off** — no listeners registered | **Strict** — violations logged + pause UI |
 | Periodic webcam snapshots | **Off** — no intervals | **On** — interval from campaign proctoring config |
-| Implementation | `useInterviewRoomProctoring` + `ProctoringConfig.antiCheatEnabled` | same hook, strict mode |
+| Implementation | `useInterviewRoomProctoring` + `ProctoringConfig.cameraAlwaysOn` / `antiCheatEnabled` | same hook, strict mode |
 
 ### B2B campaign assessment (proctoring)
 
@@ -112,7 +112,7 @@ When `campaign_id` is set (session id prefix `campaign-`), the full assessment f
 
 Flow progress is persisted per session in `sessionStorage` (`isas-interview-flow:{sessionId}`).
 
-B2C practice (`/practice`, `campaign_id = null`) uses the same interview routes **without** terms, **without identity verification**, and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera remains mandatory** for the entire session; the disable-camera control is not shown.
+B2C practice (`/practice`, `campaign_id = null`) and learning practice sessions use the same interview routes **without** terms, **without identity verification**, and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera toggle is available** in these non-exam flows (`ProctoringConfig.cameraAlwaysOn = false`).
 
 ## Status
 
