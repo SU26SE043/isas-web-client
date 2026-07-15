@@ -13,47 +13,37 @@ export const useAuth = () => {
     const token = authTokenStorage.getAccessToken();
     if (!token) {
       logout();
-      return;
+      return null;
     }
 
     try {
       setLoading(true);
       const userData = await authService.me();
       setUser(userData);
-    } catch (error: any) {
+      return userData;
+    } catch (error: unknown) {
       console.error('Failed to fetch user:', error);
-
-      // If it's a 401 error, clear auth state silently
-      if (error.response?.status === 401) {
-        console.log('Token expired or invalid - clearing auth state');
-        logout();
-        return;
-      }
-
-      // If API endpoint doesn't exist (404) or other server errors (5xx)
-      if (error.response?.status === 404 || error.response?.status >= 500) {
-        console.error('api/auth/me not available');
-        logout();
-        return;
-      }
-
-      // For other errors, don't logout but show error
-      console.error('Unexpected error fetching user data');
+      // Any /me or profile-parse failure means the UI cannot establish a session.
+      logout();
+      authTokenStorage.clear();
+      sessionManager.clear();
+      throw error;
     } finally {
       setLoading(false);
     }
   }, [setUser, setLoading, logout]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
+  const handleLogout = useCallback(() => {
+    // Snapshot token, clear local auth, and leave protected UI immediately.
+    const refreshToken = authTokenStorage.getRefreshToken();
+    logout();
+    authTokenStorage.clear();
+    sessionManager.clear();
+    navigate('/', { replace: true });
+
+    void authService.logout(refreshToken).catch((error) => {
       console.error('Logout error:', error);
-    } finally {
-      logout();
-      sessionManager.clear();
-      navigate('/');
-    }
+    });
   }, [logout, navigate]);
 
   useEffect(() => {

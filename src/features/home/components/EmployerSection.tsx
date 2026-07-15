@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
+import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 import { motion } from 'framer-motion';
 
@@ -57,6 +57,7 @@ const AnimatedNumber: React.FC<{ end: number; suffix: string }> = ({ end, suffix
 
 export const EmployerSection: React.FC = () => {
   const { t } = useLanguage();
+  const { openAuthModal } = useMarketingAuthModal();
 
   return (
     <section id="enterprise" className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
@@ -104,9 +105,9 @@ export const EmployerSection: React.FC = () => {
                 <p className="text-lg text-white/70">{t('employer.reportDescription')}</p>
               </div>
             </div>
-            <Link to="/enterprise" className="btn-accent px-10 py-5 text-lg transition-all">
+            <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary px-10 py-5 text-lg transition-all">
               {t('employer.demo')}
-            </Link>
+            </button>
           </motion.div>
 
           {/* Right Stats Grid */}

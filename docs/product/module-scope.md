@@ -11,28 +11,30 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 
 | Product module | Tier | Product contract | Route group | Implementation status |
 | --- | --- | --- | --- | --- |
-| Public marketing | T2 | Home, pricing, enterprise story | `publicRoutes` | Partial |
-| Auth & session | T1 | Login, register, verify, reset, MFA, errors | `authRoutes` | Partial |
-| Auth modal (shell) | T1 | Marketing layout modal flow | `MarketingLayout` | Partial |
-| Candidate profile | T1 | Profile, completeness, career data | `candidateRoutes` `/candidate/profile*` | Partial |
-| Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Partial (mock) |
-| CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Partial (mock) |
-| Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | In progress |
-| Learning roadmap | T1 | Roadmap, milestones, lessons | `/candidate/roadmap` | Partial |
-| Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, payment | Not started / mock |
-| Usage & billing UI | T1 | Token history, estimates, settle display | Candidate route missing; employer invoices implemented | Partial |
+| Public marketing | T2 | Home, pricing, enterprise story | `publicRoutes` | Implemented (mock) |
+| Auth & session | T1 | Login, register, verify, reset, MFA, errors | `authRoutes` | Implemented |
+| Auth modal (shell) | T1 | Marketing layout modal flow | `MarketingLayout` | Implemented |
+| Candidate profile | T1 | Profile basics + uploaded CV list; legacy wizard/sections | `candidateRoutes` `/candidate/profile*` | Implemented (mock) |
+| Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Implemented (mock) |
+| CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
+| Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | Implemented (mock) |
+| Learning roadmap | T1 | Creation wizard → AI path → Learning | `/candidate/roadmap` | Implemented (mock wizard) |
+| Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, `/candidate/usage`, payment | Implemented (mock) |
+| Usage & billing UI | T1 | Token history, estimates, settle display | `/candidate/usage`, employer invoices | Implemented (mock) |
 | Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
 | Org onboarding | T1 | Company profile, verify | `/employer/company*` | Implemented (mock) |
 | Campaign management | T1 | List, wizard, detail, publish | `/employer/campaigns*` | Implemented (mock) |
-| Candidate selection | T1 | Upload CV/email, screening, ranking, **email lookup → immediate list if registered** | Partial in wizard/pipeline | Partial |
+| Candidate selection | T1 | Upload email list, screening, ranking | `/employer/campaigns/:id/selection` | Implemented (mock) |
 | Employer analytics | T1 | Pipeline, candidate profile, report, export | `/employer/analytics`, candidates | Implemented (mock) |
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
-| **Public campaign discovery** | — | **OUT OF SCOPE** | `/candidate/campaigns*` | **Remove / deprecate** |
-| Learning hub | T3 | Standalone content library | `/candidate/learning*` | Placeholder — backlog |
+| **Public campaign browse** (self-serve catalog of all open campaigns) | — | **OUT OF SCOPE** |
+| **My invited campaigns** | T1 | Employer-invited list only | `/candidate/campaigns` | Implemented (mock) |
+| Learning hub | T1 | Dashboard of created roadmaps; milestones / theory / practice | `/candidate/learning*` | Implemented (mock) |
 | Leaderboard | T2 | Rankings | `/candidate/leaderboard` | Placeholder |
 | Certificate | T2 | Certificate viewer | `/candidate/certificates/:id` | Placeholder |
-| Achievements / progress | T2/T3 | Gamification | `/candidate/achievements`, `progress` | Placeholder |
-| Admin portal | T1 | Users, tenant, audit, AI config | `/admin/*` | Placeholder only |
+| Achievements / progress | T1/T2 | Analytics + gamification | `/candidate/progress`, `achievements`, `leaderboard` | Progress minimal 3-chart Keep; leaderboard/achievements Simplify |
+| Admin portal | T1 | Users, tenant, audit, AI config | `/admin/*` | Implemented (mock) |
+| Shared engagement | T1 | Notifications, settings, help, support, team | `/*/notifications`, `/*/settings`, `/*/help`, `/*/support`, `/employer/team` | Implemented (mock) |
 | Transactional email | T1 | Backend-driven; frontend triggers only | — | Not started |
 
 ---
@@ -42,13 +44,21 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Persona | Primary entry | Key navigation |
 | --- | --- | --- |
 | Guest | `/`, `/pricing`, `/enterprise` | Register, login |
-| Candidate | `/candidate/dashboard` | Practice, roadmap, credits, history, profile |
+| Candidate | `/candidate/dashboard` | **Practice**, **Campaigns** (invited only), roadmap, credits, history, profile |
 | HR | `/employer/dashboard` | Campaigns, candidates, analytics |
-| Organize | `/employer/dashboard`, `/employer/company` | Verify, billing (TBD routes), HR mgmt (TBD) |
+| Organize | `/employer/dashboard`, `/employer/company` | Verify, billing (`/employer/subscription`, `/employer/billing`, `/employer/invoices`), HR mgmt (`/employer/team`) |
 | Admin | `/admin` | Internal ops only |
-| B2B candidate | `/invite/:token` | Auth → interview prep → room |
+| B2B candidate | `/invite/:token` → `/candidate/campaigns` | Auth gate → my campaigns hub → briefing → interview |
 
-**Navigation rule:** No link to public campaign browse for B2B candidates. Employer distributes magic links only.
+**Navigation (candidate sidebar):**
+
+| Item | Route | Notes |
+| --- | --- | --- |
+| Luyện phỏng vấn / Practice | `/practice` | B2C pre-session wizard (domain → level → CV → questions → rubric → confirm) + token reserve on create |
+| Chiến dịch / Campaigns | `/candidate/campaigns` | B2B invites only; empty if none |
+| Lịch sử phỏng vấn / History | `/candidate/practice/history` | Completed B2C + B2B sessions |
+
+**Navigation rule:** No public campaign catalog. Magic link emails land on `/candidate/campaigns` after auth.
 
 ---
 
@@ -64,14 +74,14 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/pricing` | Pricing | T2 | |
 | `/enterprise` | Enterprise marketing | T2 | |
 | `/terms`, `/privacy` | Legal | T2 | |
-| `/invite/:token` | Magic link landing | **T1** | B2B candidate entry — **keep** |
+| `/invite/:token` | Magic link auth gate | **T1** | Redirect → `/candidate/campaigns` |
 | `/403`, `/404`, `/500`, `/maintenance` | Errors | T1/T2 | |
 
 ### Auth (T1)
 
 | Route | Screen |
 | --- | --- |
-| `/login`, `/register` | Login, register |
+| `/login`, `/register` | Login, register — **shared system templates** + UI frozen (`AuthCard` + forms; decision 0009 / `auth-profile.md`) |
 | `/verify-email` | Email verification |
 | `/forgot-password`, `/forgot-password/verify`, `/reset-password` | Password recovery |
 | `/mfa` | Two-factor |
@@ -88,17 +98,19 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/practice/history` | Interview history | T1 | Keep |
 | `/candidate/practice/history/:id` | Result detail | T1 | Keep |
 | `/candidate/practice/history/compare` | Compare results | T1 | Keep |
-| `/candidate/roadmap` | Learning roadmap | T1 | Keep |
+| `/candidate/roadmap` | Roadmap creation wizard (then Learning) | T1 | Keep — see `learning-roadmap.md` |
 | `/candidate/credits` | Wallet | T1 | Update for tokens |
 | `/candidate/subscription` | Plans | T1 | Review vs token model |
 | `/candidate/payment` | Checkout | T1 | Keep |
 | `/payment/callback` | PayOS callback | T1 | Keep |
-| `/candidate/campaigns` | Campaign browse | — | **OUT OF SCOPE — deprecate** |
-| `/candidate/campaigns/:id` | Campaign detail | — | **OUT OF SCOPE — deprecate** |
-| `/candidate/campaigns/:id/enroll` | Enrollment | — | **OUT OF SCOPE — deprecate** |
-| `/candidate/learning` | Learning hub | T3 | Backlog |
-| `/candidate/learning/:moduleId` | Learning module | T3 | Backlog |
-| `/candidate/progress` | Progress dashboard | T2 | Simplify |
+| `/candidate/campaigns` | **My invited campaigns** | T1 | Invite-only list; empty state |
+| `/candidate/campaigns/:token/briefing` | Campaign briefing | T1 | Before assessment start |
+| `/candidate/campaigns/:id` | Legacy detail | — | Redirect → `/candidate/campaigns` |
+| `/candidate/campaigns/:id/enroll` | Legacy enroll | — | Redirect → `/candidate/campaigns` |
+| `/candidate/learning` | Learning dashboard (roadmaps) | T1 | Keep — see `learning.md` |
+| `/candidate/learning/roadmaps/:id` | Roadmap detail | T1 | Keep |
+| `/candidate/learning/roadmaps/:id/lessons/...` | Theory / practice launcher → shared `/interview/learning-...` room / report | T1 | Keep |
+| `/candidate/progress` | Minimal Progress dashboard (3 charts, mock) | T1 | Keep — see `progress.md` |
 | `/candidate/leaderboard` | Leaderboard | T2 | Simplify |
 | `/candidate/achievements` | Achievements | T2 | Simplify |
 | `/candidate/certificates/:id` | Certificate | T2 | Simplify |
@@ -107,7 +119,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 
 | Route | Screen |
 | --- | --- |
-| `/practice` | Practice entry / session create |
+| `/practice` | Practice wizard + session create |
 | `/practice/result` | Result (legacy path) |
 | `/interview/:sessionId/prepare` | Preparation |
 | `/interview/:sessionId/device-check` | Device check |
@@ -131,15 +143,51 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/employer/candidates/:id` | Candidate profile | HR, Organize |
 | `/employer/candidates/:id/report` | AI report | HR, Organize |
 | `/employer/analytics` | Analytics + export | HR, Organize |
+| `/employer/notifications` | Notifications | HR, Organize |
+| `/employer/settings` | Notification settings + webhook note | HR, Organize |
+| `/employer/help` | Help center | HR, Organize |
+| `/employer/support` | Support tickets | HR, Organize |
+| `/employer/team` | Team management | Organize |
+
+### Shared engagement (T1 — per role)
+
+| Route | Screen | Role |
+| --- | --- | --- |
+| `/candidate/notifications` | Notification list | Candidate |
+| `/candidate/settings` | Notification preferences | Candidate |
+| `/candidate/help` | Help center | Candidate |
+| `/candidate/support` | Support tickets | Candidate |
+| `/admin/notifications` | Notification list | Admin |
+| `/admin/settings` | Notification preferences | Admin |
+| `/admin/help` | Help center | Admin |
+| `/admin/support` | Support tickets | Admin |
 
 ### Admin (T1 — internal)
 
 | Route | Screen | Status |
 | --- | --- | --- |
-| `/admin` | Dashboard shell | Placeholder |
-| `/admin/users` | User management | Placeholder |
+| `/admin/dashboard` | Admin dashboard | Implemented (mock) |
+| `/admin/users` | User management | Implemented (mock) |
+| `/admin/roles` | Role management | Implemented (mock) |
+| `/admin/permissions` | Permission matrix | Implemented (mock) |
+| `/admin/approvals` | HR approval queue | Implemented (mock) |
+| `/admin/candidates` | Candidate admin list | Implemented (mock) |
+| `/admin/campaigns` | Campaign moderation | Implemented (mock) |
+| `/admin/content` | Content management | Implemented (mock) |
+| `/admin/learning` | Learning content admin | Implemented (mock) |
+| `/admin/ai-config` | AI configuration | Implemented (mock) |
+| `/admin/notification-templates` | Notification templates | Implemented (mock) |
+| `/admin/reports` | Admin reports catalog | Implemented (mock) |
+| `/admin/audit-logs` | Audit log viewer | Implemented (mock) |
+| `/admin/system-config` | System config | Implemented (mock) |
+| `/admin/feature-flags` | Feature flags | Implemented (mock) |
+| `/admin/monitoring` | Monitoring | Implemented (mock) |
+| `/admin/health` | System health | Implemented (mock) |
+| `/admin/backups` | Backup management | Implemented (mock) |
+| `/admin/maintenance` | Maintenance scheduler | Implemented (mock) |
+| `/admin/support-tickets` | Support ticket queue | Implemented (mock) |
 
-**Missing admin screens (Tier 1):** tenant mgmt, audit logs, AI config, role/permission mgmt, financial overview.
+**Deferred admin capabilities:** live Admin APIs, MFA re-auth modal, impersonation, real report/export and backup restore.
 
 ### Missing routes (Tier 1 — product required, not in router)
 
@@ -203,20 +251,20 @@ flowchart TB
 
 ---
 
-## 5. Reconcile — public campaign discovery
+## 5. Reconcile — campaigns vs public browse
 
-**Product decision:** B2B candidates enter **only via magic link** ([`product-scope.md`](./product-scope.md) §4.7).
+**Product decision (2026-07-13):** [`campaign-discovery.md`](./campaign-discovery.md)
 
 | Item | Action |
 | --- | --- |
-| `/candidate/campaigns` | **Deprecate** — remove from nav; route → redirect or 404 with message |
-| `/candidate/campaigns/:id` | **Deprecate** |
-| `/candidate/campaigns/:id/enroll` | **Deprecate** |
-| `/invite/:token` | **Keep** — canonical B2B candidate entry |
-| `docs/product/campaign-discovery.md` | Mark public browse out of scope |
-| Sidebar / dashboard links to “Browse campaigns” | Remove when implementing reconcile story |
+| `/candidate/campaigns` | **Keep** — **my invited campaigns** (sidebar); empty if no invites |
+| `/candidate/campaigns/:token/briefing` | **Add** — briefing before assessment |
+| `/candidate/campaigns/:id`, `.../enroll` | **Deprecate** — redirect to `/candidate/campaigns` |
+| `/invite/:token` | **Keep** — auth gate only → redirect `/candidate/campaigns?highlight={token}` |
+| `/practice` | **Sidebar** — B2C practice entry |
+| Public browse (`CampaignBrowsePage`, filters, self-enroll) | **Out of scope** — do not restore |
 
-**Rationale:** Implemented discovery flow contradicts product scope; magic link flow already exists on public routes.
+**Rationale:** Employers invite by email; candidates see only linked campaigns. Magic link is not the interview UI.
 
 ---
 
@@ -227,10 +275,10 @@ BRD `Screen_Inventory.md` lists 100+ screens. Frontend product scope **does not*
 | BRD area | Product stance |
 | --- | --- |
 | SCR-CAN-023–025 (public discovery) | Out of scope |
-| SCR-CAN-040–041 (learning hub) | Tier 3 |
+| SCR-CAN-040–041 (learning hub) | Tier 1 dashboard — see `learning.md` |
 | SCR-CAN-044–045 (leaderboard, achievements) | Tier 2 |
 | SCR-ADM-069+ | Tier 1 but mostly **not built** |
-| SCR-EMP-063–068 (billing, team) | Tier 1 — **routes missing** |
+| SCR-EMP-063–068 (billing, team) | Tier 1 — **implemented (mock)** |
 
 Use this file + [`product-scope.md`](./product-scope.md) as frontend product truth until BRD is formally updated.
 

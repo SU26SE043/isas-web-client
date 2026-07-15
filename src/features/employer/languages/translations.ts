@@ -88,6 +88,7 @@ export const employerTranslations: TranslationDictionary = {
     'employer.verify.requirementThree': 'Tài liệu rõ ràng và còn hiệu lực.',
     'employer.verify.validation.attested': 'Bạn cần xác nhận quyền đại diện.',
     'employer.verify.validation.file': 'Vui lòng chọn tệp tài liệu.',
+    'employer.verify.reviewerNote': 'Ghi chú từ đội duyệt: {note}',
   },
   en: {
     'employer.nav.dashboard': 'Dashboard',
@@ -176,5 +177,6 @@ export const employerTranslations: TranslationDictionary = {
     'employer.verify.requirementThree': 'Document is legible and currently valid.',
     'employer.verify.validation.attested': 'You must confirm representation authority.',
     'employer.verify.validation.file': 'Please select a document file.',
+    'employer.verify.reviewerNote': 'Reviewer note: {note}',
   },
 };

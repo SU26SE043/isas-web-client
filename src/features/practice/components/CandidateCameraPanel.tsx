@@ -1,45 +1,94 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Maximize2, MoreHorizontal } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 
 interface CandidateCameraPanelProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  cameraEnabled: boolean;
+  setVideoElement?: (node: HTMLVideoElement | null) => void;
+  stream: MediaStream | null;
   micEnabled: boolean;
-  mediaReady: boolean;
+  cameraEnabled?: boolean;
 }
 
 export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
   videoRef,
-  cameraEnabled,
+  setVideoElement,
+  stream,
   micEnabled,
-  mediaReady,
+  cameraEnabled = true,
 }) => {
   const { t } = useLanguage();
+  const [hasVideoFrame, setHasVideoFrame] = useState(false);
+
+  const handleVideoRef = useCallback(
+    (node: HTMLVideoElement | null) => {
+      videoRef.current = node;
+      setVideoElement?.(node);
+    },
+    [setVideoElement, videoRef],
+  );
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) {
+      setHasVideoFrame(false);
+      return undefined;
+    }
+
+    const syncFrameState = () => {
+      setHasVideoFrame(cameraEnabled && video.readyState >= 2 && !video.paused);
+    };
+
+    video.addEventListener('loadeddata', syncFrameState);
+    video.addEventListener('playing', syncFrameState);
+    video.addEventListener('emptied', syncFrameState);
+    syncFrameState();
+
+    const pollId = window.setInterval(syncFrameState, 250);
+
+    return () => {
+      window.clearInterval(pollId);
+      video.removeEventListener('loadeddata', syncFrameState);
+      video.removeEventListener('playing', syncFrameState);
+      video.removeEventListener('emptied', syncFrameState);
+    };
+  }, [cameraEnabled, stream, videoRef]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-subtle bg-surface-raised shadow-sm">
-      <div className="relative aspect-video w-full bg-surface-base">
+    <div className="relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised shadow-[var(--satin-inset)]">
+      <div className="relative min-h-0 w-full flex-1 bg-surface-base">
         <video
-          ref={videoRef}
-          className={`h-full w-full object-cover ${cameraEnabled ? '' : 'opacity-0'}`}
+          ref={handleVideoRef}
+          className={`h-full w-full scale-x-[-1] object-cover ${cameraEnabled ? '' : 'invisible'}`}
           playsInline
+          autoPlay
           muted
           aria-label={t('practice.candidateCamera')}
         />
-        {!mediaReady ? (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-            {t('practice.room.cameraStarting')}
+        {!hasVideoFrame ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-surface-overlay">
+            {!cameraEnabled ? (
+              <span className="text-sm text-muted-foreground">{t('practice.room.cameraOff')}</span>
+            ) : (
+              <span className="absolute inset-0 animate-pulse bg-surface-overlay" aria-hidden />
+            )}
           </div>
         ) : null}
-        {mediaReady && !cameraEnabled ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-base text-sm text-muted-foreground">
-            {t('practice.room.cameraOff')}
-          </div>
-        ) : null}
-      </div>
-      <div className="flex items-center justify-between border-t border-subtle px-3 py-2 text-xs text-muted-foreground">
-        <span>{t('practice.candidateCamera')}</span>
-        <span>{micEnabled ? t('practice.room.micOn') : t('practice.room.micOff')}</span>
+
+        <div className="absolute right-3 top-3 flex gap-1.5">
+          <span className="flex size-8 items-center justify-center rounded-lg border border-satin bg-black/45 text-white/80 backdrop-blur-md">
+            <Maximize2 className="size-3.5" aria-hidden />
+            <span className="sr-only">{t('practice.room.expandCamera')}</span>
+          </span>
+          <span className="flex size-8 items-center justify-center rounded-lg border border-satin bg-black/45 text-white/80 backdrop-blur-md">
+            <MoreHorizontal className="size-3.5" aria-hidden />
+            <span className="sr-only">{t('practice.room.cameraMore')}</span>
+          </span>
+        </div>
+
+        <div className="absolute bottom-3 left-3 rounded-md border border-satin bg-black/45 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
+          {micEnabled ? t('practice.room.micOn') : t('practice.room.micOff')}
+        </div>
       </div>
     </div>
   );

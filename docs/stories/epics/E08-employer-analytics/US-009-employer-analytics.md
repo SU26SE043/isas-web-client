@@ -27,8 +27,8 @@ HR users can review ranked campaign candidates, inspect employer-only candidate 
 
 ## Acceptance Criteria
 
-- `/employer/campaigns/:id/candidates` renders candidate pipeline with loading, empty, search, filters, sort, desktop table, and mobile cards.
-- Blind-hiring mode masks candidate PII in the pipeline.
+- `/employer/campaigns/:id/candidates` renders candidate pipeline with product assessment statuses (`invited`, `invite_pending`, `in_progress`, `paused_violation`, `auto_submitted`, `completed`).
+- Blind-hiring mode masks candidate PII in the pipeline (toggle on pipeline page; synced to profile/report via session).
 - `/employer/candidates/:id` renders employer-only candidate profile with internal notes.
 - `/employer/candidates/:id/report` renders AI interview report, score breakdown, rubric evidence, and manual score override.
 - Manual override requires a note of at least 20 characters and is disabled when the report is reviewed/locked.

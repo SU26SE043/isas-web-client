@@ -1,22 +1,39 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchInterviewHistory } from '../services/history.service';
+import {
+  fetchInterviewHistory,
+  restoreInterview,
+  softDeleteInterview,
+} from '../services/history.service';
 import type { InterviewHistoryItem } from '../types/history.types';
 
-export function useInterviewHistory() {
+interface UseInterviewHistoryOptions {
+  page?: number;
+  pageSize?: number;
+  includeDeleted?: boolean;
+}
+
+export function useInterviewHistory(options: UseInterviewHistoryOptions = {}) {
+  const { page = 1, pageSize = 10, includeDeleted = false } = options;
   const [interviews, setInterviews] = useState<InterviewHistoryItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadInterviews = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetchInterviewHistory();
+      setError(null);
+      const response = await fetchInterviewHistory({ page, pageSize, includeDeleted });
       setInterviews(response.interviews);
-    } catch (error) {
-      console.error('Failed to load interviews:', error);
+      setTotal(response.total);
+    } catch {
+      setError('load_failed');
+      setInterviews([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [includeDeleted, page, pageSize]);
 
   useEffect(() => {
     void loadInterviews();
@@ -26,5 +43,29 @@ export function useInterviewHistory() {
     void loadInterviews();
   }, [loadInterviews]);
 
-  return { interviews, isLoading, refresh };
+  const hideInterview = useCallback(
+    async (interviewId: string) => {
+      await softDeleteInterview(interviewId);
+      await loadInterviews();
+    },
+    [loadInterviews],
+  );
+
+  const restoreHiddenInterview = useCallback(
+    async (interviewId: string) => {
+      await restoreInterview(interviewId);
+      await loadInterviews();
+    },
+    [loadInterviews],
+  );
+
+  return {
+    interviews,
+    total,
+    isLoading,
+    error,
+    refresh,
+    hideInterview,
+    restoreHiddenInterview,
+  };
 }

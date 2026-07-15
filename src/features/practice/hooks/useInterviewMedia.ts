@@ -2,11 +2,32 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type InterviewMediaState = 'idle' | 'starting' | 'ready' | 'error';
 
-export function useInterviewMedia(micEnabled: boolean, cameraEnabled: boolean) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraEnabledRef = useRef(cameraEnabled);
   const [state, setState] = useState<InterviewMediaState>('idle');
   const [stream, setStream] = useState<MediaStream | null>(null);
+
+  cameraEnabledRef.current = cameraEnabled;
+
+  const attachStreamToVideo = useCallback(async () => {
+    const video = videoRef.current;
+    const mediaStream = streamRef.current;
+    if (!video || !mediaStream) return false;
+
+    if (video.srcObject !== mediaStream) {
+      video.srcObject = mediaStream;
+    }
+
+    try {
+      await video.play();
+      setState('ready');
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
 
   const stopMedia = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -34,17 +55,32 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled: boolean) {
       });
       streamRef.current = mediaStream;
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
+
+      mediaStream.getVideoTracks().forEach((track) => {
+        track.enabled = cameraEnabledRef.current;
+      });
+
+      const attached = await attachStreamToVideo();
+      if (!attached) {
+        setState('starting');
       }
-      setState('ready');
+
       return mediaStream;
     } catch {
       setState('error');
       return null;
     }
-  }, [stopMedia]);
+  }, [attachStreamToVideo, stopMedia]);
+
+  const setVideoElement = useCallback(
+    (node: HTMLVideoElement | null) => {
+      videoRef.current = node;
+      if (node && streamRef.current) {
+        void attachStreamToVideo();
+      }
+    },
+    [attachStreamToVideo],
+  );
 
   useEffect(() => {
     streamRef.current?.getAudioTracks().forEach((track) => {
@@ -62,9 +98,11 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled: boolean) {
 
   return {
     videoRef,
+    setVideoElement,
     stream,
     state,
     startMedia,
     stopMedia,
+    attachStreamToVideo,
   };
 }

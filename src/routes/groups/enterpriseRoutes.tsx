@@ -4,6 +4,7 @@ import { EmployerDashboardLayout } from '@/layouts/EmployerDashboardLayout';
 import { CampaignDetailPage } from '@/features/employer-campaigns/pages/CampaignDetailPage';
 import { CampaignListPage } from '@/features/employer-campaigns/pages/CampaignListPage';
 import { CampaignWizardPage } from '@/features/employer-campaigns/pages/CampaignWizardPage';
+import { CampaignSelectionPage } from '@/features/employer-campaigns/pages/CampaignSelectionPage';
 import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
 import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
@@ -24,7 +25,6 @@ import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
 
 export const enterpriseRoutes: RouteObject[] = [
-  { path: '/enterprise', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/dashboard', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/campaigns', element: <Navigate to="/employer/campaigns" replace /> },
   { path: '/enterprise/company', element: <Navigate to="/employer/company" replace /> },
@@ -41,7 +41,7 @@ export const enterpriseRoutes: RouteObject[] = [
     element: <RequireAuth />,
     children: [
       {
-        element: <RequireRole roles={[UserRole.HR, UserRole.ORGANIZE, UserRole.ADMIN]} />,
+        element: <RequireRole roles={[UserRole.HR_MEMBER, UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
         children: [
           {
             path: '/employer',
@@ -49,11 +49,17 @@ export const enterpriseRoutes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <EmployerDashboardPage /> },
-              { path: 'company', element: <CompanyProfilePage /> },
-              { path: 'company/verify', element: <CompanyVerificationPage /> },
+              {
+                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
+                children: [
+                  { path: 'company', element: <CompanyProfilePage /> },
+                  { path: 'company/verify', element: <CompanyVerificationPage /> },
+                ],
+              },
               { path: 'campaigns', element: <CampaignListPage /> },
               { path: 'campaigns/new', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id/candidates', element: <CandidatePipelinePage /> },
+              { path: 'campaigns/:id/selection', element: <CampaignSelectionPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id', element: <CampaignDetailPage /> },
               { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },
@@ -64,7 +70,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'help', element: <HelpPage scope="employer" /> },
               { path: 'support', element: <SupportPage scope="employer" /> },
               {
-                element: <RequireRole roles={[UserRole.ORGANIZE, UserRole.ADMIN]} />,
+                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
                 children: [
                   { path: 'subscription', element: <EmployerSubscriptionPage /> },
                   { path: 'billing', element: <EmployerBillingPage /> },

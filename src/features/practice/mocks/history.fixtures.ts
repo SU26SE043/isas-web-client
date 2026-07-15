@@ -9,6 +9,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 85,
     duration: 45,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-2',
@@ -18,6 +20,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 72,
     duration: 60,
+    domainId: 'fullstack',
+    level: 'middle',
   },
   {
     id: 'interview-3',
@@ -27,6 +31,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 78,
     duration: 30,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-4',
@@ -36,6 +42,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 91,
     duration: 50,
+    domainId: 'frontend',
+    level: 'middle',
   },
   {
     id: 'interview-5',
@@ -45,6 +53,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 64,
     duration: 40,
+    domainId: 'frontend',
+    level: 'fresher',
   },
   {
     id: 'interview-6',
@@ -54,6 +64,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 88,
     duration: 55,
+    domainId: 'frontend',
+    level: 'senior',
   },
   {
     id: 'interview-7',
@@ -63,6 +75,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 82,
     duration: 48,
+    domainId: 'fullstack',
+    level: 'middle',
   },
   {
     id: 'interview-8',
@@ -72,6 +86,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 76,
     duration: 42,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-9',
@@ -81,6 +97,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 69,
     duration: 38,
+    domainId: 'frontend',
+    level: 'middle',
   },
   {
     id: 'interview-10',
@@ -90,6 +108,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 93,
     duration: 60,
+    domainId: 'frontend',
+    level: 'lead',
   },
   {
     id: 'interview-11',
@@ -99,6 +119,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 58,
     duration: 35,
+    domainId: 'mobile',
+    level: 'junior',
   },
   {
     id: 'interview-12',
@@ -108,6 +130,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 81,
     duration: 50,
+    domainId: 'backend',
+    level: 'middle',
   },
   {
     id: 'interview-13',
@@ -117,6 +141,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 87,
     duration: 55,
+    domainId: 'frontend',
+    level: 'senior',
   },
   {
     id: 'interview-14',
@@ -126,6 +152,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 74,
     duration: 44,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-15',
@@ -135,6 +163,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 84,
     duration: 52,
+    domainId: 'fullstack',
+    level: 'middle',
   },
   {
     id: 'interview-16',
@@ -144,6 +174,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 86,
     duration: 47,
+    domainId: 'frontend',
+    level: 'middle',
   },
   {
     id: 'interview-17',
@@ -153,6 +185,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 62,
     duration: 40,
+    domainId: 'frontend',
+    level: 'fresher',
   },
   {
     id: 'interview-18',
@@ -162,6 +196,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 90,
     duration: 58,
+    domainId: 'frontend',
+    level: 'senior',
   },
   {
     id: 'interview-19',
@@ -171,6 +207,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 83,
     duration: 46,
+    domainId: 'frontend',
+    level: 'middle',
   },
   {
     id: 'interview-20',
@@ -180,6 +218,8 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 79,
     duration: 43,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-21',
@@ -189,15 +229,19 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'in-progress',
     overallScore: 0,
     duration: 25,
+    domainId: 'frontend',
+    level: 'junior',
   },
   {
     id: 'interview-22',
-    jobTitle: 'Software Developer',
+    jobTitle: 'Backend API Engineer',
     company: 'OpenStack',
     date: '2025-11-20T12:00:00Z',
     status: 'completed',
     overallScore: 77,
     duration: 45,
+    domainId: 'backend',
+    level: 'junior',
   },
   {
     id: 'interview-23',
@@ -207,5 +251,29 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'pending',
     overallScore: 0,
     duration: 30,
+    domainId: 'backend',
+    level: 'intern',
+  },
+  {
+    id: 'interview-24',
+    jobTitle: 'Node.js Developer',
+    company: 'ServiceMesh',
+    date: '2026-04-10T09:00:00Z',
+    status: 'completed',
+    overallScore: 71,
+    duration: 48,
+    domainId: 'backend',
+    level: 'junior',
+  },
+  {
+    id: 'interview-25',
+    jobTitle: 'Backend Senior',
+    company: 'CoreBank',
+    date: '2026-05-20T14:00:00Z',
+    status: 'completed',
+    overallScore: 89,
+    duration: 55,
+    domainId: 'backend',
+    level: 'senior',
   },
 ];

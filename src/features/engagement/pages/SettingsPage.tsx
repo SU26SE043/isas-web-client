@@ -1,6 +1,7 @@
 import { useLanguage } from '@/shared/languages';
 import { EngagementPageShell } from '../components/EngagementPageShell';
 import { SettingsForm } from '../components/SettingsForm';
+import { WebhookConfigNote } from '../components/WebhookConfigNote';
 import { useEngagement } from '../hooks/useEngagement';
 import type { EngagementScope } from '../types/engagement.types';
 
@@ -16,7 +17,10 @@ export function SettingsPage({ scope }: { scope: EngagementScope }) {
 
   return (
     <EngagementPageShell eyebrow={screenByScope[scope]} title={t('engagement.settings.title')} description={t('engagement.settings.description')}>
-      <SettingsForm preferences={preferences} onSave={savePreferences} />
+      <div className="space-y-6">
+        <SettingsForm preferences={preferences} onSave={savePreferences} />
+        {scope === 'employer' ? <WebhookConfigNote /> : null}
+      </div>
     </EngagementPageShell>
   );
 }

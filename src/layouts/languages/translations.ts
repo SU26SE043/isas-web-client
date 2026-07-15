@@ -15,6 +15,7 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.dashboard': 'Bảng điều khiển',
     'nav.profile': 'Cá nhân',
     'nav.signIn': 'Đăng nhập',
+    'nav.signUp': 'Đăng ký',
     'nav.getStarted': 'Bắt đầu ngay',
     'nav.logout': 'Đăng xuất',
 
@@ -60,6 +61,7 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.dashboard': 'Dashboard',
     'nav.profile': 'Profile',
     'nav.signIn': 'Sign in',
+    'nav.signUp': 'Sign up',
     'nav.getStarted': 'Get started',
     'nav.logout': 'Logout',
 

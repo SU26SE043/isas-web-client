@@ -22,3 +22,17 @@ export function PracticeHistoryLegacyRedirect() {
   if (!id) return <Navigate to="/candidate/practice/history" replace />;
   return <Navigate to={`/candidate/practice/history/${id}`} replace />;
 }
+
+export function CandidateResultsLegacyRedirect() {
+  const { id } = useParams();
+  if (!id) return <Navigate to="/candidate/practice/history" replace />;
+  return <Navigate to={`/candidate/practice/history/${id}`} replace />;
+}
+
+export function CandidateHistoryLegacyRedirect() {
+  return <Navigate to="/candidate/practice/history" replace />;
+}
+
+export function CampaignDiscoveryLegacyRedirect() {
+  return <Navigate to="/candidate/campaigns" replace />;
+}

@@ -1,3 +1,4 @@
+import type { ProgressMinimalDashboard } from '../types/progress.types';
 import type {
   Achievement,
   LeaderboardEntry,
@@ -5,6 +6,7 @@ import type {
   ProgressDashboardData,
 } from '../types/learning.types';
 
+/** Legacy thin dashboard (learning.service). */
 export const MOCK_PROGRESS_DASHBOARD: ProgressDashboardData = {
   modulesCompleted: 1,
   totalModules: 4,
@@ -114,3 +116,32 @@ export const MOCK_PRACTICE_SESSIONS: Record<string, LearningPracticeSession> = {
     ],
   },
 };
+
+export function buildProgressMinimalDashboard(): ProgressMinimalDashboard {
+  return {
+    roadmapCompletion: {
+      completed: 12,
+      inProgress: 5,
+      locked: 8,
+    },
+    skillBreakdown: [
+      { id: 'java-spring', name: 'Java Spring Boot', nameVi: 'Java Spring Boot', completed: 4, inProgress: 2 },
+      { id: 'sql', name: 'SQL', nameVi: 'SQL', completed: 3, inProgress: 1 },
+      { id: 'aws', name: 'AWS', nameVi: 'AWS', completed: 2, inProgress: 2 },
+      { id: 'docker', name: 'Docker', nameVi: 'Docker', completed: 2, inProgress: 1 },
+      { id: 'rest', name: 'REST API', nameVi: 'REST API', completed: 3, inProgress: 1 },
+      { id: 'soft', name: 'Soft Skills', nameVi: 'Kỹ năng mềm', completed: 1, inProgress: 2 },
+    ],
+    practiceScores: [
+      { id: 'ps-1', sessionLabel: 'Session 1', sessionLabelVi: 'Phiên 1', score: 62 },
+      { id: 'ps-2', sessionLabel: 'Session 2', sessionLabelVi: 'Phiên 2', score: 68 },
+      { id: 'ps-3', sessionLabel: 'Session 3', sessionLabelVi: 'Phiên 3', score: 71 },
+      { id: 'ps-4', sessionLabel: 'Session 4', sessionLabelVi: 'Phiên 4', score: 74 },
+      { id: 'ps-5', sessionLabel: 'Session 5', sessionLabelVi: 'Phiên 5', score: 79 },
+      { id: 'ps-6', sessionLabel: 'Session 6', sessionLabelVi: 'Phiên 6', score: 82 },
+      { id: 'ps-7', sessionLabel: 'Session 7', sessionLabelVi: 'Phiên 7', score: 85 },
+    ],
+  };
+}
+
+export const MOCK_PROGRESS_MINIMAL = buildProgressMinimalDashboard();

@@ -1,4 +1,4 @@
-export type ProctoringEventType = 'tab_switch' | 'face_missing' | 'multiple_faces';
+export type ProctoringEventType = 'tab_switch' | 'focus_loss' | 'face_missing' | 'face_mismatch' | 'multiple_faces';
 
 export interface ProctoringEventPayload {
   type: ProctoringEventType;
@@ -8,7 +8,8 @@ export interface ProctoringEventPayload {
 
 export interface SessionStartResult {
   sessionId: string;
-  creditsRemaining: number;
+  tokensAvailable: number;
+  reservedTokens: number;
   startedAt: string;
 }
 

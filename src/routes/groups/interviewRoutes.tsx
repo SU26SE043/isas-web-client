@@ -7,6 +7,7 @@ import { PracticeInterviewPage } from '@/features/practice/pages/PracticeIntervi
 import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
 import { InterviewPrepPage } from '@/features/practice/pages/InterviewPrepPage';
 import { DeviceCheckPage } from '@/features/practice/pages/DeviceCheckPage';
+import { TermsAcceptancePage } from '@/features/practice/pages/TermsAcceptancePage';
 import { IdentityVerifyPage } from '@/features/practice/pages/IdentityVerifyPage';
 import { WaitingRoomPage } from '@/features/practice/pages/WaitingRoomPage';
 import { InterviewCompletePage } from '@/features/practice/pages/InterviewCompletePage';
@@ -23,6 +24,7 @@ export const interviewRoutes: RouteObject[] = [
         children: [
           { path: '/interview/:sessionId/prepare', element: <InterviewPrepPage /> },
           { path: '/interview/:sessionId/device-check', element: <DeviceCheckPage /> },
+          { path: '/interview/:sessionId/terms', element: <TermsAcceptancePage /> },
           { path: '/interview/:sessionId/identity', element: <IdentityVerifyPage /> },
           { path: '/interview/:sessionId/waiting', element: <WaitingRoomPage /> },
           { path: '/interview/:sessionId/room', element: <PracticeInterviewPage /> },

@@ -33,6 +33,9 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 | [cv-analysis.md](./cv-analysis.md) | CV analysis wizard & match report |
 | [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
+| [learning-roadmap.md](./learning-roadmap.md) | Roadmap creation wizard → Learning |
+| [learning.md](./learning.md) | Learning dashboard, milestones, theory/practice |
+| [progress.md](./progress.md) | Candidate progress / learning analytics |
 | [payment.md](./payment.md) | Token billing, B2C wallet, B2B invoices |
 | [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
 | [campaign-discovery.md](./campaign-discovery.md) | Magic link entry; public browse deprecated |
@@ -49,11 +52,15 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 
 
 
-| [api-gateway.md](./api-gateway.md) | Gateway client conventions |
+| [api-gateway.md](./api-gateway.md) | Gateway routing + JSON payload conventions (camelCase, dates, GUIDs) |
 
 ## UI
 
 Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
+
+Shared selection/section templates: `SectionPanel` + `SelectionOption` under `src/components/ui/`.
+
+Global look: **bright black** surfaces + **satin silver** frames (`frame-satin`) — see UI Guide § “Surface elevation” and “Satin silver borders”.
 
 ## Update rule
 

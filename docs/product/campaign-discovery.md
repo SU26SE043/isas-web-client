@@ -1,68 +1,127 @@
-# Campaign Discovery — Status: OUT OF SCOPE (public browse)
+# Candidate Campaigns & Magic Link Entry
 
-> **Product decision (2026-07-12):** B2B candidates enter campaigns **only via magic link**. Public campaign browse/enroll is **not** part of the frontend product. See [`product-scope.md`](./product-scope.md) and [`module-scope.md`](./module-scope.md) §5.
+> **Product decision (2026-07-13, supersedes 2026-07-12 browse deprecation):** B2B candidates see **only campaigns they were invited to** at `/candidate/campaigns`. **Public browse/enroll** (`list all open campaigns`) remains **out of scope**. Magic link (`/invite/:token`) is an **email entry gate** that lands on the campaigns hub — not a briefing or interview screen.
+
+**See also:** [`product-scope.md`](./product-scope.md) §4.5–4.7 · [`module-scope.md`](./module-scope.md) · [`campaign-assessment.md`](./campaign-assessment.md)
 
 ---
 
-## In scope — magic link only
+## Two candidate channels (B2C vs B2B)
 
-| Path | Component | Status |
+| Channel | Sidebar | Entry | Data source |
+| --- | --- | --- | --- |
+| **B2C Practice** | **Luyện phỏng vấn** → `/practice` | Candidate self-serve | `campaign_id = null`; token wallet reserve/settle |
+| **B2B Campaigns** | **Chiến dịch** → `/candidate/campaigns` | Employer invite (+ magic link email) | Invites linked to `candidate_id` / email |
+
+**Interview history** (`/candidate/practice/history`) covers completed sessions from **both** channels.
+
+---
+
+## `/candidate/campaigns` — My invited campaigns (IN SCOPE)
+
+### Purpose
+
+Single hub for employer-invited assessments. **Not** a marketplace.
+
+### When the list has items
+
+| Condition | Visible on list |
+| --- | --- |
+| HR added candidate email and email **already registered** as Candidate (BR-B2B-07) | Row appears with status `invited` (or later pipeline statuses) |
+| Candidate completed magic link auth after invite | Same — invite already linked to account |
+| Candidate opens sidebar without any invites | **Empty state** |
+
+### Empty state copy (bilingual)
+
+> Chưa có chiến dịch nào. Bạn sẽ thấy ở đây khi nhà tuyển dụng mời qua email đã đăng ký trên hệ thống.
+
+### Card UI
+
+Each invite card shows:
+
+- Campaign title, company
+- Deadline / expiry
+- Status: `invited` | `in_progress` | `completed` | `expired` (and future pipeline statuses)
+- CTA: **Bắt đầu** (invited) or **Tiếp tục** (in_progress)
+
+### Briefing & assessment start
+
+1. Candidate clicks **Bắt đầu** / **Tiếp tục** on a card.
+2. Navigate to `/candidate/campaigns/:token/briefing` — campaign info, instructions, proctoring notice (`CampaignBriefingPanel`).
+3. **Start assessment** → shared engine `/interview/campaign-{id}/prepare` → device → terms → identity → room (see [`campaign-assessment.md`](./campaign-assessment.md)).
+
+---
+
+## `/invite/:token` — Magic link (email gate only)
+
+Magic link **does not** show briefing or start the interview directly.
+
+### Responsibilities
+
+1. **Validate** token (valid / expired / invalid).
+2. **Auth branch** — sign in or register as Candidate (BR-B2B-08–10); reject wrong role / email mismatch.
+3. **Redirect** authenticated candidate → `/candidate/campaigns?highlight={token}` (optional query highlights the card from the email).
+
+### Flow
+
+```mermaid
+flowchart TD
+  A["Email: /invite/:token"] --> B{Valid?}
+  B -->|No| E["Expired / invalid screen"]
+  B -->|Yes| C{Authenticated\nCandidate + email match?}
+  C -->|No| D["Invite summary + Sign in / Register"]
+  D --> C
+  C -->|Yes| F["/candidate/campaigns?highlight=token"]
+  F --> G["Card CTA → briefing → interview"]
+```
+
+---
+
+## Employer side (unchanged)
+
+1. HR adds emails → lookup (BR-B2B-06).
+2. Registered Candidate → **immediate** list row `invited` (BR-B2B-07).
+3. Unknown email → `invite_pending` until registration (BR-B2B-10).
+4. Publish → send magic-link email pointing to `/invite/:token`.
+
+---
+
+## Out of scope — public discovery (still deprecated)
+
+| Path | Old component | Action |
 | --- | --- | --- |
-| `/invite/:token` | `MagicLinkLandingPage` | **Keep** — canonical B2B candidate entry |
+| `/candidate/campaigns` (browse all) | `CampaignBrowsePage` | **Replaced** by invite-only `CandidateCampaignsPage` |
+| `/candidate/campaigns/:id` | `CampaignDetailPage` | **Deprecate** — redirect to `/candidate/campaigns` |
+| `/candidate/campaigns/:id/enroll` | `CampaignEnrollmentPage` | **Deprecate** — redirect to `/candidate/campaigns` |
 
-## Magic link flows
-
-### Employer side (before candidate clicks)
-
-1. HR adds emails (candidate selection or invite modal).
-2. System **lookup email** ([`product-scope.md`](./product-scope.md) BR-B2B-06–11).
-3. If email **already registered as Candidate** → row appears **immediately** in campaign candidate list (`invited`).
-4. If email unknown → row `invite_pending` until registration.
-5. Publish → send magic-link email.
-
-### Candidate side (after click)
-
-See full flow: [`campaign-assessment.md`](./campaign-assessment.md).
-
-1. Candidate opens `/invite/:token` → **validate magic link**.
-2. **Sign in** or **register** (Candidate only).
-3. **Campaign information** → **instructions**.
-4. **Device check** (camera, microphone, internet).
-5. **Accept terms & privacy**.
-6. **Identity verification** — baseline face photo.
-7. **Interview room** — camera on; sequential questions; proctoring (face interval, tab/focus).
-8. **Violation pause** → warning → **Continue** or **auto-submit** at max violations.
-9. **AI evaluation** → assessment complete.
-
-One email = one role — invite to an HR/Organize/Admin email is rejected at entry time on the employer UI.
+Do **not** restore filters, search, or self-enroll without an invite.
 
 ---
 
-## Out of scope — public discovery (deprecated)
+## Frontend stories (FS-123–126)
 
-The following were implemented during an earlier phase but **contradict** current product scope:
-
-| Path | Component | Action |
+| ID | Story | Route / surface |
 | --- | --- | --- |
-| `/candidate/campaigns` | `CampaignBrowsePage` | Deprecate — remove nav links; redirect or remove route |
-| `/candidate/campaigns/:id` | `CampaignDetailPage` | Deprecate |
-| `/candidate/campaigns/:id/enroll` | `CampaignEnrollmentPage` | Deprecate |
-
-Do **not** extend these screens. New B2B candidate work should go through `/invite/:token` and the shared interview engine.
+| FS-123 | Candidate sidebar: **Practice** + **Campaigns** | `/practice`, `/candidate/campaigns` |
+| FS-124 | Magic link validate + auth → redirect campaigns | `/invite/:token` |
+| FS-125 | Campaign briefing (from card CTA) | `/candidate/campaigns/:token/briefing` |
+| FS-126 | My invited campaigns list + empty state | `/candidate/campaigns` |
 
 ---
 
-## Open items
+## API contract (mock → live)
 
-- Profile completeness gate (70%) on magic-link path — confirm in a future story (`employer-analytics.md` / dashboard BRD refs).
-- Campaign assessment (B2B proctoring): [`campaign-assessment.md`](./campaign-assessment.md)
+| Method | Purpose |
+| --- | --- |
+| `validateMagicLink(token)` | Invite gate |
+| `resolveInviteAuth(token)` | Sign in vs register |
+| `listMyInvitedCampaigns(candidateEmail)` | Sidebar campaigns page |
+| `getCampaignBriefing(token)` | Briefing step before interview |
 
 ---
 
 ## Related
 
-- B2B employer campaign lifecycle: [`campaign-management.md`](./campaign-management.md)
-- Product scope: [`product-scope.md`](./product-scope.md) §4.5–4.7
-- Pipeline statuses: [`employer-analytics.md`](./employer-analytics.md)
-- Assessment flow: [`campaign-assessment.md`](./campaign-assessment.md)
-- Module reconcile: [`module-scope.md`](./module-scope.md) §5
+- Assessment proctoring: [`campaign-assessment.md`](./campaign-assessment.md)
+- Shared interview engine: [`practice-interview.md`](./practice-interview.md)
+- Employer lifecycle: [`campaign-management.md`](./campaign-management.md)

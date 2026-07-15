@@ -17,7 +17,9 @@ export function SubscriptionPlanCard({ plan, language, onSelect }: SubscriptionP
       <h3 className="heading-secondary text-lg text-foreground">{title}</h3>
       <p className="body-text mt-2 text-sm text-muted-foreground">{description}</p>
       <p className="mt-4 text-3xl font-semibold text-foreground">${plan.priceUsdMonthly}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{plan.creditsPerMonth} credits / month</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {t('payment.plans.tokensPerMonth').replace('{count}', plan.tokensPerMonth.toLocaleString())}
+      </p>
       <button type="button" className="btn-primary mt-5" onClick={() => onSelect(plan.id)}>
         {t('payment.plans.subscribe')}
       </button>

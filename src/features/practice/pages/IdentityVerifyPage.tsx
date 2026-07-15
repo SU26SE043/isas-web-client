@@ -1,23 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { isCampaignSessionId, requiresIdentityVerification } from '../types/interviewFlow.types';
 import { useMediaDevices } from '../hooks/useMediaDevices';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 
 export const IdentityVerifyPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { deviceCheckPassed, identitySnapshot, setIdentityVerified } = useInterviewFlowStore();
+  useInterviewFlowSession(sessionId);
+  const isCampaign = isCampaignSessionId(sessionId);
+  const { deviceCheckPassed, termsAccepted, identitySnapshot, setIdentityVerified } =
+    useInterviewFlowStore();
   const { videoRef, state, startPreview, stopStream, captureSnapshot } = useMediaDevices();
   const [preview, setPreview] = useState(identitySnapshot ?? '');
 
   useEffect(() => {
+    if (!requiresIdentityVerification(sessionId)) {
+      navigate(`/interview/${sessionId}/waiting`, { replace: true });
+      return;
+    }
     if (!deviceCheckPassed) {
       navigate(`/interview/${sessionId}/device-check`, { replace: true });
+      return;
     }
-  }, [deviceCheckPassed, navigate, sessionId]);
+    if (isCampaign && !termsAccepted) {
+      navigate(`/interview/${sessionId}/terms`, { replace: true });
+    }
+  }, [deviceCheckPassed, isCampaign, navigate, sessionId, termsAccepted]);
 
   useEffect(() => {
     void startPreview();
@@ -28,7 +41,7 @@ export const IdentityVerifyPage: React.FC = () => {
     const snapshot = captureSnapshot();
     if (!snapshot) return;
     setPreview(snapshot);
-    setIdentityVerified(snapshot);
+    setIdentityVerified(sessionId, snapshot);
   };
 
   const handleContinue = () => {
@@ -42,6 +55,7 @@ export const IdentityVerifyPage: React.FC = () => {
       currentStep="identity"
       title={t('practice.flow.identity.title')}
       description={t('practice.flow.identity.description')}
+      isCampaignSession={isCampaign}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-6">
         <div className="grid gap-6 md:grid-cols-2">

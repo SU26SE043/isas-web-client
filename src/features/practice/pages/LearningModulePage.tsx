@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningService } from '../services/learning.service';
-import type { LearningModuleContent } from '../types/learning.types';
+import type { LearningModule, LearningModuleContent } from '../types/learning.types';
 
 export const LearningModulePage: React.FC = () => {
   const { moduleId = '' } = useParams();
   const { t, language } = useLanguage();
+  const [moduleMeta, setModuleMeta] = useState<LearningModule | null>(null);
   const [content, setContent] = useState<LearningModuleContent | null>(null);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,18 +17,27 @@ export const LearningModulePage: React.FC = () => {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
+    if (!moduleId) {
+      setError('load_failed');
+      setIsLoading(false);
+      return;
+    }
+
     let active = true;
     setIsLoading(true);
-    void learningService
-      .getModuleContent(moduleId)
-      .then((data) => {
+    setError(null);
+    void Promise.all([learningService.getModule(moduleId), learningService.getModuleContent(moduleId)])
+      .then(([meta, data]) => {
         if (!active) return;
+        setError(null);
+        setModuleMeta(meta);
         setContent(data);
-        setProgress(35);
+        setProgress(meta.progressPercent);
+        setCompleted(meta.status === 'completed');
       })
       .catch(() => {
         if (!active) return;
-        setError(t('practice.learning.module.error'));
+        setError('load_failed');
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -35,12 +45,16 @@ export const LearningModulePage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [moduleId, t]);
+  }, [moduleId]);
 
   const sectionProgressStep = useMemo(() => {
     if (!content?.sections.length) return 0;
     return Math.floor(100 / content.sections.length);
   }, [content?.sections.length]);
+
+  const passThreshold = moduleMeta?.passThreshold ?? 80;
+  const moduleTitle =
+    moduleMeta && language === 'vi' ? moduleMeta.titleVi : moduleMeta?.title ?? moduleId;
 
   const handleMarkProgress = async () => {
     if (!content) return;
@@ -48,6 +62,7 @@ export const LearningModulePage: React.FC = () => {
     setIsSaving(true);
     try {
       const updated = await learningService.completeModule(moduleId, next);
+      setModuleMeta(updated);
       setProgress(updated.progressPercent);
       setCompleted(updated.status === 'completed');
     } catch {
@@ -73,16 +88,22 @@ export const LearningModulePage: React.FC = () => {
             {t('practice.learning.title')}
           </Link>
           <span className="mx-2">{'>'}</span>
-          <span>{moduleId}</span>
+          <span className="text-foreground">{moduleTitle}</span>
         </nav>
 
-        {error ? <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
+            {t('practice.learning.module.error')}
+          </p>
+        ) : null}
 
-        {content ? (
+        {content && moduleMeta ? (
           <>
             <header className="space-y-2">
-              <h1 className="heading-primary text-3xl text-foreground">{t('practice.learning.module.title')}</h1>
-              <p className="body-text text-sm text-muted-foreground">{t('practice.learning.module.subtitle')}</p>
+              <h1 className="heading-primary text-3xl text-foreground">{moduleTitle}</h1>
+              <p className="body-text text-sm text-muted-foreground">
+                {language === 'vi' ? moduleMeta.descriptionVi : moduleMeta.description}
+              </p>
             </header>
 
             <div className="rounded-xl border border-subtle bg-surface-raised p-4">
@@ -94,7 +115,7 @@ export const LearningModulePage: React.FC = () => {
                 <div className="h-full rounded-full bg-foreground" style={{ width: `${progress}%` }} />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                {t('practice.learning.module.passHint').replace('{percent}', '80')}
+                {t('practice.learning.module.passHint').replace('{percent}', String(passThreshold))}
               </p>
             </div>
 
@@ -112,7 +133,12 @@ export const LearningModulePage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button type="button" className="btn-primary" disabled={isSaving || completed} onClick={() => void handleMarkProgress()}>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={isSaving || completed}
+                onClick={() => void handleMarkProgress()}
+              >
                 {completed ? t('practice.learning.module.completed') : t('practice.learning.module.markProgress')}
               </button>
               <Link to={`/candidate/learning/${moduleId}/practice`} className="btn-secondary">

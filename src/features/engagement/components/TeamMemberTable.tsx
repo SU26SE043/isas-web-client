@@ -14,7 +14,7 @@ interface TeamMemberTableProps {
 export function TeamMemberTable({ team, onInvite }: TeamMemberTableProps) {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<TeamRole>('hr');
+  const [role, setRole] = useState<TeamRole>('HrMember');
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
   const invite = async () => {
@@ -28,7 +28,7 @@ export function TeamMemberTable({ team, onInvite }: TeamMemberTableProps) {
       <div className="grid gap-3 rounded-xl border border-subtle bg-surface-raised p-4 md:grid-cols-[1fr_180px_auto]">
         <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t('engagement.team.email')} />
         <select className="h-8 rounded-lg border border-input bg-surface-overlay px-2 text-sm" value={role} onChange={(event) => setRole(event.target.value as TeamRole)}>
-          {(['hr', 'organize'] as TeamRole[]).map((item) => <option key={item} value={item}>{t(`engagement.team.role.${item}`)}</option>)}
+          {(['HrMember', 'OrgAdmin'] as TeamRole[]).map((item) => <option key={item} value={item}>{t(`engagement.team.role.${item}`)}</option>)}
         </select>
         <Button type="button" onClick={invite}>
           <UserPlus aria-hidden />

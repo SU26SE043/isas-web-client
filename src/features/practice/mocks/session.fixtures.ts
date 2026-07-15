@@ -11,6 +11,7 @@ export interface PracticeSession {
   description: string;
   status: 'initializing' | 'ready' | 'in_progress' | 'completed';
   questions: PracticeQuestion[];
+  campaignId?: string;
 }
 
 export const MOCK_PRACTICE_SESSIONS: Record<string, PracticeSession> = {
@@ -45,6 +46,25 @@ export const MOCK_PRACTICE_SESSIONS: Record<string, PracticeSession> = {
     description: 'Buổi phỏng vấn NodeJS (Giả lập việc sinh câu hỏi tốn thời gian)',
     status: 'initializing',
     questions: [],
+  },
+  'campaign-frontend-engineer-remote': {
+    sessionId: 'campaign-frontend-engineer-remote',
+    title: 'Frontend Engineer Assessment',
+    description: 'B2B campaign assessment with proctoring enabled',
+    status: 'ready',
+    campaignId: 'frontend-engineer-remote',
+    questions: [
+      {
+        id: 'cq1',
+        content: 'Describe your experience building accessible React applications.',
+        timeLimitSeconds: 120,
+      },
+      {
+        id: 'cq2',
+        content: 'How do you approach state management in large TypeScript codebases?',
+        timeLimitSeconds: 180,
+      },
+    ],
   },
 };
 

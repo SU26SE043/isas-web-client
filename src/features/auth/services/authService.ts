@@ -1,7 +1,7 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
+import { parseAuthTokens } from '../../../shared/api/authPayload';
 import { getApiBaseUrl } from '../../../shared/config';
 import type {
-  AuthTokensResponse,
   LoginRequest,
   MfaVerifyRequest,
   RegisterRequest,
@@ -15,7 +15,7 @@ import { parseRegisterResponse, parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
 import { sessionManager } from '../utils/sessionManager';
 
-function storeTokensIfPresent(data: AuthTokensResponse) {
+function storeTokensIfPresent(data: ReturnType<typeof parseAuthTokens>) {
   if (data.accessToken && data.refreshToken) {
     authTokenStorage.setTokens(data.accessToken, data.refreshToken);
     sessionManager.markSessionStart();
@@ -28,24 +28,27 @@ export const authService = {
     return parseRegisterResponse(data, payload.email);
   },
   login: async (payload: LoginRequest) => {
-    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.login, payload);
-    if (data.mfaRequired) {
-      return data;
+    const { data } = await apiClient.post(authEndpoints.login, payload);
+    const tokens = parseAuthTokens(data);
+    if (tokens.mfaRequired) {
+      return tokens;
     }
-    storeTokensIfPresent(data);
-    return data;
+    storeTokensIfPresent(tokens);
+    return tokens;
   },
   refresh: async () => {
     const refreshToken = authTokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.refresh, { refreshToken });
-    storeTokensIfPresent(data);
-    return data;
+    const { data } = await apiClient.post(authEndpoints.refresh, { refreshToken });
+    const tokens = parseAuthTokens(data);
+    storeTokensIfPresent(tokens);
+    return tokens;
   },
-  logout: async () => {
-    const refreshToken = authTokenStorage.getRefreshToken();
+  logout: async (refreshTokenOverride?: string | null) => {
+    const refreshToken =
+      refreshTokenOverride !== undefined ? refreshTokenOverride : authTokenStorage.getRefreshToken();
     try {
       if (refreshToken) {
         await apiClient.post(authEndpoints.logout, { refreshToken });
@@ -56,12 +59,13 @@ export const authService = {
     }
   },
   me: async () => {
-    const { data } = await apiClient.get<User>(authEndpoints.me);
+    const { data } = await apiClient.get(authEndpoints.me);
     return parseUser(data);
   },
-  updateProfile: async (payload: UpdateProfileRequest) => {
-    const { data } = await apiClient.put<User>(authEndpoints.me, payload);
-    return parseUser(data);
+  /** Auth service PUT /me returns a status string today — re-fetch profile after update. */
+  updateProfile: async (payload: UpdateProfileRequest): Promise<User> => {
+    await apiClient.put(authEndpoints.me, payload);
+    return authService.me();
   },
   forgotPassword: async (payload: { email: string }) => {
     const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);
@@ -84,14 +88,25 @@ export const authService = {
     return data;
   },
   verifyMfa: async (payload: MfaVerifyRequest) => {
-    const { data } = await apiClient.post<AuthTokensResponse>(authEndpoints.verifyMfa, payload);
-    storeTokensIfPresent(data);
-    return data;
+    const { data } = await apiClient.post(authEndpoints.verifyMfa, payload);
+    const tokens = parseAuthTokens(data);
+    storeTokensIfPresent(tokens);
+    return tokens;
   },
   loginWithGoogle: () => {
     const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;
+  },
+  loginWithSso: () => {
+    const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    const baseUrl = getApiBaseUrl();
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    window.location.href = `${normalizedBaseUrl}${authEndpoints.loginSso}?returnUrl=${returnUrl}`;
+  },
+  resetPasswordWithToken: async (payload: { token: string; newPassword: string }) => {
+    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+    return data;
   },
 };

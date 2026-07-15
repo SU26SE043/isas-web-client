@@ -65,15 +65,17 @@ Không giả định trạng thái dự án. Bắt buộc:
 
 ### Monochrome Design System (bắt buộc)
 
-Giao diện **luôn dark mode**, chỉ dùng **White, Black, Gray** cho UI cấu trúc. Không có light mode / theme toggle.
+Giao diện **luôn dark mode**, dùng **bright black** surfaces + **White / Gray / satin silver** cho UI cấu trúc. Không có light mode / theme toggle.
 
 | Phạm vi | Quy tắc |
 |---------|---------|
-| Background, Sidebar, Header, Card, Modal, Button, Input, Table, Tabs, Typography, Border, Shadow, Icon, Hover/Focus/Active | Chỉ monochrome |
+| Background, Sidebar, Header, Card, Modal, Button, Input, Table, Tabs, Typography, Border, Shadow, Icon, Hover/Focus/Active | Monochrome + satin silver frames (`frame-satin`) |
 | Success / Error / Warning / Info | Giữ semantic colors (green/red/orange/blue) |
 | Toast, Alert, validation errors, progress, charts, status badges | Giữ semantic colors |
 
 Tokens: `src/styles/colors.css`, `src/index.css`. Surface layers: `surface-base` → `surface-elevated`. Primitives: `src/components/ui`.
+
+**UI freeze — login / sign-up (shared templates):** `/login`, `/register`, and marketing `AuthModal` are the **only** auth entry UIs for the whole product (`AuthCard` + forms; split-panel modal). Every module that needs sign-in/sign-up must reuse them (redirect or open modal) — never ship a feature-local login/register screen. Do not redesign unless decision [`docs/decisions/0009-auth-login-signup-ui-freeze.md`](docs/decisions/0009-auth-login-signup-ui-freeze.md) is superseded. See `docs/product/auth-profile.md`.
 
 ### Code conventions
 

@@ -49,4 +49,42 @@ export interface CampaignInvite {
   candidateEmail: string;
   expiresAt: string;
   status: 'valid' | 'expired' | 'used';
+  authMode?: 'sign_in' | 'register';
+}
+
+export type InviteAuthMode = 'sign_in' | 'register' | 'role_blocked' | 'invalid';
+
+export interface InviteAuthResolution {
+  mode: InviteAuthMode;
+  candidateEmail?: string;
+  invite?: CampaignInvite & { campaign: Campaign };
+}
+
+export interface CampaignBriefing {
+  token: string;
+  sessionId: string;
+  campaignId: string;
+  title: string;
+  titleVi: string;
+  company: string;
+  candidateEmail: string;
+  estimatedMinutes: number;
+  instructions: string[];
+  instructionsVi: string[];
+  proctoringNotice: string;
+  proctoringNoticeVi: string;
+  assessmentSteps: string[];
+  assessmentStepsVi: string[];
+}
+
+export type CandidateInviteStatus = 'invited' | 'in_progress' | 'completed' | 'expired';
+
+export interface CandidateCampaignInvite {
+  inviteToken: string;
+  campaignId: string;
+  title: string;
+  company: string;
+  deadline: string;
+  status: CandidateInviteStatus;
+  sessionId: string;
 }

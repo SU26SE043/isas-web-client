@@ -1,4 +1,5 @@
 import React from 'react';
+import { SectionPanel } from '@/components/ui/section-panel';
 import { cn } from '@/lib/utils';
 
 interface CvFlowSectionCardProps {
@@ -8,17 +9,14 @@ interface CvFlowSectionCardProps {
   className?: string;
 }
 
+/** CV flow shell — wraps shared SectionPanel template. */
 export const CvFlowSectionCard: React.FC<CvFlowSectionCardProps> = ({
   title,
   description,
   children,
   className,
 }) => (
-  <section className={cn('rounded-xl border border-subtle bg-surface-raised', className)}>
-    <div className="border-b border-subtle px-4 py-4 sm:px-6">
-      <h2 className="heading-secondary text-base sm:text-lg">{title}</h2>
-      {description ? <p className="body-text mt-1 text-sm">{description}</p> : null}
-    </div>
-    <div className="px-4 py-5 sm:px-6">{children}</div>
-  </section>
+  <SectionPanel title={title} description={description} className={cn(className)}>
+    {children}
+  </SectionPanel>
 );

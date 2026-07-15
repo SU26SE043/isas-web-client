@@ -7,17 +7,14 @@ test.describe('B2B full journey', () => {
 
   test('magic link assessment records proctoring and organization can review token invoice', async ({ page }) => {
     await installMockMedia(page);
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/invite/phase8-valid');
-    await expect(page.getByRole('heading', { name: /Frontend Engineer Assessment/i })).toBeVisible();
-    await page.getByRole('link', { name: /Continue enrollment/i }).click();
-
-    await expect(page.getByRole('heading', { name: /Frontend Engineer Assessment/i })).toBeVisible();
-    await page.getByLabel(/Why you are a fit/i).fill('I have built accessible React and TypeScript products for hiring workflows.');
-    await page.getByLabel(/Availability window/i).fill('Weekday evenings and Saturday morning');
-    await page.getByRole('checkbox', { name: /AI assessment consent/i }).check();
-    await page.getByRole('button', { name: /Confirm enrollment/i }).click();
+    await expect(page).toHaveURL(/\/candidate\/campaigns\?highlight=phase8-valid/);
+    await page.getByRole('link', { name: /Start assessment/i }).click();
+    await expect(page).toHaveURL(/\/candidate\/campaigns\/phase8-valid\/briefing/);
+    await expect(page.getByRole('heading', { name: /^Campaign briefing$/i })).toBeVisible();
+    await page.getByRole('button', { name: /Start assessment/i }).click();
 
     await expect(page).toHaveURL(/\/interview\/campaign-frontend-engineer-remote\/prepare/);
     await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
@@ -25,6 +22,10 @@ test.describe('B2B full journey', () => {
 
     await expect(page).toHaveURL(/\/device-check/);
     await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible();
+    await page.getByRole('button', { name: /^Continue$/i }).click();
+
+    await expect(page).toHaveURL(/\/terms/);
+    await page.getByRole('checkbox', { name: /accept the assessment terms/i }).check();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
     await expect(page).toHaveURL(/\/identity/);
@@ -41,6 +42,9 @@ test.describe('B2B full journey', () => {
     await expect(page.getByRole('heading', { name: /Return to the interview window/i })).toBeVisible();
     await restoreVisibleTab(page);
     await expect(page.getByRole('heading', { name: /Return to the interview window/i })).toBeHidden();
+    await page.getByRole('button', { name: /Continue interview/i }).evaluate((button) => {
+      (button as HTMLButtonElement).click();
+    });
 
     await page.getByRole('button', { name: /Submit answer/i }).evaluate((button) => {
       (button as HTMLButtonElement).click();
@@ -55,7 +59,10 @@ test.describe('B2B full journey', () => {
     await expect(page.getByText(/Assessment ID: assessment-campaign-frontend-engineer-remote/i)).toBeVisible();
 
     await logoutForRoleSwitch(page);
-    await loginAs(page, 'organize');
+    await loginAs(page, 'OrgAdmin');
+    await page.goto('/employer/campaigns/frontend-engineer-remote/candidates');
+    await expect(page.getByRole('heading', { name: /^Candidate pipeline$/i })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: /^Rank$/i })).toBeVisible();
     await page.goto('/employer/invoices');
     await expect(page.getByRole('heading', { name: /^Invoices$/i })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: /Token usage/i })).toBeVisible();

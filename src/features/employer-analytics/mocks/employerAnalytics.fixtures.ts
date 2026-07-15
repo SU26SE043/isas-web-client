@@ -1,6 +1,6 @@
-import type { CandidateReport, PipelineCandidate, PipelineStage } from '../types/employerAnalytics.types';
+import type { CandidateReport, PipelineCandidate, PipelineStatus } from '../types/employerAnalytics.types';
 
-export const PHASE11_CAMPAIGN_ID = 'frontend-engineer-assessment';
+export const PHASE11_CAMPAIGN_ID = 'frontend-engineer-remote';
 
 export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
   {
@@ -10,7 +10,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'An Nguyen',
     email: 'an.nguyen@example.com',
     role: 'Frontend Engineer',
-    stage: 'shortlisted',
+    status: 'completed',
     score: 94,
     rank: 1,
     completedAt: '2026-07-09',
@@ -29,7 +29,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Minh Tran',
     email: 'minh.tran@example.com',
     role: 'Frontend Engineer',
-    stage: 'reviewed',
+    status: 'completed',
     score: 88,
     rank: 2,
     completedAt: '2026-07-08',
@@ -48,7 +48,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Linh Pham',
     email: 'linh.pham@example.com',
     role: 'Frontend Engineer',
-    stage: 'interviewed',
+    status: 'completed',
     score: 82,
     rank: 3,
     completedAt: '2026-07-08',
@@ -67,7 +67,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Huy Le',
     email: 'huy.le@example.com',
     role: 'Frontend Engineer',
-    stage: 'reviewed',
+    status: 'completed',
     score: 79,
     rank: 4,
     completedAt: '2026-07-07',
@@ -86,7 +86,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Mai Do',
     email: 'mai.do@example.com',
     role: 'Frontend Engineer',
-    stage: 'applied',
+    status: 'invite_pending',
     score: 0,
     rank: 5,
     completedAt: '',
@@ -105,7 +105,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Khoa Bui',
     email: 'khoa.bui@example.com',
     role: 'Frontend Engineer',
-    stage: 'rejected',
+    status: 'auto_submitted',
     score: 58,
     rank: 6,
     completedAt: '2026-07-06',
@@ -124,7 +124,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Thao Vo',
     email: 'thao.vo@example.com',
     role: 'Frontend Engineer',
-    stage: 'interviewed',
+    status: 'in_progress',
     score: 73,
     rank: 7,
     completedAt: '2026-07-06',
@@ -143,7 +143,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Nam Hoang',
     email: 'nam.hoang@example.com',
     role: 'Frontend Engineer',
-    stage: 'reviewed',
+    status: 'completed',
     score: 69,
     rank: 8,
     completedAt: '2026-07-05',
@@ -162,7 +162,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Vy Dang',
     email: 'vy.dang@example.com',
     role: 'Frontend Engineer',
-    stage: 'shortlisted',
+    status: 'completed',
     score: 91,
     rank: 9,
     completedAt: '2026-07-04',
@@ -181,7 +181,7 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     name: 'Quang Mai',
     email: 'quang.mai@example.com',
     role: 'Frontend Engineer',
-    stage: 'interviewed',
+    status: 'paused_violation',
     score: 76,
     rank: 10,
     completedAt: '2026-07-04',
@@ -193,11 +193,30 @@ export const MOCK_PIPELINE_CANDIDATES: PipelineCandidate[] = [
     shortlisted: false,
     internalNotes: ['Good backup candidate.'],
   },
+  {
+    id: 'cand-e2e',
+    campaignId: PHASE11_CAMPAIGN_ID,
+    candidateCode: 'CND-1502',
+    name: 'E2E Candidate',
+    email: 'candidate@isas.dev',
+    role: 'Frontend Engineer',
+    status: 'invited',
+    score: 0,
+    rank: 11,
+    completedAt: '',
+    location: 'Ho Chi Minh City',
+    experienceYears: 3,
+    skills: ['React', 'TypeScript', 'Playwright'],
+    summary: 'Registered candidate linked from campaign invite resolution.',
+    blindHiring: true,
+    shortlisted: false,
+    internalNotes: ['Awaiting magic-link assessment start.'],
+  },
 ];
 
 export const MOCK_REPORTS: CandidateReport[] = MOCK_PIPELINE_CANDIDATES.map((candidate) => ({
   candidateId: candidate.id,
-  reviewed: candidate.stage === 'reviewed' || candidate.stage === 'shortlisted' || candidate.stage === 'rejected',
+  reviewed: ['cand-002', 'cand-004', 'cand-006', 'cand-008'].includes(candidate.id),
   score: candidate.score,
   overrideScore: null,
   overrideNote: null,
@@ -223,4 +242,11 @@ export const MOCK_REPORTS: CandidateReport[] = MOCK_PIPELINE_CANDIDATES.map((can
   ],
 }));
 
-export const STAGE_ORDER: PipelineStage[] = ['applied', 'interviewed', 'reviewed', 'shortlisted', 'rejected'];
+export const STATUS_ORDER: PipelineStatus[] = [
+  'invited',
+  'invite_pending',
+  'in_progress',
+  'paused_violation',
+  'auto_submitted',
+  'completed',
+];

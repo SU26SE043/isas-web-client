@@ -1,42 +1,69 @@
-/** BRD ROL-001 … ROL-005 — see BRD/User_Roles_and_Permissions.md */
+/**
+ * Business roles (authenticated users).
+ * Canonical Auth Identity values:
+ *
+ * ```
+ * Candidate | OrgAdmin | HrMember | Admin
+ * ```
+ *
+ * Legacy API strings (e.g. Employer) are mapped via LEGACY_ROLE_ALIASES.
+ * Guest is client-only (unauthenticated) — never returned by `/me`.
+ */
+import { pickAuthString, unwrapAuthPayload } from '@/shared/api/authPayload';
+
+export { parseAuthTokens, unwrapAuthPayload } from '@/shared/api/authPayload';
+export type { AuthTokensResponse } from '@/shared/api/authPayload';
+
 export const UserRole = {
   GUEST: 'guest',
-  CANDIDATE: 'candidate',
-  HR: 'hr',
-  ORGANIZE: 'organize',
-  ADMIN: 'admin',
+  CANDIDATE: 'Candidate',
+  ORG_ADMIN: 'OrgAdmin',
+  HR_MEMBER: 'HrMember',
+  ADMIN: 'Admin',
 } as const;
 
 export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
 
-/** Roles that require a logged-in session (excludes Guest). */
+/** Authenticated business roles (excludes Guest). */
 export const AUTHENTICATED_ROLES: UserRoleType[] = [
   UserRole.CANDIDATE,
-  UserRole.HR,
-  UserRole.ORGANIZE,
+  UserRole.ORG_ADMIN,
+  UserRole.HR_MEMBER,
   UserRole.ADMIN,
 ];
 
-const LEGACY_ROLE_ALIASES: Record<string, UserRoleType> = {
+/** Org-scoped B2B roles (recruitment tenant). */
+export const ORG_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.HR_MEMBER];
+
+/** Can manage org settings, billing, and HR member accounts. */
+export const ORG_ADMIN_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.ADMIN];
+
+/** Exact Identity role names (keys after trim/lowercase/strip spaces/_/-). */
+const CANONICAL_ROLES: Record<string, UserRoleType> = {
   guest: UserRole.GUEST,
   candidate: UserRole.CANDIDATE,
-  Candidate: UserRole.CANDIDATE,
-  hr: UserRole.HR,
-  HR: UserRole.HR,
-  organize: UserRole.ORGANIZE,
-  Organize: UserRole.ORGANIZE,
-  organization: UserRole.ORGANIZE,
-  Organization: UserRole.ORGANIZE,
+  orgadmin: UserRole.ORG_ADMIN,
+  hrmember: UserRole.HR_MEMBER,
   admin: UserRole.ADMIN,
-  Admin: UserRole.ADMIN,
-  /** @deprecated BRD removed Interviewer — maps to HR */
-  interviewer: UserRole.HR,
-  Interviewer: UserRole.HR,
+};
+
+/**
+ * Intentional legacy Identity / BRD synonyms → canonical roles.
+ * Unknown strings stay null (parseUser throws) — never default to Candidate.
+ */
+const LEGACY_ROLE_ALIASES: Record<string, UserRoleType> = {
+  employer: UserRole.ORG_ADMIN,
+  organize: UserRole.ORG_ADMIN,
+  organization: UserRole.ORG_ADMIN,
+  organizationadmin: UserRole.ORG_ADMIN,
+  hr: UserRole.HR_MEMBER,
+  interviewer: UserRole.HR_MEMBER,
 };
 
 export function normalizeUserRole(role: string | null | undefined): UserRoleType | null {
   if (!role) return null;
-  return LEGACY_ROLE_ALIASES[role] ?? null;
+  const normalized = role.trim().toLowerCase().replace(/[\s_-]/g, '');
+  return CANONICAL_ROLES[normalized] ?? LEGACY_ROLE_ALIASES[normalized] ?? null;
 }
 
 export interface UpdateProfileRequest {
@@ -63,13 +90,8 @@ export function parseRegisterResponse(data: unknown, fallbackEmail: string): Reg
     return { id: match?.[1] ?? '', email: fallbackEmail };
   }
 
-  if (data && typeof data === 'object') {
-    const record = data as Record<string, unknown>;
-    const inner =
-      record.data && typeof record.data === 'object'
-        ? (record.data as Record<string, unknown>)
-        : record;
-
+  const inner = unwrapAuthPayload<Record<string, unknown>>(data);
+  if (inner && typeof inner === 'object') {
     return {
       id: String(inner.id ?? ''),
       email: String(inner.email ?? fallbackEmail),
@@ -98,15 +120,6 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface AuthTokensResponse {
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  emailVerificationRequired?: boolean;
-  mfaRequired?: boolean;
-  mfaToken?: string;
-}
-
 export interface MfaVerifyRequest {
   mfaToken: string;
   code: string;
@@ -130,10 +143,31 @@ export interface User {
   createdAt: string;
 }
 
-export function parseUser(raw: User): User {
-  const role = normalizeUserRole(raw.role as unknown as string);
-  if (!role || role === UserRole.GUEST) {
-    throw new Error(`Invalid user role from API: ${String(raw.role)}`);
+export function parseUser(raw: unknown): User {
+  const inner = unwrapAuthPayload<Record<string, unknown>>(raw);
+  if (!inner || typeof inner !== 'object') {
+    throw new Error('Invalid user payload from API');
   }
-  return { ...raw, role };
+
+  const role = normalizeUserRole(pickAuthString(inner, 'role', 'Role') ?? String(inner.role ?? ''));
+  if (!role || role === UserRole.GUEST) {
+    throw new Error(`Invalid user role from API: ${String(inner.role ?? inner.Role)}`);
+  }
+
+  const createdAtRaw = inner.createdAt ?? inner.CreatedAt;
+
+  return {
+    id: pickAuthString(inner, 'id', 'Id') ?? String(inner.id ?? ''),
+    fullName: pickAuthString(inner, 'fullName', 'FullName') ?? '',
+    email: pickAuthString(inner, 'email', 'Email') ?? '',
+    location: pickAuthString(inner, 'location', 'Location') ?? '',
+    title: pickAuthString(inner, 'title', 'Title') ?? '',
+    role,
+    createdAt:
+      typeof createdAtRaw === 'string'
+        ? createdAtRaw
+        : createdAtRaw != null
+          ? String(createdAtRaw)
+          : '',
+  };
 }

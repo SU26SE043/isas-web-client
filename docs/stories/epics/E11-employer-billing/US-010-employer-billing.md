@@ -31,7 +31,7 @@ Organize users can select an organization subscription, manage payment method de
 
 - `/employer/subscription` renders B2B plans, cycle switch, active plan state, and select/renew action.
 - Selecting a plan creates an invoice, adds credits to the organization pool, and shows success feedback.
-- `/employer/billing` renders current plan, credit pool, seat usage, renewal/grace-period state, and payment method management.
+- `/employer/billing` renders current plan, credit pool, seat usage, monthly postpaid token accrual, usage by campaign with per-session drill-down, renewal/grace-period state, and payment method management.
 - Payment method form validates Luhn card number, future MM/YY expiry, and 3-4 digit CVV.
 - `/employer/invoices` renders invoice metrics plus desktop table and mobile cards.
 - Invoice PDF generation shows loading feedback and success copy for the BRL-024 60-second SLA.

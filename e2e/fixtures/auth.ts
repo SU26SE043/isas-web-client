@@ -1,19 +1,31 @@
 import type { Page } from '@playwright/test';
 
-type E2ERole = 'candidate' | 'organize';
+type E2ERole = 'Candidate' | 'OrgAdmin' | 'HrMember' | 'Admin';
 
 const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: string; title: string }> = {
-  candidate: {
+  Candidate: {
     id: 'e2e-candidate',
     fullName: 'E2E Candidate',
     email: 'candidate@isas.dev',
     title: 'Frontend Candidate',
   },
-  organize: {
-    id: 'e2e-organize',
-    fullName: 'E2E Organize',
-    email: 'organize@isas.dev',
+  OrgAdmin: {
+    id: 'e2e-org-admin',
+    fullName: 'E2E Org Admin',
+    email: 'orgadmin@isas.dev',
     title: 'Organization Owner',
+  },
+  HrMember: {
+    id: 'e2e-hr-member',
+    fullName: 'E2E HR Member',
+    email: 'hrmember@isas.dev',
+    title: 'Recruiter',
+  },
+  Admin: {
+    id: 'e2e-admin',
+    fullName: 'E2E Admin',
+    email: 'admin@isas.dev',
+    title: 'Platform Administrator',
   },
 };
 
@@ -55,10 +67,19 @@ export async function loginAs(page: Page, role: E2ERole) {
     window.localStorage.setItem('language', 'en');
   });
   await page.goto('/login');
-  await page.getByLabel(/e-mail/i).fill(roleProfiles[role].email);
-  await page.getByLabel(/password/i).fill('Password123!');
-  await page.getByRole('button', { name: /^Sign in$/i }).click();
-  await page.waitForURL(role === 'candidate' ? /\/candidate\/dashboard/ : /\/employer\/dashboard/);
+  const dialog = page.getByRole('dialog');
+  await dialog.waitFor({ state: 'visible' });
+  await dialog.getByRole('heading', { level: 1, name: /^Sign in$/i }).waitFor({ state: 'visible' });
+  await dialog.getByLabel(/e-mail/i).fill(roleProfiles[role].email);
+  await dialog.getByLabel(/password/i).fill('Password123!');
+  await dialog.getByRole('button', { name: /^Sign in$/i }).click();
+  const destination =
+    role === 'Candidate'
+      ? /\/candidate\/dashboard/
+      : role === 'Admin'
+        ? /\/admin(\/dashboard)?/
+        : /\/employer\/dashboard/;
+  await page.waitForURL(destination);
 }
 
 export async function logoutForRoleSwitch(page: Page) {
@@ -66,5 +87,6 @@ export async function logoutForRoleSwitch(page: Page) {
     window.localStorage.removeItem('auth-storage');
     window.localStorage.removeItem('accessToken');
     window.localStorage.removeItem('refreshToken');
+    window.sessionStorage.removeItem('isas-mock-employer-workspace');
   });
 }

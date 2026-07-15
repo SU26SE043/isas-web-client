@@ -1,21 +1,24 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import type { PipelineStage } from '../types/employerAnalytics.types';
+import type { PipelineStatus } from '../types/employerAnalytics.types';
 
-const stageClasses: Record<PipelineStage, string> = {
-  applied: 'bg-info-bg text-info border-info/30',
-  interviewed: 'bg-warning-bg text-warning border-warning/30',
-  reviewed: 'bg-surface-overlay text-muted-foreground border-subtle',
-  shortlisted: 'bg-success-bg text-success border-success/30',
-  rejected: 'bg-error-bg text-error border-error/30',
+const statusClasses: Record<PipelineStatus, string> = {
+  invited: 'bg-info-bg text-info border-info/30',
+  invite_pending: 'bg-warning-bg text-warning border-warning/30',
+  in_progress: 'bg-surface-overlay text-foreground border-subtle',
+  paused_violation: 'bg-error-bg text-error border-error/30',
+  auto_submitted: 'bg-warning-bg text-warning border-warning/30',
+  completed: 'bg-success-bg text-success border-success/30',
 };
 
-export function PipelineStageBadge({ stage }: { stage: PipelineStage }) {
+export function PipelineStatusBadge({ status }: { status: PipelineStatus }) {
   const { t } = useLanguage();
   return (
-    <Badge variant="outline" className={cn('w-fit', stageClasses[stage])}>
-      {t(`employerAnalytics.stage.${stage}`)}
+    <Badge variant="outline" className={cn('w-fit', statusClasses[status])}>
+      {t(`employerAnalytics.status.${status}`)}
     </Badge>
   );
 }
+
+export { PipelineStatusBadge as PipelineStageBadge };

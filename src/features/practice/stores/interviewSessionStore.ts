@@ -5,6 +5,8 @@ import type {
   ConversationMessage,
   InterviewRoomStatus,
 } from '../types/interviewSession.types';
+import type { ProctoringConfig, ViolationType } from '../types/proctoring.types';
+import { B2C_PROCTORING_CONFIG } from '../types/proctoring.types';
 import { getQuestionTimeLimit } from '../utils/questionTimer';
 
 interface InterviewSessionState {
@@ -18,22 +20,34 @@ interface InterviewSessionState {
   isRecording: boolean;
   micEnabled: boolean;
   cameraEnabled: boolean;
+  violationCount: number;
   tabViolationCount: number;
+  violationReason?: ViolationType;
+  maxViolations: number;
   isTabHidden: boolean;
+  showTabLockWarning: boolean;
   isOffline: boolean;
+  proctoringConfig: ProctoringConfig;
   setLoading: () => void;
-  initSession: (title: string, questions: PracticeQuestion[]) => void;
+  initSession: (
+    title: string,
+    questions: PracticeQuestion[],
+    proctoringConfig: ProctoringConfig,
+    startIndex?: number,
+  ) => void;
   tickTimer: () => void;
   setStatus: (status: InterviewRoomStatus) => void;
   setAiState: (state: AiInterviewerState) => void;
   addMessage: (role: ConversationMessage['role'], content: string) => void;
   submitCurrentAnswer: () => Promise<boolean>;
   togglePause: () => void;
+  continueAfterViolation: () => void;
   toggleMic: () => void;
   toggleCamera: () => void;
   toggleRecording: () => void;
-  registerTabViolation: () => void;
+  registerViolation: (type: ViolationType) => void;
   setTabHidden: (hidden: boolean) => void;
+  dismissTabLockWarning: () => void;
   setOffline: (offline: boolean) => void;
   reset: () => void;
 }
@@ -49,9 +63,14 @@ const initialState = {
   isRecording: false,
   micEnabled: true,
   cameraEnabled: true,
+  violationCount: 0,
   tabViolationCount: 0,
+  violationReason: undefined as ViolationType | undefined,
+  maxViolations: B2C_PROCTORING_CONFIG.maxViolations,
   isTabHidden: false,
+  showTabLockWarning: false,
   isOffline: false,
+  proctoringConfig: B2C_PROCTORING_CONFIG,
 };
 
 function createMessage(role: ConversationMessage['role'], content: string): ConversationMessage {
@@ -72,17 +91,27 @@ function delay(ms: number) {
 export const useInterviewSessionStore = create<InterviewSessionState>((set, get) => ({
   ...initialState,
   setLoading: () => set({ ...initialState, status: 'loading' }),
-  initSession: (title, questions) => {
-    const first = questions[0];
+  initSession: (title, questions, proctoringConfig, startIndex = 0) => {
+    const safeIndex =
+      questions.length === 0 ? 0 : Math.min(Math.max(0, startIndex), questions.length - 1);
+    const current = questions[safeIndex];
     set({
       sessionTitle: title,
       questions,
-      currentIndex: 0,
-      messages: first ? [createMessage('ai', first.content)] : [],
+      currentIndex: safeIndex,
+      messages: current ? [createMessage('ai', current.content)] : [],
       aiState: 'speaking',
       status: questions.length ? 'active' : 'completed',
-      remainingSeconds: getQuestionTimeLimit(first),
+      remainingSeconds: getQuestionTimeLimit(current),
       isRecording: true,
+      cameraEnabled: true,
+      violationCount: 0,
+      tabViolationCount: 0,
+      violationReason: undefined,
+      maxViolations: proctoringConfig.maxViolations,
+      isTabHidden: false,
+      showTabLockWarning: false,
+      proctoringConfig,
     });
   },
   tickTimer: () => {
@@ -133,12 +162,61 @@ export const useInterviewSessionStore = create<InterviewSessionState>((set, get)
     if (status === 'active') set({ status: 'paused' });
     else if (status === 'paused') set({ status: 'active' });
   },
+  continueAfterViolation: () => {
+    const { status } = get();
+    if (status === 'paused_violation') {
+      set({ status: 'active', violationReason: undefined, showTabLockWarning: false });
+    }
+  },
   toggleMic: () => set((state) => ({ micEnabled: !state.micEnabled })),
-  toggleCamera: () => set((state) => ({ cameraEnabled: !state.cameraEnabled })),
+  toggleCamera: () => {
+    const { proctoringConfig } = get();
+    if (proctoringConfig.cameraAlwaysOn) return;
+    set((state) => ({ cameraEnabled: !state.cameraEnabled }));
+  },
   toggleRecording: () => set((state) => ({ isRecording: !state.isRecording })),
-  registerTabViolation: () =>
-    set((state) => ({ tabViolationCount: state.tabViolationCount + 1 })),
+  registerViolation: (type) => {
+    const state = get();
+    if (!state.proctoringConfig.antiCheatEnabled) return;
+    if (state.status === 'completed' || state.status === 'auto_submitted') return;
+
+    const nextCount = state.violationCount + 1;
+    const tabViolationCount =
+      type === 'tab_switch' || type === 'focus_loss'
+        ? state.tabViolationCount + 1
+        : state.tabViolationCount;
+
+    if (nextCount >= state.maxViolations) {
+      set({
+        violationCount: nextCount,
+        tabViolationCount,
+        violationReason: type,
+        status: 'auto_submitted',
+        isRecording: false,
+      });
+      return;
+    }
+
+    set({
+      violationCount: nextCount,
+      tabViolationCount,
+      violationReason: type,
+      status: 'paused_violation',
+    });
+  },
   setTabHidden: (isTabHidden) => set({ isTabHidden }),
-  setOffline: (isOffline) => set({ isOffline }),
+  dismissTabLockWarning: () => set({ showTabLockWarning: false }),
+  setOffline: (isOffline) => {
+    const { status } = get();
+    if (isOffline && status === 'active') {
+      set({ isOffline: true, status: 'paused' });
+      return;
+    }
+    if (!isOffline && status === 'paused') {
+      set({ isOffline: false, status: 'active' });
+      return;
+    }
+    set({ isOffline });
+  },
   reset: () => set(initialState),
 }));

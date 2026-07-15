@@ -1,4 +1,10 @@
-import type { CampaignQuestion, EmployerCampaign } from '../types/campaignManagement.types';
+import type { CampaignCandidateRow, CampaignQuestion, CampaignProctoringConfig, EmployerCampaign } from '../types/campaignManagement.types';
+
+export const DEFAULT_PROCTORING: CampaignProctoringConfig = {
+  faceCaptureIntervalSeconds: 90,
+  faceSimilarityThreshold: 0.75,
+  maxViolations: 3,
+};
 
 export const QUESTION_BANK: CampaignQuestion[] = [
   {
@@ -54,9 +60,21 @@ export const DEFAULT_RUBRIC = [
   },
 ];
 
+function seedCandidates(emails: string[]): CampaignCandidateRow[] {
+  return emails.map((email) => {
+    if (email === 'candidate@isas.dev') {
+      return { email, displayName: 'E2E Candidate', candidateId: 'e2e-candidate', status: 'invited' };
+    }
+    if (email === 'mai.nguyen@example.com') {
+      return { email, displayName: 'Mai Nguyen', candidateId: 'cand-mai', status: 'invited' };
+    }
+    return { email, status: 'invite_pending' };
+  });
+}
+
 export const MOCK_EMPLOYER_CAMPAIGNS: EmployerCampaign[] = [
   {
-    id: 'frontend-engineer-assessment',
+    id: 'frontend-engineer-remote',
     title: 'Frontend Engineer Assessment',
     company: 'NovaWorks AI',
     location: 'Ho Chi Minh City',
@@ -72,13 +90,15 @@ export const MOCK_EMPLOYER_CAMPAIGNS: EmployerCampaign[] = [
     rubric: DEFAULT_RUBRIC,
     questions: QUESTION_BANK.slice(0, 3),
     invitedEmails: ['candidate@isas.dev', 'mai.nguyen@example.com'],
+    candidates: seedCandidates(['candidate@isas.dev', 'mai.nguyen@example.com']),
+    proctoring: DEFAULT_PROCTORING,
     welcomeMessage: 'Welcome to the NovaWorks AI assessment.',
     completionMessage: 'Thank you for completing the interview.',
     createdAt: '2026-07-04T09:00:00.000Z',
     updatedAt: '2026-07-10T10:00:00.000Z',
   },
   {
-    id: 'data-analyst-screening-draft',
+    id: 'data-analyst-hybrid',
     title: 'Data Analyst Screening',
     company: 'NovaWorks AI',
     location: 'Da Nang',
@@ -94,6 +114,8 @@ export const MOCK_EMPLOYER_CAMPAIGNS: EmployerCampaign[] = [
     rubric: DEFAULT_RUBRIC,
     questions: [QUESTION_BANK[2]],
     invitedEmails: [],
+    candidates: [],
+    proctoring: DEFAULT_PROCTORING,
     welcomeMessage: 'Chao mung ban den voi bai phong van AI.',
     completionMessage: 'Cam on ban da hoan thanh bai phong van.',
     createdAt: '2026-07-09T09:00:00.000Z',

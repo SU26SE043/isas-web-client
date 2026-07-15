@@ -1,5 +1,5 @@
 import { useAuth } from './useAuth';
-import { UserRole, type UserRoleType } from '../types/auth.types';
+import { ORG_ADMIN_ROLES, ORG_ROLES, UserRole, type UserRoleType } from '../types/auth.types';
 
 export const useRole = () => {
   const { user } = useAuth();
@@ -11,22 +11,26 @@ export const useRole = () => {
 
   const isGuest = (): boolean => !user;
   const isCandidate = (): boolean => hasRole(UserRole.CANDIDATE);
-  const isHR = (): boolean => hasRole(UserRole.HR);
-  const isOrganize = (): boolean => hasRole(UserRole.ORGANIZE);
+  const isHrMember = (): boolean => hasRole(UserRole.HR_MEMBER);
+  const isOrgAdmin = (): boolean => hasRole(UserRole.ORG_ADMIN);
   const isAdmin = (): boolean => hasRole(UserRole.ADMIN);
 
-  /** B2B tenant roles (HR + Organize) */
-  const isB2B = (): boolean => isHR() || isOrganize();
+  /** B2B org roles (HrMember + OrgAdmin). */
+  const isB2B = (): boolean => hasAnyRole(ORG_ROLES);
+
+  /** Org settings / billing / team management (OrgAdmin or platform Admin). */
+  const canManageOrganization = (): boolean => hasAnyRole(ORG_ADMIN_ROLES);
 
   return {
     hasRole,
     hasAnyRole,
     isGuest,
     isCandidate,
-    isHR,
-    isOrganize,
+    isHrMember,
+    isOrgAdmin,
     isAdmin,
     isB2B,
+    canManageOrganization,
     userRole: user?.role ?? null,
   };
 };

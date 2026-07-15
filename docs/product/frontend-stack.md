@@ -10,7 +10,7 @@ Living contract for how the ISAS web client is built.
 | Build | Vite |
 | Routing | react-router-dom v7 |
 | Styling | Tailwind CSS v4 + design tokens (`src/styles/colors.css`) |
-| UI primitives | shadcn-style components in `src/components/ui/` |
+| UI primitives | shadcn-style in `src/components/ui/` + shared templates `SectionPanel`, `SelectionOption` |
 | Forms | react-hook-form + zod (preferred) |
 | Server state | @tanstack/react-query (preferred) |
 | Client state | zustand (`authStore`) |
@@ -21,7 +21,7 @@ Living contract for how the ISAS web client is built.
 
 ```text
 src/
-  components/ui/     # Reusable primitives (Button, Input, Card, …)
+  components/ui/     # Reusable primitives + SectionPanel / SelectionOption
   features/          # Domain slices (auth, home, cv-analysis, practice, …)
   layouts/           # MainLayout, DashboardLayout, Header, Footer
   routes/            # ProtectedRoute, PublicRoute
@@ -42,9 +42,21 @@ All public API calls go through Gateway:
 
 Configure base URL via environment. Auth uses JWT stored client-side; gateway validates offline with shared key (see backend `AGENTS.md`).
 
+JSON payloads: camelCase fields, ISO 8601 UTC dates, GUID as `string`, decimal as `number` — see [`api-gateway.md`](./api-gateway.md).
+
 ## UI rules
 
 Read `docs/UI_GUIDE.md` before any UI work — dark monochrome only, semantic colors for status.
+
+**Visual system (project-wide):**
+
+| Token / pattern | Rule |
+| --- | --- |
+| Bright black | Page base `#141416` (`--surface-base`) — not pure `#000` |
+| Satin silver frames | Tables, cards, panels, inputs, dialogs use `frame-satin` / `--satin-*` |
+| Shared templates | `SectionPanel` + `SelectionOption` |
+
+Do not invent alternate chrome borders (glossy / colored glow) in feature folders.
 
 ## Validation
 

@@ -3,6 +3,8 @@ import { BadgeCheck, Building2, FileCheck2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { UserRole } from '@/features/auth/types/auth.types';
 import { useLanguage } from '@/shared/languages';
 import { EmployerActivityList } from '../components/EmployerActivityList';
 import { EmployerMetricCard } from '../components/EmployerMetricCard';
@@ -11,6 +13,8 @@ import { useEmployerWorkspace } from '../hooks/useEmployerWorkspace';
 
 export function EmployerDashboardPage() {
   const { t } = useLanguage();
+  const user = useAuthStore((state) => state.user);
+  const canManageOrg = user?.role === UserRole.ORG_ADMIN || user?.role === UserRole.ADMIN;
   const { workspace, isLoading } = useEmployerWorkspace();
 
   if (isLoading || !workspace) {
@@ -36,12 +40,14 @@ export function EmployerDashboardPage() {
             <h1 className="heading-primary text-3xl text-foreground">{t('employer.dashboard.title')}</h1>
             <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employer.dashboard.subtitle')}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button render={<Link to="/employer/company" />}>{t('employer.dashboard.completeProfile')}</Button>
-            <Button variant="outline" render={<Link to="/employer/company/verify" />}>
-              {t('employer.dashboard.submitVerification')}
-            </Button>
-          </div>
+          {canManageOrg ? (
+            <div className="flex flex-wrap gap-2">
+              <Button render={<Link to="/employer/company" />}>{t('employer.dashboard.completeProfile')}</Button>
+              <Button variant="outline" render={<Link to="/employer/company/verify" />}>
+                {t('employer.dashboard.submitVerification')}
+              </Button>
+            </div>
+          ) : null}
         </header>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

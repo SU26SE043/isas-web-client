@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
@@ -10,7 +10,11 @@ import { QuestionFeedbackAccordion } from '../components/result/QuestionFeedback
 import { ReportTabs, type ReportTabId } from '../components/result/ReportTabs';
 import { ResultScoringPanel } from '../components/result/ResultScoringPanel';
 import { RoadmapTimeline } from '../components/learning/RoadmapTimeline';
-import { MOCK_ROADMAP } from '../mocks/learning.fixtures';
+import { learningService } from '../services/learning.service';
+import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
+import { useTokenSettlement } from '@/features/payment/hooks/useTokenSettlement';
+import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
+import type { RoadmapResponse } from '../types/learning.types';
 
 export const InterviewResultPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,17 +22,48 @@ export const InterviewResultPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<ReportTabId>('overview');
+  const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
+  const [roadmapError, setRoadmapError] = useState(false);
 
   const sessionId = searchParams.get('sessionId');
   const assessmentId = searchParams.get('assessmentId');
-  const resultId = id ?? assessmentId ?? (sessionId ? `assessment-${sessionId}` : 'interview-result-001');
-  const isFromHistory = !!id;
+  const resultId = id ?? assessmentId ?? (sessionId ? `assessment-${sessionId}` : null);
+  const isFromHistory = Boolean(id);
+  const isPostInterview = Boolean(assessmentId || sessionId) && !isFromHistory;
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
+  const settleSessionId = useMemo(() => {
+    if (sessionId) return sessionId;
+    if (assessmentId?.startsWith('assessment-')) return assessmentId.replace('assessment-', '');
+    return null;
+  }, [assessmentId, sessionId]);
+
   const { result, state, error } = useInterviewResult({
-    resultId,
-    pollWhenScoring: !isFromHistory && !!(sessionId || assessmentId),
+    resultId: resultId ?? '',
+    pollWhenScoring: isPostInterview,
   });
+
+  useTokenSettlement({
+    sessionId: settleSessionId,
+    enabled: isPostInterview && state === 'ready',
+  });
+
+  useEffect(() => {
+    if (activeTab !== 'roadmap') return;
+    let active = true;
+    setRoadmapError(false);
+    void learningService
+      .getRoadmap()
+      .then((data) => {
+        if (active) setRoadmap(data);
+      })
+      .catch(() => {
+        if (active) setRoadmapError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [activeTab]);
 
   const tabs = useMemo(
     () => [
@@ -55,19 +90,45 @@ export const InterviewResultPage: React.FC = () => {
     return language === 'vi' ? result.weaknessesVi : result.weaknesses;
   }, [language, result]);
 
+  if (!resultId) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-surface-raised px-6">
+        <div className="max-w-xl text-center">
+          <AlertCircle className="mx-auto h-10 w-10 text-error" />
+          <h1 className="heading-secondary mt-4 text-2xl text-foreground">{t('practice.result.errorTitle')}</h1>
+          <p className="body-text mt-2 text-sm text-muted-foreground">{t('practice.result.missingId')}</p>
+          <Link to="/candidate/practice/history" className="btn-primary mt-6 inline-flex">
+            {t('practice.history.title')}
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className={isFromHistory ? 'flex h-screen flex-col overflow-hidden bg-surface-raised' : 'min-h-screen bg-surface-raised'}>
       <header className="border-b border-subtle bg-surface-raised">
         <div className="mx-auto max-w-[1200px] px-4 py-4 sm:px-6">
           <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
-            <button
-              type="button"
-              onClick={() => navigate('/candidate/practice/history')}
-              className="text-foreground hover:underline"
-            >
-              {t('practice.history.title')}
-            </button>
-            <span className="text-muted-foreground">{'>'}</span>
+            {isFromHistory ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/candidate/practice/history')}
+                  className="text-foreground hover:underline"
+                >
+                  {t('practice.history.title')}
+                </button>
+                <span className="text-muted-foreground">{'>'}</span>
+              </>
+            ) : isPostInterview ? (
+              <>
+                <Link to="/candidate/dashboard" className="text-foreground hover:underline">
+                  {t('practice.flow.backToDashboard')}
+                </Link>
+                <span className="text-muted-foreground">{'>'}</span>
+              </>
+            ) : null}
             <span className="text-muted-foreground">{t('practice.result.breadcrumb')}</span>
             {result?.certificateId ? (
               <>
@@ -105,6 +166,13 @@ export const InterviewResultPage: React.FC = () => {
 
         {state === 'ready' && result ? (
           <div className="space-y-8">
+            {isPostInterview ? (
+              <ReserveSettleBanner
+                mode="settled"
+                reservedTokens={PRACTICE_RESERVE_ESTIMATE}
+                actualTokens={MOCK_SETTLE_ACTUAL_TOKENS}
+              />
+            ) : null}
             <ReportTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
             {activeTab === 'overview' ? (
@@ -128,7 +196,13 @@ export const InterviewResultPage: React.FC = () => {
                   <h2 className="heading-secondary text-2xl text-foreground">{t('practice.roadmap.title')}</h2>
                   <p className="body-text mt-1 text-sm text-muted-foreground">{t('practice.roadmap.subtitle')}</p>
                 </div>
-                <RoadmapTimeline steps={MOCK_ROADMAP.steps} />
+                {roadmapError ? (
+                  <p className="text-sm text-error">{t('practice.roadmap.error')}</p>
+                ) : roadmap ? (
+                  <RoadmapTimeline steps={roadmap.steps} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t('practice.result.loading')}</p>
+                )}
                 <Link to="/candidate/roadmap" className="btn-secondary inline-flex">
                   {t('practice.roadmap.viewFull')}
                 </Link>

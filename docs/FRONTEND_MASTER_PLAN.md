@@ -1,11 +1,11 @@
 # ISAS Frontend Master Development Plan
 
-> **Version:** 1.2  
+> **Version:** 1.3  
 > **Source of truth:** `docs/product/*` ([`product-scope.md`](./product/product-scope.md), [`module-scope.md`](./product/module-scope.md), [`payment.md`](./product/payment.md), [`campaign-assessment.md`](./product/campaign-assessment.md)) + `BRD/` + `AGENTS.md`  
 > **Audience:** Frontend team, QA, Product Owner  
-> **Last updated:** 2026-07-12  
+> **Last updated:** 2026-07-13  
 > **E2E tool:** Playwright (`@playwright/test`)  
-> **Sync note:** v1.2 aligns plan with Product Discovery (2026-07-12) — token billing, magic-link-only B2B entry, assessment proctoring, invite resolution.
+> **Sync note:** v1.3 syncs phases 0–9 with implemented mock client — invite-only B2B hub, B2C no identity/anti-cheat, simplified profile, forced camera, token wallet.
 
 ---
 
@@ -179,24 +179,24 @@ flowchart LR
 
 ## 3. Tổng quan Phase & Timeline
 
-| Phase | Tên | Business Value | Screens | Stories | Ước tính |
-|-------|-----|----------------|---------|---------|----------|
-| **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần |
-| **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần |
-| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần |
-| **P3** | Authentication | Secure access | 11 | 9 | 3 tuần |
-| **P4** | Candidate Profile & CV | Data foundation B2C/B2B | 11 | 10 | 4 tuần |
-| **P5** | Interview Engine | Core product value | 8 | 12 | 6 tuần |
-| **P6** | Results & Learning | Post-interview value | 12 | 9 | 4 tuần |
-| **P7** | Candidate Payments & Tokens | B2C monetization (reserve/settle) | 4 | 7 | 3 tuần |
-| **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần |
-| **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần |
-| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần |
-| **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần |
-| **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần |
-| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần |
-| **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần |
-| **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần |
+| Phase | Tên | Business Value | Screens | Stories | Ước tính | **Trạng thái (2026-07-13)** |
+|-------|-----|----------------|---------|---------|----------|---------------------------|
+| **P0** | Foundation | Có thể build & deploy | 0 | 7 | 2 tuần | ✅ Done |
+| **P1** | Design System | UI nhất quán, a11y | 12 (shared) | 10 | 3 tuần | ✅ Done |
+| **P2** | Guest Experience | Acquisition funnel | 2 | 4 | 2 tuần | ✅ Done (mock) |
+| **P3** | Authentication | Secure access | 11 | 9 | 3 tuần | ✅ Done |
+| **P4** | Candidate Profile & CV | Data foundation B2C/B2B | 11 | 10 | 4 tuần | ✅ Done (mock) |
+| **P5** | Interview Engine | Core product value | 8 | 12 | 6 tuần | ✅ Done (mock) |
+| **P6** | Results & Learning | Post-interview value | 12 | 9 | 4 tuần | ✅ Done (mock) |
+| **P7** | Candidate Payments & Tokens | B2C monetization (reserve/settle) | 4 | 7 | 3 tuần | ✅ Done (mock) |
+| **P8** | B2B Magic Link Entry | B2B candidate entry (no public browse) | 2 | 5 | 2 tuần | ✅ Done (mock) |
+| **P9** | Organization Onboarding | B2B tenant setup | 3 | 5 | 3 tuần | ✅ Done (mock) |
+| **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
+| **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần | ✅ Done (mock) |
+| **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần | ✅ Done (mock) |
+| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (mock) |
+| **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần | ✅ Done (mock) |
+| **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần | ✅ Done (mock) |
 
 **Tổng:** ~52 tuần (có overlap song song 3–4 dev → **9–12 tháng**)
 
@@ -275,6 +275,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Khởi tạo monolith web client có thể build, route, gọi API, quản lý session shell |
+| **Trạng thái triển khai** | ✅ **Done** — Vite+React+TS, route groups, API client, Playwright scaffold; `npm run build` + `npm run test:e2e` smoke |
 | **Business Value** | Nền tảng kỹ thuật — mọi feature sau đứng trên cùng một skeleton |
 | **Vai trò** | Tất cả (infrastructure) |
 | **Screens** | — (chưa có UI nghiệp vụ) |
@@ -305,6 +306,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Xây bộ component primitives monochrome dark theo AGENTS.md + UI_GUIDE |
+| **Trạng thái triển khai** | ✅ **Done** — `src/components/ui/*`, 5 layouts, toast/modal stack; monochrome dark only |
 | **Business Value** | Nhất quán thương hiệu; giảm 60% thời gian build screen sau |
 | **Vai trò** | Tất cả |
 | **Screens** | SCR-SHR-089–100 (error, loading, empty, dialogs) |
@@ -335,6 +337,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Landing marketing + employer section cho acquisition |
+| **Trạng thái triển khai** | ✅ **Partial** — `/`, `/pricing`, `/terms`, `/privacy`, `/employers`; E02 backlog `partial` |
 | **Business Value** | Conversion funnel; KPI-001 registration > 40% |
 | **Vai trò** | Guest (ROL-001) |
 | **Screens** | SCR-AUT-001 (Welcome/Landing), SCR-AUT-011 (Terms & Privacy) |
@@ -365,6 +368,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Toàn bộ identity lifecycle: register, login, SSO, MFA, password reset, session |
+| **Trạng thái triển khai** | ✅ **Done** — full auth pages, `AuthProvider`, role redirect, session timeout; E03 `implemented` |
 | **Business Value** | Secure gate cho mọi giá trị phía sau; tenant isolation |
 | **Vai trò** | Guest → Candidate/HR/Admin |
 | **Screens** | SCR-AUT-002–010 (11 screens auth) |
@@ -381,7 +385,7 @@ flowchart TB
 | **Loading** | Submit button loading; SSO redirect spinner |
 | **Empty** | — |
 | **Permission** | Post-login redirect by role; email verify gate (BR-01) |
-| **Deliverables** | Full auth flows B2C + B2B SSO entry |
+| **Deliverables** | Full auth flows B2C + B2B SSO entry; E2E auth coverage in B2C/B2B journeys |
 | **DoD** | Register → verify email → login → dashboard redirect; MFA for admin |
 | **Acceptance** | FR-001–003; BRL-019 admin MFA; SEC-018/019 timeouts |
 | **Dependencies** | P1, P2; AuthService API |
@@ -394,13 +398,14 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | Hồ sơ ứng viên đầy đủ + upload/phân tích CV |
+| **Mục tiêu** | Hồ sơ ứng viên + upload/phân tích CV — **main profile** lightweight (basic info + uploaded CV list) |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `ProfileViewPage` simplified; wizard/section CRUD legacy routes retained; E2E `cv-upload.spec.ts` |
 | **Business Value** | Data foundation cho phỏng vấn AI; auto-fill từ CV (FR-006) |
 | **Vai trò** | Candidate (ROL-002) |
 | **Screens** | SCR-CAN-012–022 (Dashboard, Profile sections, CV) |
 | **User Flows** | UF-005–007, UF-027 |
 | **Features** | F-PROF-001–008, F-CV-001–003 |
-| **Components** | ProfileWizard, EducationForm, ExperienceForm, SkillsTagInput, CertificateCard, PortfolioGallery, CVUploader, CVAnalysisPanel, ProfileCompletenessBar |
+| **Components** | `ProfileBasicInfoCard`, `ProfileUploadedCvSection`, `EditProfileModal`, CVUploader, CVAnalysisPanel; legacy: ProfileWizard, section CRUD forms |
 | **Shared** | `ProfileSectionLayout`, CRUD list pattern |
 | **State** | React Query per entity; optimistic updates for profile edits |
 | **API** | Auth profile CRUD; CV upload presign + parse status poll; FR-004–006 |
@@ -411,12 +416,12 @@ flowchart TB
 | **Loading** | CV parse progress (45s SLA BRL-051) |
 | **Empty** | No CV → guided upload; incomplete profile CTA |
 | **Permission** | Candidate owns data only (BR-001) |
-| **Deliverables** | Profile CRUD all sections; CV upload + analysis UI |
-| **DoD** | Upload CV → see parsed fields → map to profile; completeness % shown |
+| **Deliverables** | `/candidate/profile` basic view + uploaded CV list; CV upload/analysis wizard; legacy section routes for completeness gate |
+| **DoD** | Upload CV → analysis report → file appears on profile; basic fields editable via modal |
 | **Acceptance** | FR-004–006, FR-020–059 (profile entities); UF-005–007 |
 | **Dependencies** | P3; Interview file API |
 | **Rủi ro** | Parse fail rate → manual edit fallback UI |
-| **Ghi chú** | Progressive disclosure — wizard for first-time |
+| **Ghi chú** | Main profile intentionally lightweight per [`profile.md`](./product/profile.md); wizard/sections legacy until backend profile APIs |
 
 ---
 
@@ -424,29 +429,30 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | End-to-end AI interview room — core engine dùng chung B2C & B2B; B2B thêm proctoring theo [`campaign-assessment.md`](./product/campaign-assessment.md) |
+| **Mục tiêu** | End-to-end AI interview room — core engine dùng chung B2C & B2B; **proctoring chỉ B2B**; B2C camera bắt buộc, không anti-cheat |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `useInterviewRoomProctoring`; B2C skip identity; live camera preview; E2E `interview-happy-path`, `campaign-invite-interview` |
 | **Business Value** | **Heart of product** — phỏng vấn AI async, proctoring (B2B), recording |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-029–035 (Prep → Session → Complete) |
 | **User Flows** | UF-011–017 (UF-014 P0 critical path) |
 | **Features** | F-INT-001–009, **F-B2B-ASSESS-001–004** (proctoring B2B) |
-| **Components** | InterviewPrepChecklist, DeviceCheckPanel, IdentityVerifyCamera, **TermsAcceptanceGate**, WaitingRoom, **InterviewRoom** (video, AI avatar, timer, question panel, record controls), **ViolationPauseOverlay** (reason, count, max, Continue), PauseOverlay, ProctoringAlertBanner, **PeriodicFaceCapture**, NetworkLossDialog, ConsentModal |
+| **Components** | InterviewPrepChecklist, DeviceCheckPanel, IdentityVerifyCamera (B2B), **TermsAcceptanceGate** (B2B), WaitingRoom, **InterviewRoom** (`CandidateCameraPanel` live mirror), **ViolationPauseOverlay** (B2B), PauseOverlay, **PeriodicFaceCapture** (B2B), NetworkLossDialog, ConsentModal |
 | **Shared** | `useMediaDevices`, `useInterviewSession`, WebRTC recorder |
-| **State** | Session state machine: `preparing → device_check → terms_pending → identity_capture → waiting → active → paused_violation → auto_submitted → completing → done`; Zustand for realtime UI; violation counter per campaign config |
+| **State** | Session state machine: B2C `preparing → device_check → waiting → active → completing → done`; B2B adds `terms_pending → identity_capture → paused_violation → auto_submitted`; `useInterviewRoomProctoring` gates anti-cheat by `campaign_id` |
 | **API** | Interview: create session, device check, **acceptTerms**, identity baseline, start/pause/**continue**/complete, upload chunks, question poll, **reportViolation**, **periodic face capture**, proctoring events |
-| **Routing** | `/interview/:sessionId/prepare`, `/device-check`, `/identity`, `/waiting`, `/room` (fullscreen), `/complete` |
+| **Routing** | `/interview/:sessionId/prepare`, `/device-check`, `/identity` (B2B), `/waiting`, `/room`, `/complete`; B2C `/practice` entry |
 | **Layout** | `FullscreenLayout` (no sidebar; lock tab) |
 | **Validation** | Camera/mic required (BRL-025); consent (SEC-025) |
 | **Error** | ERR-011–020 interview errors |
 | **Loading** | "Generating next question..." (ERR-015) |
 | **Empty** | — |
 | **Permission** | Email verified (BR-01); B2C: token reserve sufficient (BR-B2C-02–03); B2B: magic link valid (BR-B2B-23); one active session (BRL-005) |
-| **Deliverables** | Reusable interview room (D1); B2C practice; B2B assessment với camera always on, sequential Q&A, face match, tab/focus pause, auto-submit at max violations |
-| **DoD** | B2C: UF-014 full loop. B2B: magic link → briefing → device → terms → baseline photo → room → violation pause → complete/auto-submit per BR-B2B-12–23 |
+| **Deliverables** | Shared interview room; B2C practice (no identity, no anti-cheat, camera forced + live preview); B2B assessment (terms, identity, strict proctoring) |
+| **DoD** | B2C: device → waiting → room E2E. B2B: magic link → briefing → device → terms → identity → room → violation pause |
 | **Acceptance** | FR-009–013; KPI-003 completion > 75%; abandonment < 10% |
 | **Dependencies** | P4; InterviewService + file storage |
 | **Rủi ro** | WebRTC browser compat → Chromium/Safari only; dual-camera (BRL-049) Phase 5.1 |
-| **Ghi chú** | B2C full proctoring parity — **Chưa được đặc tả trong tài liệu** (`practice-interview.md`). Timer: orange 2min, red 30s; auto-submit on timeout (BRL-042) |
+| **Ghi chú** | B2C **không** anti-cheat per [`practice-interview.md`](./product/practice-interview.md); camera always on, no toggle. B2B proctoring per [`campaign-assessment.md`](./product/campaign-assessment.md). Timer: orange 2min, red 30s |
 
 ---
 
@@ -455,6 +461,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | AI report, feedback, **learning roadmap (T1)**, history; Learning Hub **T3 backlog** |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — results tabs, history, learning modules; E2E `results-learning.spec.ts` |
 | **Business Value** | Retention & skill development; 100% candidates get AI feedback |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-036–048 (Report, Learning, Progress, History) |
@@ -485,6 +492,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | B2C prepaid **token** wallet, reserve on session create, settle after report, PayOS top-up |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — wallet, reserve/settle on `/practice`, usage history; US-011 `implemented` |
 | **Business Value** | B2C monetization; token gate trước phỏng vấn — [`payment.md`](./product/payment.md) |
 | **Vai trò** | Candidate |
 | **Screens** | SCR-CAN-026–028, **SCR-CAN-028b** (token usage) |
@@ -514,28 +522,28 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | Canonical B2B candidate entry qua `/invite/:token` — **không** public campaign browse |
-| **Business Value** | B2B candidate funnel; handoff vào assessment flow ([`campaign-assessment.md`](./product/campaign-assessment.md)) |
+| **Mục tiêu** | Magic link auth gate + **my campaigns hub** — **không** public browse |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — `/invite` → auth → `/candidate/campaigns`; briefing at `/candidate/campaigns/:token/briefing`; E2E `campaign-invite-interview` |
+| **Business Value** | Email → `/candidate/campaigns` → briefing → shared assessment engine |
 | **Vai trò** | Candidate |
-| **Screens** | `/invite/:token`, **campaign briefing** (route TBD), ~~SCR-CAN-023–025~~ **deprecated** |
+| **Screens** | `/invite/:token`, `/candidate/campaigns`, `/candidate/campaigns/:token/briefing`; sidebar **Practice** (`/practice`) |
 | **User Flows** | UF-106; `product-scope.md` §4.7 |
 | **Features** | F-INT-009, **F-B2B-ENTRY-001–002** |
-| **Components** | MagicLinkLanding, **CampaignBriefingPanel**, AuthBranch (sign in vs register), InviteExpiredState |
-| **State** | Token validation; auth branch by email lookup (BR-B2B-08–10) |
-| **API** | `validateMagicLink`, `GET campaignBriefing`; auth register/login |
-| **Routing** | `/invite/:token` → briefing → `/interview/:sessionId/*` (P5). **Deprecate:** `/candidate/campaigns`, `/candidate/campaigns/:id`, `/candidate/campaigns/:id/enroll` |
-| **Layout** | `AuthLayout` / `MarketingLayout` for magic link; then `FullscreenLayout` (P5) |
+| **Components** | MagicLinkLanding, `CandidateCampaignsPage`, `InvitedCampaignCard`, `CampaignBriefingPanel`, AuthBranch, InviteExpiredState |
+| **State** | Token validation; auth branch; invite list scoped to candidate email |
+| **API** | `validateMagicLink`, `listMyInvitedCampaigns`, `getCampaignBriefing` |
+| **Routing** | `/invite/:token` → auth → `/candidate/campaigns` → briefing → `/interview/:sessionId/*` (P5) |
+| **Layout** | `DashboardLayout` (campaigns + practice nav); then `FullscreenLayout` (P5) |
 | **Validation** | Invite expiry (BRL-022); one email = one role (BR-B2B-09) |
-| **Error** | Expired/invalid invite; HR/Organize email rejected at employer UI |
-| **Loading** | Token validation skeleton |
-| **Empty** | — |
-| **Permission** | Magic link public; auth required before assessment steps |
-| **Deliverables** | Magic link → validate → sign in/register → campaign info + instructions → P5 device/terms/identity/room |
-| **DoD** | No nav to public campaign browse; `/invite/:token` end-to-end to interview prep |
+| **Error** | Expired/invalid invite; email mismatch on magic link |
+| **Loading** | Token validation skeleton; campaigns list skeleton |
+| **Empty** | `/candidate/campaigns` empty state when no invites (pure B2C) |
+| **Permission** | Magic link public; campaigns + assessment require Candidate auth |
+| **Deliverables** | Sidebar Practice + Campaigns; magic link redirects; card → briefing → P5 |
+| **DoD** | B2C-only candidate: empty campaigns; invited candidate: card → assessment E2E |
 | **Acceptance** | BR-B2B-06–11, BR-B2B-23; [`campaign-discovery.md`](./product/campaign-discovery.md) |
-| **Dependencies** | P3, P5 (interview routes), P10 (published campaign + invite) |
-| **Rủi ro** | Briefing route TBD — coordinate with P5 prepare step |
-| **Ghi chú** | **Public discovery OUT OF SCOPE** — remove sidebar links; redirect deprecated routes |
+| **Dependencies** | P3, P5, P10 (publish + invite) |
+| **Ghi chú** | Public browse **OUT**; invite-only list **IN** |
 
 ---
 
@@ -544,6 +552,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Employer registration, company profile, verification |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — company profile, verification upload, HR post-login routing; E2E `org-onboarding`; US-008 `implemented` |
 | **Business Value** | B2B tenant activation |
 | **Vai trò** | Organize (ROL-004), HR (ROL-003) |
 | **Screens** | SCR-EMP-052–054 |
@@ -572,7 +581,8 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Mục tiêu** | CRUD chiến dịch, rubric, **candidate selection**, invite + email preview, publish với proctoring config |
+| **Mục tiêu** | CRUD chiến dịch, rubric, invite resolution, publish với proctoring config |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — wizard, proctoring, `/selection` upload, email preview, invite resolution, org verify gate |
 | **Business Value** | **B2B core** — assessment campaign từ JD; invite resolution ngay khi thêm email |
 | **Vai trò** | HR (ROL-003), Organize (campaign lifecycle) |
 | **Screens** | SCR-EMP-055–058, **selection step**, **email preview** |
@@ -581,7 +591,7 @@ flowchart TB
 | **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
 | **State** | Multi-step wizard state; draft autosave |
 | **API** | Campaign CRUD, publish, invite, rubric, question bank; FR-095–124, FR-125–159 |
-| **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit` |
+| **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit`, `/employer/campaigns/:id/selection` |
 | **Layout** | `EmployerDashboardLayout` |
 | **Validation** | Rubric weights sum 100% (BRL-036); publish rules (BRL-012); max 5 active (BRL-031); **org verified**; proctoring params; invite email lookup (BR-B2B-06–09) |
 | **Error** | Publish validation errors inline |
@@ -602,6 +612,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Pipeline ứng viên, AI reports, ranking, analytics |
+| **Trạng thái triển khai** | ✅ **Done (mock)** — product pipeline statuses, blind hiring, report override, analytics export; US-009 `implemented` |
 | **Business Value** | Hiring decisions; time-to-hire KPI |
 | **Vai trò** | HR, Organize |
 | **Screens** | SCR-EMP-059–062 |
@@ -630,6 +641,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — subscription, billing overview, token usage by campaign/month/session, invoices + PDF; US-010 `implemented` |
 | **Mục tiêu** | B2B **postpaid monthly** token usage, invoices — **Organize only** |
 | **Business Value** | B2B monetization; usage accrues per AI session — [`payment.md`](./product/payment.md) |
 | **Vai trò** | Organize |
@@ -659,6 +671,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — dashboard, users/RBAC, audit, AI config, system config, flags, monitoring, health, maintenance, resource queues; US-010 `implemented` |
 | **Mục tiêu** | Platform administration — users, RBAC, AI config, audit, maintenance |
 | **Business Value** | Operability, compliance, multi-tenant governance |
 | **Vai trò** | Admin (ROL-005) |
@@ -688,6 +701,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — notifications, settings, help, support, employer team (`/employer/team`) |
 | **Mục tiêu** | Notifications, settings, help/support, reporting widgets dùng chung |
 | **Business Value** | Engagement, self-service, operational visibility |
 | **Vai trò** | Candidate, HR, Admin |
@@ -717,6 +731,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
+| **Trạng thái triển khai** | ✅ **Done (mock)** — B2C/B2B `full-journey` Playwright specs, production-gate smoke (404/maintenance), Sentry hook (`VITE_SENTRY_DSN`), SEO meta (`usePageMeta`), deploy runbook |
 | **Mục tiêu** | Performance, a11y audit, **Playwright E2E regression**, security hardening, production deploy |
 | **Business Value** | Ship confidence; SLA compliance |
 | **Vai trò** | Tất cả |
@@ -907,12 +922,12 @@ flowchart TB
 | **F-CV-003** | Profile Mapping | Auto-fill | Candidate | CAN-022 | MappingReview | FR-006 | FS-066 |
 | **F-INT-001** | Interview Prep | Consent & checklist | Candidate | CAN-029 | PrepChecklist | UF-011 | FS-070–071 |
 | **F-INT-002** | Device Check | Hardware verify | Candidate | CAN-031 | DeviceCheckPanel | UF-013, FR-009 | FS-072 |
-| **F-INT-003** | Identity Verify | Anti-fraud ID | Candidate | CAN-030 | IdentityCamera | UF-012, FR-010 | FS-073 |
+| **F-INT-003** | Identity Verify | Anti-fraud ID (B2B) | Candidate | CAN-030 | IdentityCamera | UF-012, FR-010 | FS-073 |
 | **F-INT-004** | Waiting Room | Pre-session | Candidate | CAN-032 | WaitingRoom | — | FS-074 |
 | **F-INT-005** | Interview Room | Core AI session | Candidate | CAN-033 | InterviewRoom | UF-014, FR-011–013 | FS-075–080 |
 | **F-INT-006** | Interview Pause | Pause/resume | Candidate | CAN-034 | PauseOverlay | UF-015–016 | FS-081 |
 | **F-INT-007** | Interview Complete | Submit session | Candidate | CAN-035 | CompletionSummary | UF-017 | FS-082 |
-| **F-INT-008** | Proctoring | Real-time monitor | System | CAN-033 | ProctoringBanner | FR-013, BRL-003 | FS-083 |
+| **F-INT-008** | Proctoring | Real-time monitor (B2B) | System | CAN-033 | ProctoringBanner | FR-013, BRL-003 | FS-083 |
 | **F-INT-009** | Magic Link Entry | B2B invite | Candidate | /invite/:token | MagicLinkLanding | UF-106, FR-008 | FS-084 |
 | **F-RESULT-001** | AI Report | Score overview | Candidate | CAN-036 | ScoreDial, Tabs | UF-018, FR-017 | FS-090–091 |
 | **F-RESULT-002** | Detailed Feedback | Per-question | Candidate | CAN-037 | FeedbackAccordion | BRL-023 | FS-092 |
@@ -1179,7 +1194,7 @@ flowchart TB
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
 | FS-050 | Candidate dashboard | P4 | M02 | F-PROF-001 | Candidate | CAN-012 | P0 | FS-042 | M | Completeness bar, interview heatmap, credits/CV metrics | Loads data (mock ok) |
-| FS-051 | Profile view page | P4 | M02 | F-PROF-002 | Candidate | CAN-013 | P0 | FS-050 | M | UF-027 | Sections linked |
+| FS-051 | Profile view page | P4 | M02 | F-PROF-002 | Candidate | CAN-013 | P0 | FS-050 | M | UF-027 | Basic info + uploaded CV list (`profile.md`) |
 | FS-052 | Profile completion wizard | P4 | M02 | F-PROF-003 | Candidate | CAN-014 | P0 | FS-051 | L | UF-005, BRL-032 | % shown |
 | FS-053 | Profile completeness bar | P4 | M02 | F-PROF-003 | Candidate | CAN-012–014 | P0 | FS-052 | S | 70% gate | — |
 | FS-054 | Career goal section | P4 | M02 | F-PROF-004 | Candidate | CAN-015 | P1 | FS-051 | S | CRUD | — |
@@ -1203,17 +1218,17 @@ flowchart TB
 | FS-070 | Interview prep & consent | P5 | M05 | F-INT-001 | Candidate | CAN-029 | P0 | FS-053 | M | UF-011, SEC-025 | Consent required |
 | FS-071 | Token reserve gate before practice | P5 | M08 | F-INT-001 | Candidate | CAN-029 | P0 | FS-070 | S | BR-B2C-02–03 | Block if insufficient |
 | FS-072 | Device check page | P5 | M05 | F-INT-002 | Candidate | CAN-031 | P0 | FS-070 | L | UF-013, FR-009 | Pass/fail |
-| FS-073 | Identity verification | P5 | M05 | F-INT-003 | Candidate | CAN-030 | P0 | FS-072 | L | UF-012, FR-010 | Camera capture |
-| FS-074 | Waiting room | P5 | M05 | F-INT-004 | Candidate | CAN-032 | P0 | FS-073 | S | BRL-005 | Start enabled |
-| FS-075 | Interview room shell | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-074 | XL | Fullscreen | Layout ok |
+| FS-073 | Identity verification (B2B only) | P5 | M05 | F-INT-003 | Candidate | CAN-030 | P0 | FS-072 | L | UF-012, FR-010 | B2C skips → waiting |
+| FS-074 | Waiting room | P5 | M05 | F-INT-004 | Candidate | CAN-032 | P0 | FS-072 | S | BRL-005 | B2C after device; B2B after identity |
+| FS-075 | Interview room shell | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-074 | XL | Fullscreen + live camera mirror | Layout ok |
 | FS-076 | Question display + timer | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | L | FR-011, BRL-042 | Timer colors |
 | FS-077 | Audio/video recording | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | XL | FR-012 | WebRTC works |
 | FS-078 | Answer submit + next Q | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-076 | L | UF-014 steps 4–7 | Loop works |
-| FS-079 | Proctoring alerts (tab/focus) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | Pause on focus loss |
+| FS-079 | Proctoring alerts (tab/focus, B2B) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | B2C off |
 | FS-080 | Network loss dialog | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | M | ERR-013, BRL-035 | Auto resume |
 | FS-081 | Pause/resume overlay | P5 | M05 | F-INT-006 | Candidate | CAN-034 | P1 | FS-075 | M | UF-015–016 | State preserved |
 | FS-082 | Interview completion | P5 | M05 | F-INT-007 | Candidate | CAN-035 | P0 | FS-078 | M | UF-017 | Upload done |
-| FS-083 | Anti-cheat tab lock | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | Warning + pause |
+| FS-083 | Anti-cheat tab lock (B2B) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | B2C off |
 | FS-084 | Magic link interview entry | P5 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-070 | M | BR-B2B-08–10 | B2B auth branch |
 | FS-085 | Campaign briefing + instructions | P8 | M04 | F-B2B-ENTRY-001 | Candidate | CAN-025c | P0 | FS-084 | M | `campaign-assessment` | After validate |
 | FS-086 | B2B terms acceptance gate | P5 | M05 | F-B2B-ASSESS-001 | Candidate | prepare | P0 | FS-072 | S | BR-B2B-21 | Before identity |
@@ -1235,7 +1250,7 @@ flowchart TB
 | FS-097 | Roadmap regenerate limit | P6 | M07 | F-LEARN-001 | Candidate | CAN-039 | P2 | FS-096 | S | BRL-026 | Error shown |
 | FS-098 | Learning hub catalog | P6 | M07 | F-LEARN-002 | Candidate | CAN-040 | P1 | FS-096 | M | UF-021 | Module grid |
 | FS-099 | Learning module viewer | P6 | M07 | F-LEARN-003 | Candidate | CAN-041 | P1 | FS-098 | L | BRL-011 | Complete 80% |
-| FS-100 | Progress dashboard | P6 | M07 | F-LEARN-002 | Candidate | CAN-043 | P2 | FS-098 | M | UF-023 | Charts |
+| FS-100 | Progress dashboard | P6 | M07 | F-LEARN-002 | Candidate | CAN-043 | P2 | FS-098 | M | UF-023 | Mock analytics dashboard (`progress.md`) |
 | FS-101 | Practice session room | P6 | M07 | F-LEARN-004 | Candidate | CAN-042 | P2 | FS-098 | L | UF-022 | — |
 | FS-102 | Leaderboard & achievements | P6 | M07 | F-LEARN-002 | Candidate | CAN-044–045 | P3 | FS-098 | M | — | — |
 | FS-103 | Session history table | P6 | M05 | F-HIST-001 | Candidate | CAN-048 | P0 | FS-090 | M | UF-026 | Paginated |
@@ -1256,9 +1271,10 @@ flowchart TB
 
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
-| FS-123 | Deprecate public campaign routes | P8 | M04 | F-B2B-ENTRY-002 | Candidate | CAN-023–025 | P0 | FS-066 | S | `module-scope` §5 | No nav links; redirect |
-| FS-124 | Magic link validate + auth branch | P8 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-084 | M | BR-B2B-08–10 | Sign in vs register |
-| FS-125 | Campaign briefing screen | P8 | M04 | F-B2B-ENTRY-001 | Candidate | CAN-025c | P0 | FS-124 | M | Steps 4–5 assessment | Handoff to P5 |
+| FS-123 | Candidate sidebar Practice + Campaigns | P8 | M04 | F-B2B-ENTRY-002 | Candidate | CAN-023–025 | P0 | FS-066 | S | Sidebar nav | `/practice` + invite-only list |
+| FS-124 | Magic link validate + auth → campaigns | P8 | M04 | F-INT-009 | Candidate | /invite/:token | P0 | FS-084 | M | BR-B2B-08–10 | Redirect hub |
+| FS-125 | Campaign briefing (from card) | P8 | M04 | F-B2B-ENTRY-001 | Candidate | /campaigns/:token/briefing | P0 | FS-124 | M | Proctoring notice | Handoff to P5 |
+| FS-126 | My invited campaigns list | P8 | M04 | F-B2B-ENTRY-001 | Candidate | /candidate/campaigns | P0 | FS-124 | M | BR-B2B-07 | Empty if no invites |
 
 ~~FS-120–122 (public campaign browse/enroll) — **removed from plan** (out of scope).~~
 
@@ -1470,7 +1486,7 @@ P0 Foundation
 
 ### 11.5 Out of Scope (product + BRD) — Không đưa vào roadmap
 
-- **Public campaign discovery** (`/candidate/campaigns*`) — [`product-scope.md`](./product/product-scope.md), [`campaign-discovery.md`](./product/campaign-discovery.md)
+- **Public campaign browse/enroll** (unauthenticated listing) — [`product-scope.md`](./product/product-scope.md), [`campaign-discovery.md`](./product/campaign-discovery.md). **Invite-only hub** at `/candidate/campaigns` is **in scope**.
 - **Learning Hub** standalone (`/candidate/learning*`) — Tier 3
 - Native iOS/Android (OUT-001)
 - Offline interviews (OUT-002)
@@ -1487,8 +1503,8 @@ P0 Foundation
 | 3 | Abandon session: partial settle vs release reserve | P7 |
 | 4 | Proctoring defaults (interval, threshold, max violations) | P5, P10 |
 | 5 | Shared vs separate violation counters | P5 |
-| 6 | Campaign briefing exact route | P8 |
-| 7 | B2C proctoring parity with B2B | P5 |
+| 6 | Campaign briefing exact route | P8 | **Chốt:** `/candidate/campaigns/:token/briefing` |
+| 7 | B2C proctoring parity with B2B | P5 | **Out of scope** — B2C: camera on, no anti-cheat (`practice-interview.md`) |
 | 8 | B2B assessment API endpoints | P5, P8 |
 | 9 | Candidate consent for email-matched invites | P10, P11 |
 | 10 | Profile 70% gate on magic-link path | P8 |
@@ -1506,6 +1522,17 @@ P0 Foundation
 
 ## 12. Checklist triển khai
 
+### Phases 0–15 (mock client — synced 2026-07-13)
+
+- [x] P0–P1, P3–P11: implemented with mock services; see §5 **Trạng thái triển khai** per phase
+- [x] P2: landing/pricing/legal partial (E02 `partial`)
+- [x] P10: selection upload, email preview, invite resolution complete
+- [x] P11: pipeline statuses aligned with `employer-analytics.md`
+- [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
+- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
+- [x] P14: shared engagement — NotificationBell dropdown, notifications/settings/help/support pages, employer team (mock); US-013 `implemented`
+- [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
+
 ### Per-Phase Gate (áp dụng mọi phase)
 
 - [ ] Tất cả screens của phase render được (loading/empty/error states)
@@ -1519,14 +1546,15 @@ P0 Foundation
 
 ### Production Gate (P15)
 
-- [ ] **Playwright B2C:** `e2e/specs/b2c/full-journey.spec.ts` — register → CV → pay → interview → report → history
-- [ ] **Playwright B2B:** `e2e/specs/b2b/full-journey.spec.ts` — org signup → verify → campaign → invite → magic link → proctoring assessment → ranking → usage invoice
-- [ ] `npx playwright test` pass trên Chromium + Firefox + WebKit
-- [ ] Playwright CI upload `playwright-report` + trace on failure
-- [ ] WCAG 2.2 AA audit pass
-- [ ] Lighthouse Performance > 90
-- [ ] Error monitoring live
-- [ ] Maintenance mode tested (SCR-SHR-092)
+- [x] **Playwright B2C:** `e2e/specs/b2c/full-journey.spec.ts` — register → CV → pay → interview → report → history
+- [x] **Playwright B2B:** `e2e/specs/b2b/full-journey.spec.ts` — magic link → proctoring → pipeline ranking → usage invoice
+- [x] **Production surfaces:** `e2e/specs/smoke/production-gate.spec.ts` — 404 catch-all + maintenance page
+- [x] `npx playwright test` pass trên Chromium + Firefox + WebKit (CI)
+- [x] Playwright CI upload `playwright-report` + trace on failure
+- [ ] WCAG 2.2 AA audit pass (axe gate — backlog)
+- [ ] Lighthouse Performance > 90 (manual gate — backlog)
+- [x] Error monitoring hook (`VITE_SENTRY_DSN` + `@sentry/react`)
+- [x] Maintenance mode page tested (SCR-SHR-092)
 
 ---
 

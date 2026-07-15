@@ -1,16 +1,28 @@
-import { AlertTriangle, CalendarClock, CreditCard, Users, WalletCards } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Coins, CreditCard, Users, WalletCards } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { BillingMetricCard } from '../components/BillingMetricCard';
+import { MonthlyUsageSummary } from '../components/MonthlyUsageSummary';
 import { PaymentMethodForm } from '../components/PaymentMethodForm';
+import { TokenUsageByCampaignTable } from '../components/TokenUsageByCampaignTable';
 import { useEmployerBilling } from '../hooks/useEmployerBilling';
 
 export function EmployerBillingPage() {
   const { t, language } = useLanguage();
-  const { account, plans, isLoading, savePaymentMethod } = useEmployerBilling();
+  const {
+    account,
+    plans,
+    campaignUsage,
+    monthlyUsage,
+    sessionsByCampaign,
+    loadingCampaignId,
+    isLoading,
+    savePaymentMethod,
+    loadCampaignSessions,
+  } = useEmployerBilling();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
   const plan = plans.find((item) => item.id === account?.planId);
   const formatDate = (value: string | null | undefined) =>
@@ -65,11 +77,46 @@ export function EmployerBillingPage() {
             icon={<Users className="h-5 w-5" aria-hidden />}
           />
           <BillingMetricCard
+            label={t('employerBilling.billing.monthlyTokens')}
+            value={account?.monthlyTokensAccrued?.toLocaleString() ?? '...'}
+            hint={t('employerBilling.billing.monthlyTokensHint')}
+            icon={<Coins className="h-5 w-5" aria-hidden />}
+          />
+          <BillingMetricCard
             label={t('employerBilling.billing.renewal')}
             value={formatDate(account?.nextRenewalAt)}
             hint={t('employerBilling.billing.renewalHint')}
             icon={<CalendarClock className="h-5 w-5" aria-hidden />}
           />
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{t('employerBilling.usage.monthlyTitle')}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('employerBilling.usage.monthlySubtitle')}</p>
+          </div>
+          {isLoading ? (
+            <div className="h-32 animate-pulse rounded-xl bg-surface-overlay" />
+          ) : (
+            <MonthlyUsageSummary periods={monthlyUsage} />
+          )}
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{t('employerBilling.usage.campaignTitle')}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('employerBilling.usage.campaignSubtitle')}</p>
+          </div>
+          {isLoading ? (
+            <div className="h-48 animate-pulse rounded-xl bg-surface-overlay" />
+          ) : (
+            <TokenUsageByCampaignTable
+              campaigns={campaignUsage}
+              sessionsByCampaign={sessionsByCampaign}
+              loadingCampaignId={loadingCampaignId}
+              onExpand={loadCampaignSessions}
+            />
+          )}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">

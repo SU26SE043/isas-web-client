@@ -43,6 +43,36 @@ export interface EmployerBillingAccount {
   graceEndsAt: string | null;
   nextRenewalAt: string | null;
   paymentMethod: BillingPaymentMethod | null;
+  monthlyTokensAccrued: number;
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
+}
+
+export interface CampaignTokenUsage {
+  campaignId: string;
+  campaignName: string;
+  campaignNameVi: string;
+  sessionCount: number;
+  tokensAccrued: number;
+  lastSessionAt: string;
+}
+
+export interface SessionTokenUsage {
+  id: string;
+  campaignId: string;
+  candidateLabel: string;
+  completedAt: string;
+  tokensUsed: number;
+}
+
+export interface MonthlyUsagePeriod {
+  monthKey: string;
+  label: string;
+  labelVi: string;
+  totalTokens: number;
+  sessionCount: number;
+  status: 'current' | 'closed' | 'invoiced';
+  invoiceNumber: string | null;
 }
 
 export interface PaymentMethodInput {

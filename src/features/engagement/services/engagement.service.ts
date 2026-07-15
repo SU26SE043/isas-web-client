@@ -32,12 +32,25 @@ export const engagementService = {
   async triggerNotification(scope: EngagementScope): Promise<PlatformNotification> {
     ensureMock();
     await mockDelay(450);
+    const titleKey = 'engagement.notification.live.title';
+    const bodyKey = 'engagement.notification.live.body';
+    const dedupeWindowMs = 5 * 60 * 1000;
+    const now = Date.now();
+    const duplicate = notifications.find(
+      (item) =>
+        item.scope === scope
+        && item.titleKey === titleKey
+        && now - new Date(item.createdAt).getTime() < dedupeWindowMs,
+    );
+    if (duplicate) {
+      return structuredClone(duplicate);
+    }
     const notification: PlatformNotification = {
       id: `noti_live_${Date.now()}`,
       scope,
       category: scope === 'candidate' ? 'interview' : 'system',
-      titleKey: 'engagement.notification.live.title',
-      bodyKey: 'engagement.notification.live.body',
+      titleKey,
+      bodyKey,
       createdAt: new Date().toISOString(),
       status: 'unread',
     };

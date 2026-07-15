@@ -2,6 +2,7 @@ import { mockDelay, usesMockData } from '@/shared/mock';
 import type {
   Achievement,
   CertificateRecord,
+  CreateRoadmapInput,
   LeaderboardEntry,
   LearningModule,
   LearningModuleContent,
@@ -21,8 +22,10 @@ import {
   MOCK_PRACTICE_SESSIONS,
   MOCK_PROGRESS_DASHBOARD,
 } from '../mocks/progress.fixtures';
+import { learningPathService } from './learningPath.service';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
+let latestCreatedRoadmap: RoadmapResponse | null = null;
 
 export const learningService = {
   async getRoadmap(): Promise<RoadmapResponse> {
@@ -31,10 +34,47 @@ export const learningService = {
     }
 
     await mockDelay(400);
+    if (latestCreatedRoadmap) {
+      return {
+        ...latestCreatedRoadmap,
+        regenerateCount: roadmapRegenerateCount,
+      };
+    }
     return {
       ...MOCK_ROADMAP,
       regenerateCount: roadmapRegenerateCount,
     };
+  },
+
+  async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    if (!input.domainId || !input.targetLevel || input.reportIds.length === 0) {
+      throw new Error('INVALID_ROADMAP_INPUT');
+    }
+
+    await mockDelay(1200);
+
+    const created: RoadmapResponse = {
+      ...MOCK_ROADMAP,
+      regenerateCount: 0,
+      domainId: input.domainId,
+      targetLevel: input.targetLevel,
+      sourceReportIds: [...input.reportIds],
+      steps: MOCK_ROADMAP.steps.map((step, index) => ({
+        ...step,
+        title: `${step.title} (${input.targetLevel})`,
+        titleVi: `${step.titleVi} (${input.targetLevel})`,
+        estimatedWeeks: step.estimatedWeeks + (index === 0 ? 0 : Math.min(input.reportIds.length, 3)),
+      })),
+    };
+
+    latestCreatedRoadmap = created;
+    roadmapRegenerateCount = 0;
+    await learningPathService.registerCreatedRoadmap(input);
+    return created;
   },
 
   async regenerateRoadmap(): Promise<RoadmapResponse> {
@@ -65,7 +105,20 @@ export const learningService = {
     }
 
     await mockDelay(350);
-    return MOCK_LEARNING_MODULES;
+    return MOCK_LEARNING_MODULES.map((module) => ({ ...module }));
+  },
+
+  async getModule(moduleId: string): Promise<LearningModule> {
+    if (!usesMockData('practice')) {
+      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
+    }
+
+    await mockDelay(250);
+    const module = MOCK_LEARNING_MODULES.find((item) => item.id === moduleId);
+    if (!module) {
+      throw new Error('MODULE_NOT_FOUND');
+    }
+    return { ...module };
   },
 
   async getModuleContent(moduleId: string): Promise<LearningModuleContent> {

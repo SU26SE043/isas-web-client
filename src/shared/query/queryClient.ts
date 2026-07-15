@@ -1,18 +1,14 @@
 import { QueryClient } from '@tanstack/react-query';
+import { HttpStatus } from '@/shared/constants/http-status';
+import { getApiStatusCode } from '@/shared/api/apiError';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: unknown) => {
-        const status =
-          typeof error === 'object' &&
-          error !== null &&
-          'response' in error &&
-          typeof (error as { response?: { status?: number } }).response?.status === 'number'
-            ? (error as { response: { status: number } }).response.status
-            : undefined;
+        const status = getApiStatusCode(error);
 
-        if (status === 401) {
+        if (status === HttpStatus.UNAUTHORIZED) {
           return false;
         }
 

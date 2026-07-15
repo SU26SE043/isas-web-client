@@ -24,7 +24,7 @@ export const MarketingHeader: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-subtle bg-surface-base/80 backdrop-blur-xl">
+      <header className="glass-topbar sticky top-0 z-50 border-b">
         <div className="page-container">
           <div className="flex h-16 items-center justify-between gap-4">
             <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
@@ -63,7 +63,7 @@ export const MarketingHeader: React.FC = () => {
                     onClick={() => openAuthModal('signup')}
                     className="btn-primary hidden sm:inline-flex"
                   >
-                    {t('nav.getStarted')}
+                    {t('nav.signUp')}
                   </button>
                 </>
               )}

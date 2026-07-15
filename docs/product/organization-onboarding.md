@@ -54,7 +54,14 @@ Until backend contracts are available, the client uses a mock `EmployerService` 
 - `saveCompanyProfile(input)`
 - `submitVerification(input)`
 
-The mock keeps tenant-scoped data in memory and models the post-submit status as `pending`.
+The mock keeps tenant-scoped data in `sessionStorage` and models the post-submit status as `pending`. Verification forms lock while status is `pending` or `verified`; `rejected` allows resubmit with reviewer note display.
+
+## Phase 9 coverage (FS-130–133)
+
+- **FS-130:** `EmployerDashboardPage` — metrics, readiness steps, activity feed, Organize-only onboarding CTAs.
+- **FS-131:** `CompanyProfilePage` + `CompanyProfileForm` — BRL-052 domain, VAL-032 HTTPS, VAL-033 tax ID; Organize/Admin only.
+- **FS-132:** `CompanyVerificationPage` + `VerificationUploadForm` — document upload, attestation, pending lock, rejected resubmit.
+- **FS-133:** `EmployerDashboardLayout` — role-filtered sidebar; `/enterprise/*` subpaths redirect to `/employer/*` (public marketing remains at `/enterprise`).
 
 ## Validation
 

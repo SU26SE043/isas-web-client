@@ -49,7 +49,7 @@ export const MOCK_TICKETS: SupportTicket[] = [
 ];
 
 export const MOCK_TEAM: TeamMember[] = [
-  { id: 'tm_001', name: 'Mai Tran', email: 'mai@novaworks.ai', role: 'organize', status: 'active', lastActiveAt: '2026-07-12T03:20:00.000Z' },
-  { id: 'tm_002', name: 'Khoa Le', email: 'khoa@novaworks.ai', role: 'hr', status: 'active', lastActiveAt: '2026-07-11T12:00:00.000Z' },
-  { id: 'tm_003', name: 'Hiring Ops', email: 'ops@novaworks.ai', role: 'hr', status: 'invited', lastActiveAt: '2026-07-09T08:30:00.000Z' },
+  { id: 'tm_001', name: 'Mai Tran', email: 'mai@novaworks.ai', role: 'OrgAdmin', status: 'active', lastActiveAt: '2026-07-12T03:20:00.000Z' },
+  { id: 'tm_002', name: 'Khoa Le', email: 'khoa@novaworks.ai', role: 'HrMember', status: 'active', lastActiveAt: '2026-07-11T12:00:00.000Z' },
+  { id: 'tm_003', name: 'Hiring Ops', email: 'ops@novaworks.ai', role: 'HrMember', status: 'invited', lastActiveAt: '2026-07-09T08:30:00.000Z' },
 ];

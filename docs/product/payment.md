@@ -11,19 +11,19 @@ Both B2C and B2B bill by **AI tokens consumed**. Users **see token usage** on th
 
 ### User flow
 
-1. Candidate opens wallet at `/candidate/credits` (balance shown as token budget / VND equivalent TBD).
-2. Top up via `/candidate/payment?packageId=...` → PayOS → `/payment/callback`.
-3. **Create practice session** at `/practice` — system **reserves** estimated tokens.
-4. Complete interview → report → system **settles** actual tokens used.
-5. Usage history visible on wallet / usage screen.
+1. Candidate opens wallet at `/candidate/credits` (balance, reserved, available tokens).
+2. Top up via `/candidate/subscription` → `/candidate/payment?packageId=...` → PayOS (mock redirect) → `/payment/callback`.
+3. **Create practice session** at `/practice` — system **reserves** estimated tokens (`800` mock estimate).
+4. Complete interview → report → system **settles** actual tokens used (`620` mock actual).
+5. Usage history at `/candidate/usage` and wallet transaction log on `/candidate/credits`.
 
 ### Business rules
 
 | Rule | Behavior |
 | --- | --- |
-| BR-B2C-02 | Block session create if insufficient balance for reserve |
-| BR-B2C-03 | Reserve estimated tokens on session create |
-| BR-B2C-04 | Settle actual tokens after report |
+| BR-B2C-02 | Block session create if insufficient **available** balance for reserve |
+| BR-B2C-03 | Reserve estimated tokens on session create (`/practice`) |
+| BR-B2C-04 | Settle actual tokens after scored report |
 | BR-B2C-05 | Count tokens for CV analysis, question gen, evaluation, etc. |
 | BR-B2C-06 | Display per-session and historical token usage |
 
@@ -31,18 +31,32 @@ Both B2C and B2B bill by **AI tokens consumed**. Users **see token usage** on th
 
 | Path | Component | Notes |
 | --- | --- | --- |
-| `/candidate/credits` | `CreditsWalletPage` | Wallet + token usage (update from credit-only UI) |
-| `/candidate/subscription` | `SubscriptionPlansPage` | Review alignment with token packs |
-| `/candidate/payment` | `CheckoutPage` | PayOS checkout |
+| `/candidate/credits` | `CreditsWalletPage` | Wallet + transactions |
+| `/candidate/usage` | `TokenUsagePage` | Per-session reserve/settle history |
+| `/candidate/subscription` | `SubscriptionPlansPage` | Token packs + subscriptions |
+| `/candidate/payment` | `CheckoutPage` | PayOS checkout (mock) |
 | `/payment/callback` | `PaymentCallbackPage` | Return URL |
-| `/candidate/usage` | *TBD* | Token usage history (Tier 1 — missing route) |
 
 ### UI contract
 
-- Show **tokens used** and estimated reserve/settle on session flows.
-- Show wallet balance sufficient for reserve before practice CTA.
-- Prices may show VND; token counts must be visible.
-- Transaction and usage history on wallet/usage pages.
+- Show **tokens used**, reserved, and available on wallet and session flows.
+- `ReserveSettleBanner` in interview room (reserved) and result page (settled).
+- `useTokenWallet` (React Query) shared wallet state.
+- Prices show USD; token counts visible on packages and checkout.
+
+### Phase 7 coverage (FS-110–116)
+
+- **FS-110** Token wallet page with balance / reserved / available
+- **FS-111** Package selection (`SubscriptionPlansPage`)
+- **FS-112** Checkout + mock PayOS redirect
+- **FS-113** Payment callback updates wallet
+- **FS-114** Transaction history on wallet page
+- **FS-115** Token usage history (`/candidate/usage`)
+- **FS-116** Reserve at `/practice`, settle after report, gate checks available ≥ estimate
+
+E2E: `e2e/specs/b2c/payment-credits.spec.ts`
+
+Live PaymentService + PayOS integration TBD.
 
 ---
 
@@ -77,14 +91,14 @@ Both B2C and B2B bill by **AI tokens consumed**. Users **see token usage** on th
 ## Open product items
 
 - Token → VND conversion (fixed vs dynamic)
-- Reserve estimate formula
+- Reserve estimate formula (currently mock constant `800`)
 - Abandon session: partial settle vs release reserve
 
 ---
 
 ## Status
 
-Payment routes exist with **mock** PayOS and credit-based UI. **Rework required** for token reserve/settle (B2C) and monthly usage/invoices (B2B).
+Phase 7 B2C token wallet on **mock** PayOS with reserve/settle wired through practice flow. B2B monthly usage/invoices remain planned.
 
 ## Related
 

@@ -46,6 +46,7 @@ Browser
 - Client never calls `/internal/...` or provider webhooks.
 - JWT validated offline with shared key (no runtime AuthService call).
 - File references store keys/paths, not full URLs.
+- JSON field names: **camelCase** (ISO 8601 UTC dates, GUID as `string`, decimal as `number`) — see [`product/api-gateway.md`](./product/api-gateway.md).
 
 ## Parse-first boundary (client)
 

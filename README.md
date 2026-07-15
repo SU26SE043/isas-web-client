@@ -27,6 +27,7 @@ Open `http://localhost:5173`.
 | **Harness workflow** | [`docs/HARNESS.md`](./docs/HARNESS.md) |
 | **UI rules** | [`docs/UI_GUIDE.md`](./docs/UI_GUIDE.md) |
 | **Architecture** | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+| **API / JSON conventions** | [`docs/product/api-gateway.md`](./docs/product/api-gateway.md) |
 
 ## Harness CLI (Windows)
 

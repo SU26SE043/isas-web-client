@@ -1,16 +1,20 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
 import { useMediaDevices } from '../hooks/useMediaDevices';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 
 export const DeviceCheckPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useInterviewFlowSession(sessionId);
   const { consentAccepted, deviceCheckPassed, setDeviceCheckPassed } = useInterviewFlowStore();
   const { videoRef, state, errorKey, startPreview, stopStream } = useMediaDevices();
+  const isCampaign = isCampaignSessionId(sessionId);
 
   useEffect(() => {
     if (!consentAccepted) {
@@ -25,9 +29,11 @@ export const DeviceCheckPage: React.FC = () => {
 
   const handleContinue = () => {
     if (state !== 'ready') return;
-    setDeviceCheckPassed(true);
-    navigate(`/interview/${sessionId}/identity`);
+    setDeviceCheckPassed(sessionId, true);
+    navigate(isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/waiting`);
   };
+
+  const deviceFailed = state === 'denied' || state === 'unavailable';
 
   return (
     <InterviewFlowShell
@@ -35,6 +41,8 @@ export const DeviceCheckPage: React.FC = () => {
       currentStep="device-check"
       title={t('practice.flow.device.title')}
       description={t('practice.flow.device.description')}
+      isCampaignSession={isCampaign}
+      failedStep={deviceFailed ? 'device-check' : undefined}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-6">
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-base">
@@ -53,15 +61,23 @@ export const DeviceCheckPage: React.FC = () => {
         </div>
 
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-foreground">
+          <p
+            className={
+              state === 'ready'
+                ? 'text-sm text-success'
+                : deviceFailed
+                  ? 'text-sm text-error'
+                  : 'text-sm text-foreground'
+            }
+          >
             {state === 'ready'
               ? t('practice.flow.device.passed')
-              : state === 'denied' || state === 'unavailable'
+              : deviceFailed
                 ? t(errorKey ?? 'practice.flow.device.denied')
                 : t('practice.flow.device.hint')}
           </p>
           {deviceCheckPassed ? (
-            <p className="text-sm text-emerald-400">{t('practice.flow.device.alreadyPassed')}</p>
+            <p className="text-sm text-success">{t('practice.flow.device.alreadyPassed')}</p>
           ) : null}
         </div>
 

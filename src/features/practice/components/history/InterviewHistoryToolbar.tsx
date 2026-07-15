@@ -9,6 +9,8 @@ interface InterviewHistoryToolbarProps {
   onClearDateFilter?: () => void;
   compareMode?: boolean;
   onToggleCompareMode?: () => void;
+  showHidden?: boolean;
+  onToggleShowHidden?: () => void;
 }
 
 export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = ({
@@ -19,6 +21,8 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
   onClearDateFilter,
   compareMode = false,
   onToggleCompareMode,
+  showHidden = false,
+  onToggleShowHidden,
 }) => {
   const { t } = useLanguage();
 
@@ -57,6 +61,15 @@ export const InterviewHistoryToolbar: React.FC<InterviewHistoryToolbarProps> = (
         ) : null}
       </div>
       <div className="flex items-center gap-2">
+        {onToggleShowHidden ? (
+          <button
+            type="button"
+            onClick={onToggleShowHidden}
+            className={showHidden ? 'btn-primary text-sm' : 'btn-secondary text-sm'}
+          >
+            {showHidden ? t('practice.history.showActive') : t('practice.history.showHidden')}
+          </button>
+        ) : null}
         {onToggleCompareMode ? (
           <button
             type="button"

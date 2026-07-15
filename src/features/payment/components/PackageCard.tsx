@@ -1,8 +1,8 @@
 import { useLanguage } from '@/shared/languages';
-import type { CreditPackage } from '../types/payment.types';
+import type { TokenPackage } from '../types/payment.types';
 
 interface PackageCardProps {
-  item: CreditPackage;
+  item: TokenPackage;
   language: 'vi' | 'en';
   selected?: boolean;
   onSelect: (packageId: string) => void;
@@ -30,7 +30,9 @@ export function PackageCard({ item, language, selected = false, onSelect }: Pack
       <h3 className="heading-secondary text-lg text-foreground">{title}</h3>
       <p className="body-text mt-2 flex-1 text-sm text-muted-foreground">{description}</p>
       <p className="mt-4 text-3xl font-semibold text-foreground">${item.priceUsd}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{item.credits} credits</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {t('payment.plans.tokenCount').replace('{count}', item.tokens.toLocaleString())}
+      </p>
     </button>
   );
 }
