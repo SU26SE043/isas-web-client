@@ -93,6 +93,28 @@
   --text-secondary: var(--isas-gray-400);
   --text-disabled: var(--isas-gray-600);
 
+  /* === CHART / DATA VIZ (semantic exception — not structural chrome) ===
+     Colorblind-aware categorical order: indigo → teal → amber → rose → cyan → violet → lime
+     (no adjacent red/green of similar lightness). Soft saturation for dark BG, not neon. */
+  --chart-cat-1: #818cf8; /* indigo */
+  --chart-cat-2: #2dd4bf; /* teal */
+  --chart-cat-3: #fbbf24; /* amber */
+  --chart-cat-4: #fb7185; /* rose */
+  --chart-cat-5: #22d3ee; /* cyan */
+  --chart-cat-6: #c084fc; /* violet */
+  --chart-cat-7: #a3e635; /* lime */
+
+  --chart-radar-stroke: var(--chart-cat-1);
+  --chart-radar-fill: rgb(129 140 248 / 0.25);
+  --chart-radar-target-stroke: var(--chart-cat-3);
+  --chart-radar-target-fill: rgb(251 191 36 / 0.2);
+
+  --chart-grid: #334155;
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: var(--surface-elevated);
+  --chart-tooltip-border: var(--border-strong);
+  --chart-tooltip-shadow: var(--shadow-lg);
+
   /* === SHADCN / COMPONENT TOKENS === */
   --background: var(--surface-base);
   --foreground: var(--text-primary);
