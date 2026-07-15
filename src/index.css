@@ -30,13 +30,29 @@
   --color-surface-highlight: var(--surface-highlight);
 
   --color-success: var(--isas-success);
+  --color-success-light: var(--isas-success-light);
+  --color-success-dark: var(--isas-success-dark);
   --color-success-bg: var(--isas-success-bg);
   --color-error: var(--isas-error);
+  --color-error-light: var(--isas-error-light);
+  --color-error-dark: var(--isas-error-dark);
   --color-error-bg: var(--isas-error-bg);
   --color-warning: var(--isas-warning);
+  --color-warning-light: var(--isas-warning-light);
+  --color-warning-dark: var(--isas-warning-dark);
   --color-warning-bg: var(--isas-warning-bg);
   --color-info: var(--isas-info);
+  --color-info-light: var(--isas-info-light);
+  --color-info-dark: var(--isas-info-dark);
   --color-info-bg: var(--isas-info-bg);
+
+  --color-primary-light: var(--primary-light);
+  --color-primary-main: var(--primary-main);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary-main: var(--secondary-main);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-disabled: var(--text-disabled);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -283,8 +299,8 @@ select {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background-color: var(--isas-white);
-    color: var(--isas-black);
+    background-color: var(--primary-main);
+    color: var(--primary-foreground);
     border: 1px solid transparent;
     border-radius: var(--radius-lg);
     padding: 0.625rem 1.125rem;
@@ -298,12 +314,22 @@ select {
   }
 
   .btn-primary:hover {
-    background-color: var(--isas-gray-100);
+    background-color: var(--primary-light);
     box-shadow: var(--shadow-sm);
   }
 
   .btn-primary:active {
+    background-color: var(--primary-dark);
     transform: scale(0.98);
+  }
+
+  .btn-primary:disabled,
+  .btn-primary[aria-disabled='true'] {
+    background-color: var(--surface-overlay);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
   }
 
   .btn-secondary {

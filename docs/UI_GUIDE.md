@@ -61,17 +61,33 @@ Tokens nằm ở `src/styles/colors.css`. Utilities ở `src/index.css`.
 | `border-default` | default satin alpha |
 | `--border-focus` | stronger silver focus |
 
-## Typography
+## Typography & text tokens
 
-| Class | Dùng cho |
+| Class / Token | Dùng cho |
 |-------|----------|
 | `heading-primary` | Page title (font-semibold, tracking-tight) |
 | `heading-secondary` | Section title |
 | `body-text` | Paragraph (muted) |
 | `text-label` | Uppercase label (xs, tracking-wide) |
 | `text-caption` | Helper text |
+| `--text-primary` / `text-text-primary` | Tiêu đề & nội dung chính (`#fafafa`) |
+| `--text-secondary` / `text-text-secondary` | Phụ đề, mô tả, placeholder (`#a1a1aa`) |
+| `--text-disabled` / `text-text-disabled` | Disabled control copy (`#52525b`) |
 
 Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
+
+## Action colors (Monochrome+ — không brand hue)
+
+Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover & pressed.
+
+| Token / Class | Hex | Dùng |
+|---------------|-----|------|
+| `--primary-main` / `bg-primary-main` | `#ffffff` | Default CTA fill |
+| `--primary-light` / `bg-primary-light` | `#f4f4f5` | Hover (soft near-white) |
+| `--primary-dark` / `bg-primary-dark` | `#e4e4e7` | Active / pressed |
+| `--secondary-main` / `text-secondary-main` | silver `#cfd6df` | Accent phụ / outline soft |
+
+`btn-primary` map: default → main · hover → light · active → dark · disabled → `text-disabled` on overlay.
 
 ## Layout utilities
 
@@ -147,6 +163,17 @@ import { SelectionOption } from '@/components/ui/selection-option';
 
 Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, recording indicator, Google OAuth logo.
 
+Mỗi semantic có **main** + **light** (hover) + **dark** (pressed) + **bg** (tint trên nền tối):
+
+| Role | main | light | dark | bg |
+|------|------|-------|------|-----|
+| Success | `#22c55e` | `#4ade80` | `#16a34a` | 12% tint |
+| Error | `#ef4444` | `#f87171` | `#dc2626` | 12% tint |
+| Warning | `#f97316` | `#fb923c` | `#ea580c` | 12% tint |
+| Info | `#3b82f6` | `#60a5fa` | `#2563eb` | 12% tint |
+
+Tailwind: `text-success` / `text-success-light` / `bg-success-bg` (và tương tự error / warning / info).
+
 ### Multi-step steppers (status)
 
 Wizard / interview / CV flow steppers dùng `src/components/ui/flow-stepper.tsx`:
@@ -155,10 +182,11 @@ Wizard / interview / CV flow steppers dùng `src/components/ui/flow-stepper.tsx`
 |-------------|--------|
 | `complete` | Green marker + label (`text-success` / `bg-success-bg`) + check icon |
 | `error` / failed | Red marker + label (`text-error` / `bg-error-bg`) + X icon |
-| `current` | Monochrome white marker (active step) |
+| `processing` | Info blue + spinner (`text-info`) |
+| `current` | Monochrome/info active step |
 | `pending` | Muted satin / muted text |
 
-Không invent brand hex — chỉ token semantic success/error.
+Không invent brand hex — chỉ token semantic success/error/info.
 
 ## Files
 
