@@ -42,6 +42,8 @@ All public API calls go through Gateway:
 
 Configure base URL via environment. Auth uses JWT stored client-side; gateway validates offline with shared key (see backend `AGENTS.md`).
 
+JSON payloads: camelCase fields, ISO 8601 UTC dates, GUID as `string`, decimal as `number` — see [`api-gateway.md`](./api-gateway.md).
+
 ## UI rules
 
 Read `docs/UI_GUIDE.md` before any UI work — dark monochrome only, semantic colors for status.

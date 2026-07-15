@@ -2,8 +2,8 @@
  * Auth.md types some responses as ApiResponse<T>; Isas.AuthService returns raw DTOs.
  * Accept both shapes so axios interceptors and authService stay aligned.
  *
- * AuthService DTOs are C# PascalCase; ASP.NET may emit camelCase or PascalCase
- * depending on serializer config — read both.
+ * Gateway JSON fields are camelCase (see docs/product/api-gateway.md). Prefer those
+ * keys first; keep PascalCase fallbacks for resilience if a serializer emits them.
  */
 
 export interface AuthTokensResponse {

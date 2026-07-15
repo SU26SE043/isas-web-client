@@ -52,7 +52,7 @@ When BRD and product docs disagree on **business intent**, update BRD after disc
 
 
 
-| [api-gateway.md](./api-gateway.md) | Gateway client conventions |
+| [api-gateway.md](./api-gateway.md) | Gateway routing + JSON payload conventions (camelCase, dates, GUIDs) |
 
 ## UI
 

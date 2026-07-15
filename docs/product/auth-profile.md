@@ -4,7 +4,7 @@ BRD: `BRD/User_Roles_and_Permissions.md`, `BRD/Security_Requirements.md`, FR-001
 
 ## Roles
 
-Canonical Auth Identity values (PascalCase). Guest is client-only (unauthenticated).
+Canonical Auth Identity **values** (PascalCase strings, e.g. `Candidate`). Guest is client-only (unauthenticated). JSON **field names** remain camelCase — see [`api-gateway.md`](./api-gateway.md).
 
 | Role | API value | Scope |
 | --- | --- | --- |
