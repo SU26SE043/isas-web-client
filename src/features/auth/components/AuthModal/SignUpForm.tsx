@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
+import { HttpStatus } from '../../../../shared/constants/http-status';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
 import { validatePassword } from '../../utils/passwordPolicy';
@@ -56,7 +57,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       navigate(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`, { replace: true });
     } catch (error) {
       const statusCode = getApiStatusCode(error);
-      if (statusCode === 400 || statusCode === 409) {
+      if (statusCode === HttpStatus.BAD_REQUEST || statusCode === HttpStatus.CONFLICT) {
         setStatusMessage(t('auth.emailAlreadyUsed'));
       } else {
         setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));

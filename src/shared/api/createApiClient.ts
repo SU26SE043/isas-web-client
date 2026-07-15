@@ -1,5 +1,7 @@
 import axios from 'axios';
+import { HttpStatus } from '@/shared/constants/http-status';
 import { getApiBaseUrl } from '../config';
+import { toApiError } from './apiError';
 import { parseAuthTokens } from './authPayload';
 import { authTokenStorage } from './authTokenStorage';
 import { notifyUnauthorized } from './unauthorizedHandler';
@@ -41,9 +43,10 @@ export const createApiClient = () => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
+      const status = toApiError(error)?.status ?? error.response?.status;
 
       if (!originalRequest || originalRequest._retry) {
-        if (error.response?.status === 401) {
+        if (status === HttpStatus.UNAUTHORIZED) {
           handleSessionExpired();
         }
         return Promise.reject(error);
@@ -55,7 +58,7 @@ export const createApiClient = () => {
         originalRequest.url?.includes('/auth/register') ||
         originalRequest.url?.includes('/auth/logout');
 
-      if (error.response?.status === 401 && !isAuthEndpoint) {
+      if (status === HttpStatus.UNAUTHORIZED && !isAuthEndpoint) {
         originalRequest._retry = true;
 
         if (!isRefreshing) {

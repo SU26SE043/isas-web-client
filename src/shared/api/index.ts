@@ -1,6 +1,7 @@
 export { apiClient } from './apiClient';
 export { createApiClient } from './createApiClient';
-export { getApiErrorMessage, getApiStatusCode } from './apiError';
+export { getApiErrorMessage, getApiStatusCode, toApiError } from './apiError';
+export type { ApiError } from './apiError';
 export { parseAuthTokens, unwrapAuthPayload } from './authPayload';
 export type { AuthTokensResponse } from './authPayload';
 export { authTokenStorage } from './authTokenStorage';
