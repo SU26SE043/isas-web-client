@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "./styles/colors.css";
 
 @theme {
@@ -107,8 +106,8 @@ select {
 
   .surface-raised {
     background-color: var(--surface-raised);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--shadow-xs);
   }
 
   .surface-overlay {
@@ -118,8 +117,77 @@ select {
 
   .surface-elevated {
     background-color: var(--surface-elevated);
-    border: 1px solid var(--border-default);
-    box-shadow: var(--shadow-md);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--shadow-md);
+  }
+
+  /* Satin silver frame — project default for tables, cards, panels */
+  .frame-satin {
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--satin-glow);
+  }
+
+  .frame-satin-soft {
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--satin-inset);
+  }
+
+  .frame-satin-interactive {
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--satin-glow);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+
+  .frame-satin-interactive:hover {
+    border-color: var(--satin-border-hover);
+  }
+
+  /* Optional top edge reflection wash (keep low contrast) */
+  .frame-satin-metallic {
+    border: 1px solid transparent;
+    background-image:
+      linear-gradient(var(--surface-raised), var(--surface-raised)),
+      var(--satin-reflection);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: var(--satin-inset), var(--satin-glow);
+  }
+
+  /* Glass panels — bright-black glass + satin edge (matches upload/wizard cards) */
+  .glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--satin-border);
+    box-shadow: var(--satin-inset), var(--satin-glow);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+  }
+
+  .glass-well {
+    background: rgb(0 0 0 / 0.22);
+    border: 1px dashed var(--satin-border);
+    box-shadow: var(--satin-inset);
+  }
+
+  .glass-well:hover {
+    border-color: var(--satin-border-hover);
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  .glass-sidebar {
+    background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
+    border-color: var(--satin-border);
+    backdrop-filter: blur(var(--blur-lg));
+    -webkit-backdrop-filter: blur(var(--blur-lg));
+  }
+
+  .glass-topbar {
+    background: color-mix(in srgb, var(--surface-base) 78%, transparent);
+    border-color: var(--border-subtle);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
   }
 
   .border-subtle {
@@ -128,6 +196,10 @@ select {
 
   .border-default {
     border-color: var(--border-default);
+  }
+
+  .border-satin {
+    border-color: var(--satin-border);
   }
 
   /* === LAYOUT === */
@@ -143,14 +215,15 @@ select {
   }
 
   .dashboard-content {
-    padding: clamp(1rem, 3vw, 1.5rem);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
   }
 
   /* === TYPOGRAPHY === */
   .heading-primary {
     font-family: var(--font-heading);
     font-weight: 600;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
+    line-height: var(--leading-tight);
     color: var(--foreground);
   }
 
@@ -158,6 +231,7 @@ select {
     font-family: var(--font-heading);
     font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
     color: var(--foreground);
   }
 
@@ -212,16 +286,20 @@ select {
     background-color: var(--isas-white);
     color: var(--isas-black);
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    padding: 0.625rem 1rem;
+    border-radius: var(--radius-lg);
+    padding: 0.625rem 1.125rem;
     font-size: var(--text-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    transition:
+      background-color var(--transition-fast),
+      transform var(--transition-fast),
+      box-shadow var(--transition-fast);
   }
 
   .btn-primary:hover {
-    background-color: var(--isas-gray-200);
+    background-color: var(--isas-gray-100);
+    box-shadow: var(--shadow-sm);
   }
 
   .btn-primary:active {
@@ -235,18 +313,23 @@ select {
     gap: 0.5rem;
     background-color: transparent;
     color: var(--foreground);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-md);
-    padding: 0.5625rem 0.9375rem;
+    border: 1px solid var(--satin-border);
+    border-radius: var(--radius-lg);
+    padding: 0.5625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    box-shadow: var(--satin-inset);
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
   }
 
   .btn-secondary:hover {
-    background-color: var(--surface-overlay);
-    border-color: var(--border-strong);
+    background-color: var(--glass-highlight);
+    border-color: var(--satin-border-hover);
+    box-shadow: var(--satin-inset), var(--satin-glow);
   }
 
   .btn-accent {
@@ -256,16 +339,17 @@ select {
     background-color: var(--surface-overlay);
     color: var(--isas-gray-200);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
   }
 
   .btn-accent:hover {
     background-color: var(--surface-elevated);
+    border-color: var(--border-default);
   }
 
   .btn-ghost {
@@ -275,7 +359,7 @@ select {
     background-color: transparent;
     color: var(--isas-gray-400);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -284,7 +368,7 @@ select {
   }
 
   .btn-ghost:hover {
-    background-color: var(--surface-overlay);
+    background-color: var(--glass-highlight);
     color: var(--foreground);
   }
 
@@ -322,7 +406,7 @@ select {
     inset: 50%;
     rotate: 30deg;
     background-color: var(--isas-white);
-    transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 600ms var(--ease-out);
     z-index: 0;
   }
 

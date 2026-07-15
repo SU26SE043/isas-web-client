@@ -1,60 +1,56 @@
-import type { InterviewHistoryResponse } from '../types/history.types';
+import { mockDelay, usesMockData } from '@/shared/mock';
+import type {
+  InterviewHistoryItem,
+  InterviewHistoryQuery,
+  InterviewHistoryResponse,
+} from '../types/history.types';
+import { MOCK_INTERVIEW_HISTORY } from '../mocks/history.fixtures';
 
-export const fetchInterviewHistory = async (): Promise<InterviewHistoryResponse> => {
-  // Mock data for development
-  const mockInterviews = [
-    {
-      id: 'interview-1',
-      jobTitle: 'Frontend Developer',
-      company: 'TechCorp',
-      date: '2024-03-15T10:30:00Z',
-      status: 'completed' as const,
-      overallScore: 85,
-      duration: 45,
-    },
-    {
-      id: 'interview-2',
-      jobTitle: 'Full Stack Engineer',
-      company: 'StartupX',
-      date: '2024-03-10T14:00:00Z',
-      status: 'completed' as const,
-      overallScore: 72,
-      duration: 60,
-    },
-    {
-      id: 'interview-3',
-      jobTitle: 'React Developer',
-      company: 'DigitalAgency',
-      date: '2024-03-05T09:15:00Z',
-      status: 'in-progress' as const,
-      overallScore: 0,
-      duration: 30,
-    },
-    {
-      id: 'interview-4',
-      jobTitle: 'UI/UX Engineer',
-      company: 'DesignStudio',
-      date: '2024-02-28T11:45:00Z',
-      status: 'completed' as const,
-      overallScore: 91,
-      duration: 50,
-    },
-    {
-      id: 'interview-5',
-      jobTitle: 'JavaScript Developer',
-      company: 'WebSolutions',
-      date: '2024-02-20T16:30:00Z',
-      status: 'pending' as const,
-      overallScore: 0,
-      duration: 40,
-    },
-  ];
+let historyStore: InterviewHistoryItem[] = MOCK_INTERVIEW_HISTORY.map((item) => ({ ...item }));
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+function getVisibleInterviews(includeDeleted: boolean) {
+  return historyStore.filter((item) => includeDeleted || !item.deletedAt);
+}
+
+export async function fetchInterviewHistory(
+  query: InterviewHistoryQuery = {},
+): Promise<InterviewHistoryResponse> {
+  if (!usesMockData('practice')) {
+    throw new Error('Practice history API is not wired yet. Keep usesMockData("practice") true.');
+  }
+
+  await mockDelay(300);
+
+  const page = query.page ?? 1;
+  const pageSize = query.pageSize ?? 10;
+  const visible = getVisibleInterviews(query.includeDeleted ?? false);
 
   return {
-    interviews: mockInterviews,
-    total: mockInterviews.length,
+    interviews: visible,
+    total: visible.length,
+    page,
+    pageSize,
   };
-};
+}
+
+export async function softDeleteInterview(interviewId: string): Promise<void> {
+  if (!usesMockData('practice')) {
+    throw new Error('Practice history API is not wired yet. Keep usesMockData("practice") true.');
+  }
+
+  await mockDelay(200);
+  historyStore = historyStore.map((item) =>
+    item.id === interviewId ? { ...item, deletedAt: new Date().toISOString() } : item,
+  );
+}
+
+export async function restoreInterview(interviewId: string): Promise<void> {
+  if (!usesMockData('practice')) {
+    throw new Error('Practice history API is not wired yet. Keep usesMockData("practice") true.');
+  }
+
+  await mockDelay(200);
+  historyStore = historyStore.map((item) =>
+    item.id === interviewId ? { ...item, deletedAt: null } : item,
+  );
+}

@@ -1,75 +1,160 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { AuthOverlay } from './AuthOverlay';
 import { useLanguage } from '../../../../shared/languages';
+import {
+  backdropVariants,
+  modalShellVariants,
+  modalTransition,
+  panelTransition,
+} from './authModal.animations';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialView?: 'login' | 'signup';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login' }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { t } = useLanguage();
+  const reducedMotion = useReducedMotion();
 
-  if (!isOpen) return null;
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const handleSignUpClick = useCallback(() => {
+    setIsSignUp(true);
+    setIsForgotPassword(false);
+  }, []);
+
+  const handleSignInClick = useCallback(() => {
+    setIsSignUp(false);
+    setIsForgotPassword(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsSignUp(initialView === 'signup');
+      setIsForgotPassword(false);
+    }
+  }, [isOpen, initialView]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = window.setTimeout(() => {
+        setIsSignUp(false);
+        setIsForgotPassword(false);
+      }, reducedMotion ? 0 : 550);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [isOpen, reducedMotion]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, handleClose]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Overlay Background */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal Container */}
-      <div className="relative w-full max-w-[800px] h-[550px] surface-elevated rounded-xl overflow-hidden flex z-10">
-        
-        {/* Close Button (Absolute positioned on top of everything) */}
-        <button 
-          onClick={onClose}
-          className={`absolute top-4 right-4 z-50 p-2 rounded-full transition-colors ${isSignUp ? 'text-muted-foreground hover:text-foreground' : 'text-white/80 hover:text-foreground'} `}
-          aria-label={t('auth.close')}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* --- Form Container (Moves Left <-> Right) --- */}
-        <div className={`absolute top-0 left-0 w-1/2 h-full bg-surface-raised transition-transform duration-700 ease-in-out z-10 ${isSignUp ? 'translate-x-full' : 'translate-x-0'}`}>
-          
-          <SignInForm 
-            isSignUp={isSignUp} 
-            isForgotPassword={isForgotPassword} 
-            onForgotPasswordClick={() => setIsForgotPassword(true)} 
-            onLoginSuccess={onClose}
+    <AnimatePresence>
+      {isOpen ? (
+        <>
+          <motion.div
+            key="auth-modal-backdrop"
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md"
+            variants={backdropVariants(reducedMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={modalTransition(reducedMotion)}
+            onClick={handleClose}
+            aria-hidden="true"
           />
 
-          <ForgotPasswordForm 
-            isSignUp={isSignUp} 
-            isForgotPassword={isForgotPassword} 
-            onBackToSignInClick={() => setIsForgotPassword(false)} 
-          />
+          <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              key="auth-modal-shell"
+              role="dialog"
+              aria-modal="true"
+              aria-label={isSignUp ? t('auth.signUpTitle') : t('auth.signInTitle')}
+              className="pointer-events-auto relative flex h-[550px] w-full max-w-[800px] overflow-hidden rounded-xl surface-elevated"
+              variants={modalShellVariants(reducedMotion)}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              transition={modalTransition(reducedMotion)}
+              onClick={(event) => event.stopPropagation()}
+            >
+            <button
+              type="button"
+              onClick={handleClose}
+              className={`absolute top-4 right-4 z-50 rounded-full p-2 transition-colors focus-ring ${
+                isSignUp ? 'text-muted-foreground hover:text-foreground' : 'text-white/80 hover:text-foreground'
+              }`}
+              aria-label={t('auth.close')}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-          <SignUpForm 
-            isSignUp={isSignUp} 
-            onRegisterSuccess={onClose}
-          />
+            <motion.div
+              className="absolute top-0 left-0 z-10 h-full w-1/2 bg-surface-raised"
+              animate={{ x: isSignUp ? '100%' : '0%' }}
+              transition={panelTransition(reducedMotion)}
+            >
+              <SignInForm
+                isSignUp={isSignUp}
+                isForgotPassword={isForgotPassword}
+                onForgotPasswordClick={() => setIsForgotPassword(true)}
+                onLoginSuccess={handleClose}
+                reducedMotion={reducedMotion}
+              />
 
-        </div>
+              <ForgotPasswordForm
+                isSignUp={isSignUp}
+                isForgotPassword={isForgotPassword}
+                onBackToSignInClick={() => setIsForgotPassword(false)}
+                reducedMotion={reducedMotion}
+              />
 
-        {/* --- Overlay Container (Moves Right <-> Left) --- */}
-        <AuthOverlay 
-          isSignUp={isSignUp}
-          onSignUpClick={() => { setIsSignUp(true); setIsForgotPassword(false); }}
-          onSignInClick={() => { setIsSignUp(false); setIsForgotPassword(false); }}
-        />
+              <SignUpForm
+                isSignUp={isSignUp}
+                onRegisterSuccess={handleSignInClick}
+                reducedMotion={reducedMotion}
+              />
+            </motion.div>
 
-      </div>
-    </div>
+            <AuthOverlay
+              isSignUp={isSignUp}
+              onSignUpClick={handleSignUpClick}
+              onSignInClick={handleSignInClick}
+              reducedMotion={reducedMotion}
+            />
+            </motion.div>
+          </div>
+        </>
+      ) : null}
+    </AnimatePresence>
   );
 };

@@ -7,9 +7,15 @@ export const layoutTranslations: TranslationDictionary = {
     'language.english': 'English',
 
     'nav.home': 'Trang chủ',
+    'nav.features': 'Tính năng',
+    'nav.pricing': 'Bảng giá',
+    'nav.enterprise': 'Doanh nghiệp',
+    'nav.main': 'Điều hướng chính',
+    'nav.mobileMenu': 'Mở menu điều hướng',
     'nav.dashboard': 'Bảng điều khiển',
     'nav.profile': 'Cá nhân',
     'nav.signIn': 'Đăng nhập',
+    'nav.signUp': 'Đăng ký',
     'nav.getStarted': 'Bắt đầu ngay',
     'nav.logout': 'Đăng xuất',
 
@@ -17,8 +23,8 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.products': 'Sản phẩm',
     'footer.aiInterview': 'Luyện phỏng vấn AI',
     'footer.cvAnalysis': 'Phân tích CV',
-    'footer.tests': 'Kho bài test năng lực',
-    'footer.community': 'Cộng đồng ISAS',
+    'footer.pricing': 'Bảng giá',
+    'footer.enterprise': 'Doanh nghiệp',
     'footer.support': 'Hỗ trợ',
     'footer.helpCenter': 'Trung tâm trợ giúp',
     'footer.guide': 'Hướng dẫn sử dụng',
@@ -28,6 +34,7 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Nhận tin tức mới nhất về công nghệ và nghề nghiệp.',
     'footer.emailPlaceholder': 'Email của bạn',
     'footer.subscribe': 'Đăng ký',
+    'footer.rightsReserved': 'PIpraint. Bảo lưu mọi quyền.',
 
     'common.accessDenied': 'Không có quyền truy cập',
     'common.accessDeniedDescription': 'Vai trò của bạn không được phép truy cập trang này.',
@@ -36,9 +43,9 @@ export const layoutTranslations: TranslationDictionary = {
     'common.itemsPerPage': 'Số mục mỗi trang',
 
     'route.authShell': 'Nhóm route xác thực — shell Phase 0',
-    'route.employerShell': 'Nhóm route nhà tuyển dụng — shell Phase 0',
+    'route.enterpriseShell': 'Nhóm route Doanh nghiệp — shell Phase 0',
     'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
-    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng ISAS.',
+    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng PIpraint.',
   },
   en: {
     'language.label': 'Language',
@@ -46,9 +53,15 @@ export const layoutTranslations: TranslationDictionary = {
     'language.english': 'English',
 
     'nav.home': 'Home',
+    'nav.features': 'Features',
+    'nav.pricing': 'Pricing',
+    'nav.enterprise': 'Enterprise',
+    'nav.main': 'Main navigation',
+    'nav.mobileMenu': 'Open navigation menu',
     'nav.dashboard': 'Dashboard',
     'nav.profile': 'Profile',
     'nav.signIn': 'Sign in',
+    'nav.signUp': 'Sign up',
     'nav.getStarted': 'Get started',
     'nav.logout': 'Logout',
 
@@ -56,8 +69,8 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.products': 'Products',
     'footer.aiInterview': 'AI interview practice',
     'footer.cvAnalysis': 'CV analysis',
-    'footer.tests': 'Skill test library',
-    'footer.community': 'ISAS community',
+    'footer.pricing': 'Pricing',
+    'footer.enterprise': 'Enterprise',
     'footer.support': 'Support',
     'footer.helpCenter': 'Help center',
     'footer.guide': 'User guide',
@@ -67,6 +80,7 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Get the latest updates about technology and careers.',
     'footer.emailPlaceholder': 'Your email',
     'footer.subscribe': 'Subscribe',
+    'footer.rightsReserved': 'PIpraint. All rights reserved.',
 
     'common.accessDenied': 'Access denied',
     'common.accessDeniedDescription': 'Your role is not allowed to access this page.',
@@ -75,8 +89,8 @@ export const layoutTranslations: TranslationDictionary = {
     'common.itemsPerPage': 'Items per page',
 
     'route.authShell': 'Auth route group — Phase 0 shell',
-    'route.employerShell': 'Employer route group — Phase 0 shell',
+    'route.enterpriseShell': 'Enterprise route group — Phase 0 shell',
     'route.adminShell': 'Admin route group — Phase 0 shell',
-    'auth.loginPrompt': 'Sign in to continue to ISAS.',
+    'auth.loginPrompt': 'Sign in to continue to PIpraint.',
   },
 };

@@ -3,9 +3,12 @@ import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { AuthModal } from '../components/AuthModal';
 import { authService } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../stores/authStore';
+import { UserRole } from '../types/auth.types';
 import { useLanguage } from '../../../shared/languages';
 
 vi.mock('../services/authService', () => ({
@@ -58,8 +61,25 @@ describe('AuthModal integration', () => {
       refreshToken: 'refresh-token',
       expiresAt: '2026-01-01T00:00:00.000Z',
     });
+    fetchUser.mockImplementation(async () => {
+      const profile = {
+        id: '1',
+        fullName: 'Test User',
+        email: 'test@example.com',
+        location: '',
+        title: '',
+        role: UserRole.CANDIDATE,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+      useAuthStore.getState().setUser(profile);
+      return profile;
+    });
 
-    render(<AuthModal isOpen={true} onClose={onClose} />);
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
 
     // Use only the visible email/password fields (sign-in form)
     const emailInputs = screen.getAllByPlaceholderText('auth.emailPlaceholder');
@@ -91,7 +111,11 @@ describe('AuthModal integration', () => {
   it('shows validation message when submitting empty login form', async () => {
     const user = userEvent.setup();
 
-    render(<AuthModal isOpen={true} onClose={onClose} />);
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
 
     // Find and click the sign-in button without filling in the form
     const signInButtons = screen.getAllByRole('button', { name: 'auth.signInTitle' });
@@ -109,7 +133,11 @@ describe('AuthModal integration', () => {
   it('switches to forgot password form when forgot password is clicked', async () => {
     const user = userEvent.setup();
 
-    render(<AuthModal isOpen={true} onClose={onClose} />);
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
 
     const forgotButtons = screen.getAllByRole('button', { name: 'auth.forgotPassword' });
     await user.click(forgotButtons[0]);
@@ -122,15 +150,14 @@ describe('AuthModal integration', () => {
   it('calls loginWithGoogle when clicking Google button', async () => {
     const user = userEvent.setup();
 
-    render(<AuthModal isOpen={true} onClose={onClose} />);
-
-    // Find the Google button by text content
-    const googleButtons = screen.getAllByRole('button');
-    const googleButton = googleButtons.find(btn =>
-      btn.textContent?.toLowerCase().includes('google')
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
     );
-    if (!googleButton) throw new Error('Google button not found');
-    await user.click(googleButton);
+
+    const googleButtons = screen.getAllByRole('button', { name: 'auth.continueWithGoogle' });
+    await user.click(googleButtons[0]);
 
     expect(mockedAuthService.loginWithGoogle).toHaveBeenCalledTimes(1);
   });

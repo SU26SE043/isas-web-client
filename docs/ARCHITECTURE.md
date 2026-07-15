@@ -46,6 +46,7 @@ Browser
 - Client never calls `/internal/...` or provider webhooks.
 - JWT validated offline with shared key (no runtime AuthService call).
 - File references store keys/paths, not full URLs.
+- JSON field names: **camelCase** (ISO 8601 UTC dates, GUID as `string`, decimal as `number`) — see [`product/api-gateway.md`](./product/api-gateway.md).
 
 ## Parse-first boundary (client)
 
@@ -62,10 +63,12 @@ HTTP response
 
 Same interview engine UI; distinguished by `campaign_id`:
 
-- `null` → B2C practice (personal credit wallet).
-- set → B2B campaign session (magic link, org ranking).
+- `null` → B2C practice (prepaid **token** wallet — reserve on create, settle after report). See [`product/payment.md`](./product/payment.md).
+- set → B2B campaign session (magic link only, proctoring, org ranking). See [`product/campaign-assessment.md`](./product/campaign-assessment.md).
 
-Interview room components stay campaign-agnostic (BRD D1).
+Interview room components stay campaign-agnostic (BRD D1). B2B adds proctoring overlay, periodic face capture, violation pause per product contract.
+
+**Product scope:** [`product/product-scope.md`](./product/product-scope.md) · **Module map:** [`product/module-scope.md`](./product/module-scope.md) · **Development plan:** [`FRONTEND_MASTER_PLAN.md`](./FRONTEND_MASTER_PLAN.md).
 
 ## Observability (client)
 

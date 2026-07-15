@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { AuthModal } from '../features/auth/components/AuthModal';
 import { AvatarDropdown } from '../features/auth/components/AvatarDropdown';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { getProfileHomePath } from '../features/auth/utils/getPostLoginPath';
+import { UserRole } from '../features/auth/types/auth.types';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+  const { isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
+
+  const openAuth = (view: 'login' | 'signup') => {
+    setAuthView(view);
+    setIsAuthModalOpen(true);
+  };
+
+  const profilePath = getProfileHomePath(user?.role ?? UserRole.GUEST);
 
   return (
     <>
@@ -17,20 +28,18 @@ export const Header: React.FC = () => {
         <div className="page-container">
           <div className="flex h-16 items-center justify-between gap-6">
             <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
-              <img
-                alt="ISAS Logo"
-                className="h-8 w-auto object-contain"
-                src="/logo-horizontal-white.png"
-              />
+              <BrandLogo />
             </Link>
 
             <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
               <Link className="nav-link focus-ring rounded-md" to="/">
                 {t('nav.home')}
               </Link>
-              <Link className="nav-link focus-ring rounded-md" to="/profile">
-                {t('nav.profile')}
-              </Link>
+              {isAuthenticated ? (
+                <Link className="nav-link focus-ring rounded-md" to={profilePath}>
+                  {t('nav.profile')}
+                </Link>
+              ) : null}
             </nav>
 
             <div className="flex items-center gap-3">
@@ -41,17 +50,13 @@ export const Header: React.FC = () => {
                 <>
                   <button
                     type="button"
-                    onClick={() => setIsAuthModalOpen(true)}
+                    onClick={() => openAuth('login')}
                     className="btn-secondary hidden sm:inline-flex"
                   >
                     {t('nav.signIn')}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="btn-primary"
-                  >
-                    {t('nav.getStarted')}
+                  <button type="button" onClick={() => openAuth('signup')} className="btn-primary">
+                    {t('nav.signUp')}
                   </button>
                 </>
               )}
@@ -63,6 +68,7 @@ export const Header: React.FC = () => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        initialView={authView}
       />
     </>
   );

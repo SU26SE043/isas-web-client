@@ -5,32 +5,66 @@ Living frontend contracts for **ISAS Web Client**. Distilled from `BRD/` — the
 ## Source hierarchy
 
 ```text
-BRD/                          ← Full product spec (business truth, Vietnamese)
-docs/product/*.md             ← Frontend living contracts (English, agent-readable)
+BRD/                          ← Full business spec (business truth, Vietnamese)
+docs/product/product-scope.md ← Product definition (discovery — authoritative for product)
+docs/product/module-scope.md  ← Modules, routes, screen inventory
+docs/product/*.md             ← Per-domain living contracts
+docs/FRONTEND_MASTER_PLAN.md  ← Development phases, stories, E2E (sync with product/)
 docs/stories/                 ← Work packets + backlog
 src/                          ← Implementation
 ```
 
-When BRD and product docs disagree, BRD wins for business intent; product docs win for shipped client behavior until BRD is formally updated.
+When BRD and product docs disagree on **business intent**, update BRD after discovery sign-off. For **shipped client behavior**, `docs/product/*` wins until code changes.
 
-## Contracts
+## Product foundation (start here)
 
 | File | Domain |
 | --- | --- |
-| [overview.md](./overview.md) | Product scope, modules, personas |
+| [product-scope.md](./product-scope.md) | Product definition, tiers, workflows, business rules |
+| [module-scope.md](./module-scope.md) | Module map, routes, screen inventory, gaps, discovery reconcile |
+
+## Domain contracts
+
+| File | Domain |
+| --- | --- |
+| [overview.md](./overview.md) | Short module status summary |
 | [frontend-stack.md](./frontend-stack.md) | React/Vite conventions |
 | [auth-profile.md](./auth-profile.md) | Auth, roles, profile |
-| [cv-analysis.md](./cv-analysis.md) | CV upload & analysis |
+| [cv-analysis.md](./cv-analysis.md) | CV analysis wizard & match report |
+| [dashboard.md](./dashboard.md) | Candidate dashboard & interview heatmap |
 | [practice-interview.md](./practice-interview.md) | B2C practice session |
-| [api-gateway.md](./api-gateway.md) | Gateway client conventions |
+| [learning-roadmap.md](./learning-roadmap.md) | Roadmap creation wizard → Learning |
+| [learning.md](./learning.md) | Learning dashboard, milestones, theory/practice |
+| [progress.md](./progress.md) | Candidate progress / learning analytics |
+| [payment.md](./payment.md) | Token billing, B2C wallet, B2B invoices |
+| [campaign-management.md](./campaign-management.md) | Employer campaign lifecycle |
+| [campaign-discovery.md](./campaign-discovery.md) | Magic link entry; public browse deprecated |
+| [campaign-assessment.md](./campaign-assessment.md) | B2B assessment interview, proctoring, violations |
+| [organization-onboarding.md](./organization-onboarding.md) | Employer workspace onboarding |
+| [employer-analytics.md](./employer-analytics.md) | Employer candidate pipeline & analytics |
+
+
+| [admin-platform.md](./admin-platform.md) | Admin platform, RBAC, audit, operations |
+
+| [employer-billing.md](./employer-billing.md) | Employer subscription, billing, invoices |
+| [shared-engagement.md](./shared-engagement.md) | Notifications, settings, help, support |
+
+
+
+
+| [api-gateway.md](./api-gateway.md) | Gateway routing + JSON payload conventions (camelCase, dates, GUIDs) |
 
 ## UI
 
 Visual rules: [`docs/UI_GUIDE.md`](../UI_GUIDE.md) (not duplicated here).
 
+Shared selection/section templates: `SectionPanel` + `SelectionOption` under `src/components/ui/`.
+
+Global look: **bright black** surfaces + **satin silver** frames (`frame-satin`) — see UI Guide § “Surface elevation” and “Satin silver borders”.
+
 ## Update rule
 
-1. Read relevant `BRD/*.md` section.
-2. Update affected `docs/product/*.md`.
+1. Read [`product-scope.md`](./product-scope.md) and relevant `BRD/*.md`.
+2. Update affected `docs/product/*.md`, [`module-scope.md`](./module-scope.md), and [`FRONTEND_MASTER_PLAN.md`](../FRONTEND_MASTER_PLAN.md) if routes/phases change.
 3. Update or create story in `docs/stories/`.
 4. Update proof: `scripts/bin/harness-cli story update`.

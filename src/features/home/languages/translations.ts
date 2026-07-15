@@ -2,11 +2,15 @@ import type { TranslationDictionary } from '../../../shared/languages';
 
 export const homeTranslations: TranslationDictionary = {
   vi: {
+    'home.pageTitle': 'PIpraint — Luyện phỏng vấn AI',
+    'home.metaDescription':
+      'Luyện phỏng vấn AI, phân tích CV và nhận phản hồi tức thì. Nền tảng đánh giá năng lực cho ứng viên và nhà tuyển dụng.',
     'hero.badge': 'Hệ thống phỏng vấn ứng dụng AI',
     'hero.titleLine1': 'Luyện phỏng vấn cùng',
     'hero.highlight': 'Trí tuệ nhân tạo',
     'hero.description': 'Nâng tầm kỹ năng phỏng vấn của bạn với hệ thống mô phỏng thực tế ảo. Phân tích CV, phản hồi tức thì và lộ trình thăng tiến nghề nghiệp chuyên sâu.',
     'hero.tryNow': 'Trải nghiệm ngay',
+    'hero.getStarted': 'Bắt đầu miễn phí',
     'hero.watchDemo': 'Xem bản Demo',
     'hero.confidence': 'Tự tin',
     'hero.pronunciation': 'Phát âm',
@@ -16,7 +20,7 @@ export const homeTranslations: TranslationDictionary = {
     'hero.bulletBody': 'Đánh giá ngôn ngữ cơ thể qua webcam',
 
     'features.title': 'Tính năng đột phá',
-    'features.description': 'ISAS cung cấp bộ công cụ toàn diện giúp ứng viên và nhà tuyển dụng tối ưu hóa quy trình đánh giá năng lực thông qua AI.',
+    'features.description': 'PIpraint cung cấp bộ công cụ toàn diện giúp ứng viên và nhà tuyển dụng tối ưu hóa quy trình đánh giá năng lực thông qua AI.',
     'features.scanning': 'ĐANG QUÉT',
     'features.aiRating': 'Đánh giá AI',
     'features.match': 'Phù hợp',
@@ -35,10 +39,11 @@ export const homeTranslations: TranslationDictionary = {
     'employer.statInterviews': 'Lượt phỏng vấn/tháng',
     'employer.statAccuracy': 'Độ chính xác đánh giá',
     'employer.statSavings': 'Tiết kiệm chi phí',
-    'employer.badge': 'Dành cho doanh nghiệp',
+    'employer.badge': 'Doanh nghiệp',
     'employer.titleLine1': 'Chuẩn hóa quy trình',
     'employer.titleLine2': 'Tuyển dụng dựa trên dữ liệu',
-    'employer.description': 'Giảm 50% thời gian sàng lọc ban đầu với bộ câu hỏi phỏng vấn tự động và báo cáo phân tích ứng viên chi tiết. ISAS giúp bạn tìm thấy "mảnh ghép hoàn hảo" dựa trên dữ liệu, không phải cảm tính.',
+    'employer.description':
+      'Giảm 50% thời gian sàng lọc với chiến dịch từ JD, magic link cho ứng viên và chấm điểm AI. Thanh toán postpaid theo token tiêu thụ hàng tháng.',
     'employer.jdTitle': 'Tạo bộ câu hỏi JD',
     'employer.jdDescription': 'Tự động sinh câu hỏi theo yêu cầu công việc.',
     'employer.reportTitle': 'Báo cáo so sánh',
@@ -46,11 +51,15 @@ export const homeTranslations: TranslationDictionary = {
     'employer.demo': 'Đăng ký Demo B2B',
   },
   en: {
+    'home.pageTitle': 'PIpraint — AI Interview Practice',
+    'home.metaDescription':
+      'AI interview practice, CV analysis, and instant feedback. Competency assessment for candidates and employers.',
     'hero.badge': 'AI-powered interview system',
     'hero.titleLine1': 'Practice interviews with',
     'hero.highlight': 'Artificial Intelligence',
     'hero.description': 'Level up your interview skills with a realistic simulation platform. Analyze your CV, get instant feedback, and follow a focused career growth path.',
     'hero.tryNow': 'Try it now',
+    'hero.getStarted': 'Get started free',
     'hero.watchDemo': 'Watch demo',
     'hero.confidence': 'Confidence',
     'hero.pronunciation': 'Pronunciation',
@@ -60,7 +69,7 @@ export const homeTranslations: TranslationDictionary = {
     'hero.bulletBody': 'Evaluate body language through webcam',
 
     'features.title': 'Breakthrough Features',
-    'features.description': 'ISAS provides a complete AI toolkit that helps candidates and employers optimize competency assessment workflows.',
+    'features.description': 'PIpraint provides a complete AI toolkit that helps candidates and employers optimize competency assessment workflows.',
     'features.scanning': 'SCANNING',
     'features.aiRating': 'AI Rating',
     'features.match': 'Match',
@@ -79,10 +88,11 @@ export const homeTranslations: TranslationDictionary = {
     'employer.statInterviews': 'Interviews/month',
     'employer.statAccuracy': 'Assessment accuracy',
     'employer.statSavings': 'Cost savings',
-    'employer.badge': 'For employers',
+    'employer.badge': 'Enterprise',
     'employer.titleLine1': 'Standardize hiring',
     'employer.titleLine2': 'with data-driven workflows',
-    'employer.description': 'Reduce initial screening time by 50% with automated interview question sets and detailed candidate analytics. ISAS helps you find the right fit through data, not guesswork.',
+    'employer.description':
+      'Cut screening time with JD-based campaigns, magic-link invites, and AI scoring. Postpaid monthly billing by tokens consumed.',
     'employer.jdTitle': 'Generate JD questions',
     'employer.jdDescription': 'Automatically create questions from job requirements.',
     'employer.reportTitle': 'Comparison reports',

@@ -1,0 +1,88 @@
+export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'cancelled';
+
+export type TransactionType = 'purchase' | 'consumption' | 'subscription' | 'refund' | 'reserve' | 'settlement';
+
+export interface TokenPackage {
+  id: string;
+  name: string;
+  nameVi: string;
+  tokens: number;
+  priceUsd: number;
+  description: string;
+  descriptionVi: string;
+  popular?: boolean;
+}
+
+/** @deprecated Use TokenPackage — kept as alias for gradual migration */
+export type CreditPackage = TokenPackage;
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  nameVi: string;
+  tokensPerMonth: number;
+  priceUsdMonthly: number;
+  description: string;
+  descriptionVi: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  tokensDelta: number;
+  description: string;
+  descriptionVi: string;
+  createdAt: string;
+  status: PaymentOrderStatus | 'completed';
+  sessionId?: string;
+}
+
+export interface WalletSnapshot {
+  balance: number;
+  reserved: number;
+  available: number;
+  transactions: WalletTransaction[];
+}
+
+export interface TokenUsageRecord {
+  id: string;
+  sessionId: string;
+  sessionTitle: string;
+  sessionTitleVi: string;
+  reservedTokens: number;
+  actualTokens: number;
+  settledAt: string;
+  status: 'settled' | 'reserved';
+}
+
+export interface PaymentOrder {
+  orderId: string;
+  packageId: string;
+  packageName: string;
+  packageNameVi: string;
+  tokens: number;
+  amountUsd: number;
+  status: PaymentOrderStatus;
+  checkoutUrl: string;
+  createdAt: string;
+}
+
+export interface CreateOrderResult {
+  order: PaymentOrder;
+}
+
+export interface CompleteOrderResult {
+  order: PaymentOrder;
+  wallet: WalletSnapshot;
+}
+
+export interface ReserveTokensResult {
+  wallet: WalletSnapshot;
+  reservedAmount: number;
+}
+
+export interface SettleTokensResult {
+  wallet: WalletSnapshot;
+  usage: TokenUsageRecord;
+}

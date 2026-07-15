@@ -1,5 +1,8 @@
 import axios from 'axios';
+import { HttpStatus } from '@/shared/constants/http-status';
 import { getApiBaseUrl } from '../config';
+import { toApiError } from './apiError';
+import { parseAuthTokens } from './authPayload';
 import { authTokenStorage } from './authTokenStorage';
 import { notifyUnauthorized } from './unauthorizedHandler';
 
@@ -40,9 +43,10 @@ export const createApiClient = () => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
+      const status = toApiError(error)?.status ?? error.response?.status;
 
       if (!originalRequest || originalRequest._retry) {
-        if (error.response?.status === 401) {
+        if (status === HttpStatus.UNAUTHORIZED) {
           handleSessionExpired();
         }
         return Promise.reject(error);
@@ -51,9 +55,10 @@ export const createApiClient = () => {
       const isAuthEndpoint =
         originalRequest.url?.includes('/auth/refresh') ||
         originalRequest.url?.includes('/auth/login') ||
-        originalRequest.url?.includes('/auth/register');
+        originalRequest.url?.includes('/auth/register') ||
+        originalRequest.url?.includes('/auth/logout');
 
-      if (error.response?.status === 401 && !isAuthEndpoint) {
+      if (status === HttpStatus.UNAUTHORIZED && !isAuthEndpoint) {
         originalRequest._retry = true;
 
         if (!isRefreshing) {
@@ -64,10 +69,14 @@ export const createApiClient = () => {
               throw new Error('No refresh token available');
             }
 
-            const { data } = await client.post('/api/auth/refresh', { refreshToken });
-            authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+            const { data } = await client.post('/api/v1/auth/refresh', { refreshToken });
+            const tokens = parseAuthTokens(data);
+            if (!tokens.accessToken || !tokens.refreshToken) {
+              throw new Error('Refresh response missing tokens');
+            }
+            authTokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
             isRefreshing = false;
-            onRefreshed(data.accessToken);
+            onRefreshed(tokens.accessToken);
           } catch (refreshError) {
             isRefreshing = false;
             handleSessionExpired();

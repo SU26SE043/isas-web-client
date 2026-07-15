@@ -1,12 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
+import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 export const HeroSection: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useLanguage();
+  const { openAuthModal } = useMarketingAuthModal();
 
   return (
     <section className="bg-gradient-to-b from-surface-raised to-surface-base pt-16 pb-24 overflow-hidden">
@@ -20,7 +21,8 @@ export const HeroSection: React.FC = () => {
             transition={{ duration: 0.7 }}
           >
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-surface-overlay text-muted-foreground text-sm font-bold tracking-wide uppercase mb-8">
-              <span className="mr-2">✦</span> {t('hero.badge')}
+              <Sparkles aria-hidden className="mr-2 size-3.5 shrink-0" />
+              {t('hero.badge')}
             </div>
             <h1 className="text-5xl lg:text-6xl xl:text-[4.5rem] heading-primary text-foreground leading-[1.1] mb-8">
               {t('hero.titleLine1')} <br />
@@ -33,14 +35,11 @@ export const HeroSection: React.FC = () => {
               {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/cv-analysis')}
-                className="btn-primary"
-              >
-                {t('hero.tryNow')} <span className="ml-2">→</span>
+              <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary">
+                {t('hero.getStarted')}
               </button>
-              <button className="btn-secondary">
-                {t('hero.watchDemo')} <span className="ml-2">⊚</span>
+              <button type="button" className="btn-secondary">
+                {t('hero.watchDemo')}
               </button>
             </div>
           </motion.div>

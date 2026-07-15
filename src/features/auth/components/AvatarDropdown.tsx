@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../../../shared/languages';
+import { getPostLoginPath, getProfileHomePath } from '../utils/getPostLoginPath';
 import { getRoleTranslationKey, getRoleColor } from '../utils/rolePermissions';
 
 
@@ -55,7 +56,7 @@ export const AvatarDropdown: React.FC = () => {
           
           <div className="py-1">
             <Link
-              to="/profile"
+              to={getProfileHomePath(user.role)}
               className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:bg-surface-overlay transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -67,7 +68,7 @@ export const AvatarDropdown: React.FC = () => {
 
 
             <Link
-              to="/dashboard"
+              to={getPostLoginPath(user.role)}
               className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:bg-surface-overlay transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -82,9 +83,10 @@ export const AvatarDropdown: React.FC = () => {
             <div className="border-t border-subtle my-1"></div>
             
             <button
+              type="button"
               onClick={() => {
-                logout();
                 setIsOpen(false);
+                logout();
               }}
               className="flex items-center w-full px-4 py-2 text-sm text-error hover:bg-error-bg transition-colors"
             >

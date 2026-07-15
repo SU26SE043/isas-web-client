@@ -1,42 +1,59 @@
-# ISAS Web Client — Product Overview
+# ISAS Web Client - Product Overview
 
-Living contract distilled from `BRD/Project_Overview.md` and `BRD/Scope_and_Objectives.md`.
+Short summary. **Authoritative scope:** [`product-scope.md`](./product-scope.md) . **Modules & routes:** [`module-scope.md`](./module-scope.md).
 
-## What this app is
+## What This App Is
 
-Frontend monolith for **ISAS** — AI interview simulation and assessment. One shared interview engine serves two product lines:
+Frontend monolith for **ISAS** - AI interview simulation and assessment. One shared interview engine serves two product lines:
 
 | Line | `campaign_id` | User | Core value |
 | --- | --- | --- | --- |
-| B2C | `null` | Candidate | Self-serve practice from CV/JD, credit wallet, personal history |
-| B2B | set | HR / Org | Campaign from JD, magic links, AI rubric scoring, candidate ranking |
+| B2C | `null` | Candidate | Practice, learning roadmap, prepaid wallet (token settle) |
+| B2B | set | HR / Organize | Campaigns, magic-link invites, AI scoring, ranking |
 
-## Modules (frontend responsibility)
+**Deliverable:** Production-ready for **limited beta users**.
 
-| Module | BRD refs | Client status |
+## Modules
+
+| Module | Tier | Client status |
 | --- | --- | --- |
-| Public marketing | SCR-AUT-001, home | Partial (`/`) |
-| Auth & profile | M01, SCR-AUT-* | Partial (modal auth, `/profile`) |
-| CV analysis | M03, SCR-CAN-021–022 | Partial (`/cv-analysis`) |
-| Practice interview | M05–M06, SCR-CAN-029–048 | In progress (`/practice`, history, result) |
-| Payment & credits | M08, SCR-CAN-026–028 | Not started |
-| Campaign (B2B) | M04, SCR-EMP-* | Not started |
-| Admin | M11, SCR-ADM-* | Not started |
+| Public marketing | T2 | Partial (`/`, `/pricing`, `/enterprise`) |
+| Auth & profile | T1 | Partial |
+| CV analysis | T1 | Partial - `/candidate/cv/analysis*` (mock) |
+| Candidate dashboard | T1 | Partial - `/candidate/dashboard` (mock) |
+| Interview practice | T1 | In progress - `/practice`, `/interview/*`, history |
+| Learning roadmap / Learning study | T1 | Wizard create + dashboard study (`learning-roadmap.md`, `learning.md`) |
+| Payment & token billing | T1 | Routes exist; token model not implemented |
+| Magic link (B2B candidate) | T1 | `/invite/:token` |
+| Campaign discovery (public) | - | Out of scope - deprecate `/candidate/campaigns*` |
+| Campaign management (B2B) | T1 | `/employer/campaigns*` (mock) |
+| Org onboarding | T1 | `/employer/company*` (mock) |
+| Employer analytics | T1 | `/employer/analytics`, candidates (mock) |
+| B2B billing / invoices | T1 | Routes exist in current codebase |
+| Admin | T1 | Implemented - Admin dashboard, users, RBAC, audit, AI/system config, flags, health, maintenance, support queues (`/admin/*`; mock) |
+| Shared engagement | T1 | Implemented - notifications, settings, help, support, employer team (`/candidate/*`, `/employer/*`, `/admin/*`; mock) |
+| Learning hub | T3 | Placeholder - backlog |
+| Leaderboard / certificate | T2 | Placeholder |
 
-## Key design decisions (from BRD)
+## Key Product Decisions
 
-- **D1:** Interview room UI is reusable for B2B and B2C.
-- **D4/D15:** Credit-based UX — show credits, not token costs.
+- **D1:** Interview room UI reusable for B2B and B2C.
+- **Billing:** Token-based usage - show tokens to users; B2C prepaid reserve/settle; B2B postpaid monthly invoice.
+- **B2B entry:** Magic link only; registered email -> immediate campaign list row; existing user signs in via link.
+- **Verify gate:** Unverified org cannot create or publish campaigns.
+- **Accounts:** One email = one role.
 - **D11:** Soft-delete and audit-friendly history surfaces.
 
 ## Personas
 
-Guest, Candidate, HR, Organization, Admin — see `BRD/User_Roles_and_Permissions.md`.
+Guest, Candidate, HR, Organize, Admin - see [`product-scope.md`](./product-scope.md) section 3.
 
-## Out of scope (frontend)
+## Out Of Scope
 
-Native iOS/Android, offline mode, live human video interviews — see `BRD/Scope_and_Objectives.md` §5.
+- Public campaign discovery (`/candidate/campaigns*`)
+- Native iOS/Android, offline mode, live human video interviews
+- Learning Hub (Tier 3), ATS webhooks (Tier 3)
 
-## When this doc changes
+## When This Doc Changes
 
-Update when a module ships new routes, changes API contracts, or alters role access. Link the story packet and BRD section that drove the change.
+Update when product scope or module map changes. Link story packet and BRD section if BRD intent shifts.

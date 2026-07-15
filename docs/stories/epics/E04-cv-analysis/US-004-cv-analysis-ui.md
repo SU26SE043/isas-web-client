@@ -2,7 +2,7 @@
 
 ## Status
 
-in_progress
+implemented
 
 ## Lane
 
@@ -10,11 +10,12 @@ normal
 
 ## Product Contract
 
-Authenticated candidate uploads CV (+ optional JD), views analysis result with skill panels and improvement suggestions.
+Authenticated candidate completes a **4-step CV analysis wizard** (domain → upload → JD → progress), then views a **match report** with skill radar, dimension score bars, skills, experience, and improvement sections. Selective CV-to-profile mapping with merge strategy.
 
 ## Relevant Product Docs
 
 - `docs/product/cv-analysis.md`
+- `docs/product/profile.md`
 
 ## BRD References
 
@@ -23,17 +24,26 @@ Authenticated candidate uploads CV (+ optional JD), views analysis result with s
 
 ## Acceptance Criteria
 
-- `/cv-analysis` upload form with file validation UI.
-- `/cv-analysis/result` shows header, left/right panels, bottom improvements.
-- Loading and error states present.
-- Protected route requires auth.
+- [x] `/candidate/cv/analysis` — wizard with domain selection on step 1, file validation on step 2.
+- [x] Step 3 — JD input before analysis.
+- [x] Step 4 — analysis progress UI with parse error recovery (ERR-021–025 mock).
+- [x] `/candidate/cv/analysis/report` — match report with header, colored charts, insights, skills, experience, projects, education, feedback.
+- [x] CV-to-profile mapping with per-section toggles and merge (FR-006 mock).
+- [x] `analysisId` persisted in session; report loads from last analysis.
+- [x] Legacy routes redirect to canonical paths.
+- [x] `/candidate/cv/upload` redirects to analysis entry (no standalone upload nav).
+- [x] Protected route requires auth.
+- [x] E2E: `e2e/specs/b2c/cv-upload.spec.ts`.
+- [ ] API presign, parse poll — deferred to backend integration.
 
 ## Validation
 
 | Layer | Expected proof |
 | --- | --- |
-| Platform | Manual: upload flow renders all panels |
+| E2E | `e2e/specs/b2c/cv-upload.spec.ts` |
+| Platform | `npm run build`, `npm run check:i18n` |
 
 ## Evidence
 
 - `src/features/cv-analysis/**`
+- `src/features/profile/components/CvProfileMappingPanel.tsx`
