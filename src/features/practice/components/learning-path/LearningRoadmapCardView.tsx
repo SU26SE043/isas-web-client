@@ -27,7 +27,15 @@ export const LearningRoadmapCardView: React.FC<LearningRoadmapCardViewProps> = (
             {domain} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)}
           </p>
         </div>
-        <span className="rounded-full border border-subtle px-3 py-1 text-xs text-muted-foreground">
+        <span
+          className={
+            roadmap.status === 'completed'
+              ? 'rounded-full border border-success/30 bg-success-bg px-3 py-1 text-xs text-success'
+              : roadmap.status === 'in_progress'
+                ? 'rounded-full border border-info/30 bg-info-bg px-3 py-1 text-xs text-info'
+                : 'rounded-full border border-subtle px-3 py-1 text-xs text-muted-foreground'
+          }
+        >
           {t(`practice.learningPath.status.${roadmap.status}`)}
         </span>
       </div>
@@ -35,11 +43,21 @@ export const LearningRoadmapCardView: React.FC<LearningRoadmapCardViewProps> = (
       <div className="mt-4">
         <div className="mb-1 flex justify-between text-xs text-muted-foreground">
           <span>{t('practice.learningPath.progress')}</span>
-          <span>{roadmap.progressPercent}%</span>
+          <span
+            className={
+              roadmap.status === 'completed' ? 'text-success' : 'text-muted-foreground'
+            }
+          >
+            {roadmap.progressPercent}%
+          </span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-surface-overlay">
           <div
-            className="h-full rounded-full bg-foreground/80"
+            className={
+              roadmap.status === 'completed'
+                ? 'h-full rounded-full bg-success transition-[width] duration-300'
+                : 'h-full rounded-full bg-foreground/80 transition-[width] duration-300'
+            }
             style={{ width: `${roadmap.progressPercent}%` }}
           />
         </div>

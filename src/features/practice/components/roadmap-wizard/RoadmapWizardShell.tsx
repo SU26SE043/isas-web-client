@@ -1,5 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  FlowStepConnector,
+  FlowStepMarker,
+  flowStepLabelClass,
+  resolveFlowStepStatus,
+} from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 
@@ -44,42 +50,21 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
 
           <ol className="flex flex-col">
             {ROADMAP_WIZARD_STEP_KEYS.map((key, index) => {
-              const isActive = index === currentStep;
-              const isComplete = index < currentStep;
+              const status = resolveFlowStepStatus(index, currentStep);
               const isLast = index === ROADMAP_WIZARD_STEP_KEYS.length - 1;
               return (
                 <li key={key} className="flex w-full items-stretch gap-3">
                   <div className="flex flex-col items-center">
-                    <span
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-[background-color,border-color,color] duration-200 ease-out',
-                        isActive
-                          ? 'border-white bg-white text-black'
-                          : isComplete
-                            ? 'border-white/30 bg-white/10 text-foreground'
-                            : 'border-white/15 bg-transparent text-muted-foreground',
-                      )}
-                      aria-current={isActive ? 'step' : undefined}
-                    >
-                      {index + 1}
-                    </span>
+                    <FlowStepMarker status={status} stepNumber={index + 1} />
                     {!isLast ? (
-                      <div
-                        className={cn(
-                          'mt-1 w-px flex-1 min-h-8',
-                          isComplete ? 'bg-white/25' : 'bg-white/10',
-                        )}
-                        aria-hidden
+                      <FlowStepConnector
+                        status={status === 'complete' ? 'complete' : 'pending'}
+                        className="mt-1 min-h-8"
                       />
                     ) : null}
                   </div>
                   <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
-                    <span
-                      className={cn(
-                        'block text-sm font-medium leading-snug',
-                        isActive ? 'text-foreground' : 'text-muted-foreground',
-                      )}
-                    >
+                    <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
                       {t(key)}
                     </span>
                   </div>

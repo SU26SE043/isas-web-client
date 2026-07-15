@@ -92,6 +92,7 @@ export const practiceSetupService = {
     const { analysisId } = await cvAnalysisService.submitAnalysis({
       file,
       language,
+      domain: 'frontend',
       jobDescription: 'Practice interview CV context',
     });
     const files = await cvAnalysisService.listUploadedCvs();

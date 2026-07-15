@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Copy } from 'lucide-react';
+import {
+  FlowStepConnector,
+  FlowStepMarker,
+  flowStepLabelClass,
+  resolveFlowStepStatus,
+} from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import {
@@ -17,6 +23,8 @@ interface InterviewFlowShellProps {
   title: string;
   description?: string;
   isCampaignSession?: boolean;
+  /** When set, marks that prep step as failed (semantic error / red). */
+  failedStep?: PrepFlowStep;
   children: React.ReactNode;
 }
 
@@ -34,6 +42,7 @@ export const InterviewFlowShell: React.FC<InterviewFlowShellProps> = ({
   title,
   description,
   isCampaignSession = false,
+  failedStep,
   children,
 }) => {
   const { t } = useLanguage();
@@ -41,6 +50,8 @@ export const InterviewFlowShell: React.FC<InterviewFlowShellProps> = ({
   const steps = isCampaignSession ? INTERVIEW_FLOW_STEPS : B2C_FLOW_STEPS;
   const prepSteps = steps.filter((step): step is PrepFlowStep => step !== 'room' && step !== 'complete');
   const currentIndex = prepSteps.indexOf(currentStep);
+  const failedIndexes =
+    failedStep != null ? [prepSteps.indexOf(failedStep)].filter((index) => index >= 0) : undefined;
 
   const handleCopySession = async () => {
     try {
@@ -62,42 +73,23 @@ export const InterviewFlowShell: React.FC<InterviewFlowShellProps> = ({
           <h1 className="sr-only">{title}</h1>
           <ol className="flex gap-3 overflow-x-auto pb-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:pb-0">
             {prepSteps.map((step, index) => {
-              const isActive = step === currentStep;
-              const isComplete = index < currentIndex;
+              const status = resolveFlowStepStatus(index, currentIndex, failedIndexes);
               const isLast = index === prepSteps.length - 1;
               return (
                 <li key={step} className="flex shrink-0 items-stretch gap-3 lg:w-full">
                   <div className="flex flex-col items-center">
-                    <span
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-[background-color,border-color,color] duration-200 ease-out',
-                        isActive
-                          ? 'border-white bg-white text-black'
-                          : isComplete
-                            ? 'border-satin bg-white/10 text-foreground'
-                            : 'border-satin bg-transparent text-muted-foreground',
-                      )}
-                      aria-current={isActive ? 'step' : undefined}
-                    >
-                      {index + 1}
-                    </span>
+                    <FlowStepMarker status={status} stepNumber={index + 1} />
                     {!isLast ? (
-                      <div
-                        className={cn(
-                          'mt-1 hidden min-h-6 w-px flex-1 lg:block',
-                          isComplete ? 'bg-white/25' : 'bg-white/10',
-                        )}
-                        aria-hidden
+                      <FlowStepConnector
+                        status={
+                          status === 'complete' ? 'complete' : status === 'error' ? 'error' : 'pending'
+                        }
+                        className="mt-1 hidden min-h-6 lg:block"
                       />
                     ) : null}
                   </div>
                   <div className={cn('pt-1.5', !isLast && 'lg:pb-6')}>
-                    <span
-                      className={cn(
-                        'block text-sm font-medium',
-                        isActive ? 'text-foreground' : 'text-muted-foreground',
-                      )}
-                    >
+                    <span className={cn('block text-sm font-medium', flowStepLabelClass(status))}>
                       {t(STEP_LABEL_KEYS[step])}
                     </span>
                   </div>

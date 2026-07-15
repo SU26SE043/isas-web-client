@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useLanguage } from '@/shared/languages';
 import { CvAnalysisFlowShell } from '../components/flow/CvAnalysisFlowShell';
+import { CvDomainStep } from '../components/flow/CvDomainStep';
 import { CvUploadStep } from '../components/flow/CvUploadStep';
 import { CvJobDescriptionStep } from '../components/flow/CvJobDescriptionStep';
 import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
@@ -12,9 +13,10 @@ export const CVAnalysisPage: React.FC = () => {
   const flow = useCvAnalysisFlow();
 
   const currentStep = useMemo<CvAnalysisStep>(() => {
-    if (flow.step === 3) return 'analysis';
-    if (flow.step === 2) return 'job-description';
-    return 'upload';
+    if (flow.step === 4) return 'analysis';
+    if (flow.step === 3) return 'job-description';
+    if (flow.step === 2) return 'upload';
+    return 'domain';
   }, [flow.step]);
 
   return (
@@ -26,27 +28,40 @@ export const CVAnalysisPage: React.FC = () => {
         </p>
       </div>
 
-      <CvAnalysisFlowShell currentStep={currentStep}>
+      <CvAnalysisFlowShell
+        currentStep={currentStep}
+        failedStep={flow.parseError ? 'analysis' : undefined}
+      >
         {flow.step === 1 ? (
-          <CvUploadStep
-            file={flow.file}
-            fileError={flow.fileError}
-            onFileSelect={flow.selectFile}
+          <CvDomainStep
+            domain={flow.domain}
+            onSelect={flow.selectDomain}
             onNext={flow.goNext}
           />
         ) : null}
 
         {flow.step === 2 ? (
+          <CvUploadStep
+            file={flow.file}
+            fileError={flow.fileError}
+            onFileSelect={flow.selectFile}
+            onNext={flow.goNext}
+            onBack={flow.goBack}
+          />
+        ) : null}
+
+        {flow.step === 3 ? (
           <CvJobDescriptionStep
             jobDescription={flow.jobDescription}
             fileName={flow.file?.name}
+            domain={flow.domain}
             onJobDescriptionChange={flow.setJobDescription}
             onBack={flow.goBack}
             onNext={() => void flow.runAnalysis()}
           />
         ) : null}
 
-        {flow.step === 3 ? (
+        {flow.step === 4 ? (
           <CvAnalysisProgressStep
             parseProgress={flow.parseProgress}
             parseError={flow.parseErrorMessage}

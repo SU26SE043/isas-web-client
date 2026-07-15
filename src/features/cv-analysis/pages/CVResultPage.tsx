@@ -6,6 +6,8 @@ import { CvProfileMappingPanel } from '@/features/profile/components/CvProfileMa
 import { CvAnalysisStepper } from '../components/CvAnalysisStepper';
 import { CvMatchReportHeader } from '../components/report/CvMatchReportHeader';
 import { CvReportInsightsSection } from '../components/report/CvReportInsightsSection';
+import { CvSkillRadarChart } from '../components/report/CvSkillRadarChart';
+import { CvDimensionScoreBars } from '../components/report/CvDimensionScoreBars';
 import { CvReportSkillsSection } from '../components/report/CvReportSkillsSection';
 import { CvReportExperienceSection } from '../components/report/CvReportExperienceSection';
 import { CvReportProjectsSection } from '../components/report/CvReportProjectsSection';
@@ -63,6 +65,10 @@ export const CVResultPage: React.FC = () => {
       <div className="mx-auto max-w-5xl space-y-4">
         <CvMatchReportHeader result={result} />
         <CvReportInsightsSection result={result} />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <CvSkillRadarChart dimensions={result.skillDimensions} />
+          <CvDimensionScoreBars dimensions={result.dimensionScores} />
+        </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <CvReportSkillsSection result={result} />
           <CvReportExperienceSection result={result} />

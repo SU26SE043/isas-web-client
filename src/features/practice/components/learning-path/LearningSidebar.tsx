@@ -66,7 +66,13 @@ function MilestoneBlock({
             {t('practice.learningPath.milestone').replace('{n}', String(milestone.order))}
           </span>
           <span className="block text-sm font-medium text-foreground">{title}</span>
-          <span className="mt-0.5 block text-caption text-muted-foreground">
+          <span
+            className={
+              milestone.status === 'completed'
+                ? 'mt-0.5 block text-caption text-success'
+                : 'mt-0.5 block text-caption text-muted-foreground'
+            }
+          >
             {milestone.progressPercent}% · {t(`practice.learningPath.milestoneStatus.${milestone.status}`)}
           </span>
         </span>
@@ -88,7 +94,13 @@ function MilestoneBlock({
                 <LessonStatusIcon lesson={lesson} locked={lessonLocked} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm text-foreground">{lessonTitle}</span>
-                  <span className="block text-caption text-muted-foreground">
+                  <span
+                    className={
+                      lesson.status === 'completed'
+                        ? 'block text-caption text-success'
+                        : 'block text-caption text-muted-foreground'
+                    }
+                  >
                     {t(`practice.learningPath.status.${lesson.status}`)}
                   </span>
                 </span>
@@ -145,7 +157,11 @@ export function LearningSidebar({ roadmap, currentLessonId }: LearningSidebarPro
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-surface-overlay">
             <div
-              className="h-full rounded-full bg-foreground/80 transition-[width] duration-300"
+              className={
+                roadmap.status === 'completed'
+                  ? 'h-full rounded-full bg-success transition-[width] duration-300'
+                  : 'h-full rounded-full bg-foreground/80 transition-[width] duration-300'
+              }
               style={{ width: `${roadmap.progressPercent}%` }}
             />
           </div>

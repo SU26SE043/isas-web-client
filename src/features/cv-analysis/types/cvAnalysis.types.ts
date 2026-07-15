@@ -1,6 +1,25 @@
+import type { CvAnalysisDomain } from './cvDomain.types';
+
 export interface CvSkill {
   name: string;
   highlight?: boolean;
+}
+
+/** Radar axes for CV match competency overview. */
+export interface CvSkillDimension {
+  id: string;
+  labelEn: string;
+  labelVi: string;
+  score: number;
+  target: number;
+}
+
+/** Horizontal bar dimensions on the match report. */
+export interface CvDimensionScore {
+  id: string;
+  labelEn: string;
+  labelVi: string;
+  score: number;
 }
 
 export interface CvProject {
@@ -29,6 +48,9 @@ export interface CvAnalysisResult {
   jobTitle: string;
   profileCompletionPercent: number;
   matchScore: number;
+  domain?: CvAnalysisDomain;
+  skillDimensions: CvSkillDimension[];
+  dimensionScores: CvDimensionScore[];
   skills: CvSkill[];
   projects: CvProject[];
   experiences: CvExperience[];
@@ -38,6 +60,7 @@ export interface CvAnalysisResult {
 export interface SubmitCvAnalysisInput {
   file: File;
   jobDescription?: string;
+  domain: CvAnalysisDomain;
   language: 'vi' | 'en';
 }
 

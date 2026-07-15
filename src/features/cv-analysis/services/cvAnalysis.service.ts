@@ -1,9 +1,12 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_CV_ANALYSIS_RESULT, MOCK_UPLOADED_CV_FILES } from '../mocks/cvAnalysis.fixtures';
 import type { CvAnalysisResult, SubmitCvAnalysisInput, UploadedCvFile } from '../types/cvAnalysis.types';
+import type { CvAnalysisDomain } from '../types/cvDomain.types';
 
 const UPLOADED_CV_STORAGE_KEY = 'isas-uploaded-cvs';
 const MOCK_PDF_URL = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+
+let lastSubmittedDomain: CvAnalysisDomain | null = null;
 
 export class CvAnalysisError extends Error {
   readonly code: 'passwordProtected' | 'corruptFile' | 'parseFailed';
@@ -93,6 +96,7 @@ export const cvAnalysisService = {
 
     await mockDelay(800);
     const analysisId = `cv-analysis-${crypto.randomUUID().slice(0, 8)}`;
+    lastSubmittedDomain = input.domain;
     registerUploadedCv(input.file, analysisId);
     return { analysisId };
   },
@@ -116,6 +120,10 @@ export const cvAnalysisService = {
     }
 
     await mockDelay(500);
-    return { ...MOCK_CV_ANALYSIS_RESULT, id: analysisId };
+    return {
+      ...MOCK_CV_ANALYSIS_RESULT,
+      id: analysisId,
+      domain: lastSubmittedDomain ?? MOCK_CV_ANALYSIS_RESULT.domain,
+    };
   },
 };

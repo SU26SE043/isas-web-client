@@ -33,6 +33,8 @@ export const DeviceCheckPage: React.FC = () => {
     navigate(isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/waiting`);
   };
 
+  const deviceFailed = state === 'denied' || state === 'unavailable';
+
   return (
     <InterviewFlowShell
       sessionId={sessionId}
@@ -40,6 +42,7 @@ export const DeviceCheckPage: React.FC = () => {
       title={t('practice.flow.device.title')}
       description={t('practice.flow.device.description')}
       isCampaignSession={isCampaign}
+      failedStep={deviceFailed ? 'device-check' : undefined}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-6">
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-base">
@@ -58,15 +61,23 @@ export const DeviceCheckPage: React.FC = () => {
         </div>
 
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-foreground">
+          <p
+            className={
+              state === 'ready'
+                ? 'text-sm text-success'
+                : deviceFailed
+                  ? 'text-sm text-error'
+                  : 'text-sm text-foreground'
+            }
+          >
             {state === 'ready'
               ? t('practice.flow.device.passed')
-              : state === 'denied' || state === 'unavailable'
+              : deviceFailed
                 ? t(errorKey ?? 'practice.flow.device.denied')
                 : t('practice.flow.device.hint')}
           </p>
           {deviceCheckPassed ? (
-            <p className="text-sm text-emerald-400">{t('practice.flow.device.alreadyPassed')}</p>
+            <p className="text-sm text-success">{t('practice.flow.device.alreadyPassed')}</p>
           ) : null}
         </div>
 

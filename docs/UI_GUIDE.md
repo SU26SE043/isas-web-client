@@ -147,6 +147,19 @@ import { SelectionOption } from '@/components/ui/selection-option';
 
 Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, recording indicator, Google OAuth logo.
 
+### Multi-step steppers (status)
+
+Wizard / interview / CV flow steppers dùng `src/components/ui/flow-stepper.tsx`:
+
+| Step status | Visual |
+|-------------|--------|
+| `complete` | Green marker + label (`text-success` / `bg-success-bg`) + check icon |
+| `error` / failed | Red marker + label (`text-error` / `bg-error-bg`) + X icon |
+| `current` | Monochrome white marker (active step) |
+| `pending` | Muted satin / muted text |
+
+Không invent brand hex — chỉ token semantic success/error.
+
 ## Files
 
 | File | Vai trò |

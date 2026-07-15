@@ -1,10 +1,12 @@
 import React from 'react';
 import { useLanguage } from '@/shared/languages';
+import type { CvAnalysisDomain } from '../../types/cvDomain.types';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
 
 interface CvJobDescriptionStepProps {
   jobDescription: string;
   fileName?: string;
+  domain?: CvAnalysisDomain | null;
   onJobDescriptionChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
@@ -13,6 +15,7 @@ interface CvJobDescriptionStepProps {
 export const CvJobDescriptionStep: React.FC<CvJobDescriptionStepProps> = ({
   jobDescription,
   fileName,
+  domain,
   onJobDescriptionChange,
   onBack,
   onNext,
@@ -21,10 +24,20 @@ export const CvJobDescriptionStep: React.FC<CvJobDescriptionStepProps> = ({
 
   return (
     <CvFlowSectionCard title={t('cv.step.jobDescription')} description={t('cv.stepDesc.job-description')}>
-      {fileName ? (
-        <p className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-muted-foreground">
-          {t('cv.attachedFile')}: <span className="font-medium text-foreground">{fileName}</span>
-        </p>
+      {fileName || domain ? (
+        <div className="mb-4 space-y-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-muted-foreground">
+          {domain ? (
+            <p>
+              {t('cv.selectedDomain')}:{' '}
+              <span className="font-medium text-foreground">{t(`cv.domain.${domain}.title`)}</span>
+            </p>
+          ) : null}
+          {fileName ? (
+            <p>
+              {t('cv.attachedFile')}: <span className="font-medium text-foreground">{fileName}</span>
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="mb-2 flex items-center justify-between gap-3">

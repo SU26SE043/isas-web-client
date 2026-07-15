@@ -9,6 +9,7 @@ interface CvUploadStepProps {
   fileError: string | null;
   onFileSelect: (file: File | null) => void;
   onNext: () => void;
+  onBack?: () => void;
 }
 
 export const CvUploadStep: React.FC<CvUploadStepProps> = ({
@@ -16,6 +17,7 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
   fileError,
   onFileSelect,
   onNext,
+  onBack,
 }) => {
   const { t } = useLanguage();
   const canNext = Boolean(file) && !fileError;
@@ -72,7 +74,14 @@ export const CvUploadStep: React.FC<CvUploadStepProps> = ({
         </p>
       ) : null}
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+        {onBack ? (
+          <button type="button" className="btn-secondary rounded-xl" onClick={onBack}>
+            {t('cv.back')}
+          </button>
+        ) : (
+          <span />
+        )}
         <button
           type="button"
           className={cn(
