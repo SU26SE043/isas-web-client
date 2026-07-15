@@ -20,7 +20,7 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 72,
     duration: 60,
-    domainId: 'fullstack',
+    domainId: 'business-analyst',
     level: 'middle',
   },
   {
@@ -75,7 +75,7 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 82,
     duration: 48,
-    domainId: 'fullstack',
+    domainId: 'business-analyst',
     level: 'middle',
   },
   {
@@ -119,7 +119,7 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 58,
     duration: 35,
-    domainId: 'mobile',
+    domainId: 'frontend',
     level: 'junior',
   },
   {
@@ -163,7 +163,7 @@ export const MOCK_INTERVIEW_HISTORY: InterviewHistoryItem[] = [
     status: 'completed',
     overallScore: 84,
     duration: 52,
-    domainId: 'fullstack',
+    domainId: 'business-analyst',
     level: 'middle',
   },
   {

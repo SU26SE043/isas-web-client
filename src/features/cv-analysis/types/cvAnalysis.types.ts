@@ -1,13 +1,14 @@
 import type { CvAnalysisDomain } from './cvDomain.types';
+import type { JobCategoryCode as SharedJobCategoryCode } from '@/shared/domain/jobDomains';
+import { JOB_DOMAINS } from '@/shared/domain/jobDomains';
 
 /** Numeric jobCategory sent to analyze API (FE=1, BE=2, BA=3). */
-export type JobCategoryCode = 1 | 2 | 3;
+export type JobCategoryCode = SharedJobCategoryCode;
 
-export const DOMAIN_TO_JOB_CATEGORY: Record<CvAnalysisDomain, JobCategoryCode> = {
-  frontend: 1,
-  backend: 2,
-  'business-analyst': 3,
-};
+export const DOMAIN_TO_JOB_CATEGORY = Object.fromEntries(
+  JOB_DOMAINS.map((domain) => [domain.id, domain.jobCategoryCode]),
+) as Record<CvAnalysisDomain, JobCategoryCode>;
+
 
 export type FileParseStatus = 'pending' | 'done' | 'failed';
 export type CampaignFileType = 'cv' | 'jd';

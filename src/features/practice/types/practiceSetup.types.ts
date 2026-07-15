@@ -1,7 +1,9 @@
+import type { JobDomainId } from '@/shared/domain/jobDomains';
+
 export type PracticeLevel = 'intern' | 'fresher' | 'junior' | 'middle' | 'senior';
 
 export interface PracticeDomain {
-  id: string;
+  id: JobDomainId | string;
   name: string;
   nameVi: string;
   description: string;
