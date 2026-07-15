@@ -25,6 +25,7 @@
 | `surface-elevated` | `#2a2a30` | Modals, dropdowns, active nav |
 | `surface-highlight` | `#34343c` | Strong hover |
 | `glass-panel` | glass + satin edge | Elevated glass cards |
+| `glass-table-container` / `GlassTableContainer` | specular edge glow + diagonal shine | **Preferred** wrapper for data tables |
 | `glass-sidebar` | sunken + blur | Dashboard sidebars |
 | `glass-topbar` | base + blur | Sticky engagement / top chrome |
 
@@ -104,7 +105,7 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Header | `h-16`, glass-topbar + satin edge |
 | Sidebar | `glass-sidebar`, active `bg-surface-elevated` |
 | Card | `frame-satin` + `Card` primitive |
-| Table | container `frame-satin rounded-2xl` |
+| Table | `GlassTableContainer` / `.glass-table-container` (specular glass) |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
 | **SelectionOption** | Satin selectable tile — **default** for choice grids |
 | Modal | Dialog + `border-satin` |
@@ -236,6 +237,7 @@ Không invent brand hex — chỉ token semantic success/error/info.
 | `src/styles/colors.css` | Surface + satin silver + chart tokens |
 | `src/shared/charts/chartColors.ts` | Categorical / radar / grid / tooltip helpers |
 | `src/index.css` | Tailwind theme + `frame-satin*` utilities |
+| `src/components/ui/glass-table-container.tsx` | Specular glass table wrapper |
 | `src/components/ui/*` | shadcn primitives + shared templates |
 | `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
 | `src/components/ui/selection-option.tsx` | Selectable option tile |
