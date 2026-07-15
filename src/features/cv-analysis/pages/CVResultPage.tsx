@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { CvProfileMappingPanel } from '@/features/profile/components/CvProfileMappingPanel';
@@ -16,8 +16,18 @@ import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
 
 export const CVResultPage: React.FC = () => {
   const { t } = useLanguage();
+  const [params] = useSearchParams();
+  const analysisIdFromQuery = params.get('analysisId') ?? undefined;
   const analysisId =
-    typeof window !== 'undefined' ? sessionStorage.getItem(CV_ANALYSIS_ID_KEY) ?? undefined : undefined;
+    analysisIdFromQuery ??
+    (typeof window !== 'undefined' ? sessionStorage.getItem(CV_ANALYSIS_ID_KEY) ?? undefined : undefined);
+
+  useEffect(() => {
+    if (analysisIdFromQuery) {
+      sessionStorage.setItem(CV_ANALYSIS_ID_KEY, analysisIdFromQuery);
+    }
+  }, [analysisIdFromQuery]);
+
   const { result, isLoading, error } = useCvAnalysisResult(analysisId);
 
   if (isLoading) {

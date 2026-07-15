@@ -8,9 +8,9 @@ BRD: FR-009–019, SCR-CAN-029–048, `BRD/User_Flows.md` (practice + results + 
 | --- | --- | --- |
 | **Practice** | `/practice` | B2C — create practice session (token reserve) |
 | **Campaigns** | `/candidate/campaigns` | B2B — my invited assessments only |
-| **Interview history** | `/candidate/practice/history` | Completed sessions (both lines) |
+| **Reports** | `/candidate/reports` | Hub of interview / learning / CV reports (collapsible categories) |
 
-Legacy `/practice/history` redirects to `/candidate/practice/history`.
+Interview history list remains at `/candidate/practice/history` (also linked from the Reports hub). Legacy `/practice/history` redirects to `/candidate/practice/history`.
 
 ## User flow
 

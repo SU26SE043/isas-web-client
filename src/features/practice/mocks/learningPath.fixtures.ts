@@ -32,6 +32,7 @@ function lesson(
   order: number,
   theory: LearningLesson['theoryStatus'],
   practice: LearningLesson['practiceStatus'],
+  practiceReportId?: string,
 ): LearningLesson {
   const status =
     theory === 'completed' && practice === 'completed'
@@ -50,6 +51,7 @@ function lesson(
     content: html.content,
     contentVi: html.contentVi,
     status,
+    practiceReportId,
   };
 }
 
@@ -96,11 +98,18 @@ export const MOCK_LEARNING_PATH_ROADMAPS: LearningRoadmapDetail[] = [
     estimatedRemainingHours: 18,
     updatedAt: '2026-07-12T10:00:00.000Z',
     readOnly: false,
-    reports: [],
+    reports: [
+      createPracticeReportStub({
+        id: 'report-ms-js-l1-seed',
+        lessonId: 'ms-js-l1',
+        roadmapId: 'roadmap-frontend-junior',
+        questionFeedback: [],
+      }),
+    ],
     milestones: [
       milestone('ms-js', 'JavaScript Fundamentals', 'Nền tảng JavaScript', 1, 'current', [
-        lesson('ms-js-l1', 'Variables & Types', 'Biến & Kiểu dữ liệu', 1, 'available', 'locked'),
-        lesson('ms-js-l2', 'Functions & Scope', 'Hàm & Scope', 2, 'locked', 'locked'),
+        lesson('ms-js-l1', 'Variables & Types', 'Biến & Kiểu dữ liệu', 1, 'completed', 'completed', 'report-ms-js-l1-seed'),
+        lesson('ms-js-l2', 'Functions & Scope', 'Hàm & Scope', 2, 'available', 'locked'),
         lesson('ms-js-l3', 'Arrays & Objects', 'Mảng & Object', 3, 'locked', 'locked'),
       ]),
       milestone('ms-dom', 'DOM & Events', 'DOM & Sự kiện', 2, 'locked', [
