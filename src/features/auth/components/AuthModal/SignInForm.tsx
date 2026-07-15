@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 import { parseAuthError } from '../../utils/authErrors';
-import { getPostLoginPath } from '../../utils/getPostLoginPath';
+import { resolvePostLoginPath } from '../../utils/getPostLoginPath';
 import { SocialLoginButton } from '../SocialLoginButton';
 import { SSOButton } from '../SSOButton';
 import { signInFormVariants } from './authModal.animations';
@@ -81,7 +81,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
 
       setStatusMessage(t('auth.loginSuccess'));
       onLoginSuccess();
-      navigate(redirectFrom ?? getPostLoginPath(currentUser.role), { replace: true });
+      navigate(resolvePostLoginPath(currentUser.role, redirectFrom), { replace: true });
     } catch (error) {
       const parsed = parseAuthError(error, t('auth.loginFailed'));
       if (parsed.kind === 'accountLocked') {

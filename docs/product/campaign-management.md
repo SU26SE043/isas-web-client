@@ -33,12 +33,16 @@ Campaign list provides:
 - Empty/loading states.
 - Create campaign CTA.
 
-Campaign wizard provides four steps:
+Campaign wizard provides six steps (Candidate-aligned vertical stepper UX):
 
-1. Job description: title, company, location, working mode, summary, JD content.
-2. Rubric: weighted criteria must total 100%.
-3. Questions: selected question bank items.
-4. Settings: capacity, deadline, duration, locale, welcome/completion messages, **proctoring** (face capture interval, similarity threshold, max violations — see [`campaign-assessment.md`](./campaign-assessment.md)).
+1. Basic information: title, company, location, working mode, summary.
+2. Job description: JD content.
+3. AI interview config: session duration and question bank selection.
+4. Evaluation criteria: weighted rubric must total 100%.
+5. Campaign settings: capacity, deadline, locale, welcome/completion messages, **proctoring** (face capture interval, similarity threshold, max violations — see [`campaign-assessment.md`](./campaign-assessment.md)).
+6. Review & Publish: summary review with **Save draft** and **Publish**.
+
+Back/Next preserves in-memory form state; Save draft calls `saveDraft`; Publish saves then `publishCampaign`.
 
 Campaign detail provides:
 

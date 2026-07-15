@@ -4,19 +4,23 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { AuthModal } from '../features/auth/components/AuthModal';
 import { AvatarDropdown } from '../features/auth/components/AvatarDropdown';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { getProfileHomePath } from '../features/auth/utils/getPostLoginPath';
+import { UserRole } from '../features/auth/types/auth.types';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 
 export const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
 
   const openAuth = (view: 'login' | 'signup') => {
     setAuthView(view);
     setIsAuthModalOpen(true);
   };
+
+  const profilePath = getProfileHomePath(user?.role ?? UserRole.GUEST);
 
   return (
     <>
@@ -31,9 +35,11 @@ export const Header: React.FC = () => {
               <Link className="nav-link focus-ring rounded-md" to="/">
                 {t('nav.home')}
               </Link>
-              <Link className="nav-link focus-ring rounded-md" to="/candidate/profile">
-                {t('nav.profile')}
-              </Link>
+              {isAuthenticated ? (
+                <Link className="nav-link focus-ring rounded-md" to={profilePath}>
+                  {t('nav.profile')}
+                </Link>
+              ) : null}
             </nav>
 
             <div className="flex items-center gap-3">

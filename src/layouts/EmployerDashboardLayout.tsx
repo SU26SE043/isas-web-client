@@ -3,7 +3,6 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { UserRole } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
@@ -26,13 +25,14 @@ function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
 export const EmployerDashboardLayout: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const role = user?.role ?? UserRole.HR_MEMBER;
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const role = user?.role ?? null;
+  // Role must come from auth store; never invent a default org/candidate role for nav.
   const navItems = useMemo(
-    () => filterEmployerNavItems(buildEmployerNavItems(t), role),
+    () => (role ? filterEmployerNavItems(buildEmployerNavItems(t), role) : []),
     [role, t],
   );
+
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen surface-base">

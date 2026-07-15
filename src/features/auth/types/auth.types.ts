@@ -1,11 +1,12 @@
 /**
  * Business roles (authenticated users).
- * Canonical Auth Identity values only — no legacy role strings.
+ * Canonical Auth Identity values:
  *
  * ```
  * Candidate | OrgAdmin | HrMember | Admin
  * ```
  *
+ * Legacy API strings (e.g. Employer) are mapped via LEGACY_ROLE_ALIASES.
  * Guest is client-only (unauthenticated) — never returned by `/me`.
  */
 import { pickAuthString, unwrapAuthPayload } from '@/shared/api/authPayload';
@@ -37,7 +38,7 @@ export const ORG_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.HR_MEMBER
 /** Can manage org settings, billing, and HR member accounts. */
 export const ORG_ADMIN_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.ADMIN];
 
-/** Exact Identity role names only (case-insensitive). */
+/** Exact Identity role names (keys after trim/lowercase/strip spaces/_/-). */
 const CANONICAL_ROLES: Record<string, UserRoleType> = {
   guest: UserRole.GUEST,
   candidate: UserRole.CANDIDATE,
@@ -46,10 +47,23 @@ const CANONICAL_ROLES: Record<string, UserRoleType> = {
   admin: UserRole.ADMIN,
 };
 
+/**
+ * Intentional legacy Identity / BRD synonyms → canonical roles.
+ * Unknown strings stay null (parseUser throws) — never default to Candidate.
+ */
+const LEGACY_ROLE_ALIASES: Record<string, UserRoleType> = {
+  employer: UserRole.ORG_ADMIN,
+  organize: UserRole.ORG_ADMIN,
+  organization: UserRole.ORG_ADMIN,
+  organizationadmin: UserRole.ORG_ADMIN,
+  hr: UserRole.HR_MEMBER,
+  interviewer: UserRole.HR_MEMBER,
+};
+
 export function normalizeUserRole(role: string | null | undefined): UserRoleType | null {
   if (!role) return null;
   const normalized = role.trim().toLowerCase().replace(/[\s_-]/g, '');
-  return CANONICAL_ROLES[normalized] ?? null;
+  return CANONICAL_ROLES[normalized] ?? LEGACY_ROLE_ALIASES[normalized] ?? null;
 }
 
 export interface UpdateProfileRequest {

@@ -5,7 +5,7 @@ import { AuthCard } from '../components/AuthCard';
 import { MFAChallenge } from '../components/MFAChallenge';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
-import { getPostLoginPath } from '../utils/getPostLoginPath';
+import { resolvePostLoginPath } from '../utils/getPostLoginPath';
 
 interface MfaLocationState {
   mfaToken?: string;
@@ -29,9 +29,11 @@ export function MfaPage() {
   const handleVerified = async () => {
     await fetchUser();
     const currentUser = useAuthStore.getState().user;
-    navigate(from ?? (currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard'), {
-      replace: true,
-    });
+    if (!currentUser) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    navigate(resolvePostLoginPath(currentUser.role, from), { replace: true });
   };
 
   return (

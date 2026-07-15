@@ -57,7 +57,7 @@ describe('parseRegisterResponse', () => {
 });
 
 describe('normalizeUserRole', () => {
-  it('accepts only Candidate | OrgAdmin | HrMember | Admin', () => {
+  it('accepts canonical Candidate | OrgAdmin | HrMember | Admin', () => {
     expect(normalizeUserRole('Candidate')).toBe(UserRole.CANDIDATE);
     expect(normalizeUserRole('OrgAdmin')).toBe(UserRole.ORG_ADMIN);
     expect(normalizeUserRole('HrMember')).toBe(UserRole.HR_MEMBER);
@@ -66,11 +66,21 @@ describe('normalizeUserRole', () => {
     expect(normalizeUserRole('ORG_ADMIN')).toBe(UserRole.ORG_ADMIN);
   });
 
-  it('rejects deleted legacy roles', () => {
-    expect(normalizeUserRole('Employer')).toBeNull();
-    expect(normalizeUserRole('organize')).toBeNull();
-    expect(normalizeUserRole('HR')).toBeNull();
-    expect(normalizeUserRole('interviewer')).toBeNull();
+  it('maps intentional legacy role synonyms', () => {
+    expect(normalizeUserRole('Employer')).toBe(UserRole.ORG_ADMIN);
+    expect(normalizeUserRole('employer')).toBe(UserRole.ORG_ADMIN);
+    expect(normalizeUserRole('organize')).toBe(UserRole.ORG_ADMIN);
+    expect(normalizeUserRole('organization_admin')).toBe(UserRole.ORG_ADMIN);
+    expect(normalizeUserRole('HR')).toBe(UserRole.HR_MEMBER);
+    expect(normalizeUserRole('hr')).toBe(UserRole.HR_MEMBER);
+    expect(normalizeUserRole('interviewer')).toBe(UserRole.HR_MEMBER);
+  });
+
+  it('rejects truly invalid / unknown roles', () => {
+    expect(normalizeUserRole('SuperUser')).toBeNull();
+    expect(normalizeUserRole('garbage')).toBeNull();
+    expect(normalizeUserRole('')).toBeNull();
+    expect(normalizeUserRole(null)).toBeNull();
   });
 });
 
@@ -115,13 +125,28 @@ describe('parseUser', () => {
     });
   });
 
-  it('rejects Employer (deleted role)', () => {
-    expect(() =>
+  it('maps Employer legacy role to OrgAdmin', () => {
+    expect(
       parseUser({
         Id: 'emp-1',
         FullName: 'Employer User',
         Email: 'employer@isas.dev',
         Role: 'Employer',
+      }),
+    ).toMatchObject({
+      id: 'emp-1',
+      email: 'employer@isas.dev',
+      role: UserRole.ORG_ADMIN,
+    });
+  });
+
+  it('rejects unknown roles without defaulting to Candidate', () => {
+    expect(() =>
+      parseUser({
+        Id: 'x-1',
+        FullName: 'Unknown',
+        Email: 'x@isas.dev',
+        Role: 'SuperUser',
       }),
     ).toThrow(/Invalid user role/);
   });
