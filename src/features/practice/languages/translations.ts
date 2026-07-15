@@ -523,7 +523,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.room.hintLabel': 'Gợi ý',
     'practice.room.questionHint':
       'Hãy tập trung vào các dự án, quy trình bạn đã tham gia và vai trò của bạn.',
-    'practice.room.speakAgain': 'Nói lại',
+    'practice.room.speakAgain': 'Phát lại',
+    'practice.room.replayHint': 'Nghe lại câu hỏi AI',
     'practice.room.answerTime': 'Thời gian trả lời',
     'practice.room.progressLabel': 'Tiến độ câu hỏi',
     'practice.room.screenShare': 'Chia sẻ màn hình',
@@ -1061,7 +1062,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.room.hintLabel': 'Hint',
     'practice.room.questionHint':
       'Focus on projects and processes you took part in, and your role in them.',
-    'practice.room.speakAgain': 'Speak again',
+    'practice.room.speakAgain': 'Replay',
+    'practice.room.replayHint': 'Hear the AI question again',
     'practice.room.answerTime': 'Answer time',
     'practice.room.progressLabel': 'Question progress',
     'practice.room.screenShare': 'Share screen',

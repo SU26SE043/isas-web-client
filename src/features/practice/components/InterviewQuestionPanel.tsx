@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, RotateCcw } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
@@ -8,16 +8,12 @@ interface InterviewQuestionPanelProps {
   currentIndex: number;
   totalQuestions: number;
   remainingSeconds: number;
-  onSpeakAgain: () => void;
-  speakAgainDisabled?: boolean;
 }
 
 export const InterviewQuestionPanel: React.FC<InterviewQuestionPanelProps> = ({
   currentIndex,
   totalQuestions,
   remainingSeconds,
-  onSpeakAgain,
-  speakAgainDisabled = false,
 }) => {
   const { t } = useLanguage();
   const timerClass = getTimerColorClass(getTimerSeverity(remainingSeconds));
@@ -35,15 +31,11 @@ export const InterviewQuestionPanel: React.FC<InterviewQuestionPanelProps> = ({
           >
             AI
           </span>
-          <button
-            type="button"
-            className="btn-secondary inline-flex items-center gap-2 px-3 py-2 text-sm"
-            disabled={speakAgainDisabled}
-            onClick={onSpeakAgain}
-          >
-            <RotateCcw className="size-4" aria-hidden />
-            {t('practice.room.speakAgain')}
-          </button>
+          <p className="text-sm font-medium text-foreground">
+            {t('practice.room.questionOf')
+              .replace('{current}', String(currentIndex + 1))
+              .replace('{total}', String(Math.max(totalQuestions, 1)))}
+          </p>
         </div>
 
         <div className="frame-satin-soft flex shrink-0 items-center gap-3 self-start rounded-xl bg-surface-overlay/60 px-4 py-3">
@@ -77,7 +69,7 @@ export const InterviewQuestionPanel: React.FC<InterviewQuestionPanelProps> = ({
                 className={cn(
                   'flex size-8 items-center justify-center rounded-full border text-xs font-semibold',
                   isActive && 'border-white bg-white text-black',
-                  isDone && !isActive && 'border-satin bg-surface-elevated text-foreground',
+                  isDone && !isActive && 'border-success/50 bg-success/15 text-success',
                   !isActive && !isDone && 'border-satin bg-transparent text-muted-foreground',
                 )}
                 aria-current={isActive ? 'step' : undefined}

@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Send, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, RotateCcw, Send, Video, VideoOff } from 'lucide-react';
 import { useLanguage } from '../../../shared/languages';
 import { cn } from '@/lib/utils';
-import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
 
 interface InterviewControlsProps {
   sessionId: string;
-  remainingSeconds: number;
   isSubmitting: boolean;
   isPaused: boolean;
   isLocked: boolean;
@@ -16,12 +14,13 @@ interface InterviewControlsProps {
   /** When true (B2B exam), hide the camera toggle — camera stays on. */
   cameraAlwaysOn?: boolean;
   isRecording: boolean;
-  chunksUploaded: number;
   onSubmit: () => void;
   onTogglePause: () => void;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onToggleRecording: () => void;
+  onSpeakAgain: () => void;
+  speakAgainDisabled?: boolean;
   learningMode?: boolean;
   isLastQuestion?: boolean;
   isEvaluating?: boolean;
@@ -68,17 +67,17 @@ function ControlIconButton({
 
 export const InterviewControls: React.FC<InterviewControlsProps> = ({
   sessionId,
-  remainingSeconds,
   isSubmitting,
   isPaused,
   isLocked,
   micEnabled,
   cameraEnabled,
   cameraAlwaysOn = false,
-  chunksUploaded,
   onSubmit,
   onToggleMic,
   onToggleCamera,
+  onSpeakAgain,
+  speakAgainDisabled = false,
   learningMode = false,
   isLastQuestion = false,
   isEvaluating = false,
@@ -86,9 +85,9 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const timerClass = getTimerColorClass(getTimerSeverity(remainingSeconds));
   const finishHref = exitHref ?? `/interview/${sessionId}/complete`;
   const busy = isSubmitting || isEvaluating || isPaused || isLocked;
+  const replayDisabled = busy || speakAgainDisabled;
 
   const handlePrimary = useCallback(() => {
     onSubmit();
@@ -126,10 +125,14 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
         event.preventDefault();
         navigate(finishHref);
       }
+      if ((event.key === 'r' || event.key === 'R') && !replayDisabled) {
+        event.preventDefault();
+        onSpeakAgain();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [busy, finishHref, handlePrimary, learningMode, navigate]);
+  }, [busy, finishHref, handlePrimary, learningMode, navigate, onSpeakAgain, replayDisabled]);
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-satin bg-surface-raised/95 backdrop-blur-md">
@@ -160,22 +163,35 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           ) : null}
         </div>
 
-        <div className="flex min-w-[7rem] flex-col items-center">
-          <span className={cn('text-2xl font-semibold tabular-nums tracking-wider sm:text-3xl', timerClass)}>
-            {formatTimerSeconds(remainingSeconds)}
+        <button
+          type="button"
+          className={cn(
+            'group inline-flex min-w-[10.5rem] items-center gap-3 rounded-full border border-satin bg-surface-overlay/70 py-2 pl-2 pr-5 text-left shadow-[var(--satin-inset)] transition',
+            'hover:border-white/25 hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+            'disabled:pointer-events-none disabled:opacity-40',
+          )}
+          disabled={replayDisabled}
+          onClick={onSpeakAgain}
+          aria-label={t('practice.room.speakAgain')}
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-black transition group-hover:scale-[1.03] group-active:scale-95">
+            <RotateCcw className="size-4 transition group-hover:-rotate-45" aria-hidden />
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {t('practice.room.answerTime')}
+          <span className="flex min-w-0 flex-col">
+            <span className="text-sm font-medium tracking-tight text-foreground">
+              {t('practice.room.speakAgain')}
+            </span>
+            <span className="text-[11px] text-muted-foreground">{t('practice.room.replayHint')}</span>
           </span>
-          <span className="mt-0.5 text-[10px] text-muted-foreground/80">
-            {t('practice.room.chunksUploaded').replace('{count}', String(chunksUploaded))}
-          </span>
-        </div>
+          <kbd className="ml-auto hidden rounded border border-satin bg-surface-base/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">
+            R
+          </kbd>
+        </button>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             type="button"
-            className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-sm"
+            className="btn-primary inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm"
             disabled={busy}
             onClick={handlePrimary}
           >
@@ -189,7 +205,7 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           {!learningMode ? (
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-red-500/50 bg-transparent px-4 py-2.5 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10"
+              className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-transparent px-4 py-2.5 text-sm font-medium text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/10"
               onClick={() => navigate(finishHref)}
             >
               {t('practice.room.end')}

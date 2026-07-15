@@ -143,14 +143,11 @@ export const PracticeInterviewPage: React.FC = () => {
           currentIndex={session.currentIndex}
           totalQuestions={session.totalQuestions}
           remainingSeconds={session.remainingSeconds}
-          onSpeakAgain={() => setAiState('speaking')}
-          speakAgainDisabled={session.isManualPaused || session.isViolationPaused}
         />
       </main>
 
       <InterviewControls
         sessionId={sessionId}
-        remainingSeconds={session.remainingSeconds}
         isSubmitting={session.status === 'submitting' || learning.isCompleting}
         isPaused={session.isManualPaused}
         isLocked={(antiCheatEnabled && session.isViolationPaused) || session.isAutoSubmitted}
@@ -158,12 +155,13 @@ export const PracticeInterviewPage: React.FC = () => {
         cameraEnabled={session.cameraEnabled}
         cameraAlwaysOn={session.proctoringConfig.cameraAlwaysOn}
         isRecording={session.isRecording}
-        chunksUploaded={recording.chunksUploaded}
         onSubmit={handleSubmit}
         onTogglePause={session.togglePause}
         onToggleMic={session.toggleMic}
         onToggleCamera={session.toggleCamera}
         onToggleRecording={session.toggleRecording}
+        onSpeakAgain={() => setAiState('speaking')}
+        speakAgainDisabled={session.isManualPaused || session.isViolationPaused}
         learningMode={session.isLearning}
         isLastQuestion={isLastQuestion}
         isEvaluating={learning.isEvaluating}

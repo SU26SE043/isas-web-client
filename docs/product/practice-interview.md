@@ -27,7 +27,7 @@ Interview history list remains at `/candidate/practice/history` (also linked fro
 5. **Terms** (B2B campaign sessions only) — `/interview/:sessionId/terms` — assessment terms acceptance.
 6. **Identity** (B2B campaign sessions only) — `/interview/:sessionId/identity` — baseline face photo capture.
 7. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
-8. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, timer, controls, recording.
+8. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, question progress + answer timer, controls (mic/camera, **AI replay**, submit), recording.
 9. Session completes → upload → `/interview/:sessionId/complete` → result/history.
 10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
 11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.

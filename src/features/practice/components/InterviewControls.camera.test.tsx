@@ -16,19 +16,18 @@ vi.mock('../../../shared/languages', () => ({
 
 const baseProps = {
   sessionId: 'session-123',
-  remainingSeconds: 60,
   isSubmitting: false,
   isPaused: false,
   isLocked: false,
   micEnabled: true,
   cameraEnabled: true,
   isRecording: true,
-  chunksUploaded: 0,
   onSubmit: vi.fn(),
   onTogglePause: vi.fn(),
   onToggleMic: vi.fn(),
   onToggleCamera: vi.fn(),
   onToggleRecording: vi.fn(),
+  onSpeakAgain: vi.fn(),
 };
 
 describe('InterviewControls camera toggle', () => {
@@ -57,5 +56,17 @@ describe('InterviewControls camera toggle', () => {
 
     expect(screen.queryByRole('button', { name: 'practice.flow.controls.camera' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'practice.flow.controls.mic' })).toBeInTheDocument();
+  });
+
+  it('replays AI question from the center control', async () => {
+    const onSpeakAgain = vi.fn();
+    render(
+      <MemoryRouter>
+        <InterviewControls {...baseProps} onSpeakAgain={onSpeakAgain} />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'practice.room.speakAgain' }));
+    expect(onSpeakAgain).toHaveBeenCalledTimes(1);
   });
 });
