@@ -13,6 +13,7 @@ import { LearningTheoryPage } from '@/features/practice/pages/LearningTheoryPage
 import { LearningPracticeDeviceCheckPage } from '@/features/practice/pages/LearningPracticeDeviceCheckPage';
 import { LearningLessonPracticePage } from '@/features/practice/pages/LearningLessonPracticePage';
 import { LearningPracticeReportPage } from '@/features/practice/pages/LearningPracticeReportPage';
+import { LearningQuestionReportPage } from '@/features/practice/pages/LearningQuestionReportPage';
 import { LearningReaderLayout } from '@/features/practice/components/learning-path/LearningReaderLayout';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
 import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage';
@@ -64,6 +65,10 @@ export const candidateRoutes: RouteObject[] = [
                 element: <LearningPracticeDeviceCheckPage />,
               },
               { path: 'practice', element: <LearningLessonPracticePage /> },
+              {
+                path: 'practice/questions/:questionId/report',
+                element: <LearningQuestionReportPage />,
+              },
               { path: 'report', element: <LearningPracticeReportPage /> },
             ],
           },

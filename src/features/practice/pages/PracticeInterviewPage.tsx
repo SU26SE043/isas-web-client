@@ -7,7 +7,6 @@ import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
 import { CandidateCameraPanel } from '../components/CandidateCameraPanel';
 import { InterviewQuestionPanel } from '../components/InterviewQuestionPanel';
 import { InterviewControls } from '../components/InterviewControls';
-import { LearningLiveFeedbackPanel } from '../components/learning-path/LearningLiveFeedbackPanel';
 import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner';
 import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
@@ -29,7 +28,7 @@ import { requiresIdentityVerification } from '../types/interviewFlow.types';
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
   const identityVerified = useInterviewFlowStore((state) => state.identityVerified);
   const deviceCheckPassed = useInterviewFlowStore((state) => state.deviceCheckPassed);
@@ -69,17 +68,18 @@ export const PracticeInterviewPage: React.FC = () => {
     void media.startMedia();
   }, [media.startMedia, session.isLoading, session.status]);
 
+  const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
+
   const handleSubmit = () => {
     if (session.isLearning) {
-      void learning.evaluateAnswer(session.currentQuestion);
+      if (isLastQuestion) {
+        void learning.completeSession(session.currentQuestion, session.submitCurrentAnswer);
+        return;
+      }
+      void learning.submitForReport(session.currentQuestion);
       return;
     }
     void session.submitAnswer();
-  };
-
-  const handleNextQuestion = async () => {
-    learning.clearFeedback();
-    await session.submitCurrentAnswer();
   };
 
   if (session.isLoading) {
@@ -90,8 +90,6 @@ export const PracticeInterviewPage: React.FC = () => {
       </div>
     );
   }
-
-  const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
 
   return (
     <div className="flex min-h-screen flex-col surface-base pb-28 font-sans">
@@ -147,10 +145,6 @@ export const PracticeInterviewPage: React.FC = () => {
         />
       </main>
 
-      {session.isLearning && learning.feedback ? (
-        <LearningLiveFeedbackPanel feedback={learning.feedback} language={language} />
-      ) : null}
-
       <InterviewControls
         sessionId={sessionId}
         remainingSeconds={session.remainingSeconds}
@@ -165,11 +159,8 @@ export const PracticeInterviewPage: React.FC = () => {
         onToggleMic={session.toggleMic}
         onToggleRecording={session.toggleRecording}
         learningMode={session.isLearning}
-        feedbackVisible={Boolean(learning.feedback)}
         isLastQuestion={isLastQuestion}
         isEvaluating={learning.isEvaluating}
-        onNextQuestion={() => void handleNextQuestion()}
-        onCompleteSession={() => void learning.completeSession(session.submitCurrentAnswer)}
         exitHref={learning.exitHref}
       />
 

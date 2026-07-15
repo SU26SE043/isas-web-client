@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { practiceSessionService } from '../services/practiceSession.service';
+import { getLearningQuestionIndex } from '../services/learningPracticeSession.registry';
 import { useInterviewSessionStore } from '../stores/interviewSessionStore';
 import { useNetworkStatus } from './useNetworkStatus';
 import { isLearningSessionId } from '../types/interviewFlow.types';
@@ -30,7 +31,8 @@ export function useInterviewSession(sessionId: string) {
       ? session.questions
       : await practiceSessionService.pollQuestions(sessionId);
     const proctoringConfig = practiceSessionService.getProctoringConfig(sessionId);
-    initSession(session.title, questions, proctoringConfig);
+    const startIndex = isLearningSessionId(sessionId) ? getLearningQuestionIndex(sessionId) : 0;
+    initSession(session.title, questions, proctoringConfig, startIndex);
   }, [initSession, navigate, sessionId, setLoading]);
 
   useEffect(() => {

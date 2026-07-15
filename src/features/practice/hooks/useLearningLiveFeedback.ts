@@ -1,19 +1,33 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { learningPathService } from '../services/learningPath.service';
-import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
-import type {
-  LearningPracticeQuestionFeedback,
-  LearningPracticeReport,
-} from '../types/learningPath.types';
+import {
+  appendLearningAnswer,
+  clearLearningPending,
+  getLearningAnswered,
+  getLearningPracticeSession,
+} from '../services/learningPracticeSession.registry';
 import type { PracticeQuestion } from '../mocks/session.fixtures';
 
+function questionReportPath(
+  roadmapId: string,
+  lessonId: string,
+  questionId: string,
+  sessionId: string,
+) {
+  return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/practice/questions/${questionId}/report?sessionId=${encodeURIComponent(sessionId)}`;
+}
+
+function lessonReportPath(roadmapId: string, lessonId: string, reportId: string) {
+  return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/report?reportId=${reportId}`;
+}
+
+/**
+ * Learning practice orchestrator: Submit → per-question report page;
+ * last question Complete → aggregate lesson report.
+ */
 export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) {
   const navigate = useNavigate();
-  const [feedback, setFeedback] = useState<LearningPracticeQuestionFeedback | null>(null);
-  const [answered, setAnswered] = useState<LearningPracticeReport['questionFeedback']>([]);
-  const answeredRef = useRef(answered);
-  answeredRef.current = answered;
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -22,53 +36,64 @@ export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) 
     ? `/candidate/learning/roadmaps/${learningMeta.roadmapId}`
     : `/interview/${sessionId}/complete`;
 
-  const evaluateAnswer = async (question: PracticeQuestion | undefined) => {
-    if (!question || feedback) return;
+  const submitForReport = async (question: PracticeQuestion | undefined) => {
+    if (!question || !learningMeta || isEvaluating) return;
     setIsEvaluating(true);
     try {
-      const nextFeedback = await learningPathService.evaluateAnswer(question.id);
-      setFeedback(nextFeedback);
-      setAnswered((prev) => [
-        ...prev,
-        {
-          questionId: question.id,
-          prompt: question.content,
-          promptVi: question.content,
-          feedback: nextFeedback,
-        },
-      ]);
+      const feedback = await learningPathService.evaluateAnswer(question.id);
+      appendLearningAnswer(sessionId, {
+        questionId: question.id,
+        prompt: question.content,
+        promptVi: question.content,
+        feedback,
+      });
+      navigate(
+        questionReportPath(
+          learningMeta.roadmapId,
+          learningMeta.lessonId,
+          question.id,
+          sessionId,
+        ),
+      );
     } finally {
       setIsEvaluating(false);
     }
   };
 
-  const clearFeedback = () => setFeedback(null);
-
-  const completeSession = async (submitCurrentAnswer: () => Promise<boolean>) => {
-    if (!learningMeta) return;
+  const completeSession = async (
+    question: PracticeQuestion | undefined,
+    submitCurrentAnswer: () => Promise<boolean>,
+  ) => {
+    if (!learningMeta || !question || isCompleting) return;
     setIsCompleting(true);
+    setIsEvaluating(true);
     try {
+      const feedback = await learningPathService.evaluateAnswer(question.id);
+      appendLearningAnswer(sessionId, {
+        questionId: question.id,
+        prompt: question.content,
+        promptVi: question.content,
+        feedback,
+      });
+      clearLearningPending(sessionId);
       await submitCurrentAnswer();
       const { report } = await learningPathService.completePracticeSession(
         learningMeta.roadmapId,
         learningMeta.lessonId,
-        answeredRef.current,
+        getLearningAnswered(sessionId),
       );
-      navigate(
-        `/candidate/learning/roadmaps/${learningMeta.roadmapId}/lessons/${learningMeta.lessonId}/report?reportId=${report.id}`,
-      );
+      navigate(lessonReportPath(learningMeta.roadmapId, learningMeta.lessonId, report.id));
     } catch {
       setIsCompleting(false);
+      setIsEvaluating(false);
     }
   };
 
   return {
-    feedback,
     isEvaluating,
     isCompleting,
     exitHref,
-    evaluateAnswer,
-    clearFeedback,
+    submitForReport,
     completeSession,
   };
 }

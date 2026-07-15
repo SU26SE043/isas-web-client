@@ -46,11 +46,11 @@ Shared UX includes: Device Check, Waiting Screen, Interview Layout, Camera Previ
 
 Learning only changes **business logic**. Allowed differences vs interview practice:
 
-1. **Per-question live AI feedback** — after each answer, show feedback on the shared room; candidate taps **Next Question**. Interview practice evaluates only at end-of-session report.
-2. **End CTA** — **Complete Practice Session** (not Submit Interview / Finish).
-3. **Purpose** — post-theory drill with instant feedback, not a full interview simulation.
+1. **Per-question report pages** — after each answer (except the last), navigate to a **question report** page; candidate taps **Continue** to return to the shared room for the next question. Interview practice evaluates only at end-of-session report.
+2. **End CTA** — on the last question in the room, primary button is **Hoàn tất / Complete** (not Submit Answer). That evaluates the last answer and opens the **aggregate lesson report**.
+3. **Purpose** — post-theory drill with per-question feedback reports, not a full interview simulation.
 
-After practice, return to Learning Report (still in Learning workspace + Learning Sidebar) with **Next Lesson** when available.
+After practice, the aggregate Learning Report (Learning workspace + Learning Sidebar) lists overall scores plus every per-question report, with **Next Lesson** when available.
 
 ## Learning Dashboard
 
@@ -87,13 +87,13 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 
 1. Theory / Open Practice registers a learning session and opens **`/interview/:sessionId/prepare`** (shared prepare → device-check → waiting → room).
 2. Legacy Learning paths `.../practice/device-check` and `.../practice` only redirect into that shared flow.
-3. In the shared room: AI asks questions; after **each** answer, live feedback panel → **Next Question**.
-4. Final CTA **Complete Practice Session** → Practice Report on the roadmap → lesson practice completed.
+3. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** → evaluate → navigate to **question report** (`.../practice/questions/:questionId/report`) → **Continue** → next question in the room.
+4. On the **last** question, primary CTA is **Hoàn tất / Complete** → evaluate + complete session → **lesson Practice Report** (aggregate of all question reports) → lesson practice completed.
 
 | Mode | Feedback timing | End button |
 | --- | --- | --- |
 | Interview practice (B2C/B2B) | End-of-session report only | Submit / Finish interview |
-| Learning practice | After every answer + Next Question | Complete Practice Session |
+| Learning practice | After each answer → question report page; aggregate at end | Hoàn tất / Complete (last question) |
 
 ## Completion rules
 
@@ -112,11 +112,12 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 | `.../lessons/:lessonId/theory` | Theory reader | `LearningLayout` + Learning Sidebar |
 | `.../lessons/:lessonId/practice/device-check` | Launcher → shared `/interview/:sessionId/prepare` | Learning Sidebar until redirect |
 | `.../lessons/:lessonId/practice` | Redirect → device-check launcher | Learning Sidebar until redirect |
-| `.../lessons/:lessonId/report` | Practice Report | Learning Sidebar |
+| `.../lessons/:lessonId/practice/questions/:questionId/report` | Per-question Practice Report | Learning Sidebar |
+| `.../lessons/:lessonId/report` | Aggregate Practice Report | Learning Sidebar |
 | `/interview/learning-.../prepare` → `device-check` → `waiting` → room | Shared Practice Session UI | `FullscreenLayout` |
 
 ## Related
 
 - Create: `learning-roadmap.md`
 - Shared room / device check: B2C/B2B interview flow (`InterviewPrepPage`, `DeviceCheckPage`, `PracticeInterviewPage`)
-- Live feedback delta: `LearningLiveFeedbackPanel` + learning controls on shared `InterviewControls`
+- Per-question / aggregate reports: `LearningQuestionReportPage`, `LearningPracticeReportPage`, learning controls on shared `InterviewControls`

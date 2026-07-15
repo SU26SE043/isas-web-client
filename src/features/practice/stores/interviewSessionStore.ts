@@ -29,7 +29,12 @@ interface InterviewSessionState {
   isOffline: boolean;
   proctoringConfig: ProctoringConfig;
   setLoading: () => void;
-  initSession: (title: string, questions: PracticeQuestion[], proctoringConfig: ProctoringConfig) => void;
+  initSession: (
+    title: string,
+    questions: PracticeQuestion[],
+    proctoringConfig: ProctoringConfig,
+    startIndex?: number,
+  ) => void;
   tickTimer: () => void;
   setStatus: (status: InterviewRoomStatus) => void;
   setAiState: (state: AiInterviewerState) => void;
@@ -86,16 +91,18 @@ function delay(ms: number) {
 export const useInterviewSessionStore = create<InterviewSessionState>((set, get) => ({
   ...initialState,
   setLoading: () => set({ ...initialState, status: 'loading' }),
-  initSession: (title, questions, proctoringConfig) => {
-    const first = questions[0];
+  initSession: (title, questions, proctoringConfig, startIndex = 0) => {
+    const safeIndex =
+      questions.length === 0 ? 0 : Math.min(Math.max(0, startIndex), questions.length - 1);
+    const current = questions[safeIndex];
     set({
       sessionTitle: title,
       questions,
-      currentIndex: 0,
-      messages: first ? [createMessage('ai', first.content)] : [],
+      currentIndex: safeIndex,
+      messages: current ? [createMessage('ai', current.content)] : [],
       aiState: 'speaking',
       status: questions.length ? 'active' : 'completed',
-      remainingSeconds: getQuestionTimeLimit(first),
+      remainingSeconds: getQuestionTimeLimit(current),
       isRecording: true,
       cameraEnabled: true,
       violationCount: 0,

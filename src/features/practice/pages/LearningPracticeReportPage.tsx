@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { QuestionFeedbackReport } from '../components/learning-path/QuestionFeedbackReport';
 import { learningPathService } from '../services/learningPath.service';
 import type { LearningPracticeReport, LearningRoadmapDetail } from '../types/learningPath.types';
 import { findNextLesson, theoryPath } from '../utils/learningPathNavigation';
@@ -100,6 +101,27 @@ export function LearningPracticeReportPage() {
           items={language === 'vi' ? report.nextActionsVi : report.nextActions}
         />
       </section>
+
+      {report.questionFeedback.length > 0 ? (
+        <section className="mt-8 space-y-4">
+          <h2 className="heading-secondary text-xl text-foreground">
+            {t('practice.learningPath.questionReportsSection')}
+          </h2>
+          <div className="space-y-4">
+            {report.questionFeedback.map((item, index) => (
+              <QuestionFeedbackReport
+                key={item.questionId}
+                feedback={item.feedback}
+                language={language}
+                prompt={item.prompt}
+                promptVi={item.promptVi}
+                questionNumber={index + 1}
+                compact
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-8 flex flex-wrap gap-3 border-t border-subtle pt-6">
         {nextLesson ? (

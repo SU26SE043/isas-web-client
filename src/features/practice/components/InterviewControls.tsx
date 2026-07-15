@@ -19,11 +19,8 @@ interface InterviewControlsProps {
   onToggleMic: () => void;
   onToggleRecording: () => void;
   learningMode?: boolean;
-  feedbackVisible?: boolean;
   isLastQuestion?: boolean;
   isEvaluating?: boolean;
-  onNextQuestion?: () => void;
-  onCompleteSession?: () => void;
   exitHref?: string;
 }
 
@@ -76,11 +73,8 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   onSubmit,
   onToggleMic,
   learningMode = false,
-  feedbackVisible = false,
   isLastQuestion = false,
   isEvaluating = false,
-  onNextQuestion,
-  onCompleteSession,
   exitHref,
 }) => {
   const { t } = useLanguage();
@@ -90,34 +84,20 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   const busy = isSubmitting || isEvaluating || isPaused || isLocked;
 
   const handlePrimary = useCallback(() => {
-    if (learningMode && feedbackVisible) {
-      if (isLastQuestion) onCompleteSession?.();
-      else onNextQuestion?.();
-      return;
-    }
     onSubmit();
-  }, [
-    feedbackVisible,
-    isLastQuestion,
-    learningMode,
-    onCompleteSession,
-    onNextQuestion,
-    onSubmit,
-  ]);
+  }, [onSubmit]);
 
   const primaryLabel = (() => {
-    if (learningMode && feedbackVisible) {
-      if (isLastQuestion) {
-        return isSubmitting
-          ? t('practice.learningPath.completing')
-          : t('practice.learningPath.completeSession');
-      }
-      return t('practice.learningPath.nextQuestion');
-    }
     if (isEvaluating || isSubmitting) {
+      if (learningMode && isLastQuestion && isSubmitting) {
+        return t('practice.learningPath.completing');
+      }
       return learningMode
         ? t('practice.learningPath.evaluating')
         : t('practice.room.submitting');
+    }
+    if (learningMode && isLastQuestion) {
+      return t('practice.learningPath.finish');
     }
     return t('practice.room.submitAnswer');
   })();
