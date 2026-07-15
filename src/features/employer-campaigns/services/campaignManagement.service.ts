@@ -20,7 +20,7 @@ const MOCK_REGISTERED_CANDIDATES: Record<string, { candidateId: string; displayN
   'new.candidate@example.com': { candidateId: 'cand-new', displayName: 'New Candidate' },
 };
 
-const EMPLOYER_EMAILS = new Set(['hr@isas.dev', 'organize@isas.dev', 'admin@isas.dev']);
+const EMPLOYER_EMAILS = new Set(['hrmember@isas.dev', 'orgadmin@isas.dev', 'admin@isas.dev']);
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();

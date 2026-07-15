@@ -7,7 +7,7 @@ test.describe('B2B magic link interview', () => {
 
   test('candidate opens magic link, reviews briefing, and completes proctored assessment', async ({ page }) => {
     await installMockMedia(page);
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/invite/phase8-valid');
     await expect(page).toHaveURL(/\/candidate\/campaigns\?highlight=phase8-valid/);

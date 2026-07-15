@@ -5,7 +5,7 @@ test.describe('Admin platform', () => {
   test.setTimeout(60_000);
 
   test('admin can access dashboard, users, audit logs, and AI config', async ({ page }) => {
-    await loginAs(page, 'admin');
+    await loginAs(page, 'Admin');
 
     await page.goto('/admin/dashboard');
     await expect(page.getByRole('heading', { name: /Admin Platform/i })).toBeVisible();
@@ -24,7 +24,7 @@ test.describe('Admin platform', () => {
   });
 
   test('candidate is denied admin workspace', async ({ page }) => {
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
     await page.goto('/admin/dashboard');
     await expect(page).toHaveURL(/\/access-denied/);
   });

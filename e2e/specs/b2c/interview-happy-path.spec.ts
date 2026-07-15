@@ -8,7 +8,7 @@ test.describe('B2C interview happy path', () => {
 
   test('candidate completes practice flow from prepare to complete', async ({ page }) => {
     await installMockMedia(page);
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     const sessionId = await completePracticeSetupWizard(page);
 

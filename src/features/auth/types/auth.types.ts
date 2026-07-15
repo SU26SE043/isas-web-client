@@ -1,47 +1,55 @@
-/** BRD ROL-001 … ROL-005 — see BRD/User_Roles_and_Permissions.md */
-import { unwrapAuthPayload } from '@/shared/api/authPayload';
+/**
+ * Business roles (authenticated users).
+ * Canonical Auth Identity values only — no legacy role strings.
+ *
+ * ```
+ * Candidate | OrgAdmin | HrMember | Admin
+ * ```
+ *
+ * Guest is client-only (unauthenticated) — never returned by `/me`.
+ */
+import { pickAuthString, unwrapAuthPayload } from '@/shared/api/authPayload';
 
 export { parseAuthTokens, unwrapAuthPayload } from '@/shared/api/authPayload';
 export type { AuthTokensResponse } from '@/shared/api/authPayload';
 
 export const UserRole = {
   GUEST: 'guest',
-  CANDIDATE: 'candidate',
-  HR: 'hr',
-  ORGANIZE: 'organize',
-  ADMIN: 'admin',
+  CANDIDATE: 'Candidate',
+  ORG_ADMIN: 'OrgAdmin',
+  HR_MEMBER: 'HrMember',
+  ADMIN: 'Admin',
 } as const;
 
 export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
 
-/** Roles that require a logged-in session (excludes Guest). */
+/** Authenticated business roles (excludes Guest). */
 export const AUTHENTICATED_ROLES: UserRoleType[] = [
   UserRole.CANDIDATE,
-  UserRole.HR,
-  UserRole.ORGANIZE,
+  UserRole.ORG_ADMIN,
+  UserRole.HR_MEMBER,
   UserRole.ADMIN,
 ];
 
-const LEGACY_ROLE_ALIASES: Record<string, UserRoleType> = {
+/** Org-scoped B2B roles (recruitment tenant). */
+export const ORG_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.HR_MEMBER];
+
+/** Can manage org settings, billing, and HR member accounts. */
+export const ORG_ADMIN_ROLES: UserRoleType[] = [UserRole.ORG_ADMIN, UserRole.ADMIN];
+
+/** Exact Identity role names only (case-insensitive). */
+const CANONICAL_ROLES: Record<string, UserRoleType> = {
   guest: UserRole.GUEST,
   candidate: UserRole.CANDIDATE,
-  Candidate: UserRole.CANDIDATE,
-  hr: UserRole.HR,
-  HR: UserRole.HR,
-  organize: UserRole.ORGANIZE,
-  Organize: UserRole.ORGANIZE,
-  organization: UserRole.ORGANIZE,
-  Organization: UserRole.ORGANIZE,
+  orgadmin: UserRole.ORG_ADMIN,
+  hrmember: UserRole.HR_MEMBER,
   admin: UserRole.ADMIN,
-  Admin: UserRole.ADMIN,
-  /** @deprecated BRD removed Interviewer — maps to HR */
-  interviewer: UserRole.HR,
-  Interviewer: UserRole.HR,
 };
 
 export function normalizeUserRole(role: string | null | undefined): UserRoleType | null {
   if (!role) return null;
-  return LEGACY_ROLE_ALIASES[role] ?? null;
+  const normalized = role.trim().toLowerCase().replace(/[\s_-]/g, '');
+  return CANONICAL_ROLES[normalized] ?? null;
 }
 
 export interface UpdateProfileRequest {
@@ -127,25 +135,25 @@ export function parseUser(raw: unknown): User {
     throw new Error('Invalid user payload from API');
   }
 
-  const role = normalizeUserRole(
-    typeof inner.role === 'string' ? inner.role : String(inner.role ?? ''),
-  );
+  const role = normalizeUserRole(pickAuthString(inner, 'role', 'Role') ?? String(inner.role ?? ''));
   if (!role || role === UserRole.GUEST) {
-    throw new Error(`Invalid user role from API: ${String(inner.role)}`);
+    throw new Error(`Invalid user role from API: ${String(inner.role ?? inner.Role)}`);
   }
 
+  const createdAtRaw = inner.createdAt ?? inner.CreatedAt;
+
   return {
-    id: String(inner.id ?? ''),
-    fullName: String(inner.fullName ?? ''),
-    email: String(inner.email ?? ''),
-    location: inner.location == null ? '' : String(inner.location),
-    title: inner.title == null ? '' : String(inner.title),
+    id: pickAuthString(inner, 'id', 'Id') ?? String(inner.id ?? ''),
+    fullName: pickAuthString(inner, 'fullName', 'FullName') ?? '',
+    email: pickAuthString(inner, 'email', 'Email') ?? '',
+    location: pickAuthString(inner, 'location', 'Location') ?? '',
+    title: pickAuthString(inner, 'title', 'Title') ?? '',
     role,
     createdAt:
-      typeof inner.createdAt === 'string'
-        ? inner.createdAt
-        : inner.createdAt != null
-          ? String(inner.createdAt)
+      typeof createdAtRaw === 'string'
+        ? createdAtRaw
+        : createdAtRaw != null
+          ? String(createdAtRaw)
           : '',
   };
 }

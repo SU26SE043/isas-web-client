@@ -4,7 +4,7 @@ import type { UserRoleType } from '../types/auth.types';
 import { SESSION_LIMITS, sessionManager } from '../utils/sessionManager';
 
 function getIdleLimitMs(role: UserRoleType | null): number {
-  if (role === UserRole.ADMIN || role === UserRole.HR || role === UserRole.ORGANIZE) {
+  if (role === UserRole.ADMIN || role === UserRole.HR_MEMBER || role === UserRole.ORG_ADMIN) {
     return SESSION_LIMITS.idleAdminMs;
   }
   return SESSION_LIMITS.idleCandidateMs;

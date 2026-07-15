@@ -8,14 +8,14 @@ export const ADMIN_PLATFORM_FIXTURE: AdminPlatformSnapshot = {
     { id: 'sla', labelKey: 'admin.metric.sla', value: '99.98%', hintKey: 'admin.metric.slaHint', status: 'warning' },
   ],
   users: [
-    { id: 'usr_001', name: 'An Nguyen', email: 'an@pipraint.local', role: 'candidate', tenant: 'Public', status: 'active', mfaEnabled: false, lastSeenAt: '2026-07-12T02:05:00.000Z' },
-    { id: 'usr_002', name: 'Mai Tran', email: 'mai@novaworks.ai', role: 'hr', tenant: 'NovaWorks AI', status: 'pending', mfaEnabled: true, lastSeenAt: '2026-07-11T09:40:00.000Z' },
-    { id: 'usr_003', name: 'Long Pham', email: 'long@pipraint.local', role: 'admin', tenant: 'Platform', status: 'active', mfaEnabled: true, lastSeenAt: '2026-07-12T03:12:00.000Z' },
+    { id: 'usr_001', name: 'An Nguyen', email: 'an@pipraint.local', role: 'Candidate', tenant: 'Public', status: 'active', mfaEnabled: false, lastSeenAt: '2026-07-12T02:05:00.000Z' },
+    { id: 'usr_002', name: 'Mai Tran', email: 'mai@novaworks.ai', role: 'HrMember', tenant: 'NovaWorks AI', status: 'pending', mfaEnabled: true, lastSeenAt: '2026-07-11T09:40:00.000Z' },
+    { id: 'usr_003', name: 'Long Pham', email: 'long@pipraint.local', role: 'Admin', tenant: 'Platform', status: 'active', mfaEnabled: true, lastSeenAt: '2026-07-12T03:12:00.000Z' },
   ],
   roles: [
-    { id: 'role_admin', nameKey: 'admin.role.admin', descriptionKey: 'admin.role.adminHint', users: 4, permissions: ['users.manage', 'audit.view', 'config.sign'] },
-    { id: 'role_org', nameKey: 'admin.role.organize', descriptionKey: 'admin.role.organizeHint', users: 36, permissions: ['tenant.manage', 'billing.manage'] },
-    { id: 'role_hr', nameKey: 'admin.role.hr', descriptionKey: 'admin.role.hrHint', users: 214, permissions: ['campaign.manage', 'candidate.view'] },
+    { id: 'role_admin', nameKey: 'admin.role.Admin', descriptionKey: 'admin.role.AdminHint', users: 4, permissions: ['users.manage', 'audit.view', 'config.sign'] },
+    { id: 'role_org', nameKey: 'admin.role.OrgAdmin', descriptionKey: 'admin.role.OrgAdminHint', users: 36, permissions: ['tenant.manage', 'billing.manage'] },
+    { id: 'role_hr', nameKey: 'admin.role.HrMember', descriptionKey: 'admin.role.HrMemberHint', users: 214, permissions: ['campaign.manage', 'candidate.view'] },
   ],
   permissionGroups: [
     { id: 'identity', labelKey: 'admin.permission.identity', permissions: ['users.manage', 'roles.assign', 'impersonation.create'] },

@@ -12,7 +12,7 @@ test.describe('B2B organization onboarding', () => {
   });
 
   test('organize completes dashboard, profile, and verification flow', async ({ page }) => {
-    await loginAs(page, 'organize');
+    await loginAs(page, 'OrgAdmin');
 
     await expect(page.getByRole('heading', { name: /^Employer workspace$/i })).toBeVisible();
     await expect(page.getByText(/Profile completeness/i)).toBeVisible();
@@ -40,7 +40,7 @@ test.describe('B2B organization onboarding', () => {
   });
 
   test('hr can access dashboard but not company profile routes', async ({ page }) => {
-    await loginAs(page, 'hr');
+    await loginAs(page, 'HrMember');
 
     await expect(page.getByRole('heading', { name: /^Employer workspace$/i })).toBeVisible();
     await expect(page.getByRole('link', { name: /^Company profile$/i })).toHaveCount(0);
@@ -50,7 +50,7 @@ test.describe('B2B organization onboarding', () => {
   });
 
   test('candidate is denied employer workspace', async ({ page }) => {
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
     await page.goto('/employer/dashboard');
     await expect(page).toHaveURL(/\/access-denied/);
   });

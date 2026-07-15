@@ -3,7 +3,7 @@ export type NotificationCategory = 'interview' | 'campaign' | 'billing' | 'syste
 export type NotificationStatus = 'unread' | 'read';
 export type SupportPriority = 'low' | 'normal' | 'high';
 export type SupportStatus = 'open' | 'pending' | 'resolved';
-export type TeamRole = 'hr' | 'organize' | 'admin';
+export type TeamRole = 'HrMember' | 'OrgAdmin' | 'Admin';
 
 export interface PlatformNotification {
   id: string;

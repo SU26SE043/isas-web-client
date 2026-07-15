@@ -41,7 +41,7 @@ export const enterpriseRoutes: RouteObject[] = [
     element: <RequireAuth />,
     children: [
       {
-        element: <RequireRole roles={[UserRole.HR, UserRole.ORGANIZE, UserRole.ADMIN]} />,
+        element: <RequireRole roles={[UserRole.HR_MEMBER, UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
         children: [
           {
             path: '/employer',
@@ -50,7 +50,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <EmployerDashboardPage /> },
               {
-                element: <RequireRole roles={[UserRole.ORGANIZE, UserRole.ADMIN]} />,
+                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
                 children: [
                   { path: 'company', element: <CompanyProfilePage /> },
                   { path: 'company/verify', element: <CompanyVerificationPage /> },
@@ -70,7 +70,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'help', element: <HelpPage scope="employer" /> },
               { path: 'support', element: <SupportPage scope="employer" /> },
               {
-                element: <RequireRole roles={[UserRole.ORGANIZE, UserRole.ADMIN]} />,
+                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
                 children: [
                   { path: 'subscription', element: <EmployerSubscriptionPage /> },
                   { path: 'billing', element: <EmployerBillingPage /> },

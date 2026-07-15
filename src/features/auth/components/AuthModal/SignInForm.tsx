@@ -74,13 +74,14 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       }
 
       await fetchUser();
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser) {
+        throw new Error('PROFILE_LOAD_FAILED');
+      }
+
       setStatusMessage(t('auth.loginSuccess'));
       onLoginSuccess();
-      const currentUser = useAuthStore.getState().user;
-      navigate(
-        redirectFrom ?? (currentUser ? getPostLoginPath(currentUser.role) : '/candidate/dashboard'),
-        { replace: true },
-      );
+      navigate(redirectFrom ?? getPostLoginPath(currentUser.role), { replace: true });
     } catch (error) {
       const parsed = parseAuthError(error, t('auth.loginFailed'));
       if (parsed.kind === 'accountLocked') {

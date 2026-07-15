@@ -2,18 +2,19 @@
 
 BRD: `BRD/User_Roles_and_Permissions.md`, `BRD/Security_Requirements.md`, FR-001–003.
 
-## Roles (BRD ROL-001 … ROL-005)
+## Roles
 
-| Role | API value | Client status |
+Canonical Auth Identity values (PascalCase). Guest is client-only (unauthenticated).
+
+| Role | API value | Scope |
 | --- | --- | --- |
-| Guest | `guest` | Unauthenticated (no `user.role`) |
-| Candidate | `candidate` | B2C: CV, practice, profile |
-| HR | `hr` | B2B: campaigns (future) |
-| Organize | `organize` | B2B: org admin, billing (future) |
-| Admin | `admin` | Platform admin (future) |
+| Candidate | `Candidate` | B2C: own interviews, reports, profile, subscription |
+| OrgAdmin | `OrgAdmin` | Full control **within one organization** (settings, billing, team, campaigns, analytics) |
+| HrMember | `HrMember` | Org recruitment: campaigns, interviews, candidate review, reports — **no** billing/settings/admin management |
+| Admin | `Admin` | Platform-wide system administrator (all orgs/users/config) |
 
-Legacy API values (`Candidate`, `interviewer`) are normalized in `parseUser()`.
-`interviewer` maps to `hr` per BRD (no separate Interviewer role).
+`OrgAdmin` ≠ platform `Admin`. Only these Identity role strings are accepted (case-insensitive).
+Deleted legacy values (`Employer`, `organize`, `hr`, `interviewer`, …) are **rejected** by `normalizeUserRole()`.
 
 ## Surfaces (Phase 3 — M01)
 

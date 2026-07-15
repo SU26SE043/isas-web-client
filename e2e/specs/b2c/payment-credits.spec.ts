@@ -6,7 +6,7 @@ test.describe('B2C token wallet and checkout', () => {
   test.setTimeout(90_000);
 
   test('candidate tops up wallet, reserves tokens on practice, and sees usage history', async ({ page }) => {
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/candidate/credits');
     await expect(page.getByRole('heading', { name: /^Token wallet$/i })).toBeVisible();

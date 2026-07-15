@@ -5,7 +5,7 @@ test.describe('B2C results and learning', () => {
   test.setTimeout(90_000);
 
   test('candidate views scored result, history, roadmap wizard, and learning dashboard', async ({ page }) => {
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/candidate/practice/history/interview-result-001');
     await expect(page.getByRole('tab', { name: /^Overview$/i })).toBeVisible({ timeout: 15_000 });

@@ -38,13 +38,13 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       label: t('employer.nav.company'),
       end: true,
       icon: <Building2 className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/company/verify',
       label: t('employer.nav.verify'),
       icon: <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/campaigns',
@@ -65,19 +65,19 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       to: '/employer/subscription',
       label: t('employer.nav.subscription'),
       icon: <CreditCard className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/billing',
       label: t('employer.nav.billing'),
       icon: <ReceiptText className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/invoices',
       label: t('employer.nav.invoices'),
       icon: <ScrollText className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/notifications',
@@ -93,7 +93,7 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       to: '/employer/team',
       label: t('engagement.nav.team'),
       icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORGANIZE, UserRole.ADMIN],
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/help',

@@ -7,6 +7,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { AuthModal } from '../components/AuthModal';
 import { authService } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../stores/authStore';
+import { UserRole } from '../types/auth.types';
 import { useLanguage } from '../../../shared/languages';
 
 vi.mock('../services/authService', () => ({
@@ -58,6 +60,19 @@ describe('AuthModal integration', () => {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
       expiresAt: '2026-01-01T00:00:00.000Z',
+    });
+    fetchUser.mockImplementation(async () => {
+      const profile = {
+        id: '1',
+        fullName: 'Test User',
+        email: 'test@example.com',
+        location: '',
+        title: '',
+        role: UserRole.CANDIDATE,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+      useAuthStore.getState().setUser(profile);
+      return profile;
     });
 
     render(

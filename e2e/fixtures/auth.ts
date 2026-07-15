@@ -1,27 +1,27 @@
 import type { Page } from '@playwright/test';
 
-type E2ERole = 'candidate' | 'organize' | 'hr' | 'admin';
+type E2ERole = 'Candidate' | 'OrgAdmin' | 'HrMember' | 'Admin';
 
 const roleProfiles: Record<E2ERole, { id: string; fullName: string; email: string; title: string }> = {
-  candidate: {
+  Candidate: {
     id: 'e2e-candidate',
     fullName: 'E2E Candidate',
     email: 'candidate@isas.dev',
     title: 'Frontend Candidate',
   },
-  organize: {
-    id: 'e2e-organize',
-    fullName: 'E2E Organize',
-    email: 'organize@isas.dev',
+  OrgAdmin: {
+    id: 'e2e-org-admin',
+    fullName: 'E2E Org Admin',
+    email: 'orgadmin@isas.dev',
     title: 'Organization Owner',
   },
-  hr: {
-    id: 'e2e-hr',
-    fullName: 'E2E HR',
-    email: 'hr@isas.dev',
+  HrMember: {
+    id: 'e2e-hr-member',
+    fullName: 'E2E HR Member',
+    email: 'hrmember@isas.dev',
     title: 'Recruiter',
   },
-  admin: {
+  Admin: {
     id: 'e2e-admin',
     fullName: 'E2E Admin',
     email: 'admin@isas.dev',
@@ -74,9 +74,9 @@ export async function loginAs(page: Page, role: E2ERole) {
   await dialog.getByLabel(/password/i).fill('Password123!');
   await dialog.getByRole('button', { name: /^Sign in$/i }).click();
   const destination =
-    role === 'candidate'
+    role === 'Candidate'
       ? /\/candidate\/dashboard/
-      : role === 'admin'
+      : role === 'Admin'
         ? /\/admin(\/dashboard)?/
         : /\/employer\/dashboard/;
   await page.waitForURL(destination);

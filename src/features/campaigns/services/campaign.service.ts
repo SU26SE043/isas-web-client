@@ -14,7 +14,7 @@ import type {
 
 const enrolledCampaigns = new Set<string>();
 
-const BLOCKED_INVITE_EMAILS = new Set(['organize@isas.dev', 'hr@isas.dev', 'admin@isas.dev']);
+const BLOCKED_INVITE_EMAILS = new Set(['orgadmin@isas.dev', 'hrmember@isas.dev', 'admin@isas.dev']);
 
 function assertMockMode() {
   if (!usesMockData('enterprise')) {

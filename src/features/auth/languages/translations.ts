@@ -143,9 +143,9 @@ export const authTranslations: TranslationDictionary = {
 
     'role.guest': 'Khách',
     'role.candidate': 'Ứng viên',
-    'role.hr': 'Nhân sự',
-    'role.organize': 'Quản trị tổ chức',
-    'role.admin': 'Quản trị viên',
+    'role.hrMember': 'Nhân sự',
+    'role.orgAdmin': 'Quản trị tổ chức',
+    'role.admin': 'Quản trị hệ thống',
   },
   en: {
     'auth.signInTitle': 'Sign in',
@@ -289,8 +289,8 @@ export const authTranslations: TranslationDictionary = {
 
     'role.guest': 'Guest',
     'role.candidate': 'Candidate',
-    'role.hr': 'HR',
-    'role.organize': 'Organization Admin',
-    'role.admin': 'Administrator',
+    'role.hrMember': 'HR Member',
+    'role.orgAdmin': 'Organization Admin',
+    'role.admin': 'Platform Admin',
   },
 };

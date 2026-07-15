@@ -29,7 +29,7 @@ test.describe('B2C full journey', () => {
     await expect(page).toHaveURL(/\/verify-email/);
     await expect(page.getByRole('heading', { name: /^Verify email$/i })).toBeVisible();
 
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/candidate/cv/analysis');
     await expect(page.getByRole('heading', { level: 1, name: /cv analysis/i })).toBeVisible();

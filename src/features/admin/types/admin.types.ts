@@ -23,7 +23,7 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: 'candidate' | 'hr' | 'organize' | 'admin';
+  role: 'Candidate' | 'HrMember' | 'OrgAdmin' | 'Admin';
   tenant: string;
   status: AdminStatus;
   mfaEnabled: boolean;

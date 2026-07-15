@@ -25,7 +25,7 @@ async function mockCandidateAuth(page: import('@playwright/test').Page) {
         fullName: 'E2E Candidate',
         email: 'candidate@isas.dev',
         title: 'Frontend Candidate',
-        role: 'candidate',
+        role: 'Candidate',
         location: 'Ho Chi Minh City',
         createdAt: '2026-07-12T00:00:00.000Z',
       }),

@@ -7,7 +7,7 @@ test.describe('B2B full journey', () => {
 
   test('magic link assessment records proctoring and organization can review token invoice', async ({ page }) => {
     await installMockMedia(page);
-    await loginAs(page, 'candidate');
+    await loginAs(page, 'Candidate');
 
     await page.goto('/invite/phase8-valid');
     await expect(page).toHaveURL(/\/candidate\/campaigns\?highlight=phase8-valid/);
@@ -59,7 +59,7 @@ test.describe('B2B full journey', () => {
     await expect(page.getByText(/Assessment ID: assessment-campaign-frontend-engineer-remote/i)).toBeVisible();
 
     await logoutForRoleSwitch(page);
-    await loginAs(page, 'organize');
+    await loginAs(page, 'OrgAdmin');
     await page.goto('/employer/campaigns/frontend-engineer-remote/candidates');
     await expect(page.getByRole('heading', { name: /^Candidate pipeline$/i })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: /^Rank$/i })).toBeVisible();

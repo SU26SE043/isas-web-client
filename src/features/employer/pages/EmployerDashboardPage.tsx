@@ -14,7 +14,7 @@ import { useEmployerWorkspace } from '../hooks/useEmployerWorkspace';
 export function EmployerDashboardPage() {
   const { t } = useLanguage();
   const user = useAuthStore((state) => state.user);
-  const canManageOrg = user?.role === UserRole.ORGANIZE || user?.role === UserRole.ADMIN;
+  const canManageOrg = user?.role === UserRole.ORG_ADMIN || user?.role === UserRole.ADMIN;
   const { workspace, isLoading } = useEmployerWorkspace();
 
   if (isLoading || !workspace) {

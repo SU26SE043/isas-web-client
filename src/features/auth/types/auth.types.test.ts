@@ -1,7 +1,7 @@
 /* @vitest-environment node */
 import { describe, expect, it } from 'vitest';
 import { parseAuthTokens, unwrapAuthPayload } from '@/shared/api/authPayload';
-import { parseRegisterResponse, parseUser, UserRole } from './auth.types';
+import { normalizeUserRole, parseRegisterResponse, parseUser, UserRole } from './auth.types';
 
 describe('unwrapAuthPayload', () => {
   it('returns raw DTO when no wrapper', () => {
@@ -28,6 +28,16 @@ describe('parseAuthTokens', () => {
     ).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' });
   });
 
+  it('parses PascalCase Auth service DTO keys', () => {
+    expect(
+      parseAuthTokens({
+        AccessToken: 'access',
+        RefreshToken: 'refresh',
+        ExpiresAt: '2026-07-14T15:00:00Z',
+      }),
+    ).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' });
+  });
+
   it('parses wrapped token body', () => {
     expect(
       parseAuthTokens({
@@ -43,6 +53,24 @@ describe('parseRegisterResponse', () => {
       id: 'abc-123',
       email: 'x@y.z',
     });
+  });
+});
+
+describe('normalizeUserRole', () => {
+  it('accepts only Candidate | OrgAdmin | HrMember | Admin', () => {
+    expect(normalizeUserRole('Candidate')).toBe(UserRole.CANDIDATE);
+    expect(normalizeUserRole('OrgAdmin')).toBe(UserRole.ORG_ADMIN);
+    expect(normalizeUserRole('HrMember')).toBe(UserRole.HR_MEMBER);
+    expect(normalizeUserRole('Admin')).toBe(UserRole.ADMIN);
+    expect(normalizeUserRole('candidate')).toBe(UserRole.CANDIDATE);
+    expect(normalizeUserRole('ORG_ADMIN')).toBe(UserRole.ORG_ADMIN);
+  });
+
+  it('rejects deleted legacy roles', () => {
+    expect(normalizeUserRole('Employer')).toBeNull();
+    expect(normalizeUserRole('organize')).toBeNull();
+    expect(normalizeUserRole('HR')).toBeNull();
+    expect(normalizeUserRole('interviewer')).toBeNull();
   });
 });
 
@@ -67,5 +95,34 @@ describe('parseUser', () => {
       createdAt: '2026-07-14T00:00:00Z',
       role: UserRole.CANDIDATE,
     });
+  });
+
+  it('parses OrgAdmin profile from AuthService', () => {
+    expect(
+      parseUser({
+        Id: 'org-1',
+        FullName: 'Org Admin User',
+        Email: 'orgadmin@isas.dev',
+        Location: null,
+        Title: null,
+        CreatedAt: '2026-07-14T00:00:00Z',
+        Role: 'OrgAdmin',
+      }),
+    ).toMatchObject({
+      id: 'org-1',
+      email: 'orgadmin@isas.dev',
+      role: UserRole.ORG_ADMIN,
+    });
+  });
+
+  it('rejects Employer (deleted role)', () => {
+    expect(() =>
+      parseUser({
+        Id: 'emp-1',
+        FullName: 'Employer User',
+        Email: 'employer@isas.dev',
+        Role: 'Employer',
+      }),
+    ).toThrow(/Invalid user role/);
   });
 });

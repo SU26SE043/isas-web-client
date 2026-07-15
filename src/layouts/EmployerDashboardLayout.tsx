@@ -26,7 +26,7 @@ function navLinkClassName(isActive: boolean, isCollapsed: boolean) {
 export const EmployerDashboardLayout: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const role = user?.role ?? UserRole.HR;
+  const role = user?.role ?? UserRole.HR_MEMBER;
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = useMemo(
