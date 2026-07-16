@@ -1,3 +1,5 @@
+import { apiClient } from '@/shared/api/apiClient';
+import { getApiErrorMessage } from '@/shared/api/apiError';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
 import type {
@@ -5,6 +7,7 @@ import type {
   CreateOrderResult,
   ReserveTokensResult,
   SettleTokensResult,
+  PackageResponse,
   PaymentOrder,
   SubscriptionPlan,
   TokenPackage,
@@ -18,6 +21,50 @@ import {
   MOCK_TOKEN_USAGE,
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks/payment.fixtures';
+import { paymentEndpoints } from './payment.endpoints';
+
+function toInt(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function toNullableInt(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const parsed = toInt(value, Number.NaN);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parsePackageResponse(raw: unknown): PackageResponse | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  const id = String(data.id ?? '');
+  const name = String(data.name ?? '').trim();
+  if (!id || !name) return null;
+
+  return {
+    id,
+    name,
+    type: typeof data.type === 'string' || typeof data.type === 'number' ? data.type : 1,
+    priceVnd: toInt(data.priceVnd),
+    interviewCredits: toNullableInt(data.interviewCredits),
+    durationDays: toNullableInt(data.durationDays),
+    isActive: data.isActive !== false,
+    createdAt: String(data.createdAt ?? ''),
+  };
+}
+
+function unwrapList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    const nested = (payload as { data: unknown }).data;
+    if (Array.isArray(nested)) return nested;
+  }
+  return [];
+}
 
 const STORAGE_KEY = 'isas-mock-payment-wallet';
 
@@ -159,6 +206,21 @@ export const paymentService = {
 
   getReservationAmount(sessionId: string): number {
     return sessionReserves.get(sessionId) ?? 0;
+  },
+
+  /**
+   * Public catalog — always hits PaymentService (no mock).
+   * `GET /api/v1/payment/package` → active PackageResponse[].
+   */
+  async listCatalogPackages(): Promise<PackageResponse[]> {
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.listPackages);
+      return unwrapList(response.data)
+        .map(parsePackageResponse)
+        .filter((item): item is PackageResponse => item != null && item.isActive);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, 'Failed to load packages.'));
+    }
   },
 
   async listPackages(): Promise<TokenPackage[]> {

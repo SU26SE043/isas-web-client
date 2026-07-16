@@ -2,6 +2,21 @@ export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'cancelled';
 
 export type TransactionType = 'purchase' | 'consumption' | 'subscription' | 'refund' | 'reserve' | 'settlement';
 
+/**
+ * PaymentService package catalog DTO (`GET /api/v1/payment/package`).
+ * `type` is serialized as integer in live gateway responses (1 = OneTime).
+ */
+export interface PackageResponse {
+  id: string;
+  name: string;
+  type: number | string;
+  priceVnd: number;
+  interviewCredits: number | null;
+  durationDays: number | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface TokenPackage {
   id: string;
   name: string;
