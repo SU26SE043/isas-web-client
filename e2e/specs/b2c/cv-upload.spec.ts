@@ -66,28 +66,55 @@ test.describe('cv upload smoke', () => {
   test('candidate can upload CV and reach match report', async ({ page }) => {
     await loginAsCandidate(page);
 
-    await page.route('**/api/v1/campaign/api/files/upload**', async (route) => {
+    await page.route('**/api/v1/interview/files/upload**', async (route) => {
       const url = route.request().url();
       const fileType = url.includes('fileType=jd') ? 'jd' : 'cv';
       await route.fulfill({
-        status: 201,
+        status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          id: fileType === 'jd' ? 'e2e-jd-id' : 'e2e-cv-id',
+          fileId: fileType === 'jd' ? 'e2e-jd-id' : 'e2e-cv-id',
           fileType,
           originalName: fileType === 'jd' ? 'e2e-jd.pdf' : 'e2e-cv.pdf',
           mimeType: 'application/pdf',
           fileSize: 128,
-          parseStatus: 'done',
+          parsedStatus: 'completed',
           createdAt: '2026-07-15T00:00:00.000Z',
         }),
       });
     });
 
-    await page.route('**/api/v1/campaign/api/practice/cv-analysis**', async (route) => {
-      if (route.request().method() === 'POST') {
+    await page.route('**/api/v1/interview/practice/cv-analysis**', async (route) => {
+      const url = route.request().url();
+      const method = route.request().method();
+
+      if (method === 'POST') {
         await route.fulfill({
           status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'e2e-analysis-001',
+            cvId: 'e2e-cv-id',
+            jdId: 'e2e-jd-id',
+            jobCategory: 'Frontend',
+            summary: 'Strong frontend alignment with solid React fundamentals.',
+            strengths: ['React', 'TypeScript'],
+            weaknesses: ['System design depth'],
+            suggestions: ['Add quantified impact to project bullets.'],
+            jdMatch: {
+              score: 85,
+              matchedSkills: ['React'],
+              missingSkills: ['GraphQL'],
+            },
+            createdAt: '2026-07-15T00:00:00.000Z',
+          }),
+        });
+        return;
+      }
+
+      if (method === 'GET' && url.includes('e2e-analysis-001')) {
+        await route.fulfill({
+          status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             id: 'e2e-analysis-001',
@@ -112,24 +139,7 @@ test.describe('cv upload smoke', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([
-          {
-            id: 'e2e-analysis-001',
-            cvId: 'e2e-cv-id',
-            jdId: 'e2e-jd-id',
-            jobCategory: 'Frontend',
-            summary: 'Strong frontend alignment with solid React fundamentals.',
-            strengths: ['React', 'TypeScript'],
-            weaknesses: ['System design depth'],
-            suggestions: ['Add quantified impact to project bullets.'],
-            jdMatch: {
-              score: 85,
-              matchedSkills: ['React'],
-              missingSkills: ['GraphQL'],
-            },
-            createdAt: '2026-07-15T00:00:00.000Z',
-          },
-        ]),
+        body: JSON.stringify([]),
       });
     });
 
@@ -163,7 +173,7 @@ test.describe('cv upload smoke', () => {
     await page.getByRole('button', { name: /^analyze cv$/i }).click();
     await page.waitForURL(/\/candidate\/cv\/analysis\/report/, { timeout: 15000 });
 
-    await expect(page.getByRole('heading', { level: 1, name: /cv analysis report/i }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /frontend/i }).first()).toBeVisible();
     await expect(page.getByText(/strong frontend alignment/i)).toBeVisible();
   });
 

@@ -1,6 +1,7 @@
 /**
  * Canonical job domains for the whole product (CV analysis, practice, roadmap).
- * Only three values are supported — keep this list in sync with Campaign `jobCategory` 1|2|3.
+ * CV analysis API expects `jobCategory` as the English name (Frontend / Backend / Business Analyst).
+ * `jobCategoryCode` 1|2|3 is retained for any legacy callers.
  */
 export const JOB_DOMAIN_IDS = ['frontend', 'backend', 'business-analyst'] as const;
 

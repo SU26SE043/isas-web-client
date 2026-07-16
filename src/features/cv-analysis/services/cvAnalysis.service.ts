@@ -104,7 +104,7 @@ function parseFileRecord(raw: unknown): FileRecord {
     throw new CvAnalysisError('uploadFailed', 'Invalid upload response.');
   }
   const data = raw as Record<string, unknown>;
-  const id = String(data.id ?? data.fileId ?? data.cvId ?? data.jdId ?? '');
+  const id = String(data.fileId ?? data.id ?? data.cvId ?? data.jdId ?? '');
   if (!id) {
     throw new CvAnalysisError('uploadFailed', 'Upload response missing file id.');
   }
@@ -115,7 +115,7 @@ function parseFileRecord(raw: unknown): FileRecord {
     originalName: String(data.originalName ?? data.fileName ?? data.name ?? 'file.pdf'),
     mimeType: String(data.mimeType ?? 'application/pdf'),
     fileSize: typeof data.fileSize === 'number' ? data.fileSize : Number(data.fileSize ?? 0),
-    parseStatus: String(data.parseStatus ?? 'pending'),
+    parsedStatus: String(data.parsedStatus ?? data.parseStatus ?? 'pending'),
     createdAt: String(data.createdAt ?? new Date().toISOString()),
   };
 }
@@ -157,7 +157,6 @@ async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord>
 
   try {
     const response = await apiClient.post<unknown>(cvAnalysisEndpoints.uploadFile(fileType), formData, {
-      // Let the runtime set multipart boundary (do not force application/json default).
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return parseFileRecord(unwrapData(response.data));
@@ -167,7 +166,7 @@ async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord>
 }
 
 /**
- * Live Campaign CV Analysis API only — no mock fixtures.
+ * Live Interview CV Analysis API only — no mock fixtures.
  * Auth: Bearer token via `apiClient` interceptor (Candidate).
  */
 export const cvAnalysisService = {
@@ -183,7 +182,7 @@ export const cvAnalysisService = {
     try {
       const body = {
         cvId: input.cvId,
-        jdId: input.jdId ?? null,
+        jdId: input.jdId,
         jobCategory: input.jobCategory,
       };
       const response = await apiClient.post<unknown>(cvAnalysisEndpoints.analyze, body);
@@ -211,13 +210,6 @@ export const cvAnalysisService = {
       const response = await apiClient.get<unknown>(cvAnalysisEndpoints.getAnalysis(analysisId));
       return parseAnalysis(unwrapData(response.data));
     } catch (error) {
-      try {
-        const list = await this.listAnalyses();
-        const found = list.find((item) => item.id === analysisId);
-        if (found) return found;
-      } catch {
-        /* ignore secondary failure */
-      }
       throw toCvAnalysisError(error, 'Could not load analysis result.');
     }
   },

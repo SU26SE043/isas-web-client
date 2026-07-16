@@ -1,26 +1,18 @@
 import type { CvAnalysisDomain } from './cvDomain.types';
-import type { JobCategoryCode as SharedJobCategoryCode } from '@/shared/domain/jobDomains';
-import { JOB_DOMAINS } from '@/shared/domain/jobDomains';
+import { getJobDomain } from '@/shared/domain/jobDomains';
 
-/** Numeric jobCategory sent to analyze API (FE=1, BE=2, BA=3). */
-export type JobCategoryCode = SharedJobCategoryCode;
+export type FileParseStatus = 'pending' | 'completed' | 'failed' | 'done';
+export type InterviewFileType = 'cv' | 'jd';
 
-export const DOMAIN_TO_JOB_CATEGORY = Object.fromEntries(
-  JOB_DOMAINS.map((domain) => [domain.id, domain.jobCategoryCode]),
-) as Record<CvAnalysisDomain, JobCategoryCode>;
-
-
-export type FileParseStatus = 'pending' | 'done' | 'failed';
-export type CampaignFileType = 'cv' | 'jd';
-
-/** Upload response from POST .../files/upload */
+/** Upload response from POST /api/v1/interview/files/upload */
 export interface FileRecord {
   id: string;
-  fileType: CampaignFileType | string;
+  fileType: InterviewFileType | string;
   originalName: string;
   mimeType: string;
   fileSize: number;
-  parseStatus: FileParseStatus | string;
+  /** Backend field: `parsedStatus` (completed|failed); legacy alias `parseStatus`. */
+  parsedStatus: FileParseStatus | string;
   createdAt: string;
 }
 
@@ -30,7 +22,7 @@ export interface JdMatch {
   missingSkills: string[];
 }
 
-/** Analyze + history item — render only API fields. */
+/** Analyze + detail response — render only API fields. */
 export interface CvAnalysisResult {
   id: string;
   cvId: string;
@@ -46,8 +38,9 @@ export interface CvAnalysisResult {
 
 export interface AnalyzeCvRequest {
   cvId: string;
-  jdId: string | null;
-  jobCategory: JobCategoryCode;
+  jdId: string;
+  /** Frontend domain display name, e.g. "Frontend" — not 1|2|3. */
+  jobCategory: string;
 }
 
 /** Local UI attachment metadata (not computed scores). */
@@ -65,4 +58,9 @@ export interface UploadedCvFile {
   uploadedAt: string;
   pdfUrl: string;
   analysisId?: string;
+}
+
+/** Map selected domain id → API `jobCategory` string (Frontend / Backend / Business Analyst). */
+export function domainToJobCategoryLabel(domain: CvAnalysisDomain): string {
+  return getJobDomain(domain)?.name ?? domain;
 }

@@ -7,7 +7,7 @@ import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
 import { cvAnalysisService, CvAnalysisError } from '../services/cvAnalysis.service';
 import type { CvAnalysisDomain } from '../types/cvDomain.types';
 import { isCvAnalysisDomain } from '../types/cvDomain.types';
-import { DOMAIN_TO_JOB_CATEGORY } from '../types/cvAnalysis.types';
+import { domainToJobCategoryLabel } from '../types/cvAnalysis.types';
 import { validatePdfFile } from '../utils/cvFileValidation';
 import {
   buildCvTimelineStatuses,
@@ -27,16 +27,22 @@ const FLOW_STEP_TO_TIMELINE: Record<CvFlowStep, CvAnalysisStep> = {
   4: 'analysis',
 };
 
-function readStoredDomain(): CvAnalysisDomain | null {
+function readStorage(key: string): string | null {
   if (typeof window === 'undefined') return null;
-  const raw = sessionStorage.getItem(CV_ANALYSIS_DOMAIN_KEY);
+  return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+}
+
+function writeStorage(key: string, value: string) {
+  localStorage.setItem(key, value);
+  sessionStorage.removeItem(key);
+}
+
+function readStoredDomain(): CvAnalysisDomain | null {
+  const raw = readStorage(CV_ANALYSIS_DOMAIN_KEY);
   return isCvAnalysisDomain(raw) ? raw : null;
 }
 
-function resolveAnalyzeMessage(
-  error: unknown,
-  t: (key: string) => string,
-): string {
+function resolveAnalyzeMessage(error: unknown, t: (key: string) => string): string {
   let message = t('cv.error.parseFailed');
   if (error instanceof CvAnalysisError) {
     const key = `cv.error.${error.code}` as const;
@@ -75,7 +81,7 @@ export function useCvAnalysisFlow() {
   const selectDomain = useCallback(
     (next: CvAnalysisDomain) => {
       setDomainState(next);
-      sessionStorage.setItem(CV_ANALYSIS_DOMAIN_KEY, next);
+      writeStorage(CV_ANALYSIS_DOMAIN_KEY, next);
       if (failedStep === 'domain') clearFailure();
     },
     [clearFailure, failedStep],
@@ -180,18 +186,14 @@ export function useCvAnalysisFlow() {
   }, [clearFailure, cvFile, failStep, isUploading, t]);
 
   const goNextFromJd = useCallback(async () => {
-    if (isUploading) return;
+    if (!jdFile || isUploading) return;
     setIsUploading(true);
     setJdFileError(null);
     clearFailure();
     try {
-      if (jdFile) {
-        const record = await cvAnalysisService.uploadJd(jdFile);
-        setJdId(record.id);
-        toast.success(t('cv.uploadJdSuccess'));
-      } else {
-        setJdId(null);
-      }
+      const record = await cvAnalysisService.uploadJd(jdFile);
+      setJdId(record.id);
+      toast.success(t('cv.uploadJdSuccess'));
       setStep(4);
     } catch (error) {
       const message =
@@ -212,27 +214,23 @@ export function useCvAnalysisFlow() {
   }, [clearFailure]);
 
   const runAnalysis = useCallback(async () => {
-    if (!cvId || !domain || isAnalyzing) return;
+    if (!cvId || !jdId || !domain || isAnalyzing) return;
 
     setIsAnalyzing(true);
-    setParseProgress(8);
+    setParseProgress(35);
     setAnalyzeError(null);
     clearFailure();
-
-    const progressTimer = window.setInterval(() => {
-      setParseProgress((value) => Math.min(value + 10, 90));
-    }, 450);
 
     try {
       const result = await cvAnalysisService.analyze({
         cvId,
-        jdId: jdId ?? null,
-        jobCategory: DOMAIN_TO_JOB_CATEGORY[domain],
+        jdId,
+        jobCategory: domainToJobCategoryLabel(domain),
       });
 
-      sessionStorage.setItem(CV_ANALYSIS_ID_KEY, result.id);
-      sessionStorage.setItem(CV_ANALYSIS_DOMAIN_KEY, domain);
-      sessionStorage.setItem(
+      writeStorage(CV_ANALYSIS_ID_KEY, result.id);
+      writeStorage(CV_ANALYSIS_DOMAIN_KEY, domain);
+      writeStorage(
         CV_ANALYSIS_META_KEY,
         JSON.stringify({
           cvFileName: cvFile?.name,
@@ -254,8 +252,6 @@ export function useCvAnalysisFlow() {
       setParseProgress(0);
       setIsAnalyzing(false);
       failStep('analysis', message);
-    } finally {
-      window.clearInterval(progressTimer);
     }
   }, [
     clearFailure,

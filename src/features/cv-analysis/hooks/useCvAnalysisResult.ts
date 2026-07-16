@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getApiErrorMessage } from '@/shared/api/apiError';
 import { cvAnalysisService } from '../services/cvAnalysis.service';
 import type { CvAnalysisResult } from '../types/cvAnalysis.types';
-import { getApiErrorMessage } from '@/shared/api/apiError';
 
+/**
+ * Loads a single analysis via GET /practice/cv-analysis/{id}.
+ * History list is optional (best-effort) when the catalogue endpoint exists.
+ */
 export function useCvAnalysisResult(analysisId?: string) {
   const [result, setResult] = useState<CvAnalysisResult | null>(null);
   const [history, setHistory] = useState<CvAnalysisResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadHistory = useCallback(async () => {
@@ -28,21 +32,15 @@ export function useCvAnalysisResult(analysisId?: string) {
     setIsLoading(true);
     setError(null);
     try {
-      const items = await loadHistory();
-
-      if (analysisId) {
-        const fromHistory = items.find((item) => item.id === analysisId);
-        if (fromHistory) {
-          setResult(fromHistory);
-        } else {
-          const data = await cvAnalysisService.getAnalysisResult(analysisId);
-          setResult(data);
-        }
-      } else if (items.length > 0) {
-        setResult(items[0]);
-      } else {
+      if (!analysisId) {
         setResult(null);
+        setError('missing');
+        return;
       }
+
+      const data = await cvAnalysisService.getAnalysisResult(analysisId);
+      setResult(data);
+      void loadHistory();
     } catch (err) {
       setError(getApiErrorMessage(err, 'failed'));
       setResult(null);
