@@ -77,12 +77,14 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.successTitle': 'Thanh toán thành công',
     'payment.result.successDescription': 'Giao dịch của bạn đã được xử lý thành công.',
     'payment.result.failedTitle': 'Thanh toán thất bại',
-    'payment.result.failedDescription': 'Giao dịch chưa được hoàn tất.',
+    'payment.result.failedDescription':
+      'Giao dịch chưa được hoàn tất.\nVui lòng kiểm tra lại hoặc thử thanh toán lại.',
     'payment.result.incompleteTitle': 'Thanh toán chưa hoàn tất',
     'payment.result.incompleteDescription':
       'Hệ thống chưa ghi nhận giao dịch thành công. Vui lòng kiểm tra lại hoặc thực hiện thanh toán lại.',
     'payment.result.cancelledDescription':
       'Bạn đã hủy giao dịch hoặc giao dịch chưa được xử lý thành công.',
+    'payment.result.failureReason': 'Lý do thất bại',
     'payment.result.viewOrder': 'Xem đơn hàng',
     'payment.result.backToDashboard': 'Về Dashboard',
     'payment.result.retryPayment': 'Thanh toán lại',
@@ -213,12 +215,14 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.successTitle': 'Payment successful',
     'payment.result.successDescription': 'Your transaction was processed successfully.',
     'payment.result.failedTitle': 'Payment failed',
-    'payment.result.failedDescription': 'The transaction was not completed.',
+    'payment.result.failedDescription':
+      'The transaction was not completed.\nPlease check again or try paying again.',
     'payment.result.incompleteTitle': 'Payment not completed',
     'payment.result.incompleteDescription':
       'The system has not recorded a successful payment yet. Please check again or try paying again.',
     'payment.result.cancelledDescription':
       'You cancelled the payment or the transaction was not completed successfully.',
+    'payment.result.failureReason': 'Failure reason',
     'payment.result.viewOrder': 'View order',
     'payment.result.backToDashboard': 'Back to dashboard',
     'payment.result.retryPayment': 'Pay again',

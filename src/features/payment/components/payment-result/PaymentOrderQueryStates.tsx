@@ -30,7 +30,7 @@ export function PaymentOrderQueryStates({
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-base px-4 py-10">
         <EmptyState
-          className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-300"
+          className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-300 frame-satin"
           variant="no-results"
           title={t('payment.result.invalidOrderTitle')}
           description={t('payment.result.invalidOrderDescription')}
@@ -42,12 +42,22 @@ export function PaymentOrderQueryStates({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-base px-4 py-10">
-        <div className="w-full max-w-lg space-y-4 rounded-xl border border-subtle bg-surface-raised p-8">
-          <div className="flex flex-col items-center gap-3">
-            <Spinner className="size-8" label={t('payment.result.loading')} />
-            <p className="text-sm text-muted-foreground">{t('payment.result.loading')}</p>
+        <div className="w-full max-w-lg space-y-6 rounded-2xl bg-surface-raised p-6 frame-satin sm:p-8">
+          <div className="flex flex-col items-center gap-4">
+            <Skeleton className="size-20 rounded-full" />
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-4 w-72 max-w-full" />
           </div>
-          <Skeleton className="h-40 w-full" />
+          <div className="space-y-3 rounded-xl bg-surface-overlay p-4 frame-satin">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner className="size-6" label={t('payment.result.loading')} />
+            <p className="text-sm text-text-secondary">{t('payment.result.loading')}</p>
+          </div>
         </div>
       </div>
     );
@@ -57,7 +67,7 @@ export function PaymentOrderQueryStates({
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-base px-4 py-10">
         <EmptyState
-          className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-300"
+          className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-300 frame-satin"
           variant="no-data"
           title={t('payment.result.errorTitle')}
           description={resolvePaymentOrderErrorMessage(error, t)}

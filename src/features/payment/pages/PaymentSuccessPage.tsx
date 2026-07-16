@@ -47,7 +47,7 @@ export function PaymentSuccessPage() {
   return (
     <PaymentOrderQueryStates
       isInvalidOrderId={isInvalidOrderId}
-      isLoading={isLoading}
+      isLoading={isLoading || (isSuccess && !canShowSuccess && !isError)}
       isError={isError}
       error={error}
       onRetry={() => void refetch()}
@@ -55,16 +55,16 @@ export function PaymentSuccessPage() {
       {canShowSuccess ? (
         <PaymentResultShell
           icon={CheckCircle2}
-          iconClassName="text-success"
+          variant="success"
           title={t('payment.result.successTitle')}
           description={t('payment.result.successDescription')}
         >
-          <PaymentOrderDetailCard order={order} />
+          <PaymentOrderDetailCard order={order} variant="success" />
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link to="/candidate/credits" className="btn-primary text-center">
+            <Link to="/candidate/credits" className="btn-primary flex-1 text-center">
               {t('payment.result.viewOrder')}
             </Link>
-            <Link to={dashboardPath} className="btn-secondary text-center">
+            <Link to={dashboardPath} className="btn-secondary flex-1 text-center">
               {t('payment.result.backToDashboard')}
             </Link>
           </div>

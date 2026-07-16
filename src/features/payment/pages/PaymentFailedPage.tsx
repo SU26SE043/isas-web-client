@@ -10,10 +10,6 @@ import { PaymentOrderDetailCard } from '../components/payment-result/PaymentOrde
 import { PaymentOrderQueryStates } from '../components/payment-result/PaymentOrderQueryStates';
 import { PaymentResultShell } from '../components/payment-result/PaymentResultShell';
 import { isValidOrderId, resolveOrderIdFromSearch } from '../utils/resolveOrderId';
-import {
-  resolveFailedResultCopy,
-  translateFailedResultCopy,
-} from '../utils/resolveFailedResultCopy';
 
 export function PaymentFailedPage() {
   const [searchParams] = useSearchParams();
@@ -25,13 +21,13 @@ export function PaymentFailedPage() {
     isInvalidOrderId ? null : orderId,
   );
 
-  usePageTitle(t('payment.result.incompleteTitle'));
+  usePageTitle(t('payment.result.failedTitle'));
 
   const dashboardPath = getPostLoginPath(user?.role ?? UserRole.GUEST);
-  const failedCopy = order ? translateFailedResultCopy(resolveFailedResultCopy(order), t) : null;
-  const retryCheckoutUrl = order?.checkoutUrl ?? null;
-  const canRetryWithCheckout = Boolean(retryCheckoutUrl);
-  const canRetryWithPackage = Boolean(order?.packageId) && !canRetryWithCheckout;
+  const retryPath = order?.packageId
+    ? `/candidate/payment?packageId=${encodeURIComponent(order.packageId)}`
+    : '/candidate/subscription';
+  const failureReason = order?.failureReason?.trim() || null;
 
   return (
     <PaymentOrderQueryStates
@@ -41,34 +37,24 @@ export function PaymentFailedPage() {
       error={error}
       onRetry={() => void refetch()}
     >
-      {order && failedCopy ? (
+      {order ? (
         <PaymentResultShell
           icon={XCircle}
-          iconClassName="text-error"
-          title={failedCopy.title}
-          description={failedCopy.description}
+          variant="failed"
+          title={t('payment.result.failedTitle')}
+          description={t('payment.result.failedDescription')}
         >
-          {failedCopy.reason ? (
-            <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
-              {failedCopy.reason}
+          {failureReason ? (
+            <p className="rounded-xl border border-error/25 bg-error-bg px-4 py-3 text-sm text-error frame-satin-soft">
+              {failureReason}
             </p>
           ) : null}
-          <PaymentOrderDetailCard order={order} />
+          <PaymentOrderDetailCard order={order} variant="failed" />
           <div className="flex flex-col gap-3 sm:flex-row">
-            {canRetryWithCheckout ? (
-              <a href={retryCheckoutUrl!} className="btn-primary text-center">
-                {t('payment.result.retryPayment')}
-              </a>
-            ) : null}
-            {canRetryWithPackage ? (
-              <Link
-                to={`/candidate/payment?packageId=${encodeURIComponent(order.packageId)}`}
-                className="btn-primary text-center"
-              >
-                {t('payment.result.retryPayment')}
-              </Link>
-            ) : null}
-            <Link to={dashboardPath} className="btn-secondary text-center">
+            <Link to={retryPath} className="btn-primary flex-1 text-center">
+              {t('payment.result.retryPayment')}
+            </Link>
+            <Link to={dashboardPath} className="btn-secondary flex-1 text-center">
               {t('payment.result.backToDashboard')}
             </Link>
           </div>
