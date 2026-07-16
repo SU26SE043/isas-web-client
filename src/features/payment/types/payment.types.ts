@@ -94,6 +94,29 @@ export interface OrderResponse {
   priceVnd?: number;
   interviewCredits?: number | null;
   createdAt?: string;
+  paymentStatus?: string;
+  orderStatus?: string;
+  paidAt?: string;
+  paymentMethod?: string;
+  transactionId?: string;
+  failureReason?: string;
+}
+
+/** Normalized order detail for payment result screens (`GET /api/v1/payment/order/{id}`). */
+export interface PaymentOrderDetail {
+  orderId: string;
+  packageId: string;
+  packageName?: string;
+  status: string;
+  paymentStatus?: string;
+  orderStatus?: string;
+  priceVnd?: number;
+  interviewCredits?: number | null;
+  createdAt?: string;
+  paidAt?: string;
+  paymentMethod?: string;
+  transactionId?: string;
+  failureReason?: string;
 }
 
 export interface CreateOrderResult {

@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/api/apiClient';
-import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import { getApiErrorMessage } from '@/shared/api/apiError';
 import axios from 'axios';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
@@ -10,6 +10,7 @@ import type {
   SettleTokensResult,
   PackageResponse,
   PaymentOrder,
+  PaymentOrderDetail,
   SubscriptionPlan,
   TokenPackage,
   TokenUsageRecord,
@@ -25,9 +26,12 @@ import {
 import { paymentEndpoints } from './payment.endpoints';
 import {
   mapPaymentOrderError,
+  mapPaymentOrderFetchError,
   parseOrderResponse,
   parseOrderStatus,
   toPaymentOrder,
+  toPaymentOrderDetail,
+  normalizeOrderStatus,
 } from './paymentOrder.parsers';
 
 function toInt(value: unknown, fallback = 0): number {
@@ -311,18 +315,63 @@ export const paymentService = {
 
   async getOrder(orderId: string): Promise<PaymentOrder | null> {
     try {
-      const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));
-      const dto = parseOrderResponse(response.data);
-      return dto ? toPaymentOrder(dto) : null;
+      const detail = await paymentService.fetchOrderDetail(orderId);
+      return {
+        orderId: detail.orderId,
+        packageId: detail.packageId,
+        packageName: detail.packageName ?? detail.packageId,
+        packageNameVi: detail.packageName ?? detail.packageId,
+        tokens: detail.interviewCredits ?? 0,
+        amountUsd: 0,
+        priceVnd: detail.priceVnd,
+        status: normalizeOrderStatus(detail.status),
+        checkoutUrl: null,
+        createdAt: detail.createdAt ?? new Date().toISOString(),
+      };
     } catch (error) {
-      if (getApiStatusCode(error) === 404) {
+      if (error instanceof Error && error.message === 'PAYMENT_ORDER_NOT_FOUND') {
         return null;
       }
       if (!shouldUseMockOrderFallback(error)) {
-        throw mapPaymentOrderError(error, 'Failed to load order.');
+        throw mapPaymentOrderFetchError(error, 'Failed to load order.');
       }
       await mockDelay(200);
       return pendingOrders.get(orderId) ?? null;
+    }
+  },
+
+  async fetchOrderDetail(orderId: string): Promise<PaymentOrderDetail> {
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));
+      const dto = parseOrderResponse(response.data);
+      if (!dto) {
+        throw new Error('INVALID_ORDER_RESPONSE');
+      }
+      return toPaymentOrderDetail(dto);
+    } catch (error) {
+      if (!shouldUseMockOrderFallback(error)) {
+        throw mapPaymentOrderFetchError(error, 'Failed to load order.');
+      }
+
+      await mockDelay(200);
+      const order = pendingOrders.get(orderId);
+      if (!order) {
+        throw new Error('PAYMENT_ORDER_NOT_FOUND');
+      }
+
+      return {
+        orderId: order.orderId,
+        packageId: order.packageId,
+        packageName: order.packageName,
+        status: order.status,
+        paymentStatus: order.status,
+        orderStatus: order.status,
+        priceVnd: order.priceVnd,
+        interviewCredits: order.tokens,
+        createdAt: order.createdAt,
+        paidAt: order.status === 'paid' ? order.createdAt : undefined,
+        paymentMethod: 'PayOS',
+      };
     }
   },
 

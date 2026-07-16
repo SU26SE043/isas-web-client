@@ -1,6 +1,11 @@
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { HttpStatus } from '@/shared/constants/http-status';
-import type { OrderResponse, PaymentOrder, PaymentOrderStatus } from '../types/payment.types';
+import type {
+  OrderResponse,
+  PaymentOrder,
+  PaymentOrderDetail,
+  PaymentOrderStatus,
+} from '../types/payment.types';
 
 function toInt(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -36,7 +41,7 @@ function unwrapPayload(raw: unknown): Record<string, unknown> | null {
   return record;
 }
 
-function normalizeOrderStatus(status: string): PaymentOrderStatus {
+export function normalizeOrderStatus(status: string): PaymentOrderStatus {
   const lower = status.trim().toLowerCase();
   if (lower === 'paid') return 'paid';
   if (lower === 'failed') return 'failed';
@@ -65,6 +70,30 @@ export function parseOrderResponse(raw: unknown): OrderResponse | null {
     priceVnd: toInt(data.priceVnd ?? data.PriceVnd, 0) || undefined,
     interviewCredits: toNullableInt(data.interviewCredits ?? data.InterviewCredits),
     createdAt: pickString(data, 'createdAt', 'CreatedAt'),
+    paymentStatus: pickString(data, 'paymentStatus', 'PaymentStatus'),
+    orderStatus: pickString(data, 'orderStatus', 'OrderStatus'),
+    paidAt: pickString(data, 'paidAt', 'PaidAt'),
+    paymentMethod: pickString(data, 'paymentMethod', 'PaymentMethod'),
+    transactionId: pickString(data, 'transactionId', 'TransactionId'),
+    failureReason: pickString(data, 'failureReason', 'FailureReason'),
+  };
+}
+
+export function toPaymentOrderDetail(dto: OrderResponse): PaymentOrderDetail {
+  return {
+    orderId: dto.id,
+    packageId: dto.packageId,
+    packageName: dto.packageName,
+    status: dto.status,
+    paymentStatus: dto.paymentStatus,
+    orderStatus: dto.orderStatus,
+    priceVnd: dto.priceVnd,
+    interviewCredits: dto.interviewCredits,
+    createdAt: dto.createdAt,
+    paidAt: dto.paidAt,
+    paymentMethod: dto.paymentMethod,
+    transactionId: dto.transactionId,
+    failureReason: dto.failureReason,
   };
 }
 
@@ -109,6 +138,20 @@ export function mapPaymentOrderError(error: unknown, fallback: string): Error {
   }
   if (status === HttpStatus.BAD_GATEWAY) {
     return new Error('PAYMENT_GATEWAY_ERROR');
+  }
+
+  return new Error(message || fallback);
+}
+
+export function mapPaymentOrderFetchError(error: unknown, fallback: string): Error {
+  const status = getApiStatusCode(error);
+  const message = getApiErrorMessage(error, fallback);
+
+  if (status === HttpStatus.FORBIDDEN) {
+    return new Error('PAYMENT_FORBIDDEN');
+  }
+  if (status === HttpStatus.NOT_FOUND) {
+    return new Error('PAYMENT_ORDER_NOT_FOUND');
   }
 
   return new Error(message || fallback);
