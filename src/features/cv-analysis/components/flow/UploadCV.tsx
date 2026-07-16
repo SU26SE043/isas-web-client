@@ -1,28 +1,32 @@
 import React from 'react';
-import { FileText, Upload } from 'lucide-react';
+import { CheckCircle2, FileText, Upload } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import type { FileUploadStatus } from '../../hooks/useCvAnalysisFlow';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
 
 export interface UploadCVProps {
   file: File | null;
   fileError: string | null;
   isUploading?: boolean;
+  uploadStatus?: FileUploadStatus;
   onFileSelect: (file: File | null) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-/** Step 2 — POST /files/upload?fileType=cv (PDF ≤10MB). */
+/** Step 2 — upload CV on Next only (skip API if already completed for this file). */
 export const UploadCV: React.FC<UploadCVProps> = ({
   file,
   fileError,
   isUploading = false,
+  uploadStatus = 'idle',
   onFileSelect,
   onNext,
   onBack,
 }) => {
   const { t } = useLanguage();
+  const isUploaded = uploadStatus === 'completed' && Boolean(file);
   const canNext = Boolean(file) && !fileError && !isUploading;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +41,7 @@ export const UploadCV: React.FC<UploadCVProps> = ({
         className={cn(
           'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl glass-well px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
           file ? 'border-[var(--satin-border-hover)] bg-white/[0.03] shadow-[var(--satin-inset)]' : null,
+          isUploading && 'pointer-events-none opacity-70',
         )}
       >
         <input
@@ -51,13 +56,13 @@ export const UploadCV: React.FC<UploadCVProps> = ({
           <Upload className="size-7" aria-hidden />
         </span>
         <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-          {t('cv.dropTitle')}
+          {isUploaded ? t('cv.changeFile') : t('cv.dropTitle')}
         </p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
           {t('cv.dropDescription')}
         </p>
         <span className="btn-secondary mt-6 inline-flex rounded-xl px-4 py-2.5 text-sm">
-          {t('cv.chooseFile')}
+          {isUploaded ? t('cv.changeFile') : t('cv.chooseFile')}
         </span>
       </label>
 
@@ -70,6 +75,12 @@ export const UploadCV: React.FC<UploadCVProps> = ({
               {(file.size / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
+          {isUploaded ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
+              <CheckCircle2 className="size-3.5" aria-hidden />
+              {t('cv.uploadCompleted')}
+            </span>
+          ) : null}
         </div>
       ) : null}
 

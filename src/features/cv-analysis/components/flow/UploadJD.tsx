@@ -1,7 +1,8 @@
 import React from 'react';
-import { FileText, Upload, X } from 'lucide-react';
+import { CheckCircle2, FileText, Upload, X } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import type { FileUploadStatus } from '../../hooks/useCvAnalysisFlow';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
 
@@ -9,6 +10,7 @@ export interface UploadJDProps {
   jdFile: File | null;
   jdFileError: string | null;
   isUploading?: boolean;
+  uploadStatus?: FileUploadStatus;
   fileName?: string;
   domain?: CvAnalysisDomain | null;
   onJdFileSelect: (file: File | null) => void;
@@ -16,11 +18,12 @@ export interface UploadJDProps {
   onNext: () => void;
 }
 
-/** Step 3 — required POST /files/upload?fileType=jd (PDF ≤10MB). */
+/** Step 3 — upload JD on Next only (skip API if already completed for this file). */
 export const UploadJD: React.FC<UploadJDProps> = ({
   jdFile,
   jdFileError,
   isUploading = false,
+  uploadStatus = 'idle',
   fileName,
   domain,
   onJdFileSelect,
@@ -28,6 +31,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
   onNext,
 }) => {
   const { t } = useLanguage();
+  const isUploaded = uploadStatus === 'completed' && Boolean(jdFile);
   const canNext = Boolean(jdFile) && !jdFileError && !isUploading;
 
   const handleJdFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +69,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
         className={cn(
           'group relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-2xl glass-well px-6 py-10 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
           jdFile ? 'border-[var(--satin-border-hover)] bg-white/[0.03] shadow-[var(--satin-inset)]' : null,
+          isUploading && 'pointer-events-none opacity-70',
         )}
       >
         <input
@@ -78,12 +83,14 @@ export const UploadJD: React.FC<UploadJDProps> = ({
         <span className="frame-satin-soft mb-4 flex size-12 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
           <Upload className="size-6" aria-hidden />
         </span>
-        <p className="text-base font-semibold tracking-tight text-foreground">{t('cv.jdDropTitle')}</p>
+        <p className="text-base font-semibold tracking-tight text-foreground">
+          {isUploaded ? t('cv.changeFile') : t('cv.jdDropTitle')}
+        </p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
           {t('cv.jdDropDescription')}
         </p>
         <span className="btn-secondary mt-5 inline-flex rounded-xl px-4 py-2.5 text-sm">
-          {t('cv.chooseFile')}
+          {isUploaded ? t('cv.changeFile') : t('cv.chooseFile')}
         </span>
       </label>
 
@@ -96,6 +103,12 @@ export const UploadJD: React.FC<UploadJDProps> = ({
               {(jdFile.size / 1024).toFixed(1)} KB
             </p>
           </div>
+          {isUploaded ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
+              <CheckCircle2 className="size-3.5" aria-hidden />
+              {t('cv.uploadCompleted')}
+            </span>
+          ) : null}
           <button
             type="button"
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"

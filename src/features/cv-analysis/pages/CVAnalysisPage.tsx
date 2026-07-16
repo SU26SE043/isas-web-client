@@ -38,6 +38,7 @@ export const CVAnalysisPage: React.FC = () => {
             file={flow.cvFile}
             fileError={flow.fileError}
             isUploading={flow.isUploading}
+            uploadStatus={flow.cvUploadStatus}
             onFileSelect={flow.selectCvFile}
             onNext={() => void flow.goNextFromUpload()}
             onBack={flow.goBack}
@@ -49,6 +50,7 @@ export const CVAnalysisPage: React.FC = () => {
             jdFile={flow.jdFile}
             jdFileError={flow.jdFileError}
             isUploading={flow.isUploading}
+            uploadStatus={flow.jdUploadStatus}
             fileName={flow.cvFile?.name}
             domain={flow.domain}
             onJdFileSelect={flow.selectJdFile}

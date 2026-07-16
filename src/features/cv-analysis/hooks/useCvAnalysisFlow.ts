@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
@@ -19,6 +19,7 @@ export const CV_ANALYSIS_DOMAIN_KEY = 'cv-analysis:domain';
 export const CV_ANALYSIS_META_KEY = 'cv-analysis:lastMeta';
 
 export type CvFlowStep = 1 | 2 | 3 | 4;
+export type FileUploadStatus = 'idle' | 'uploading' | 'completed' | 'error';
 
 const FLOW_STEP_TO_TIMELINE: Record<CvFlowStep, CvAnalysisStep> = {
   1: 'domain',
@@ -26,6 +27,10 @@ const FLOW_STEP_TO_TIMELINE: Record<CvFlowStep, CvAnalysisStep> = {
   3: 'job-description',
   4: 'analysis',
 };
+
+function fileIdentityKey(file: File): string {
+  return `${file.name}::${file.size}::${file.lastModified}`;
+}
 
 function readStorage(key: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -52,6 +57,11 @@ function resolveAnalyzeMessage(error: unknown, t: (key: string) => string): stri
   return message;
 }
 
+/**
+ * Wizard state lives in this hook (parent of step UIs) so unmounting a step
+ * on navigation does not lose cvId/jdId. Upload APIs run only from Next
+ * click handlers, and are skipped when the same file is already uploaded.
+ */
 export function useCvAnalysisFlow() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -61,6 +71,8 @@ export function useCvAnalysisFlow() {
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [cvId, setCvId] = useState<string | null>(null);
   const [jdId, setJdId] = useState<string | null>(null);
+  const [cvUploadStatus, setCvUploadStatus] = useState<FileUploadStatus>('idle');
+  const [jdUploadStatus, setJdUploadStatus] = useState<FileUploadStatus>('idle');
   const [fileError, setFileError] = useState<string | null>(null);
   const [jdFileError, setJdFileError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -68,6 +80,10 @@ export function useCvAnalysisFlow() {
   const [parseProgress, setParseProgress] = useState(0);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
+
+  const uploadedCvKeyRef = useRef<string | null>(null);
+  const uploadedJdKeyRef = useRef<string | null>(null);
+  const uploadInFlightRef = useRef(false);
 
   const clearFailure = useCallback(() => {
     setFailedStep(null);
@@ -92,6 +108,8 @@ export function useCvAnalysisFlow() {
       if (!next) {
         setCvFile(null);
         setCvId(null);
+        setCvUploadStatus('idle');
+        uploadedCvKeyRef.current = null;
         setFileError(null);
         return;
       }
@@ -102,6 +120,8 @@ export function useCvAnalysisFlow() {
         setFileError(message);
         setCvFile(null);
         setCvId(null);
+        setCvUploadStatus('idle');
+        uploadedCvKeyRef.current = null;
         failStep('upload', message);
         return;
       }
@@ -110,16 +130,28 @@ export function useCvAnalysisFlow() {
         setFileError(message);
         setCvFile(null);
         setCvId(null);
+        setCvUploadStatus('idle');
+        uploadedCvKeyRef.current = null;
         failStep('upload', message);
         return;
       }
 
+      const key = fileIdentityKey(next);
       setFileError(null);
       setCvFile(next);
-      setCvId(null);
+
+      // Same file as a completed upload → keep cvId (no re-upload needed).
+      if (cvId && uploadedCvKeyRef.current === key) {
+        setCvUploadStatus('completed');
+      } else {
+        setCvId(null);
+        setCvUploadStatus('idle');
+        uploadedCvKeyRef.current = null;
+      }
+
       if (failedStep === 'upload') clearFailure();
     },
-    [clearFailure, failStep, failedStep, t],
+    [clearFailure, cvId, failStep, failedStep, t],
   );
 
   const selectJdFile = useCallback(
@@ -127,6 +159,8 @@ export function useCvAnalysisFlow() {
       if (!next) {
         setJdFile(null);
         setJdId(null);
+        setJdUploadStatus('idle');
+        uploadedJdKeyRef.current = null;
         setJdFileError(null);
         return;
       }
@@ -137,6 +171,8 @@ export function useCvAnalysisFlow() {
         setJdFileError(message);
         setJdFile(null);
         setJdId(null);
+        setJdUploadStatus('idle');
+        uploadedJdKeyRef.current = null;
         failStep('job-description', message);
         return;
       }
@@ -145,16 +181,27 @@ export function useCvAnalysisFlow() {
         setJdFileError(message);
         setJdFile(null);
         setJdId(null);
+        setJdUploadStatus('idle');
+        uploadedJdKeyRef.current = null;
         failStep('job-description', message);
         return;
       }
 
+      const key = fileIdentityKey(next);
       setJdFileError(null);
       setJdFile(next);
-      setJdId(null);
+
+      if (jdId && uploadedJdKeyRef.current === key) {
+        setJdUploadStatus('completed');
+      } else {
+        setJdId(null);
+        setJdUploadStatus('idle');
+        uploadedJdKeyRef.current = null;
+      }
+
       if (failedStep === 'job-description') clearFailure();
     },
-    [clearFailure, failStep, failedStep, t],
+    [clearFailure, failStep, failedStep, jdId, t],
   );
 
   const goBack = useCallback(() => {
@@ -166,44 +213,83 @@ export function useCvAnalysisFlow() {
   }, [clearFailure]);
 
   const goNextFromUpload = useCallback(async () => {
-    if (!cvFile || isUploading) return;
+    if (!cvFile || isUploading || uploadInFlightRef.current) return;
+
+    // Already uploaded this exact file — advance without calling the API.
+    if (
+      cvId &&
+      cvUploadStatus === 'completed' &&
+      uploadedCvKeyRef.current === fileIdentityKey(cvFile)
+    ) {
+      clearFailure();
+      setStep(3);
+      return;
+    }
+
+    uploadInFlightRef.current = true;
     setIsUploading(true);
+    setCvUploadStatus('uploading');
     setFileError(null);
     clearFailure();
+
     try {
       const record = await cvAnalysisService.uploadCv(cvFile);
+      const key = fileIdentityKey(cvFile);
+      uploadedCvKeyRef.current = key;
       setCvId(record.id);
+      setCvUploadStatus('completed');
       toast.success(t('cv.uploadCvSuccess'));
       setStep(3);
     } catch (error) {
       const message =
         error instanceof CvAnalysisError ? error.message : t('cv.error.uploadFailed');
       setFileError(message);
+      setCvUploadStatus('error');
       failStep('upload', message);
     } finally {
       setIsUploading(false);
+      uploadInFlightRef.current = false;
     }
-  }, [clearFailure, cvFile, failStep, isUploading, t]);
+  }, [clearFailure, cvFile, cvId, cvUploadStatus, failStep, isUploading, t]);
 
   const goNextFromJd = useCallback(async () => {
-    if (!jdFile || isUploading) return;
+    if (!jdFile || isUploading || uploadInFlightRef.current) return;
+
+    if (
+      jdId &&
+      jdUploadStatus === 'completed' &&
+      uploadedJdKeyRef.current === fileIdentityKey(jdFile)
+    ) {
+      clearFailure();
+      setStep(4);
+      return;
+    }
+
+    uploadInFlightRef.current = true;
     setIsUploading(true);
+    setJdUploadStatus('uploading');
     setJdFileError(null);
     clearFailure();
+
     try {
       const record = await cvAnalysisService.uploadJd(jdFile);
+      const key = fileIdentityKey(jdFile);
+      uploadedJdKeyRef.current = key;
       setJdId(record.id);
+      setJdUploadStatus('completed');
       toast.success(t('cv.uploadJdSuccess'));
       setStep(4);
     } catch (error) {
       const message =
         error instanceof CvAnalysisError ? error.message : t('cv.error.uploadFailed');
       setJdFileError(message);
+      setJdUploadStatus('error');
       failStep('job-description', message);
     } finally {
       setIsUploading(false);
+      uploadInFlightRef.current = false;
     }
-  }, [clearFailure, failStep, isUploading, jdFile, t]);
+  }, [clearFailure, failStep, isUploading, jdFile, jdId, jdUploadStatus, t]);
 
   const retryFromUpload = useCallback(() => {
     setAnalyzeError(null);
@@ -286,6 +372,8 @@ export function useCvAnalysisFlow() {
     jdFile,
     cvId,
     jdId,
+    cvUploadStatus,
+    jdUploadStatus,
     fileError,
     jdFileError,
     isUploading,
