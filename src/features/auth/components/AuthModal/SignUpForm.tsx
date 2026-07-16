@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
-import { HttpStatus } from '../../../../shared/constants/http-status';
 import { useLanguage } from '../../../../shared/languages';
+import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
+import { useAuthStore } from '../../stores/authStore';
+import { parseRegisterError } from '../../utils/authErrors';
+import { resolvePostLoginPath } from '../../utils/getPostLoginPath';
 import { validatePassword } from '../../utils/passwordPolicy';
 import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
 import { SocialLoginButton } from '../SocialLoginButton';
@@ -23,6 +25,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { fetchUser } = useAuth();
+  const redirectFrom = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,21 +52,41 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     setStatusMessage('');
 
     try {
-      await authService.register({
+      const result = await authService.register({
         email: email.trim(),
         fullName: fullName.trim(),
         password,
       });
-      const trimmedEmail = email.trim();
-      onRegisterSuccess();
-      navigate(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`, { replace: true });
-    } catch (error) {
-      const statusCode = getApiStatusCode(error);
-      if (statusCode === HttpStatus.BAD_REQUEST || statusCode === HttpStatus.CONFLICT) {
-        setStatusMessage(t('auth.emailAlreadyUsed'));
-      } else {
-        setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));
+
+      if (result.mfaRequired) {
+        onRegisterSuccess();
+        navigate('/mfa', {
+          replace: true,
+          state: { mfaToken: result.mfaToken, email: email.trim(), from: redirectFrom },
+        });
+        return;
       }
+
+      if (result.emailVerificationRequired) {
+        onRegisterSuccess();
+        navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
+        return;
+      }
+
+      await fetchUser();
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser) {
+        throw new Error('PROFILE_LOAD_FAILED');
+      }
+
+      setStatusMessage(t('auth.registerSuccess'));
+      onRegisterSuccess();
+      navigate(resolvePostLoginPath(currentUser.role, redirectFrom), { replace: true });
+    } catch (error) {
+      const parsed = parseRegisterError(error, t('auth.registerFailed'));
+      setStatusMessage(
+        parsed.kind === 'emailAlreadyExists' ? t('auth.emailAlreadyUsed') : parsed.message,
+      );
     } finally {
       setIsSubmitting(false);
     }

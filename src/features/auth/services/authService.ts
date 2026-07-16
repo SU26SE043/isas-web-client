@@ -2,16 +2,16 @@ import { apiClient, authTokenStorage } from '../../../shared/api';
 import { parseAuthTokens } from '../../../shared/api/authPayload';
 import { getApiBaseUrl } from '../../../shared/config';
 import type {
+  AuthTokensResponse,
   LoginRequest,
   MfaVerifyRequest,
   RegisterRequest,
-  RegisterResponse,
   ResendVerificationRequest,
   User,
   UpdateProfileRequest,
   VerifyEmailRequest,
 } from '../types/auth.types';
-import { parseRegisterResponse, parseUser } from '../types/auth.types';
+import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
 import { sessionManager } from '../utils/sessionManager';
 
@@ -23,9 +23,14 @@ function storeTokensIfPresent(data: ReturnType<typeof parseAuthTokens>) {
 }
 
 export const authService = {
-  register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
+  register: async (payload: RegisterRequest): Promise<AuthTokensResponse> => {
     const { data } = await apiClient.post(authEndpoints.register, payload);
-    return parseRegisterResponse(data, payload.email);
+    const tokens = parseAuthTokens(data);
+    if (tokens.mfaRequired) {
+      return tokens;
+    }
+    storeTokensIfPresent(tokens);
+    return tokens;
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post(authEndpoints.login, payload);
