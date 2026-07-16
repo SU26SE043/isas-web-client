@@ -106,6 +106,10 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface LogoutRequest {
+  refreshToken: string;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }

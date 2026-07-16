@@ -4,6 +4,7 @@ import { getApiBaseUrl } from '../../../shared/config';
 import type {
   AuthTokensResponse,
   LoginRequest,
+  LogoutRequest,
   MfaVerifyRequest,
   RegisterRequest,
   ResendVerificationRequest,
@@ -56,7 +57,8 @@ export const authService = {
       refreshTokenOverride !== undefined ? refreshTokenOverride : authTokenStorage.getRefreshToken();
     try {
       if (refreshToken) {
-        await apiClient.post(authEndpoints.logout, { refreshToken });
+        const payload: LogoutRequest = { refreshToken };
+        await apiClient.post(authEndpoints.logout, payload);
       }
     } finally {
       authTokenStorage.clear();

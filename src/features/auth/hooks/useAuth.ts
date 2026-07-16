@@ -34,11 +34,8 @@ export const useAuth = () => {
   }, [setUser, setLoading, logout]);
 
   const handleLogout = useCallback(() => {
-    // Snapshot token, clear local auth, and leave protected UI immediately.
     const refreshToken = authTokenStorage.getRefreshToken();
     logout();
-    authTokenStorage.clear();
-    sessionManager.clear();
     navigate('/', { replace: true });
 
     void authService.logout(refreshToken).catch((error) => {
