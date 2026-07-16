@@ -78,6 +78,14 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface RegisterOrgRequest {
+  email: string;
+  fullName: string;
+  password: string;
+  orgName: string;
+  taxCode?: string;
+}
+
 export interface RegisterResponse {
   id: string;
   email: string;

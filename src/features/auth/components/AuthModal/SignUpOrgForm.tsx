@@ -6,22 +6,24 @@ import { useRegisterFlow } from '../../hooks/useRegisterFlow';
 import { parseRegisterError } from '../../utils/authErrors';
 import { validatePassword } from '../../utils/passwordPolicy';
 import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
-import { SocialLoginButton } from '../SocialLoginButton';
 import { signUpFormVariants } from './authModal.animations';
 
-interface SignUpFormProps {
+const fieldClassName =
+  'bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-3';
+
+interface SignUpOrgFormProps {
   isSignUp: boolean;
   isOrgSignUp: boolean;
   onRegisterSuccess: () => void;
-  onOrgSignUpClick: () => void;
+  onCandidateSignUpClick: () => void;
   reducedMotion: boolean | null;
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({
+export const SignUpOrgForm: React.FC<SignUpOrgFormProps> = ({
   isSignUp,
   isOrgSignUp,
   onRegisterSuccess,
-  onOrgSignUpClick,
+  onCandidateSignUpClick,
   reducedMotion,
 }) => {
   const { t } = useLanguage();
@@ -29,14 +31,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [taxCode, setTaxCode] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setStatusMessage(t('auth.registerRequired'));
+    if (!fullName.trim() || !email.trim() || !password.trim() || !orgName.trim()) {
+      setStatusMessage(t('auth.registerOrgRequired'));
       return;
     }
 
@@ -50,10 +54,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     setStatusMessage('');
 
     try {
-      const result = await authService.register({
+      const trimmedTaxCode = taxCode.trim();
+      const result = await authService.registerOrg({
         email: email.trim(),
         fullName: fullName.trim(),
         password,
+        orgName: orgName.trim(),
+        ...(trimmedTaxCode ? { taxCode: trimmedTaxCode } : {}),
       });
 
       setStatusMessage(t('auth.registerSuccess'));
@@ -68,24 +75,38 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   };
 
-  const isActive = isSignUp && !isOrgSignUp;
+  const isActive = isSignUp && isOrgSignUp;
 
   return (
     <motion.form
       onSubmit={handleSubmit}
-      className="absolute inset-0 flex flex-col items-center justify-center px-12"
+      className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-start py-6 px-12"
       variants={signUpFormVariants(reducedMotion)}
       initial={false}
       animate={isActive ? 'active' : 'hiddenRight'}
     >
-      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
-
-      <div className="w-full mb-6">
-        <SocialLoginButton />
-      </div>
+      <h1 className="text-3xl heading-primary mb-4 tracking-tight text-center">
+        {t('auth.signUpOrgTitle')}
+      </h1>
+      <p className="mb-4 text-center text-xs text-muted-foreground">{t('auth.signUpOrgDescription')}</p>
 
       <input
-        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
+        className={fieldClassName}
+        placeholder={t('auth.orgNamePlaceholder')}
+        aria-label={t('auth.orgNamePlaceholder')}
+        value={orgName}
+        onChange={(event) => setOrgName(event.target.value)}
+        autoComplete="organization"
+      />
+      <input
+        className={fieldClassName}
+        placeholder={t('auth.taxCodePlaceholder')}
+        aria-label={t('auth.taxCodePlaceholder')}
+        value={taxCode}
+        onChange={(event) => setTaxCode(event.target.value)}
+      />
+      <input
+        className={fieldClassName}
         placeholder={t('auth.fullNamePlaceholder')}
         aria-label={t('auth.fullNamePlaceholder')}
         value={fullName}
@@ -93,7 +114,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         autoComplete="name"
       />
       <input
-        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-4"
+        className={fieldClassName}
         placeholder={t('auth.emailPlaceholder')}
         aria-label={t('auth.emailPlaceholder')}
         type="email"
@@ -102,7 +123,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         autoComplete="email"
       />
       <input
-        className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
+        className={`${fieldClassName} mb-2`}
         type="password"
         placeholder={t('auth.password')}
         aria-label={t('auth.password')}
@@ -110,12 +131,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="new-password"
       />
-      <div className="w-full mb-4">
+      <div className="w-full mb-3">
         <PasswordStrengthMeter password={password} />
       </div>
 
       <p
-        className={`min-h-5 mb-3 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-foreground' : 'text-error'}`}
+        className={`min-h-5 mb-2 text-xs font-bold text-center ${statusMessage === t('auth.registerSuccess') ? 'text-foreground' : 'text-error'}`}
       >
         {statusMessage}
       </p>
@@ -125,15 +146,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         disabled={isSubmitting}
         className="btn-primary w-full uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? t('auth.registering') : t('auth.signUp')}
+        {isSubmitting ? t('auth.registeringOrg') : t('auth.signUpOrg')}
       </button>
 
       <button
         type="button"
-        onClick={onOrgSignUpClick}
+        onClick={onCandidateSignUpClick}
         className="mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
-        {t('auth.switchToOrgSignUp')}
+        {t('auth.switchToCandidateSignUp')}
       </button>
     </motion.form>
   );

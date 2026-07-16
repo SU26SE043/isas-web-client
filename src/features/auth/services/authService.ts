@@ -7,6 +7,7 @@ import type {
   LogoutRequest,
   MfaVerifyRequest,
   RegisterRequest,
+  RegisterOrgRequest,
   ResendVerificationRequest,
   User,
   UpdateProfileRequest,
@@ -26,6 +27,15 @@ function storeTokensIfPresent(data: ReturnType<typeof parseAuthTokens>) {
 export const authService = {
   register: async (payload: RegisterRequest): Promise<AuthTokensResponse> => {
     const { data } = await apiClient.post(authEndpoints.register, payload);
+    const tokens = parseAuthTokens(data);
+    if (tokens.mfaRequired) {
+      return tokens;
+    }
+    storeTokensIfPresent(tokens);
+    return tokens;
+  },
+  registerOrg: async (payload: RegisterOrgRequest): Promise<AuthTokensResponse> => {
+    const { data } = await apiClient.post(authEndpoints.registerOrg, payload);
     const tokens = parseAuthTokens(data);
     if (tokens.mfaRequired) {
       return tokens;

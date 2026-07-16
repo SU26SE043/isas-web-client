@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
+import { SignUpOrgForm } from './SignUpOrgForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { AuthOverlay } from './AuthOverlay';
 import { useLanguage } from '../../../../shared/languages';
@@ -12,14 +13,21 @@ import {
   panelTransition,
 } from './authModal.animations';
 
+export type AuthModalView = 'login' | 'signup' | 'signup-org';
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialView?: 'login' | 'signup';
+  initialView?: AuthModalView;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login' }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  initialView = 'login',
+}) => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isOrgSignUp, setIsOrgSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { t } = useLanguage();
   const reducedMotion = useReducedMotion();
@@ -30,17 +38,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
 
   const handleSignUpClick = useCallback(() => {
     setIsSignUp(true);
+    setIsOrgSignUp(false);
     setIsForgotPassword(false);
   }, []);
 
   const handleSignInClick = useCallback(() => {
     setIsSignUp(false);
+    setIsOrgSignUp(false);
+    setIsForgotPassword(false);
+  }, []);
+
+  const handleOrgSignUpClick = useCallback(() => {
+    setIsSignUp(true);
+    setIsOrgSignUp(true);
+    setIsForgotPassword(false);
+  }, []);
+
+  const handleCandidateSignUpClick = useCallback(() => {
+    setIsSignUp(true);
+    setIsOrgSignUp(false);
     setIsForgotPassword(false);
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setIsSignUp(initialView === 'signup');
+      setIsSignUp(initialView === 'signup' || initialView === 'signup-org');
+      setIsOrgSignUp(initialView === 'signup-org');
       setIsForgotPassword(false);
     }
   }, [isOpen, initialView]);
@@ -49,6 +72,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
     if (!isOpen) {
       const timer = window.setTimeout(() => {
         setIsSignUp(false);
+        setIsOrgSignUp(false);
         setIsForgotPassword(false);
       }, reducedMotion ? 0 : 550);
       return () => window.clearTimeout(timer);
@@ -75,6 +99,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
     };
   }, [isOpen, handleClose]);
 
+  const dialogLabel = isSignUp
+    ? isOrgSignUp
+      ? t('auth.signUpOrgTitle')
+      : t('auth.signUpTitle')
+    : t('auth.signInTitle');
+
   return (
     <AnimatePresence>
       {isOpen ? (
@@ -96,7 +126,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
               key="auth-modal-shell"
               role="dialog"
               aria-modal="true"
-              aria-label={isSignUp ? t('auth.signUpTitle') : t('auth.signInTitle')}
+              aria-label={dialogLabel}
               className="pointer-events-auto relative flex h-[550px] w-full max-w-[800px] overflow-hidden rounded-xl surface-elevated"
               variants={modalShellVariants(reducedMotion)}
               initial="hidden"
@@ -140,7 +170,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
 
               <SignUpForm
                 isSignUp={isSignUp}
+                isOrgSignUp={isOrgSignUp}
                 onRegisterSuccess={handleSignInClick}
+                onOrgSignUpClick={handleOrgSignUpClick}
+                reducedMotion={reducedMotion}
+              />
+
+              <SignUpOrgForm
+                isSignUp={isSignUp}
+                isOrgSignUp={isOrgSignUp}
+                onRegisterSuccess={handleSignInClick}
+                onCandidateSignUpClick={handleCandidateSignUpClick}
                 reducedMotion={reducedMotion}
               />
             </motion.div>

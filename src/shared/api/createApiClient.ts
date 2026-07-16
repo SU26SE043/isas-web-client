@@ -56,6 +56,7 @@ export const createApiClient = () => {
         originalRequest.url?.includes('/auth/refresh') ||
         originalRequest.url?.includes('/auth/login') ||
         originalRequest.url?.includes('/auth/register') ||
+        originalRequest.url?.includes('/auth/register-org') ||
         originalRequest.url?.includes('/auth/logout');
 
       if (status === HttpStatus.UNAUTHORIZED && !isAuthEndpoint) {
