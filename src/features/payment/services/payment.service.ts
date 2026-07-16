@@ -291,7 +291,11 @@ export const paymentService = {
         .filter((item): item is NonNullable<typeof item> => item != null)
         .map(toPaymentOrderDetail);
     } catch (error) {
-      throw mapPaymentOrderFetchError(error, 'Failed to load orders.');
+      const mapped = mapPaymentOrderFetchError(error, 'Failed to load orders.');
+      if (mapped.message === 'PAYMENT_ORDER_NOT_FOUND') {
+        return [];
+      }
+      throw mapped;
     }
   },
 

@@ -19,7 +19,7 @@ import { sessionManager } from '../utils/sessionManager';
 
 function storeTokensIfPresent(data: ReturnType<typeof parseAuthTokens>) {
   if (data.accessToken && data.refreshToken) {
-    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    authTokenStorage.setTokens(data.accessToken, data.refreshToken, data.expiresAt ?? null);
     sessionManager.markSessionStart();
   }
 }
@@ -57,8 +57,15 @@ export const authService = {
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    const { data } = await apiClient.post(authEndpoints.refresh, { refreshToken });
+    const { data } = await apiClient.post(
+      authEndpoints.refresh,
+      { refreshToken } satisfies RefreshRequest,
+      { skipAuth: true } as { skipAuth?: boolean },
+    );
     const tokens = parseAuthTokens(data);
+    if (!tokens.accessToken || !tokens.refreshToken) {
+      throw new Error('Refresh response missing tokens');
+    }
     storeTokensIfPresent(tokens);
     return tokens;
   },

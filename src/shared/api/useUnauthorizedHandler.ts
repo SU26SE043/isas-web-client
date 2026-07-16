@@ -14,7 +14,7 @@ export function useUnauthorizedHandler() {
       logout();
       authTokenStorage.clear();
       sessionManager.clear();
-      navigate('/', { replace: true });
+      navigate('/login', { replace: true });
     });
 
     return clearUnauthorizedHandler;
