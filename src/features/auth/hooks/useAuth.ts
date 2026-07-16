@@ -50,7 +50,8 @@ export const useAuth = () => {
     const urlRefreshToken = searchParams.get('refreshToken');
 
     if (urlAccessToken && urlRefreshToken) {
-      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken);
+      const urlExpiresAt = searchParams.get('expiresAt');
+      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken, urlExpiresAt);
       sessionManager.markSessionStart();
       // Clean up URL parameters without refreshing page
       window.history.replaceState({}, document.title, window.location.pathname);

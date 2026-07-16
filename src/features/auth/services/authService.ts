@@ -1,11 +1,14 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
 import { parseAuthTokens } from '../../../shared/api/authPayload';
+import { getApiErrorMessage, getApiStatusCode } from '../../../shared/api/apiError';
 import { getApiBaseUrl } from '../../../shared/config';
+import { HttpStatus } from '@/shared/constants/http-status';
 import type {
   AuthTokensResponse,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
+  RefreshRequest,
   RegisterRequest,
   RegisterOrgRequest,
   ResendVerificationRequest,
@@ -52,22 +55,37 @@ export const authService = {
     storeTokensIfPresent(tokens);
     return tokens;
   },
+  /**
+   * Public refresh — body `{ refreshToken }` only (no Bearer).
+   * On 401 (expired/revoked), clears local tokens so callers can redirect.
+   */
   refresh: async () => {
     const refreshToken = authTokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    const { data } = await apiClient.post(
-      authEndpoints.refresh,
-      { refreshToken } satisfies RefreshRequest,
-      { skipAuth: true } as { skipAuth?: boolean },
-    );
-    const tokens = parseAuthTokens(data);
-    if (!tokens.accessToken || !tokens.refreshToken) {
-      throw new Error('Refresh response missing tokens');
+
+    const body: RefreshRequest = { refreshToken };
+
+    try {
+      const { data } = await apiClient.post(authEndpoints.refresh, body, {
+        skipAuth: true,
+      } as { skipAuth?: boolean });
+      const tokens = parseAuthTokens(data);
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error('Refresh response missing tokens');
+      }
+      storeTokensIfPresent(tokens);
+      return tokens;
+    } catch (error) {
+      if (getApiStatusCode(error) === HttpStatus.UNAUTHORIZED) {
+        authTokenStorage.clear();
+        sessionManager.clear();
+      }
+      throw error instanceof Error
+        ? error
+        : new Error(getApiErrorMessage(error, 'Refresh token expired or revoked'));
     }
-    storeTokensIfPresent(tokens);
-    return tokens;
   },
   logout: async (refreshTokenOverride?: string | null) => {
     const refreshToken =
@@ -75,6 +93,7 @@ export const authService = {
     try {
       if (refreshToken) {
         const payload: LogoutRequest = { refreshToken };
+        // Requires Bearer access token (not a public auth route).
         await apiClient.post(authEndpoints.logout, payload);
       }
     } finally {

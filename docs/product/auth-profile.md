@@ -69,11 +69,21 @@ The current login and sign-up UI is also the **frozen product default**. Do not 
 ## Shared infrastructure
 
 - `useAuth`, `AuthProvider`, `sessionManager` (idle + absolute timeout).
-- JWT stored in `localStorage` via `authTokenStorage` (refresh via API interceptor).
+- Tokens in `localStorage` via `authTokenStorage`: `accessToken`, `refreshToken`, `expiresAt`.
+- User session in Zustand (`auth-storage`).
+- Auto refresh: axios interceptor on `401` → `POST /api/v1/auth/refresh` `{ refreshToken }` (public, no Bearer) → store new tokens → retry once.
+- Refresh failure (401 expired/revoked): clear tokens + user → redirect `/login`.
+- Logout: `POST /api/v1/auth/logout` with Bearer + `{ refreshToken }`, then clear local session.
 
 ## API (via Gateway)
 
 Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
+
+| Action | Path | Auth |
+| --- | --- | --- |
+| Login | `POST /api/v1/auth/login` | Public |
+| Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → `{ accessToken, refreshToken, expiresAt }` |
+| Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 
 ## E2E
 

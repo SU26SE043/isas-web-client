@@ -1,6 +1,8 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { HttpStatus } from '@/shared/constants/http-status';
 import { authEndpoints } from '@/features/auth/services/authEndpoints';
+import type { RefreshRequest } from '@/features/auth/types/auth.types';
+import { sessionManager } from '@/features/auth/utils/sessionManager';
 import { getApiBaseUrl } from '../config';
 import { toApiError } from './apiError';
 import { parseAuthTokens } from './authPayload';
@@ -9,6 +11,7 @@ import { notifyUnauthorized } from './unauthorizedHandler';
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
+  /** Skip attaching Bearer (public endpoints such as refresh). */
   skipAuth?: boolean;
 };
 
@@ -36,17 +39,18 @@ const addRefreshSubscriber = (subscriber: RefreshSubscriber) => {
 
 const handleSessionExpired = () => {
   authTokenStorage.clear();
+  sessionManager.clear();
   notifyUnauthorized();
 };
 
+/** Auth routes that must not trigger the 401→refresh loop (and usually skip Bearer). */
 const isPublicAuthUrl = (url?: string) =>
   Boolean(
     url &&
       (url.includes('/auth/refresh') ||
         url.includes('/auth/login') ||
         url.includes('/auth/register') ||
-        url.includes('/auth/register-org') ||
-        url.includes('/auth/logout')),
+        url.includes('/auth/register-org')),
   );
 
 export const createApiClient = () => {
@@ -90,6 +94,7 @@ export const createApiClient = () => {
         return Promise.reject(error);
       }
 
+      // Login/register/refresh 401s are not access-token expiry — do not auto-refresh.
       if (status !== HttpStatus.UNAUTHORIZED || isPublicAuthUrl(originalRequest.url)) {
         return Promise.reject(error);
       }
@@ -118,11 +123,11 @@ export const createApiClient = () => {
               throw new Error('No refresh token available');
             }
 
-            const { data } = await client.post(
-              authEndpoints.refresh,
-              { refreshToken },
-              { skipAuth: true } as RetriableRequestConfig,
-            );
+            const body: RefreshRequest = { refreshToken };
+            const { data } = await client.post(authEndpoints.refresh, body, {
+              skipAuth: true,
+            } as RetriableRequestConfig);
+
             const tokens = parseAuthTokens(data);
             if (!tokens.accessToken || !tokens.refreshToken) {
               throw new Error('Refresh response missing tokens');
@@ -133,6 +138,7 @@ export const createApiClient = () => {
               tokens.refreshToken,
               tokens.expiresAt ?? null,
             );
+            sessionManager.touchActivity();
             onRefreshed(tokens.accessToken);
           } catch (refreshError) {
             onRefreshFailed(refreshError);
