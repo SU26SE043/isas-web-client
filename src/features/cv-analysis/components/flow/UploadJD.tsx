@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, FileText, Upload, X } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 import type { FileUploadStatus } from '../../hooks/useCvAnalysisFlow';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
@@ -18,7 +19,7 @@ export interface UploadJDProps {
   onNext: () => void;
 }
 
-/** Step 3 — upload JD on Next only (skip API if already completed for this file). */
+/** Step 3 — upload starts on file Open; Next only advances when completed. */
 export const UploadJD: React.FC<UploadJDProps> = ({
   jdFile,
   jdFileError,
@@ -32,7 +33,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
 }) => {
   const { t } = useLanguage();
   const isUploaded = uploadStatus === 'completed' && Boolean(jdFile);
-  const canNext = Boolean(jdFile) && !jdFileError && !isUploading;
+  const canNext = isUploaded && !jdFileError && !isUploading;
 
   const handleJdFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
@@ -81,10 +82,14 @@ export const UploadJD: React.FC<UploadJDProps> = ({
           disabled={isUploading}
         />
         <span className="frame-satin-soft mb-4 flex size-12 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
-          <Upload className="size-6" aria-hidden />
+          {isUploading ? (
+            <Spinner className="size-6 border-muted border-t-foreground" label={t('cv.uploading')} />
+          ) : (
+            <Upload className="size-6" aria-hidden />
+          )}
         </span>
         <p className="text-base font-semibold tracking-tight text-foreground">
-          {isUploaded ? t('cv.changeFile') : t('cv.jdDropTitle')}
+          {isUploading ? t('cv.uploading') : isUploaded ? t('cv.changeFile') : t('cv.jdDropTitle')}
         </p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
           {t('cv.jdDropDescription')}
@@ -103,6 +108,12 @@ export const UploadJD: React.FC<UploadJDProps> = ({
               {(jdFile.size / 1024).toFixed(1)} KB
             </p>
           </div>
+          {isUploading ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Spinner className="size-3.5 border-muted border-t-foreground" label={t('cv.uploading')} />
+              {t('cv.uploading')}
+            </span>
+          ) : null}
           {isUploaded ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
               <CheckCircle2 className="size-3.5" aria-hidden />
@@ -147,7 +158,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
           disabled={!canNext}
           onClick={onNext}
         >
-          {isUploading ? t('cv.uploading') : t('cv.next')}
+          {t('cv.next')}
         </button>
       </div>
     </CvFlowSectionCard>
