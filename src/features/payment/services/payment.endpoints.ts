@@ -17,7 +17,9 @@ export const paymentEndpoints = {
   listPackages: `${PAYMENT_API_PREFIX}/package`,
   getPackage: (id: string) => `${PAYMENT_API_PREFIX}/package/${encodeURIComponent(id)}`,
   createOrder: `${PAYMENT_API_PREFIX}/order`,
+  listMyOrders: `${PAYMENT_API_PREFIX}/order/my-orders`,
   getOrder: (id: string) => `${PAYMENT_API_PREFIX}/order/${encodeURIComponent(id)}`,
   getOrderStatus: (id: string) =>
     `${PAYMENT_API_PREFIX}/order/${encodeURIComponent(id)}/status`,
+  cancelOrder: (id: string) => `${PAYMENT_API_PREFIX}/order/${encodeURIComponent(id)}`,
 } as const;

@@ -5,6 +5,7 @@ import type {
   PaymentOrder,
   PaymentOrderDetail,
   PaymentOrderStatus,
+  PaymentOrderStatusResult,
 } from '../types/payment.types';
 
 function toInt(value: unknown, fallback = 0): number {
@@ -39,6 +40,15 @@ function unwrapPayload(raw: unknown): Record<string, unknown> | null {
     if (inner && typeof inner === 'object') return inner as Record<string, unknown>;
   }
   return record;
+}
+
+export function unwrapOrderList(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    const nested = (raw as { data: unknown }).data;
+    if (Array.isArray(nested)) return nested;
+  }
+  return [];
 }
 
 export function normalizeOrderStatus(status: string): PaymentOrderStatus {
@@ -94,6 +104,7 @@ export function toPaymentOrderDetail(dto: OrderResponse): PaymentOrderDetail {
     paymentMethod: dto.paymentMethod,
     transactionId: dto.transactionId,
     failureReason: dto.failureReason,
+    checkoutUrl: dto.checkoutUrl,
   };
 }
 
@@ -121,6 +132,19 @@ export function parseOrderStatus(raw: unknown): string {
     if (status) return status;
   }
   return '';
+}
+
+export function parseOrderStatusResult(raw: unknown): PaymentOrderStatusResult {
+  const data = unwrapPayload(raw);
+  if (!data) {
+    throw new Error('INVALID_ORDER_STATUS_RESPONSE');
+  }
+
+  return {
+    orderCode: toInt(data.orderCode ?? data.OrderCode),
+    status: pickString(data, 'status', 'Status') ?? '',
+    paidAt: pickString(data, 'paidAt', 'PaidAt') ?? null,
+  };
 }
 
 export function mapPaymentOrderError(error: unknown, fallback: string): Error {

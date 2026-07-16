@@ -117,6 +117,13 @@ export interface PaymentOrderDetail {
   paymentMethod?: string;
   transactionId?: string;
   failureReason?: string;
+  checkoutUrl?: string | null;
+}
+
+export interface PaymentOrderStatusResult {
+  orderCode: number;
+  status: string;
+  paidAt: string | null;
 }
 
 export interface CreateOrderResult {

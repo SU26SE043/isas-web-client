@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useLanguage } from '@/shared/languages';
@@ -11,12 +11,14 @@ import { usePaymentOrder } from '../hooks/usePaymentOrder';
 import { PaymentOrderDetailCard } from '../components/payment-result/PaymentOrderDetailCard';
 import { PaymentOrderQueryStates } from '../components/payment-result/PaymentOrderQueryStates';
 import { PaymentResultShell } from '../components/payment-result/PaymentResultShell';
-import { isResolvableOrderId, resolveOrderIdFromSearch } from '../utils/resolveOrderId';
+import { isValidOrderId, resolveOrderIdFromSearch } from '../utils/resolveOrderId';
+import { getOrderPaymentStatus, isPaymentSuccessStatus } from '../utils/paymentOrderOutcome';
 
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const orderId = resolveOrderIdFromSearch(searchParams);
-  const isInvalidOrderId = !isResolvableOrderId(orderId);
+  const isInvalidOrderId = !isValidOrderId(orderId);
   const { t } = useLanguage();
   const { user } = useAuth();
   const invalidateWallet = useInvalidateTokenWallet();
@@ -27,12 +29,20 @@ export function PaymentSuccessPage() {
   usePageTitle(t('payment.result.successTitle'));
 
   useEffect(() => {
-    if (isSuccess && order) {
-      invalidateWallet();
+    if (!isSuccess || !order || isInvalidOrderId) return;
+
+    const paymentStatus = getOrderPaymentStatus(order);
+    if (!isPaymentSuccessStatus(paymentStatus)) {
+      navigate(`/payment/failed?orderId=${encodeURIComponent(orderId)}`, { replace: true });
+      return;
     }
-  }, [isSuccess, order, invalidateWallet]);
+
+    invalidateWallet();
+  }, [isSuccess, order, isInvalidOrderId, orderId, navigate, invalidateWallet]);
 
   const dashboardPath = getPostLoginPath(user?.role ?? UserRole.GUEST);
+  const canShowSuccess =
+    isSuccess && order && isPaymentSuccessStatus(getOrderPaymentStatus(order));
 
   return (
     <PaymentOrderQueryStates
@@ -42,7 +52,7 @@ export function PaymentSuccessPage() {
       error={error}
       onRetry={() => void refetch()}
     >
-      {order ? (
+      {canShowSuccess ? (
         <PaymentResultShell
           icon={CheckCircle2}
           iconClassName="text-success"

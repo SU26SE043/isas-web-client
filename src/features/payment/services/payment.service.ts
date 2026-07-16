@@ -3,6 +3,7 @@ import { getApiErrorMessage } from '@/shared/api/apiError';
 import axios from 'axios';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
+import { paymentEndpoints } from './payment.endpoints';
 import type {
   CompleteOrderResult,
   CreateOrderResult,
@@ -11,6 +12,7 @@ import type {
   PackageResponse,
   PaymentOrder,
   PaymentOrderDetail,
+  PaymentOrderStatusResult,
   SubscriptionPlan,
   TokenPackage,
   TokenUsageRecord,
@@ -23,15 +25,20 @@ import {
   MOCK_TOKEN_USAGE,
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks/payment.fixtures';
-import { paymentEndpoints } from './payment.endpoints';
+import {
+  getOrderPaymentStatus,
+  isPaymentTerminalStatus,
+} from '../utils/paymentOrderOutcome';
 import {
   mapPaymentOrderError,
   mapPaymentOrderFetchError,
   parseOrderResponse,
   parseOrderStatus,
+  parseOrderStatusResult,
   toPaymentOrder,
   toPaymentOrderDetail,
   normalizeOrderStatus,
+  unwrapOrderList,
 } from './paymentOrder.parsers';
 
 function toInt(value: unknown, fallback = 0): number {
@@ -156,43 +163,10 @@ function buildSnapshot(): WalletSnapshot {
   };
 }
 
-function buildCheckoutUrl(orderId: string): string {
-  return `/payment/callback?orderId=${encodeURIComponent(orderId)}&status=PAID`;
-}
-
-function findPackage(packageId: string): TokenPackage | SubscriptionPlan | undefined {
-  return (
-    MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId) ??
-    MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId)
-  );
-}
-
-function resolveTokens(packageId: string): number {
-  const tokenPackage = MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId);
-  if (tokenPackage) return tokenPackage.tokens;
-  const subscription = MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId);
-  if (subscription) return subscription.tokensPerMonth;
-  return 0;
-}
-
-function resolvePrice(packageId: string): number {
-  const tokenPackage = MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId);
-  if (tokenPackage) return tokenPackage.priceUsd;
-  const subscription = MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId);
-  if (subscription) return subscription.priceUsdMonthly;
-  return 0;
-}
-
 function shouldUseMockOrderFallback(error: unknown): boolean {
   if (!usesMockData('payment')) return false;
   if (!axios.isAxiosError(error)) return true;
   return !error.response;
-}
-
-function resolveNames(packageId: string): { name: string; nameVi: string } {
-  const item = findPackage(packageId);
-  if (!item) return { name: packageId, nameVi: packageId };
-  return { name: item.name, nameVi: item.nameVi };
 }
 
 export const paymentService = {
@@ -281,35 +255,7 @@ export const paymentService = {
       }
       return { order: toPaymentOrder(dto) };
     } catch (error) {
-      if (!shouldUseMockOrderFallback(error)) {
-        throw mapPaymentOrderError(error, 'Failed to create order.');
-      }
-
-      const tokens = resolveTokens(packageId);
-      const amountUsd = resolvePrice(packageId);
-      const names = resolveNames(packageId);
-
-      if (tokens <= 0) {
-        throw mapPaymentOrderError(error, 'Failed to create order.');
-      }
-
-      await mockDelay(500);
-
-      const orderId = `order-${crypto.randomUUID().slice(0, 8)}`;
-      const order: PaymentOrder = {
-        orderId,
-        packageId,
-        packageName: names.name,
-        packageNameVi: names.nameVi,
-        tokens,
-        amountUsd,
-        status: 'pending',
-        checkoutUrl: buildCheckoutUrl(orderId),
-        createdAt: new Date().toISOString(),
-      };
-
-      pendingOrders.set(orderId, order);
-      return { order };
+      throw mapPaymentOrderError(error, 'Failed to create order.');
     }
   },
 
@@ -332,11 +278,19 @@ export const paymentService = {
       if (error instanceof Error && error.message === 'PAYMENT_ORDER_NOT_FOUND') {
         return null;
       }
-      if (!shouldUseMockOrderFallback(error)) {
-        throw mapPaymentOrderFetchError(error, 'Failed to load order.');
-      }
-      await mockDelay(200);
-      return pendingOrders.get(orderId) ?? null;
+      throw mapPaymentOrderFetchError(error, 'Failed to load order.');
+    }
+  },
+
+  async listMyOrders(): Promise<PaymentOrderDetail[]> {
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.listMyOrders);
+      return unwrapOrderList(response.data)
+        .map(parseOrderResponse)
+        .filter((item): item is NonNullable<typeof item> => item != null)
+        .map(toPaymentOrderDetail);
+    } catch (error) {
+      throw mapPaymentOrderFetchError(error, 'Failed to load orders.');
     }
   },
 
@@ -349,30 +303,40 @@ export const paymentService = {
       }
       return toPaymentOrderDetail(dto);
     } catch (error) {
-      if (!shouldUseMockOrderFallback(error)) {
-        throw mapPaymentOrderFetchError(error, 'Failed to load order.');
-      }
-
-      await mockDelay(200);
-      const order = pendingOrders.get(orderId);
-      if (!order) {
-        throw new Error('PAYMENT_ORDER_NOT_FOUND');
-      }
-
-      return {
-        orderId: order.orderId,
-        packageId: order.packageId,
-        packageName: order.packageName,
-        status: order.status,
-        paymentStatus: order.status,
-        orderStatus: order.status,
-        priceVnd: order.priceVnd,
-        interviewCredits: order.tokens,
-        createdAt: order.createdAt,
-        paidAt: order.status === 'paid' ? order.createdAt : undefined,
-        paymentMethod: 'PayOS',
-      };
+      throw mapPaymentOrderFetchError(error, 'Failed to load order.');
     }
+  },
+
+  /**
+   * Poll `GET /order/{id}` until payment reaches a terminal status or attempts are exhausted.
+   * Never infers success from URL params — only OrderResponse fields.
+   */
+  async pollOrderDetail(
+    orderId: string,
+    options?: { intervalMs?: number; maxAttempts?: number },
+  ): Promise<PaymentOrderDetail> {
+    const intervalMs = options?.intervalMs ?? 2000;
+    const maxAttempts = options?.maxAttempts ?? 15;
+    let latest: PaymentOrderDetail | null = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      latest = await paymentService.fetchOrderDetail(orderId);
+      const status = getOrderPaymentStatus(latest);
+
+      if (isPaymentTerminalStatus(status)) {
+        return latest;
+      }
+
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+      }
+    }
+
+    if (!latest) {
+      throw new Error('PAYMENT_ORDER_NOT_FOUND');
+    }
+
+    return latest;
   },
 
   async getOrderStatus(orderId: string): Promise<string> {
@@ -390,6 +354,27 @@ export const paymentService = {
       if (order.status === 'cancelled') return 'Cancelled';
       if (order.status === 'failed') return 'Failed';
       return 'Pending';
+    }
+  },
+
+  async fetchOrderStatus(orderId: string): Promise<PaymentOrderStatusResult> {
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.getOrderStatus(orderId));
+      return parseOrderStatusResult(response.data);
+    } catch (error) {
+      throw mapPaymentOrderFetchError(error, 'Failed to load order status.');
+    }
+  },
+
+  async cancelOrder(orderId: string): Promise<void> {
+    try {
+      await apiClient.delete(paymentEndpoints.cancelOrder(orderId));
+    } catch (error) {
+      const mapped = mapPaymentOrderFetchError(error, 'Failed to cancel order.');
+      if (mapped.message === 'Failed to cancel order.') {
+        throw mapPaymentOrderError(error, 'Failed to cancel order.');
+      }
+      throw mapped;
     }
   },
 
