@@ -78,9 +78,22 @@ export interface PaymentOrder {
   packageNameVi: string;
   tokens: number;
   amountUsd: number;
+  priceVnd?: number;
   status: PaymentOrderStatus;
-  checkoutUrl: string;
+  checkoutUrl: string | null;
   createdAt: string;
+}
+
+/** PaymentService order DTO (`POST/GET /api/v1/payment/order`). */
+export interface OrderResponse {
+  id: string;
+  packageId: string;
+  status: string;
+  checkoutUrl: string | null;
+  packageName?: string;
+  priceVnd?: number;
+  interviewCredits?: number | null;
+  createdAt?: string;
 }
 
 export interface CreateOrderResult {

@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
-import { getApiErrorMessage } from '@/shared/api/apiError';
+import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import axios from 'axios';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
 import type {
@@ -22,6 +23,12 @@ import {
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks/payment.fixtures';
 import { paymentEndpoints } from './payment.endpoints';
+import {
+  mapPaymentOrderError,
+  parseOrderResponse,
+  parseOrderStatus,
+  toPaymentOrder,
+} from './paymentOrder.parsers';
 
 function toInt(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -172,6 +179,12 @@ function resolvePrice(packageId: string): number {
   return 0;
 }
 
+function shouldUseMockOrderFallback(error: unknown): boolean {
+  if (!usesMockData('payment')) return false;
+  if (!axios.isAxiosError(error)) return true;
+  return !error.response;
+}
+
 function resolveNames(packageId: string): { name: string; nameVi: string } {
   const item = findPackage(packageId);
   if (!item) return { name: packageId, nameVi: packageId };
@@ -253,44 +266,100 @@ export const paymentService = {
   },
 
   async createOrder(packageId: string): Promise<CreateOrderResult> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
+    try {
+      const response = await apiClient.post<unknown>(paymentEndpoints.createOrder, { packageId });
+      const dto = parseOrderResponse(response.data);
+      if (!dto) {
+        throw new Error('INVALID_ORDER_RESPONSE');
+      }
+      if (!dto.checkoutUrl) {
+        throw new Error('CHECKOUT_URL_MISSING');
+      }
+      return { order: toPaymentOrder(dto) };
+    } catch (error) {
+      if (!shouldUseMockOrderFallback(error)) {
+        throw mapPaymentOrderError(error, 'Failed to create order.');
+      }
+
+      const tokens = resolveTokens(packageId);
+      const amountUsd = resolvePrice(packageId);
+      const names = resolveNames(packageId);
+
+      if (tokens <= 0) {
+        throw mapPaymentOrderError(error, 'Failed to create order.');
+      }
+
+      await mockDelay(500);
+
+      const orderId = `order-${crypto.randomUUID().slice(0, 8)}`;
+      const order: PaymentOrder = {
+        orderId,
+        packageId,
+        packageName: names.name,
+        packageNameVi: names.nameVi,
+        tokens,
+        amountUsd,
+        status: 'pending',
+        checkoutUrl: buildCheckoutUrl(orderId),
+        createdAt: new Date().toISOString(),
+      };
+
+      pendingOrders.set(orderId, order);
+      return { order };
     }
-
-    const tokens = resolveTokens(packageId);
-    const amountUsd = resolvePrice(packageId);
-    const names = resolveNames(packageId);
-
-    if (tokens <= 0) {
-      throw new Error('PACKAGE_NOT_FOUND');
-    }
-
-    await mockDelay(500);
-
-    const orderId = `order-${crypto.randomUUID().slice(0, 8)}`;
-    const order: PaymentOrder = {
-      orderId,
-      packageId,
-      packageName: names.name,
-      packageNameVi: names.nameVi,
-      tokens,
-      amountUsd,
-      status: 'pending',
-      checkoutUrl: buildCheckoutUrl(orderId),
-      createdAt: new Date().toISOString(),
-    };
-
-    pendingOrders.set(orderId, order);
-    return { order };
   },
 
   async getOrder(orderId: string): Promise<PaymentOrder | null> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));
+      const dto = parseOrderResponse(response.data);
+      return dto ? toPaymentOrder(dto) : null;
+    } catch (error) {
+      if (getApiStatusCode(error) === 404) {
+        return null;
+      }
+      if (!shouldUseMockOrderFallback(error)) {
+        throw mapPaymentOrderError(error, 'Failed to load order.');
+      }
+      await mockDelay(200);
+      return pendingOrders.get(orderId) ?? null;
+    }
+  },
+
+  async getOrderStatus(orderId: string): Promise<string> {
+    try {
+      const response = await apiClient.get<unknown>(paymentEndpoints.getOrderStatus(orderId));
+      return parseOrderStatus(response.data);
+    } catch (error) {
+      if (!shouldUseMockOrderFallback(error)) {
+        throw mapPaymentOrderError(error, 'Failed to load order status.');
+      }
+      await mockDelay(200);
+      const order = pendingOrders.get(orderId);
+      if (!order) return 'NotFound';
+      if (order.status === 'paid') return 'Paid';
+      if (order.status === 'cancelled') return 'Cancelled';
+      if (order.status === 'failed') return 'Failed';
+      return 'Pending';
+    }
+  },
+
+  async pollOrderStatus(
+    orderId: string,
+    options?: { intervalMs?: number; maxAttempts?: number },
+  ): Promise<string> {
+    const intervalMs = options?.intervalMs ?? 2000;
+    const maxAttempts = options?.maxAttempts ?? 45;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const status = await paymentService.getOrderStatus(orderId);
+      if (status === 'Paid' || status === 'Failed' || status === 'Cancelled' || status === 'Canceled') {
+        return status;
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
     }
 
-    await mockDelay(200);
-    return pendingOrders.get(orderId) ?? null;
+    throw new Error('ORDER_STATUS_TIMEOUT');
   },
 
   async completeOrder(orderId: string, status: 'PAID' | 'FAILED' | 'CANCELLED'): Promise<CompleteOrderResult> {

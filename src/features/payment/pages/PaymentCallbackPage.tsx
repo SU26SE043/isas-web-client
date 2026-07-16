@@ -2,16 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { usesMockData } from '@/shared/mock';
 import { PaymentStatusBanner } from '../components/PaymentStatusBanner';
 import { paymentService } from '../services/payment.service';
 import { useInvalidateTokenWallet } from '../hooks/useTokenWallet';
 
 type CallbackState = 'processing' | 'success' | 'failed' | 'cancelled';
 
+function resolveOrderId(searchParams: URLSearchParams): string {
+  return (
+    searchParams.get('orderId') ??
+    searchParams.get('id') ??
+    searchParams.get('orderCode') ??
+    ''
+  );
+}
+
 export const PaymentCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get('orderId') ?? '';
-  const status = (searchParams.get('status') ?? 'FAILED').toUpperCase();
+  const orderId = resolveOrderId(searchParams);
+  const legacyStatus = (searchParams.get('status') ?? '').toUpperCase();
   const { t } = useLanguage();
   const [state, setState] = useState<CallbackState>('processing');
   const [tokensAdded, setTokensAdded] = useState(0);
@@ -24,10 +34,11 @@ export const PaymentCallbackPage: React.FC = () => {
     }
 
     let active = true;
-    const normalizedStatus =
-      status === 'PAID' ? 'PAID' : status === 'CANCELLED' ? 'CANCELLED' : 'FAILED';
 
-    void paymentService.completeOrder(orderId, normalizedStatus).then((result) => {
+    const completeMockOrder = async () => {
+      const normalizedStatus =
+        legacyStatus === 'PAID' ? 'PAID' : legacyStatus === 'CANCELLED' ? 'CANCELLED' : 'FAILED';
+      const result = await paymentService.completeOrder(orderId, normalizedStatus);
       if (!active) return;
       if (result.order.status === 'paid') {
         setTokensAdded(result.order.tokens);
@@ -36,14 +47,56 @@ export const PaymentCallbackPage: React.FC = () => {
         return;
       }
       setState(result.order.status === 'cancelled' ? 'cancelled' : 'failed');
-    }).catch(() => {
-      if (active) setState('failed');
-    });
+    };
+
+    const pollLiveOrder = async () => {
+      const finalStatus = await paymentService.pollOrderStatus(orderId);
+      if (!active) return;
+
+      if (finalStatus === 'Paid') {
+        const order = await paymentService.getOrder(orderId);
+        setTokensAdded(order?.tokens ?? 0);
+        if (usesMockData('payment')) {
+          await paymentService.completeOrder(orderId, 'PAID').catch(() => undefined);
+        }
+        invalidateWallet();
+        setState('success');
+        return;
+      }
+
+      if (finalStatus === 'Cancelled' || finalStatus === 'Canceled') {
+        setState('cancelled');
+        return;
+      }
+
+      setState('failed');
+    };
+
+    void (async () => {
+      try {
+        if (usesMockData('payment') && legacyStatus) {
+          await completeMockOrder();
+          return;
+        }
+        await pollLiveOrder();
+      } catch {
+        if (!active) return;
+        if (usesMockData('payment') && legacyStatus) {
+          try {
+            await completeMockOrder();
+          } catch {
+            if (active) setState('failed');
+          }
+          return;
+        }
+        setState('failed');
+      }
+    })();
 
     return () => {
       active = false;
     };
-  }, [orderId, status]);
+  }, [orderId, legacyStatus, invalidateWallet]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-base px-4">
@@ -59,7 +112,10 @@ export const PaymentCallbackPage: React.FC = () => {
           <>
             <PaymentStatusBanner
               variant="success"
-              description={t('payment.callback.successDescription').replace('{count}', tokensAdded.toLocaleString())}
+              description={t('payment.callback.successDescription').replace(
+                '{count}',
+                tokensAdded.toLocaleString(),
+              )}
             />
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link to="/candidate/credits" className="btn-primary text-center">
