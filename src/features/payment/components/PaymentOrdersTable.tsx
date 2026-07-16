@@ -1,57 +1,39 @@
-import { RefreshCw, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { PaymentOrderDetail, PaymentOrderStatusResult } from '../types/payment.types';
 import { formatPaymentDate, formatVnd } from '../utils/paymentFormat';
+import {
+  getLiveStatusBadgeClass,
+  livePaymentStatusLabelKey,
+  normalizeLivePaymentStatus,
+} from '../utils/livePaymentStatus';
 
 interface PaymentOrdersTableProps {
   orders: PaymentOrderDetail[];
-  selectedOrderId: string | null;
-  statusResult?: PaymentOrderStatusResult;
-  isStatusLoading: boolean;
-  isCanceling: boolean;
-  cancelError?: string | null;
+  statuses: Record<string, PaymentOrderStatusResult>;
+  isStatusesLoading: boolean;
   onSelectOrder: (orderId: string) => void;
-  onRefreshStatus: () => void;
-  onCancelOrder: (orderId: string) => void;
 }
 
-function getDisplayStatus(order: PaymentOrderDetail, statusResult?: PaymentOrderStatusResult): string {
-  if (statusResult) return statusResult.status;
-  return order.orderStatus ?? order.paymentStatus ?? order.status;
-}
-
-function isPending(status: string): boolean {
-  return status.trim().toLowerCase() === 'pending';
-}
-
-function getStatusClass(status: string): string {
-  const normalized = status.trim().toLowerCase();
-  if (normalized === 'paid') return 'border-success/30 bg-success-bg text-success';
-  if (normalized === 'failed' || normalized === 'expired') return 'border-error/30 bg-error-bg text-error';
-  if (normalized === 'cancelled' || normalized === 'canceled') {
-    return 'border-warning/30 bg-warning-bg text-warning';
-  }
-  return 'border-subtle bg-surface-overlay text-foreground';
+function resolveRowStatus(
+  order: PaymentOrderDetail,
+  statuses: Record<string, PaymentOrderStatusResult>,
+): string {
+  const live = statuses[order.orderId]?.status;
+  if (live) return normalizeLivePaymentStatus(live);
+  return normalizeLivePaymentStatus(order.paymentStatus ?? order.orderStatus ?? order.status);
 }
 
 export function PaymentOrdersTable({
   orders,
-  selectedOrderId,
-  statusResult,
-  isStatusLoading,
-  isCanceling,
-  cancelError,
+  statuses,
+  isStatusesLoading,
   onSelectOrder,
-  onRefreshStatus,
-  onCancelOrder,
 }: PaymentOrdersTableProps) {
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
-  const selectedOrder = orders.find((order) => order.orderId === selectedOrderId) ?? null;
-  const selectedStatus = selectedOrder ? getDisplayStatus(selectedOrder, statusResult) : '';
 
   if (orders.length === 0) {
     return (
@@ -62,7 +44,7 @@ export function PaymentOrdersTable({
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <>
       <div className="hidden overflow-hidden rounded-xl border border-subtle bg-surface-raised md:block">
         <table className="min-w-full text-sm">
           <thead className="border-b border-subtle bg-surface-base text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -75,15 +57,12 @@ export function PaymentOrdersTable({
           </thead>
           <tbody>
             {orders.map((order) => {
-              const active = order.orderId === selectedOrderId;
-              const status = getDisplayStatus(order, active ? statusResult : undefined);
+              const status = resolveRowStatus(order, statuses);
+              const hasLiveStatus = Boolean(statuses[order.orderId]);
               return (
                 <tr
                   key={order.orderId}
-                  className={cn(
-                    'cursor-pointer border-b border-subtle transition last:border-b-0 hover:bg-surface-overlay',
-                    active && 'bg-surface-elevated',
-                  )}
+                  className="cursor-pointer border-b border-subtle transition last:border-b-0 hover:bg-surface-overlay"
                   onClick={() => onSelectOrder(order.orderId)}
                 >
                   <td className="px-4 py-3 text-muted-foreground">
@@ -94,9 +73,13 @@ export function PaymentOrdersTable({
                     {order.priceVnd ? `${formatVnd(order.priceVnd, locale)} VND` : '-'}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className={getStatusClass(status)}>
-                      {status}
-                    </Badge>
+                    {!hasLiveStatus && isStatusesLoading ? (
+                      <Skeleton className="h-6 w-28 rounded-full" />
+                    ) : (
+                      <Badge variant="outline" className={getLiveStatusBadgeClass(status)}>
+                        {t(livePaymentStatusLabelKey(status))}
+                      </Badge>
+                    )}
                   </td>
                 </tr>
               );
@@ -107,15 +90,15 @@ export function PaymentOrdersTable({
 
       <div className="space-y-3 md:hidden">
         {orders.map((order) => {
-          const active = order.orderId === selectedOrderId;
-          const status = getDisplayStatus(order, active ? statusResult : undefined);
+          const status = resolveRowStatus(order, statuses);
+          const hasLiveStatus = Boolean(statuses[order.orderId]);
           return (
             <button
               key={order.orderId}
               type="button"
               className={cn(
-                'w-full rounded-xl border border-subtle bg-surface-raised p-4 text-left transition hover:bg-surface-overlay focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
-                active && 'bg-surface-elevated',
+                'w-full rounded-xl border border-subtle bg-surface-raised p-4 text-left transition hover:bg-surface-overlay',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
               )}
               onClick={() => onSelectOrder(order.orderId)}
             >
@@ -126,9 +109,13 @@ export function PaymentOrdersTable({
                     {order.createdAt ? formatPaymentDate(order.createdAt, language) : '-'}
                   </p>
                 </div>
-                <Badge variant="outline" className={getStatusClass(status)}>
-                  {status}
-                </Badge>
+                {!hasLiveStatus && isStatusesLoading ? (
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                ) : (
+                  <Badge variant="outline" className={getLiveStatusBadgeClass(status)}>
+                    {t(livePaymentStatusLabelKey(status))}
+                  </Badge>
+                )}
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
                 {order.priceVnd ? `${formatVnd(order.priceVnd, locale)} VND` : '-'}
@@ -137,61 +124,6 @@ export function PaymentOrdersTable({
           );
         })}
       </div>
-
-      <aside className="rounded-xl border border-subtle bg-surface-raised p-4">
-        <h3 className="text-sm font-semibold text-foreground">{t('payment.orders.detailTitle')}</h3>
-        {selectedOrder ? (
-          <div className="mt-4 space-y-4">
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="text-xs text-muted-foreground">{t('payment.result.orderId')}</dt>
-                <dd className="mt-1 break-all text-foreground">{selectedOrder.orderId}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t('payment.orders.orderCode')}</dt>
-                <dd className="mt-1 text-foreground">{statusResult?.orderCode || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t('payment.orders.status')}</dt>
-                <dd className="mt-1">
-                  <Badge variant="outline" className={getStatusClass(selectedStatus)}>
-                    {isStatusLoading ? t('payment.orders.polling') : selectedStatus}
-                  </Badge>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t('payment.result.paidAt')}</dt>
-                <dd className="mt-1 text-foreground">
-                  {statusResult?.paidAt ? formatPaymentDate(statusResult.paidAt, language) : '-'}
-                </dd>
-              </div>
-            </dl>
-            {cancelError ? (
-              <p className="rounded-lg border border-error/20 bg-error-bg px-3 py-2 text-sm text-error">
-                {cancelError}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={onRefreshStatus} disabled={isStatusLoading}>
-                <RefreshCw className={cn('size-4', isStatusLoading && 'animate-spin')} aria-hidden />
-                {t('payment.orders.refresh')}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                loading={isCanceling}
-                disabled={!isPending(selectedStatus)}
-                onClick={() => onCancelOrder(selectedOrder.orderId)}
-              >
-                <Trash2 className="size-4" aria-hidden />
-                {t('payment.orders.cancel')}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-muted-foreground">{t('payment.orders.selectHint')}</p>
-        )}
-      </aside>
-    </div>
+    </>
   );
 }

@@ -32,6 +32,7 @@ import {
 import {
   mapPaymentOrderError,
   mapPaymentOrderFetchError,
+  mapPaymentOrderCancelError,
   parseOrderResponse,
   parseOrderStatus,
   parseOrderStatusResult,
@@ -370,11 +371,7 @@ export const paymentService = {
     try {
       await apiClient.delete(paymentEndpoints.cancelOrder(orderId));
     } catch (error) {
-      const mapped = mapPaymentOrderFetchError(error, 'Failed to cancel order.');
-      if (mapped.message === 'Failed to cancel order.') {
-        throw mapPaymentOrderError(error, 'Failed to cancel order.');
-      }
-      throw mapped;
+      throw mapPaymentOrderCancelError(error, 'Failed to cancel order.');
     }
   },
 

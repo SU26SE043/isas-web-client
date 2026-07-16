@@ -9,7 +9,9 @@
  * - GET /api/v1/payment/package/{id} — public package detail
  * - POST /api/v1/payment/order — create order → OrderResponse (checkoutUrl on create)
  * - GET /api/v1/payment/order/{id} — order detail (checkoutUrl null)
- * - GET /api/v1/payment/order/{id}/status — poll payment status string
+ * - GET /api/v1/payment/order/my-orders — list caller orders (newest first)
+ * - GET /api/v1/payment/order/{id}/status — poll PayOS status string
+ * - DELETE /api/v1/payment/order/{id} — cancel Pending order
  */
 const PAYMENT_API_PREFIX = '/api/v1/payment';
 

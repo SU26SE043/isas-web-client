@@ -180,3 +180,20 @@ export function mapPaymentOrderFetchError(error: unknown, fallback: string): Err
 
   return new Error(message || fallback);
 }
+
+export function mapPaymentOrderCancelError(error: unknown, fallback: string): Error {
+  const status = getApiStatusCode(error);
+  const message = getApiErrorMessage(error, fallback);
+
+  if (status === HttpStatus.FORBIDDEN) {
+    return new Error('PAYMENT_FORBIDDEN');
+  }
+  if (status === HttpStatus.NOT_FOUND) {
+    return new Error('PAYMENT_ORDER_NOT_FOUND');
+  }
+  if (status === HttpStatus.BAD_REQUEST) {
+    return new Error('PAYMENT_ORDER_NOT_PENDING');
+  }
+
+  return new Error(message || fallback);
+}
