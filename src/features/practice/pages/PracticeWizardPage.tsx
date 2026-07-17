@@ -87,10 +87,15 @@ export function PracticeWizardPage() {
       {flow.step === 4 ? (
         <PracticeRubricStep
           rubric={flow.rubric}
+          contextLabel={[flow.domainLabel, flow.level].filter(Boolean).join(', ')}
           isLoading={flow.loadingRubric}
+          isSaving={flow.savingRubric}
+          isResetting={flow.resettingRubric}
+          errorMessage={flow.rubricError}
           onChange={flow.setRubric}
+          onReset={() => void flow.resetRubric()}
           onBack={() => flow.goToStep(3)}
-          onNext={() => flow.goToStep(5)}
+          onNext={() => void flow.handleRubricNext()}
         />
       ) : null}
 

@@ -16,6 +16,8 @@ export interface PracticeRubricCriterion {
   name: string;
   weight: number;
   description: string;
+  /** API maxScore; required when saving via PUT. */
+  maxScore: number;
 }
 
 export interface PracticeSessionCreateInput {
@@ -33,8 +35,6 @@ export interface PracticeSessionCreateResult {
 }
 
 export interface GenerateRubricInput {
+  /** Practice domain id from wizard step 1 (`frontend` | `backend` | `business-analyst`). */
   domainId: string;
-  /** API `level` enum: Fresher · Junior · Middle · Senior */
-  level: PracticeLevel;
-  cvFileId?: string;
 }

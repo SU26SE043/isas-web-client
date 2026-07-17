@@ -39,23 +39,27 @@ export const DEFAULT_PRACTICE_RUBRIC: PracticeRubricCriterion[] = [
     name: 'Technical depth',
     weight: 40,
     description: 'Problem solving, architecture, and correctness.',
+    maxScore: 10,
   },
   {
     id: 'communication',
     name: 'Communication',
     weight: 25,
     description: 'Clarity, structure, and tradeoff explanation.',
+    maxScore: 10,
   },
   {
     id: 'delivery',
     name: 'Delivery',
     weight: 20,
     description: 'Confidence, pacing, and completeness of answers.',
+    maxScore: 10,
   },
   {
     id: 'culture-fit',
     name: 'Culture fit',
     weight: 15,
     description: 'Collaboration mindset and ownership signals.',
+    maxScore: 10,
   },
 ];

@@ -28,9 +28,12 @@ export function usePracticeWizardFlow() {
   const [loadingDomains, setLoadingDomains] = useState(true);
   const [loadingCv, setLoadingCv] = useState(false);
   const [loadingRubric, setLoadingRubric] = useState(false);
+  const [savingRubric, setSavingRubric] = useState(false);
+  const [resettingRubric, setResettingRubric] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [rubricError, setRubricError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<'insufficient' | 'generic' | null>(null);
 
   useEffect(() => {
@@ -61,19 +64,49 @@ export function usePracticeWizardFlow() {
   }, []);
 
   const loadRubric = useCallback(async () => {
-    if (!domainId || !level) return;
+    if (!domainId) return;
     setLoadingRubric(true);
+    setRubricError(null);
     try {
-      const generated = await practiceSetupService.generateRubric({
-        domainId,
-        level,
-        cvFileId: cvFileId || undefined,
-      });
-      setRubric(generated);
+      const criteria = await practiceSetupService.getRubric(domainId);
+      setRubric(criteria);
+    } catch {
+      setRubric([]);
+      setRubricError(t('practice.wizard.rubric.loadError'));
     } finally {
       setLoadingRubric(false);
     }
-  }, [cvFileId, domainId, level]);
+  }, [domainId, t]);
+
+  const saveRubric = useCallback(async () => {
+    if (!domainId) return false;
+    setSavingRubric(true);
+    setRubricError(null);
+    try {
+      const saved = await practiceSetupService.updateRubric(domainId, rubric);
+      setRubric(saved);
+      return true;
+    } catch {
+      setRubricError(t('practice.wizard.rubric.saveError'));
+      return false;
+    } finally {
+      setSavingRubric(false);
+    }
+  }, [domainId, rubric, t]);
+
+  const resetRubric = useCallback(async () => {
+    if (!domainId) return;
+    setResettingRubric(true);
+    setRubricError(null);
+    try {
+      const criteria = await practiceSetupService.resetRubric(domainId);
+      setRubric(criteria);
+    } catch {
+      setRubricError(t('practice.wizard.rubric.resetError'));
+    } finally {
+      setResettingRubric(false);
+    }
+  }, [domainId, t]);
 
   const goToStep = useCallback(
     (nextStep: number) => {
@@ -83,6 +116,11 @@ export function usePracticeWizardFlow() {
     },
     [loadCvFiles, loadRubric],
   );
+
+  const handleRubricNext = useCallback(async () => {
+    const ok = await saveRubric();
+    if (ok) setStep(5);
+  }, [saveRubric]);
 
   const handleUploadCv = async (file: File) => {
     setUploadingCv(true);
@@ -130,6 +168,11 @@ export function usePracticeWizardFlow() {
     [cvFileId, cvFiles],
   );
 
+  const domainLabel = useMemo(() => {
+    if (!selectedDomain) return domainId;
+    return language === 'vi' ? selectedDomain.nameVi : selectedDomain.name;
+  }, [domainId, language, selectedDomain]);
+
   return {
     step,
     domains,
@@ -143,18 +186,25 @@ export function usePracticeWizardFlow() {
     loadingDomains,
     loadingCv,
     loadingRubric,
+    savingRubric,
+    resettingRubric,
     uploadingCv,
     isSubmitting,
     uploadError,
+    rubricError,
     submitError,
     selectedDomain,
     selectedCv,
+    domainLabel,
     setDomainId,
     setLevel,
     setCvFileId,
     setQuestionCount,
     setRubric,
     goToStep,
+    handleRubricNext,
+    resetRubric,
+    loadRubric,
     handleUploadCv,
     handleConfirm,
   };
