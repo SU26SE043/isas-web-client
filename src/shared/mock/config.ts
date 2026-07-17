@@ -6,6 +6,7 @@
  * routes under `e2e/` only.
  *
  * Add other domains to LIVE_API_DOMAINS when they start calling the real API.
+ * Candidate rubrics (`/api/v1/interview/practice/rubrics/*`) always call the live API.
  */
 export type MockDataDomain =
   | 'practice'
