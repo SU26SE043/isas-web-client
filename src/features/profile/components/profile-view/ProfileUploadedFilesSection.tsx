@@ -1,7 +1,8 @@
-import { AlertCircle, FileText } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { useProfileUploadedFilesManager } from './useProfileUploadedFilesManager';
 import { ProfileFilesSelectionToolbar } from './ProfileFilesSelectionToolbar';
 import { ProfileFilesGrid } from './ProfileFilesGrid';
@@ -9,14 +10,27 @@ import { ProfileSingleDeleteDialog } from './ProfileSingleDeleteDialog';
 import { ProfileSingleReplaceDialog } from './ProfileSingleReplaceDialog';
 import { ProfileFilesBulkDeleteDialog } from './ProfileFilesBulkDeleteDialog';
 
-export function ProfileUploadedFilesSection() {
-  const manager = useProfileUploadedFilesManager();
+interface ProfileUploadedFilesSectionProps {
+  files: FileRecord[];
+  isLoading: boolean;
+  error: string | null;
+  reload: () => Promise<void>;
+}
+
+export function ProfileUploadedFilesSection({
+  files,
+  isLoading,
+  error,
+  reload,
+}: ProfileUploadedFilesSectionProps) {
+  const manager = useProfileUploadedFilesManager({ files, reload });
   const {
     t,
-    files,
-    isLoading,
-    error,
-    reload,
+    filteredFiles,
+    typeFilter,
+    sort,
+    setTypeFilter,
+    setSort,
     fileInputRef,
     handleReplaceFileSelected,
     activeAction,
@@ -44,6 +58,12 @@ export function ProfileUploadedFilesSection() {
     confirmBulkDelete,
   } = manager;
 
+  const isUploadDisabled =
+    isLoading ||
+    isBulkDeleting ||
+    deleteTarget !== null ||
+    replacePending !== null;
+
   return (
     <>
       <Card className="border border-subtle bg-surface-raised">
@@ -52,9 +72,6 @@ export function ProfileUploadedFilesSection() {
             <h2 className="heading-secondary text-lg text-foreground">
               {t('profile.view.uploadedFiles')}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('profile.view.uploadedFilesHint')}
-            </p>
           </div>
 
           {isLoading ? (
@@ -66,7 +83,7 @@ export function ProfileUploadedFilesSection() {
           ) : null}
 
           {!isLoading && error ? (
-            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-subtle bg-surface-overlay px-4 py-8 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-subtle bg-surface-overlay px-4 py-6 text-center">
               <AlertCircle className="size-8 text-muted-foreground" aria-hidden />
               <p className="text-sm text-muted-foreground">
                 {t('profile.view.filesLoadError')}
@@ -82,41 +99,37 @@ export function ProfileUploadedFilesSection() {
             </div>
           ) : null}
 
-          {!isLoading && !error && files.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-subtle bg-surface-overlay px-4 py-8 text-center">
-              <FileText className="mx-auto size-8 text-muted-foreground" aria-hidden />
-              <p className="mt-3 text-sm font-medium text-foreground">
-                {t('profile.view.filesEmptyTitle')}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('profile.view.filesEmptyHint')}
-              </p>
-            </div>
-          ) : null}
-
-          {!isLoading && !error && files.length > 0 ? (
+          {!isLoading ? (
             <div className="space-y-4">
-              <ProfileFilesSelectionToolbar
-                showSelectAll={files.length >= 2}
-                selectedCount={selectedCount}
-                isAllSelected={isAllSelected}
-                isSomeSelected={isSomeSelected}
-                isSelectionDisabled={isSelectionDisabled}
-                isBulkDeleting={isBulkDeleting}
-                onClearSelection={clearSelected}
-                onSetSelectedAll={setSelectedAll}
-                onOpenBulkDelete={() => setIsBulkDeleteConfirmOpen(true)}
-              />
+              {!error ? (
+                <ProfileFilesSelectionToolbar
+                  showSelectAll={filteredFiles.length >= 2}
+                  selectedCount={selectedCount}
+                  isAllSelected={isAllSelected}
+                  isSomeSelected={isSomeSelected}
+                  isSelectionDisabled={isSelectionDisabled}
+                  isBulkDeleting={isBulkDeleting}
+                  typeFilter={typeFilter}
+                  sort={sort}
+                  onTypeFilterChange={setTypeFilter}
+                  onSortChange={setSort}
+                  onClearSelection={clearSelected}
+                  onSetSelectedAll={setSelectedAll}
+                  onOpenBulkDelete={() => setIsBulkDeleteConfirmOpen(true)}
+                />
+              ) : null}
               <ProfileFilesGrid
-                files={files}
+                files={error ? [] : filteredFiles}
                 selectedFileIds={selectedFileIds}
                 activeAction={activeAction}
                 isSelectionDisabled={isSelectionDisabled}
                 isBulkDeleting={isBulkDeleting}
+                isUploadDisabled={isUploadDisabled}
                 onToggleSelected={toggleFileSelected}
                 onDownload={(file) => void handleDownload(file)}
                 onReplace={(file) => void openReplacePicker(file)}
                 onDelete={(file) => setDeleteTarget(file)}
+                onUploaded={reload}
               />
             </div>
           ) : null}
@@ -126,7 +139,7 @@ export function ProfileUploadedFilesSection() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
         className="sr-only"
         onChange={handleReplaceFileSelected}
       />
@@ -163,4 +176,3 @@ export function ProfileUploadedFilesSection() {
     </>
   );
 }
-

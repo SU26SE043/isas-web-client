@@ -2,10 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
 import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
-import { validatePdfFile } from '@/features/cv-analysis/utils/cvFileValidation';
-import { useInterviewFiles } from '@/features/cv-analysis/hooks/useInterviewFiles';
+import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
 import { useLanguage } from '@/shared/languages';
 import type { ProfileFileCardAction } from './ProfileFileCard';
+import {
+  filterAndSortProfileFiles,
+  type ProfileFileSort,
+  type ProfileFileTypeFilter,
+} from './profileFilesFilter';
 import { resolveCvFileActionError } from './resolveCvFileActionError';
 
 type PendingReplace = {
@@ -13,23 +17,33 @@ type PendingReplace = {
   newFile: File;
 };
 
-export function useProfileUploadedFilesManager() {
+interface UseProfileUploadedFilesManagerOptions {
+  files: FileRecord[];
+  reload: () => Promise<void>;
+}
+
+export function useProfileUploadedFilesManager({
+  files,
+  reload,
+}: UseProfileUploadedFilesManagerOptions) {
   const { t } = useLanguage();
-  const { files, isLoading, error, reload } = useInterviewFiles();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceTargetRef = useRef<FileRecord | null>(null);
 
+  const [typeFilter, setTypeFilter] = useState<ProfileFileTypeFilter>('all');
+  const [sort, setSort] = useState<ProfileFileSort>('newest');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const selectedCount = selectedFileIds.length;
 
-  const selectedSet = useMemo(
-    () => new Set(selectedFileIds),
-    [selectedFileIds],
+  const filteredFiles = useMemo(
+    () => filterAndSortProfileFiles(files, typeFilter, sort),
+    [files, sort, typeFilter],
   );
 
-  const isAllSelected = files.length > 0 && selectedCount === files.length;
-  const isSomeSelected = selectedCount > 0 && selectedCount < files.length;
+  const isAllSelected =
+    filteredFiles.length > 0 && selectedCount === filteredFiles.length;
+  const isSomeSelected = selectedCount > 0 && selectedCount < filteredFiles.length;
 
   const [activeAction, setActiveAction] = useState<{
     fileId: string;
@@ -54,9 +68,9 @@ export function useProfileUploadedFilesManager() {
 
   useEffect(() => {
     setSelectedFileIds((prev) =>
-      prev.filter((id) => files.some((f) => f.id === id)),
+      prev.filter((id) => filteredFiles.some((f) => f.id === id)),
     );
-  }, [files]);
+  }, [filteredFiles]);
 
   const toggleFileSelected = useCallback((fileId: string) => {
     setSelectedFileIds((prev) => {
@@ -75,9 +89,9 @@ export function useProfileUploadedFilesManager() {
         setSelectedFileIds([]);
         return;
       }
-      setSelectedFileIds(files.map((f) => f.id));
+      setSelectedFileIds(filteredFiles.map((f) => f.id));
     },
-    [files],
+    [filteredFiles],
   );
 
   const handleDownload = useCallback(
@@ -109,7 +123,7 @@ export function useProfileUploadedFilesManager() {
       const target = replaceTargetRef.current;
       if (!selected || !target) return;
 
-      const validation = validatePdfFile(selected);
+      const validation = validateCvFile(selected);
       if (validation === 'invalidType') {
         toast.error(t('cv.invalidType'));
         return;
@@ -174,7 +188,7 @@ export function useProfileUploadedFilesManager() {
     setIsBulkDeleting(true);
     try {
       const idsToDelete = [...selectedFileIds];
-      const fileById = new Map(files.map((f) => [f.id, f]));
+      const fileById = new Map(filteredFiles.map((f) => [f.id, f]));
 
       const results = await Promise.allSettled(
         idsToDelete.map((id) => cvAnalysisService.deleteFile(id)),
@@ -227,18 +241,18 @@ export function useProfileUploadedFilesManager() {
       await reload();
       setIsBulkDeleting(false);
     }
-  }, [files, reload, selectedFileIds, t]);
+  }, [filteredFiles, reload, selectedFileIds, t]);
 
   return {
     t,
-    files,
-    isLoading,
-    error,
-    reload,
+    filteredFiles,
+    typeFilter,
+    sort,
+    setTypeFilter,
+    setSort,
     fileInputRef,
     handleReplaceFileSelected,
     selectedFileIds,
-    selectedSet,
     selectedCount,
     isAllSelected,
     isSomeSelected,
@@ -261,6 +275,6 @@ export function useProfileUploadedFilesManager() {
     confirmDelete,
     confirmBulkDelete,
     setIsBulkDeleteConfirmOpen,
+    reload,
   };
 }
-

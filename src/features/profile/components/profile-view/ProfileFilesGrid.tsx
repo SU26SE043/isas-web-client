@@ -1,5 +1,6 @@
 import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { ProfileFileCard, type ProfileFileCardAction } from './ProfileFileCard';
+import { ProfileFileUploadCard } from './ProfileFileUploadCard';
 
 interface ProfileFilesGridProps {
   files: FileRecord[];
@@ -7,10 +8,12 @@ interface ProfileFilesGridProps {
   activeAction: { fileId: string; action: ProfileFileCardAction } | null;
   isSelectionDisabled: boolean;
   isBulkDeleting: boolean;
+  isUploadDisabled?: boolean;
   onToggleSelected: (fileId: string) => void;
   onDownload: (file: FileRecord) => void;
   onReplace: (file: FileRecord) => void;
   onDelete: (file: FileRecord) => void;
+  onUploaded: () => Promise<void>;
 }
 
 export function ProfileFilesGrid({
@@ -19,10 +22,12 @@ export function ProfileFilesGrid({
   activeAction,
   isSelectionDisabled,
   isBulkDeleting,
+  isUploadDisabled = false,
   onToggleSelected,
   onDownload,
   onReplace,
   onDelete,
+  onUploaded,
 }: ProfileFilesGridProps) {
   const selectedSet = new Set(selectedFileIds);
 
@@ -44,7 +49,7 @@ export function ProfileFilesGrid({
           onDelete={() => onDelete(file)}
         />
       ))}
+      <ProfileFileUploadCard disabled={isUploadDisabled} onUploaded={onUploaded} />
     </div>
   );
 }
-

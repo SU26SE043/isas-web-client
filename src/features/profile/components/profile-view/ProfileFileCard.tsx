@@ -45,64 +45,71 @@ export function ProfileFileCard({
 }: ProfileFileCardProps) {
   const { t, language } = useLanguage();
   const isBusy = activeAction !== null || isCardActionsDisabled;
+  const isCv = isCvFileType(file.fileType);
+  const isJd = isJdFileType(file.fileType);
 
   return (
     <article
       className={cn(
-        'flex h-full flex-col rounded-lg border border-satin bg-surface-overlay p-4 transition-[border-color,background-color] duration-200 ease-out',
+        'relative flex h-full flex-col rounded-lg border border-satin bg-surface-overlay p-4 transition-[border-color,background-color] duration-200 ease-out',
         'hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03]',
         isSelected ? 'border-[var(--satin-border-hover)] bg-white/[0.05]' : null,
         isBusy && 'opacity-90',
       )}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <label
-          className="mt-0.5 flex size-6 cursor-pointer items-center justify-center rounded-md"
+      <label
+        className="absolute left-3 top-3 flex size-6 cursor-pointer items-center justify-center rounded-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={isSelected}
+          disabled={isSelectionDisabled}
+          onChange={() => onToggleSelected()}
           onClick={(e) => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            checked={isSelected}
-            disabled={isSelectionDisabled}
-            onChange={() => onToggleSelected()}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t('profile.view.selectFileCheckboxAria').replace('{name}', file.originalName)}
-            className="size-4 rounded-sm border-satin bg-surface-base accent-white"
-          />
-        </label>
+          aria-label={t('profile.view.selectFileCheckboxAria').replace('{name}', file.originalName)}
+          className="size-4 rounded-sm border-satin bg-surface-base accent-white"
+        />
+      </label>
 
-        <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-foreground">
-          <FileText className="size-5" aria-hidden />
+      <div className="flex flex-1 flex-col items-center pt-6 text-center">
+        <span
+          className={cn(
+            'frame-satin-soft mb-3 flex size-12 items-center justify-center rounded-lg',
+            isCv && 'bg-error/10 text-error',
+            isJd && 'bg-info/10 text-info',
+            !isCv && !isJd && 'bg-white/[0.06] text-foreground',
+          )}
+        >
+          <FileText className="size-6" aria-hidden />
         </span>
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {isCvFileType(file.fileType) ? (
-              <Badge variant="outline" className="border-satin bg-white/[0.04] text-foreground">
-                {t('profile.view.fileTypeCv')}
-              </Badge>
-            ) : null}
-            {isJdFileType(file.fileType) ? (
-              <Badge variant="secondary" className="bg-white/[0.08] text-foreground">
-                {t('profile.view.fileTypeJd')}
-              </Badge>
-            ) : null}
-            <Badge variant="ghost" className="text-muted-foreground">
-              {t(parseStatusKey(file.parsedStatus))}
+
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
+          {isCv ? (
+            <Badge variant="outline" className="border-error/30 bg-error/10 text-error">
+              {t('profile.view.fileTypeCv')}
             </Badge>
-          </div>
-          <p className="truncate text-sm font-medium text-foreground" title={file.originalName}>
-            {file.originalName}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t('profile.view.fileUploadedAt').replace(
-              '{date}',
-              formatProfileFileDate(file.createdAt, language),
-            )}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {formatProfileFileSize(file.fileSize)}
-          </p>
+          ) : null}
+          {isJd ? (
+            <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
+              {t('profile.view.fileTypeJd')}
+            </Badge>
+          ) : null}
+          <Badge variant="ghost" className="text-muted-foreground">
+            {t(parseStatusKey(file.parsedStatus))}
+          </Badge>
         </div>
+
+        <p className="line-clamp-2 w-full text-sm font-medium text-foreground" title={file.originalName}>
+          {file.originalName}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t('profile.view.fileUploadedAt').replace(
+            '{date}',
+            formatProfileFileDate(file.createdAt, language),
+          )}
+        </p>
+        <p className="text-xs text-muted-foreground">{formatProfileFileSize(file.fileSize)}</p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2 border-t border-subtle pt-4">
