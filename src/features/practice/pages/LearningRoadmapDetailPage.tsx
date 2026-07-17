@@ -7,8 +7,8 @@ import { useLanguage } from '@/shared/languages';
 import { useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
 import { roadmapService } from '../services/roadmap.service';
 import {
-  launchLearningInterviewPractice,
   learningInterviewPreparePath,
+  startLearningLessonPractice,
 } from '../utils/launchLearningInterviewPractice';
 
 export function LearningRoadmapDetailPage() {
@@ -83,12 +83,16 @@ export function LearningRoadmapDetailPage() {
         navigate(learningInterviewPreparePath(sessionId));
         return;
       }
-      const nextSessionId = await launchLearningInterviewPractice({
+      const result = await startLearningLessonPractice({
         roadmapId: roadmap.id,
         lessonId,
         title: lessonTitle,
       });
-      navigate(learningInterviewPreparePath(nextSessionId));
+      if (!result.ok) {
+        setLaunchingLessonId(null);
+        return;
+      }
+      navigate(learningInterviewPreparePath(result.session.sessionId));
     } catch {
       setLaunchingLessonId(null);
     }

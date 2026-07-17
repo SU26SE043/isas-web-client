@@ -17,8 +17,9 @@ import {
 } from '../mocks/learningPath.fixtures';
 import { buildLessonHtml } from '../mocks/lessonContent.fixtures';
 import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
-import { registerLearningPracticeSession } from './learningPracticeSession.registry';
+import { getLearningPracticeSession } from './learningPracticeSession.registry';
 import { roadmapService } from './roadmap.service';
+import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
 
 let store: LearningRoadmapDetail[] = structuredClone(MOCK_LEARNING_PATH_ROADMAPS);
 
@@ -139,15 +140,6 @@ function recompute(roadmap: LearningRoadmapDetail): LearningRoadmapDetail {
   };
 }
 
-function toCard(roadmap: LearningRoadmapDetail): LearningRoadmapCard {
-  const {
-    milestones: _m,
-    reports: _r,
-    ...card
-  } = roadmap;
-  return card;
-}
-
 function findLesson(roadmap: LearningRoadmapDetail, lessonId: string) {
   for (const milestone of roadmap.milestones) {
     const lesson = milestone.lessons.find((item) => item.id === lessonId);
@@ -261,8 +253,15 @@ export const learningPathService = {
     lessonId: string;
     title: string;
   }) {
-    await mockDelay(150);
-    return registerLearningPracticeSession(input);
+    const result = await startLearningLessonPractice(input);
+    if (!result.ok) {
+      throw new Error(result.code);
+    }
+    const meta = getLearningPracticeSession(result.session.sessionId);
+    if (!meta) {
+      throw new Error('SESSION_NOT_REGISTERED');
+    }
+    return meta;
   },
 
   async evaluateAnswer(questionId: string): Promise<LearningPracticeQuestionFeedback> {

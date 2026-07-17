@@ -14,6 +14,7 @@ import { LearningPracticeDeviceCheckPage } from '@/features/practice/pages/Learn
 import { LearningLessonPracticePage } from '@/features/practice/pages/LearningLessonPracticePage';
 import { LearningPracticeReportPage } from '@/features/practice/pages/LearningPracticeReportPage';
 import { LearningQuestionReportPage } from '@/features/practice/pages/LearningQuestionReportPage';
+import { LearningRoadmapReportPage } from '@/features/practice/pages/LearningRoadmapReportPage';
 import { CandidateReportsPage } from '@/features/practice/pages/CandidateReportsPage';
 import { LearningReaderLayout } from '@/features/practice/components/learning-path/LearningReaderLayout';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
@@ -64,6 +65,10 @@ export const candidateRoutes: RouteObject[] = [
             children: [
               { index: true, element: <LearningHubPage /> },
               { path: 'roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
+              {
+                path: 'roadmaps/:roadmapId/report',
+                element: <LearningRoadmapReportPage />,
+              },
               {
                 path: 'roadmaps/:roadmapId/lessons/:lessonId',
                 element: <LearningReaderLayout />,

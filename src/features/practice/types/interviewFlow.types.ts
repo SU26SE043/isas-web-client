@@ -35,12 +35,15 @@ export interface InterviewFlowProgress {
   identitySnapshot?: string;
 }
 
+import { hasLearningPracticeSession } from '../services/learningPracticeSession.registry';
+
 export function isCampaignSessionId(sessionId: string) {
   return sessionId.startsWith('campaign-');
 }
 
+/** Learning practice: legacy `learning-` ids or sessions registered after lesson start. */
 export function isLearningSessionId(sessionId: string) {
-  return sessionId.startsWith('learning-');
+  return sessionId.startsWith('learning-') || hasLearningPracticeSession(sessionId);
 }
 
 export function requiresIdentityVerification(sessionId: string) {

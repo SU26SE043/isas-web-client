@@ -8,4 +8,20 @@ export const learningEndpoints = {
   /** GET — open lesson; backend may generate theoryContent on first open. */
   lesson: (roadmapId: string, lessonId: string) =>
     `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}`,
+  /** POST — mark theory done / start practice session (charges 1 credit). */
+  startLesson: (roadmapId: string, lessonId: string) =>
+    `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}/start`,
+  /** GET — practice session detail (questions, progress). */
+  practiceSession: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}`,
+  /** POST — upload answer audio (multipart). */
+  submitAnswer: (sessionId: string) =>
+    `/api/v1/interview/practice/sessions/${sessionId}/answers`,
+  /** GET — answer / progressive scoring result. */
+  answer: (sessionId: string, answerId: string) =>
+    `/api/v1/interview/practice/sessions/${sessionId}/answers/${answerId}`,
+  /** POST — complete practice session after last question report. */
+  completePracticeSession: (sessionId: string) =>
+    `/api/v1/interview/practice/sessions/${sessionId}/complete`,
+  /** GET — roadmap interim / snapshot report. */
+  roadmapReport: (roadmapId: string) => `/api/v1/interview/practice/roadmaps/${roadmapId}/report`,
 } as const;

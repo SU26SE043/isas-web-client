@@ -20,6 +20,7 @@ import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
 import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring';
 import { useLearningLiveFeedback } from '../hooks/useLearningLiveFeedback';
+import { useLearningAnswerCapture } from '../hooks/useLearningAnswerCapture';
 import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
@@ -37,6 +38,10 @@ export const PracticeInterviewPage: React.FC = () => {
   const setAiState = useInterviewSessionStore((state) => state.setAiState);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
   const learning = useLearningLiveFeedback(sessionId, session.isLearning);
+  const answerCapture = useLearningAnswerCapture(
+    media.stream,
+    session.isLearning && session.isRoomActive && !session.isLoading,
+  );
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
     sessionId,
@@ -45,6 +50,8 @@ export const PracticeInterviewPage: React.FC = () => {
     videoRef: media.videoRef,
   });
 
+  // Keep the same shared room recording UI for learning + B2C/B2B.
+  // Learning still uploads a dedicated answer blob on Submit via answerCapture.
   const recording = useInterviewRecording({
     sessionId,
     stream: media.stream,
@@ -70,15 +77,9 @@ export const PracticeInterviewPage: React.FC = () => {
     void media.startMedia();
   }, [media.startMedia, session.isLoading, session.status]);
 
-  const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
-
   const handleSubmit = () => {
     if (session.isLearning) {
-      if (isLastQuestion) {
-        void learning.completeSession(session.currentQuestion, session.submitCurrentAnswer);
-        return;
-      }
-      void learning.submitForReport(session.currentQuestion);
+      void learning.submitForReport(session.currentQuestion, answerCapture.stopAndGetBlob);
       return;
     }
     void session.submitAnswer();
@@ -163,7 +164,7 @@ export const PracticeInterviewPage: React.FC = () => {
         onSpeakAgain={() => setAiState('speaking')}
         speakAgainDisabled={session.isManualPaused || session.isViolationPaused}
         learningMode={session.isLearning}
-        isLastQuestion={isLastQuestion}
+        isLastQuestion={false}
         isEvaluating={learning.isEvaluating}
         exitHref={learning.exitHref}
       />
