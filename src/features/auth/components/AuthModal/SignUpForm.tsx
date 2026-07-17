@@ -10,16 +10,12 @@ import { SocialLoginButton } from '../SocialLoginButton';
 import { signUpFormVariants } from './authModal.animations';
 
 interface SignUpFormProps {
-  isSignUp: boolean;
-  isOrgSignUp: boolean;
   onRegisterSuccess: () => void;
   onOrgSignUpClick: () => void;
   reducedMotion: boolean | null;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({
-  isSignUp,
-  isOrgSignUp,
   onRegisterSuccess,
   onOrgSignUpClick,
   reducedMotion,
@@ -68,15 +64,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   };
 
-  const isActive = isSignUp && !isOrgSignUp;
-
   return (
     <motion.form
       onSubmit={handleSubmit}
       className="absolute inset-0 flex flex-col items-center justify-center px-12"
       variants={signUpFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenRight'}
+      initial="hiddenRight"
+      animate="active"
+      exit="hiddenRight"
     >
       <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
 

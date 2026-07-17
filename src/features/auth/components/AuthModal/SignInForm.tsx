@@ -12,16 +12,12 @@ import { SSOButton } from '../SSOButton';
 import { signInFormVariants } from './authModal.animations';
 
 interface SignInFormProps {
-  isSignUp: boolean;
-  isForgotPassword: boolean;
   onForgotPasswordClick: () => void;
   onLoginSuccess: () => void;
   reducedMotion: boolean | null;
 }
 
 export const SignInForm: React.FC<SignInFormProps> = ({
-  isSignUp,
-  isForgotPassword,
   onForgotPasswordClick,
   onLoginSuccess,
   reducedMotion,
@@ -105,15 +101,14 @@ export const SignInForm: React.FC<SignInFormProps> = ({
     }
   };
 
-  const isActive = !isSignUp && !isForgotPassword;
-
   return (
     <motion.form
       onSubmit={handleSubmit}
       className="absolute inset-0 flex flex-col items-center justify-center px-12"
       variants={signInFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenLeft'}
+      initial="hiddenLeft"
+      animate="active"
+      exit="hiddenLeft"
     >
       <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signInTitle')}</h1>
 

@@ -31,7 +31,7 @@ Deleted legacy values (`Employer`, `organize`, `hr`, `interviewer`, …) are **r
 | `/session-expired` | SCR-AUT-008 | Implemented |
 | `/access-denied` | SCR-AUT-009 | Implemented |
 | `/account-locked` | SCR-AUT-010 | Implemented |
-| Auth modal (overlay) | SCR-AUT-002–005 | Implemented — split-panel `AuthModal` + `AuthOverlay` (**UI frozen**) |
+| Auth modal (overlay) | SCR-AUT-002–005 | Implemented — split-panel `AuthModal` + `AuthOverlay`; **only the active form panel is mounted** (signin / signup / signup-org / forgot) so accessible names stay unique |
 | `/profile` | SCR-CAN-013 | Partial |
 | Session timeout modal | SHR-100 | Implemented — `SessionTimeoutModal` |
 

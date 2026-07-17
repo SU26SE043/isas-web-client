@@ -12,16 +12,12 @@ const fieldClassName =
   'bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-3';
 
 interface SignUpOrgFormProps {
-  isSignUp: boolean;
-  isOrgSignUp: boolean;
   onRegisterSuccess: () => void;
   onCandidateSignUpClick: () => void;
   reducedMotion: boolean | null;
 }
 
 export const SignUpOrgForm: React.FC<SignUpOrgFormProps> = ({
-  isSignUp,
-  isOrgSignUp,
   onRegisterSuccess,
   onCandidateSignUpClick,
   reducedMotion,
@@ -75,15 +71,14 @@ export const SignUpOrgForm: React.FC<SignUpOrgFormProps> = ({
     }
   };
 
-  const isActive = isSignUp && isOrgSignUp;
-
   return (
     <motion.form
       onSubmit={handleSubmit}
       className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-start py-6 px-12"
       variants={signUpFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenRight'}
+      initial="hiddenRight"
+      animate="active"
+      exit="hiddenRight"
     >
       <h1 className="text-3xl heading-primary mb-4 tracking-tight text-center">
         {t('auth.signUpOrgTitle')}
