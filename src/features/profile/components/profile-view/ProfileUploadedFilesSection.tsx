@@ -1,114 +1,48 @@
-import { useCallback, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
-import { AlertCircle, FileText, Trash2 } from 'lucide-react';
-import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
+import { AlertCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
-import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
-import { validatePdfFile } from '@/features/cv-analysis/utils/cvFileValidation';
-import { useInterviewFiles } from '@/features/cv-analysis/hooks/useInterviewFiles';
-import { useLanguage } from '@/shared/languages';
-import { ProfileFileCard, type ProfileFileCardAction } from './ProfileFileCard';
-import { resolveCvFileActionError } from './resolveCvFileActionError';
-
-type PendingReplace = {
-  file: FileRecord;
-  newFile: File;
-};
+import { useProfileUploadedFilesManager } from './useProfileUploadedFilesManager';
+import { ProfileFilesSelectionToolbar } from './ProfileFilesSelectionToolbar';
+import { ProfileFilesGrid } from './ProfileFilesGrid';
+import { ProfileSingleDeleteDialog } from './ProfileSingleDeleteDialog';
+import { ProfileSingleReplaceDialog } from './ProfileSingleReplaceDialog';
+import { ProfileFilesBulkDeleteDialog } from './ProfileFilesBulkDeleteDialog';
 
 export function ProfileUploadedFilesSection() {
-  const { t } = useLanguage();
-  const { files, isLoading, error, reload } = useInterviewFiles();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const replaceTargetRef = useRef<FileRecord | null>(null);
-
-  const [activeAction, setActiveAction] = useState<{
-    fileId: string;
-    action: ProfileFileCardAction;
-  } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<FileRecord | null>(null);
-  const [replacePending, setReplacePending] = useState<PendingReplace | null>(null);
-  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
-  const [isReplaceConfirming, setIsReplaceConfirming] = useState(false);
-
-  const handleDownload = useCallback(
-    async (file: FileRecord) => {
-      setActiveAction({ fileId: file.id, action: 'download' });
-      try {
-        await cvAnalysisService.downloadFile(file.id, file.originalName);
-      } catch (err) {
-        toast.error(
-          resolveCvFileActionError(err, t, 'profile.view.filesDownloadError'),
-        );
-      } finally {
-        setActiveAction(null);
-      }
-    },
-    [t],
-  );
-
-  const openReplacePicker = useCallback((file: FileRecord) => {
-    replaceTargetRef.current = file;
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleReplaceFileSelected = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = event.target.files?.[0];
-      event.target.value = '';
-      const target = replaceTargetRef.current;
-      if (!selected || !target) return;
-
-      const validation = validatePdfFile(selected);
-      if (validation === 'invalidType') {
-        toast.error(t('cv.invalidType'));
-        return;
-      }
-      if (validation === 'invalidSize') {
-        toast.error(t('cv.invalidSize'));
-        return;
-      }
-
-      setReplacePending({ file: target, newFile: selected });
-    },
-    [t],
-  );
-
-  const confirmReplace = useCallback(async () => {
-    if (!replacePending) return;
-    setIsReplaceConfirming(true);
-    setActiveAction({ fileId: replacePending.file.id, action: 'replace' });
-    try {
-      await cvAnalysisService.replaceFile(replacePending.file.id, replacePending.newFile);
-      toast.success(t('profile.view.replaceSuccess'));
-      setReplacePending(null);
-      await reload();
-    } catch (err) {
-      toast.error(resolveCvFileActionError(err, t, 'profile.view.filesReplaceError'));
-    } finally {
-      setIsReplaceConfirming(false);
-      setActiveAction(null);
-    }
-  }, [replacePending, reload, t]);
-
-  const confirmDelete = useCallback(async () => {
-    if (!deleteTarget) return;
-    setIsDeleteConfirming(true);
-    setActiveAction({ fileId: deleteTarget.id, action: 'delete' });
-    try {
-      await cvAnalysisService.deleteFile(deleteTarget.id);
-      toast.success(t('profile.view.deleteSuccess'));
-      setDeleteTarget(null);
-      await reload();
-    } catch (err) {
-      toast.error(resolveCvFileActionError(err, t, 'profile.view.filesDeleteError'));
-    } finally {
-      setIsDeleteConfirming(false);
-      setActiveAction(null);
-    }
-  }, [deleteTarget, reload, t]);
+  const manager = useProfileUploadedFilesManager();
+  const {
+    t,
+    files,
+    isLoading,
+    error,
+    reload,
+    fileInputRef,
+    handleReplaceFileSelected,
+    activeAction,
+    deleteTarget,
+    replacePending,
+    isDeleteConfirming,
+    isReplaceConfirming,
+    isBulkDeleteConfirmOpen,
+    isBulkDeleting,
+    selectedFileIds,
+    selectedCount,
+    isAllSelected,
+    isSomeSelected,
+    isSelectionDisabled,
+    toggleFileSelected,
+    clearSelected,
+    setSelectedAll,
+    handleDownload,
+    openReplacePicker,
+    setDeleteTarget,
+    setReplacePending,
+    setIsBulkDeleteConfirmOpen,
+    confirmDelete,
+    confirmReplace,
+    confirmBulkDelete,
+  } = manager;
 
   return (
     <>
@@ -134,8 +68,15 @@ export function ProfileUploadedFilesSection() {
           {!isLoading && error ? (
             <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-subtle bg-surface-overlay px-4 py-8 text-center">
               <AlertCircle className="size-8 text-muted-foreground" aria-hidden />
-              <p className="text-sm text-muted-foreground">{t('profile.view.filesLoadError')}</p>
-              <Button type="button" variant="secondary" size="sm" onClick={() => void reload()}>
+              <p className="text-sm text-muted-foreground">
+                {t('profile.view.filesLoadError')}
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => void reload()}
+              >
                 {t('profile.view.filesRetry')}
               </Button>
             </div>
@@ -154,19 +95,29 @@ export function ProfileUploadedFilesSection() {
           ) : null}
 
           {!isLoading && !error && files.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {files.map((file) => (
-                <ProfileFileCard
-                  key={file.id}
-                  file={file}
-                  activeAction={
-                    activeAction?.fileId === file.id ? activeAction.action : null
-                  }
-                  onDownload={() => void handleDownload(file)}
-                  onReplace={() => openReplacePicker(file)}
-                  onDelete={() => setDeleteTarget(file)}
-                />
-              ))}
+            <div className="space-y-4">
+              <ProfileFilesSelectionToolbar
+                showSelectAll={files.length >= 2}
+                selectedCount={selectedCount}
+                isAllSelected={isAllSelected}
+                isSomeSelected={isSomeSelected}
+                isSelectionDisabled={isSelectionDisabled}
+                isBulkDeleting={isBulkDeleting}
+                onClearSelection={clearSelected}
+                onSetSelectedAll={setSelectedAll}
+                onOpenBulkDelete={() => setIsBulkDeleteConfirmOpen(true)}
+              />
+              <ProfileFilesGrid
+                files={files}
+                selectedFileIds={selectedFileIds}
+                activeAction={activeAction}
+                isSelectionDisabled={isSelectionDisabled}
+                isBulkDeleting={isBulkDeleting}
+                onToggleSelected={toggleFileSelected}
+                onDownload={(file) => void handleDownload(file)}
+                onReplace={(file) => void openReplacePicker(file)}
+                onDelete={(file) => setDeleteTarget(file)}
+              />
             </div>
           ) : null}
         </CardContent>
@@ -180,40 +131,36 @@ export function ProfileUploadedFilesSection() {
         onChange={handleReplaceFileSelected}
       />
 
-      <ConfirmDialog
+      <ProfileSingleDeleteDialog
         open={deleteTarget !== null}
+        loading={isDeleteConfirming}
+        fileName={deleteTarget?.originalName ?? ''}
         onOpenChange={(open) => {
           if (!open && !isDeleteConfirming) setDeleteTarget(null);
         }}
-        title={t('profile.view.deleteFileTitle')}
-        description={t('profile.view.deleteFileDesc').replace(
-          '{name}',
-          deleteTarget?.originalName ?? '',
-        )}
-        confirmLabel={t('profile.view.fileDelete')}
-        cancelLabel={t('profile.education.cancel')}
-        destructive
-        loading={isDeleteConfirming}
-        icon={<Trash2 className="size-5" aria-hidden />}
         onConfirm={() => void confirmDelete()}
       />
 
-      <ConfirmDialog
+      <ProfileSingleReplaceDialog
         open={replacePending !== null}
+        loading={isReplaceConfirming}
+        newFileName={replacePending?.newFile.name ?? ''}
         onOpenChange={(open) => {
           if (!open && !isReplaceConfirming) setReplacePending(null);
         }}
-        title={t('profile.view.replaceFileTitle')}
-        description={t('profile.view.replaceFileDesc').replace(
-          '{name}',
-          replacePending?.newFile.name ?? '',
-        )}
-        confirmLabel={t('profile.view.fileReplace')}
-        cancelLabel={t('profile.education.cancel')}
-        loading={isReplaceConfirming}
-        icon={<FileText className="size-5" aria-hidden />}
         onConfirm={() => void confirmReplace()}
+      />
+
+      <ProfileFilesBulkDeleteDialog
+        open={isBulkDeleteConfirmOpen}
+        loading={isBulkDeleting}
+        selectedCount={selectedCount}
+        onOpenChange={(open) => {
+          if (!open && !isBulkDeleting) setIsBulkDeleteConfirmOpen(false);
+        }}
+        onConfirm={() => void confirmBulkDelete()}
       />
     </>
   );
 }
+

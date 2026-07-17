@@ -15,7 +15,11 @@ export type ProfileFileCardAction = 'download' | 'replace' | 'delete';
 
 interface ProfileFileCardProps {
   file: FileRecord;
+  isSelected: boolean;
   activeAction: ProfileFileCardAction | null;
+  isSelectionDisabled?: boolean;
+  isCardActionsDisabled?: boolean;
+  onToggleSelected: () => void;
   onDownload: () => void;
   onReplace: () => void;
   onDelete: () => void;
@@ -30,23 +34,43 @@ function parseStatusKey(status: string): string {
 
 export function ProfileFileCard({
   file,
+  isSelected,
   activeAction,
+  isSelectionDisabled = false,
+  isCardActionsDisabled = false,
+  onToggleSelected,
   onDownload,
   onReplace,
   onDelete,
 }: ProfileFileCardProps) {
   const { t, language } = useLanguage();
-  const isBusy = activeAction !== null;
+  const isBusy = activeAction !== null || isCardActionsDisabled;
 
   return (
     <article
       className={cn(
         'flex h-full flex-col rounded-lg border border-satin bg-surface-overlay p-4 transition-[border-color,background-color] duration-200 ease-out',
         'hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03]',
+        isSelected ? 'border-[var(--satin-border-hover)] bg-white/[0.05]' : null,
         isBusy && 'opacity-90',
       )}
     >
       <div className="flex min-w-0 items-start gap-3">
+        <label
+          className="mt-0.5 flex size-6 cursor-pointer items-center justify-center rounded-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            disabled={isSelectionDisabled}
+            onChange={() => onToggleSelected()}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t('profile.view.selectFileCheckboxAria').replace('{name}', file.originalName)}
+            className="size-4 rounded-sm border-satin bg-surface-base accent-white"
+          />
+        </label>
+
         <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-foreground">
           <FileText className="size-5" aria-hidden />
         </span>
