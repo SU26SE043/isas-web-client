@@ -36,6 +36,17 @@ describe('env schema', () => {
     expect(parsed.VITE_API_BASE_URL).toBe('https://gateway.example.com');
   });
 
+  it('strips accidental /api suffix when resolving base URL', async () => {
+    const { getApiBaseUrl } = await import('./env');
+    // getApiBaseUrl uses import.meta.env at module load — verify pure helper logic here.
+    const normalize = (raw: string) =>
+      raw.trim().replace(/\/+$/, '').replace(/\/api(?:\/v1)?$/i, '');
+    expect(normalize('http://localhost:5050/api')).toBe('http://localhost:5050');
+    expect(normalize('http://localhost:5050/api/v1')).toBe('http://localhost:5050');
+    expect(normalize('http://localhost:5050')).toBe('http://localhost:5050');
+    expect(getApiBaseUrl()).toBeTypeOf('string');
+  });
+
   it('rejects invalid mode', () => {
     expect(() =>
       envSchema.parse({

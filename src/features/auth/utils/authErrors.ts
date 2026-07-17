@@ -3,7 +3,12 @@ import { getApiErrorMessage, getApiStatusCode } from '@/shared/api';
 import { HttpStatus } from '@/shared/constants/http-status';
 import type { ApiError } from '@/shared/types/api-error';
 
-export type AuthErrorKind = 'invalidCredentials' | 'accountLocked' | 'mfaRequired' | 'generic';
+export type AuthErrorKind =
+  | 'invalidCredentials'
+  | 'accountLocked'
+  | 'emailAlreadyExists'
+  | 'mfaRequired'
+  | 'generic';
 
 interface ApiErrorBody extends Pick<ApiError, 'message' | 'error'> {
   code?: string;
@@ -23,6 +28,25 @@ const HTTP_LOCKED = 423;
 function isLockedMessage(message: string): boolean {
   const lower = message.toLowerCase();
   return lower.includes('lock') || lower.includes('blocked') || lower.includes('too many');
+}
+
+function isEmailAlreadyExistsMessage(message: string): boolean {
+  const lower = message.toLowerCase();
+  return lower.includes('email already') || lower.includes('already exists');
+}
+
+export function parseRegisterError(error: unknown, fallback: string): ParsedAuthError {
+  const status = getApiStatusCode(error);
+  const message = getApiErrorMessage(error, fallback);
+
+  if (
+    status === HttpStatus.CONFLICT ||
+    (status === HttpStatus.BAD_REQUEST && isEmailAlreadyExistsMessage(message))
+  ) {
+    return { kind: 'emailAlreadyExists', message };
+  }
+
+  return { kind: 'generic', message };
 }
 
 export function parseAuthError(error: unknown, fallback: string): ParsedAuthError {

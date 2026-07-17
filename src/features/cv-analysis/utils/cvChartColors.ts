@@ -1,3 +1,5 @@
+import { CHART_CATEGORICAL, CHART_GRID, CHART_RADAR } from '@/shared/charts/chartColors';
+
 /** Semantic / multi-hue palette for CV analysis charts (dark monochrome chrome). */
 export const CV_CHART_COLORS = {
   match: 'var(--isas-info)',
@@ -6,19 +8,13 @@ export const CV_CHART_COLORS = {
   warning: 'var(--isas-warning)',
   error: 'var(--isas-error)',
   info: 'var(--isas-info)',
-  radarFill: 'color-mix(in srgb, var(--isas-info) 28%, transparent)',
-  radarStroke: 'var(--isas-info)',
-  radarTargetFill: 'color-mix(in srgb, var(--isas-warning) 16%, transparent)',
-  radarTargetStroke: 'var(--isas-warning)',
-  grid: 'color-mix(in srgb, var(--isas-silver-200) 22%, transparent)',
-  axis: 'var(--isas-gray-400)',
-  barTracks: [
-    'var(--isas-info)',
-    'var(--isas-success)',
-    'var(--isas-warning)',
-    '#38bdf8',
-    '#34d399',
-  ],
+  radarFill: CHART_RADAR.fill,
+  radarStroke: CHART_RADAR.stroke,
+  radarTargetFill: CHART_RADAR.targetFill,
+  radarTargetStroke: CHART_RADAR.targetStroke,
+  grid: CHART_GRID.stroke,
+  axis: CHART_GRID.axis,
+  barTracks: [...CHART_CATEGORICAL],
 } as const;
 
 export function scoreToneColor(score: number): string {

@@ -34,11 +34,8 @@ export const useAuth = () => {
   }, [setUser, setLoading, logout]);
 
   const handleLogout = useCallback(() => {
-    // Snapshot token, clear local auth, and leave protected UI immediately.
     const refreshToken = authTokenStorage.getRefreshToken();
     logout();
-    authTokenStorage.clear();
-    sessionManager.clear();
     navigate('/', { replace: true });
 
     void authService.logout(refreshToken).catch((error) => {
@@ -53,7 +50,8 @@ export const useAuth = () => {
     const urlRefreshToken = searchParams.get('refreshToken');
 
     if (urlAccessToken && urlRefreshToken) {
-      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken);
+      const urlExpiresAt = searchParams.get('expiresAt');
+      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken, urlExpiresAt);
       sessionManager.markSessionStart();
       // Clean up URL parameters without refreshing page
       window.history.replaceState({}, document.title, window.location.pathname);

@@ -25,6 +25,7 @@
 | `surface-elevated` | `#2a2a30` | Modals, dropdowns, active nav |
 | `surface-highlight` | `#34343c` | Strong hover |
 | `glass-panel` | glass + satin edge | Elevated glass cards |
+| `glass-table-container` / `GlassTableContainer` | specular edge glow + diagonal shine | **Preferred** wrapper for data tables |
 | `glass-sidebar` | sunken + blur | Dashboard sidebars |
 | `glass-topbar` | base + blur | Sticky engagement / top chrome |
 
@@ -61,17 +62,33 @@ Tokens nằm ở `src/styles/colors.css`. Utilities ở `src/index.css`.
 | `border-default` | default satin alpha |
 | `--border-focus` | stronger silver focus |
 
-## Typography
+## Typography & text tokens
 
-| Class | Dùng cho |
+| Class / Token | Dùng cho |
 |-------|----------|
 | `heading-primary` | Page title (font-semibold, tracking-tight) |
 | `heading-secondary` | Section title |
 | `body-text` | Paragraph (muted) |
 | `text-label` | Uppercase label (xs, tracking-wide) |
 | `text-caption` | Helper text |
+| `--text-primary` / `text-text-primary` | Tiêu đề & nội dung chính (`#fafafa`) |
+| `--text-secondary` / `text-text-secondary` | Phụ đề, mô tả, placeholder (`#a1a1aa`) |
+| `--text-disabled` / `text-text-disabled` | Disabled control copy (`#52525b`) |
 
 Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
+
+## Action colors (Monochrome+ — không brand hue)
+
+Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover & pressed.
+
+| Token / Class | Hex | Dùng |
+|---------------|-----|------|
+| `--primary-main` / `bg-primary-main` | `#ffffff` | Default CTA fill |
+| `--primary-light` / `bg-primary-light` | `#f4f4f5` | Hover (soft near-white) |
+| `--primary-dark` / `bg-primary-dark` | `#e4e4e7` | Active / pressed |
+| `--secondary-main` / `text-secondary-main` | silver `#cfd6df` | Accent phụ / outline soft |
+
+`btn-primary` map: default → main · hover → light · active → dark · disabled → `text-disabled` on overlay.
 
 ## Layout utilities
 
@@ -88,7 +105,7 @@ Base font size: **14px** (`text-sm`). Headings dùng negative letter-spacing.
 | Header | `h-16`, glass-topbar + satin edge |
 | Sidebar | `glass-sidebar`, active `bg-surface-elevated` |
 | Card | `frame-satin` + `Card` primitive |
-| Table | container `frame-satin rounded-2xl` |
+| Table | `GlassTableContainer` / `.glass-table-container` (specular glass) |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
 | **SelectionOption** | Satin selectable tile — **default** for choice grids |
 | Modal | Dialog + `border-satin` |
@@ -147,6 +164,58 @@ import { SelectionOption } from '@/components/ui/selection-option';
 
 Giữ nguyên cho: toast, alert, validation, progress, charts, status badges, recording indicator, Google OAuth logo.
 
+Mỗi semantic có **main** + **light** (hover) + **dark** (pressed) + **bg** (tint trên nền tối):
+
+| Role | main | light | dark | bg |
+|------|------|-------|------|-----|
+| Success | `#22c55e` | `#4ade80` | `#16a34a` | 12% tint |
+| Error | `#ef4444` | `#f87171` | `#dc2626` | 12% tint |
+| Warning | `#f97316` | `#fb923c` | `#ea580c` | 12% tint |
+| Info | `#3b82f6` | `#60a5fa` | `#2563eb` | 12% tint |
+
+Tailwind: `text-success` / `text-success-light` / `bg-success-bg` (và tương tự error / warning / info).
+
+## Chart / Data visualization colors
+
+Charts được phép dùng hue (ngoại lệ monochrome). Token ở `src/styles/colors.css` · helper `src/shared/charts/chartColors.ts`.
+
+### Categorical (7 màu · CVD-friendly)
+
+Thứ tự tránh đỏ–xanh lá kề nhau cùng độ sáng: indigo → teal → amber → rose → cyan → violet → lime.
+
+| Index | Token | HEX |
+|-------|-------|-----|
+| 0 | `--chart-cat-1` | `#818cf8` indigo |
+| 1 | `--chart-cat-2` | `#2dd4bf` teal |
+| 2 | `--chart-cat-3` | `#fbbf24` amber |
+| 3 | `--chart-cat-4` | `#fb7185` rose |
+| 4 | `--chart-cat-5` | `#22d3ee` cyan |
+| 5 | `--chart-cat-6` | `#c084fc` violet |
+| 6 | `--chart-cat-7` | `#a3e635` lime |
+
+Dùng: `CHART_CATEGORICAL` / `chartCategoryColor(i)` / `CHART_CATEGORICAL_HEX` (canvas).
+
+### Radar
+
+| Token | Value |
+|-------|--------|
+| `--chart-radar-stroke` | indigo `#818cf8` (đậm, rõ) |
+| `--chart-radar-fill` | `rgb(129 140 248 / 0.25)` (~25%) |
+| `--chart-radar-target-stroke` | amber `#fbbf24` |
+| `--chart-radar-target-fill` | `rgb(251 191 36 / 0.2)` (~20%) |
+
+### Grid · Axis · Tooltip
+
+| Token | HEX / value | Vai trò |
+|-------|-------------|---------|
+| `--chart-grid` | `#334155` | Gridlines (chìm) |
+| `--chart-axis` | `#64748b` | Axis labels |
+| `--chart-tooltip-bg` | `surface-elevated` | Tooltip nền |
+| `--chart-tooltip-border` | `border-strong` | Viền tooltip |
+| `--chart-tooltip-shadow` | `shadow-lg` | Đổ bóng nổi khối |
+
+Recharts: `CHART_TOOLTIP_STYLE`, `CHART_GRID`, `CHART_RADAR`.
+
 ### Multi-step steppers (status)
 
 Wizard / interview / CV flow steppers dùng `src/components/ui/flow-stepper.tsx`:
@@ -155,17 +224,20 @@ Wizard / interview / CV flow steppers dùng `src/components/ui/flow-stepper.tsx`
 |-------------|--------|
 | `complete` | Green marker + label (`text-success` / `bg-success-bg`) + check icon |
 | `error` / failed | Red marker + label (`text-error` / `bg-error-bg`) + X icon |
-| `current` | Monochrome white marker (active step) |
+| `processing` | Info blue + spinner (`text-info`) |
+| `current` | Monochrome/info active step |
 | `pending` | Muted satin / muted text |
 
-Không invent brand hex — chỉ token semantic success/error.
+Không invent brand hex — chỉ token semantic success/error/info.
 
 ## Files
 
 | File | Vai trò |
 |------|---------|
-| `src/styles/colors.css` | Surface + satin silver tokens |
+| `src/styles/colors.css` | Surface + satin silver + chart tokens |
+| `src/shared/charts/chartColors.ts` | Categorical / radar / grid / tooltip helpers |
 | `src/index.css` | Tailwind theme + `frame-satin*` utilities |
+| `src/components/ui/glass-table-container.tsx` | Specular glass table wrapper |
 | `src/components/ui/*` | shadcn primitives + shared templates |
 | `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
 | `src/components/ui/selection-option.tsx` | Selectable option tile |

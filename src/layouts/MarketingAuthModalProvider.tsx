@@ -8,9 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AuthModal } from '@/features/auth/components/AuthModal';
+import { AuthModal, type AuthModalView } from '@/features/auth/components/AuthModal';
 
-export type MarketingAuthView = 'login' | 'signup';
+export type MarketingAuthView = AuthModalView;
 
 interface MarketingAuthModalContextValue {
   openAuthModal: (view?: MarketingAuthView) => void;
@@ -28,7 +28,7 @@ export function useMarketingAuthModal(): MarketingAuthModalContextValue {
 }
 
 function parseAuthView(value: string | null): MarketingAuthView | null {
-  if (value === 'login' || value === 'signup') return value;
+  if (value === 'login' || value === 'signup' || value === 'signup-org') return value;
   return null;
 }
 

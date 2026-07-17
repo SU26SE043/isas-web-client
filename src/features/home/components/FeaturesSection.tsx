@@ -85,8 +85,8 @@ export const FeaturesSection: React.FC = () => {
                 {/* Defs for gradients and filters */}
                 <defs>
                   <linearGradient id="radarFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F3F4F6" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#F3F4F6" stopOpacity="0.05" />
+                    <stop offset="0%" stopColor="var(--chart-cat-1)" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="var(--chart-cat-1)" stopOpacity="0.08" />
                   </linearGradient>
                   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="4" result="blur" />
@@ -95,7 +95,7 @@ export const FeaturesSection: React.FC = () => {
                 </defs>
 
                 {/* Grid Lines */}
-                <g stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="4 4">
+                <g stroke="var(--chart-grid)" strokeWidth="1.5" fill="none" strokeDasharray="4 4">
                   {/* Outer Hexagon (100%) */}
                   <polygon points="200,50 330,125 330,275 200,350 70,275 70,125" />
                   {/* Middle Hexagon (66%) */}
@@ -105,7 +105,7 @@ export const FeaturesSection: React.FC = () => {
                 </g>
 
                 {/* Axes from center */}
-                <g stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3 3">
+                <g stroke="var(--chart-axis)" strokeWidth="1.5" strokeDasharray="3 3">
                   <line x1="200" y1="200" x2="200" y2="50" />
                   <line x1="200" y1="200" x2="330" y2="125" />
                   <line x1="200" y1="200" x2="330" y2="275" />
@@ -117,7 +117,7 @@ export const FeaturesSection: React.FC = () => {
                 {/* Data Polygon */}
                 <polygon
                   fill="url(#radarFill)"
-                  stroke="#D1D5DB"
+                  stroke="var(--chart-radar-stroke)"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
                   filter="url(#glow)"
@@ -136,7 +136,7 @@ export const FeaturesSection: React.FC = () => {
                 </polygon>
 
                 {/* Data Points (Dots) */}
-                <g fill="#D1D5DB" stroke="#ffffff" strokeWidth="2">
+                <g fill="var(--chart-radar-stroke)" stroke="#ffffff" strokeWidth="2">
                   <circle r="6">
                     <animate attributeName="cx" dur="4s" repeatCount="indefinite" values="200; 200; 200" />
                     <animate attributeName="cy" dur="4s" repeatCount="indefinite" values="60; 140; 60" />

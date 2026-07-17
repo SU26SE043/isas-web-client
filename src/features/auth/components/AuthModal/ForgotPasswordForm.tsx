@@ -8,8 +8,6 @@ import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
 import { forgotPasswordFormVariants } from './authModal.animations';
 
 interface ForgotPasswordFormProps {
-  isSignUp: boolean;
-  isForgotPassword: boolean;
   onBackToSignInClick: () => void;
   reducedMotion: boolean | null;
 }
@@ -17,8 +15,6 @@ interface ForgotPasswordFormProps {
 type ForgotPasswordStep = 'email' | 'otp' | 'reset';
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  isSignUp,
-  isForgotPassword,
   onBackToSignInClick,
   reducedMotion,
 }) => {
@@ -98,14 +94,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     onBackToSignInClick();
   };
 
-  const isActive = !isSignUp && isForgotPassword;
-
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center px-12"
       variants={forgotPasswordFormVariants(reducedMotion)}
-      initial={false}
-      animate={isActive ? 'active' : 'hiddenRight'}
+      initial="hiddenRight"
+      animate="active"
+      exit="hiddenRight"
     >
       {step === 'email' && (
         <>
@@ -117,6 +112,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           <input
             className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
             placeholder={t('auth.emailPlaceholder')}
+            aria-label={t('auth.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
@@ -145,11 +141,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
             className="bg-surface-overlay border border-default px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-muted-foreground focus:outline-none"
             value={email}
             disabled
+            aria-label={t('auth.emailPlaceholder')}
           />
 
           <input
             className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
             placeholder={t('auth.otpPlaceholder')}
+            aria-label={t('auth.otpPlaceholder')}
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             disabled={isLoading}
@@ -178,12 +176,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
             className="bg-surface-overlay border border-default px-5 py-3.5 rounded-xl w-full mb-4 text-sm text-muted-foreground focus:outline-none"
             value={email}
             disabled
+            aria-label={t('auth.emailPlaceholder')}
           />
 
           <input
             type="password"
             className="bg-surface-overlay border border-default rounded-lg px-4 py-2.5 text-sm text-foreground focus-ring w-full transition-all placeholder:text-muted-foreground mb-2"
             placeholder={t('auth.newPasswordPlaceholder')}
+            aria-label={t('auth.newPasswordPlaceholder')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={isLoading || !!success}

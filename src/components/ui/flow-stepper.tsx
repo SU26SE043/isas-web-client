@@ -1,7 +1,7 @@
-import { Check, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type FlowStepStatus = 'complete' | 'current' | 'pending' | 'error';
+export type FlowStepStatus = 'complete' | 'current' | 'processing' | 'pending' | 'error';
 
 export function resolveFlowStepStatus(
   index: number,
@@ -20,6 +20,8 @@ export function flowStepMarkerClass(status: FlowStepStatus): string {
       return 'border-success bg-success-bg text-success';
     case 'error':
       return 'border-error bg-error-bg text-error';
+    case 'processing':
+      return 'border-info bg-info-bg text-info';
     case 'current':
       return 'border-white bg-white text-black';
     default:
@@ -33,6 +35,8 @@ export function flowStepLabelClass(status: FlowStepStatus): string {
       return 'text-success';
     case 'error':
       return 'text-error';
+    case 'processing':
+      return 'text-info';
     case 'current':
       return 'text-foreground';
     default:
@@ -46,6 +50,8 @@ export function flowStepConnectorClass(status: FlowStepStatus): string {
       return 'bg-success/40';
     case 'error':
       return 'bg-error/40';
+    case 'processing':
+      return 'bg-info/40';
     default:
       return 'bg-white/10';
   }
@@ -57,8 +63,9 @@ interface FlowStepMarkerProps {
   className?: string;
 }
 
-/** Numbered circle / check / error for multi-step flow sidebars. */
+/** Numbered circle / check / spinner / error for multi-step flow sidebars. */
 export function FlowStepMarker({ status, stepNumber, className }: FlowStepMarkerProps) {
+  const isActive = status === 'current' || status === 'processing';
   return (
     <span
       className={cn(
@@ -66,12 +73,14 @@ export function FlowStepMarker({ status, stepNumber, className }: FlowStepMarker
         flowStepMarkerClass(status),
         className,
       )}
-      aria-current={status === 'current' ? 'step' : undefined}
+      aria-current={isActive ? 'step' : undefined}
     >
       {status === 'complete' ? (
         <Check className="size-3.5" aria-hidden />
       ) : status === 'error' ? (
         <X className="size-3.5" aria-hidden />
+      ) : status === 'processing' ? (
+        <Loader2 className="size-3.5 animate-spin" aria-hidden />
       ) : (
         stepNumber
       )}

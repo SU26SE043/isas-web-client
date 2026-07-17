@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from '../../../../shared/languages';
 import { overlayPanelVariants, panelTransition } from './authModal.animations';
 
@@ -29,45 +29,53 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
 
       <div className="relative h-full w-full">
-        <motion.div
-          className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center"
-          variants={overlayPanelVariants(reducedMotion)}
-          initial={false}
-          custom={1}
-          animate={isSignUp ? 'inactive' : 'active'}
-        >
-          <h1 className="text-4xl heading-primary mb-4">{t('auth.helloTitle')}</h1>
-          <p className="text-base text-muted-foreground mb-10 font-medium leading-relaxed">
-            {t('auth.helloDescription')}
-          </p>
-          <button
-            type="button"
-            onClick={onSignUpClick}
-            className="btn-secondary uppercase tracking-wider px-14"
-          >
-            {t('auth.signUp')}
-          </button>
-        </motion.div>
-
-        <motion.div
-          className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center"
-          variants={overlayPanelVariants(reducedMotion)}
-          initial={false}
-          custom={-1}
-          animate={isSignUp ? 'active' : 'inactive'}
-        >
-          <h1 className="text-4xl heading-primary mb-4">{t('auth.welcomeBackTitle')}</h1>
-          <p className="text-base text-white/80 mb-10 font-medium leading-relaxed">
-            {t('auth.welcomeBackDescription')}
-          </p>
-          <button
-            type="button"
-            onClick={onSignInClick}
-            className="btn-secondary uppercase tracking-wider px-14"
-          >
-            {t('auth.signInTitle')}
-          </button>
-        </motion.div>
+        <AnimatePresence mode="wait" initial={false}>
+          {!isSignUp ? (
+            <motion.div
+              key="overlay-hello"
+              className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center"
+              variants={overlayPanelVariants(reducedMotion)}
+              initial="inactive"
+              animate="active"
+              exit="inactive"
+              custom={1}
+            >
+              <h1 className="text-4xl heading-primary mb-4">{t('auth.helloTitle')}</h1>
+              <p className="text-base text-muted-foreground mb-10 font-medium leading-relaxed">
+                {t('auth.helloDescription')}
+              </p>
+              <button
+                type="button"
+                onClick={onSignUpClick}
+                className="btn-secondary uppercase tracking-wider px-14"
+              >
+                {t('auth.signUp')}
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="overlay-welcome"
+              className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center"
+              variants={overlayPanelVariants(reducedMotion)}
+              initial="inactive"
+              animate="active"
+              exit="inactive"
+              custom={-1}
+            >
+              <h1 className="text-4xl heading-primary mb-4">{t('auth.welcomeBackTitle')}</h1>
+              <p className="text-base text-white/80 mb-10 font-medium leading-relaxed">
+                {t('auth.welcomeBackDescription')}
+              </p>
+              <button
+                type="button"
+                onClick={onSignInClick}
+                className="btn-secondary uppercase tracking-wider px-14"
+              >
+                {t('auth.signInTitle')}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

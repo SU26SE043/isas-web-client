@@ -10,7 +10,7 @@ import { ProfileViewLoading } from '../components/profile-view/ProfileViewLoadin
 
 export const ProfileViewPage: React.FC = () => {
   const { t } = useLanguage();
-  const { user, isLoading, fetchUser } = useAuth();
+  const { user, isLoading } = useAuth();
   const { files, isLoading: cvLoading } = useUploadedCvFiles();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -40,7 +40,6 @@ export const ProfileViewPage: React.FC = () => {
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={() => void fetchUser()}
       />
     </div>
   );

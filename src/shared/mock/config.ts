@@ -16,7 +16,7 @@ export type MockDataDomain =
   | 'admin';
 
 /** Domains wired to the real gateway today (auth is always live — not listed here). */
-export const LIVE_API_DOMAINS: readonly MockDataDomain[] = [];
+export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis'];
 
 export function usesMockData(domain: MockDataDomain): boolean {
   return !LIVE_API_DOMAINS.includes(domain);

@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { installMockMedia } from '../../fixtures/media';
-import { loginAs } from '../../fixtures/auth';
 import { completePracticeSetupWizard } from '../../fixtures/practiceWizard';
 
 test.describe('B2C full journey', () => {
@@ -11,7 +10,27 @@ test.describe('B2C full journey', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 'e2e-journey-candidate', email: 'journey@isas.dev' }),
+        body: JSON.stringify({
+          accessToken: 'e2e-access-journey',
+          refreshToken: 'e2e-refresh-journey',
+          expiresAt: '2026-07-12T12:00:00.000Z',
+        }),
+      });
+    });
+
+    await page.route('**/api/v1/auth/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'e2e-journey-candidate',
+          fullName: 'Journey Candidate',
+          email: 'journey@isas.dev',
+          title: 'Frontend Candidate',
+          role: 'Candidate',
+          location: 'Ho Chi Minh City',
+          createdAt: '2026-07-12T00:00:00.000Z',
+        }),
       });
     });
 
@@ -26,10 +45,8 @@ test.describe('B2C full journey', () => {
     await dialog.getByLabel(/e-mail/i).fill('journey@isas.dev');
     await dialog.getByLabel(/^password$/i).fill('Password123!Secure');
     await dialog.getByRole('button', { name: /^Sign up$/i }).click();
-    await expect(page).toHaveURL(/\/verify-email/);
-    await expect(page.getByRole('heading', { name: /^Verify email$/i })).toBeVisible();
-
-    await loginAs(page, 'Candidate');
+    await page.waitForURL(/\/candidate\/dashboard/);
+    await expect(page).toHaveURL(/\/candidate\/dashboard/);
 
     await page.goto('/candidate/cv/analysis');
     await expect(page.getByRole('heading', { level: 1, name: /cv analysis/i })).toBeVisible();

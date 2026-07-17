@@ -18,24 +18,35 @@ describe('unwrapAuthPayload', () => {
 });
 
 describe('parseAuthTokens', () => {
-  it('parses Auth service login body', () => {
+  it('parses Auth service login body including expiresAt', () => {
     expect(
       parseAuthTokens({
         accessToken: 'access',
         refreshToken: 'refresh',
         expiresAt: '2026-07-14T15:00:00Z',
       }),
-    ).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' });
+    ).toEqual({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresAt: '2026-07-14T15:00:00Z',
+      emailVerificationRequired: false,
+      mfaRequired: false,
+      mfaToken: undefined,
+    });
   });
 
-  it('parses PascalCase Auth service DTO keys', () => {
+  it('parses PascalCase Auth service DTO keys including ExpiresAt', () => {
     expect(
       parseAuthTokens({
         AccessToken: 'access',
         RefreshToken: 'refresh',
         ExpiresAt: '2026-07-14T15:00:00Z',
       }),
-    ).toMatchObject({ accessToken: 'access', refreshToken: 'refresh' });
+    ).toMatchObject({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresAt: '2026-07-14T15:00:00Z',
+    });
   });
 
   it('parses wrapped token body', () => {

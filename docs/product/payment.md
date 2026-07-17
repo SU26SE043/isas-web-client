@@ -58,6 +58,14 @@ E2E: `e2e/specs/b2c/payment-credits.spec.ts`
 
 Live PaymentService + PayOS integration TBD.
 
+### Public package catalog (wired)
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/payment/package` | Public | Catalog → `PackageResponse[]` (`id`, `name`, `type`, `priceVnd`, `interviewCredits`, `durationDays`, `isActive`, `createdAt`) |
+
+Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages()` (always live). Wallet / checkout remain mock until PayOS order APIs are wired.
+
 ---
 
 ## B2B — Postpaid monthly by tokens

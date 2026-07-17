@@ -30,13 +30,40 @@
   --color-surface-highlight: var(--surface-highlight);
 
   --color-success: var(--isas-success);
+  --color-success-light: var(--isas-success-light);
+  --color-success-dark: var(--isas-success-dark);
   --color-success-bg: var(--isas-success-bg);
   --color-error: var(--isas-error);
+  --color-error-light: var(--isas-error-light);
+  --color-error-dark: var(--isas-error-dark);
   --color-error-bg: var(--isas-error-bg);
   --color-warning: var(--isas-warning);
+  --color-warning-light: var(--isas-warning-light);
+  --color-warning-dark: var(--isas-warning-dark);
   --color-warning-bg: var(--isas-warning-bg);
   --color-info: var(--isas-info);
+  --color-info-light: var(--isas-info-light);
+  --color-info-dark: var(--isas-info-dark);
   --color-info-bg: var(--isas-info-bg);
+
+  --color-primary-light: var(--primary-light);
+  --color-primary-main: var(--primary-main);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary-main: var(--secondary-main);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-chart-cat-1: var(--chart-cat-1);
+  --color-chart-cat-2: var(--chart-cat-2);
+  --color-chart-cat-3: var(--chart-cat-3);
+  --color-chart-cat-4: var(--chart-cat-4);
+  --color-chart-cat-5: var(--chart-cat-5);
+  --color-chart-cat-6: var(--chart-cat-6);
+  --color-chart-cat-7: var(--chart-cat-7);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
+  --color-chart-tooltip-bg: var(--chart-tooltip-bg);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -165,6 +192,149 @@ select {
     -webkit-backdrop-filter: blur(var(--blur-md));
   }
 
+  /*
+   * Specular glass shell (reference: reflective dark glass plate).
+   * Edge glow via::before gradients; diagonal shine via layered backgrounds.
+   * Prefer this for data tables — not a hard 1px border.
+   */
+  .glass-table-container {
+    --glass-table-radius: 1.5rem;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--glass-table-radius);
+    background-color: rgb(18 18 20 / 0.58);
+    background-image:
+      /* diagonal specular wash (top-left → bottom-right feel) */
+      linear-gradient(
+        118deg,
+        rgb(255 255 255 / 0.09) 0%,
+        rgb(255 255 255 / 0.035) 18%,
+        rgb(255 255 255 / 0) 36%,
+        rgb(255 255 255 / 0) 62%,
+        rgb(255 255 255 / 0.025) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.04) 0%,
+        rgb(255 255 255 / 0) 42%
+      );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    /* faint silhouette + soft outer lift */
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      var(--shadow-md),
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 -1px 0 rgb(255 255 255 / 0.03);
+  }
+
+  .glass-table-container::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    background:
+      /* top edge streak — bright center, soft tips */
+      radial-gradient(
+        72% 140% at 50% -8%,
+        rgb(255 255 255 / 0.92) 0%,
+        rgb(255 255 255 / 0.35) 28%,
+        transparent 58%
+      ),
+      /* bottom edge streak */
+      radial-gradient(
+        68% 120% at 50% 108%,
+        rgb(255 255 255 / 0.55) 0%,
+        rgb(255 255 255 / 0.18) 32%,
+        transparent 60%
+      ),
+      /* left edge flare (upper half) — stronger catch at rim */
+      radial-gradient(
+        140% 60% at -2% 28%,
+        rgb(255 255 255 / 0.95) 0%,
+        rgb(255 255 255 / 0.4) 22%,
+        transparent 52%
+      ),
+      /* faint continuous lip */
+      linear-gradient(
+        rgb(255 255 255 / 0.14),
+        rgb(255 255 255 / 0.14)
+      );
+    background-repeat: no-repeat;
+    background-size:
+      78% 2px,
+      70% 2px,
+      2px 58%,
+      100% 100%;
+    background-position:
+      50% 0,
+      50% 100%,
+      0 18%,
+      0 0;
+    padding: 1px;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .glass-table-container::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    /* soft bloom behind bright edge catches */
+    background:
+      radial-gradient(55% 18% at 50% 0%, rgb(255 255 255 / 0.16), transparent 70%),
+      radial-gradient(50% 16% at 50% 100%, rgb(255 255 255 / 0.1), transparent 70%),
+      radial-gradient(18% 40% at 0% 34%, rgb(255 255 255 / 0.12), transparent 72%);
+    mix-blend-mode: screen;
+    opacity: 0.9;
+  }
+
+  .glass-table-container > .glass-table-container__scroll {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Minimal table chrome inside the glass shell */
+  .glass-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+  }
+
+  .glass-table-container thead th {
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .glass-table-container tbody td {
+    background: transparent;
+    border-bottom: 1px solid rgb(255 255 255 / 0.05);
+  }
+
+  .glass-table-container tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .glass-table-container tbody tr:hover td {
+    background: rgb(255 255 255 / 0.03);
+  }
+
   .glass-well {
     background: rgb(0 0 0 / 0.22);
     border: 1px dashed var(--satin-border);
@@ -283,8 +453,8 @@ select {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background-color: var(--isas-white);
-    color: var(--isas-black);
+    background-color: var(--primary-main);
+    color: var(--primary-foreground);
     border: 1px solid transparent;
     border-radius: var(--radius-lg);
     padding: 0.625rem 1.125rem;
@@ -298,12 +468,22 @@ select {
   }
 
   .btn-primary:hover {
-    background-color: var(--isas-gray-100);
+    background-color: var(--primary-light);
     box-shadow: var(--shadow-sm);
   }
 
   .btn-primary:active {
+    background-color: var(--primary-dark);
     transform: scale(0.98);
+  }
+
+  .btn-primary:disabled,
+  .btn-primary[aria-disabled='true'] {
+    background-color: var(--surface-overlay);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
   }
 
   .btn-secondary {

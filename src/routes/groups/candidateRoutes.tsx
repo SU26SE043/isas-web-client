@@ -26,6 +26,8 @@ import { TokenUsagePage } from '@/features/payment/pages/TokenUsagePage';
 import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
 import { CheckoutPage } from '@/features/payment/pages/CheckoutPage';
 import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPage';
+import { PaymentSuccessPage } from '@/features/payment/pages/PaymentSuccessPage';
+import { PaymentFailedPage } from '@/features/payment/pages/PaymentFailedPage';
 import { HelpPage } from '@/features/engagement/pages/HelpPage';
 import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
 import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
@@ -126,6 +128,8 @@ export const candidateRoutes: RouteObject[] = [
             ],
           },
           { path: '/payment/callback', element: <PaymentCallbackPage /> },
+          { path: '/payment/success', element: <PaymentSuccessPage /> },
+          { path: '/payment/failed', element: <PaymentFailedPage /> },
           { path: '/profile', element: <LegacyRedirect /> },
           { path: '/cv-analysis', element: <LegacyRedirect /> },
           { path: '/cv-analysis/result', element: <LegacyRedirect /> },

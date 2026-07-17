@@ -24,7 +24,7 @@ The main profile screen is intentionally lightweight:
 1. **Basic account info** from Auth API (`GET /api/v1/auth/me`) — full name, email, title, location, member since.
 2. **Uploaded CV files** from CV service (`listUploadedCvs` mock today) — file name, size, upload time, `pdfUrl` opens the original PDF in a new tab.
 
-Edit basic fields via `EditProfileModal` (Auth update profile). New uploads flow through `/candidate/cv/analysis` (or Practice wizard) and appear at the top of the profile CV list. Match reports are opened from the CV Analysis module, not from Profile.
+Edit basic fields via `EditProfileModal` → `PUT /api/v1/auth/me` then `GET /api/v1/auth/me` (Auth update profile; ignore PUT body string). New uploads flow through `/candidate/cv/analysis` (or Practice wizard) and appear at the top of the profile CV list. Match reports are opened from the CV Analysis module, not from Profile.
 
 ## Components
 
@@ -43,5 +43,5 @@ Edit basic fields via `EditProfileModal` (Auth update profile). New uploads flow
 
 ## Open gaps
 
-- Wire `auth/me` and CV file list to real Gateway APIs.
+- Wire CV file list to real Gateway APIs (auth `/me` profile update is live via `EditProfileModal`).
 - Deprecate or remove legacy profile section routes when product retires wizard CRUD.

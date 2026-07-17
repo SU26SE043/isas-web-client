@@ -68,5 +68,5 @@ Next is disabled. Candidate cannot skip steps.
 ## Related
 
 - Learning Hub: `practice-interview.md` learning routes
-- Roadmap domains: `ROADMAP_DOMAINS` (Frontend, Backend, Business Analyst) — separate from practice-setup domain list
+- Roadmap / practice / CV domains: shared `JOB_DOMAINS` — **Frontend**, **Backend**, **Business Analyst** only
 - Report step shows at most `ROADMAP_REPORT_PREVIEW_LIMIT` (3) reports

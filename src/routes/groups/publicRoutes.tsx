@@ -10,13 +10,17 @@ import { PrivacyPage } from '@/features/marketing/pages/PrivacyPage';
 import { TermsPage } from '@/features/marketing/pages/TermsPage';
 import { ForbiddenPage, MaintenancePage, NotFoundPage, ServerErrorPage } from '@/pages/errors/ErrorPages';
 import { ComponentHarnessPage } from '@/pages/dev/ComponentHarnessPage';
+import { OrderDetailUiPreviewPage } from '@/features/payment/pages/OrderDetailUiPreviewPage';
 
 const devRoutes: RouteObject[] = import.meta.env.DEV
   ? [
       {
         path: 'dev',
         element: <DashboardLayout />,
-        children: [{ path: 'components', element: <ComponentHarnessPage /> }],
+        children: [
+          { path: 'components', element: <ComponentHarnessPage /> },
+          { path: 'order-detail', element: <OrderDetailUiPreviewPage /> },
+        ],
       },
     ]
   : [];

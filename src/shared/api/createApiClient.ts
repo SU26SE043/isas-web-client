@@ -1,27 +1,57 @@
-import axios from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { HttpStatus } from '@/shared/constants/http-status';
+import { authEndpoints } from '@/features/auth/services/authEndpoints';
+import type { RefreshRequest } from '@/features/auth/types/auth.types';
+import { sessionManager } from '@/features/auth/utils/sessionManager';
 import { getApiBaseUrl } from '../config';
 import { toApiError } from './apiError';
 import { parseAuthTokens } from './authPayload';
 import { authTokenStorage } from './authTokenStorage';
 import { notifyUnauthorized } from './unauthorizedHandler';
 
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  /** Skip attaching Bearer (public endpoints such as refresh). */
+  skipAuth?: boolean;
+};
+
+type RefreshSubscriber = {
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+};
+
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshSubscribers: RefreshSubscriber[] = [];
 
 const onRefreshed = (token: string) => {
-  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers.forEach(({ resolve }) => resolve(token));
   refreshSubscribers = [];
 };
 
-const addRefreshSubscriber = (callback: (token: string) => void) => {
-  refreshSubscribers.push(callback);
+const onRefreshFailed = (error: unknown) => {
+  refreshSubscribers.forEach(({ reject }) => reject(error));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (subscriber: RefreshSubscriber) => {
+  refreshSubscribers.push(subscriber);
 };
 
 const handleSessionExpired = () => {
   authTokenStorage.clear();
+  sessionManager.clear();
   notifyUnauthorized();
 };
+
+/** Auth routes that must not trigger the 401→refresh loop (and usually skip Bearer). */
+const isPublicAuthUrl = (url?: string) =>
+  Boolean(
+    url &&
+      (url.includes('/auth/refresh') ||
+        url.includes('/auth/login') ||
+        url.includes('/auth/register') ||
+        url.includes('/auth/register-org')),
+  );
 
 export const createApiClient = () => {
   const client = axios.create({
@@ -31,7 +61,14 @@ export const createApiClient = () => {
     },
   });
 
-  client.interceptors.request.use((config) => {
+  client.interceptors.request.use((config: RetriableRequestConfig) => {
+    if (config.skipAuth || isPublicAuthUrl(config.url)) {
+      if (config.headers) {
+        delete config.headers.Authorization;
+      }
+      return config;
+    }
+
     const accessToken = authTokenStorage.getAccessToken();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -41,59 +78,77 @@ export const createApiClient = () => {
 
   client.interceptors.response.use(
     (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
+    async (error: AxiosError) => {
+      const originalRequest = error.config as RetriableRequestConfig | undefined;
       const status = toApiError(error)?.status ?? error.response?.status;
 
-      if (!originalRequest || originalRequest._retry) {
+      if (!originalRequest) {
+        return Promise.reject(error);
+      }
+
+      // Already retried once — do not refresh again (avoids infinite loops).
+      if (originalRequest._retry) {
         if (status === HttpStatus.UNAUTHORIZED) {
           handleSessionExpired();
         }
         return Promise.reject(error);
       }
 
-      const isAuthEndpoint =
-        originalRequest.url?.includes('/auth/refresh') ||
-        originalRequest.url?.includes('/auth/login') ||
-        originalRequest.url?.includes('/auth/register') ||
-        originalRequest.url?.includes('/auth/logout');
+      // Login/register/refresh 401s are not access-token expiry — do not auto-refresh.
+      if (status !== HttpStatus.UNAUTHORIZED || isPublicAuthUrl(originalRequest.url)) {
+        return Promise.reject(error);
+      }
 
-      if (status === HttpStatus.UNAUTHORIZED && !isAuthEndpoint) {
-        originalRequest._retry = true;
+      originalRequest._retry = true;
 
-        if (!isRefreshing) {
-          isRefreshing = true;
+      return new Promise((resolve, reject) => {
+        addRefreshSubscriber({
+          resolve: (token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(client(originalRequest));
+          },
+          reject,
+        });
+
+        if (isRefreshing) {
+          return;
+        }
+
+        isRefreshing = true;
+
+        void (async () => {
           try {
             const refreshToken = authTokenStorage.getRefreshToken();
             if (!refreshToken) {
               throw new Error('No refresh token available');
             }
 
-            const { data } = await client.post('/api/v1/auth/refresh', { refreshToken });
+            const body: RefreshRequest = { refreshToken };
+            const { data } = await client.post(authEndpoints.refresh, body, {
+              skipAuth: true,
+            });
+
             const tokens = parseAuthTokens(data);
             if (!tokens.accessToken || !tokens.refreshToken) {
               throw new Error('Refresh response missing tokens');
             }
-            authTokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
-            isRefreshing = false;
+
+            authTokenStorage.setTokens(
+              tokens.accessToken,
+              tokens.refreshToken,
+              tokens.expiresAt ?? null,
+            );
+            sessionManager.touchActivity();
             onRefreshed(tokens.accessToken);
           } catch (refreshError) {
-            isRefreshing = false;
+            onRefreshFailed(refreshError);
             handleSessionExpired();
-            return Promise.reject(refreshError);
+          } finally {
+            isRefreshing = false;
           }
-        }
-
-        return new Promise((resolve) => {
-          addRefreshSubscriber((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(client(originalRequest));
-          });
-        });
-      }
-
-      return Promise.reject(error);
-    }
+        })();
+      });
+    },
   );
 
   return client;
