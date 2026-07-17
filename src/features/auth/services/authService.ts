@@ -70,7 +70,7 @@ export const authService = {
     try {
       const { data } = await apiClient.post(authEndpoints.refresh, body, {
         skipAuth: true,
-      } as { skipAuth?: boolean });
+      });
       const tokens = parseAuthTokens(data);
       if (!tokens.accessToken || !tokens.refreshToken) {
         throw new Error('Refresh response missing tokens');

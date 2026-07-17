@@ -126,7 +126,7 @@ export const createApiClient = () => {
             const body: RefreshRequest = { refreshToken };
             const { data } = await client.post(authEndpoints.refresh, body, {
               skipAuth: true,
-            } as RetriableRequestConfig);
+            });
 
             const tokens = parseAuthTokens(data);
             if (!tokens.accessToken || !tokens.refreshToken) {
