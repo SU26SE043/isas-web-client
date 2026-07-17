@@ -10,7 +10,7 @@ interface AppShellProps {
 
 export function AppShell({ header, sidebar, children, className }: AppShellProps) {
   return (
-    <div className={cn('min-h-screen surface-base', className)}>
+    <div className={cn('min-h-screen surface-page', className)}>
       {header}
       <div className="flex min-h-[calc(100vh-4rem)]">
         {sidebar}

@@ -35,7 +35,7 @@ export const EmployerDashboardLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen surface-base">
+    <div className="min-h-screen surface-page">
       <div className="flex min-h-screen">
         <aside
           className={cn(
@@ -123,7 +123,7 @@ export const EmployerDashboardLayout: React.FC = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
           <Outlet />
         </main>
       </div>

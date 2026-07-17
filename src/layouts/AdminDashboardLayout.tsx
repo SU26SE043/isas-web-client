@@ -74,7 +74,7 @@ export const AdminDashboardLayout: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen surface-base">
+    <div className="min-h-screen surface-page">
       <div className="flex min-h-screen">
         <aside className="glass-sidebar sticky top-0 flex h-screen w-[4.5rem] shrink-0 flex-col border-r sm:w-72">
           <div className="flex items-center justify-center border-b border-subtle px-3 py-4 sm:justify-between">
@@ -105,7 +105,7 @@ export const AdminDashboardLayout: React.FC = () => {
             </SidebarLogoutButton>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
           <div className="glass-topbar border-b px-4 py-3 sm:px-6">
             <Alert variant="info">
               <AlertDescription>
