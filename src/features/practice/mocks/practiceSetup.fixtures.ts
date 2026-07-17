@@ -1,7 +1,8 @@
-import type { PracticeDomain, PracticeLevel, PracticeRubricCriterion } from '../types/practiceSetup.types';
+import type { PracticeDomain, PracticeRubricCriterion } from '../types/practiceSetup.types';
+import { PRACTICE_LEVELS } from '@/shared/domain/practiceLevels';
 import { JOB_DOMAINS } from '@/shared/domain/jobDomains';
 
-export const PRACTICE_LEVELS: PracticeLevel[] = ['intern', 'fresher', 'junior', 'middle', 'senior'];
+export const PRACTICE_LEVELS_LIST = [...PRACTICE_LEVELS];
 
 export const PRACTICE_QUESTION_COUNTS = [3, 5, 7, 10] as const;
 

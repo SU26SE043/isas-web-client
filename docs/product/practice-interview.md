@@ -17,7 +17,7 @@ Interview history list remains at `/candidate/practice/history` (also linked fro
 1. Candidate opens **Practice** at `/practice` (role-guarded: Candidate + Admin).
 2. **Pre-session wizard** (steps 1–6 on `/practice`):
    1. **Chọn Domain** — field/industry for the session.
-   2. **Chọn Level** — Intern, Fresher, Junior, Middle, Senior.
+   2. **Chọn Level** — Fresher, Junior, Middle, Senior (gửi API đúng các chuỗi này).
    3. **Upload CV** — upload new or select an existing uploaded CV.
    4. **Chọn số lượng câu hỏi** — question count for the session (3 / 5 / 7 / 10).
    5. **Rubric chấm điểm** — AI-generated rubric; user can view and edit weights (must total 100%).

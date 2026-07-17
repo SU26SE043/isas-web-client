@@ -5,7 +5,7 @@ import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.typ
 import {
   DEFAULT_PRACTICE_RUBRIC,
   PRACTICE_DOMAINS,
-  PRACTICE_LEVELS,
+  PRACTICE_LEVELS_LIST,
 } from '../mocks/practiceSetup.fixtures';
 import type { PracticeQuestion, PracticeSession } from '../mocks/session.fixtures';
 import type {
@@ -16,6 +16,7 @@ import type {
   PracticeSessionCreateInput,
   PracticeSessionCreateResult,
 } from '../types/practiceSetup.types';
+import { normalizePracticeLevels } from '@/shared/domain/practiceLevels';
 import { practiceSetupEndpoints } from './practiceSetup.endpoints';
 
 const dynamicSessions = new Map<string, PracticeSession>();
@@ -28,21 +29,10 @@ function findDomain(domainId: string): PracticeDomain | undefined {
   return PRACTICE_DOMAINS.find((item) => item.id === domainId);
 }
 
-function levelLabel(level: PracticeLevel): string {
-  const labels: Record<PracticeLevel, string> = {
-    intern: 'Intern',
-    fresher: 'Fresher',
-    junior: 'Junior',
-    middle: 'Middle',
-    senior: 'Senior',
-  };
-  return labels[level];
-}
-
 function buildSessionTitle(domainId: string, level: PracticeLevel): string {
   const domain = findDomain(domainId);
   const domainName = domain?.nameVi ?? domain?.name ?? domainId;
-  return `Phỏng vấn ${domainName} — ${levelLabel(level)}`;
+  return `Phỏng vấn ${domainName} — ${level}`;
 }
 
 function buildMockQuestions(sessionId: string, count: number, title: string): PracticeQuestion[] {
@@ -66,12 +56,12 @@ export const practiceSetupService = {
 
   async listLevels(): Promise<PracticeLevel[]> {
     if (!usesMockData('practice')) {
-      const response = await apiClient.get<PracticeLevel[]>(practiceSetupEndpoints.levels);
-      return response.data;
+      const response = await apiClient.get<string[]>(practiceSetupEndpoints.levels);
+      return normalizePracticeLevels(response.data);
     }
 
     await mockDelay(150);
-    return [...PRACTICE_LEVELS];
+    return [...PRACTICE_LEVELS_LIST];
   },
 
   async listUploadedCvs(): Promise<UploadedCvFile[]> {
@@ -114,7 +104,7 @@ export const practiceSetupService = {
     const domainLabel = domain?.name ?? input.domainId;
     return DEFAULT_PRACTICE_RUBRIC.map((item) => ({
       ...item,
-      description: `${item.description} (${domainLabel}, ${levelLabel(input.level)})`,
+      description: `${item.description} (${domainLabel}, ${input.level})`,
     }));
   },
 
