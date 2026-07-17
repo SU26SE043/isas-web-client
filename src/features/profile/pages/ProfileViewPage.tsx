@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { EditProfileModal } from '@/features/auth/components/EditProfileModal';
-import { useUploadedCvFiles } from '@/features/cv-analysis/hooks/useUploadedCvFiles';
 import { useLanguage } from '@/shared/languages';
 import { CandidateProfileHeader } from '../components/profile-view/CandidateProfileHeader';
 import { ProfileBasicInfoCard } from '../components/profile-view/ProfileBasicInfoCard';
-import { ProfileUploadedCvSection } from '../components/profile-view/ProfileUploadedCvSection';
+import { ProfileUploadedFilesSection } from '../components/profile-view/ProfileUploadedFilesSection';
 import { ProfileViewLoading } from '../components/profile-view/ProfileViewLoading';
 
 export const ProfileViewPage: React.FC = () => {
   const { t } = useLanguage();
   const { user, isLoading } = useAuth();
-  const { files, isLoading: cvLoading } = useUploadedCvFiles();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (isLoading || !user) {
@@ -34,7 +32,7 @@ export const ProfileViewPage: React.FC = () => {
           onEditClick={() => setIsEditModalOpen(true)}
         />
         <ProfileBasicInfoCard user={user} />
-        <ProfileUploadedCvSection files={files} isLoading={cvLoading} />
+        <ProfileUploadedFilesSection />
       </div>
 
       <EditProfileModal
