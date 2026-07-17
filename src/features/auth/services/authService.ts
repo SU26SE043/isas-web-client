@@ -105,7 +105,10 @@ export const authService = {
     const { data } = await apiClient.get(authEndpoints.me);
     return parseUser(data);
   },
-  /** Auth service PUT /me returns a status string today — re-fetch profile after update. */
+  /**
+   * PUT /api/v1/auth/me — body may omit or set fields to null to keep current values.
+   * On 200 the response body is a status string only; always re-fetch via GET /me.
+   */
   updateProfile: async (payload: UpdateProfileRequest): Promise<User> => {
     await apiClient.put(authEndpoints.me, payload);
     return authService.me();

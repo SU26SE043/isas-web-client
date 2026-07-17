@@ -84,6 +84,8 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Login | `POST /api/v1/auth/login` | Public |
 | Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → `{ accessToken, refreshToken, expiresAt }` |
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
+| Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
+| Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
 
 ## E2E
 

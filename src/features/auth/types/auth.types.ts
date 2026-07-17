@@ -66,10 +66,11 @@ export function normalizeUserRole(role: string | null | undefined): UserRoleType
   return CANONICAL_ROLES[normalized] ?? LEGACY_ROLE_ALIASES[normalized] ?? null;
 }
 
+/** Partial profile update. `null` or omitted fields are left unchanged by the API. */
 export interface UpdateProfileRequest {
-  fullName?: string;
-  location?: string;
-  title?: string;
+  fullName?: string | null;
+  location?: string | null;
+  title?: string | null;
 }
 
 export interface RegisterRequest {
