@@ -1,5 +1,5 @@
 import type { CvAnalysisDomain } from './cvDomain.types';
-import { getJobDomain } from '@/shared/domain/jobDomains';
+import { domainToJobCategoryEnum } from '@/shared/domain/jobDomains';
 
 export type FileParseStatus = 'pending' | 'completed' | 'failed' | 'done';
 export type InterviewFileType = 'cv' | 'jd';
@@ -39,7 +39,7 @@ export interface CvAnalysisResult {
 export interface AnalyzeCvRequest {
   cvId: string;
   jdId: string;
-  /** Frontend domain display name, e.g. "Frontend" — not 1|2|3. */
+  /** API `jobCategory` enum: FE · BE · BA */
   jobCategory: string;
 }
 
@@ -60,7 +60,7 @@ export interface UploadedCvFile {
   analysisId?: string;
 }
 
-/** Map selected domain id → API `jobCategory` string (Frontend / Backend / Business Analyst). */
+/** Map selected domain id → API `jobCategory` enum (FE / BE / BA). */
 export function domainToJobCategoryLabel(domain: CvAnalysisDomain): string {
-  return getJobDomain(domain)?.name ?? domain;
+  return domainToJobCategoryEnum(domain);
 }

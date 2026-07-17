@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
+import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import { profileService } from '../services/profile.service';
 import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { CandidateProfile } from '../types/profile.types';
@@ -27,7 +28,7 @@ export const CvProfileMappingPanel: React.FC<CvProfileMappingPanelProps> = ({ re
     const payload: Partial<CandidateProfile> = {};
     if (sections.careerGoal) {
       payload.careerGoal = {
-        targetRole: result.jobCategory,
+        targetRole: formatJobCategoryDisplay(result.jobCategory, 'en'),
         targetIndustry: t('profile.mapping.defaultIndustry'),
         summary: result.summary || t('profile.mapping.importSummary').replace('{id}', result.id),
       };

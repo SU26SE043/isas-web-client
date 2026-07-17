@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarClock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { AnalysisFileMeta, CvAnalysisResult } from '../../types/cvAnalysis.types';
 import { CvMatchScoreRing } from './CvMatchScoreRing';
 
@@ -34,7 +35,8 @@ export function CvAnalysisLandingHero({ result, meta }: CvAnalysisLandingHeroPro
           <p className="text-label text-muted-foreground">{t('cv.landing.kicker')}</p>
           <div className="space-y-3">
             <h1 className="heading-primary text-4xl tracking-tight text-foreground sm:text-5xl">
-              {result.jobCategory || t('cv.landing.untitledDomain')}
+              {formatJobCategoryDisplay(result.jobCategory, language) ||
+                t('cv.landing.untitledDomain')}
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
               {result.summary || t('cv.report.emptySummary')}

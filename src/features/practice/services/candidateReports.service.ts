@@ -1,6 +1,7 @@
 import { fetchInterviewHistory } from './history.service';
 import { learningPathService } from './learningPath.service';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { CandidateReportsHub } from '../types/candidateReports.types';
 
 export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
@@ -39,8 +40,8 @@ export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
   const cv = analyses.map((item) => ({
     id: item.id,
     category: 'cv' as const,
-    title: item.jobCategory || 'CV Analysis',
-    titleVi: item.jobCategory || 'Phân tích CV',
+    title: formatJobCategoryDisplay(item.jobCategory, 'en') || 'CV Analysis',
+    titleVi: formatJobCategoryDisplay(item.jobCategory, 'vi') || 'Phân tích CV',
     subtitle: item.jdId ? 'With JD' : 'No JD',
     subtitleVi: item.jdId ? 'Có JD' : 'Không có JD',
     href: `/candidate/cv/analysis/report?analysisId=${encodeURIComponent(item.id)}`,

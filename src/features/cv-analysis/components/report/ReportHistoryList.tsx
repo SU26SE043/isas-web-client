@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { CvAnalysisResult } from '../../types/cvAnalysis.types';
 
 interface ReportHistoryListProps {
@@ -55,7 +56,8 @@ export const ReportHistoryList: React.FC<ReportHistoryListProps> = ({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">
-                        {item.jobCategory || t('cv.report.domain')}
+                        {formatJobCategoryDisplay(item.jobCategory, language) ||
+                          t('cv.report.domain')}
                       </p>
                       <p className="mt-1 text-caption text-muted-foreground">
                         {formatDate(item.createdAt, language)}
