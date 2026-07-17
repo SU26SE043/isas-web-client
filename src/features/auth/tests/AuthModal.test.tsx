@@ -81,14 +81,9 @@ describe('AuthModal integration', () => {
       </MemoryRouter>,
     );
 
-    // Use only the visible email/password fields (sign-in form)
-    const emailInputs = screen.getAllByPlaceholderText('auth.emailPlaceholder');
-    const passwordInputs = screen.getAllByPlaceholderText('auth.passwordPlaceholder');
-    await user.type(emailInputs[0], 'test@example.com');
-    await user.type(passwordInputs[0], 'password123');
-    // Find the visible sign-in button
-    const signInButtons = screen.getAllByRole('button', { name: 'auth.signInTitle' });
-    await user.click(signInButtons[0]);
+    await user.type(screen.getByLabelText('auth.emailPlaceholder'), 'test@example.com');
+    await user.type(screen.getByLabelText('auth.passwordPlaceholder'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'auth.signInTitle' }));
 
     await waitFor(() => {
       expect(mockedAuthService.login).toHaveBeenCalledWith({
@@ -117,14 +112,9 @@ describe('AuthModal integration', () => {
       </MemoryRouter>,
     );
 
-    // Find and click the sign-in button without filling in the form
-    const signInButtons = screen.getAllByRole('button', { name: 'auth.signInTitle' });
-    await user.click(signInButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'auth.signInTitle' }));
 
-    // Wait for the validation message to appear
-    const loginRequiredMessages = await screen.findAllByText((content) => content.includes('auth.loginRequired'));
-    expect(loginRequiredMessages.length).toBeGreaterThan(0);
-
+    expect(await screen.findByText('auth.loginRequired')).toBeInTheDocument();
     expect(mockedAuthService.login).not.toHaveBeenCalled();
     expect(fetchUser).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
@@ -139,12 +129,10 @@ describe('AuthModal integration', () => {
       </MemoryRouter>,
     );
 
-    const forgotButtons = screen.getAllByRole('button', { name: 'auth.forgotPassword' });
-    await user.click(forgotButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'auth.forgotPassword' }));
 
-    // The forgot password form title may be 'auth.forgotTitle'
-    const forgotTitles = screen.queryAllByText((content) => content.includes('auth.forgotTitle'));
-    expect(forgotTitles.length).toBeGreaterThan(0);
+    expect(await screen.findByText('auth.forgotTitle')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'auth.signInTitle' })).not.toBeInTheDocument();
   });
 
   it('calls loginWithGoogle when clicking Google button', async () => {
@@ -156,9 +144,20 @@ describe('AuthModal integration', () => {
       </MemoryRouter>,
     );
 
-    const googleButtons = screen.getAllByRole('button', { name: 'auth.continueWithGoogle' });
-    await user.click(googleButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'auth.continueWithGoogle' }));
 
     expect(mockedAuthService.loginWithGoogle).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a single email field in the accessibility tree on login', () => {
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getAllByLabelText('auth.emailPlaceholder')).toHaveLength(1);
+    expect(screen.getAllByLabelText('auth.passwordPlaceholder')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'auth.signInTitle' })).toHaveLength(1);
   });
 });

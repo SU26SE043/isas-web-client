@@ -63,29 +63,71 @@
     color-mix(in srgb, var(--isas-silver-100) 22%, transparent) 100%
   );
 
-  /* === SEMANTIC COLORS (status only) === */
+  /* === SEMANTIC COLORS (status only) — main + light(hover) + dark(pressed) === */
   --isas-success: #22c55e;
+  --isas-success-light: #4ade80;
+  --isas-success-dark: #16a34a;
   --isas-success-bg: rgb(34 197 94 / 0.12);
   --isas-error: #ef4444;
+  --isas-error-light: #f87171;
+  --isas-error-dark: #dc2626;
   --isas-error-bg: rgb(239 68 68 / 0.12);
   --isas-warning: #f97316;
+  --isas-warning-light: #fb923c;
+  --isas-warning-dark: #ea580c;
   --isas-warning-bg: rgb(249 115 22 / 0.12);
   --isas-info: #3b82f6;
+  --isas-info-light: #60a5fa;
+  --isas-info-dark: #2563eb;
   --isas-info-bg: rgb(59 130 246 / 0.12);
+
+  /* === ACTION / TEXT SCALE (Elegant Monochrome+) ===
+     Primary stays white — no brand hue. Structural UI remains monochrome.
+     For a white CTA, "light" = soft near-white hover (not brighter than white). */
+  --primary-light: #f4f4f5;
+  --primary-main: #ffffff;
+  --primary-dark: #e4e4e7;
+  --secondary-main: var(--isas-silver-200);
+
+  --text-primary: var(--isas-gray-50);
+  --text-secondary: var(--isas-gray-400);
+  --text-disabled: var(--isas-gray-600);
+
+  /* === CHART / DATA VIZ (semantic exception — not structural chrome) ===
+     Colorblind-aware categorical order: indigo → teal → amber → rose → cyan → violet → lime
+     (no adjacent red/green of similar lightness). Soft saturation for dark BG, not neon. */
+  --chart-cat-1: #818cf8; /* indigo */
+  --chart-cat-2: #2dd4bf; /* teal */
+  --chart-cat-3: #fbbf24; /* amber */
+  --chart-cat-4: #fb7185; /* rose */
+  --chart-cat-5: #22d3ee; /* cyan */
+  --chart-cat-6: #c084fc; /* violet */
+  --chart-cat-7: #a3e635; /* lime */
+
+  --chart-radar-stroke: var(--chart-cat-1);
+  --chart-radar-fill: rgb(129 140 248 / 0.25);
+  --chart-radar-target-stroke: var(--chart-cat-3);
+  --chart-radar-target-fill: rgb(251 191 36 / 0.2);
+
+  --chart-grid: #334155;
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: var(--surface-elevated);
+  --chart-tooltip-border: var(--border-strong);
+  --chart-tooltip-shadow: var(--shadow-lg);
 
   /* === SHADCN / COMPONENT TOKENS === */
   --background: var(--surface-base);
-  --foreground: var(--isas-gray-50);
+  --foreground: var(--text-primary);
   --card: var(--surface-raised);
-  --card-foreground: var(--isas-gray-50);
+  --card-foreground: var(--text-primary);
   --popover: var(--surface-elevated);
-  --popover-foreground: var(--isas-gray-50);
-  --primary: var(--isas-white);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--primary-main);
   --primary-foreground: var(--isas-black);
   --secondary: var(--surface-overlay);
   --secondary-foreground: var(--isas-gray-200);
   --muted: var(--surface-overlay);
-  --muted-foreground: var(--isas-gray-400);
+  --muted-foreground: var(--text-secondary);
   --accent: var(--surface-elevated);
   --accent-foreground: var(--isas-gray-100);
   --destructive: var(--isas-error);

@@ -1,83 +1,99 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import { CvProfileMappingPanel } from '@/features/profile/components/CvProfileMappingPanel';
-import { CvAnalysisStepper } from '../components/CvAnalysisStepper';
-import { CvMatchReportHeader } from '../components/report/CvMatchReportHeader';
-import { CvReportInsightsSection } from '../components/report/CvReportInsightsSection';
-import { CvSkillRadarChart } from '../components/report/CvSkillRadarChart';
-import { CvDimensionScoreBars } from '../components/report/CvDimensionScoreBars';
-import { CvReportSkillsSection } from '../components/report/CvReportSkillsSection';
-import { CvReportExperienceSection } from '../components/report/CvReportExperienceSection';
-import { CvReportProjectsSection } from '../components/report/CvReportProjectsSection';
-import { CvReportEducationSection } from '../components/report/CvReportEducationSection';
-import { CvReportActionsBar, CvReportFeedbackSection } from '../components/report/CvReportFeedbackSection';
-import { CV_ANALYSIS_ID_KEY } from '../hooks/useCvAnalysisFlow';
+import { CvAnalysisLandingHero } from '../components/report/CvAnalysisLandingHero';
+import { StrengthCard } from '../components/report/StrengthCard';
+import { WeaknessCard } from '../components/report/WeaknessCard';
+import { SuggestionCard } from '../components/report/SuggestionCard';
+import { JDMatchCard } from '../components/report/JDMatchCard';
+import { CV_ANALYSIS_ID_KEY, CV_ANALYSIS_META_KEY } from '../hooks/useCvAnalysisFlow';
 import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
+import type { AnalysisFileMeta } from '../types/cvAnalysis.types';
 
+function readMeta(): AnalysisFileMeta | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(CV_ANALYSIS_META_KEY) ?? sessionStorage.getItem(CV_ANALYSIS_META_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AnalysisFileMeta;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredAnalysisId(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  return localStorage.getItem(CV_ANALYSIS_ID_KEY) ?? sessionStorage.getItem(CV_ANALYSIS_ID_KEY) ?? undefined;
+}
+
+/** Landing-page report driven by GET /practice/cv-analysis/{id}. */
 export const CVResultPage: React.FC = () => {
   const { t } = useLanguage();
   const [params] = useSearchParams();
   const analysisIdFromQuery = params.get('analysisId') ?? undefined;
-  const analysisId =
-    analysisIdFromQuery ??
-    (typeof window !== 'undefined' ? sessionStorage.getItem(CV_ANALYSIS_ID_KEY) ?? undefined : undefined);
-
-  useEffect(() => {
-    if (analysisIdFromQuery) {
-      sessionStorage.setItem(CV_ANALYSIS_ID_KEY, analysisIdFromQuery);
-    }
-  }, [analysisIdFromQuery]);
+  const analysisId = analysisIdFromQuery ?? readStoredAnalysisId();
+  const meta = useMemo(() => readMeta(), []);
 
   const { result, isLoading, error } = useCvAnalysisResult(analysisId);
 
+  useEffect(() => {
+    if (!analysisIdFromQuery) return;
+    localStorage.setItem(CV_ANALYSIS_ID_KEY, analysisIdFromQuery);
+    sessionStorage.removeItem(CV_ANALYSIS_ID_KEY);
+  }, [analysisIdFromQuery]);
+
+  const toastShownRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!isLoading && (error || !result) && !toastShownRef.current) {
+      toastShownRef.current = true;
+      toast.error(error === 'missing' ? t('cv.landing.missingId') : error || t('cv.analysisFailed'));
+    }
+    if (result) toastShownRef.current = false;
+  }, [error, isLoading, result, t]);
+
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-        <span className="sr-only">{t('ds.loading.page')}</span>
+      <div className="min-h-full bg-surface-base">
+        <div className="mx-auto flex min-h-[70vh] max-w-6xl flex-col items-center justify-center gap-3 px-4">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+          <p className="text-sm text-muted-foreground">{t('cv.landing.loading')}</p>
+        </div>
       </div>
     );
   }
 
   if (error || !result) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="body-text">{t('cv.analysisFailed')}</p>
-        <Link to="/candidate/cv/analysis" className="btn-primary">
-          {t('cv.retryUpload')}
-        </Link>
+      <div className="min-h-full bg-surface-base">
+        <div className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center gap-4 px-4 text-center">
+          <h1 className="heading-primary text-3xl text-foreground">{t('cv.reportTitle')}</h1>
+          <p className="body-text text-error">
+            {error === 'missing' ? t('cv.landing.missingId') : error || t('cv.analysisFailed')}
+          </p>
+          <Link to="/candidate/cv/analysis" className="btn-primary rounded-md">
+            {t('cv.startNewAnalysis')}
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-content min-h-full pb-12">
-      <div className="mb-6 space-y-4">
-        <div>
-          <h1 className="heading-primary text-3xl tracking-tight">{t('cv.reportTitle')}</h1>
-          <p className="body-text mt-2 max-w-2xl">{t('cv.reportDescription')}</p>
-        </div>
-        <CvAnalysisStepper currentStep="report" />
-      </div>
+    <div className="min-h-full overflow-y-auto bg-surface-base">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:py-12">
+        <CvAnalysisLandingHero result={result} meta={meta} />
 
-      <div className="mx-auto max-w-5xl space-y-4">
-        <CvMatchReportHeader result={result} />
-        <CvReportInsightsSection result={result} />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <CvSkillRadarChart dimensions={result.skillDimensions} />
-          <CvDimensionScoreBars dimensions={result.dimensionScores} />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <StrengthCard strengths={result.strengths} />
+          <WeaknessCard weaknesses={result.weaknesses} />
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <CvReportSkillsSection result={result} />
-          <CvReportExperienceSection result={result} />
-          <CvReportProjectsSection result={result} />
-          <CvReportEducationSection result={result} />
-        </div>
-        <CvReportFeedbackSection />
-        <CvProfileMappingPanel result={result} />
-        <CvReportActionsBar />
+
+        <SuggestionCard suggestions={result.suggestions} />
+
+        {result.jdMatch ? <JDMatchCard jdMatch={result.jdMatch} /> : null}
       </div>
     </div>
   );

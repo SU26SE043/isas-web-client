@@ -3,6 +3,7 @@ const AUTH_API_PREFIX = '/api/v1/auth';
 
 export const authEndpoints = {
   register: `${AUTH_API_PREFIX}/register`,
+  registerOrg: `${AUTH_API_PREFIX}/register-org`,
   login: `${AUTH_API_PREFIX}/login`,
   loginGoogle: `${AUTH_API_PREFIX}/login-google`,
   loginSso: `${AUTH_API_PREFIX}/login-sso`,

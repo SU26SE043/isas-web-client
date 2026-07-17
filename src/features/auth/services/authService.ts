@@ -1,31 +1,50 @@
 import { apiClient, authTokenStorage } from '../../../shared/api';
 import { parseAuthTokens } from '../../../shared/api/authPayload';
+import { getApiErrorMessage, getApiStatusCode } from '../../../shared/api/apiError';
 import { getApiBaseUrl } from '../../../shared/config';
+import { HttpStatus } from '@/shared/constants/http-status';
 import type {
+  AuthTokensResponse,
   LoginRequest,
+  LogoutRequest,
   MfaVerifyRequest,
+  RefreshRequest,
   RegisterRequest,
-  RegisterResponse,
+  RegisterOrgRequest,
   ResendVerificationRequest,
   User,
   UpdateProfileRequest,
   VerifyEmailRequest,
 } from '../types/auth.types';
-import { parseRegisterResponse, parseUser } from '../types/auth.types';
+import { parseUser } from '../types/auth.types';
 import { authEndpoints } from './authEndpoints';
 import { sessionManager } from '../utils/sessionManager';
 
 function storeTokensIfPresent(data: ReturnType<typeof parseAuthTokens>) {
   if (data.accessToken && data.refreshToken) {
-    authTokenStorage.setTokens(data.accessToken, data.refreshToken);
+    authTokenStorage.setTokens(data.accessToken, data.refreshToken, data.expiresAt ?? null);
     sessionManager.markSessionStart();
   }
 }
 
 export const authService = {
-  register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
+  register: async (payload: RegisterRequest): Promise<AuthTokensResponse> => {
     const { data } = await apiClient.post(authEndpoints.register, payload);
-    return parseRegisterResponse(data, payload.email);
+    const tokens = parseAuthTokens(data);
+    if (tokens.mfaRequired) {
+      return tokens;
+    }
+    storeTokensIfPresent(tokens);
+    return tokens;
+  },
+  registerOrg: async (payload: RegisterOrgRequest): Promise<AuthTokensResponse> => {
+    const { data } = await apiClient.post(authEndpoints.registerOrg, payload);
+    const tokens = parseAuthTokens(data);
+    if (tokens.mfaRequired) {
+      return tokens;
+    }
+    storeTokensIfPresent(tokens);
+    return tokens;
   },
   login: async (payload: LoginRequest) => {
     const { data } = await apiClient.post(authEndpoints.login, payload);
@@ -36,22 +55,46 @@ export const authService = {
     storeTokensIfPresent(tokens);
     return tokens;
   },
+  /**
+   * Public refresh — body `{ refreshToken }` only (no Bearer).
+   * On 401 (expired/revoked), clears local tokens so callers can redirect.
+   */
   refresh: async () => {
     const refreshToken = authTokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    const { data } = await apiClient.post(authEndpoints.refresh, { refreshToken });
-    const tokens = parseAuthTokens(data);
-    storeTokensIfPresent(tokens);
-    return tokens;
+
+    const body: RefreshRequest = { refreshToken };
+
+    try {
+      const { data } = await apiClient.post(authEndpoints.refresh, body, {
+        skipAuth: true,
+      });
+      const tokens = parseAuthTokens(data);
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error('Refresh response missing tokens');
+      }
+      storeTokensIfPresent(tokens);
+      return tokens;
+    } catch (error) {
+      if (getApiStatusCode(error) === HttpStatus.UNAUTHORIZED) {
+        authTokenStorage.clear();
+        sessionManager.clear();
+      }
+      throw error instanceof Error
+        ? error
+        : new Error(getApiErrorMessage(error, 'Refresh token expired or revoked'));
+    }
   },
   logout: async (refreshTokenOverride?: string | null) => {
     const refreshToken =
       refreshTokenOverride !== undefined ? refreshTokenOverride : authTokenStorage.getRefreshToken();
     try {
       if (refreshToken) {
-        await apiClient.post(authEndpoints.logout, { refreshToken });
+        const payload: LogoutRequest = { refreshToken };
+        // Requires Bearer access token (not a public auth route).
+        await apiClient.post(authEndpoints.logout, payload);
       }
     } finally {
       authTokenStorage.clear();
@@ -62,7 +105,10 @@ export const authService = {
     const { data } = await apiClient.get(authEndpoints.me);
     return parseUser(data);
   },
-  /** Auth service PUT /me returns a status string today — re-fetch profile after update. */
+  /**
+   * PUT /api/v1/auth/me — body may omit or set fields to null to keep current values.
+   * On 200 the response body is a status string only; always re-fetch via GET /me.
+   */
   updateProfile: async (payload: UpdateProfileRequest): Promise<User> => {
     await apiClient.put(authEndpoints.me, payload);
     return authService.me();

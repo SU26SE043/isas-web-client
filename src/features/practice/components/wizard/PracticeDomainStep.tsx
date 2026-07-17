@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Database,
-  Layers,
-  Monitor,
-  Server,
-  ShieldCheck,
-  Smartphone,
-} from 'lucide-react';
+import { Briefcase, Layers, Monitor, Server } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -16,10 +9,7 @@ import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
   frontend: <Monitor className="size-5" aria-hidden />,
   backend: <Server className="size-5" aria-hidden />,
-  fullstack: <Layers className="size-5" aria-hidden />,
-  mobile: <Smartphone className="size-5" aria-hidden />,
-  data: <Database className="size-5" aria-hidden />,
-  qa: <ShieldCheck className="size-5" aria-hidden />,
+  'business-analyst': <Briefcase className="size-5" aria-hidden />,
 };
 
 interface PracticeDomainStepProps {

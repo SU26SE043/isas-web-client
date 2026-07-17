@@ -15,10 +15,6 @@ export const ProfilePage: React.FC = () => {
   const { t } = useLanguage();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleEditSuccess = () => {
-    console.log('Profile updated successfully');
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -78,7 +74,6 @@ export const ProfilePage: React.FC = () => {
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={handleEditSuccess}
       />
     </main>
   );

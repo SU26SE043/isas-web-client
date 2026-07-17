@@ -9,12 +9,31 @@ import {
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 
-export const ROADMAP_WIZARD_STEP_KEYS = [
-  'practice.roadmapWizard.steps.domain',
-  'practice.roadmapWizard.steps.reports',
-  'practice.roadmapWizard.steps.level',
-  'practice.roadmapWizard.steps.confirm',
+const ROADMAP_WIZARD_STEPS = [
+  {
+    id: 'domain',
+    titleKey: 'practice.roadmapWizard.steps.domain',
+    descKey: 'practice.roadmapWizard.stepDesc.domain',
+  },
+  {
+    id: 'reports',
+    titleKey: 'practice.roadmapWizard.steps.reports',
+    descKey: 'practice.roadmapWizard.stepDesc.reports',
+  },
+  {
+    id: 'level',
+    titleKey: 'practice.roadmapWizard.steps.level',
+    descKey: 'practice.roadmapWizard.stepDesc.level',
+  },
+  {
+    id: 'confirm',
+    titleKey: 'practice.roadmapWizard.steps.confirm',
+    descKey: 'practice.roadmapWizard.stepDesc.confirm',
+  },
 ] as const;
+
+/** Title keys in step order — kept for any external lookups. */
+export const ROADMAP_WIZARD_STEP_KEYS = ROADMAP_WIZARD_STEPS.map((step) => step.titleKey);
 
 interface RoadmapWizardShellProps {
   currentStep: number;
@@ -38,22 +57,22 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
         <nav
           aria-label={t('practice.roadmapWizard.stepperLabel')}
-          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[240px] lg:self-start"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[280px] lg:self-start"
         >
           <h1 className="sr-only">
             {t('practice.roadmapWizard.stepOf')
               .replace('{current}', String(currentStep + 1))
-              .replace('{total}', String(ROADMAP_WIZARD_STEP_KEYS.length))}
+              .replace('{total}', String(ROADMAP_WIZARD_STEPS.length))}
             {': '}
-            {t(ROADMAP_WIZARD_STEP_KEYS[currentStep])}
+            {t(ROADMAP_WIZARD_STEPS[currentStep]!.titleKey)}
           </h1>
 
           <ol className="flex flex-col">
-            {ROADMAP_WIZARD_STEP_KEYS.map((key, index) => {
+            {ROADMAP_WIZARD_STEPS.map((step, index) => {
               const status = resolveFlowStepStatus(index, currentStep);
-              const isLast = index === ROADMAP_WIZARD_STEP_KEYS.length - 1;
+              const isLast = index === ROADMAP_WIZARD_STEPS.length - 1;
               return (
-                <li key={key} className="flex w-full items-stretch gap-3">
+                <li key={step.id} className="flex w-full items-stretch gap-3">
                   <div className="flex flex-col items-center">
                     <FlowStepMarker status={status} stepNumber={index + 1} />
                     {!isLast ? (
@@ -65,8 +84,11 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
                   </div>
                   <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
                     <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
-                      {t(key)}
+                      {t(step.titleKey)}
                     </span>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {t(step.descKey)}
+                    </p>
                   </div>
                 </li>
               );

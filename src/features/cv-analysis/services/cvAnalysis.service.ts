@@ -1,129 +1,237 @@
-import { mockDelay, usesMockData } from '@/shared/mock';
-import { MOCK_CV_ANALYSIS_RESULT, MOCK_UPLOADED_CV_FILES } from '../mocks/cvAnalysis.fixtures';
-import type { CvAnalysisResult, SubmitCvAnalysisInput, UploadedCvFile } from '../types/cvAnalysis.types';
-import type { CvAnalysisDomain } from '../types/cvDomain.types';
+import { apiClient } from '@/shared/api/apiClient';
+import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import type {
+  AnalyzeCvRequest,
+  CvAnalysisResult,
+  FileRecord,
+  JdMatch,
+  UploadedCvFile,
+} from '../types/cvAnalysis.types';
+import { cvAnalysisEndpoints } from './cvAnalysis.endpoints';
 
-const UPLOADED_CV_STORAGE_KEY = 'isas-uploaded-cvs';
-const MOCK_PDF_URL = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-
-let lastSubmittedDomain: CvAnalysisDomain | null = null;
+export type CvAnalysisErrorCode =
+  | 'badRequest'
+  | 'insufficientCredits'
+  | 'forbidden'
+  | 'notFound'
+  | 'aiBusy'
+  | 'serverError'
+  | 'uploadFailed'
+  | 'unknown';
 
 export class CvAnalysisError extends Error {
-  readonly code: 'passwordProtected' | 'corruptFile' | 'parseFailed';
+  readonly code: CvAnalysisErrorCode;
+  readonly status?: number;
 
-  constructor(code: 'passwordProtected' | 'corruptFile' | 'parseFailed', message?: string) {
-    super(message ?? code);
+  constructor(code: CvAnalysisErrorCode, message: string, status?: number) {
+    super(message);
     this.name = 'CvAnalysisError';
     this.code = code;
+    this.status = status;
   }
 }
 
-function normalizeUploadedCv(file: UploadedCvFile): UploadedCvFile {
+function statusToCode(status?: number): CvAnalysisErrorCode {
+  switch (status) {
+    case 400:
+      return 'badRequest';
+    case 402:
+      return 'insufficientCredits';
+    case 403:
+      return 'forbidden';
+    case 404:
+      return 'notFound';
+    case 500:
+      return 'serverError';
+    case 502:
+      return 'aiBusy';
+    default:
+      return 'unknown';
+  }
+}
+
+function toCvAnalysisError(error: unknown, fallback: string): CvAnalysisError {
+  if (error instanceof CvAnalysisError) return error;
+  const status = getApiStatusCode(error);
+  return new CvAnalysisError(statusToCode(status), getApiErrorMessage(error, fallback), status);
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function parseJdMatch(raw: unknown): JdMatch | null {
+  if (raw == null) return null;
+  if (typeof raw !== 'object') return null;
+  const match = raw as Record<string, unknown>;
+  const score = typeof match.score === 'number' ? match.score : Number(match.score);
+  if (!Number.isFinite(score)) return null;
   return {
-    ...file,
-    pdfUrl: file.pdfUrl || MOCK_PDF_URL,
+    score,
+    matchedSkills: asStringArray(match.matchedSkills),
+    missingSkills: asStringArray(match.missingSkills),
   };
 }
 
-function readUploadedCvStore(): UploadedCvFile[] {
-  if (typeof sessionStorage !== 'undefined') {
-    const raw = sessionStorage.getItem(UPLOADED_CV_STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as UploadedCvFile[];
-        return parsed.map(normalizeUploadedCv);
-      } catch {
-        sessionStorage.removeItem(UPLOADED_CV_STORAGE_KEY);
-      }
-    }
+function parseAnalysis(raw: unknown): CvAnalysisResult {
+  if (!raw || typeof raw !== 'object') {
+    throw new CvAnalysisError('unknown', 'Invalid analysis response.');
   }
-  return structuredClone(MOCK_UPLOADED_CV_FILES);
-}
-
-function writeUploadedCvStore(files: UploadedCvFile[]) {
-  uploadedCvStore = files;
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem(UPLOADED_CV_STORAGE_KEY, JSON.stringify(files));
+  const data = raw as Record<string, unknown>;
+  const id = String(data.id ?? '');
+  const cvId = String(data.cvId ?? '');
+  if (!id || !cvId) {
+    throw new CvAnalysisError('unknown', 'Invalid analysis response.');
   }
-}
 
-let uploadedCvStore = readUploadedCvStore();
-
-function detectMockFailure(file: File): CvAnalysisError | null {
-  const name = file.name.toLowerCase();
-  if (name.includes('locked') || name.includes('protected')) {
-    return new CvAnalysisError('passwordProtected');
-  }
-  if (name.includes('corrupt') || name.includes('broken')) {
-    return new CvAnalysisError('corruptFile');
-  }
-  return null;
-}
-
-function registerUploadedCv(file: File, analysisId: string): UploadedCvFile {
-  const entry: UploadedCvFile = {
-    id: `cv-file-${crypto.randomUUID().slice(0, 8)}`,
-    fileName: file.name,
-    fileSizeBytes: file.size,
-    mimeType: file.type || 'application/octet-stream',
-    uploadedAt: new Date().toISOString(),
-    pdfUrl: MOCK_PDF_URL,
-    analysisId,
+  return {
+    id,
+    cvId,
+    jdId: data.jdId == null || data.jdId === '' ? null : String(data.jdId),
+    jobCategory: String(data.jobCategory ?? ''),
+    summary: String(data.summary ?? ''),
+    strengths: asStringArray(data.strengths),
+    weaknesses: asStringArray(data.weaknesses),
+    suggestions: asStringArray(data.suggestions),
+    jdMatch: parseJdMatch(data.jdMatch),
+    createdAt: String(data.createdAt ?? ''),
   };
-
-  const existingIndex = uploadedCvStore.findIndex(
-    (item) => item.fileName.toLowerCase() === entry.fileName.toLowerCase(),
-  );
-  const nextStore =
-    existingIndex >= 0
-      ? uploadedCvStore.map((item, index) => (index === existingIndex ? entry : item))
-      : [entry, ...uploadedCvStore];
-
-  writeUploadedCvStore(nextStore);
-  return entry;
 }
 
+function parseFileRecord(raw: unknown): FileRecord {
+  if (!raw || typeof raw !== 'object') {
+    throw new CvAnalysisError('uploadFailed', 'Invalid upload response.');
+  }
+  const data = raw as Record<string, unknown>;
+  const id = String(data.fileId ?? data.id ?? data.cvId ?? data.jdId ?? '');
+  if (!id) {
+    throw new CvAnalysisError('uploadFailed', 'Upload response missing file id.');
+  }
+
+  return {
+    id,
+    fileType: String(data.fileType ?? ''),
+    originalName: String(data.originalName ?? data.fileName ?? data.name ?? 'file.pdf'),
+    mimeType: String(data.mimeType ?? 'application/pdf'),
+    fileSize: typeof data.fileSize === 'number' ? data.fileSize : Number(data.fileSize ?? 0),
+    parsedStatus: String(data.parsedStatus ?? data.parseStatus ?? 'pending'),
+    createdAt: String(data.createdAt ?? new Date().toISOString()),
+  };
+}
+
+/** Unwrap `{ data: T }` envelopes without treating `data: null` as missing payload root. */
+function unwrapData(payload: unknown): unknown {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    const nested = (payload as { data: unknown }).data;
+    if (nested !== undefined) return nested;
+  }
+  return payload;
+}
+
+function unwrapList(payload: unknown): unknown[] {
+  const data = unwrapData(payload);
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.results)) return obj.results;
+  }
+  return [];
+}
+
+function toUploadedCvFile(record: FileRecord): UploadedCvFile {
+  return {
+    id: record.id,
+    fileName: record.originalName,
+    fileSizeBytes: record.fileSize,
+    mimeType: record.mimeType,
+    uploadedAt: record.createdAt,
+    pdfUrl: cvAnalysisEndpoints.downloadFile(record.id),
+  };
+}
+
+async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await apiClient.post<unknown>(cvAnalysisEndpoints.uploadFile(fileType), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return parseFileRecord(unwrapData(response.data));
+  } catch (error) {
+    throw toCvAnalysisError(error, 'File upload failed.');
+  }
+}
+
+/**
+ * Live Interview CV Analysis API only — no mock fixtures.
+ * Auth: Bearer token via `apiClient` interceptor (Candidate).
+ */
 export const cvAnalysisService = {
-  async submitAnalysis(input: SubmitCvAnalysisInput): Promise<{ analysisId: string }> {
-    if (!usesMockData('cv-analysis')) {
-      throw new Error('CV analysis API is not wired yet. Keep usesMockData("cv-analysis") true.');
-    }
-
-    const failure = detectMockFailure(input.file);
-    if (failure) {
-      throw failure;
-    }
-
-    await mockDelay(800);
-    const analysisId = `cv-analysis-${crypto.randomUUID().slice(0, 8)}`;
-    lastSubmittedDomain = input.domain;
-    registerUploadedCv(input.file, analysisId);
-    return { analysisId };
+  async uploadCv(file: File): Promise<FileRecord> {
+    return uploadPdf(file, 'cv');
   },
 
-  async listUploadedCvs(): Promise<UploadedCvFile[]> {
-    if (!usesMockData('cv-analysis')) {
-      throw new Error('CV analysis API is not wired yet. Keep usesMockData("cv-analysis") true.');
-    }
+  async uploadJd(file: File): Promise<FileRecord> {
+    return uploadPdf(file, 'jd');
+  },
 
-    await mockDelay(250);
-    return structuredClone(uploadedCvStore).map(normalizeUploadedCv);
+  async analyze(input: AnalyzeCvRequest): Promise<CvAnalysisResult> {
+    try {
+      const body = {
+        cvId: input.cvId,
+        jdId: input.jdId,
+        jobCategory: input.jobCategory,
+      };
+      const response = await apiClient.post<unknown>(cvAnalysisEndpoints.analyze, body);
+      return parseAnalysis(unwrapData(response.data));
+    } catch (error) {
+      throw toCvAnalysisError(error, 'CV analysis failed.');
+    }
+  },
+
+  async listAnalyses(): Promise<CvAnalysisResult[]> {
+    try {
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listAnalyses);
+      return unwrapList(response.data).map(parseAnalysis);
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load analysis history.');
+    }
   },
 
   async getAnalysisResult(analysisId?: string): Promise<CvAnalysisResult> {
-    if (!usesMockData('cv-analysis')) {
-      throw new Error('CV analysis API is not wired yet. Keep usesMockData("cv-analysis") true.');
-    }
-
     if (!analysisId) {
-      throw new CvAnalysisError('parseFailed');
+      throw new CvAnalysisError('badRequest', 'Missing analysis id.');
     }
 
-    await mockDelay(500);
-    return {
-      ...MOCK_CV_ANALYSIS_RESULT,
-      id: analysisId,
-      domain: lastSubmittedDomain ?? MOCK_CV_ANALYSIS_RESULT.domain,
-    };
+    try {
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.getAnalysis(analysisId));
+      return parseAnalysis(unwrapData(response.data));
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load analysis result.');
+    }
+  },
+
+  async listUploadedCvs(): Promise<UploadedCvFile[]> {
+    try {
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listFiles);
+      return unwrapList(response.data)
+        .map(parseFileRecord)
+        .filter((file) => String(file.fileType).toLowerCase() === 'cv')
+        .map(toUploadedCvFile);
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load uploaded CVs.');
+    }
+  },
+
+  async getFile(id: string): Promise<FileRecord> {
+    try {
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.getFile(id));
+      return parseFileRecord(unwrapData(response.data));
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load file.');
+    }
   },
 };

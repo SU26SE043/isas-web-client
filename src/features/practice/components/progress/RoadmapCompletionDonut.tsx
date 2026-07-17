@@ -1,12 +1,13 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useLanguage } from '@/shared/languages';
+import { CHART_CATEGORICAL, CHART_TOOLTIP_STYLE } from '@/shared/charts/chartColors';
 import type { ProgressRoadmapCompletion } from '../../types/progress.types';
 import { getRoadmapCompletionPercent } from '../../types/progress.types';
 import { ProgressSection } from './ProgressSection';
 
 const SLICE_COLORS = {
-  completed: 'var(--isas-gray-50)',
-  inProgress: 'var(--isas-gray-400)',
+  completed: CHART_CATEGORICAL[1],
+  inProgress: CHART_CATEGORICAL[2],
   locked: 'var(--isas-gray-700)',
 } as const;
 
@@ -51,11 +52,7 @@ export function RoadmapCompletionDonut({ data }: { data: ProgressRoadmapCompleti
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                background: 'var(--surface-raised)',
-                border: '1px solid var(--border-default)',
-                borderRadius: 12,
-              }}
+              contentStyle={CHART_TOOLTIP_STYLE}
               formatter={(value, name) => [
                 String(value ?? 0),
                 t(`practice.progress.status.${String(name)}`),

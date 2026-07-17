@@ -1,28 +1,27 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getApiErrorMessage, getApiStatusCode } from '../../../../shared/api';
-import { HttpStatus } from '../../../../shared/constants/http-status';
 import { useLanguage } from '../../../../shared/languages';
 import { authService } from '../../services/authService';
+import { useRegisterFlow } from '../../hooks/useRegisterFlow';
+import { parseRegisterError } from '../../utils/authErrors';
 import { validatePassword } from '../../utils/passwordPolicy';
 import { PasswordStrengthMeter } from '../PasswordStrengthMeter';
 import { SocialLoginButton } from '../SocialLoginButton';
 import { signUpFormVariants } from './authModal.animations';
 
 interface SignUpFormProps {
-  isSignUp: boolean;
   onRegisterSuccess: () => void;
+  onOrgSignUpClick: () => void;
   reducedMotion: boolean | null;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({
-  isSignUp,
   onRegisterSuccess,
+  onOrgSignUpClick,
   reducedMotion,
 }) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
+  const { completeRegistration } = useRegisterFlow(onRegisterSuccess);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,21 +46,19 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     setStatusMessage('');
 
     try {
-      await authService.register({
+      const result = await authService.register({
         email: email.trim(),
         fullName: fullName.trim(),
         password,
       });
-      const trimmedEmail = email.trim();
-      onRegisterSuccess();
-      navigate(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`, { replace: true });
+
+      setStatusMessage(t('auth.registerSuccess'));
+      await completeRegistration(result, email.trim());
     } catch (error) {
-      const statusCode = getApiStatusCode(error);
-      if (statusCode === HttpStatus.BAD_REQUEST || statusCode === HttpStatus.CONFLICT) {
-        setStatusMessage(t('auth.emailAlreadyUsed'));
-      } else {
-        setStatusMessage(getApiErrorMessage(error, t('auth.registerFailed')));
-      }
+      const parsed = parseRegisterError(error, t('auth.registerFailed'));
+      setStatusMessage(
+        parsed.kind === 'emailAlreadyExists' ? t('auth.emailAlreadyUsed') : parsed.message,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -72,8 +69,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       onSubmit={handleSubmit}
       className="absolute inset-0 flex flex-col items-center justify-center px-12"
       variants={signUpFormVariants(reducedMotion)}
-      initial={false}
-      animate={isSignUp ? 'active' : 'hiddenRight'}
+      initial="hiddenRight"
+      animate="active"
+      exit="hiddenRight"
     >
       <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
 
@@ -123,6 +121,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         className="btn-primary w-full uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? t('auth.registering') : t('auth.signUp')}
+      </button>
+
+      <button
+        type="button"
+        onClick={onOrgSignUpClick}
+        className="mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {t('auth.switchToOrgSignUp')}
       </button>
     </motion.form>
   );

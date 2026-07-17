@@ -1,78 +1,21 @@
 import type { PracticeDomain, PracticeLevel, PracticeRubricCriterion } from '../types/practiceSetup.types';
+import { JOB_DOMAINS } from '@/shared/domain/jobDomains';
 
 export const PRACTICE_LEVELS: PracticeLevel[] = ['intern', 'fresher', 'junior', 'middle', 'senior'];
 
 export const PRACTICE_QUESTION_COUNTS = [3, 5, 7, 10] as const;
 
-export const PRACTICE_DOMAINS: PracticeDomain[] = [
-  {
-    id: 'frontend',
-    name: 'Frontend Development',
-    nameVi: 'Phát triển Frontend',
-    description: 'UI engineering, React, accessibility, and web performance.',
-    descriptionVi: 'Kỹ thuật UI, React, accessibility và hiệu năng web.',
-  },
-  {
-    id: 'backend',
-    name: 'Backend Development',
-    nameVi: 'Phát triển Backend',
-    description: 'API design, databases, distributed systems, and reliability.',
-    descriptionVi: 'Thiết kế API, cơ sở dữ liệu, hệ thống phân tán và độ tin cậy.',
-  },
-  {
-    id: 'fullstack',
-    name: 'Full-stack Development',
-    nameVi: 'Phát triển Full-stack',
-    description: 'End-to-end product delivery across client and server layers.',
-    descriptionVi: 'Triển khai sản phẩm end-to-end trên client và server.',
-  },
-  {
-    id: 'mobile',
-    name: 'Mobile Development',
-    nameVi: 'Phát triển Mobile',
-    description: 'Native and cross-platform mobile application engineering.',
-    descriptionVi: 'Kỹ thuật ứng dụng mobile native và đa nền tảng.',
-  },
-  {
-    id: 'data',
-    name: 'Data Engineering',
-    nameVi: 'Kỹ thuật Dữ liệu',
-    description: 'Pipelines, warehousing, analytics, and data quality.',
-    descriptionVi: 'Pipeline, kho dữ liệu, phân tích và chất lượng dữ liệu.',
-  },
-  {
-    id: 'qa',
-    name: 'QA / Testing',
-    nameVi: 'QA / Kiểm thử',
-    description: 'Test strategy, automation, and release quality gates.',
-    descriptionVi: 'Chiến lược kiểm thử, tự động hóa và cổng chất lượng phát hành.',
-  },
-];
+/** Single domain list for practice interview + roadmap (Frontend / Backend / BA only). */
+export const PRACTICE_DOMAINS: PracticeDomain[] = JOB_DOMAINS.map((domain) => ({
+  id: domain.id,
+  name: domain.name,
+  nameVi: domain.nameVi,
+  description: domain.description,
+  descriptionVi: domain.descriptionVi,
+}));
 
-/** Domains available in Roadmap Creation Wizard only */
-export const ROADMAP_DOMAINS: PracticeDomain[] = [
-  {
-    id: 'frontend',
-    name: 'Frontend',
-    nameVi: 'Frontend',
-    description: 'UI engineering, React, accessibility, and web performance.',
-    descriptionVi: 'Kỹ thuật UI, React, accessibility và hiệu năng web.',
-  },
-  {
-    id: 'backend',
-    name: 'Backend',
-    nameVi: 'Backend',
-    description: 'API design, databases, distributed systems, and reliability.',
-    descriptionVi: 'Thiết kế API, cơ sở dữ liệu, hệ thống phân tán và độ tin cậy.',
-  },
-  {
-    id: 'business-analyst',
-    name: 'Business Analyst',
-    nameVi: 'Business Analyst',
-    description: 'Requirements, stakeholder alignment, and process analysis.',
-    descriptionVi: 'Phân tích yêu cầu, stakeholder và quy trình nghiệp vụ.',
-  },
-];
+/** @deprecated Use PRACTICE_DOMAINS — same three domains project-wide. */
+export const ROADMAP_DOMAINS: PracticeDomain[] = PRACTICE_DOMAINS;
 
 export const ROADMAP_TARGET_LEVELS = [
   'intern',
