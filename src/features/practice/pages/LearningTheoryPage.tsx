@@ -1,76 +1,129 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
+import { EmptyState } from '@/components/patterns/EmptyState';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { LessonHtmlContent } from '../components/learning-path/LessonHtmlContent';
 import { LearningTheoryActions } from '../components/learning-path/LearningTheoryActions';
 import { useLearningWorkspaceOptional } from '../context/LearningWorkspaceContext';
-import { learningPathService } from '../services/learningPath.service';
-import type { LearningLesson, LearningRoadmapDetail } from '../types/learningPath.types';
+import { useLearningLesson, useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
+import { roadmapService } from '../services/roadmap.service';
+
+function TheorySkeleton() {
+  return (
+    <div className="mx-auto max-w-[900px] space-y-6 px-4 py-8 sm:px-6 lg:px-10" aria-busy="true">
+      <div className="space-y-3 border-b border-subtle pb-6">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-9 w-3/4 max-w-md" />
+      </div>
+      <div className="frame-satin space-y-4 rounded-2xl border border-subtle bg-surface-raised p-6 sm:p-8">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="mt-6 h-32 w-full" />
+      </div>
+    </div>
+  );
+}
 
 export function LearningTheoryPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
   const { language, t } = useLanguage();
   const workspace = useLearningWorkspaceOptional();
-  const [localRoadmap, setLocalRoadmap] = useState<LearningRoadmapDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(!workspace);
-  const [error, setError] = useState(false);
 
-  const roadmap = workspace?.roadmap ?? localRoadmap;
+  const roadmapQuery = useLearningRoadmapDetail(roadmapId);
+  const lessonQuery = useLearningLesson(roadmapId, lessonId, Boolean(roadmapId && lessonId));
 
-  useEffect(() => {
-    if (workspace) return;
-    let active = true;
-    setIsLoading(true);
-    void learningPathService
-      .getRoadmap(roadmapId)
-      .then((data) => {
-        if (!active) return;
-        setLocalRoadmap(data);
-        setError(false);
-      })
-      .catch(() => {
-        if (active) setError(true);
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [roadmapId, workspace]);
+  const roadmap = workspace?.roadmap ?? roadmapQuery.data ?? null;
+  const opened = lessonQuery.data;
+  const errorStatus = lessonQuery.isError
+    ? roadmapService.getErrorStatus(lessonQuery.error)
+    : roadmapQuery.isError
+      ? roadmapService.getErrorStatus(roadmapQuery.error)
+      : workspace?.errorStatus;
 
-  const lesson: LearningLesson | null =
-    roadmap?.milestones.flatMap((item) => item.lessons).find((item) => item.id === lessonId) ?? null;
+  const showSkeleton =
+    (lessonQuery.isLoading || lessonQuery.isFetching) && !opened;
 
-  const markComplete = async () => {
-    await learningPathService.markTheoryCompleted(roadmapId, lessonId);
-  };
-
-  const onMarkedComplete = async () => {
-    if (workspace) {
-      await workspace.reload();
-      return;
-    }
-    const data = await learningPathService.getRoadmap(roadmapId);
-    setLocalRoadmap(data);
-  };
-
-  if ((workspace?.isLoading ?? isLoading) && !roadmap) {
+  if (showSkeleton) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-        <span className="sr-only">{t('practice.learningPath.loading')}</span>
+      <div className="min-h-full overflow-y-auto bg-surface-base">
+        <TheorySkeleton />
+        <span className="sr-only">{t('practice.learningPath.loadingTheory')}</span>
       </div>
     );
   }
 
-  if (workspace?.error || error || !lesson || !roadmap) {
-    return <p className="page-container page-section text-sm text-error">{t('practice.learningPath.error')}</p>;
+  if (lessonQuery.isError || !opened) {
+    const isNotFound = errorStatus === 404;
+    const isForbidden = errorStatus === 403;
+    const isAiFailure = errorStatus === 502;
+    return (
+      <div className="page-container page-section min-h-[50vh]">
+        <EmptyState
+          className="frame-satin mx-auto max-w-lg"
+          variant={isForbidden ? 'no-permission' : 'no-results'}
+          title={
+            isAiFailure
+              ? t('practice.learningPath.lessonAiErrorTitle')
+              : isNotFound
+                ? t('practice.learningPath.errorNotFoundTitle')
+                : isForbidden
+                  ? t('practice.learningPath.errorForbiddenTitle')
+                  : t('practice.learningPath.errorTitle')
+          }
+          description={
+            isAiFailure
+              ? t('practice.learningPath.lessonAiError')
+              : isNotFound
+                ? t('practice.learningPath.errorNotFound')
+                : isForbidden
+                  ? t('practice.learningPath.errorForbidden')
+                  : t('practice.learningPath.error')
+          }
+          action={
+            isAiFailure || (!isNotFound && !isForbidden) ? (
+              <Button
+                type="button"
+                onClick={() => void lessonQuery.refetch()}
+                disabled={lessonQuery.isFetching}
+              >
+                <AlertCircle className="size-4" aria-hidden />
+                {t('practice.learningPath.retry')}
+              </Button>
+            ) : (
+              <Link to="/candidate/learning" className="btn-secondary inline-flex">
+                {t('practice.learningPath.backToDashboard')}
+              </Link>
+            )
+          }
+        />
+      </div>
+    );
   }
 
-  const title = language === 'vi' ? lesson.titleVi : lesson.title;
-  const html = language === 'vi' ? lesson.contentVi : lesson.content;
+  if (!roadmap) {
+    return (
+      <div className="page-container page-section min-h-[50vh]">
+        <EmptyState
+          className="frame-satin mx-auto max-w-lg"
+          title={t('practice.learningPath.errorTitle')}
+          description={t('practice.learningPath.error')}
+          action={
+            <Button type="button" onClick={() => void roadmapQuery.refetch()}>
+              {t('practice.learningPath.retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const title = language === 'vi' ? opened.titleVi : opened.title;
+  const html = opened.theoryContent.trim();
 
   return (
     <div className="min-h-full overflow-y-auto bg-surface-base">
@@ -78,18 +131,20 @@ export function LearningTheoryPage() {
         <header className="space-y-2 border-b border-subtle pb-6">
           <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}</p>
           <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{title}</h1>
+          {opened.apiStatus === 'Done' ? (
+            <p className="text-sm text-success">{t('practice.learningPath.lessonDoneHint')}</p>
+          ) : null}
         </header>
 
         <article className="frame-satin mt-8 rounded-2xl border border-subtle bg-surface-raised p-6 sm:p-8 lg:p-10">
-          <LessonHtmlContent html={html} />
+          {html ? (
+            <LessonHtmlContent html={html} />
+          ) : (
+            <p className="text-sm text-muted-foreground">{t('practice.learningPath.theoryEmpty')}</p>
+          )}
         </article>
 
-        <LearningTheoryActions
-          roadmap={roadmap}
-          lesson={lesson}
-          markComplete={markComplete}
-          onMarkedComplete={onMarkedComplete}
-        />
+        <LearningTheoryActions roadmap={roadmap} opened={opened} />
       </div>
     </div>
   );

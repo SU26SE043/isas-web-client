@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
 import type { InterviewHistoryItem } from '../types/history.types';
@@ -13,6 +15,7 @@ import {
 
 export function useRoadmapWizardFlow() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
@@ -91,6 +94,7 @@ export function useRoadmapWizardFlow() {
         reportIds: selectedIds,
         cvId,
       });
+      await invalidateLearningRoadmaps(queryClient);
       navigate('/candidate/learning', { replace: true });
     } catch {
       setSubmitError(true);

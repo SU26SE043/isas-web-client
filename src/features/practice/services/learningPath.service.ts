@@ -18,6 +18,7 @@ import {
 import { buildLessonHtml } from '../mocks/lessonContent.fixtures';
 import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
 import { registerLearningPracticeSession } from './learningPracticeSession.registry';
+import { roadmapService } from './roadmap.service';
 
 let store: LearningRoadmapDetail[] = structuredClone(MOCK_LEARNING_PATH_ROADMAPS);
 
@@ -172,46 +173,14 @@ function instantFeedback(): LearningPracticeQuestionFeedback {
 }
 
 export const learningPathService = {
+  /** Always live — GET /api/v1/interview/practice/roadmaps */
   async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(300);
-    store = store.map((item) => recompute(item));
-
-    let items = store.map(toCard);
-    const search = query.search?.trim().toLowerCase();
-    if (search) {
-      items = items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search) ||
-          item.nameVi.toLowerCase().includes(search) ||
-          item.domainLabel.toLowerCase().includes(search),
-      );
-    }
-    if (query.domainId && query.domainId !== 'all') {
-      items = items.filter((item) => item.domainId === query.domainId);
-    }
-    if (query.status && query.status !== 'all') {
-      items = items.filter((item) => item.status === query.status);
-    }
-    if (query.sort === 'progress') {
-      items = items.slice().sort((a, b) => b.progressPercent - a.progressPercent);
-    } else {
-      items = items.slice().sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-    }
-    return items;
+    return roadmapService.listRoadmaps(query);
   },
 
+  /** Always live — GET /api/v1/interview/practice/roadmaps/{id} */
   async getRoadmap(roadmapId: string): Promise<LearningRoadmapDetail> {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(250);
-    const index = store.findIndex((item) => item.id === roadmapId);
-    if (index < 0) throw new Error('ROADMAP_NOT_FOUND');
-    store[index] = recompute(store[index]);
-    return structuredClone(store[index]);
+    return roadmapService.getRoadmap(roadmapId);
   },
 
   async registerCreatedRoadmap(input: CreateRoadmapInput & { roadmapId?: string }): Promise<LearningRoadmapDetail> {

@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Loader2, Lock } from 'lucide-react';
+import { AlertCircle, Loader2, Lock } from 'lucide-react';
+import { EmptyState } from '@/components/patterns/EmptyState';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
-import { learningPathService } from '../services/learningPath.service';
-import type { LearningRoadmapDetail } from '../types/learningPath.types';
+import { useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
+import { roadmapService } from '../services/roadmap.service';
 import {
   launchLearningInterviewPractice,
   learningInterviewPreparePath,
@@ -13,58 +15,81 @@ export function LearningRoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
   const { language, t } = useLanguage();
-  const [roadmap, setRoadmap] = useState<LearningRoadmapDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [launchingLessonId, setLaunchingLessonId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    void learningPathService
-      .getRoadmap(roadmapId)
-      .then((data) => {
-        if (active) {
-          setRoadmap(data);
-          setError(false);
-        }
-      })
-      .catch(() => {
-        if (active) setError(true);
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [roadmapId]);
+  const { data: roadmap, isLoading, isError, error, refetch, isFetching } =
+    useLearningRoadmapDetail(roadmapId);
+  const errorStatus = isError ? roadmapService.getErrorStatus(error) : undefined;
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
+      <div className="flex min-h-[40vh] items-center justify-center" role="status">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+        <span className="sr-only">{t('practice.learningPath.loading')}</span>
       </div>
     );
   }
 
-  if (error || !roadmap) {
-    return <p className="page-container page-section text-sm text-error">{t('practice.learningPath.error')}</p>;
+  if (isError || !roadmap) {
+    const isNotFound = errorStatus === 404;
+    const isForbidden = errorStatus === 403;
+    return (
+      <div className="page-container page-section min-h-screen">
+        <Link to="/candidate/learning" className="text-sm text-muted-foreground hover:text-foreground">
+          {t('practice.learningPath.backToDashboard')}
+        </Link>
+        <div className="mt-8">
+          <EmptyState
+            className="frame-satin"
+            variant={isForbidden ? 'no-permission' : 'no-results'}
+            title={
+              isNotFound
+                ? t('practice.learningPath.errorNotFoundTitle')
+                : isForbidden
+                  ? t('practice.learningPath.errorForbiddenTitle')
+                  : t('practice.learningPath.errorTitle')
+            }
+            description={
+              isNotFound
+                ? t('practice.learningPath.errorNotFound')
+                : isForbidden
+                  ? t('practice.learningPath.errorForbidden')
+                  : t('practice.learningPath.error')
+            }
+            action={
+              isNotFound || isForbidden ? (
+                <Link to="/candidate/learning" className="btn-secondary inline-flex">
+                  {t('practice.learningPath.backToDashboard')}
+                </Link>
+              ) : (
+                <Button type="button" onClick={() => void refetch()} disabled={isFetching}>
+                  <AlertCircle className="size-4" aria-hidden />
+                  {t('practice.learningPath.retry')}
+                </Button>
+              )
+            }
+          />
+        </div>
+      </div>
+    );
   }
 
   const title = language === 'vi' ? roadmap.nameVi : roadmap.name;
 
-  const openPractice = async (lessonId: string, lessonTitle: string) => {
+  const openPractice = async (lessonId: string, lessonTitle: string, sessionId?: string | null) => {
     setLaunchingLessonId(lessonId);
     try {
-      const sessionId = await launchLearningInterviewPractice({
+      if (sessionId) {
+        navigate(learningInterviewPreparePath(sessionId));
+        return;
+      }
+      const nextSessionId = await launchLearningInterviewPractice({
         roadmapId: roadmap.id,
         lessonId,
         title: lessonTitle,
       });
-      navigate(learningInterviewPreparePath(sessionId));
+      navigate(learningInterviewPreparePath(nextSessionId));
     } catch {
-      setError(true);
       setLaunchingLessonId(null);
     }
   };
@@ -123,16 +148,17 @@ export function LearningRoadmapDetailPage() {
                   const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
                   const canOpenTheory =
                     !locked &&
-                    !roadmap.readOnly &&
-                    (lessonItem.theoryStatus === 'available' || lessonItem.theoryStatus === 'completed');
+                    (lessonItem.theoryStatus === 'available' ||
+                      lessonItem.theoryStatus === 'completed' ||
+                      roadmap.readOnly);
                   const canOpenPractice =
                     !locked &&
-                    lessonItem.practiceStatus === 'available' &&
-                    !roadmap.readOnly;
-                  const reportLink =
-                    lessonItem.practiceReportId
-                      ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report`
-                      : null;
+                    !roadmap.readOnly &&
+                    (lessonItem.practiceStatus === 'available' ||
+                      lessonItem.apiStatus === 'Practicing');
+                  const reportLink = lessonItem.practiceReportId
+                    ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report`
+                    : null;
 
                   return (
                     <li
@@ -150,7 +176,7 @@ export function LearningRoadmapDetailPage() {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {canOpenTheory || (roadmap.readOnly && lessonItem.theoryStatus === 'completed') ? (
+                          {canOpenTheory ? (
                             <Link
                               to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`}
                               className="btn-secondary inline-flex text-xs"
@@ -163,7 +189,9 @@ export function LearningRoadmapDetailPage() {
                               type="button"
                               className="btn-primary inline-flex text-xs"
                               disabled={launchingLessonId === lessonItem.id}
-                              onClick={() => void openPractice(lessonItem.id, lessonTitle)}
+                              onClick={() =>
+                                void openPractice(lessonItem.id, lessonTitle, lessonItem.sessionId)
+                              }
                             >
                               {launchingLessonId === lessonItem.id
                                 ? t('practice.learningPath.saving')
