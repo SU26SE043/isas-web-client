@@ -21,6 +21,7 @@ export interface RubricCriterion {
   name: string;
   weight: number;
   description: string;
+  maxScore: number;
 }
 
 export interface CampaignQuestion {
@@ -33,6 +34,8 @@ export interface CampaignQuestion {
 export interface EmployerCampaign {
   id: string;
   title: string;
+  /** API domain label when present (e.g. Frontend). */
+  domain?: string;
   company: string;
   location: string;
   mode: EmployerCampaignMode;
@@ -42,7 +45,10 @@ export interface EmployerCampaign {
   capacity: number;
   applicants: number;
   deadline: string;
+  startsAt?: string;
   durationMinutes: number;
+  passScorePct?: number | null;
+  antiCheatEnabled?: boolean;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];

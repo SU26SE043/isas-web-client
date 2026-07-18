@@ -39,24 +39,28 @@ export const DEFAULT_RUBRIC = [
     name: 'Technical depth',
     weight: 40,
     description: 'Problem solving, architecture, and correctness.',
+    maxScore: 10,
   },
   {
     id: 'communication',
     name: 'Communication',
     weight: 25,
     description: 'Clarity, structure, and tradeoff explanation.',
+    maxScore: 10,
   },
   {
     id: 'delivery',
     name: 'Delivery readiness',
     weight: 20,
     description: 'Pragmatism, testing, and production judgment.',
+    maxScore: 10,
   },
   {
     id: 'culture',
     name: 'Team fit',
     weight: 15,
     description: 'Collaboration and learning posture.',
+    maxScore: 10,
   },
 ];
 

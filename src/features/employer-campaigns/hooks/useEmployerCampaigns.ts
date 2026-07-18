@@ -4,11 +4,11 @@ import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type {
-  CampaignDraftInput,
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,
 } from '../types/campaignManagement.types';
+import type { CampaignCreateRequest } from '../types/campaign.api.types';
 
 export const EMPLOYER_CAMPAIGNS_QUERY_KEY = ['employer', 'campaigns'] as const;
 export const EMPLOYER_CAMPAIGN_DETAIL_QUERY_KEY = ['employer', 'campaign'] as const;
@@ -71,11 +71,39 @@ export function useEmployerCampaign(id: string | undefined) {
 
   const detailQuery = useQuery({
     queryKey: employerCampaignDetailQueryKey(id ?? ''),
-    queryFn: () => campaignManagementService.getCampaign(id!),
+    queryFn: async () => {
+      try {
+        return await campaignManagementService.getCampaign(id!);
+      } catch (error) {
+        const status = campaignManagementService.getErrorStatus(error);
+        // After Step 1 create we seed React Query; prefer cache so the wizard can continue.
+        if (status === 400 || status === 404) {
+          const cached = queryClient.getQueryData<EmployerCampaign>(
+            employerCampaignDetailQueryKey(id!),
+          );
+          if (cached) return cached;
+          const memory = campaignManagementService.getCachedCampaign(id!);
+          if (memory) {
+            queryClient.setQueryData(employerCampaignDetailQueryKey(id!), memory);
+            return memory;
+          }
+        }
+        throw error;
+      }
+    },
     enabled: Boolean(id),
+    // Prefer data seeded by createCampaign before navigate → edit remount.
+    initialData: () =>
+      id
+        ? queryClient.getQueryData<EmployerCampaign>(employerCampaignDetailQueryKey(id))
+        : undefined,
+    initialDataUpdatedAt: () =>
+      id
+        ? queryClient.getQueryState(employerCampaignDetailQueryKey(id))?.dataUpdatedAt
+        : undefined,
     retry: (failureCount, error) => {
       const status = campaignManagementService.getErrorStatus(error);
-      if (status === 401 || status === 403 || status === 404) return false;
+      if (status === 401 || status === 403 || status === 404 || status === 400) return false;
       return failureCount < 1;
     },
   });
@@ -89,7 +117,9 @@ export function useEmployerCampaign(id: string | undefined) {
       toastedRef.current = null;
       return;
     }
-    if (errorStatus === 401 || errorStatus === 403 || errorStatus === 404) return;
+    if (errorStatus === 401 || errorStatus === 403 || errorStatus === 404 || errorStatus === 400) {
+      return;
+    }
 
     const key = `${errorStatus ?? 'x'}-${detailQuery.errorUpdatedAt}`;
     if (toastedRef.current === key) return;
@@ -117,11 +147,72 @@ export function useEmployerCampaign(id: string | undefined) {
     return next;
   }, [queryClient]);
 
+  const createCampaign = useCallback(
+    async (input: CampaignCreateRequest) => {
+      const next = await campaignManagementService.createCampaign(input);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(next.id), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
+  const updateCampaign = useCallback(
+    async (campaignId: string, payload: import('../types/campaign.api.types').CampaignUpdateRequest) => {
+      const next = await campaignManagementService.updateCampaign(campaignId, payload);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
+  const updateCampaignQuestions = useCallback(
+    async (
+      campaignId: string,
+      questions: import('../types/campaign.api.types').CampaignCreateQuestionRequest[],
+    ) => {
+      const next = await campaignManagementService.updateCampaignQuestions(campaignId, questions);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
+  const saveCampaignQuestions = useCallback(
+    async (campaignId: string, questions: CampaignQuestion[]) => {
+      const next = await campaignManagementService.saveCampaignQuestions(campaignId, questions);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      return next;
+    },
+    [queryClient],
+  );
+
+  const uploadJdFile = useCallback(
+    async (campaignId: string, jdFile: File) => {
+      const next = await campaignManagementService.uploadCampaignJdFile(campaignId, jdFile);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      return next;
+    },
+    [queryClient],
+  );
+
   const publish = useCallback(
     async (campaignId: string) => {
       const result = await campaignManagementService.publishCampaign(campaignId);
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), result.campaign);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
       return result;
+    },
+    [queryClient],
+  );
+
+  const deleteCampaign = useCallback(
+    async (campaignId: string) => {
+      await campaignManagementService.deleteCampaign(campaignId);
+      queryClient.removeQueries({ queryKey: employerCampaignDetailQueryKey(campaignId) });
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
     },
     [queryClient],
   );
@@ -145,7 +236,13 @@ export function useEmployerCampaign(id: string | undefined) {
       void detailQuery.refetch();
     },
     saveDraft,
+    createCampaign,
+    updateCampaign,
+    updateCampaignQuestions,
+    saveCampaignQuestions,
+    uploadJdFile,
     publish,
+    deleteCampaign,
     invite,
   };
 }

@@ -74,7 +74,32 @@ describe('campaignMapper', () => {
 
     const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
     expect(campaign.rubric[0]?.name).toBe('Tech');
+    expect(campaign.rubric[0]?.maxScore).toBe(10);
     expect(campaign.questions[0]?.prompt).toBe('Explain React state');
     expect(campaign.candidates[0]?.status).toBe('invited');
+  });
+
+  it('parses questionText from Campaign API question DTOs', () => {
+    const parsed = parseCampaignResponse({
+      id: 'c5',
+      title: 'With Questions',
+      status: 'Draft',
+      criteria: [{ name: 'Tech', description: 'Depth', weight: 0.4, maxScore: 10 }],
+      questions: [
+        {
+          questionText: 'Explain Virtual DOM.',
+          source: 'AiGenerated',
+          isRequired: true,
+        },
+      ],
+    });
+
+    expect(parsed?.questions).toHaveLength(1);
+    expect(parsed?.questions?.[0]?.prompt).toBe('Explain Virtual DOM.');
+    expect(parsed?.rubric).toHaveLength(1);
+
+    const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
+    expect(campaign.questions[0]?.prompt).toBe('Explain Virtual DOM.');
+    expect(campaign.rubric[0]?.name).toBe('Tech');
   });
 });

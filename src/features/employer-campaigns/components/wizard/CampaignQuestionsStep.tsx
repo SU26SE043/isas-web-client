@@ -19,9 +19,11 @@ interface CampaignQuestionsStepProps {
   onGenerateAi: () => void;
   onChangeQuestions: (questions: CampaignQuestion[]) => void;
   onBack: () => void;
-  onNext: () => void;
-  onSaveDraft: () => void;
-  isSaving?: boolean;
+  onSubmit: () => void;
+  submitLabel: string;
+  submittingLabel: string;
+  isSubmitting?: boolean;
+  submitDisabled?: boolean;
 }
 
 export function CampaignQuestionsStep({
@@ -34,9 +36,11 @@ export function CampaignQuestionsStep({
   onGenerateAi,
   onChangeQuestions,
   onBack,
-  onNext,
-  onSaveDraft,
-  isSaving,
+  onSubmit,
+  submitLabel,
+  submittingLabel,
+  isSubmitting = false,
+  submitDisabled = false,
 }: CampaignQuestionsStepProps) {
   const { t } = useLanguage();
 
@@ -54,9 +58,11 @@ export function CampaignQuestionsStep({
       footer={
         <CampaignWizardNav
           onBack={onBack}
-          onNext={onNext}
-          onSaveDraft={onSaveDraft}
-          isSaving={isSaving}
+          onNext={onSubmit}
+          nextLabel={isSubmitting ? submittingLabel : submitLabel}
+          nextDisabled={submitDisabled || isSubmitting}
+          isSaving={isSubmitting}
+          backDisabled={isSubmitting}
         />
       }
     >

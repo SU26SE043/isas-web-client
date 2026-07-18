@@ -1,37 +1,49 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { CampaignWizardForm } from '../components/wizard/CampaignWizardForm';
-import type { CampaignDraftInput } from '../types/campaignManagement.types';
+import type {
+  CampaignCreateQuestionRequest,
+  CampaignCreateRequest,
+  CampaignUpdateRequest,
+} from '../types/campaign.api.types';
 
 export function CampaignWizardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { campaign, isLoading, saveDraft, publish } = useEmployerCampaign(id);
-  const isEditing = Boolean(id);
+  const {
+    campaign,
+    isLoading,
+    isError,
+    errorStatus,
+    createCampaign,
+    updateCampaign,
+    updateCampaignQuestions,
+    reload,
+  } = useEmployerCampaign(id);
+  const mode = id ? 'edit' : 'create';
+  const isEditing = mode === 'edit';
 
-  const handleSaveDraft = async (input: CampaignDraftInput) => {
-    const saved = await saveDraft(input, id);
-    if (!id) {
-      navigate(`/employer/campaigns/${saved.id}/edit`, { replace: true });
-    }
-    return saved;
+  const handleCreateCampaign = async (input: CampaignCreateRequest) => {
+    return createCampaign(input);
   };
 
-  const handlePublish = async (input: CampaignDraftInput) => {
-    const saved = await saveDraft(input, id);
-    const result = await publish(saved.id);
-    if (result.warnings.length > 0) {
-      throw new Error(
-        result.warnings
-          .map((warning) => t(`employer.campaigns.detail.warning.${warning}`))
-          .join(' · '),
-      );
-    }
-    navigate(`/employer/campaigns/${saved.id}`);
-    return result.campaign;
+  const handleUpdateCampaign = async (campaignId: string, payload: CampaignUpdateRequest) => {
+    return updateCampaign(campaignId, payload);
+  };
+
+  const handleUpdateQuestions = async (
+    campaignId: string,
+    questions: CampaignCreateQuestionRequest[],
+  ) => {
+    return updateCampaignQuestions(campaignId, questions);
+  };
+
+  const goToDetail = (campaignId: string) => {
+    navigate(`/employer/campaigns/${campaignId}`, { replace: true });
   };
 
   if (isLoading && isEditing) {
@@ -42,12 +54,58 @@ export function CampaignWizardPage() {
     );
   }
 
+  if (isEditing && isError && !campaign) {
+    const notFound = errorStatus === 404 || errorStatus === 400;
+    return (
+      <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-2xl flex-col justify-center gap-4 p-8">
+        <Alert variant="error">
+          <AlertTitle>
+            {notFound
+              ? t('employer.campaigns.detail.notFoundTitle')
+              : t('employer.campaigns.detail.errorTitle')}
+          </AlertTitle>
+          <AlertDescription>
+            {notFound
+              ? t('employer.campaigns.detail.notFoundDescription')
+              : t('employer.campaigns.detail.errorDescription')}
+          </AlertDescription>
+        </Alert>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn-secondary" onClick={() => reload()}>
+            {t('employer.campaigns.detail.retry')}
+          </button>
+          <Link to="/employer/campaigns" className="btn-primary">
+            {t('employer.campaigns.detail.back')}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEditing && campaign && campaign.status !== 'draft') {
+    return (
+      <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-2xl flex-col justify-center gap-4 p-8">
+        <Alert variant="warning">
+          <AlertTitle>{t('employer.campaigns.wizard.notDraftEditable')}</AlertTitle>
+          <AlertDescription>
+            {t('employer.campaigns.wizard.notDraftEditableDescription')}
+          </AlertDescription>
+        </Alert>
+        <Link to={`/employer/campaigns/${campaign.id}`} className="btn-primary inline-flex w-fit">
+          {t('employer.campaigns.detail.back')}
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <CampaignWizardForm
       campaign={campaign}
-      isEditing={isEditing}
-      onSaveDraft={handleSaveDraft}
-      onPublish={handlePublish}
+      mode={mode}
+      onCreateCampaign={handleCreateCampaign}
+      onUpdateCampaign={handleUpdateCampaign}
+      onUpdateQuestions={handleUpdateQuestions}
+      onAfterSubmit={(next) => goToDetail(next.id)}
     />
   );
 }

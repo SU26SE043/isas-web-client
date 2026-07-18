@@ -1,155 +1,127 @@
-import { Scale, Sparkles, Upload } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ClipboardList, Plus } from 'lucide-react';
 import { SectionPanel } from '@/components/ui/section-panel';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
-import type { RubricSource } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
+import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionCard';
+import { CampaignRubricTotalWeight } from './criteria/CampaignRubricTotalWeight';
 
 interface CampaignCriteriaStepV2Props {
-  rubricSource: RubricSource;
   rubric: RubricCriterion[];
-  totalWeight: number;
-  rubricSavedAt: string | null;
+  contextLabel: string;
   error?: string | null;
-  onSelectSource: (source: 'ai' | 'upload') => void;
-  onGenerateAi: () => void;
   onChangeRubric: (rubric: RubricCriterion[]) => void;
-  onSaveRubric: () => void;
+  onReset: () => void;
   onBack: () => void;
   onNext: () => void;
-  onSaveDraft: () => void;
   isSaving?: boolean;
 }
 
+function createEmptyCriterion(): RubricCriterion {
+  return {
+    id: `new-${crypto.randomUUID().slice(0, 8)}`,
+    name: '',
+    description: '',
+    weight: 0,
+    maxScore: 10,
+  };
+}
+
 export function CampaignCriteriaStepV2({
-  rubricSource,
   rubric,
-  totalWeight,
-  rubricSavedAt,
+  contextLabel,
   error,
-  onSelectSource,
-  onGenerateAi,
   onChangeRubric,
-  onSaveRubric,
+  onReset,
   onBack,
   onNext,
-  onSaveDraft,
   isSaving,
 }: CampaignCriteriaStepV2Props) {
   const { t } = useLanguage();
-  const weightOk = totalWeight === 100;
+  const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
+  const totalMaxScore = rubric.reduce((sum, item) => sum + Number(item.maxScore || 0), 0);
+  const weightValid = Math.round(totalWeight * 10) / 10 === 100;
+  const maxScoreValid = rubric.every(
+    (item) => Number.isFinite(item.maxScore) && item.maxScore >= 1 && item.maxScore <= 10,
+  );
+  const hasEmptyName = rubric.some((item) => !item.name.trim());
+  const canNext =
+    weightValid &&
+    maxScoreValid &&
+    rubric.length > 0 &&
+    !hasEmptyName &&
+    !isSaving;
 
-  const patchWeight = (index: number, weight: number) => {
+  const updateCriterion = (index: number, patch: Partial<RubricCriterion>) => {
     onChangeRubric(
-      rubric.map((item, i) => (i === index ? { ...item, weight } : item)),
+      rubric.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
     );
   };
 
   return (
     <SectionPanel
-      icon={<Scale className="size-4" aria-hidden />}
+      icon={<ClipboardList className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.criteria')}
       description={t('employer.campaigns.wizard.steps.criteriaDesc')}
+      headerAside={
+        <CampaignRubricTotalWeight
+          totalWeight={totalWeight}
+          totalMaxScore={totalMaxScore}
+          weightValid={weightValid}
+          maxScoreValid={maxScoreValid}
+          resetDisabled={Boolean(isSaving)}
+          onReset={onReset}
+        />
+      }
       footer={
         <CampaignWizardNav
           onBack={onBack}
           onNext={onNext}
-          onSaveDraft={onSaveDraft}
           isSaving={isSaving}
+          nextDisabled={!canNext}
+          backDisabled={Boolean(isSaving)}
         />
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         {error ? <FieldError message={error} /> : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            className={cn(
-              'flex flex-col gap-2 rounded-lg border border-satin bg-surface-overlay p-4 text-left transition',
-              rubricSource === 'ai' && 'border-foreground/40 bg-white/[0.06]',
-            )}
-            onClick={() => {
-              onSelectSource('ai');
-              onGenerateAi();
-            }}
-          >
-            <Sparkles className="size-5 text-foreground" aria-hidden />
-            <span className="font-medium text-foreground">
-              {t('employer.campaigns.wizard.criteriaAi')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {t('employer.campaigns.wizard.criteriaAiDesc')}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className={cn(
-              'flex flex-col gap-2 rounded-lg border border-satin bg-surface-overlay p-4 text-left transition',
-              rubricSource === 'upload' && 'border-foreground/40 bg-white/[0.06]',
-            )}
-            onClick={() => onSelectSource('upload')}
-          >
-            <Upload className="size-5 text-foreground" aria-hidden />
-            <span className="font-medium text-foreground">
-              {t('employer.campaigns.wizard.criteriaUpload')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {t('employer.campaigns.wizard.criteriaUploadDesc')}
-            </span>
-          </button>
-        </div>
-
-        <div className="rounded-lg border border-satin bg-surface-overlay p-4">
-          <p className={cn('text-sm font-semibold', weightOk ? 'text-success' : 'text-error')}>
-            {t('employer.campaigns.form.weightTotal')}: {totalWeight}%
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t('employer.campaigns.form.weightHelp')}
-          </p>
-          {rubricSavedAt ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t('employer.campaigns.wizard.criteriaSavedAt').replace(
-                '{time}',
-                new Date(rubricSavedAt).toLocaleString(),
-              )}
-            </p>
-          ) : null}
+        <div className="mb-3 hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] gap-3 px-1 text-caption text-muted-foreground lg:grid">
+          <span>{t('employer.campaigns.wizard.rubric.colCriterion')}</span>
+          <span>{t('employer.campaigns.wizard.rubric.colDescription')}</span>
+          <span>{t('employer.campaigns.wizard.rubric.colWeight')}</span>
+          <span>{t('employer.campaigns.wizard.rubric.colMaxScore')}</span>
+          <span className="sr-only">{t('employer.campaigns.wizard.rubric.remove')}</span>
         </div>
 
         <div className="space-y-3">
           {rubric.map((criterion, index) => (
-            <div
+            <CampaignRubricCriterionCard
               key={criterion.id}
-              className="grid gap-3 rounded-lg border border-satin bg-surface-overlay p-4 md:grid-cols-[1fr_120px]"
-            >
-              <div>
-                <p className="font-medium text-foreground">{criterion.name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{criterion.description}</p>
-              </div>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={criterion.weight}
-                onChange={(e) => patchWeight(index, Number(e.target.value))}
-                aria-label={`${criterion.name} weight`}
-              />
-            </div>
+              criterion={criterion}
+              index={index}
+              contextLabel={contextLabel}
+              disabled={Boolean(isSaving)}
+              onChange={(patch) => updateCriterion(index, patch)}
+              onRemove={() => onChangeRubric(rubric.filter((item) => item.id !== criterion.id))}
+            />
           ))}
         </div>
 
         <button
           type="button"
-          className="btn-secondary"
-          disabled={!weightOk}
-          onClick={onSaveRubric}
+          disabled={Boolean(isSaving)}
+          onClick={() => onChangeRubric([...rubric, createEmptyCriterion()])}
+          className="mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin bg-transparent px-4 py-5 text-center transition-[background-color,border-color] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {t('employer.campaigns.wizard.saveCriteria')}
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+            <Plus className="size-4" aria-hidden />
+            {t('employer.campaigns.wizard.rubric.add')}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {t('employer.campaigns.wizard.rubric.addHint')}
+          </span>
         </button>
       </div>
     </SectionPanel>

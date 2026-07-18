@@ -20,8 +20,6 @@ interface CampaignWizardShellProps {
   isEditing?: boolean;
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
-  onSaveDraft?: () => void;
-  isSaving?: boolean;
   children: React.ReactNode;
 }
 
@@ -36,6 +34,7 @@ function autosaveLabel(
   t: (key: string) => string,
   status: AutosaveStatus | undefined,
   lastSavedAt?: string,
+  isEditing?: boolean,
 ): string {
   if (status === 'saving') return t('employer.campaigns.wizard.autosave.saving');
   if (status === 'failed') return t('employer.campaigns.wizard.autosave.failed');
@@ -46,7 +45,14 @@ function autosaveLabel(
     });
     return t('employer.campaigns.wizard.autosave.savedAt').replace('{time}', time);
   }
-  return t('employer.campaigns.wizard.autosave.idle');
+  if (status === 'dirty') {
+    return isEditing
+      ? t('employer.campaigns.wizard.autosave.dirty')
+      : t('employer.campaigns.wizard.autosave.localOnly');
+  }
+  return isEditing
+    ? t('employer.campaigns.wizard.autosave.idle')
+    : t('employer.campaigns.wizard.autosave.localOnly');
 }
 
 export function CampaignWizardShell({
@@ -57,8 +63,6 @@ export function CampaignWizardShell({
   isEditing = false,
   autosaveStatus = 'idle',
   lastSavedAt,
-  onSaveDraft,
-  isSaving = false,
   children,
 }: CampaignWizardShellProps) {
   const { t } = useLanguage();
@@ -80,7 +84,7 @@ export function CampaignWizardShell({
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {autosaveLabel(t, autosaveStatus, lastSavedAt)}
+              {autosaveLabel(t, autosaveStatus, lastSavedAt, isEditing)}
               {' · '}
               {t('employer.campaigns.wizard.progress')
                 .replace('{percent}', String(Math.round(progressPercent)))
@@ -88,27 +92,13 @@ export function CampaignWizardShell({
                 .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {onSaveDraft ? (
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={isSaving}
-                onClick={onSaveDraft}
-              >
-                {isSaving
-                  ? t('employer.campaigns.wizard.saving')
-                  : t('employer.campaigns.wizard.save')}
-              </button>
-            ) : null}
-            <Link
-              to="/employer/campaigns"
-              className="btn-ghost inline-flex size-9 items-center justify-center"
-              aria-label={t('employer.campaigns.wizard.close')}
-            >
-              <X className="size-4" aria-hidden />
-            </Link>
-          </div>
+          <Link
+            to="/employer/campaigns"
+            className="btn-ghost inline-flex size-9 items-center justify-center"
+            aria-label={t('employer.campaigns.wizard.close')}
+          >
+            <X className="size-4" aria-hidden />
+          </Link>
         </div>
       </header>
 

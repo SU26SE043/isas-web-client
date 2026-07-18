@@ -1,48 +1,105 @@
-import { useRef } from 'react';
-import { FileText, Upload } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { SectionPanel } from '@/components/ui/section-panel';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import type { JdAnalysisState } from '../../types/campaignWizard.types';
+import type { JobDescriptionState, JobDescriptionMethod } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
+import {
+  JobDescriptionFilePanel,
+  validateCampaignJdPdf,
+} from './jd/JobDescriptionFilePanel';
+import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
+import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
-  jd: JdAnalysisState;
+  jd: JobDescriptionState;
   error?: string | null;
-  onUpload: (file: File) => void;
-  onChange: (patch: Partial<JdAnalysisState>) => void;
-  onRetryAnalyze: () => void;
-  onManualEntry: () => void;
+  onChange: (patch: Partial<JobDescriptionState>) => void;
+  onRetryUpload?: () => void;
   onBack: () => void;
   onNext: () => void;
-  onSaveDraft: () => void;
   isSaving?: boolean;
 }
-
-const ACCEPT = '.pdf,.doc,.docx,.txt,application/pdf,text/plain';
 
 export function CampaignJdStep({
   jd,
   error,
-  onUpload,
   onChange,
-  onRetryAnalyze,
-  onManualEntry,
+  onRetryUpload,
   onBack,
   onNext,
-  onSaveDraft,
   isSaving,
 }: CampaignJdStepProps) {
   const { t } = useLanguage();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const busy = jd.status === 'uploading' || jd.status === 'analyzing';
+  const [pendingMethod, setPendingMethod] = useState<JobDescriptionMethod | null>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const localError =
+    jd.inputMethod === 'file'
+      ? jd.fileError
+        ? t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
+        : null
+      : null;
 
-  const onFile = (file: File | undefined) => {
-    if (!file || busy) return;
-    onUpload(file);
+  const requestMethodChange = (next: JobDescriptionMethod) => {
+    if (next === jd.inputMethod) return;
+    const hasFile = Boolean(jd.jdFile || jd.fileName);
+    const hasText = Boolean(jd.jdText.trim());
+    if ((jd.inputMethod === 'file' && hasFile) || (jd.inputMethod === 'text' && hasText)) {
+      setPendingMethod(next);
+      return;
+    }
+    onChange({ inputMethod: next });
+  };
+
+  const confirmMethodChange = () => {
+    if (!pendingMethod) return;
+    onChange({ inputMethod: pendingMethod });
+    setPendingMethod(null);
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    if (!file) {
+      onChange({
+        jdFile: null,
+        fileName: null,
+        fileSize: null,
+        fileStatus: 'idle',
+        fileError: null,
+        uploadProgress: null,
+      });
+      return;
+    }
+    const code = validateCampaignJdPdf(file);
+    if (code) {
+      onChange({
+        jdFile: null,
+        fileName: file.name,
+        fileSize: file.size,
+        fileStatus: 'failed',
+        fileError: code,
+        uploadProgress: null,
+      });
+      return;
+    }
+    onChange({
+      jdFile: file,
+      fileName: file.name,
+      fileSize: file.size,
+      fileStatus: 'selected',
+      fileError: null,
+      uploadProgress: null,
+      inputMethod: 'file',
+    });
   };
 
   return (
@@ -54,141 +111,111 @@ export function CampaignJdStep({
         <CampaignWizardNav
           onBack={onBack}
           onNext={onNext}
-          onSaveDraft={onSaveDraft}
           isSaving={isSaving}
+          nextDisabled={isSaving || jd.fileStatus === 'uploading'}
+          backDisabled={isSaving || jd.fileStatus === 'uploading'}
         />
       }
     >
-      <div className="space-y-5">
+      <div className="mx-auto w-full max-w-[960px] space-y-5">
         {error ? <FieldError message={error} /> : null}
 
-        <div
-          className={cn(
-            'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-satin bg-surface-overlay/60 px-6 py-10 text-center',
-            busy && 'opacity-70',
-          )}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            onFile(e.dataTransfer.files?.[0]);
-          }}
-        >
-          <Upload className="size-6 text-muted-foreground" aria-hidden />
-          <p className="text-sm text-foreground">{t('employer.campaigns.wizard.jdDropzone')}</p>
-          <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.jdFormats')}</p>
-          <input
-            ref={inputRef}
-            type="file"
-            accept={ACCEPT}
-            className="sr-only"
-            onChange={(e) => onFile(e.target.files?.[0])}
+        <JobDescriptionMethodTabs
+          active={jd.inputMethod}
+          fileLabel={t('employer.campaigns.wizard.jdTab.file')}
+          textLabel={t('employer.campaigns.wizard.jdTab.text')}
+          listLabel={t('employer.campaigns.wizard.jdTab.list')}
+          onChange={requestMethodChange}
+          disabled={jd.fileStatus === 'uploading'}
+        />
+
+        {jd.inputMethod === 'file' ? (
+          <JobDescriptionFilePanel
+            file={jd.jdFile}
+            fileName={jd.fileName}
+            fileSize={jd.fileSize}
+            status={jd.fileStatus}
+            progress={jd.uploadProgress}
+            error={localError}
+            dropTitle={t('employer.campaigns.wizard.jdDropzone')}
+            dropSecondary={t('employer.campaigns.wizard.jdDropSecondary')}
+            chooseFileLabel={t('employer.campaigns.wizard.jdBrowse')}
+            changeFileLabel={t('employer.campaigns.wizard.jdReplace')}
+            removeLabel={t('employer.campaigns.wizard.jdRemove')}
+            pendingLabel={t('employer.campaigns.wizard.jdPendingUpload')}
+            uploadingLabel={t('employer.campaigns.wizard.jdUploading')}
+            successLabel={t('employer.campaigns.wizard.jdUploadSuccess')}
+            failureLabel={t('employer.campaigns.wizard.jdUploadFailed')}
+            retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
+            chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
+            supportLabel={t('employer.campaigns.wizard.jdFormats')}
+            onFileSelect={handleFileSelect}
+            onRetry={onRetryUpload}
+            disabled={jd.fileStatus === 'uploading'}
           />
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-          >
-            {t('employer.campaigns.wizard.jdBrowse')}
-          </button>
-          <button type="button" className="btn-ghost text-sm" disabled={busy} onClick={onManualEntry}>
-            {t('employer.campaigns.wizard.jdManual')}
-          </button>
-        </div>
-
-        <div className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm">
-          <p className="font-medium text-foreground">
-            {t(`employer.campaigns.wizard.jdStatus.${jd.status}`)}
-          </p>
-          {jd.fileName ? (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {jd.fileName}
-              {jd.fileSize != null ? ` · ${Math.round(jd.fileSize / 1024)} KB` : ''}
-            </p>
-          ) : null}
-          {jd.status === 'failed' ? (
-            <button type="button" className="btn-secondary mt-3" onClick={onRetryAnalyze}>
-              {t('employer.campaigns.wizard.jdRetry')}
-            </button>
-          ) : null}
-        </div>
-
-        {jd.status === 'ready' || jd.status === 'idle' ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="jd-job-title">{t('employer.campaigns.form.jobTitle')}</Label>
-              <Input
-                id="jd-job-title"
-                value={jd.jobTitle}
-                onChange={(e) => onChange({ jobTitle: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="jd-years">{t('employer.campaigns.form.yearsExperience')}</Label>
-              <Input
-                id="jd-years"
-                value={jd.yearsExperience}
-                onChange={(e) => onChange({ yearsExperience: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="jd-summary">{t('employer.campaigns.form.jdSummary')}</Label>
-              <textarea
-                id="jd-summary"
-                rows={4}
-                className="w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm"
-                value={jd.summary}
-                onChange={(e) => onChange({ summary: e.target.value, status: 'ready' })}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="jd-resp">{t('employer.campaigns.form.responsibilities')}</Label>
-              <textarea
-                id="jd-resp"
-                rows={3}
-                className="w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm"
-                value={jd.responsibilities}
-                onChange={(e) => onChange({ responsibilities: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="jd-req">{t('employer.campaigns.form.requiredQualifications')}</Label>
-              <textarea
-                id="jd-req"
-                rows={3}
-                className="w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm"
-                value={jd.requiredQualifications}
-                onChange={(e) => onChange({ requiredQualifications: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="jd-pref">{t('employer.campaigns.form.preferredQualifications')}</Label>
-              <textarea
-                id="jd-pref"
-                rows={3}
-                className="w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm"
-                value={jd.preferredQualifications}
-                onChange={(e) => onChange({ preferredQualifications: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="jd-skills">{t('employer.campaigns.form.technicalSkills')}</Label>
-              <Input
-                id="jd-skills"
-                value={jd.technicalSkills.join(', ')}
-                onChange={(e) =>
-                  onChange({
-                    technicalSkills: e.target.value
-                      .split(',')
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            </div>
-          </div>
-        ) : null}
+        ) : (
+          <JobDescriptionTextEditor
+            value={jd.jdText}
+            onChange={(jdText) => onChange({ jdText, inputMethod: 'text' })}
+            label={t('employer.campaigns.wizard.jdTextLabel')}
+            placeholder={t('employer.campaigns.wizard.jdTextPlaceholder')}
+            helper={t('employer.campaigns.wizard.jdTextHelp')}
+            clearLabel={t('employer.campaigns.wizard.jdTextClear')}
+            charsLabel={t('employer.campaigns.wizard.jdCharCount')}
+            wordsLabel={t('employer.campaigns.wizard.jdWordCount')}
+            onClear={() => {
+              if (jd.jdText.trim()) setClearConfirmOpen(true);
+              else onChange({ jdText: '' });
+            }}
+          />
+        )}
       </div>
+
+      <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('employer.campaigns.wizard.jdSwitchTitle')}</DialogTitle>
+            <DialogDescription>
+              {pendingMethod === 'text'
+                ? t('employer.campaigns.wizard.jdSwitchToText')
+                : t('employer.campaigns.wizard.jdSwitchToFile')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingMethod(null)}>
+              {t('employer.campaigns.wizard.jdSwitchCancel')}
+            </Button>
+            <Button type="button" onClick={confirmMethodChange}>
+              {pendingMethod === 'text'
+                ? t('employer.campaigns.wizard.jdSwitchConfirmText')
+                : t('employer.campaigns.wizard.jdSwitchConfirmFile')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('employer.campaigns.wizard.jdClearTitle')}</DialogTitle>
+            <DialogDescription>{t('employer.campaigns.wizard.jdClearDesc')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setClearConfirmOpen(false)}>
+              {t('employer.campaigns.wizard.jdSwitchCancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                onChange({ jdText: '' });
+                setClearConfirmOpen(false);
+              }}
+            >
+              {t('employer.campaigns.wizard.jdTextClear')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SectionPanel>
   );
 }

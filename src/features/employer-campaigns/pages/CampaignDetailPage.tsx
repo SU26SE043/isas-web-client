@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
@@ -9,17 +10,41 @@ import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 
 export function CampaignDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, errorStatus, reload, publish, invite } =
+  const { campaign, isLoading, isError, errorStatus, reload, publish, deleteCampaign, invite } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
 
   const handlePublish = async () => {
     if (!campaign) return;
-    const result = await publish(campaign.id);
-    setWarnings(result.warnings);
-    setPublished(result.warnings.length === 0);
+    try {
+      const result = await publish(campaign.id);
+      setWarnings(result.warnings);
+      setPublished(result.warnings.length === 0);
+      if (result.warnings.length === 0) {
+        toast.success(t('employer.campaigns.detail.publishSuccess'));
+        reload();
+      }
+    } catch {
+      setPublished(false);
+      setWarnings([]);
+      toast.error(t('employer.campaigns.wizard.publishFailed'));
+      throw new Error('PUBLISH_FAILED');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!campaign) return;
+    try {
+      await deleteCampaign(campaign.id);
+      toast.success(t('employer.campaigns.detail.deleteSuccess'));
+      navigate('/employer/campaigns', { replace: true });
+    } catch {
+      toast.error(t('employer.campaigns.detail.deleteFailed'));
+      throw new Error('DELETE_FAILED');
+    }
   };
 
   if (isLoading) {
@@ -50,7 +75,7 @@ export function CampaignDetailPage() {
     );
   }
 
-  if ((isError && errorStatus === 404) || (!isError && !campaign)) {
+  if ((isError && (errorStatus === 404 || errorStatus === 400)) || (!isError && !campaign)) {
     return (
       <DetailShell>
         <EmptyState
@@ -92,6 +117,7 @@ export function CampaignDetailPage() {
       published={published}
       warnings={warnings}
       onPublish={handlePublish}
+      onDelete={handleDelete}
       onInvite={(emails) => invite(campaign.id, emails)}
     />
   );

@@ -1,94 +1,115 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
-import { DEFAULT_PROCTORING, DEFAULT_RUBRIC, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import { DEFAULT_RUBRIC, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
 import type {
-  CampaignDraftInput,
-  CampaignLocale,
+  CampaignQuestion,
   EmployerCampaign,
-  EmployerCampaignMode,
   RubricCriterion,
 } from '../types/campaignManagement.types';
+import type { CampaignCreateRequest, CampaignUpdateRequest } from '../types/campaign.api.types';
+import type { CampaignCreateQuestionRequest } from '../types/campaign.api.types';
+import {
+  buildCampaignCreateRequest,
+  buildCampaignUpdateRequest,
+  mapQuestionsToApiRequest,
+  resolveDomainOption,
+} from '../utils/buildCampaignCreateRequest';
+import {
+  validateAllCampaignWizardSteps,
+  validateCampaignWizardStep,
+} from '../utils/validateCampaignWizard';
 import type {
   CampaignInfoState,
   CampaignWizardPersistedState,
-  CandidateInviteMethod,
-  InvitationEmailState,
-  JdAnalysisState,
+  JobDescriptionState,
   QuestionSource,
-  RankedCandidate,
   RubricSource,
 } from '../types/campaignWizard.types';
 import {
-  createDefaultInvitationEmail,
   createEmptyJdState,
   decimalWeightsToPercent,
-  percentWeightsToDecimal,
 } from '../types/campaignWizard.types';
 import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
 
+export type CampaignFormMode = 'create' | 'edit';
+
+function pad2(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+/** Format a Date for `<input type="datetime-local">` in the browser's local timezone. */
+function toDatetimeLocalValue(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+function parseCampaignDate(value?: string | null): Date | null {
+  if (!value?.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
-  const today = new Date();
-  const end = new Date(today);
-  end.setDate(end.getDate() + 30);
+  const start = parseCampaignDate(campaign?.startsAt) ?? (() => {
+    const next = new Date();
+    next.setMinutes(next.getMinutes() + 60);
+    return next;
+  })();
+  const end =
+    parseCampaignDate(campaign?.deadline) ??
+    (() => {
+      const next = new Date(start);
+      next.setDate(next.getDate() + 30);
+      return next;
+    })();
+
   return {
     title: campaign?.title ?? '',
-    domain: '',
-    customDomain: '',
+    domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
     targetLevel: '',
-    jobTitle: '',
-    maxCandidates: campaign?.capacity ?? null,
-    timeLimitMinutes: campaign?.durationMinutes ?? 60,
-    antiCheatEnabled: true,
-    startsAt: today.toISOString().slice(0, 16),
-    expiresAt: (campaign?.deadline
-      ? new Date(campaign.deadline)
-      : end
-    )
-      .toISOString()
-      .slice(0, 16),
+    maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
+    timeLimitMinutes: campaign?.durationMinutes || 60,
+    passScorePct: campaign?.passScorePct ?? null,
+    antiCheatEnabled: campaign?.antiCheatEnabled ?? true,
+    startsAt: toDatetimeLocalValue(start),
+    expiresAt: toDatetimeLocalValue(end),
     timezone: 'Asia/Ho_Chi_Minh',
-    description: '',
   };
 }
 
-function buildInitialState(campaign?: EmployerCampaign | null): CampaignWizardPersistedState {
-  const info = defaultInfo(campaign);
-  const rubric = decimalWeightsToPercent(
+function buildInitialState(
+  campaign?: EmployerCampaign | null,
+  mode: CampaignFormMode = 'create',
+): CampaignWizardPersistedState {
+  const hasJdText = Boolean(campaign?.jobDescription?.trim());
+  const initialRubric = decimalWeightsToPercent(
     campaign?.rubric?.length ? campaign.rubric : DEFAULT_RUBRIC,
   );
   return {
-    info,
+    info: defaultInfo(campaign),
     jd: {
       ...createEmptyJdState(),
-      summary: campaign?.jobDescription ?? '',
-      jdText: campaign?.jobDescription ?? '',
-      status: campaign?.jobDescription ? 'ready' : 'idle',
-      source: campaign?.jobDescription ? 'paste' : null,
+      ...(hasJdText
+        ? {
+            inputMethod: 'text' as const,
+            jdText: campaign?.jobDescription ?? '',
+            fileStatus: 'uploaded' as const,
+          }
+        : {}),
     },
-    rubricSource: campaign?.rubric?.length ? 'ai' : null,
-    rubric,
-    rubricSavedAt: null,
+    rubricSource: campaign?.rubric?.length ? 'manual' : 'ai',
+    rubric: initialRubric,
+    rubricSavedAt: campaign?.rubric?.length ? new Date().toISOString() : null,
     questionSource: campaign?.questions?.length ? 'ai' : null,
     questionCount: 5,
     questions: campaign?.questions?.length ? campaign.questions : [],
-    candidateMethod: null,
-    candidateEmails: campaign?.invitedEmails ?? [],
-    rankedCandidates: [],
-    matchThreshold: 70,
-    magicLink: {
-      url: '',
-      campaignCode: '',
-      expiresAt: '',
-      status: 'idle',
-      candidateCount: 0,
-    },
-    invitationEmail: createDefaultInvitationEmail(info.title),
     currentStep: 0,
-    completedSteps: [],
+    completedSteps: mode === 'edit' ? [0, 1, 2, 3] : [],
     errorSteps: [],
     draftId: campaign?.id,
     autosaveStatus: 'idle',
-    publishConfirmed: false,
+    lastSavedAt: campaign?.updatedAt,
   };
 }
 
@@ -100,52 +121,150 @@ function clearError(errorSteps: number[], step: number) {
   return errorSteps.filter((item) => item !== step);
 }
 
-interface UseCampaignWizardArgs {
-  campaign?: EmployerCampaign | null;
-  onSaveDraft: (input: CampaignDraftInput) => Promise<EmployerCampaign>;
-  onPublish: (input: CampaignDraftInput) => Promise<EmployerCampaign>;
+function mapSubmitError(
+  error: unknown,
+  t: (key: string) => string,
+  kind: 'create' | 'update' | 'questions',
+): { message: string; step: number | null } {
+  const status = getApiStatusCode(error);
+  const message = getApiErrorMessage(error, '');
+  const lower = message.toLowerCase();
+
+  // Prefer the backend plain-text / message body when present.
+  const preferApiMessage = Boolean(message.trim());
+
+  if (status === 401) return { message: t('employer.campaigns.wizard.sessionExpired'), step: null };
+  if (status === 403) {
+    return {
+      message:
+        kind === 'create'
+          ? t('employer.campaigns.wizard.forbidden')
+          : t('employer.campaigns.wizard.updateForbidden'),
+      step: null,
+    };
+  }
+  if (status === 404) {
+    return { message: t('employer.campaigns.wizard.campaignNotFound'), step: null };
+  }
+  if (status === 409) {
+    return { message: t('employer.campaigns.wizard.notDraftEditable'), step: null };
+  }
+  if (
+    status === 400 &&
+    (lower.includes('question') || lower.includes('câu hỏi') || kind === 'questions')
+  ) {
+    return {
+      message: preferApiMessage ? message : t('employer.campaigns.wizard.questionsRequired'),
+      step: 3,
+    };
+  }
+  if (
+    status === 400 &&
+    (lower.includes('date') ||
+      lower.includes('start') ||
+      lower.includes('expir') ||
+      lower.includes('past'))
+  ) {
+    return {
+      message: preferApiMessage ? message : t('employer.campaigns.wizard.dateRangeInvalid'),
+      step: 0,
+    };
+  }
+  if (
+    status === 400 &&
+    (lower.includes('criteria') ||
+      lower.includes('weight') ||
+      lower.includes('maxscore') ||
+      lower.includes('tiêu chí'))
+  ) {
+    return {
+      message: preferApiMessage ? message : t('employer.campaigns.wizard.criteriaInvalid'),
+      step: 2,
+    };
+  }
+  if (status === 500 || status === 502 || status === 503) {
+    return { message: t('employer.campaigns.wizard.saveFailedRetry'), step: null };
+  }
+  if (preferApiMessage) return { message, step: null };
+  return {
+    message:
+      kind === 'create'
+        ? t('employer.campaigns.wizard.createFailed')
+        : t('employer.campaigns.wizard.saveFailedRetry'),
+    step: null,
+  };
 }
 
-export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampaignWizardArgs) {
-  const { t } = useLanguage();
-  const [state, setState] = useState<CampaignWizardPersistedState>(() => buildInitialState(campaign));
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const [stepError, setStepError] = useState<string | null>(null);
+interface UseCampaignWizardArgs {
+  campaign?: EmployerCampaign | null;
+  mode: CampaignFormMode;
+  onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
+  onUpdateCampaign: (campaignId: string, payload: CampaignUpdateRequest) => Promise<EmployerCampaign>;
+  onUpdateQuestions: (
+    campaignId: string,
+    questions: CampaignCreateQuestionRequest[],
+  ) => Promise<EmployerCampaign>;
+  onAfterSubmit: (campaign: EmployerCampaign) => void;
+}
 
-  const totalWeightPercent = useMemo(
+export function useCampaignWizard({
+  campaign,
+  mode,
+  onCreateCampaign,
+  onUpdateCampaign,
+  onUpdateQuestions,
+  onAfterSubmit,
+}: UseCampaignWizardArgs) {
+  const { t } = useLanguage();
+  const [state, setState] = useState<CampaignWizardPersistedState>(() =>
+    buildInitialState(campaign, mode),
+  );
+  const [isSavingStep, setIsSavingStep] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [metadataSaved, setMetadataSaved] = useState(false);
+  const [questionsSaved, setQuestionsSaved] = useState(false);
+  const requestLockRef = useRef(false);
+  const hydratedIdRef = useRef<string | null>(campaign?.id ?? null);
+
+  useEffect(() => {
+    if (mode !== 'edit' || !campaign?.id) return;
+    if (hydratedIdRef.current === campaign.id) return;
+    hydratedIdRef.current = campaign.id;
+    setState(buildInitialState(campaign, 'edit'));
+    setMetadataSaved(false);
+    setQuestionsSaved(false);
+  }, [campaign, mode]);
+
+  const totalWeight = useMemo(
     () => state.rubric.reduce((sum, item) => sum + Number(item.weight), 0),
     [state.rubric],
   );
 
-  const selectedCandidates = useMemo(
-    () => state.rankedCandidates.filter((item) => item.selected),
-    [state.rankedCandidates],
-  );
+  const domainLabel = useMemo(() => {
+    if (!state.info.domain) return '';
+    return t(`employer.campaigns.form.domain.${state.info.domain}`);
+  }, [state.info.domain, t]);
 
-  const invitedEmails = useMemo(() => {
-    if (state.candidateMethod === 'cv-ranking') {
-      return selectedCandidates.map((item) => item.email);
-    }
-    return state.candidateEmails;
-  }, [selectedCandidates, state.candidateEmails, state.candidateMethod]);
+  const campaignId = state.draftId ?? campaign?.id ?? null;
+  const campaignStatus = campaign?.status ?? null;
+  const isDraftEditable = mode === 'create' || campaignStatus === 'draft';
 
   const patchInfo = useCallback((patch: Partial<CampaignInfoState>) => {
-    setState((prev) => ({ ...prev, info: { ...prev.info, ...patch }, autosaveStatus: 'idle' }));
+    setState((prev) => ({ ...prev, info: { ...prev.info, ...patch }, autosaveStatus: 'dirty' }));
   }, []);
 
-  const patchJd = useCallback((patch: Partial<JdAnalysisState>) => {
-    setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'idle' }));
+  const patchJd = useCallback((patch: Partial<JobDescriptionState>) => {
+    setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'dirty' }));
   }, []);
 
   const setRubricSource = useCallback((rubricSource: RubricSource) => {
-    setState((prev) => ({ ...prev, rubricSource }));
+    setState((prev) => ({ ...prev, rubricSource, autosaveStatus: 'dirty' }));
   }, []);
 
   const setRubric = useCallback((rubric: RubricCriterion[]) => {
-    setState((prev) => ({ ...prev, rubric }));
+    setState((prev) => ({ ...prev, rubric, autosaveStatus: 'dirty' }));
   }, []);
 
   const saveRubric = useCallback(() => {
@@ -153,7 +272,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
   }, []);
 
   const setQuestionSource = useCallback((questionSource: QuestionSource) => {
-    setState((prev) => ({ ...prev, questionSource }));
+    setState((prev) => ({ ...prev, questionSource, autosaveStatus: 'dirty' }));
   }, []);
 
   const setQuestionCount = useCallback((questionCount: number) => {
@@ -161,31 +280,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
   }, []);
 
   const setQuestions = useCallback((questions: CampaignWizardPersistedState['questions']) => {
-    setState((prev) => ({ ...prev, questions }));
-  }, []);
-
-  const setCandidateMethod = useCallback((candidateMethod: CandidateInviteMethod) => {
-    setState((prev) => ({ ...prev, candidateMethod }));
-  }, []);
-
-  const setCandidateEmails = useCallback((candidateEmails: string[]) => {
-    setState((prev) => ({ ...prev, candidateEmails }));
-  }, []);
-
-  const setRankedCandidates = useCallback((rankedCandidates: RankedCandidate[]) => {
-    setState((prev) => ({ ...prev, rankedCandidates }));
-  }, []);
-
-  const setMatchThreshold = useCallback((matchThreshold: number) => {
-    setState((prev) => ({ ...prev, matchThreshold }));
-  }, []);
-
-  const setInvitationEmail = useCallback((invitationEmail: InvitationEmailState) => {
-    setState((prev) => ({ ...prev, invitationEmail }));
-  }, []);
-
-  const setPublishConfirmed = useCallback((publishConfirmed: boolean) => {
-    setState((prev) => ({ ...prev, publishConfirmed }));
+    setState((prev) => ({ ...prev, questions, autosaveStatus: 'dirty' }));
   }, []);
 
   const goToStep = useCallback((step: number) => {
@@ -196,193 +291,257 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setStepError(null);
   }, []);
 
-  const validateStep = useCallback(
-    (step: number): string | null => {
-      const { info, jd, questions, candidateMethod, magicLink, invitationEmail, publishConfirmed } =
-        state;
-      if (step === 0) {
-        if (!info.title.trim()) return t('employer.campaigns.form.required');
-        if (!info.domain) return t('employer.campaigns.form.required');
-        if (!info.targetLevel) return t('employer.campaigns.form.required');
-        if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
-          return t('employer.campaigns.form.required');
-        }
-        if (!info.startsAt || !info.expiresAt) return t('employer.campaigns.form.required');
-        if (info.expiresAt <= info.startsAt) return t('employer.campaigns.wizard.dateRangeInvalid');
-        return null;
-      }
-      if (step === 1) {
-        const hasContent =
-          jd.status === 'ready' || jd.summary.trim() || jd.jdText.trim() || jd.responsibilities.trim();
-        if (!hasContent) return t('employer.campaigns.wizard.jdRequired');
-        return null;
-      }
-      if (step === 2) {
-        if (state.rubric.length === 0) return t('employer.campaigns.wizard.criteriaRequired');
-        if (Math.round(totalWeightPercent) !== 100) return t('employer.campaigns.form.weightHelp');
-        if (!state.rubricSavedAt) return t('employer.campaigns.wizard.rubricSaveRequired');
-        return null;
-      }
-      if (step === 3) {
-        if (questions.length === 0) return t('employer.campaigns.form.noQuestions');
-        if (questions.some((q) => !q.prompt.trim())) return t('employer.campaigns.form.required');
-        return null;
-      }
-      if (step === 4) {
-        if (!candidateMethod) return t('employer.campaigns.wizard.candidateMethodRequired');
-        if (candidateMethod === 'emails' && state.candidateEmails.length === 0) {
-          return t('employer.campaigns.wizard.candidatesRequired');
-        }
-        return null;
-      }
-      if (step === 5) {
-        if (candidateMethod === 'cv-ranking' && selectedCandidates.length === 0) {
-          return t('employer.campaigns.wizard.candidatesRequired');
-        }
-        return null;
-      }
-      if (step === 6) {
-        if (magicLink.status !== 'ready') return t('employer.campaigns.wizard.magicLinkRequired');
-        return null;
-      }
-      if (step === 7) {
-        if (!invitationEmail.subject.trim() || !invitationEmail.body.trim()) {
-          return t('employer.campaigns.form.required');
-        }
-        return null;
-      }
-      if (step === 9 && !publishConfirmed) {
-        return t('employer.campaigns.wizard.publishConfirmRequired');
-      }
-      return null;
-    },
-    [selectedCandidates.length, state, t, totalWeightPercent],
+  const snapshot = useCallback(
+    () => ({
+      info: state.info,
+      jd: state.jd,
+      rubric: state.rubric,
+      questions: state.questions,
+      questionSource: state.questionSource,
+      criteriaText: null as string | null,
+    }),
+    [state.info, state.jd, state.questionSource, state.questions, state.rubric],
   );
 
   const goNext = useCallback(() => {
-    const error = validateStep(state.currentStep);
-    if (error) {
-      setStepError(error);
+    if (requestLockRef.current || isSubmitting) return;
+    const step = state.currentStep;
+    const errorKey = validateCampaignWizardStep(state, step, { mode });
+    if (errorKey) {
+      setStepError(t(errorKey));
       setState((prev) => ({
         ...prev,
         errorSteps: Array.from(new Set([...prev.errorSteps, prev.currentStep])),
       }));
       return;
     }
+
     setStepError(null);
-    setState((prev) => {
-      let next = Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1);
-      // Email-list path skips CV ranking screen.
-      if (prev.currentStep === 4 && prev.candidateMethod === 'emails') next = 6;
-      return {
-        ...prev,
-        completedSteps: markCompleted(prev.completedSteps, prev.currentStep),
-        errorSteps: clearError(prev.errorSteps, prev.currentStep),
-        currentStep: next,
-      };
-    });
-  }, [state.currentStep, validateStep]);
+    setActionError(null);
+    setState((prev) => ({
+      ...prev,
+      completedSteps: markCompleted(prev.completedSteps, prev.currentStep),
+      errorSteps: clearError(prev.errorSteps, prev.currentStep),
+      currentStep: Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1),
+      autosaveStatus: 'dirty',
+    }));
+  }, [isSubmitting, mode, state, t]);
 
   const goBack = useCallback(() => {
+    if (requestLockRef.current || isSubmitting || isSavingStep) return;
     setStepError(null);
-    setState((prev) => {
-      let next = Math.max(0, prev.currentStep - 1);
-      if (prev.currentStep === 6 && prev.candidateMethod === 'emails') next = 4;
-      return { ...prev, currentStep: next };
-    });
-  }, []);
+    setState((prev) => ({
+      ...prev,
+      currentStep: Math.max(0, prev.currentStep - 1),
+    }));
+  }, [isSavingStep, isSubmitting]);
 
-  const buildDraftInput = useCallback((): CampaignDraftInput => {
-    const domainLabel = state.info.domain || 'Organization';
-    const capacity =
-      state.info.maxCandidates && state.info.maxCandidates > 0
-        ? state.info.maxCandidates
-        : Math.max(invitedEmails.length || 1, 1);
-    return {
-      title: state.info.title,
-      company: domainLabel,
-      location: state.info.timezone,
-      mode: 'remote',
-      summary: state.jd.summary || state.info.title,
-      jobDescription:
-        state.jd.jdText || state.jd.summary || state.jd.responsibilities || state.info.title,
-      capacity,
-      deadline: state.info.expiresAt,
-      durationMinutes: state.info.timeLimitMinutes,
-      locale: 'vi',
-      rubric: percentWeightsToDecimal(state.rubric),
-      questions: state.questions,
-      proctoring: {
-        ...DEFAULT_PROCTORING,
-        maxViolations: state.info.antiCheatEnabled ? DEFAULT_PROCTORING.maxViolations : 0,
-      },
-      welcomeMessage: state.invitationEmail.body.slice(0, 280),
-      completionMessage: 'Thank you for completing the interview.',
-    };
-  }, [invitedEmails.length, state]);
+  const handleCreateCampaign = useCallback(async () => {
+    if (requestLockRef.current || isSubmitting || mode !== 'create') return;
 
-  const handleSaveDraft = useCallback(async () => {
-    setIsSaving(true);
-    setSaved(false);
-    setPublishError(null);
-    setState((prev) => ({ ...prev, autosaveStatus: 'saving' }));
-    try {
-      const savedCampaign = await onSaveDraft(buildDraftInput());
-      const savedAt = new Date().toISOString();
+    const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
+    if (!validation.isValid) {
+      const first = validation.errors[0];
+      setStepError(t(first.messageKey));
       setState((prev) => ({
         ...prev,
-        draftId: savedCampaign.id,
-        lastSavedAt: savedAt,
-        autosaveStatus: 'saved',
+        currentStep: first.step,
+        errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      setSaved(true);
-    } catch {
-      setState((prev) => ({
-        ...prev,
-        autosaveStatus: 'failed',
-        errorSteps: Array.from(new Set([...prev.errorSteps, prev.currentStep])),
-      }));
-      setStepError(t('employer.campaigns.wizard.saveFailed'));
-    } finally {
-      setIsSaving(false);
-    }
-  }, [buildDraftInput, onSaveDraft, t]);
-
-  const handlePublish = useCallback(async () => {
-    setPublishError(null);
-    const confirmError = validateStep(9);
-    if (confirmError) {
-      setPublishError(confirmError);
       return;
     }
-    for (let step = 0; step < 9; step += 1) {
-      if (step === 5 && state.candidateMethod === 'emails') continue;
-      const error = validateStep(step);
-      if (error) {
-        setPublishError(error);
-        setState((prev) => ({
-          ...prev,
-          currentStep: step,
-          errorSteps: Array.from(new Set([...prev.errorSteps, step])),
-        }));
-        return;
-      }
-    }
-    setIsPublishing(true);
+
+    requestLockRef.current = true;
+    setIsSubmitting(true);
+    setActionError(null);
+    setStepError(null);
+
     try {
-      await onPublish(buildDraftInput());
-    } catch (error) {
-      setPublishError(
-        error instanceof Error ? error.message : t('employer.campaigns.wizard.publishFailed'),
-      );
+      const request = buildCampaignCreateRequest(snapshot());
+      const created = await onCreateCampaign(request);
       setState((prev) => ({
         ...prev,
-        errorSteps: Array.from(new Set([...prev.errorSteps, 9])),
+        draftId: created.id,
+        autosaveStatus: 'saved',
+        lastSavedAt: new Date().toISOString(),
+        completedSteps: markCompleted(prev.completedSteps, 3),
       }));
+      toast.success(t('employer.campaigns.wizard.createSuccess'));
+      onAfterSubmit(created);
+    } catch (error) {
+      const mapped = mapSubmitError(error, t, 'create');
+      setActionError(mapped.message);
+      if (mapped.step != null) {
+        setState((prev) => ({
+          ...prev,
+          currentStep: mapped.step!,
+          errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+        }));
+      }
     } finally {
-      setIsPublishing(false);
+      requestLockRef.current = false;
+      setIsSubmitting(false);
     }
-  }, [buildDraftInput, onPublish, state.candidateMethod, t, validateStep]);
+  }, [
+    isSubmitting,
+    mode,
+    onAfterSubmit,
+    onCreateCampaign,
+    snapshot,
+    state,
+    t,
+  ]);
+
+  const handleUpdateDraft = useCallback(async () => {
+    if (requestLockRef.current || isSubmitting || mode !== 'edit') return;
+    if (!campaignId) {
+      setActionError(t('employer.campaigns.wizard.campaignNotFound'));
+      return;
+    }
+    if (!isDraftEditable) {
+      setActionError(t('employer.campaigns.wizard.notDraftEditable'));
+      return;
+    }
+
+    const validation = validateAllCampaignWizardSteps(state, { mode: 'edit' });
+    if (!validation.isValid) {
+      const first = validation.errors[0];
+      setStepError(t(first.messageKey));
+      setState((prev) => ({
+        ...prev,
+        currentStep: first.step,
+        errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
+      }));
+      return;
+    }
+
+    requestLockRef.current = true;
+    setIsSubmitting(true);
+    setActionError(null);
+    setStepError(null);
+
+    const questionPayload = mapQuestionsToApiRequest(state.questions, state.questionSource);
+    if (questionPayload.length === 0) {
+      requestLockRef.current = false;
+      setIsSubmitting(false);
+      setStepError(t('employer.campaigns.wizard.questionsRequired'));
+      setState((prev) => ({
+        ...prev,
+        currentStep: 3,
+        errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
+      }));
+      return;
+    }
+
+    let metadataOk = metadataSaved;
+
+    try {
+      if (!metadataOk) {
+        const metadataPayload = buildCampaignUpdateRequest(snapshot());
+        await onUpdateCampaign(campaignId, metadataPayload);
+        metadataOk = true;
+        setMetadataSaved(true);
+      }
+
+      const updated = await onUpdateQuestions(campaignId, questionPayload);
+      setQuestionsSaved(true);
+      setMetadataSaved(false);
+      setQuestionsSaved(false);
+      setState((prev) => ({
+        ...prev,
+        autosaveStatus: 'saved',
+        lastSavedAt: new Date().toISOString(),
+        completedSteps: markCompleted(prev.completedSteps, 3),
+      }));
+      toast.success(t('employer.campaigns.wizard.updateSuccess'));
+      onAfterSubmit(updated);
+    } catch (error) {
+      if (metadataOk && !questionsSaved) {
+        setMetadataSaved(true);
+        setQuestionsSaved(false);
+        setActionError(t('employer.campaigns.wizard.partialUpdateQuestionsFailed'));
+        const mapped = mapSubmitError(error, t, 'questions');
+        if (mapped.step != null) {
+          setState((prev) => ({
+            ...prev,
+            currentStep: mapped.step!,
+            errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+          }));
+        }
+      } else {
+        const mapped = mapSubmitError(error, t, 'update');
+        setActionError(mapped.message);
+        if (mapped.step != null) {
+          setState((prev) => ({
+            ...prev,
+            currentStep: mapped.step!,
+            errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+          }));
+        }
+      }
+    } finally {
+      requestLockRef.current = false;
+      setIsSubmitting(false);
+    }
+  }, [
+    campaignId,
+    isDraftEditable,
+    isSubmitting,
+    metadataSaved,
+    mode,
+    onAfterSubmit,
+    onUpdateCampaign,
+    onUpdateQuestions,
+    questionsSaved,
+    snapshot,
+    state,
+    t,
+  ]);
+
+  const retryQuestionsUpdate = useCallback(async () => {
+    if (requestLockRef.current || isSubmitting || !campaignId || !metadataSaved) return;
+    requestLockRef.current = true;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      const questionPayload = mapQuestionsToApiRequest(state.questions, state.questionSource);
+      const updated = await onUpdateQuestions(campaignId, questionPayload);
+      setMetadataSaved(false);
+      setQuestionsSaved(false);
+      toast.success(t('employer.campaigns.wizard.updateSuccess'));
+      onAfterSubmit(updated);
+    } catch (error) {
+      setActionError(t('employer.campaigns.wizard.partialUpdateQuestionsFailed'));
+      const mapped = mapSubmitError(error, t, 'questions');
+      if (mapped.step != null) {
+        setState((prev) => ({
+          ...prev,
+          currentStep: mapped.step!,
+          errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+        }));
+      }
+    } finally {
+      requestLockRef.current = false;
+      setIsSubmitting(false);
+    }
+  }, [
+    campaignId,
+    isSubmitting,
+    metadataSaved,
+    onAfterSubmit,
+    onUpdateQuestions,
+    state.questionSource,
+    state.questions,
+    t,
+  ]);
+
+  const handleFinalSubmit = useCallback(() => {
+    if (mode === 'create') {
+      void handleCreateCampaign();
+      return;
+    }
+    void handleUpdateDraft();
+  }, [handleCreateCampaign, handleUpdateDraft, mode]);
 
   const generateQuestionsWithAi = useCallback(() => {
     const count = Math.max(1, Math.min(state.questionCount, QUESTION_BANK.length));
@@ -394,6 +553,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       ...prev,
       questionSource: 'ai',
       questions: generated,
+      autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 3),
     }));
   }, [state.questionCount]);
@@ -403,126 +563,38 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       ...prev,
       rubricSource: 'ai',
       rubric: decimalWeightsToPercent(DEFAULT_RUBRIC),
+      rubricSavedAt: new Date().toISOString(),
+      autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 2),
     }));
   }, []);
 
-  const simulateJdUpload = useCallback((file: File) => {
+  const resetRubric = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      jd: {
-        ...prev.jd,
-        source: 'file',
-        fileName: file.name,
-        fileSize: file.size,
-        status: 'uploading',
-        errorKey: undefined,
-      },
-    }));
-    window.setTimeout(() => {
-      setState((prev) => ({ ...prev, jd: { ...prev.jd, status: 'analyzing' } }));
-    }, 400);
-    window.setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        jd: {
-          ...prev.jd,
-          status: 'ready',
-          jobTitle: prev.info.title || 'Software Engineer',
-          domain: prev.info.domain || 'frontend',
-          targetLevel: prev.info.targetLevel || 'Junior',
-          yearsExperience: '1-3',
-          technicalSkills: ['TypeScript', 'React', 'REST'],
-          frameworks: ['React', 'Vite'],
-          tools: ['Git', 'Figma'],
-          softSkills: ['Communication', 'Ownership'],
-          responsibilities: 'Build and maintain product UI surfaces.',
-          requiredQualifications: 'Solid TypeScript and React experience.',
-          preferredQualifications: 'Experience with design systems.',
-          keywords: ['React', 'TypeScript', 'Accessibility'],
-          summary:
-            prev.jd.summary ||
-            prev.jd.jdText ||
-            'Own React surfaces, async state, accessibility, and API integration.',
-          jdText:
-            prev.jd.jdText ||
-            prev.jd.summary ||
-            'Own React surfaces, async state, accessibility, and API integration.',
-        },
-        errorSteps: clearError(prev.errorSteps, 1),
-      }));
-    }, 1100);
-  }, []);
-
-  const generateMagicLink = useCallback(() => {
-    const code = `CMP-${Date.now().toString(36).toUpperCase()}`;
-    setState((prev) => ({
-      ...prev,
-      magicLink: {
-        url: `${window.location.origin}/invite/${code.toLowerCase()}`,
-        campaignCode: code,
-        expiresAt: prev.info.expiresAt,
-        status: 'ready',
-        candidateCount: invitedEmails.length,
-      },
-      errorSteps: clearError(prev.errorSteps, 6),
-    }));
-  }, [invitedEmails.length]);
-
-  const simulateCvRanking = useCallback(() => {
-    const samples: RankedCandidate[] = [
-      {
-        id: 'cv-1',
-        name: 'Mai Nguyen',
-        email: 'mai.nguyen@example.com',
-        overallMatch: 88,
-        technicalMatch: 90,
-        experienceMatch: 82,
-        skillsMatch: 91,
-        selected: true,
-      },
-      {
-        id: 'cv-2',
-        name: 'An Tran',
-        email: 'an.tran@example.com',
-        overallMatch: 74,
-        technicalMatch: 70,
-        experienceMatch: 76,
-        skillsMatch: 78,
-        selected: false,
-      },
-      {
-        id: 'cv-3',
-        name: 'Lan Pham',
-        email: 'lan.pham@example.com',
-        overallMatch: 61,
-        technicalMatch: 58,
-        experienceMatch: 64,
-        skillsMatch: 60,
-        selected: false,
-      },
-    ];
-    setState((prev) => ({
-      ...prev,
-      candidateMethod: 'cv-ranking',
-      rankedCandidates: samples,
-      errorSteps: clearError(prev.errorSteps, 4),
+      rubricSource: 'ai',
+      rubric: decimalWeightsToPercent(DEFAULT_RUBRIC),
+      rubricSavedAt: null,
+      autosaveStatus: 'dirty',
+      errorSteps: clearError(prev.errorSteps, 2),
     }));
   }, []);
 
   return {
     state,
+    mode,
     step: state.currentStep,
     errorSteps: state.errorSteps,
     completedSteps: state.completedSteps,
     stepError,
-    saved,
-    isSaving,
-    isPublishing,
-    publishError,
-    totalWeight: totalWeightPercent,
-    invitedEmails,
-    selectedCandidates,
+    actionError,
+    isSavingStep,
+    isSubmitting,
+    metadataSaved,
+    questionsSaved,
+    isDraftEditable,
+    totalWeight,
+    domainLabel,
     patchInfo,
     patchJd,
     setRubricSource,
@@ -531,39 +603,15 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setQuestionSource,
     setQuestionCount,
     setQuestions,
-    setCandidateMethod,
-    setCandidateEmails,
-    setRankedCandidates,
-    setMatchThreshold,
-    setInvitationEmail,
-    setPublishConfirmed,
     goNext,
     goBack,
     goToStep,
-    handleSaveDraft,
-    handlePublish,
+    handleFinalSubmit,
+    retryQuestionsUpdate,
     generateQuestionsWithAi,
     generateRubricWithAi,
-    simulateJdUpload,
-    generateMagicLink,
-    simulateCvRanking,
+    resetRubric,
   };
 }
 
 export type CampaignWizardController = ReturnType<typeof useCampaignWizard>;
-
-/** @deprecated Legacy RHF shape kept for older step files during migration. */
-export type CampaignWizardValues = {
-  title: string;
-  company: string;
-  location: string;
-  mode: EmployerCampaignMode;
-  summary: string;
-  jobDescription: string;
-  capacity: number;
-  deadline: string;
-  durationMinutes: number;
-  locale: CampaignLocale;
-  welcomeMessage: string;
-  completionMessage: string;
-};

@@ -1,13 +1,11 @@
 import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignCandidateTable } from './CampaignCandidateTable';
-import { CandidateSelectionPanel } from './CandidateSelectionPanel';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
-import { InviteCandidatesDialog } from './InviteCandidatesDialog';
+import { DeleteCampaignDialog } from './DeleteCampaignDialog';
 import { PublishCampaignDialog } from './PublishCampaignDialog';
 import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
 
@@ -16,7 +14,8 @@ interface CampaignDetailViewProps {
   published: boolean;
   warnings: string[];
   onPublish: () => Promise<void>;
-  onInvite: (emails: string[]) => Promise<InviteResolution>;
+  onDelete?: () => Promise<void>;
+  onInvite?: (emails: string[]) => Promise<InviteResolution>;
 }
 
 export function CampaignDetailView({
@@ -24,9 +23,11 @@ export function CampaignDetailView({
   published,
   warnings,
   onPublish,
-  onInvite,
+  onDelete,
 }: CampaignDetailViewProps) {
   const { t } = useLanguage();
+  const isActive = campaign.status === 'active';
+  const isDraft = campaign.status === 'draft';
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -34,38 +35,66 @@ export function CampaignDetailView({
         <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
           {t('employer.campaigns.detail.back')}
         </Link>
+
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <CampaignManagementStatusBadge status={campaign.status} />
-              <p className="text-label text-muted-foreground">SCR-EMP-056</p>
+              {isDraft ? (
+                <span className="text-xs text-muted-foreground">
+                  {t('employer.campaigns.detail.previewHint')}
+                </span>
+              ) : null}
             </div>
             <h1 className="heading-primary text-3xl text-foreground">{campaign.title}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{campaign.summary}</p>
+            <p className="body-text max-w-3xl text-sm text-muted-foreground">
+              {campaign.summary || campaign.jobDescription.slice(0, 180)}
+            </p>
           </div>
+
           <div className="flex flex-wrap gap-2">
-            {campaign.status === 'draft' ? (
+            {isDraft ? (
               <>
                 <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
                   {t('employer.campaigns.detail.edit')}
                 </Button>
-                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/selection`} />}>
-                  {t('employer.campaigns.selection.open')}
+                <PublishCampaignDialog onPublish={onPublish} />
+                {onDelete ? (
+                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
+                ) : null}
+              </>
+            ) : null}
+
+            {isActive ? (
+              <>
+                <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
+                  {t('employer.campaigns.detail.inviteCandidates')}
+                </Button>
+                <Button
+                  variant="outline"
+                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
+                >
+                  {t('employer.campaigns.detail.pipeline')}
                 </Button>
               </>
-            ) : (
-              <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}>
+            ) : null}
+
+            {!isActive && !isDraft ? (
+              <Button
+                variant="outline"
+                render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
+              >
                 {t('employer.campaigns.detail.pipeline')}
               </Button>
-            )}
-            <PublishCampaignDialog
-              campaign={campaign}
-              onPublish={onPublish}
-              disabled={campaign.status !== 'draft'}
-            />
-            <InviteCandidatesDialog onInvite={onInvite} />
+            ) : null}
           </div>
         </header>
+
+        {isDraft ? (
+          <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
+            {t('employer.campaigns.detail.inviteAfterPublish')}
+          </p>
+        ) : null}
 
         {published ? (
           <Alert variant="success">
@@ -85,10 +114,6 @@ export function CampaignDetailView({
           </Alert>
         ) : null}
 
-        {campaign.status === 'draft' ? (
-          <CandidateSelectionPanel onImport={(emails) => onInvite(emails)} />
-        ) : null}
-
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           <Card className="border border-subtle bg-surface-raised">
             <CardHeader>
@@ -102,10 +127,13 @@ export function CampaignDetailView({
                   value={`${campaign.applicants}/${campaign.capacity}`}
                 />
                 <Info
-                  label={t('employer.campaigns.detail.duration')}
-                  value={`${campaign.durationMinutes} ${t('employer.campaigns.detail.minutes')}`}
+                  label={t('employer.campaigns.form.duration')}
+                  value={`${campaign.durationMinutes}`}
                 />
-                <Info label={t('employer.campaigns.detail.invited')} value={campaign.candidates.length} />
+                <Info
+                  label={t('employer.campaigns.form.questionsUnit')}
+                  value={`${campaign.questions.length}`}
+                />
               </div>
             </CardContent>
           </Card>
@@ -114,77 +142,69 @@ export function CampaignDetailView({
             <CardHeader>
               <CardTitle>{t('employer.campaigns.detail.settings')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <Info label={t('employer.campaigns.form.location')} value={campaign.location} />
-              <Info label={t('employer.campaigns.form.deadline')} value={campaign.deadline} />
-              <Info label={t('employer.campaigns.detail.locale')} value={campaign.locale.toUpperCase()} />
-              <Info
-                label={t('employer.campaigns.form.faceInterval')}
-                value={`${campaign.proctoring.faceCaptureIntervalSeconds}s`}
-              />
-              <Info label={t('employer.campaigns.form.maxViolations')} value={campaign.proctoring.maxViolations} />
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                {t('employer.campaigns.form.deadline')}: {campaign.deadline}
+              </p>
+              <p>
+                {t('employer.campaigns.form.company')}: {campaign.company}
+              </p>
             </CardContent>
           </Card>
         </div>
 
         <Card className="border border-subtle bg-surface-raised">
           <CardHeader>
-            <CardTitle>{t('employer.campaigns.detail.candidates')}</CardTitle>
+            <CardTitle>{t('employer.campaigns.detail.rubric')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <CampaignCandidateTable candidates={campaign.candidates} />
+          <CardContent className="space-y-3">
+            {campaign.rubric.map((item) => (
+              <div key={item.id} className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
+                <p className="text-sm font-medium text-foreground">
+                  {item.name} ·{' '}
+                  {Number(item.weight) <= 1
+                    ? `${Math.round(Number(item.weight) * 100)}%`
+                    : `${item.weight}%`}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="border border-subtle bg-surface-raised">
+          <CardHeader>
+            <CardTitle>{t('employer.campaigns.detail.questions')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {campaign.questions.map((item, index) => (
+              <p key={item.id} className="text-sm text-foreground">
+                {index + 1}. {item.prompt}
+              </p>
+            ))}
+          </CardContent>
+        </Card>
+
+        {!isDraft ? (
           <Card className="border border-subtle bg-surface-raised">
             <CardHeader>
-              <CardTitle>{t('employer.campaigns.detail.rubric')}</CardTitle>
+              <CardTitle>{t('employer.campaigns.detail.candidates')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {campaign.rubric.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('employer.campaigns.detail.rubricEmpty')}</p>
-              ) : (
-                campaign.rubric.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-subtle bg-surface-overlay p-4">
-                    <div className="flex justify-between gap-3 text-sm font-medium text-foreground">
-                      <span>{item.name}</span>
-                      <span>{item.weight}%</span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                  </div>
-                ))
-              )}
+            <CardContent>
+              <CampaignCandidateTable candidates={campaign.candidates} />
             </CardContent>
           </Card>
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader>
-              <CardTitle>{t('employer.campaigns.detail.questions')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {campaign.questions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('employer.campaigns.detail.questionsEmpty')}</p>
-              ) : (
-                campaign.questions.map((question) => (
-                  <div key={question.id} className="flex gap-3 rounded-xl border border-subtle bg-surface-overlay p-4">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-                    <p className="text-sm text-foreground">{question.prompt}</p>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string | number }) {
+function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-subtle bg-surface-overlay p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 font-semibold text-foreground">{value}</p>
+    <div className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 font-medium text-foreground">{value}</p>
     </div>
   );
 }

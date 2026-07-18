@@ -1,38 +1,63 @@
+import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
-import { useCampaignWizard } from '../../hooks/useCampaignWizard';
-import type { CampaignDraftInput, EmployerCampaign } from '../../types/campaignManagement.types';
+import { useCampaignWizard, type CampaignFormMode } from '../../hooks/useCampaignWizard';
+import type { EmployerCampaign } from '../../types/campaignManagement.types';
+import type {
+  CampaignCreateQuestionRequest,
+  CampaignCreateRequest,
+  CampaignUpdateRequest,
+} from '../../types/campaign.api.types';
 import { CAMPAIGN_WIZARD_STEP_COUNT } from './campaignWizard.steps';
 import { CampaignCriteriaStepV2 } from './CampaignCriteriaStepV2';
-import { CampaignEmailStep } from './CampaignEmailStep';
-import { CampaignFinalReviewStep } from './CampaignFinalReviewStep';
 import { CampaignInfoStep } from './CampaignInfoStep';
-import { CampaignInviteMethodStep } from './CampaignInviteMethodStep';
 import { CampaignJdStep } from './CampaignJdStep';
-import { CampaignMagicLinkStep } from './CampaignMagicLinkStep';
-import { CampaignPublishStep } from './CampaignPublishStep';
 import { CampaignQuestionsStep } from './CampaignQuestionsStep';
-import { CampaignRankingStep } from './CampaignRankingStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
 
 interface CampaignWizardFormProps {
   campaign?: EmployerCampaign | null;
-  isEditing?: boolean;
-  onSaveDraft: (input: CampaignDraftInput) => Promise<EmployerCampaign>;
-  onPublish: (input: CampaignDraftInput) => Promise<EmployerCampaign>;
+  mode: CampaignFormMode;
+  onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
+  onUpdateCampaign: (
+    campaignId: string,
+    payload: CampaignUpdateRequest,
+  ) => Promise<EmployerCampaign>;
+  onUpdateQuestions: (
+    campaignId: string,
+    questions: CampaignCreateQuestionRequest[],
+  ) => Promise<EmployerCampaign>;
+  onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
 
 export function CampaignWizardForm({
   campaign,
-  isEditing = false,
-  onSaveDraft,
-  onPublish,
+  mode,
+  onCreateCampaign,
+  onUpdateCampaign,
+  onUpdateQuestions,
+  onAfterSubmit,
 }: CampaignWizardFormProps) {
   const { t } = useLanguage();
-  const wizard = useCampaignWizard({ campaign, onSaveDraft, onPublish });
+  const navigate = useNavigate();
+  const wizard = useCampaignWizard({
+    campaign,
+    mode,
+    onCreateCampaign,
+    onUpdateCampaign,
+    onUpdateQuestions,
+    onAfterSubmit,
+  });
   const { state, step } = wizard;
   const progressPercent = Math.round(((step + 1) / CAMPAIGN_WIZARD_STEP_COUNT) * 100);
-  const stepError = wizard.stepError;
+  const finalSubmitLabel =
+    mode === 'edit'
+      ? t('employer.campaigns.wizard.saveChanges')
+      : t('employer.campaigns.wizard.createCampaign');
+  const finalLoadingLabel =
+    mode === 'edit'
+      ? t('employer.campaigns.wizard.savingChanges')
+      : t('employer.campaigns.wizard.creatingCampaign');
 
   return (
     <CampaignWizardShell
@@ -40,15 +65,25 @@ export function CampaignWizardForm({
       errorSteps={wizard.errorSteps}
       campaignName={state.info.title}
       progressPercent={progressPercent}
-      isEditing={isEditing}
+      isEditing={mode === 'edit'}
       autosaveStatus={state.autosaveStatus}
       lastSavedAt={state.lastSavedAt}
-      onSaveDraft={() => void wizard.handleSaveDraft()}
-      isSaving={wizard.isSaving}
     >
-      {wizard.saved ? (
-        <Alert variant="success" className="mb-4">
-          <AlertDescription>{t('employer.campaigns.wizard.saved')}</AlertDescription>
+      {wizard.actionError ? (
+        <Alert variant="error" className="mb-4">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{wizard.actionError}</span>
+            {wizard.metadataSaved && !wizard.questionsSaved ? (
+              <button
+                type="button"
+                className="btn-secondary text-sm"
+                disabled={wizard.isSubmitting}
+                onClick={() => void wizard.retryQuestionsUpdate()}
+              >
+                {t('employer.campaigns.wizard.retryQuestions')}
+              </button>
+            ) : null}
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -61,47 +96,38 @@ export function CampaignWizardForm({
       {step === 0 ? (
         <CampaignInfoStep
           info={state.info}
-          error={stepError}
+          error={wizard.stepError}
           onChange={wizard.patchInfo}
           onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
+          onCancel={() => navigate('/employer/campaigns')}
+          isSaving={wizard.isSavingStep}
         />
       ) : null}
 
       {step === 1 ? (
         <CampaignJdStep
           jd={state.jd}
-          error={stepError}
-          onUpload={wizard.simulateJdUpload}
+          error={wizard.stepError}
           onChange={wizard.patchJd}
-          onRetryAnalyze={() => {
-            const name = state.jd.fileName || 'retry.txt';
-            wizard.simulateJdUpload(new File([''], name));
-          }}
-          onManualEntry={() => wizard.patchJd({ status: 'ready' })}
+          onRetryUpload={() => undefined}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
+          isSaving={wizard.isSavingStep}
         />
       ) : null}
 
       {step === 2 ? (
         <CampaignCriteriaStepV2
-          rubricSource={state.rubricSource}
           rubric={state.rubric}
-          totalWeight={wizard.totalWeight}
-          rubricSavedAt={state.rubricSavedAt}
-          error={stepError}
-          onSelectSource={wizard.setRubricSource}
-          onGenerateAi={wizard.generateRubricWithAi}
+          contextLabel={
+            wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
+          }
+          error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
-          onSaveRubric={wizard.saveRubric}
+          onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
+          isSaving={wizard.isSavingStep}
         />
       ) : null}
 
@@ -110,119 +136,17 @@ export function CampaignWizardForm({
           questionSource={state.questionSource}
           questionCount={state.questionCount}
           questions={state.questions}
-          error={stepError}
+          error={wizard.stepError}
           onSelectSource={wizard.setQuestionSource}
           onQuestionCount={wizard.setQuestionCount}
           onGenerateAi={wizard.generateQuestionsWithAi}
           onChangeQuestions={wizard.setQuestions}
           onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 4 ? (
-        <CampaignInviteMethodStep
-          method={state.candidateMethod}
-          emails={state.candidateEmails}
-          error={stepError}
-          onSelectMethod={wizard.setCandidateMethod}
-          onEmailsChange={wizard.setCandidateEmails}
-          onSimulateCvRanking={wizard.simulateCvRanking}
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 5 ? (
-        <CampaignRankingStep
-          ranked={state.rankedCandidates}
-          threshold={state.matchThreshold}
-          error={stepError}
-          onThreshold={wizard.setMatchThreshold}
-          onSimulateCvRanking={wizard.simulateCvRanking}
-          onToggleCandidate={(id) =>
-            wizard.setRankedCandidates(
-              state.rankedCandidates.map((row) =>
-                row.id === id ? { ...row, selected: !row.selected } : row,
-              ),
-            )
-          }
-          onSelectAboveThreshold={() =>
-            wizard.setRankedCandidates(
-              state.rankedCandidates.map((row) => ({
-                ...row,
-                selected: row.overallMatch >= state.matchThreshold,
-              })),
-            )
-          }
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 6 ? (
-        <CampaignMagicLinkStep
-          magicLink={state.magicLink}
-          error={stepError}
-          onGenerate={wizard.generateMagicLink}
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 7 ? (
-        <CampaignEmailStep
-          email={state.invitationEmail}
-          error={stepError}
-          onChange={(patch) =>
-            wizard.setInvitationEmail({ ...state.invitationEmail, ...patch })
-          }
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 8 ? (
-        <CampaignFinalReviewStep
-          info={state.info}
-          jd={state.jd}
-          rubric={state.rubric}
-          questions={state.questions}
-          invitedCount={wizard.invitedEmails.length}
-          magicLink={state.magicLink}
-          email={state.invitationEmail}
-          onEditStep={wizard.goToStep}
-          onBack={wizard.goBack}
-          onNext={wizard.goNext}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          isSaving={wizard.isSaving}
-        />
-      ) : null}
-
-      {step === 9 ? (
-        <CampaignPublishStep
-          info={state.info}
-          questionCount={state.questions.length}
-          invitedCount={wizard.invitedEmails.length}
-          confirmed={state.publishConfirmed}
-          error={stepError}
-          publishError={wizard.publishError}
-          onConfirmChange={wizard.setPublishConfirmed}
-          onBack={wizard.goBack}
-          onSaveDraft={() => void wizard.handleSaveDraft()}
-          onPublish={() => void wizard.handlePublish()}
-          isSaving={wizard.isSaving}
-          isPublishing={wizard.isPublishing}
+          onSubmit={wizard.handleFinalSubmit}
+          submitLabel={finalSubmitLabel}
+          submittingLabel={finalLoadingLabel}
+          isSubmitting={wizard.isSubmitting}
+          submitDisabled={!wizard.isDraftEditable}
         />
       ) : null}
     </CampaignWizardShell>

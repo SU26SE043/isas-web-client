@@ -1,0 +1,219 @@
+import type {
+  CampaignCreateCriterionRequest,
+  CampaignCreateQuestionRequest,
+  CampaignCreateRequest,
+  CampaignUpdateRequest,
+} from '../types/campaign.api.types';
+import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
+import type { CampaignInfoState, JobDescriptionState, QuestionSource } from '../types/campaignWizard.types';
+import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
+
+const DOMAIN_API_LABEL: Record<CampaignDomainOption, string> = {
+  frontend: 'Frontend',
+  backend: 'Backend',
+  'business-analyst': 'Business Analyst',
+};
+
+export function toIsoDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error('INVALID_DATE');
+  }
+  return date.toISOString();
+}
+
+export function mapDomainToApiLabel(domain: CampaignDomainOption): string {
+  return DOMAIN_API_LABEL[domain];
+}
+
+export function resolveDomainOption(value?: string | null): CampaignDomainOption | '' {
+  const normalized = (value ?? '').trim().toLowerCase();
+  if (!normalized) return '';
+  if (normalized.includes('frontend') || normalized === 'frontend development') return 'frontend';
+  if (normalized.includes('backend')) return 'backend';
+  if (normalized.includes('business') || normalized.includes('analyst')) return 'business-analyst';
+  return '';
+}
+
+export function mapRubricToCreateCriteria(
+  rubric: RubricCriterion[],
+): CampaignCreateCriterionRequest[] {
+  return rubric
+    .filter((item) => item.name.trim())
+    .map((item) => {
+      const rawWeight = Number(item.weight);
+      const weight = rawWeight > 1 ? Number((rawWeight / 100).toFixed(4)) : rawWeight;
+      return {
+        name: item.name.trim(),
+        description: item.description.trim() || null,
+        weight,
+        maxScore: Math.max(1, Math.round(Number(item.maxScore) || 1)),
+      };
+    });
+}
+
+export function mapQuestionsToApiRequest(
+  questions: CampaignQuestion[],
+  questionSource: QuestionSource,
+): CampaignCreateQuestionRequest[] {
+  const source: CampaignCreateQuestionRequest['source'] =
+    questionSource === 'ai' ? 'AiGenerated' : 'CustomHr';
+  return questions
+    .filter((item) => item.prompt.trim())
+    .map((item) => ({
+      questionText: item.prompt.trim(),
+      source,
+      isRequired: true,
+    }));
+}
+
+function criteriaRequestToRubric(
+  criteria: CampaignCreateCriterionRequest[] | null | undefined,
+): RubricCriterion[] {
+  return (criteria ?? []).map((item, index) => ({
+    id: `criterion-${index}`,
+    name: item.name,
+    description: item.description?.trim() || '',
+    weight: item.weight,
+    maxScore: item.maxScore,
+  }));
+}
+
+function questionRequestToUi(
+  questions: CampaignCreateQuestionRequest[],
+): CampaignQuestion[] {
+  return questions.map((item, index) => ({
+    id: `question-${index}`,
+    prompt: item.questionText,
+    skill: '',
+    difficulty: 'middle' as const,
+  }));
+}
+
+/**
+ * Some CampaignResponse payloads omit nested criteria/questions even after a successful write.
+ * Prefer response collections when present; otherwise keep what we just submitted.
+ */
+export function mergeCampaignWriteResult(
+  mapped: EmployerCampaign,
+  input: {
+    criteria?: CampaignCreateCriterionRequest[] | null;
+    questions?: CampaignCreateQuestionRequest[] | null;
+    jdText?: string | null;
+    title?: string;
+    domain?: string;
+    maxCandidates?: number | null;
+    timeLimitMinutes?: number;
+    startsAt?: string;
+    expiresAt?: string;
+  },
+): EmployerCampaign {
+  const next: EmployerCampaign = { ...mapped };
+
+  if (!next.rubric.length && input.criteria?.length) {
+    next.rubric = criteriaRequestToRubric(input.criteria);
+  }
+  if (!next.questions.length && input.questions?.length) {
+    next.questions = questionRequestToUi(input.questions);
+  }
+  if (!next.jobDescription.trim() && input.jdText?.trim()) {
+    next.jobDescription = input.jdText.trim();
+    next.summary = next.summary || input.jdText.trim().slice(0, 200);
+  }
+  if (input.title?.trim()) next.title = input.title.trim();
+  if (input.domain?.trim()) {
+    next.domain = input.domain.trim();
+    next.company = input.domain.trim();
+  }
+  if (input.maxCandidates && input.maxCandidates > 0) next.capacity = input.maxCandidates;
+  if (input.timeLimitMinutes && input.timeLimitMinutes > 0) {
+    next.durationMinutes = input.timeLimitMinutes;
+  }
+  if (input.expiresAt) next.deadline = input.expiresAt;
+  if (input.startsAt) next.startsAt = input.startsAt;
+
+  return next;
+}
+
+function resolveJdTextForCreate(jd: JobDescriptionState): string | null {
+  if (jd.inputMethod !== 'text') return null;
+  const text = jd.jdText.trim();
+  return text || null;
+}
+
+function resolveJdTextForUpdate(jd: JobDescriptionState): string | undefined {
+  if (jd.inputMethod !== 'text') return undefined;
+  const text = jd.jdText.trim();
+  return text || undefined;
+}
+
+export type CampaignWizardSubmitSnapshot = {
+  info: CampaignInfoState;
+  jd: JobDescriptionState;
+  rubric: RubricCriterion[];
+  questions: CampaignQuestion[];
+  questionSource: QuestionSource;
+  criteriaText?: string | null;
+};
+
+/**
+ * Build POST /api/v1/campaign body from the full wizard (all steps).
+ * File-based JD is omitted (jdText: null) — file upload is a later update.
+ */
+export function buildCampaignCreateRequest(
+  snapshot: CampaignWizardSubmitSnapshot,
+): CampaignCreateRequest {
+  const { info } = snapshot;
+  if (!info.domain) {
+    throw new Error('DOMAIN_REQUIRED');
+  }
+
+  const questions = mapQuestionsToApiRequest(snapshot.questions, snapshot.questionSource);
+  if (questions.length === 0) {
+    throw new Error('QUESTIONS_REQUIRED');
+  }
+
+  return {
+    title: info.title.trim(),
+    domain: mapDomainToApiLabel(info.domain),
+    maxCandidates:
+      info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
+    timeLimitMinutes: info.timeLimitMinutes,
+    passScorePct: info.passScorePct ?? null,
+    antiCheatEnabled: info.antiCheatEnabled,
+    jdText: resolveJdTextForCreate(snapshot.jd),
+    criteriaText: snapshot.criteriaText?.trim() || null,
+    criteria: mapRubricToCreateCriteria(snapshot.rubric),
+    startsAt: toIsoDateTime(info.startsAt),
+    expiresAt: toIsoDateTime(info.expiresAt),
+    questions,
+  };
+}
+
+/**
+ * Build PUT /api/v1/campaign/{id} body (no questions).
+ * Omits undefined fields so Axios/JSON do not send "keep-as-null" clears.
+ */
+export function buildCampaignUpdateRequest(
+  snapshot: CampaignWizardSubmitSnapshot,
+): CampaignUpdateRequest {
+  const { info } = snapshot;
+  if (!info.domain) {
+    throw new Error('DOMAIN_REQUIRED');
+  }
+
+  return {
+    title: info.title.trim(),
+    domain: mapDomainToApiLabel(info.domain),
+    maxCandidates:
+      info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
+    timeLimitMinutes: info.timeLimitMinutes,
+    antiCheatEnabled: info.antiCheatEnabled,
+    passScorePct: info.passScorePct ?? null,
+    jdText: resolveJdTextForUpdate(snapshot.jd),
+    criteriaText: snapshot.criteriaText?.trim() || undefined,
+    criteria: mapRubricToCreateCriteria(snapshot.rubric),
+    startsAt: toIsoDateTime(info.startsAt),
+    expiresAt: toIsoDateTime(info.expiresAt),
+  };
+}

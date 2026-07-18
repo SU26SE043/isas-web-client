@@ -1,46 +1,68 @@
 # Campaign Management
 
-Frontend contract for employer campaign list + creation wizard (OrgAdmin / HrMember).
+Frontend contract for employer campaign list, create/publish (Flow 1), and invite (Flow 2).
 
 ## Status
 
-**List API live** — `GET /api/v1/campaign` powers `/employer/campaigns` (summary cards, search/status filters, loading / empty / 403 / retry).
+**List / detail GET live** — `GET /api/v1/campaign`, `GET /api/v1/campaign/{id}`.
 
-**Detail API live** — `GET /api/v1/campaign/{id}`.
+**Create Draft live** — `POST /api/v1/campaign` once after the wizard finishes (Employer Bearer). Body includes metadata, JD text (or null for file-later), criteria, schedule, and non-empty questions.
 
-**Create wizard (UI)** — 10-step sidebar wizard at `/employer/campaigns/new` and `/employer/campaigns/:id/edit`. Local/mock AI upload helpers until create/publish APIs are wired. **Answer Requirement Configuration is not part of the flow.**
+**Update Draft live** — `PUT /api/v1/campaign/{id}` (metadata/JD/criteria) + `PUT /api/v1/campaign/{id}/questions` (JSON array body).
 
-## Wizard steps (sidebar)
+**Publish live** — From Draft detail preview: **Xuất bản** → confirm modal → `POST /api/v1/campaign/{id}/publish`.
 
-1. Campaign information (title, Frontend/Backend/Business Analyst domain, Fresher–Senior level, schedule, time limit, anti-cheat)
-2. Job description (upload **or** paste + analysis editor)
-3. Evaluation criteria (AI or upload; UI weights in %; submit as decimals summing to 1.0)
-4. Question configuration (AI generate with count, or upload bank; sources `AiGenerated` / `CustomHr`)
-5. Candidate invitation method (email list **or** CV ranking)
-6. Candidate selection / CV ranking (skipped when method is email list)
-7. Magic link
-8. Invitation email setup
-9. Final review
-10. Publish campaign (confirm + progress)
+**Delete Draft** — From Draft detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}`.
 
-Removed entirely: Answer Requirement Configuration (EMP-CAM-07 legacy).
+**Invite / file upload** — still mock-shaped for upcoming live wiring (candidates, invitations, files).
+
+## Flow 1 — Create & publish
+
+Wizard at `/employer/campaigns/new` (and draft edit): **4 steps** (current UI)
+
+1. Campaign information
+2. Job description (text sent on create; file selection is UI-only until a later file API)
+3. Evaluation criteria
+4. Question configuration → **Create campaign** (`POST`) → navigate to **Campaign Detail (Draft preview)**
+
+Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → delete).
+
+There is **no** “Save draft” button mid-wizard. Create produces `Draft` from the backend. Publish is only from Campaign Detail.
+
+Candidate invitation is **not** part of Flow 1.
+
+## Flow 2 — Invite candidates (Active only)
+
+| Route | Screen |
+| --- | --- |
+| `/employer/campaigns/:id/invite` | Choose method |
+| `/employer/campaigns/:id/invite/cv` | Upload CVs + ranking + invite by candidateIds |
+| `/employer/campaigns/:id/invite/email` | Enter emails → invite |
+| `/employer/campaigns/:id/invite/result` | Partial success result |
+
+Campaign Detail shows **Mời ứng viên** only when `status === active`. Draft shows helper copy to publish first, plus **Edit** and **Publish**.
 
 ## Routes
 
 | Route | Screen |
 | --- | --- |
-| `/employer/campaigns` | EMP-CAM-01 Campaign List |
-| `/employer/campaigns/new` | EMP-CAM-02 Create wizard |
-| `/employer/campaigns/:id/edit` | Continue draft wizard |
-| `/employer/campaigns/:id` | Campaign detail |
+| `/employer/campaigns` | List |
+| `/employer/campaigns/new` | Flow 1 wizard (create) |
+| `/employer/campaigns/:id/edit` | Edit Draft wizard |
+| `/employer/campaigns/:id` | Detail |
+| `/employer/campaigns/:id/invite/*` | Flow 2 |
 
-## Data notes
+Legacy `/selection` redirects to `/invite`.
 
-- Wizard state is held in `useCampaignWizard` (survives step remounts; no refetch on back).
-- Shell: top header (draft badge, autosave, save, close) + left stepper (Pending / Active / Completed / Error) + bottom action bar.
-- Draft save / publish still use mock `campaignManagementService` until POST/PUT endpoints land.
-- List/detail remain live GET.
-- Create body maps toward `POST /api/v1/campaign` (`title`, `domain`, `maxCandidates`, `timeLimitMinutes`, `antiCheatEnabled`, `jdText`, `criteria[]` decimal weights, `questions[]`, `startsAt` / `expiresAt`). `passScorePct` and `criteriaText` stay null.
+## API call matrix
+
+| Case | API |
+| --- | --- |
+| Next step while creating | None |
+| Finish wizard (create) | `POST /api/v1/campaign` |
+| Next step while editing Draft | None |
+| Save changes (edit) | `PUT /api/v1/campaign/{id}` then `PUT …/questions` |
+| Publish | `POST /api/v1/campaign/{id}/publish` |
 
 ## Validation
 

@@ -49,7 +49,12 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                       </Link>
                       {campaign.status === 'draft' ? (
                         <Link to={`/employer/campaigns/${campaign.id}/edit`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
-                          <Pencil className="size-3" aria-hidden /> {t('employer.campaigns.list.edit')}
+                          <Pencil className="size-3" aria-hidden /> {t('employer.campaigns.list.continueSetup')}
+                        </Link>
+                      ) : null}
+                      {campaign.status === 'active' ? (
+                        <Link to={`/employer/campaigns/${campaign.id}/invite`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
+                          {t('employer.campaigns.list.invite')}
                         </Link>
                       ) : null}
                     </div>

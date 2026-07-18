@@ -19,7 +19,7 @@ interface CampaignInfoStepProps {
   error?: string | null;
   onChange: (patch: Partial<CampaignInfoState>) => void;
   onNext: () => void;
-  onSaveDraft: () => void;
+  onCancel: () => void;
   isSaving?: boolean;
 }
 
@@ -31,7 +31,7 @@ export function CampaignInfoStep({
   error,
   onChange,
   onNext,
-  onSaveDraft,
+  onCancel,
   isSaving,
 }: CampaignInfoStepProps) {
   const { t } = useLanguage();
@@ -43,15 +43,18 @@ export function CampaignInfoStep({
       description={t('employer.campaigns.wizard.steps.infoDesc')}
       footer={
         <CampaignWizardNav
-          backDisabled
+          onCancel={onCancel}
           onNext={onNext}
-          onSaveDraft={onSaveDraft}
           isSaving={isSaving}
+          nextDisabled={isSaving}
+          backDisabled={isSaving}
         />
       }
     >
       <div className="space-y-6">
         {error ? <FieldError message={error} /> : null}
+
+        <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.localStateHint')}</p>
 
         <section className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground">
@@ -127,6 +130,27 @@ export function CampaignInfoStep({
                 {t('employer.campaigns.form.maxCandidatesHelp')}
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
+              <Input
+                id="campaign-pass-score"
+                type="number"
+                min={0}
+                max={100}
+                value={info.passScorePct ?? ''}
+                placeholder={t('employer.campaigns.form.passScorePlaceholder')}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  onChange({
+                    passScorePct: raw === '' ? null : Math.min(100, Math.max(0, Number(raw) || 0)),
+                  });
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.passScoreHelp')}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -152,7 +176,7 @@ export function CampaignInfoStep({
                 {t('employer.campaigns.form.timeLimitHelp')}
               </p>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-4 py-3 md:col-span-2">
+            <div className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-4 py-3">
               <input
                 id="campaign-anti-cheat"
                 type="checkbox"

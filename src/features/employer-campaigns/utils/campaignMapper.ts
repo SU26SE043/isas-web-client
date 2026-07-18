@@ -96,6 +96,7 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       name,
       weight,
       description: pickString(record, 'description', 'Description') ?? null,
+      maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
     });
   });
   return result;
@@ -107,13 +108,30 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
   raw.forEach((item, index) => {
     const record = asRecord(item);
     if (!record) return;
-    const prompt = pickString(record, 'prompt', 'Prompt', 'text', 'Text', 'content', 'Content');
+    const prompt = pickString(
+      record,
+      'questionText',
+      'QuestionText',
+      'prompt',
+      'Prompt',
+      'text',
+      'Text',
+      'content',
+      'Content',
+    );
     if (!prompt) return;
     result.push({
       id: pickString(record, 'id', 'Id') ?? `question-${index}`,
       prompt,
       skill: pickString(record, 'skill', 'Skill') ?? null,
       difficulty: pickString(record, 'difficulty', 'Difficulty') ?? null,
+      source: pickString(record, 'source', 'Source') ?? null,
+      isRequired:
+        typeof record.isRequired === 'boolean'
+          ? record.isRequired
+          : typeof record.IsRequired === 'boolean'
+            ? record.IsRequired
+            : null,
     });
   });
   return result;
@@ -155,26 +173,38 @@ function parseProctoring(raw: unknown): CampaignProctoringResponse | null {
 export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
   const record = asRecord(raw);
   if (!record) return null;
-  const id = pickString(record, 'id', 'Id');
+  const id = pickString(record, 'id', 'Id', 'campaignId', 'CampaignId');
   const title = pickString(record, 'title', 'Title', 'name', 'Name');
   if (!id || !title) return null;
 
   return {
     id,
     title,
+    domain: pickString(record, 'domain', 'Domain') ?? null,
     company: pickString(record, 'company', 'Company') ?? null,
     location: pickString(record, 'location', 'Location') ?? null,
     mode: pickString(record, 'mode', 'Mode', 'workingMode', 'WorkingMode') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'draft',
     summary: pickString(record, 'summary', 'Summary', 'description', 'Description') ?? null,
-    jobDescription: pickString(record, 'jobDescription', 'JobDescription') ?? null,
+    jobDescription: pickString(record, 'jobDescription', 'JobDescription', 'jdText', 'JdText') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
     applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
     applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
     maxCandidates: pickNumber(record, 'maxCandidates', 'MaxCandidates') ?? null,
-    deadline: pickString(record, 'deadline', 'Deadline', 'endDate', 'EndDate') ?? null,
-    endDate: pickString(record, 'endDate', 'EndDate') ?? null,
-    durationMinutes: pickNumber(record, 'durationMinutes', 'DurationMinutes') ?? null,
+    deadline: pickString(record, 'deadline', 'Deadline', 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
+    endDate: pickString(record, 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
+    startsAt: pickString(record, 'startsAt', 'StartsAt') ?? null,
+    expiresAt: pickString(record, 'expiresAt', 'ExpiresAt') ?? null,
+    durationMinutes:
+      pickNumber(record, 'durationMinutes', 'DurationMinutes', 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
+    timeLimitMinutes: pickNumber(record, 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
+    passScorePct: pickNumber(record, 'passScorePct', 'PassScorePct') ?? null,
+    antiCheatEnabled:
+      typeof record.antiCheatEnabled === 'boolean'
+        ? record.antiCheatEnabled
+        : typeof record.AntiCheatEnabled === 'boolean'
+          ? record.AntiCheatEnabled
+          : null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
@@ -233,6 +263,7 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     name: item.name,
     weight: item.weight,
     description: item.description?.trim() || '',
+    maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
   }));
 }
 
@@ -279,7 +310,8 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
   return {
     id: item.id,
     title: item.title,
-    company: item.company?.trim() || '—',
+    domain: item.domain?.trim() || undefined,
+    company: item.company?.trim() || item.domain?.trim() || '—',
     location: item.location?.trim() || '—',
     mode: mapMode(item.mode),
     status: mapStatus(item.status),
@@ -288,7 +320,12 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     capacity,
     applicants,
     deadline,
-    durationMinutes: item.durationMinutes ?? 0,
+    startsAt: item.startsAt?.trim() || undefined,
+    durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
+    passScorePct: item.passScorePct ?? null,
+    antiCheatEnabled:
+      item.antiCheatEnabled ??
+      (mapProctoring(item.proctoring).maxViolations > 0),
     locale: mapLocale(item.locale),
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),

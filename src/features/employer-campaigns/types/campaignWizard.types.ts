@@ -1,33 +1,61 @@
 import type { CampaignTargetLevel, CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
 
-export type JdSource = 'file' | 'paste' | null;
+export type JobDescriptionMethod = 'file' | 'text';
 
-export type JdAnalysisState = {
-  source: JdSource;
+export type DeferredJdFileStatus = 'idle' | 'selected' | 'uploading' | 'uploaded' | 'failed';
+
+export type JobDescriptionState = {
+  inputMethod: JobDescriptionMethod;
+  jdFile: File | null;
   fileName: string | null;
   fileSize: number | null;
   jdText: string;
-  status: 'idle' | 'uploading' | 'analyzing' | 'ready' | 'failed';
-  errorKey?: string;
-  jobTitle: string;
-  domain: string;
-  targetLevel: string;
-  yearsExperience: string;
-  technicalSkills: string[];
-  frameworks: string[];
-  tools: string[];
-  softSkills: string[];
-  responsibilities: string;
-  requiredQualifications: string;
-  preferredQualifications: string;
-  keywords: string[];
-  summary: string;
+  fileStatus: DeferredJdFileStatus;
+  fileError: string | null;
+  uploadProgress: number | null;
 };
 
-export type RubricSource = 'ai' | 'upload' | null;
-export type QuestionSource = 'ai' | 'upload' | null;
-export type CandidateInviteMethod = 'emails' | 'cv-ranking' | null;
+/** @deprecated Alias kept for gradual rename. */
+export type JdAnalysisState = JobDescriptionState;
+
+export type RubricSource = 'ai' | 'upload' | 'manual' | null;
+export type QuestionSource = 'ai' | 'upload' | 'manual' | null;
+
+/** Maps to POST /api/v1/campaign campaign fields. */
+export type CampaignInfoState = {
+  title: string;
+  domain: CampaignDomainOption | '';
+  targetLevel: CampaignTargetLevel | '';
+  maxCandidates: number | null;
+  timeLimitMinutes: number;
+  /** Optional 0–100; null = HR decides. */
+  passScorePct: number | null;
+  antiCheatEnabled: boolean;
+  startsAt: string;
+  expiresAt: string;
+  timezone: string;
+};
+
+export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
+
+export type CampaignWizardPersistedState = {
+  info: CampaignInfoState;
+  jd: JobDescriptionState;
+  rubricSource: RubricSource;
+  /** Weights as UI percents (0–100); convert on submit. */
+  rubric: RubricCriterion[];
+  rubricSavedAt: string | null;
+  questionSource: QuestionSource;
+  questionCount: number;
+  questions: CampaignQuestion[];
+  currentStep: number;
+  completedSteps: number[];
+  errorSteps: number[];
+  draftId?: string;
+  lastSavedAt?: string;
+  autosaveStatus: AutosaveStatus;
+};
 
 export type RankedCandidate = {
   id: string;
@@ -38,110 +66,58 @@ export type RankedCandidate = {
   experienceMatch: number;
   skillsMatch: number;
   selected: boolean;
+  status?: string;
 };
 
-export type MagicLinkState = {
-  url: string;
-  campaignCode: string;
-  expiresAt: string;
-  status: 'idle' | 'ready' | 'error';
-  candidateCount: number;
+export type InvalidEmail = {
+  value: string;
+  reason: string;
 };
 
-export type InvitationEmailState = {
-  subject: string;
-  body: string;
-  buttonText: string;
-  attachmentName: string | null;
-};
+export type InviteMethod = 'cv' | 'email' | null;
 
-/** Maps to POST /api/v1/campaign campaign fields. */
-export type CampaignInfoState = {
-  title: string;
-  domain: CampaignDomainOption | '';
-  customDomain: string;
-  targetLevel: CampaignTargetLevel | '';
-  jobTitle: string;
-  /** Optional; omit/empty = unlimited */
-  maxCandidates: number | null;
-  timeLimitMinutes: number;
-  antiCheatEnabled: boolean;
-  startsAt: string;
-  expiresAt: string;
-  timezone: string;
-  description: string;
-};
-
-export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
-
-export type CampaignWizardPersistedState = {
-  info: CampaignInfoState;
-  jd: JdAnalysisState;
-  rubricSource: RubricSource;
-  /** Weights stored as UI percents (0–100); convert with percentWeightsToDecimal on submit. */
-  rubric: RubricCriterion[];
-  rubricSavedAt: string | null;
-  questionSource: QuestionSource;
-  questionCount: number;
-  questions: CampaignQuestion[];
-  candidateMethod: CandidateInviteMethod;
-  candidateEmails: string[];
+export type CampaignInvitationState = {
+  campaignId: string;
+  method: InviteMethod;
+  selectedCandidateIds: string[];
   rankedCandidates: RankedCandidate[];
-  matchThreshold: number;
-  magicLink: MagicLinkState;
-  invitationEmail: InvitationEmailState;
-  currentStep: number;
-  completedSteps: number[];
-  errorSteps: number[];
-  draftId?: string;
-  lastSavedAt?: string;
-  autosaveStatus: AutosaveStatus;
-  publishConfirmed: boolean;
+  rawEmailInput: string;
+  validEmails: string[];
+  invalidEmails: InvalidEmail[];
+  isSubmitting: boolean;
+  result?: {
+    invited: Array<{ email: string; invitationId?: string }>;
+    failed: Array<{ email: string; reason: string }>;
+  };
 };
 
-export function createEmptyJdState(): JdAnalysisState {
+export function createEmptyJdState(): JobDescriptionState {
   return {
-    source: null,
+    inputMethod: 'file',
+    jdFile: null,
     fileName: null,
     fileSize: null,
     jdText: '',
-    status: 'idle',
-    jobTitle: '',
-    domain: '',
-    targetLevel: '',
-    yearsExperience: '',
-    technicalSkills: [],
-    frameworks: [],
-    tools: [],
-    softSkills: [],
-    responsibilities: '',
-    requiredQualifications: '',
-    preferredQualifications: '',
-    keywords: [],
-    summary: '',
+    fileStatus: 'idle',
+    fileError: null,
+    uploadProgress: null,
   };
 }
 
-export function createDefaultInvitationEmail(campaignName: string): InvitationEmailState {
-  return {
-    subject: `Invitation: ${campaignName || 'Campaign'}`,
-    body: 'You are invited to join our AI interview campaign. Please use the magic link below before the deadline.',
-    buttonText: 'Join interview',
-    attachmentName: 'campaign-guide.pptx',
-  };
-}
-
-/** Convert UI percent (0–100) weights to API decimals summing to ~1. */
 export function percentWeightsToDecimal(items: RubricCriterion[]): RubricCriterion[] {
   return items.map((item) => ({
     ...item,
     weight: Number((Number(item.weight) / 100).toFixed(4)),
+    maxScore: Number(item.maxScore) || 0,
   }));
 }
 
 export function decimalWeightsToPercent(items: RubricCriterion[]): RubricCriterion[] {
   return items.map((item) => ({
     ...item,
-    weight: Number((Number(item.weight) <= 1 ? Number(item.weight) * 100 : Number(item.weight)).toFixed(2)),
+    weight: Number(
+      (Number(item.weight) <= 1 ? Number(item.weight) * 100 : Number(item.weight)).toFixed(2),
+    ),
+    maxScore: Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
   }));
 }
