@@ -14,7 +14,6 @@ import type {
   CandidateInviteMethod,
   InvitationEmailState,
   JdAnalysisState,
-  MagicLinkState,
   QuestionSource,
   RankedCandidate,
   RubricSource,
@@ -22,38 +21,52 @@ import type {
 import {
   createDefaultInvitationEmail,
   createEmptyJdState,
+  decimalWeightsToPercent,
+  percentWeightsToDecimal,
 } from '../types/campaignWizard.types';
-import {
-  CAMPAIGN_WIZARD_STEP_COUNT,
-} from '../components/wizard/campaignWizard.steps';
+import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
 
 function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
+  const today = new Date();
+  const end = new Date(today);
+  end.setDate(end.getDate() + 30);
   return {
-    name: campaign?.title ?? '',
+    title: campaign?.title ?? '',
     domain: '',
     customDomain: '',
     targetLevel: '',
-    jobTitle: campaign?.title ?? '',
-    hireCount: Math.max(1, campaign?.capacity ? Math.min(campaign.capacity, 10) : 1),
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: campaign?.deadline?.slice(0, 10) || '',
-    joinDeadline: campaign?.deadline?.slice(0, 10) || '',
+    jobTitle: '',
+    maxCandidates: campaign?.capacity ?? null,
+    timeLimitMinutes: campaign?.durationMinutes ?? 60,
+    antiCheatEnabled: true,
+    startsAt: today.toISOString().slice(0, 16),
+    expiresAt: (campaign?.deadline
+      ? new Date(campaign.deadline)
+      : end
+    )
+      .toISOString()
+      .slice(0, 16),
     timezone: 'Asia/Ho_Chi_Minh',
-    description: campaign?.summary ?? '',
+    description: '',
   };
 }
 
 function buildInitialState(campaign?: EmployerCampaign | null): CampaignWizardPersistedState {
   const info = defaultInfo(campaign);
+  const rubric = decimalWeightsToPercent(
+    campaign?.rubric?.length ? campaign.rubric : DEFAULT_RUBRIC,
+  );
   return {
     info,
     jd: {
       ...createEmptyJdState(),
       summary: campaign?.jobDescription ?? '',
+      jdText: campaign?.jobDescription ?? '',
       status: campaign?.jobDescription ? 'ready' : 'idle',
+      source: campaign?.jobDescription ? 'paste' : null,
     },
     rubricSource: campaign?.rubric?.length ? 'ai' : null,
-    rubric: campaign?.rubric?.length ? campaign.rubric : DEFAULT_RUBRIC,
+    rubric,
     rubricSavedAt: null,
     questionSource: campaign?.questions?.length ? 'ai' : null,
     questionCount: 5,
@@ -69,11 +82,13 @@ function buildInitialState(campaign?: EmployerCampaign | null): CampaignWizardPe
       status: 'idle',
       candidateCount: 0,
     },
-    invitationEmail: createDefaultInvitationEmail(info.name),
+    invitationEmail: createDefaultInvitationEmail(info.title),
     currentStep: 0,
     completedSteps: [],
     errorSteps: [],
     draftId: campaign?.id,
+    autosaveStatus: 'idle',
+    publishConfirmed: false,
   };
 }
 
@@ -100,7 +115,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
   const [publishError, setPublishError] = useState<string | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
 
-  const totalWeight = useMemo(
+  const totalWeightPercent = useMemo(
     () => state.rubric.reduce((sum, item) => sum + Number(item.weight), 0),
     [state.rubric],
   );
@@ -118,11 +133,11 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
   }, [selectedCandidates, state.candidateEmails, state.candidateMethod]);
 
   const patchInfo = useCallback((patch: Partial<CampaignInfoState>) => {
-    setState((prev) => ({ ...prev, info: { ...prev.info, ...patch } }));
+    setState((prev) => ({ ...prev, info: { ...prev.info, ...patch }, autosaveStatus: 'idle' }));
   }, []);
 
   const patchJd = useCallback((patch: Partial<JdAnalysisState>) => {
-    setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch } }));
+    setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'idle' }));
   }, []);
 
   const setRubricSource = useCallback((rubricSource: RubricSource) => {
@@ -134,10 +149,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
   }, []);
 
   const saveRubric = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      rubricSavedAt: new Date().toISOString(),
-    }));
+    setState((prev) => ({ ...prev, rubricSavedAt: new Date().toISOString() }));
   }, []);
 
   const setQuestionSource = useCallback((questionSource: QuestionSource) => {
@@ -168,12 +180,12 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setState((prev) => ({ ...prev, matchThreshold }));
   }, []);
 
-  const setMagicLink = useCallback((magicLink: MagicLinkState) => {
-    setState((prev) => ({ ...prev, magicLink }));
-  }, []);
-
   const setInvitationEmail = useCallback((invitationEmail: InvitationEmailState) => {
     setState((prev) => ({ ...prev, invitationEmail }));
+  }, []);
+
+  const setPublishConfirmed = useCallback((publishConfirmed: boolean) => {
+    setState((prev) => ({ ...prev, publishConfirmed }));
   }, []);
 
   const goToStep = useCallback((step: number) => {
@@ -186,52 +198,65 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
 
   const validateStep = useCallback(
     (step: number): string | null => {
-      const { info, jd, questions, candidateMethod, magicLink, invitationEmail } = state;
+      const { info, jd, questions, candidateMethod, magicLink, invitationEmail, publishConfirmed } =
+        state;
       if (step === 0) {
-        if (!info.name.trim()) return t('employer.campaigns.form.required');
+        if (!info.title.trim()) return t('employer.campaigns.form.required');
         if (!info.domain) return t('employer.campaigns.form.required');
-        if (info.domain === 'other' && !info.customDomain.trim()) {
+        if (!info.targetLevel) return t('employer.campaigns.form.required');
+        if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
           return t('employer.campaigns.form.required');
         }
-        if (!info.targetLevel) return t('employer.campaigns.form.required');
-        if (!info.jobTitle.trim()) return t('employer.campaigns.form.required');
-        if (!info.startDate || !info.endDate) return t('employer.campaigns.form.required');
-        if (info.endDate < info.startDate) return t('employer.campaigns.wizard.dateRangeInvalid');
+        if (!info.startsAt || !info.expiresAt) return t('employer.campaigns.form.required');
+        if (info.expiresAt <= info.startsAt) return t('employer.campaigns.wizard.dateRangeInvalid');
         return null;
       }
       if (step === 1) {
-        if (jd.status !== 'ready' && !jd.summary.trim()) {
-          return t('employer.campaigns.wizard.jdRequired');
-        }
+        const hasContent =
+          jd.status === 'ready' || jd.summary.trim() || jd.jdText.trim() || jd.responsibilities.trim();
+        if (!hasContent) return t('employer.campaigns.wizard.jdRequired');
         return null;
       }
       if (step === 2) {
-        if (totalWeight !== 100) return t('employer.campaigns.form.weightHelp');
+        if (state.rubric.length === 0) return t('employer.campaigns.wizard.criteriaRequired');
+        if (Math.round(totalWeightPercent) !== 100) return t('employer.campaigns.form.weightHelp');
         if (!state.rubricSavedAt) return t('employer.campaigns.wizard.rubricSaveRequired');
         return null;
       }
       if (step === 3) {
         if (questions.length === 0) return t('employer.campaigns.form.noQuestions');
+        if (questions.some((q) => !q.prompt.trim())) return t('employer.campaigns.form.required');
         return null;
       }
       if (step === 4) {
         if (!candidateMethod) return t('employer.campaigns.wizard.candidateMethodRequired');
-        if (invitedEmails.length === 0) return t('employer.campaigns.wizard.candidatesRequired');
+        if (candidateMethod === 'emails' && state.candidateEmails.length === 0) {
+          return t('employer.campaigns.wizard.candidatesRequired');
+        }
         return null;
       }
       if (step === 5) {
-        if (magicLink.status !== 'ready') return t('employer.campaigns.wizard.magicLinkRequired');
+        if (candidateMethod === 'cv-ranking' && selectedCandidates.length === 0) {
+          return t('employer.campaigns.wizard.candidatesRequired');
+        }
         return null;
       }
       if (step === 6) {
+        if (magicLink.status !== 'ready') return t('employer.campaigns.wizard.magicLinkRequired');
+        return null;
+      }
+      if (step === 7) {
         if (!invitationEmail.subject.trim() || !invitationEmail.body.trim()) {
           return t('employer.campaigns.form.required');
         }
         return null;
       }
+      if (step === 9 && !publishConfirmed) {
+        return t('employer.campaigns.wizard.publishConfirmRequired');
+      }
       return null;
     },
-    [invitedEmails.length, state, t, totalWeight],
+    [selectedCandidates.length, state, t, totalWeightPercent],
   );
 
   const goNext = useCallback(() => {
@@ -245,41 +270,52 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       return;
     }
     setStepError(null);
-    setState((prev) => ({
-      ...prev,
-      completedSteps: markCompleted(prev.completedSteps, prev.currentStep),
-      errorSteps: clearError(prev.errorSteps, prev.currentStep),
-      currentStep: Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1),
-    }));
+    setState((prev) => {
+      let next = Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1);
+      // Email-list path skips CV ranking screen.
+      if (prev.currentStep === 4 && prev.candidateMethod === 'emails') next = 6;
+      return {
+        ...prev,
+        completedSteps: markCompleted(prev.completedSteps, prev.currentStep),
+        errorSteps: clearError(prev.errorSteps, prev.currentStep),
+        currentStep: next,
+      };
+    });
   }, [state.currentStep, validateStep]);
 
   const goBack = useCallback(() => {
     setStepError(null);
-    setState((prev) => ({
-      ...prev,
-      currentStep: Math.max(0, prev.currentStep - 1),
-    }));
+    setState((prev) => {
+      let next = Math.max(0, prev.currentStep - 1);
+      if (prev.currentStep === 6 && prev.candidateMethod === 'emails') next = 4;
+      return { ...prev, currentStep: next };
+    });
   }, []);
 
   const buildDraftInput = useCallback((): CampaignDraftInput => {
-    const domainLabel =
-      state.info.domain === 'other'
-        ? state.info.customDomain
-        : state.info.domain || state.info.jobTitle;
+    const domainLabel = state.info.domain || 'Organization';
+    const capacity =
+      state.info.maxCandidates && state.info.maxCandidates > 0
+        ? state.info.maxCandidates
+        : Math.max(invitedEmails.length || 1, 1);
     return {
-      title: state.info.name,
-      company: domainLabel || 'Organization',
+      title: state.info.title,
+      company: domainLabel,
       location: state.info.timezone,
       mode: 'remote',
-      summary: state.info.description,
-      jobDescription: state.jd.summary || state.jd.responsibilities || state.info.description,
-      capacity: Math.max(state.info.hireCount, invitedEmails.length || 1),
-      deadline: state.info.joinDeadline || state.info.endDate,
-      durationMinutes: Math.max(15, state.questions.length * 5),
+      summary: state.jd.summary || state.info.title,
+      jobDescription:
+        state.jd.jdText || state.jd.summary || state.jd.responsibilities || state.info.title,
+      capacity,
+      deadline: state.info.expiresAt,
+      durationMinutes: state.info.timeLimitMinutes,
       locale: 'vi',
-      rubric: state.rubric,
+      rubric: percentWeightsToDecimal(state.rubric),
       questions: state.questions,
-      proctoring: DEFAULT_PROCTORING,
+      proctoring: {
+        ...DEFAULT_PROCTORING,
+        maxViolations: state.info.antiCheatEnabled ? DEFAULT_PROCTORING.maxViolations : 0,
+      },
       welcomeMessage: state.invitationEmail.body.slice(0, 280),
       completionMessage: 'Thank you for completing the interview.',
     };
@@ -289,17 +325,21 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setIsSaving(true);
     setSaved(false);
     setPublishError(null);
+    setState((prev) => ({ ...prev, autosaveStatus: 'saving' }));
     try {
       const savedCampaign = await onSaveDraft(buildDraftInput());
+      const savedAt = new Date().toISOString();
       setState((prev) => ({
         ...prev,
         draftId: savedCampaign.id,
-        lastSavedAt: new Date().toISOString(),
+        lastSavedAt: savedAt,
+        autosaveStatus: 'saved',
       }));
       setSaved(true);
     } catch {
       setState((prev) => ({
         ...prev,
+        autosaveStatus: 'failed',
         errorSteps: Array.from(new Set([...prev.errorSteps, prev.currentStep])),
       }));
       setStepError(t('employer.campaigns.wizard.saveFailed'));
@@ -310,7 +350,13 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
 
   const handlePublish = useCallback(async () => {
     setPublishError(null);
-    for (let step = 0; step < CAMPAIGN_WIZARD_STEP_COUNT - 1; step += 1) {
+    const confirmError = validateStep(9);
+    if (confirmError) {
+      setPublishError(confirmError);
+      return;
+    }
+    for (let step = 0; step < 9; step += 1) {
+      if (step === 5 && state.candidateMethod === 'emails') continue;
       const error = validateStep(step);
       if (error) {
         setPublishError(error);
@@ -331,12 +377,12 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       );
       setState((prev) => ({
         ...prev,
-        errorSteps: Array.from(new Set([...prev.errorSteps, 7])),
+        errorSteps: Array.from(new Set([...prev.errorSteps, 9])),
       }));
     } finally {
       setIsPublishing(false);
     }
-  }, [buildDraftInput, onPublish, t, validateStep]);
+  }, [buildDraftInput, onPublish, state.candidateMethod, t, validateStep]);
 
   const generateQuestionsWithAi = useCallback(() => {
     const count = Math.max(1, Math.min(state.questionCount, QUESTION_BANK.length));
@@ -356,7 +402,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setState((prev) => ({
       ...prev,
       rubricSource: 'ai',
-      rubric: DEFAULT_RUBRIC,
+      rubric: decimalWeightsToPercent(DEFAULT_RUBRIC),
       errorSteps: clearError(prev.errorSteps, 2),
     }));
   }, []);
@@ -366,6 +412,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       ...prev,
       jd: {
         ...prev.jd,
+        source: 'file',
         fileName: file.name,
         fileSize: file.size,
         status: 'uploading',
@@ -373,13 +420,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       },
     }));
     window.setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        jd: {
-          ...prev.jd,
-          status: 'analyzing',
-        },
-      }));
+      setState((prev) => ({ ...prev, jd: { ...prev.jd, status: 'analyzing' } }));
     }, 400);
     window.setTimeout(() => {
       setState((prev) => ({
@@ -387,7 +428,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
         jd: {
           ...prev.jd,
           status: 'ready',
-          jobTitle: prev.info.jobTitle || 'Software Engineer',
+          jobTitle: prev.info.title || 'Software Engineer',
           domain: prev.info.domain || 'frontend',
           targetLevel: prev.info.targetLevel || 'Junior',
           yearsExperience: '1-3',
@@ -401,7 +442,12 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
           keywords: ['React', 'TypeScript', 'Accessibility'],
           summary:
             prev.jd.summary ||
-            'Own React surfaces, async state, accessibility, and API integration for hiring workflows.',
+            prev.jd.jdText ||
+            'Own React surfaces, async state, accessibility, and API integration.',
+          jdText:
+            prev.jd.jdText ||
+            prev.jd.summary ||
+            'Own React surfaces, async state, accessibility, and API integration.',
         },
         errorSteps: clearError(prev.errorSteps, 1),
       }));
@@ -415,11 +461,11 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
       magicLink: {
         url: `${window.location.origin}/invite/${code.toLowerCase()}`,
         campaignCode: code,
-        expiresAt: prev.info.endDate || prev.info.joinDeadline,
+        expiresAt: prev.info.expiresAt,
         status: 'ready',
         candidateCount: invitedEmails.length,
       },
-      errorSteps: clearError(prev.errorSteps, 5),
+      errorSteps: clearError(prev.errorSteps, 6),
     }));
   }, [invitedEmails.length]);
 
@@ -474,7 +520,7 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     isSaving,
     isPublishing,
     publishError,
-    totalWeight,
+    totalWeight: totalWeightPercent,
     invitedEmails,
     selectedCandidates,
     patchInfo,
@@ -489,8 +535,8 @@ export function useCampaignWizard({ campaign, onSaveDraft, onPublish }: UseCampa
     setCandidateEmails,
     setRankedCandidates,
     setMatchThreshold,
-    setMagicLink,
     setInvitationEmail,
+    setPublishConfirmed,
     goNext,
     goBack,
     goToStep,

@@ -18,13 +18,11 @@ interface CampaignFinalReviewStepProps {
   invitedCount: number;
   magicLink: MagicLinkState;
   email: InvitationEmailState;
-  publishError?: string | null;
   onEditStep: (step: number) => void;
   onBack: () => void;
+  onNext: () => void;
   onSaveDraft: () => void;
-  onPublish: () => void;
   isSaving?: boolean;
-  isPublishing?: boolean;
 }
 
 function ReviewCard({
@@ -69,22 +67,23 @@ export function CampaignFinalReviewStep({
   invitedCount,
   magicLink,
   email,
-  publishError,
   onEditStep,
   onBack,
+  onNext,
   onSaveDraft,
-  onPublish,
   isSaving,
-  isPublishing,
 }: CampaignFinalReviewStepProps) {
   const { t } = useLanguage();
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
   const editLabel = t('employer.campaigns.wizard.editStep');
+  const domainLabel = info.domain
+    ? t(`employer.campaigns.form.domain.${info.domain}`)
+    : '—';
 
   const checks = [
-    { ok: Boolean(info.name.trim()), label: t('employer.campaigns.wizard.check.info') },
-    { ok: jd.status === 'ready' || Boolean(jd.summary.trim()), label: t('employer.campaigns.wizard.check.jd') },
-    { ok: totalWeight === 100, label: t('employer.campaigns.wizard.check.criteria') },
+    { ok: Boolean(info.title.trim()), label: t('employer.campaigns.wizard.check.info') },
+    { ok: jd.status === 'ready' || Boolean(jd.summary.trim() || jd.jdText.trim()), label: t('employer.campaigns.wizard.check.jd') },
+    { ok: Math.round(totalWeight) === 100, label: t('employer.campaigns.wizard.check.criteria') },
     { ok: questions.length > 0, label: t('employer.campaigns.wizard.check.questions') },
     { ok: invitedCount > 0, label: t('employer.campaigns.wizard.check.candidates') },
     { ok: magicLink.status === 'ready', label: t('employer.campaigns.wizard.check.magicLink') },
@@ -99,21 +98,14 @@ export function CampaignFinalReviewStep({
       footer={
         <CampaignWizardNav
           onBack={onBack}
+          onNext={onNext}
           onSaveDraft={onSaveDraft}
-          onPublish={onPublish}
-          showPublish
+          nextLabel={t('employer.campaigns.wizard.continueToPublish')}
           isSaving={isSaving}
-          isPublishing={isPublishing}
         />
       }
     >
       <div className="space-y-5">
-        {publishError ? (
-          <p className="rounded-lg border border-error/40 bg-error-bg px-3 py-2 text-sm text-error" role="alert">
-            {publishError}
-          </p>
-        ) : null}
-
         <ul className="grid gap-2 sm:grid-cols-2">
           {checks.map((item) => (
             <li
@@ -130,39 +122,49 @@ export function CampaignFinalReviewStep({
 
         <ReviewCard title={t('employer.campaigns.wizard.steps.info')} onEdit={() => onEditStep(0)} editLabel={editLabel}>
           <dl>
-            <Row label={t('employer.campaigns.form.name')} value={info.name || '—'} />
-            <Row label={t('employer.campaigns.form.jobTitle')} value={info.jobTitle || '—'} />
+            <Row label={t('employer.campaigns.form.title')} value={info.title || '—'} />
+            <Row label={t('employer.campaigns.form.domain')} value={domainLabel} />
             <Row label={t('employer.campaigns.form.targetLevel')} value={info.targetLevel || '—'} />
-            <Row label={t('employer.campaigns.form.hireCount')} value={String(info.hireCount)} />
+            <Row
+              label={t('employer.campaigns.form.maxCandidates')}
+              value={info.maxCandidates == null ? t('employer.campaigns.form.unlimited') : String(info.maxCandidates)}
+            />
+            <Row label={t('employer.campaigns.form.timeLimitMinutes')} value={`${info.timeLimitMinutes}`} />
+            <Row
+              label={t('employer.campaigns.form.antiCheat')}
+              value={info.antiCheatEnabled ? t('employer.campaigns.form.yes') : t('employer.campaigns.form.no')}
+            />
           </dl>
         </ReviewCard>
 
         <ReviewCard title={t('employer.campaigns.wizard.steps.jd')} onEdit={() => onEditStep(1)} editLabel={editLabel}>
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-            {jd.summary || t('employer.campaigns.wizard.emptyJd')}
+            {jd.summary || jd.jdText || t('employer.campaigns.wizard.emptyJd')}
           </p>
         </ReviewCard>
 
         <ReviewCard title={t('employer.campaigns.wizard.steps.criteria')} onEdit={() => onEditStep(2)} editLabel={editLabel}>
-          <Row label={t('employer.campaigns.form.weightTotal')} value={`${totalWeight}%`} />
+          <Row label={t('employer.campaigns.form.weightTotal')} value={`${Math.round(totalWeight)}%`} />
           <p className="mt-2 text-sm text-muted-foreground">
             {rubric.map((c) => c.name).join(' · ') || '—'}
           </p>
         </ReviewCard>
 
         <ReviewCard title={t('employer.campaigns.wizard.steps.questions')} onEdit={() => onEditStep(3)} editLabel={editLabel}>
-          <p className="text-sm text-foreground">{questions.length} {t('employer.campaigns.form.questionsUnit')}</p>
+          <p className="text-sm text-foreground">
+            {questions.length} {t('employer.campaigns.form.questionsUnit')}
+          </p>
         </ReviewCard>
 
-        <ReviewCard title={t('employer.campaigns.wizard.steps.candidates')} onEdit={() => onEditStep(4)} editLabel={editLabel}>
+        <ReviewCard title={t('employer.campaigns.wizard.steps.inviteMethod')} onEdit={() => onEditStep(4)} editLabel={editLabel}>
           <Row label={t('employer.campaigns.form.candidateCount')} value={String(invitedCount)} />
         </ReviewCard>
 
-        <ReviewCard title={t('employer.campaigns.wizard.steps.magicLink')} onEdit={() => onEditStep(5)} editLabel={editLabel}>
+        <ReviewCard title={t('employer.campaigns.wizard.steps.magicLink')} onEdit={() => onEditStep(6)} editLabel={editLabel}>
           <p className="break-all text-sm text-muted-foreground">{magicLink.url || '—'}</p>
         </ReviewCard>
 
-        <ReviewCard title={t('employer.campaigns.wizard.steps.email')} onEdit={() => onEditStep(6)} editLabel={editLabel}>
+        <ReviewCard title={t('employer.campaigns.wizard.steps.email')} onEdit={() => onEditStep(7)} editLabel={editLabel}>
           <Row label={t('employer.campaigns.form.emailSubject')} value={email.subject || '—'} />
         </ReviewCard>
       </div>

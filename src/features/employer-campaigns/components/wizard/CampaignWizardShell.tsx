@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { X } from 'lucide-react';
 import {
   FlowStepConnector,
   FlowStepMarker,
@@ -8,6 +9,7 @@ import {
 } from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import type { AutosaveStatus } from '../../types/campaignWizard.types';
 import { CAMPAIGN_WIZARD_STEPS } from './campaignWizard.steps';
 
 interface CampaignWizardShellProps {
@@ -16,6 +18,10 @@ interface CampaignWizardShellProps {
   campaignName?: string;
   progressPercent?: number;
   isEditing?: boolean;
+  autosaveStatus?: AutosaveStatus;
+  lastSavedAt?: string;
+  onSaveDraft?: () => void;
+  isSaving?: boolean;
   children: React.ReactNode;
 }
 
@@ -26,22 +32,90 @@ function statusLabelKey(status: FlowStepStatus): string {
   return 'employer.campaigns.wizard.status.pending';
 }
 
+function autosaveLabel(
+  t: (key: string) => string,
+  status: AutosaveStatus | undefined,
+  lastSavedAt?: string,
+): string {
+  if (status === 'saving') return t('employer.campaigns.wizard.autosave.saving');
+  if (status === 'failed') return t('employer.campaigns.wizard.autosave.failed');
+  if (status === 'saved' && lastSavedAt) {
+    const time = new Date(lastSavedAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return t('employer.campaigns.wizard.autosave.savedAt').replace('{time}', time);
+  }
+  return t('employer.campaigns.wizard.autosave.idle');
+}
+
 export function CampaignWizardShell({
   currentStep,
   errorSteps = [],
   campaignName,
   progressPercent = 0,
   isEditing = false,
+  autosaveStatus = 'idle',
+  lastSavedAt,
+  onSaveDraft,
+  isSaving = false,
   children,
 }: CampaignWizardShellProps) {
   const { t } = useLanguage();
+  const flowTitle = campaignName?.trim()
+    ? `${t('employer.campaigns.wizard.createTitle')}: ${campaignName}`
+    : isEditing
+      ? t('employer.campaigns.wizard.editTitle')
+      : t('employer.campaigns.wizard.createTitle');
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] justify-center overflow-y-auto bg-surface-base px-4 py-6 sm:px-8 lg:px-12 lg:py-8">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-surface-base">
+      <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-medium text-foreground sm:text-base">{flowTitle}</p>
+              <span className="rounded-md border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
+                {t('employer.campaigns.status.draft')}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {autosaveLabel(t, autosaveStatus, lastSavedAt)}
+              {' · '}
+              {t('employer.campaigns.wizard.progress')
+                .replace('{percent}', String(Math.round(progressPercent)))
+                .replace('{current}', String(currentStep + 1))
+                .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {onSaveDraft ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={isSaving}
+                onClick={onSaveDraft}
+              >
+                {isSaving
+                  ? t('employer.campaigns.wizard.saving')
+                  : t('employer.campaigns.wizard.save')}
+              </button>
+            ) : null}
+            <Link
+              to="/employer/campaigns"
+              className="btn-ghost inline-flex size-9 items-center justify-center"
+              aria-label={t('employer.campaigns.wizard.close')}
+            >
+              <X className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 px-4 py-6 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-12 lg:py-8">
         <nav
           aria-label={t('employer.campaigns.wizard.stepperLabel')}
-          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[280px] lg:self-start"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[280px] lg:self-start"
         >
           <ol className="flex flex-col">
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
@@ -76,47 +150,6 @@ export function CampaignWizardShell({
         </nav>
 
         <div className="flex min-w-0 flex-1 flex-col gap-5">
-          <header className="flex flex-col gap-3 border-b border-satin pb-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-2">
-              <Link
-                to="/employer/campaigns"
-                className="text-sm text-muted-foreground transition hover:text-foreground"
-              >
-                {t('employer.campaigns.wizard.backToList')}
-              </Link>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="heading-primary text-2xl text-foreground sm:text-3xl">
-                  {campaignName?.trim()
-                    ? campaignName
-                    : isEditing
-                      ? t('employer.campaigns.wizard.editTitle')
-                      : t('employer.campaigns.wizard.createTitle')}
-                </h1>
-                <span className="rounded-md border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
-                  {t('employer.campaigns.status.draft')}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {t('employer.campaigns.wizard.progress')
-                  .replace('{percent}', String(Math.round(progressPercent)))
-                  .replace('{current}', String(currentStep + 1))
-                  .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
-              </p>
-            </div>
-            <div
-              className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay sm:max-w-xs"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progressPercent)}
-            >
-              <div
-                className="h-full rounded-full bg-foreground/80 transition-[width] duration-300 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </header>
-
           <ol
             aria-label={t('employer.campaigns.wizard.stepperLabel')}
             className="flex gap-2 overflow-x-auto pb-1 sm:hidden"

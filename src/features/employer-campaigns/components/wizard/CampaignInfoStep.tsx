@@ -10,6 +10,7 @@ import {
   type CampaignDomainOption,
   type CampaignTargetLevel,
 } from './campaignWizard.steps';
+import { CampaignInfoScheduleSection } from './CampaignInfoScheduleSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
@@ -49,141 +50,125 @@ export function CampaignInfoStep({
         />
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {error ? <FieldError message={error} /> : null}
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="campaign-name">{t('employer.campaigns.form.name')}</Label>
-            <Input
-              id="campaign-name"
-              value={info.name}
-              onChange={(e) => onChange({ name: e.target.value })}
-              aria-invalid={!!error && !info.name.trim()}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="campaign-domain">{t('employer.campaigns.form.domain')}</Label>
-            <select
-              id="campaign-domain"
-              className={selectClass}
-              value={info.domain}
-              onChange={(e) =>
-                onChange({ domain: e.target.value as CampaignDomainOption | '' })
-              }
-            >
-              <option value="">{t('employer.campaigns.form.domainPlaceholder')}</option>
-              {CAMPAIGN_DOMAIN_OPTIONS.map((domain) => (
-                <option key={domain} value={domain}>
-                  {t(`employer.campaigns.form.domain.${domain}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {info.domain === 'other' ? (
-            <div className="space-y-2">
-              <Label htmlFor="campaign-custom-domain">
-                {t('employer.campaigns.form.customDomain')}
-              </Label>
+        <section className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">
+            {t('employer.campaigns.form.section.general')}
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="campaign-title">{t('employer.campaigns.form.title')}</Label>
               <Input
-                id="campaign-custom-domain"
-                value={info.customDomain}
-                onChange={(e) => onChange({ customDomain: e.target.value })}
+                id="campaign-title"
+                value={info.title}
+                placeholder={t('employer.campaigns.form.titlePlaceholder')}
+                onChange={(e) => onChange({ title: e.target.value })}
+                aria-invalid={!!error && !info.title.trim()}
               />
+              <p className="text-xs text-muted-foreground">{t('employer.campaigns.form.titleHelp')}</p>
             </div>
-          ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="campaign-level">{t('employer.campaigns.form.targetLevel')}</Label>
-            <select
-              id="campaign-level"
-              className={selectClass}
-              value={info.targetLevel}
-              onChange={(e) =>
-                onChange({ targetLevel: e.target.value as CampaignTargetLevel | '' })
-              }
-            >
-              <option value="">{t('employer.campaigns.form.targetLevelPlaceholder')}</option>
-              {CAMPAIGN_TARGET_LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-domain">{t('employer.campaigns.form.domain')}</Label>
+              <select
+                id="campaign-domain"
+                className={selectClass}
+                value={info.domain}
+                onChange={(e) =>
+                  onChange({ domain: e.target.value as CampaignDomainOption | '' })
+                }
+              >
+                <option value="">{t('employer.campaigns.form.domainPlaceholder')}</option>
+                {CAMPAIGN_DOMAIN_OPTIONS.map((domain) => (
+                  <option key={domain} value={domain}>
+                    {t(`employer.campaigns.form.domain.${domain}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="campaign-job-title">{t('employer.campaigns.form.jobTitle')}</Label>
-            <Input
-              id="campaign-job-title"
-              value={info.jobTitle}
-              onChange={(e) => onChange({ jobTitle: e.target.value })}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-level">{t('employer.campaigns.form.targetLevel')}</Label>
+              <select
+                id="campaign-level"
+                className={selectClass}
+                value={info.targetLevel}
+                onChange={(e) =>
+                  onChange({ targetLevel: e.target.value as CampaignTargetLevel | '' })
+                }
+              >
+                <option value="">{t('employer.campaigns.form.targetLevelPlaceholder')}</option>
+                {CAMPAIGN_TARGET_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="campaign-hire-count">{t('employer.campaigns.form.hireCount')}</Label>
-            <Input
-              id="campaign-hire-count"
-              type="number"
-              min={1}
-              value={info.hireCount}
-              onChange={(e) => onChange({ hireCount: Math.max(1, Number(e.target.value) || 1) })}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="campaign-max">{t('employer.campaigns.form.maxCandidates')}</Label>
+              <Input
+                id="campaign-max"
+                type="number"
+                min={1}
+                value={info.maxCandidates ?? ''}
+                placeholder={t('employer.campaigns.form.maxCandidatesPlaceholder')}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  onChange({
+                    maxCandidates: raw === '' ? null : Math.max(1, Number(raw) || 1),
+                  });
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.maxCandidatesHelp')}
+              </p>
+            </div>
           </div>
+        </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="campaign-start">{t('employer.campaigns.form.startDate')}</Label>
-            <Input
-              id="campaign-start"
-              type="date"
-              value={info.startDate}
-              onChange={(e) => onChange({ startDate: e.target.value })}
-            />
-          </div>
+        <CampaignInfoScheduleSection info={info} onChange={onChange} />
 
-          <div className="space-y-2">
-            <Label htmlFor="campaign-end">{t('employer.campaigns.form.endDate')}</Label>
-            <Input
-              id="campaign-end"
-              type="date"
-              value={info.endDate}
-              onChange={(e) => onChange({ endDate: e.target.value })}
-            />
+        <section className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">
+            {t('employer.campaigns.form.section.settings')}
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="campaign-time-limit">{t('employer.campaigns.form.timeLimitMinutes')}</Label>
+              <Input
+                id="campaign-time-limit"
+                type="number"
+                min={1}
+                value={info.timeLimitMinutes}
+                onChange={(e) =>
+                  onChange({ timeLimitMinutes: Math.max(1, Number(e.target.value) || 1) })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.timeLimitHelp')}
+              </p>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-4 py-3 md:col-span-2">
+              <input
+                id="campaign-anti-cheat"
+                type="checkbox"
+                className="mt-1 size-4 rounded border-satin"
+                checked={info.antiCheatEnabled}
+                onChange={(e) => onChange({ antiCheatEnabled: e.target.checked })}
+              />
+              <div>
+                <Label htmlFor="campaign-anti-cheat">{t('employer.campaigns.form.antiCheat')}</Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('employer.campaigns.form.antiCheatHelp')}
+                </p>
+              </div>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="campaign-join">{t('employer.campaigns.form.joinDeadline')}</Label>
-            <Input
-              id="campaign-join"
-              type="date"
-              value={info.joinDeadline}
-              onChange={(e) => onChange({ joinDeadline: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="campaign-tz">{t('employer.campaigns.form.timezone')}</Label>
-            <Input
-              id="campaign-tz"
-              value={info.timezone}
-              onChange={(e) => onChange({ timezone: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="campaign-desc">{t('employer.campaigns.form.description')}</Label>
-            <textarea
-              id="campaign-desc"
-              rows={4}
-              className="w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm"
-              value={info.description}
-              onChange={(e) => onChange({ description: e.target.value })}
-            />
-          </div>
-        </div>
+        </section>
       </div>
     </SectionPanel>
   );

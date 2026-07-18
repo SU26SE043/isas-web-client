@@ -3,14 +3,16 @@ import { useLanguage } from '@/shared/languages';
 import { useCampaignWizard } from '../../hooks/useCampaignWizard';
 import type { CampaignDraftInput, EmployerCampaign } from '../../types/campaignManagement.types';
 import { CAMPAIGN_WIZARD_STEP_COUNT } from './campaignWizard.steps';
-import { CampaignCandidatesStep } from './CampaignCandidatesStep';
 import { CampaignCriteriaStepV2 } from './CampaignCriteriaStepV2';
 import { CampaignEmailStep } from './CampaignEmailStep';
 import { CampaignFinalReviewStep } from './CampaignFinalReviewStep';
 import { CampaignInfoStep } from './CampaignInfoStep';
+import { CampaignInviteMethodStep } from './CampaignInviteMethodStep';
 import { CampaignJdStep } from './CampaignJdStep';
 import { CampaignMagicLinkStep } from './CampaignMagicLinkStep';
+import { CampaignPublishStep } from './CampaignPublishStep';
 import { CampaignQuestionsStep } from './CampaignQuestionsStep';
+import { CampaignRankingStep } from './CampaignRankingStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
 
 interface CampaignWizardFormProps {
@@ -36,9 +38,13 @@ export function CampaignWizardForm({
     <CampaignWizardShell
       currentStep={step}
       errorSteps={wizard.errorSteps}
-      campaignName={state.info.name}
+      campaignName={state.info.title}
       progressPercent={progressPercent}
       isEditing={isEditing}
+      autosaveStatus={state.autosaveStatus}
+      lastSavedAt={state.lastSavedAt}
+      onSaveDraft={() => void wizard.handleSaveDraft()}
+      isSaving={wizard.isSaving}
     >
       {wizard.saved ? (
         <Alert variant="success" className="mb-4">
@@ -117,14 +123,25 @@ export function CampaignWizardForm({
       ) : null}
 
       {step === 4 ? (
-        <CampaignCandidatesStep
+        <CampaignInviteMethodStep
           method={state.candidateMethod}
           emails={state.candidateEmails}
-          ranked={state.rankedCandidates}
-          threshold={state.matchThreshold}
           error={stepError}
           onSelectMethod={wizard.setCandidateMethod}
           onEmailsChange={wizard.setCandidateEmails}
+          onSimulateCvRanking={wizard.simulateCvRanking}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+          onSaveDraft={() => void wizard.handleSaveDraft()}
+          isSaving={wizard.isSaving}
+        />
+      ) : null}
+
+      {step === 5 ? (
+        <CampaignRankingStep
+          ranked={state.rankedCandidates}
+          threshold={state.matchThreshold}
+          error={stepError}
           onThreshold={wizard.setMatchThreshold}
           onSimulateCvRanking={wizard.simulateCvRanking}
           onToggleCandidate={(id) =>
@@ -149,7 +166,7 @@ export function CampaignWizardForm({
         />
       ) : null}
 
-      {step === 5 ? (
+      {step === 6 ? (
         <CampaignMagicLinkStep
           magicLink={state.magicLink}
           error={stepError}
@@ -161,7 +178,7 @@ export function CampaignWizardForm({
         />
       ) : null}
 
-      {step === 6 ? (
+      {step === 7 ? (
         <CampaignEmailStep
           email={state.invitationEmail}
           error={stepError}
@@ -175,7 +192,7 @@ export function CampaignWizardForm({
         />
       ) : null}
 
-      {step === 7 ? (
+      {step === 8 ? (
         <CampaignFinalReviewStep
           info={state.info}
           jd={state.jd}
@@ -184,8 +201,23 @@ export function CampaignWizardForm({
           invitedCount={wizard.invitedEmails.length}
           magicLink={state.magicLink}
           email={state.invitationEmail}
-          publishError={wizard.publishError}
           onEditStep={wizard.goToStep}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+          onSaveDraft={() => void wizard.handleSaveDraft()}
+          isSaving={wizard.isSaving}
+        />
+      ) : null}
+
+      {step === 9 ? (
+        <CampaignPublishStep
+          info={state.info}
+          questionCount={state.questions.length}
+          invitedCount={wizard.invitedEmails.length}
+          confirmed={state.publishConfirmed}
+          error={stepError}
+          publishError={wizard.publishError}
+          onConfirmChange={wizard.setPublishConfirmed}
           onBack={wizard.goBack}
           onSaveDraft={() => void wizard.handleSaveDraft()}
           onPublish={() => void wizard.handlePublish()}
