@@ -125,3 +125,24 @@ export type CampaignUpdateRequest = {
   startsAt?: string;
   expiresAt?: string;
 };
+
+/** POST /api/v1/campaign/{id}/invitations — invite by email list (Active only). */
+export type CampaignInviteByEmailRequest = {
+  emails: string[];
+};
+
+export type CampaignInvitationCreatedItem = {
+  id: string;
+  email: string;
+  expiresAt?: string | null;
+};
+
+export type CampaignInvitationFailedItem = {
+  email: string;
+  reason: string;
+};
+
+export type CampaignInviteByEmailResponse = {
+  created: CampaignInvitationCreatedItem[];
+  failed: CampaignInvitationFailedItem[];
+};

@@ -79,7 +79,9 @@ export function CampaignInviteCvPage() {
             email: item.candidateId,
             reason: item.reason,
           })),
+          submittedAt: new Date().toISOString(),
         },
+        replace: true,
       });
       toast.success(t('employer.campaigns.inviteFlow.inviteSuccess'));
     } catch (err) {

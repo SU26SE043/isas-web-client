@@ -234,6 +234,8 @@ export function useEmployerCampaign(id: string | undefined) {
     async (campaignId: string, emails: string[]) => {
       const result = await campaignManagementService.inviteCandidates(campaignId, emails);
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), result.campaign);
+      void queryClient.invalidateQueries({ queryKey: employerCampaignDetailQueryKey(campaignId) });
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
       return result;
     },
     [queryClient],

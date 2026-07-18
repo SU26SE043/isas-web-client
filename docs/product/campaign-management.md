@@ -16,7 +16,9 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Soft-delete** — From Draft / Closed / Archived detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}` (204).
 
-**Invite / file upload** — still mock-shaped for upcoming live wiring (candidates, invitations, files).
+**Invite by email live** — Active detail → invite/email → `POST /api/v1/campaign/{id}/invitations` with `{ emails }`. Response `{ created, failed }` shown on result page. Errors: 400 · 404 · 409 (not Active).
+
+**CV invite / file upload** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds, JD files).
 
 ## Flow 1 — Create & publish
 
@@ -73,6 +75,7 @@ Legacy `/selection` redirects to `/invite`.
 | Publish | `POST /api/v1/campaign/{id}/publish` |
 | Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
 | Soft-delete | `DELETE /api/v1/campaign/{id}` |
+| Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
 
 ## Validation
 

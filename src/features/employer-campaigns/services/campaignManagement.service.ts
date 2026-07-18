@@ -5,6 +5,8 @@ import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../m
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
+  CampaignInviteByEmailRequest,
+  CampaignInviteByEmailResponse,
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
@@ -15,7 +17,6 @@ import type {
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,
-  InviteRejectedEmail,
   InviteResolution,
   PublishResult,
 } from '../types/campaignManagement.types';
@@ -48,18 +49,6 @@ export class CampaignRequestError extends Error {
   }
 }
 
-const MOCK_REGISTERED_CANDIDATES: Record<string, { candidateId: string; displayName: string }> = {
-  'candidate@isas.dev': { candidateId: 'e2e-candidate', displayName: 'E2E Candidate' },
-  'mai.nguyen@example.com': { candidateId: 'cand-mai', displayName: 'Mai Nguyen' },
-  'new.candidate@example.com': { candidateId: 'cand-new', displayName: 'New Candidate' },
-};
-
-const EMPLOYER_EMAILS = new Set(['hrmember@isas.dev', 'orgadmin@isas.dev', 'admin@isas.dev']);
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
 function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
   const query = filters.query.trim().toLowerCase();
   const matchesQuery =
@@ -71,34 +60,82 @@ function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
   return matchesQuery && matchesStatus;
 }
 
-function resolveEmail(email: string): { row?: CampaignCandidateRow; rejected?: InviteRejectedEmail } {
-  const normalized = normalizeEmail(email);
-  if (!normalized.includes('@')) {
-    return { rejected: { email, reason: 'INVALID_EMAIL' } };
-  }
-  if (EMPLOYER_EMAILS.has(normalized)) {
-    return { rejected: { email: normalized, reason: 'EMPLOYER_EMAIL' } };
-  }
-  const registered = MOCK_REGISTERED_CANDIDATES[normalized];
-  if (registered) {
-    return {
-      row: {
-        email: normalized,
-        displayName: registered.displayName,
-        candidateId: registered.candidateId,
-        status: 'invited',
-      },
-    };
-  }
-  return { row: { email: normalized, status: 'invite_pending' } };
-}
-
 function mergeCandidates(existing: CampaignCandidateRow[], incoming: CampaignCandidateRow[]) {
   const map = new Map(existing.map((row) => [row.email, row]));
   for (const row of incoming) {
     map.set(row.email, row);
   }
   return Array.from(map.values());
+}
+
+function unwrapInviteByEmailPayload(data: unknown): CampaignInviteByEmailResponse {
+  const root =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : null;
+  const inner =
+    root && root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+      ? (root.data as Record<string, unknown>)
+      : root;
+  if (!inner) {
+    return { created: [], failed: [] };
+  }
+
+  const createdRaw = Array.isArray(inner.created)
+    ? inner.created
+    : Array.isArray(inner.Created)
+      ? inner.Created
+      : [];
+  const failedRaw = Array.isArray(inner.failed)
+    ? inner.failed
+    : Array.isArray(inner.Failed)
+      ? inner.Failed
+      : [];
+
+  const created = createdRaw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const id = typeof record.id === 'string' ? record.id : typeof record.Id === 'string' ? record.Id : '';
+      const email =
+        typeof record.email === 'string'
+          ? record.email
+          : typeof record.Email === 'string'
+            ? record.Email
+            : '';
+      if (!id.trim() || !email.trim()) return null;
+      const expiresAt =
+        typeof record.expiresAt === 'string'
+          ? record.expiresAt
+          : typeof record.ExpiresAt === 'string'
+            ? record.ExpiresAt
+            : null;
+      return { id: id.trim(), email: email.trim().toLowerCase(), expiresAt };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  const failed = failedRaw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const email =
+        typeof record.email === 'string'
+          ? record.email
+          : typeof record.Email === 'string'
+            ? record.Email
+            : '';
+      const reason =
+        typeof record.reason === 'string'
+          ? record.reason
+          : typeof record.Reason === 'string'
+            ? record.Reason
+            : 'UNKNOWN';
+      if (!email.trim()) return null;
+      return { email: email.trim().toLowerCase(), reason };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  return { created, failed };
 }
 
 export const campaignManagementService = {
@@ -349,40 +386,81 @@ export const campaignManagementService = {
     campaigns = campaigns.filter((item) => item.id !== id);
   },
 
+  /**
+   * Live: POST /api/v1/campaign/{id}/invitations — invite by email list (Active only).
+   * Body `{ emails }` (non-empty). 200 → `{ created, failed }`. Errors: 400 · 404 · 409.
+   */
   async inviteCandidates(id: string, emails: string[]): Promise<InviteResolution> {
-    await mockDelay(400);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (campaign.status !== 'active') throw new Error('CAMPAIGN_NOT_ACTIVE');
-
-    const linked: CampaignCandidateRow[] = [];
-    const pending: CampaignCandidateRow[] = [];
-    const rejected: InviteRejectedEmail[] = [];
-    const accepted: CampaignCandidateRow[] = [];
-
-    for (const rawEmail of emails) {
-      const result = resolveEmail(rawEmail);
-      if (result.rejected) {
-        rejected.push(result.rejected);
-        continue;
-      }
-      if (!result.row) continue;
-      accepted.push(result.row);
-      if (result.row.status === 'invited') linked.push(result.row);
-      else pending.push(result.row);
+    const normalized = Array.from(
+      new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean)),
+    );
+    if (normalized.length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_EMAILS');
     }
 
-    const candidates = mergeCandidates(campaign.candidates, accepted);
-    const invitedEmails = Array.from(new Set([...campaign.invitedEmails, ...accepted.map((row) => row.email)]));
-    const updated = {
-      ...campaign,
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.invitations(id),
+      { emails: normalized } satisfies CampaignInviteByEmailRequest,
+    );
+    const payload = unwrapInviteByEmailPayload(response.data);
+
+    const linked: CampaignCandidateRow[] = payload.created.map((item) => ({
+      email: item.email,
+      status: 'invited' as const,
+    }));
+    const rejected = payload.failed.map((item) => ({
+      email: item.email,
+      reason: item.reason,
+    }));
+
+    const existing = campaigns.find((item) => item.id === id);
+    const base =
+      existing ??
+      ({
+        id,
+        title: '',
+        company: '',
+        location: '',
+        mode: 'remote' as const,
+        status: 'active' as const,
+        summary: '',
+        jobDescription: '',
+        capacity: 0,
+        applicants: 0,
+        deadline: '',
+        durationMinutes: 0,
+        locale: 'vi' as const,
+        rubric: [],
+        questions: [],
+        invitedEmails: [],
+        candidates: [],
+        proctoring: DEFAULT_PROCTORING,
+        welcomeMessage: '',
+        completionMessage: '',
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      } satisfies EmployerCampaign);
+
+    const candidates = mergeCandidates(base.candidates, linked);
+    const invitedEmails = Array.from(
+      new Set([...base.invitedEmails, ...linked.map((row) => row.email)]),
+    );
+    const updated: EmployerCampaign = {
+      ...base,
       candidates,
       invitedEmails,
       applicants: candidates.length,
       updatedAt: new Date().toISOString(),
     };
-    campaigns = campaigns.map((item) => (item.id === id ? updated : item));
-    return { campaign: updated, linked, pending, rejected };
+    campaigns = [updated, ...campaigns.filter((item) => item.id !== id)];
+
+    return {
+      campaign: updated,
+      created: payload.created,
+      linked,
+      pending: [],
+      rejected,
+    };
   },
 
   /**

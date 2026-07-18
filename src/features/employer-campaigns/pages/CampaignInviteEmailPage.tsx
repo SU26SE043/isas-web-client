@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { campaignManagementService } from '../services/campaignManagement.service';
+import type { InviteResultState } from './CampaignInviteResultPage';
 
 function parseEmails(raw: string) {
   const tokens = raw
@@ -30,12 +31,25 @@ function parseEmails(raw: string) {
   return { valid, invalid };
 }
 
+function inviteErrorMessage(err: unknown, t: (key: string) => string): string {
+  const status = campaignManagementService.getErrorStatus(err);
+  if (status === 409) return t('employer.campaigns.inviteFlow.error.notActive');
+  if (status === 404) return t('employer.campaigns.inviteFlow.error.notFound');
+  if (status === 400) return t('employer.campaigns.inviteFlow.error.badRequest');
+  return t('employer.campaigns.inviteFlow.inviteFailed');
+}
+
 export function CampaignInviteEmailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
-  const { campaign } = useEmployerCampaign(id);
-  const [raw, setRaw] = useState('');
+  const { campaign, invite } = useEmployerCampaign(id);
+  const draftFromRetry =
+    typeof (location.state as { draftEmails?: unknown } | null)?.draftEmails === 'string'
+      ? (location.state as { draftEmails: string }).draftEmails
+      : '';
+  const [raw, setRaw] = useState(draftFromRetry);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,20 +69,32 @@ export function CampaignInviteEmailPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const result = await campaignManagementService.inviteCandidates(id, parsed.valid);
+      const result = await invite(id, parsed.valid);
+      const resultState: InviteResultState = {
+        method: 'email',
+        invited: result.created.map((row) => ({
+          email: row.email,
+          invitationId: row.id,
+          expiresAt: row.expiresAt,
+        })),
+        failed: result.rejected.map((row) => ({
+          email: row.email,
+          reason: row.reason,
+        })),
+        emailsDraft: raw,
+        submittedAt: new Date().toISOString(),
+      };
       navigate(`/employer/campaigns/${id}/invite/result`, {
-        state: {
-          method: 'email',
-          invited: [...result.linked, ...result.pending].map((row) => ({ email: row.email })),
-          failed: result.rejected.map((row) => ({
-            email: row.email,
-            reason: row.reason,
-          })),
-        },
+        state: resultState,
+        replace: true,
       });
-      toast.success(t('employer.campaigns.inviteFlow.inviteSuccess'));
+      if (result.created.length > 0 && result.rejected.length === 0) {
+        toast.success(t('employer.campaigns.inviteFlow.inviteSuccess'));
+      } else if (result.created.length === 0) {
+        toast.error(t('employer.campaigns.inviteFlow.inviteAllFailed'));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('employer.campaigns.inviteFlow.inviteFailed'));
+      setError(inviteErrorMessage(err, t));
     } finally {
       setIsSubmitting(false);
     }

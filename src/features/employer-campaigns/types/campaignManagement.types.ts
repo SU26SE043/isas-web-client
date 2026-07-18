@@ -78,11 +78,18 @@ export interface PublishResult {
 
 export interface InviteRejectedEmail {
   email: string;
-  reason: 'EMPLOYER_EMAIL' | 'INVALID_EMAIL';
+  reason: string;
+}
+
+export interface InviteCreatedItem {
+  id: string;
+  email: string;
+  expiresAt?: string | null;
 }
 
 export interface InviteResolution {
   campaign: EmployerCampaign;
+  created: InviteCreatedItem[];
   linked: CampaignCandidateRow[];
   pending: CampaignCandidateRow[];
   rejected: InviteRejectedEmail[];
