@@ -9,7 +9,7 @@ export function CampaignWizardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { campaign, questions, isLoading, saveDraft, publish } = useEmployerCampaign(id);
+  const { campaign, isLoading, saveDraft, publish } = useEmployerCampaign(id);
   const isEditing = Boolean(id);
 
   const handleSaveDraft = async (input: CampaignDraftInput) => {
@@ -45,7 +45,6 @@ export function CampaignWizardPage() {
   return (
     <CampaignWizardForm
       campaign={campaign}
-      questions={questions}
       isEditing={isEditing}
       onSaveDraft={handleSaveDraft}
       onPublish={handlePublish}

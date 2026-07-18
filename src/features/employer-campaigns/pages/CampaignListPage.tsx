@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignFilters } from '../components/CampaignFilters';
 import { CampaignManagementTable } from '../components/CampaignManagementTable';
+import { CampaignSummaryCards } from '../components/CampaignSummaryCards';
 import { useEmployerCampaigns } from '../hooks/useEmployerCampaigns';
 import type { CampaignFilters as CampaignFiltersValue } from '../types/campaignManagement.types';
 
@@ -15,6 +16,8 @@ export function CampaignListPage() {
   const { t } = useLanguage();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const stableFilters = useMemo(() => filters, [filters]);
+  const summaryFilters = useMemo(() => DEFAULT_FILTERS, []);
+  const summaryQuery = useEmployerCampaigns(summaryFilters);
   const { campaigns, isLoading, isError, errorStatus, reload } = useEmployerCampaigns(stableFilters);
 
   const isForbidden = isError && errorStatus === 403;
@@ -27,10 +30,19 @@ export function CampaignListPage() {
           <div className="space-y-2">
             <p className="text-label text-muted-foreground">{t('employer.campaigns.list.eyebrow')}</p>
             <h1 className="heading-primary text-3xl text-foreground">{t('employer.campaigns.list.title')}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employer.campaigns.list.subtitle')}</p>
+            <p className="body-text max-w-3xl text-sm text-muted-foreground">
+              {t('employer.campaigns.list.subtitle')}
+            </p>
           </div>
-          <Button render={<Link to="/employer/campaigns/new" />}>{t('employer.campaigns.list.create')}</Button>
+          <Button render={<Link to="/employer/campaigns/new" />}>
+            {t('employer.campaigns.list.create')}
+          </Button>
         </header>
+
+        {summaryQuery.isLoading ? <Skeleton className="h-24 w-full" /> : null}
+        {!summaryQuery.isLoading && !summaryQuery.isError ? (
+          <CampaignSummaryCards campaigns={summaryQuery.campaigns} />
+        ) : null}
 
         <CampaignFilters value={filters} onChange={setFilters} />
 
@@ -73,7 +85,7 @@ export function CampaignListPage() {
             description={t('employer.campaigns.list.emptyDescription')}
             action={
               <Button render={<Link to="/employer/campaigns/new" />}>
-                {t('employer.campaigns.list.create')}
+                {t('employer.campaigns.list.createFirst')}
               </Button>
             }
           />
