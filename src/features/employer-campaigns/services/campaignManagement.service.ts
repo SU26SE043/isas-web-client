@@ -6,6 +6,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignResponse,
+  CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
 } from '../types/campaign.api.types';
 import type {
@@ -322,7 +323,27 @@ export const campaignManagementService = {
     return { campaign: mapped, warnings: [] };
   },
 
-  /** Live: DELETE /api/v1/campaign/{id} — remove Draft (or allowed statuses). */
+  /**
+   * Live: PUT /api/v1/campaign/{id}/status — Active→Closed→Archived.
+   * Draft→Active uses publish. Invalid transitions → 409.
+   */
+  async updateCampaignStatus(
+    id: string,
+    status: CampaignStatusUpdateRequest['status'],
+  ): Promise<EmployerCampaign> {
+    const response = await apiClient.put<unknown>(campaignManagementEndpoints.status(id), {
+      status,
+    } satisfies CampaignStatusUpdateRequest);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid update campaign status response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /** Live: DELETE /api/v1/campaign/{id} — soft-delete (204). */
   async deleteCampaign(id: string): Promise<void> {
     await apiClient.delete(campaignManagementEndpoints.delete(id));
     campaigns = campaigns.filter((item) => item.id !== id);

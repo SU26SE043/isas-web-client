@@ -229,7 +229,8 @@ function mapStatus(value: string): EmployerCampaignStatus {
   const normalized = value.trim().toLowerCase();
   if (normalized === 'active' || normalized === 'open' || normalized === 'published') return 'active';
   if (normalized === 'paused' || normalized === 'pause') return 'paused';
-  if (normalized === 'closed' || normalized === 'archived' || normalized === 'ended') return 'closed';
+  if (normalized === 'archived') return 'archived';
+  if (normalized === 'closed' || normalized === 'ended') return 'closed';
   return 'draft';
 }
 

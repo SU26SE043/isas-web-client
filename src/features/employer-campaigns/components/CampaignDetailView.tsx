@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignCandidateTable } from './CampaignCandidateTable';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
+import { ChangeCampaignStatusDialog } from './ChangeCampaignStatusDialog';
 import { DeleteCampaignDialog } from './DeleteCampaignDialog';
 import { PublishCampaignDialog } from './PublishCampaignDialog';
+import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
 
 interface CampaignDetailViewProps {
@@ -14,6 +16,7 @@ interface CampaignDetailViewProps {
   published: boolean;
   warnings: string[];
   onPublish: () => Promise<void>;
+  onChangeStatus: (status: CampaignStatusUpdateRequest['status']) => Promise<void>;
   onDelete?: () => Promise<void>;
   onInvite?: (emails: string[]) => Promise<InviteResolution>;
 }
@@ -23,11 +26,14 @@ export function CampaignDetailView({
   published,
   warnings,
   onPublish,
+  onChangeStatus,
   onDelete,
 }: CampaignDetailViewProps) {
   const { t } = useLanguage();
   const isActive = campaign.status === 'active';
   const isDraft = campaign.status === 'draft';
+  const isClosed = campaign.status === 'closed';
+  const canDelete = isDraft || isClosed || campaign.status === 'archived';
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -76,16 +82,43 @@ export function CampaignDetailView({
                 >
                   {t('employer.campaigns.detail.pipeline')}
                 </Button>
+                <ChangeCampaignStatusDialog
+                  targetStatus="Closed"
+                  onConfirm={() => onChangeStatus('Closed')}
+                />
               </>
             ) : null}
 
-            {!isActive && !isDraft ? (
-              <Button
-                variant="outline"
-                render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
-              >
-                {t('employer.campaigns.detail.pipeline')}
-              </Button>
+            {isClosed ? (
+              <>
+                <Button
+                  variant="outline"
+                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
+                >
+                  {t('employer.campaigns.detail.pipeline')}
+                </Button>
+                <ChangeCampaignStatusDialog
+                  targetStatus="Archived"
+                  onConfirm={() => onChangeStatus('Archived')}
+                />
+                {onDelete ? (
+                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
+                ) : null}
+              </>
+            ) : null}
+
+            {campaign.status === 'archived' || campaign.status === 'paused' ? (
+              <>
+                <Button
+                  variant="outline"
+                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
+                >
+                  {t('employer.campaigns.detail.pipeline')}
+                </Button>
+                {canDelete && onDelete ? (
+                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
+                ) : null}
+              </>
             ) : null}
           </div>
         </header>

@@ -102,6 +102,13 @@ export type CampaignCreateRequest = {
 };
 
 /**
+ * PUT /api/v1/campaign/{id}/status — Active→Closed→Archived (Draft→Active uses /publish).
+ */
+export type CampaignStatusUpdateRequest = {
+  status: 'Draft' | 'Active' | 'Closed' | 'Archived';
+};
+
+/**
  * PUT /api/v1/campaign/{id} — update Draft metadata / JD / criteria.
  * Omit fields you do not want to change. Do not put questions here.
  */

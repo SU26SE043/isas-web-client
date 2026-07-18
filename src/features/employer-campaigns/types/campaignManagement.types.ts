@@ -1,4 +1,4 @@
-export type EmployerCampaignStatus = 'draft' | 'active' | 'paused' | 'closed';
+export type EmployerCampaignStatus = 'draft' | 'active' | 'paused' | 'closed' | 'archived';
 export type EmployerCampaignMode = 'remote' | 'hybrid' | 'onsite';
 export type CampaignLocale = 'vi' | 'en';
 export type CampaignCandidateStatus = 'invited' | 'invite_pending';

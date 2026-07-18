@@ -12,7 +12,9 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Publish live** — From Draft detail preview: **Xuất bản** → confirm modal → `POST /api/v1/campaign/{id}/publish`.
 
-**Delete Draft** — From Draft detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}`.
+**Status after Active** — From detail: **Đóng** (Active→Closed) / **Lưu trữ** (Closed→Archived) → confirm → `PUT /api/v1/campaign/{id}/status` with `{ status }`.
+
+**Soft-delete** — From Draft / Closed / Archived detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}` (204).
 
 **Invite / file upload** — still mock-shaped for upcoming live wiring (candidates, invitations, files).
 
@@ -25,7 +27,13 @@ Wizard at `/employer/campaigns/new` (and draft edit): **4 steps** (current UI)
 3. Evaluation criteria
 4. Question configuration → **Create campaign** (`POST`) → navigate to **Campaign Detail (Draft preview)**
 
-Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → delete).
+Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
+
+Active detail: **Mời ứng viên** · **Pipeline** · **Đóng** (confirm → status Closed).
+
+Closed detail: **Pipeline** · **Lưu trữ** (confirm → status Archived) · **Xóa**.
+
+Archived detail: **Pipeline** · **Xóa**.
 
 There is **no** “Save draft” button mid-wizard. Create produces `Draft` from the backend. Publish is only from Campaign Detail.
 
@@ -63,6 +71,8 @@ Legacy `/selection` redirects to `/invite`.
 | Next step while editing Draft | None |
 | Save changes (edit) | `PUT /api/v1/campaign/{id}` then `PUT …/questions` |
 | Publish | `POST /api/v1/campaign/{id}/publish` |
+| Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
+| Soft-delete | `DELETE /api/v1/campaign/{id}` |
 
 ## Validation
 

@@ -10,7 +10,9 @@ export function CampaignSummaryCards({ campaigns }: CampaignSummaryCardsProps) {
   const total = campaigns.length;
   const active = campaigns.filter((item) => item.status === 'active').length;
   const draft = campaigns.filter((item) => item.status === 'draft').length;
-  const closed = campaigns.filter((item) => item.status === 'closed' || item.status === 'paused').length;
+  const closed = campaigns.filter(
+    (item) => item.status === 'closed' || item.status === 'paused' || item.status === 'archived',
+  ).length;
   const invited = campaigns.reduce((sum, item) => sum + (item.invitedEmails?.length || item.applicants || 0), 0);
   const completed = campaigns.reduce(
     (sum, item) => sum + Math.min(item.applicants || 0, item.capacity || 0),

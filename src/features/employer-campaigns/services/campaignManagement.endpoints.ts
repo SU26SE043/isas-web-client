@@ -10,6 +10,7 @@ export const campaignManagementEndpoints = {
   create: CAMPAIGN_API_PREFIX,
   detail: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   publish: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/publish`,
+  status: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/status`,
   update: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   delete: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   questions: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions`,

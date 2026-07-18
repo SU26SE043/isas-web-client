@@ -208,6 +208,19 @@ export function useEmployerCampaign(id: string | undefined) {
     [queryClient],
   );
 
+  const updateStatus = useCallback(
+    async (
+      campaignId: string,
+      status: import('../types/campaign.api.types').CampaignStatusUpdateRequest['status'],
+    ) => {
+      const next = await campaignManagementService.updateCampaignStatus(campaignId, status);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
   const deleteCampaign = useCallback(
     async (campaignId: string) => {
       await campaignManagementService.deleteCampaign(campaignId);
@@ -242,6 +255,7 @@ export function useEmployerCampaign(id: string | undefined) {
     saveCampaignQuestions,
     uploadJdFile,
     publish,
+    updateStatus,
     deleteCampaign,
     invite,
   };

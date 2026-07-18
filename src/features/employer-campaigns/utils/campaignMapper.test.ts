@@ -55,6 +55,36 @@ describe('campaignMapper', () => {
     expect(campaign.deadline).toBe('2026-09-01');
   });
 
+  it('maps Archived separately from Closed', () => {
+    const archived = mapCampaignResponseToEmployerCampaign({
+      id: 'c-arch',
+      title: 'Archived campaign',
+      status: 'Archived',
+      mode: 'Remote',
+      company: 'Acme',
+      location: 'HN',
+      capacity: 5,
+      applicantCount: 1,
+      endDate: '2026-09-01',
+      updatedAt: '2026-07-10T00:00:00.000Z',
+    });
+    expect(archived.status).toBe('archived');
+
+    const closed = mapCampaignResponseToEmployerCampaign({
+      id: 'c-closed',
+      title: 'Closed campaign',
+      status: 'Closed',
+      mode: 'Remote',
+      company: 'Acme',
+      location: 'HN',
+      capacity: 5,
+      applicantCount: 1,
+      endDate: '2026-09-01',
+      updatedAt: '2026-07-10T00:00:00.000Z',
+    });
+    expect(closed.status).toBe('closed');
+  });
+
   it('unwraps detail { data: CampaignResponse } with nested collections', () => {
     const payload = unwrapCampaignDetailPayload({
       data: {

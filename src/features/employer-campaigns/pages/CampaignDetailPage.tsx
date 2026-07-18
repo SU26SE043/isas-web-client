@@ -7,12 +7,14 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailView } from '../components/CampaignDetailView';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { campaignManagementService } from '../services/campaignManagement.service';
+import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 
 export function CampaignDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, errorStatus, reload, publish, deleteCampaign, invite } =
+  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign, invite } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
@@ -32,6 +34,33 @@ export function CampaignDetailPage() {
       setWarnings([]);
       toast.error(t('employer.campaigns.wizard.publishFailed'));
       throw new Error('PUBLISH_FAILED');
+    }
+  };
+
+  const handleChangeStatus = async (status: CampaignStatusUpdateRequest['status']) => {
+    if (!campaign) return;
+    try {
+      await updateStatus(campaign.id, status);
+      toast.success(
+        t(
+          status === 'Closed'
+            ? 'employer.campaigns.detail.closeSuccess'
+            : 'employer.campaigns.detail.archiveSuccess',
+        ),
+      );
+      reload();
+    } catch (error) {
+      const code = campaignManagementService.getErrorStatus(error);
+      toast.error(
+        t(
+          code === 409
+            ? 'employer.campaigns.detail.statusConflict'
+            : status === 'Closed'
+              ? 'employer.campaigns.detail.closeFailed'
+              : 'employer.campaigns.detail.archiveFailed',
+        ),
+      );
+      throw new Error('STATUS_UPDATE_FAILED');
     }
   };
 
@@ -117,6 +146,7 @@ export function CampaignDetailPage() {
       published={published}
       warnings={warnings}
       onPublish={handlePublish}
+      onChangeStatus={handleChangeStatus}
       onDelete={handleDelete}
       onInvite={(emails) => invite(campaign.id, emails)}
     />
