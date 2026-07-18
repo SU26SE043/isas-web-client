@@ -4,18 +4,18 @@ Frontend contract for Phase 10: HR campaign lifecycle.
 
 ## Status
 
-**Implemented (mock)** — employer list/wizard/detail/edit/selection, proctoring settings, invite email resolution, candidate table, org verification gate on publish, invitation email preview before publish.
+**List + detail API live** — `GET /api/v1/campaign` and `GET /api/v1/campaign/{id}` power list/detail (loading / empty / 404 / 403 / retry). Wizard create/publish/invite remain mock until their endpoints are wired.
 
 ## Scope
 
 Phase 10 covers employer-side campaign management:
 
-- `/employer/campaigns` campaign list with status filter and search.
+- `/employer/campaigns` campaign list with status filter and search (live list API).
 - `/employer/campaigns/new` campaign wizard.
-- `/employer/campaigns/:id` campaign detail with publish and invite actions.
+- `/employer/campaigns/:id` campaign detail with publish and invite actions (live detail API).
 - `/employer/campaigns/:id/edit` draft campaign editing.
 
-Out of scope: candidate ranking/pipeline, employer analytics, billing, admin moderation, and live backend integration.
+Out of scope for this slice: candidate ranking/pipeline, employer analytics, billing, admin moderation. Create/publish/invite still use the mock service.
 
 ## BRD Trace
 
@@ -66,16 +66,22 @@ After publish, magic-link email is sent. Existing candidates **sign in** via `/i
 
 ## Data Contract
 
-Until backend contracts are wired, the client uses a mock `EmployerCampaignService`:
+### List + detail (live)
 
-- `listCampaigns(filters)`
-- `getCampaign(id)`
+- `GET /api/v1/campaign` — Bearer employer token via shared `apiClient`
+- `GET /api/v1/campaign/{id}` — detail; response parsed as `CampaignResponse` (also accepts `{ data: CampaignResponse }`)
+- Mapped to UI `EmployerCampaign` for list table and detail page; list search/status filters apply client-side
+
+### Remaining (mock)
+
+Until backend contracts are wired, create/publish/invite use mock `campaignManagementService`:
+
 - `saveDraft(input, id?)`
 - `publishCampaign(id)`
 - `inviteCandidates(id, emails)` — resolves emails; links existing Candidate accounts immediately
 - `resolveInviteEmails(id, emails)` — optional explicit lookup returning `{ linked, pending, rejected }` per email (wire with Auth/Campaign API)
 
-The mock is tenant-scoped in memory and uses the existing `enterprise` mock domain.
+The mock is tenant-scoped in memory and uses the existing `enterprise` mock domain for non-list/detail operations.
 
 ## Validation
 

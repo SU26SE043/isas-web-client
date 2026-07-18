@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BriefcaseBusiness } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignFilters } from '../components/CampaignFilters';
 import { CampaignManagementTable } from '../components/CampaignManagementTable';
@@ -16,7 +15,10 @@ export function CampaignListPage() {
   const { t } = useLanguage();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const stableFilters = useMemo(() => filters, [filters]);
-  const { campaigns, isLoading } = useEmployerCampaigns(stableFilters);
+  const { campaigns, isLoading, isError, errorStatus, reload } = useEmployerCampaigns(stableFilters);
+
+  const isForbidden = isError && errorStatus === 403;
+  const isLoadError = isError && errorStatus !== 401 && errorStatus !== 403;
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -32,17 +34,49 @@ export function CampaignListPage() {
 
         <CampaignFilters value={filters} onChange={setFilters} />
 
-        {isLoading ? <Skeleton className="h-80 w-full" /> : null}
-        {!isLoading && campaigns.length > 0 ? <CampaignManagementTable campaigns={campaigns} /> : null}
-        {!isLoading && campaigns.length === 0 ? (
-          <Card className="border border-subtle bg-surface-raised">
-            <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-              <BriefcaseBusiness className="size-10 text-muted-foreground" aria-hidden />
-              <h2 className="text-lg font-semibold text-foreground">{t('employer.campaigns.list.emptyTitle')}</h2>
-              <p className="max-w-md text-sm text-muted-foreground">{t('employer.campaigns.list.emptyDescription')}</p>
-              <Button render={<Link to="/employer/campaigns/new" />}>{t('employer.campaigns.list.create')}</Button>
-            </CardContent>
-          </Card>
+        {isLoading ? (
+          <div className="space-y-3" aria-busy="true">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-80 w-full" />
+          </div>
+        ) : null}
+
+        {!isLoading && isForbidden ? (
+          <EmptyState
+            variant="no-permission"
+            title={t('employer.campaigns.list.forbiddenTitle')}
+            description={t('employer.campaigns.list.forbiddenDescription')}
+          />
+        ) : null}
+
+        {!isLoading && isLoadError ? (
+          <EmptyState
+            variant="no-results"
+            title={t('employer.campaigns.list.errorTitle')}
+            description={t('employer.campaigns.list.errorDescription')}
+            action={
+              <Button type="button" onClick={reload}>
+                {t('employer.campaigns.list.retry')}
+              </Button>
+            }
+          />
+        ) : null}
+
+        {!isLoading && !isError && campaigns.length > 0 ? (
+          <CampaignManagementTable campaigns={campaigns} />
+        ) : null}
+
+        {!isLoading && !isError && campaigns.length === 0 ? (
+          <EmptyState
+            variant="no-data"
+            title={t('employer.campaigns.list.emptyTitle')}
+            description={t('employer.campaigns.list.emptyDescription')}
+            action={
+              <Button render={<Link to="/employer/campaigns/new" />}>
+                {t('employer.campaigns.list.create')}
+              </Button>
+            }
+          />
         ) : null}
       </div>
     </div>

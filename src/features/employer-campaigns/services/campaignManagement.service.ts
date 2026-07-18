@@ -1,6 +1,9 @@
-import { mockDelay, usesMockData } from '@/shared/mock';
+import { apiClient } from '@/shared/api/apiClient';
+import { getApiStatusCode } from '@/shared/api/apiError';
+import { mockDelay } from '@/shared/mock';
 import { employerService } from '@/features/employer/services/employer.service';
 import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import type { CampaignResponse } from '../types/campaign.api.types';
 import type {
   CampaignCandidateRow,
   CampaignDraftInput,
@@ -11,6 +14,13 @@ import type {
   InviteResolution,
   PublishResult,
 } from '../types/campaignManagement.types';
+import {
+  mapCampaignResponseToEmployerCampaign,
+  parseCampaignResponse,
+  parseCampaignResponseList,
+  unwrapCampaignDetailPayload,
+} from '../utils/campaignMapper';
+import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
 
@@ -83,20 +93,38 @@ async function validatePublish(campaign: EmployerCampaign): Promise<string[]> {
 }
 
 export const campaignManagementService = {
+  /**
+   * Live: GET /api/v1/campaign → CampaignResponse[] (Bearer employer token via apiClient).
+   * Client-side search/status filters match existing list UI.
+   */
   async listCampaigns(filters: CampaignFilters): Promise<EmployerCampaign[]> {
-    if (!usesMockData('enterprise')) {
-      throw new Error('Campaign API is not wired yet. Keep usesMockData("enterprise") true.');
-    }
-    await mockDelay(250);
-    return campaigns.filter((campaign) => matchesFilters(campaign, filters));
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.list);
+    const items: CampaignResponse[] = parseCampaignResponseList(response.data);
+    return items
+      .map(mapCampaignResponseToEmployerCampaign)
+      .filter((campaign) => matchesFilters(campaign, filters));
   },
 
-  async getCampaign(id: string): Promise<EmployerCampaign | null> {
-    if (!usesMockData('enterprise')) {
-      throw new Error('Campaign API is not wired yet. Keep usesMockData("enterprise") true.');
+  getErrorStatus(error: unknown): number | undefined {
+    return getApiStatusCode(error);
+  },
+
+  /** @deprecated Prefer getErrorStatus */
+  getListErrorStatus(error: unknown): number | undefined {
+    return getApiStatusCode(error);
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id} → CampaignResponse (Bearer employer token via apiClient).
+   * Throws on HTTP errors (404/401/403/…) so React Query can surface status codes.
+   */
+  async getCampaign(id: string): Promise<EmployerCampaign> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.detail(id));
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed) {
+      throw new Error('Invalid campaign detail response');
     }
-    await mockDelay(200);
-    return campaigns.find((campaign) => campaign.id === id) ?? null;
+    return mapCampaignResponseToEmployerCampaign(parsed);
   },
 
   async listQuestions(): Promise<CampaignQuestion[]> {
