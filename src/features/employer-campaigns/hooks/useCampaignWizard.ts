@@ -27,6 +27,7 @@ import {
 } from '../utils/validateCampaignWizard';
 import {
   createDefaultSettingsState,
+  createEmptyCriteriaFileState,
   createEmptyJdState,
   decimalWeightsToPercent,
 } from '../types/campaignWizard.types';
@@ -34,10 +35,12 @@ import type {
   CampaignInfoState,
   CampaignSettingsState,
   CampaignWizardPersistedState,
+  CriteriaFileState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
-import { validateCampaignJdPdf } from '../components/wizard/jd/JobDescriptionFilePanel';
 import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
+import { useCampaignFileActions } from './useCampaignFileActions';
+import type { BlobDownloadResult, CampaignFileType } from '../utils/campaignFiles';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -114,6 +117,7 @@ function buildInitialState(
           }
         : {}),
     },
+    criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
     questions: campaign?.questions?.length ? campaign.questions : [],
     questionCount: 5,
@@ -231,8 +235,15 @@ interface UseCampaignWizardArgs {
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
-    options?: { replace?: boolean },
   ) => Promise<EmployerCampaign>;
+  onReplaceFiles: (
+    campaignId: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ) => Promise<EmployerCampaign>;
+  onDownloadFile: (
+    campaignId: string,
+    fileType: CampaignFileType,
+  ) => Promise<BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
 
@@ -243,13 +254,14 @@ export function useCampaignWizard({
   onUpdateCampaign,
   onUpdateQuestions,
   onUploadFiles,
+  onReplaceFiles,
+  onDownloadFile,
   onAfterSubmit,
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
   const [state, setState] = useState<CampaignWizardPersistedState>(() =>
     buildInitialState(campaign, mode),
   );
-  const [isSavingStep, setIsSavingStep] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -294,6 +306,14 @@ export function useCampaignWizard({
     setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'dirty' }));
   }, []);
 
+  const patchCriteria = useCallback((patch: Partial<CriteriaFileState>) => {
+    setState((prev) => ({
+      ...prev,
+      criteria: { ...prev.criteria, ...patch },
+      autosaveStatus: 'dirty',
+    }));
+  }, []);
+
   const patchSettings = useCallback((patch: Partial<CampaignSettingsState>) => {
     setState((prev) => ({
       ...prev,
@@ -303,99 +323,23 @@ export function useCampaignWizard({
     }));
   }, []);
 
-  const mapFileUploadError = useCallback((error: unknown): string => {
-    const status = getApiStatusCode(error);
-    if (status === 404) return 'notFound';
-    if (status === 409) return 'notDraft';
-    if (status === 400) {
-      const message = getApiErrorMessage(error, '').toLowerCase();
-      if (message.includes('10') || message.includes('size') || message.includes('large')) {
-        return 'tooLarge';
-      }
-      if (message.includes('pdf')) return 'notPdf';
-      return 'server';
-    }
-    return 'server';
-  }, []);
+  const snapshot = useCallback(() => toSnapshot(state), [state]);
 
-  /** Edit mode only — create mode keeps the JD file local until final submit. */
-  const uploadJdFileNow = useCallback(
-    async (file: File) => {
-      if (requestLockRef.current || !campaignId) return;
-      requestLockRef.current = true;
-      setIsSavingStep(true);
-      patchJd({ fileStatus: 'uploading', fileError: null, uploadProgress: 10 });
-      try {
-        const replace = Boolean(state.jd.serverUploaded);
-        await onUploadFiles(campaignId, { jdFile: file }, { replace });
-        patchJd({
-          fileStatus: 'uploaded',
-          fileError: null,
-          uploadProgress: 100,
-          serverUploaded: true,
-        });
-        setStepError(null);
-      } catch (error) {
-        patchJd({
-          fileStatus: 'failed',
-          fileError: mapFileUploadError(error),
-          uploadProgress: null,
-        });
-      } finally {
-        requestLockRef.current = false;
-        setIsSavingStep(false);
-      }
-    },
-    [campaignId, mapFileUploadError, onUploadFiles, patchJd, state.jd.serverUploaded],
-  );
-
-  const selectJdFile = useCallback(
-    (file: File | null) => {
-      if (!file) {
-        patchJd({
-          jdFile: null,
-          fileName: null,
-          fileSize: null,
-          fileStatus: 'idle',
-          fileError: null,
-          uploadProgress: null,
-          serverUploaded: false,
-        });
-        return;
-      }
-      const code = validateCampaignJdPdf(file);
-      if (code) {
-        patchJd({
-          jdFile: null,
-          fileName: file.name,
-          fileSize: file.size,
-          fileStatus: 'failed',
-          fileError: code,
-          uploadProgress: null,
-        });
-        return;
-      }
-      patchJd({
-        jdFile: file,
-        fileName: file.name,
-        fileSize: file.size,
-        fileStatus: 'selected',
-        fileError: null,
-        uploadProgress: null,
-        inputMethod: 'file',
-      });
-      // Local-only on create; edit mode uploads immediately via the existing files API.
-      if (mode === 'edit' && campaignId) {
-        void uploadJdFileNow(file);
-      }
-    },
-    [campaignId, mode, patchJd, uploadJdFileNow],
-  );
-
-  const retryJdUpload = useCallback(() => {
-    const file = state.jd.jdFile;
-    if (file && mode === 'edit') void uploadJdFileNow(file);
-  }, [mode, state.jd.jdFile, uploadJdFileNow]);
+  const fileActions = useCampaignFileActions({
+    state,
+    campaign,
+    isDraftEditable,
+    t,
+    setState,
+    patchJd,
+    patchCriteria,
+    setStepError,
+    onCreateCampaign,
+    onUploadFiles,
+    onReplaceFiles,
+    onDownloadFile,
+    snapshot,
+  });
 
   const setRubric = useCallback((rubric: RubricCriterion[]) => {
     setState((prev) => ({ ...prev, rubric, autosaveStatus: 'dirty' }));
@@ -496,8 +440,6 @@ export function useCampaignWizard({
     setStepError(null);
   }, []);
 
-  const snapshot = useCallback(() => toSnapshot(state), [state]);
-
   const goNext = useCallback(() => {
     if (requestLockRef.current || isSubmitting) return;
     const step = state.currentStep;
@@ -523,17 +465,19 @@ export function useCampaignWizard({
   }, [isSubmitting, mode, state, t]);
 
   const goBack = useCallback(() => {
-    if (requestLockRef.current || isSubmitting || isSavingStep) return;
+    if (requestLockRef.current || isSubmitting || fileActions.isJdBusy || fileActions.isCriteriaBusy) {
+      return;
+    }
     setStepError(null);
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(0, prev.currentStep - 1),
     }));
-  }, [isSavingStep, isSubmitting]);
+  }, [fileActions.isCriteriaBusy, fileActions.isJdBusy, isSubmitting]);
 
-  /** Only entry point that calls POST /api/v1/campaign — final step of the wizard. */
+  /** POST create only when no Draft exists yet (file upload may have created one already). */
   const handleCreateCampaign = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'create') return;
+    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
@@ -556,24 +500,12 @@ export function useCampaignWizard({
       const request = buildCampaignCreateRequest(snapshot());
       const created = await onCreateCampaign(request);
 
-      const jdFile =
-        state.jd.inputMethod === 'file' && state.jd.jdFile && !state.jd.serverUploaded
-          ? state.jd.jdFile
-          : null;
-      if (jdFile) {
-        await onUploadFiles(created.id, { jdFile }, { replace: false });
-      }
-
       setState((prev) => ({
         ...prev,
         draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
         completedSteps: markCompleted(prev.completedSteps, 5),
-        jd:
-          jdFile != null
-            ? { ...prev.jd, fileStatus: 'uploaded', serverUploaded: true, uploadProgress: 100 }
-            : prev.jd,
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
       onAfterSubmit(created);
@@ -591,11 +523,12 @@ export function useCampaignWizard({
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
-  }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, onUploadFiles, snapshot, state, t]);
+  }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, snapshot, state, t]);
 
-  /** Edit mode save — PUT dirty metadata fields, then PUT the full question list. */
+  /** Save Draft metadata + questions — used for edit mode and create-after-ensureDraft. */
   const handleUpdateDraft = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'edit') return;
+    if (requestLockRef.current || isSubmitting) return;
+    if (mode === 'create' && !state.draftId) return;
     if (!campaignId) {
       setActionError(t('employer.campaigns.wizard.campaignNotFound'));
       return;
@@ -605,7 +538,9 @@ export function useCampaignWizard({
       return;
     }
 
-    const validation = validateAllCampaignWizardSteps(state, { mode: 'edit' });
+    const validation = validateAllCampaignWizardSteps(state, {
+      mode: mode === 'create' && state.draftId ? 'edit' : mode,
+    });
     if (!validation.isValid) {
       const first = validation.errors[0];
       setStepError(t(first.messageKey));
@@ -661,7 +596,11 @@ export function useCampaignWizard({
         lastSavedAt: new Date().toISOString(),
         completedSteps: markCompleted(prev.completedSteps, 5),
       }));
-      toast.success(t('employer.campaigns.wizard.updateSuccess'));
+      toast.success(
+        mode === 'create'
+          ? t('employer.campaigns.wizard.createSuccess')
+          : t('employer.campaigns.wizard.updateSuccess'),
+      );
       onAfterSubmit(updated);
     } catch (error) {
       if (metadataOk && !questionsSaved) {
@@ -735,12 +674,12 @@ export function useCampaignWizard({
   }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
 
   const handleFinalSubmit = useCallback(() => {
-    if (mode === 'create') {
+    if (mode === 'create' && !state.draftId) {
       void handleCreateCampaign();
       return;
     }
     void handleUpdateDraft();
-  }, [handleCreateCampaign, handleUpdateDraft, mode]);
+  }, [handleCreateCampaign, handleUpdateDraft, mode, state.draftId]);
 
   return {
     state,
@@ -750,7 +689,7 @@ export function useCampaignWizard({
     completedSteps: state.completedSteps,
     stepError,
     actionError,
-    isSavingStep,
+    isSavingStep: fileActions.isJdBusy || fileActions.isCriteriaBusy,
     isSubmitting,
     metadataSaved,
     questionsSaved,
@@ -759,9 +698,15 @@ export function useCampaignWizard({
     domainLabel,
     patchInfo,
     patchJd,
+    patchCriteria,
     patchSettings,
-    selectJdFile,
-    retryJdUpload,
+    selectJdFile: fileActions.selectJdFile,
+    selectCriteriaFile: fileActions.selectCriteriaFile,
+    retryJdUpload: fileActions.retryJdUpload,
+    retryCriteriaUpload: fileActions.retryCriteriaUpload,
+    downloadJdFile: fileActions.downloadJdFile,
+    downloadCriteriaFile: fileActions.downloadCriteriaFile,
+    canReplaceFiles: fileActions.canReplaceFiles,
     setRubric,
     resetRubric,
     setQuestionCount,

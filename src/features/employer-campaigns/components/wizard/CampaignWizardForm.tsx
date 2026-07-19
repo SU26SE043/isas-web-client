@@ -32,8 +32,15 @@ interface CampaignWizardFormProps {
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
-    options?: { replace?: boolean },
   ) => Promise<EmployerCampaign>;
+  onReplaceFiles: (
+    campaignId: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ) => Promise<EmployerCampaign>;
+  onDownloadFile: (
+    campaignId: string,
+    fileType: 'jd' | 'criteria',
+  ) => Promise<import('../../utils/campaignFiles').BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
 
@@ -44,6 +51,8 @@ export function CampaignWizardForm({
   onUpdateCampaign,
   onUpdateQuestions,
   onUploadFiles,
+  onReplaceFiles,
+  onDownloadFile,
   onAfterSubmit,
 }: CampaignWizardFormProps) {
   const { t } = useLanguage();
@@ -55,6 +64,8 @@ export function CampaignWizardForm({
     onUpdateCampaign,
     onUpdateQuestions,
     onUploadFiles,
+    onReplaceFiles,
+    onDownloadFile,
     onAfterSubmit,
   });
   const { state, step } = wizard;
@@ -117,10 +128,11 @@ export function CampaignWizardForm({
         <CampaignJdStep
           jd={state.jd}
           error={wizard.stepError}
-          isEditMode={mode === 'edit'}
+          canReplace={wizard.canReplaceFiles}
           onChange={wizard.patchJd}
           onSelectFile={wizard.selectJdFile}
           onRetryUpload={wizard.retryJdUpload}
+          onDownload={wizard.downloadJdFile}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
@@ -130,11 +142,16 @@ export function CampaignWizardForm({
       {step === 2 ? (
         <CampaignCriteriaStepV2
           rubric={state.rubric}
+          criteria={state.criteria}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
           }
           error={wizard.stepError}
+          canReplace={wizard.canReplaceFiles}
           onChangeRubric={wizard.setRubric}
+          onSelectFile={wizard.selectCriteriaFile}
+          onRetryUpload={wizard.retryCriteriaUpload}
+          onDownload={wizard.downloadCriteriaFile}
           onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}

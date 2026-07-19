@@ -23,6 +23,8 @@ export function CampaignWizardPage() {
     updateCampaign,
     updateCampaignQuestions,
     uploadFiles,
+    replaceFiles,
+    downloadFile,
     reload,
   } = useEmployerCampaign(id);
   const mode = id ? 'edit' : 'create';
@@ -46,9 +48,19 @@ export function CampaignWizardPage() {
   const handleUploadFiles = async (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
-    options?: { replace?: boolean },
   ) => {
-    return uploadFiles(campaignId, files, options);
+    return uploadFiles(campaignId, files);
+  };
+
+  const handleReplaceFiles = async (
+    campaignId: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ) => {
+    return replaceFiles(campaignId, files);
+  };
+
+  const handleDownloadFile = async (campaignId: string, fileType: 'jd' | 'criteria') => {
+    return downloadFile(campaignId, fileType);
   };
 
   const goToDetail = (campaignId: string) => {
@@ -115,6 +127,8 @@ export function CampaignWizardPage() {
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}
       onUploadFiles={handleUploadFiles}
+      onReplaceFiles={handleReplaceFiles}
+      onDownloadFile={handleDownloadFile}
       onAfterSubmit={(next) => goToDetail(next.id)}
     />
   );

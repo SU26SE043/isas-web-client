@@ -1,5 +1,5 @@
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
-import { validateCampaignJdPdf } from '../components/wizard/jd/JobDescriptionFilePanel';
+import { validateCampaignPdf } from './campaignFiles';
 
 const MIN_JD_TEXT_LENGTH = 50;
 const LAST_STEP_INDEX = 5;
@@ -60,15 +60,18 @@ export function validateCampaignWizardStep(
 
   if (step === 1) {
     if (jd.inputMethod === 'file') {
-      if (!jd.jdFile && !jd.fileName) return 'employer.campaigns.wizard.jdFileRequired';
+      if (!jd.jdFile && !jd.fileName && !jd.serverUploaded) {
+        return 'employer.campaigns.wizard.jdFileRequired';
+      }
       if (jd.jdFile) {
-        const code = validateCampaignJdPdf(jd.jdFile);
+        const code = validateCampaignPdf(jd.jdFile);
         if (code) return `employer.campaigns.wizard.jdFileError.${code}`;
       }
       if (jd.fileStatus === 'failed') return 'employer.campaigns.wizard.jdUploadFailed';
-      if (jd.fileStatus === 'uploading') return 'employer.campaigns.wizard.jdUploadingWait';
-      // Create mode keeps the file local until final submit; edit mode uploads immediately.
-      if (mode === 'edit' && jd.fileStatus !== 'uploaded') {
+      if (jd.fileStatus === 'uploading' || jd.fileStatus === 'replacing') {
+        return 'employer.campaigns.wizard.jdUploadingWait';
+      }
+      if (!jd.serverUploaded || jd.fileStatus !== 'uploaded') {
         return 'employer.campaigns.wizard.jdUploadRequired';
       }
       return null;

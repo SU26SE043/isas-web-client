@@ -27,6 +27,12 @@ import {
   unwrapCampaignDetailPayload,
 } from '../utils/campaignMapper';
 import { mergeCampaignWriteResult } from '../utils/buildCampaignCreateRequest';
+import {
+  parseContentDispositionFilename,
+  validateCampaignPdf,
+  type BlobDownloadResult,
+  type CampaignFileType,
+} from '../utils/campaignFiles';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
@@ -464,13 +470,59 @@ export const campaignManagementService = {
   },
 
   /**
-   * Live: POST or PUT /api/v1/campaign/{id}/files — multipart jdFile / criteriaFile (PDF, ≤10MB).
-   * Use POST for first upload, PUT to replace (Draft only → 409 if not Draft).
+   * Live: POST /api/v1/campaign/{id}/files — first upload (multipart jdFile / criteriaFile).
+   * Send only the field that changed.
    */
   async uploadCampaignFiles(
     id: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
-    options?: { replace?: boolean },
+  ): Promise<EmployerCampaign> {
+    return this.sendCampaignFiles(id, files, 'post');
+  },
+
+  /**
+   * Live: PUT /api/v1/campaign/{id}/files — replace (Draft only).
+   * Send only the field that changed.
+   */
+  async replaceCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ): Promise<EmployerCampaign> {
+    return this.sendCampaignFiles(id, files, 'put');
+  },
+
+  /** @deprecated Prefer uploadCampaignFiles / replaceCampaignFiles. */
+  async uploadCampaignJdFile(id: string, jdFile: File): Promise<EmployerCampaign> {
+    return this.uploadCampaignFiles(id, { jdFile });
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/files/download?fileType=jd|criteria — PDF blob.
+   */
+  async downloadCampaignFile(
+    id: string,
+    fileType: CampaignFileType,
+  ): Promise<BlobDownloadResult> {
+    const response = await apiClient.post<Blob>(
+      campaignManagementEndpoints.filesDownload(id),
+      null,
+      {
+        params: { fileType },
+        responseType: 'blob',
+      },
+    );
+
+    const header = response.headers?.['content-disposition'] as string | undefined;
+    return {
+      blob: response.data,
+      filename: parseContentDispositionFilename(header),
+    };
+  },
+
+  async sendCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+    method: 'post' | 'put',
   ): Promise<EmployerCampaign> {
     const jdFile = files.jdFile ?? null;
     const criteriaFile = files.criteriaFile ?? null;
@@ -479,11 +531,10 @@ export const campaignManagementService = {
     }
 
     const validate = (file: File, label: string) => {
-      const isPdf =
-        file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      if (!isPdf) throw new CampaignRequestError(400, `${label}_NOT_PDF`);
-      if (file.size > 10 * 1024 * 1024) throw new CampaignRequestError(400, `${label}_TOO_LARGE`);
-      if (file.size <= 0) throw new CampaignRequestError(400, `${label}_CORRUPT`);
+      const code = validateCampaignPdf(file);
+      if (code === 'notPdf') throw new CampaignRequestError(400, `${label}_NOT_PDF`);
+      if (code === 'tooLarge') throw new CampaignRequestError(400, `${label}_TOO_LARGE`);
+      if (code === 'corrupt') throw new CampaignRequestError(400, `${label}_CORRUPT`);
     };
     if (jdFile) validate(jdFile, 'JD');
     if (criteriaFile) validate(criteriaFile, 'CRITERIA');
@@ -493,27 +544,20 @@ export const campaignManagementService = {
     if (criteriaFile) formData.append('criteriaFile', criteriaFile);
 
     const url = campaignManagementEndpoints.files(id);
-    const request = options?.replace
-      ? apiClient.put<unknown>(url, formData, {
-          transformRequest: [
-            (data, headers) => {
-              if (data instanceof FormData && headers) {
-                delete (headers as Record<string, unknown>)['Content-Type'];
-              }
-              return data;
-            },
-          ],
-        })
-      : apiClient.post<unknown>(url, formData, {
-          transformRequest: [
-            (data, headers) => {
-              if (data instanceof FormData && headers) {
-                delete (headers as Record<string, unknown>)['Content-Type'];
-              }
-              return data;
-            },
-          ],
-        });
+    const formDataConfig = {
+      transformRequest: [
+        (data: unknown, headers?: Record<string, unknown>) => {
+          if (data instanceof FormData && headers) {
+            delete headers['Content-Type'];
+          }
+          return data;
+        },
+      ],
+    };
+    const request =
+      method === 'put'
+        ? apiClient.put<unknown>(url, formData, formDataConfig)
+        : apiClient.post<unknown>(url, formData, formDataConfig);
 
     const response = await request;
     const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
@@ -523,11 +567,6 @@ export const campaignManagementService = {
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
-  },
-
-  /** @deprecated Prefer uploadCampaignFiles. */
-  async uploadCampaignJdFile(id: string, jdFile: File): Promise<EmployerCampaign> {
-    return this.uploadCampaignFiles(id, { jdFile }, { replace: false });
   },
 
   /**

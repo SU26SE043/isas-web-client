@@ -192,11 +192,7 @@ export function useEmployerCampaign(id: string | undefined) {
 
   const uploadJdFile = useCallback(
     async (campaignId: string, jdFile: File) => {
-      const next = await campaignManagementService.uploadCampaignFiles(
-        campaignId,
-        { jdFile },
-        { replace: false },
-      );
+      const next = await campaignManagementService.uploadCampaignFiles(campaignId, { jdFile });
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
       return next;
     },
@@ -207,15 +203,31 @@ export function useEmployerCampaign(id: string | undefined) {
     async (
       campaignId: string,
       files: { jdFile?: File | null; criteriaFile?: File | null },
-      options?: { replace?: boolean },
     ) => {
-      const next = await campaignManagementService.uploadCampaignFiles(campaignId, files, options);
+      const next = await campaignManagementService.uploadCampaignFiles(campaignId, files);
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
       void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
       return next;
     },
     [queryClient],
   );
+
+  const replaceFiles = useCallback(
+    async (
+      campaignId: string,
+      files: { jdFile?: File | null; criteriaFile?: File | null },
+    ) => {
+      const next = await campaignManagementService.replaceCampaignFiles(campaignId, files);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
+  const downloadFile = useCallback(async (campaignId: string, fileType: 'jd' | 'criteria') => {
+    return campaignManagementService.downloadCampaignFile(campaignId, fileType);
+  }, []);
 
   const publish = useCallback(
     async (campaignId: string) => {
@@ -276,6 +288,8 @@ export function useEmployerCampaign(id: string | undefined) {
     saveCampaignQuestions,
     uploadJdFile,
     uploadFiles,
+    replaceFiles,
+    downloadFile,
     publish,
     updateStatus,
     deleteCampaign,

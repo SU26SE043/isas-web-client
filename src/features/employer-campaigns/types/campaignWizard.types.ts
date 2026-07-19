@@ -3,7 +3,26 @@ import type { CampaignQuestion, RubricCriterion } from './campaignManagement.typ
 
 export type JobDescriptionMethod = 'file' | 'text';
 
-export type DeferredJdFileStatus = 'idle' | 'selected' | 'uploading' | 'uploaded' | 'failed';
+export type DeferredJdFileStatus =
+  | 'idle'
+  | 'selected'
+  | 'uploading'
+  | 'replacing'
+  | 'uploaded'
+  | 'failed';
+
+/** Manual rubric + optional criteria PDF upload on the same step. */
+export type CriteriaFileState = {
+  criteriaFile: File | null;
+  fileName: string | null;
+  fileSize: number | null;
+  fileStatus: DeferredJdFileStatus;
+  fileError: string | null;
+  uploadProgress: number | null;
+  /** True after at least one successful server upload (POST/PUT …/files). */
+  serverUploaded: boolean;
+  isDownloading: boolean;
+};
 
 export type JobDescriptionState = {
   inputMethod: JobDescriptionMethod;
@@ -16,8 +35,9 @@ export type JobDescriptionState = {
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
-  /** True after at least one successful server upload (POST/PUT …/files). Edit mode only. */
+  /** True after at least one successful server upload (POST/PUT …/files). */
   serverUploaded: boolean;
+  isDownloading: boolean;
 };
 
 /** @deprecated Alias kept for gradual rename. */
@@ -52,6 +72,7 @@ export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
 export type CampaignWizardPersistedState = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
+  criteria: CriteriaFileState;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
@@ -112,6 +133,20 @@ export function createEmptyJdState(): JobDescriptionState {
     fileError: null,
     uploadProgress: null,
     serverUploaded: false,
+    isDownloading: false,
+  };
+}
+
+export function createEmptyCriteriaFileState(): CriteriaFileState {
+  return {
+    criteriaFile: null,
+    fileName: null,
+    fileSize: null,
+    fileStatus: 'idle',
+    fileError: null,
+    uploadProgress: null,
+    serverUploaded: false,
+    isDownloading: false,
   };
 }
 

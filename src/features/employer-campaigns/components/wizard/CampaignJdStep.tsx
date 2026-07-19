@@ -15,17 +15,18 @@ import type { JobDescriptionState, JobDescriptionMethod } from '../../types/camp
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
-import { JobDescriptionFilePanel } from './jd/JobDescriptionFilePanel';
+import { CampaignFilePanel } from './jd/CampaignFilePanel';
 import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
   jd: JobDescriptionState;
   error?: string | null;
-  isEditMode?: boolean;
+  canReplace?: boolean;
   onChange: (patch: Partial<JobDescriptionState>) => void;
   onSelectFile: (file: File | null) => void;
   onRetryUpload?: () => void;
+  onDownload?: () => void;
   onBack: () => void;
   onNext: () => void;
   isSaving?: boolean;
@@ -34,10 +35,11 @@ interface CampaignJdStepProps {
 export function CampaignJdStep({
   jd,
   error,
-  isEditMode = false,
+  canReplace = true,
   onChange,
   onSelectFile,
   onRetryUpload,
+  onDownload,
   onBack,
   onNext,
   isSaving,
@@ -45,11 +47,10 @@ export function CampaignJdStep({
   const { t } = useLanguage();
   const [pendingMethod, setPendingMethod] = useState<JobDescriptionMethod | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const fileBusy = jd.fileStatus === 'uploading' || jd.fileStatus === 'replacing';
   const localError =
-    jd.inputMethod === 'file'
-      ? jd.fileError
-        ? t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
-        : null
+    jd.inputMethod === 'file' && jd.fileError
+      ? t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
       : null;
 
   const requestMethodChange = (next: JobDescriptionMethod) => {
@@ -79,8 +80,8 @@ export function CampaignJdStep({
           onBack={onBack}
           onNext={onNext}
           isSaving={isSaving}
-          nextDisabled={isSaving || jd.fileStatus === 'uploading'}
-          backDisabled={isSaving || jd.fileStatus === 'uploading'}
+          nextDisabled={isSaving || fileBusy}
+          backDisabled={isSaving || fileBusy}
         />
       }
     >
@@ -93,40 +94,43 @@ export function CampaignJdStep({
           textLabel={t('employer.campaigns.wizard.jdTab.text')}
           listLabel={t('employer.campaigns.wizard.jdTab.list')}
           onChange={requestMethodChange}
-          disabled={jd.fileStatus === 'uploading'}
+          disabled={fileBusy}
         />
 
         {jd.inputMethod === 'file' ? (
-          <>
-            <p className="text-xs text-muted-foreground">
-              {isEditMode
-                ? t('employer.campaigns.wizard.jdEditUploadHint')
-                : t('employer.campaigns.wizard.jdLocalOnlyHint')}
-            </p>
-            <JobDescriptionFilePanel
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground">
+              {t('employer.campaigns.files.jd.title')}
+            </h3>
+            <CampaignFilePanel
               file={jd.jdFile}
               fileName={jd.fileName}
               fileSize={jd.fileSize}
               status={jd.fileStatus}
               progress={jd.uploadProgress}
               error={localError}
+              isDownloading={jd.isDownloading}
+              canReplace={canReplace}
+              replaceDisabledReason={t('employer.campaigns.files.errors.draftOnly')}
               dropTitle={t('employer.campaigns.wizard.jdDropzone')}
               dropSecondary={t('employer.campaigns.wizard.jdDropSecondary')}
-              chooseFileLabel={t('employer.campaigns.wizard.jdBrowse')}
-              changeFileLabel={t('employer.campaigns.wizard.jdReplace')}
-              removeLabel={t('employer.campaigns.wizard.jdRemove')}
-              pendingLabel={t('employer.campaigns.wizard.jdPendingUpload')}
-              uploadingLabel={t('employer.campaigns.wizard.jdUploading')}
-              successLabel={t('employer.campaigns.wizard.jdUploadSuccess')}
+              chooseFileLabel={t('employer.campaigns.files.jd.select')}
+              replaceLabel={t('employer.campaigns.files.jd.replace')}
+              downloadLabel={t('employer.campaigns.files.jd.download')}
+              downloadingLabel={t('employer.campaigns.files.status.downloading')}
+              uploadingLabel={t('employer.campaigns.files.status.uploading')}
+              replacingLabel={t('employer.campaigns.files.status.replacing')}
+              successLabel={t('employer.campaigns.files.status.uploaded')}
               failureLabel={t('employer.campaigns.wizard.jdUploadFailed')}
               retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
               chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
               supportLabel={t('employer.campaigns.wizard.jdFormats')}
               onFileSelect={onSelectFile}
               onRetry={onRetryUpload}
-              disabled={jd.fileStatus === 'uploading'}
+              onDownload={onDownload}
+              disabled={fileBusy}
             />
-          </>
+          </div>
         ) : (
           <JobDescriptionTextEditor
             value={jd.jdText}
