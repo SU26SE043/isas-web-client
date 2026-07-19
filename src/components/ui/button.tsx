@@ -53,14 +53,21 @@ function Button({
   loading = false,
   disabled,
   children,
+  render,
+  nativeButton,
   ...props
 }: ButtonProps) {
+  // Base UI defaults nativeButton=true. Polymorphic `render` (Link, a, etc.) must opt out.
+  const resolvedNativeButton = nativeButton ?? render == null
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
+      render={render}
+      nativeButton={resolvedNativeButton}
       {...props}
     >
       {loading ? <Spinner className="size-4 border-current border-t-transparent" /> : null}
