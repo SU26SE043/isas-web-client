@@ -96,10 +96,10 @@ export function CampaignInvitePage() {
           >
             <List className="size-5 text-foreground" aria-hidden />
             <span className="font-semibold text-foreground">
-              {t('employer.campaigns.inviteFlow.emailTitle')}
+              {t('employer.campaigns.emailInvitations.title')}
             </span>
             <span className="text-sm text-muted-foreground">
-              {t('employer.campaigns.inviteFlow.emailDesc')}
+              {t('employer.campaigns.emailInvitations.description')}
             </span>
             <span className="mt-auto text-sm font-medium text-foreground">
               {t('employer.campaigns.inviteFlow.emailCta')}

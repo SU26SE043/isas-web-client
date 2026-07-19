@@ -5,8 +5,8 @@ import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../m
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
-  CampaignInviteByEmailRequest,
-  CampaignInviteByEmailResponse,
+  CreateCampaignInvitationsRequest,
+  CreateCampaignInvitationsResponse,
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
@@ -90,7 +90,7 @@ function mergeCandidates(existing: CampaignCandidateRow[], incoming: CampaignCan
   return Array.from(map.values());
 }
 
-function unwrapInviteByEmailPayload(data: unknown): CampaignInviteByEmailResponse {
+function unwrapInviteByEmailPayload(data: unknown): CreateCampaignInvitationsResponse {
   const root =
     data && typeof data === 'object' && !Array.isArray(data)
       ? (data as Record<string, unknown>)
@@ -131,7 +131,7 @@ function unwrapInviteByEmailPayload(data: unknown): CampaignInviteByEmailRespons
           ? record.expiresAt
           : typeof record.ExpiresAt === 'string'
             ? record.ExpiresAt
-            : null;
+            : '';
       return { id: id.trim(), email: email.trim().toLowerCase(), expiresAt };
     })
     .filter((item): item is NonNullable<typeof item> => item != null);
@@ -412,19 +412,31 @@ export const campaignManagementService = {
    * Live: POST /api/v1/campaign/{id}/invitations — invite by email list (Active only).
    * Body `{ emails }` (non-empty). 200 → `{ created, failed }`. Errors: 400 · 404 · 409.
    */
-  async inviteCandidates(id: string, emails: string[]): Promise<InviteResolution> {
-    const normalized = Array.from(
-      new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean)),
+  async createCampaignInvitations(
+    id: string,
+    payload: CreateCampaignInvitationsRequest,
+  ): Promise<CreateCampaignInvitationsResponse> {
+    const emails = Array.from(
+      new Set(
+        payload.emails
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean),
+      ),
     );
-    if (normalized.length === 0) {
+    if (emails.length === 0) {
       throw new CampaignRequestError(400, 'EMPTY_EMAILS');
     }
 
     const response = await apiClient.post<unknown>(
       campaignManagementEndpoints.invitations(id),
-      { emails: normalized } satisfies CampaignInviteByEmailRequest,
+      { emails } satisfies CreateCampaignInvitationsRequest,
     );
-    const payload = unwrapInviteByEmailPayload(response.data);
+    return unwrapInviteByEmailPayload(response.data);
+  },
+
+  /** Maps invitation response onto local InviteResolution (legacy callers). */
+  async inviteCandidates(id: string, emails: string[]): Promise<InviteResolution> {
+    const payload = await this.createCampaignInvitations(id, { emails });
 
     const linked: CampaignCandidateRow[] = payload.created.map((item) => ({
       email: item.email,

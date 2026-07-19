@@ -73,7 +73,7 @@ export function CampaignDetailView({
 
             {isActive ? (
               <>
-                <Button render={<Link to={`/employer/campaigns/${campaign.id}?tab=screening`} />}>
+                <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
                   {t('employer.campaigns.detail.inviteCandidates')}
                 </Button>
                 <Button

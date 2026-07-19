@@ -144,25 +144,37 @@ export type CampaignUpdateRequest = {
 };
 
 /** POST /api/v1/campaign/{id}/invitations — invite by email list (Active only). */
-export type CampaignInviteByEmailRequest = {
+export type CreateCampaignInvitationsRequest = {
   emails: string[];
 };
 
-export type CampaignInvitationCreatedItem = {
+export type CreatedCampaignInvitation = {
   id: string;
   email: string;
-  expiresAt?: string | null;
+  /** ISO timestamp; present for successfully created invitations. */
+  expiresAt: string;
 };
 
-export type CampaignInvitationFailedItem = {
+export type FailedCampaignInvitation = {
   email: string;
   reason: string;
 };
 
-export type CampaignInviteByEmailResponse = {
-  created: CampaignInvitationCreatedItem[];
-  failed: CampaignInvitationFailedItem[];
+export type CreateCampaignInvitationsResponse = {
+  created: CreatedCampaignInvitation[];
+  failed: FailedCampaignInvitation[];
 };
+
+/** @deprecated Prefer CreateCampaignInvitationsRequest */
+export type CampaignInviteByEmailRequest = CreateCampaignInvitationsRequest;
+/** @deprecated Prefer CreatedCampaignInvitation */
+export type CampaignInvitationCreatedItem = CreatedCampaignInvitation & {
+  expiresAt?: string | null;
+};
+/** @deprecated Prefer FailedCampaignInvitation */
+export type CampaignInvitationFailedItem = FailedCampaignInvitation;
+/** @deprecated Prefer CreateCampaignInvitationsResponse */
+export type CampaignInviteByEmailResponse = CreateCampaignInvitationsResponse;
 
 /** POST /api/v1/campaign/{id}/candidates — multipart field `files` (202 Accepted). */
 export type CandidateUploadResult = {
