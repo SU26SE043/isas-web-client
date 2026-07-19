@@ -1,7 +1,7 @@
 import { CheckCircle2, Download, FileText, RefreshCw } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import type { DeferredJdFileStatus } from '../../types/campaignWizard.types';
-import { CAMPAIGN_PDF_MAX_BYTES } from '../../utils/campaignFiles';
+import type { DeferredJdFileStatus } from '../../../types/campaignWizard.types';
+import { CAMPAIGN_PDF_MAX_BYTES } from '../../../utils/campaignFiles';
 
 type CampaignFileUploadedCardProps = {
   file: File | null;

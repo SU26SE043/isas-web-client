@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { CheckCircle2, Download, FileText, RefreshCw, Upload } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import type { DeferredJdFileStatus } from '../../types/campaignWizard.types';
+import type { DeferredJdFileStatus } from '../../../types/campaignWizard.types';
 import { CampaignFileUploadedCard } from './CampaignFileUploadedCard';
 
 interface CampaignFilePanelProps {
@@ -177,4 +177,4 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
   );
 }
 
-export { validateCampaignPdf as validateCampaignJdPdf } from '../../utils/campaignFiles';
+export { validateCampaignPdf as validateCampaignJdPdf } from '../../../utils/campaignFiles';
