@@ -10,6 +10,13 @@ import type {
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
+  CandidateListQuery,
+  CandidateUploadResponse,
+  CampaignCandidateDetail,
+  CampaignCandidateListItem,
+  CampaignResultsResponse,
+  InviteCampaignCandidatesRequest,
+  InviteCampaignCandidatesResponse,
 } from '../types/campaign.api.types';
 import type {
   CampaignCandidateRow,
@@ -33,6 +40,15 @@ import {
   type BlobDownloadResult,
   type CampaignFileType,
 } from '../utils/campaignFiles';
+import {
+  buildCandidateListParams,
+  parseCampaignResultsResponse,
+  parseCandidateDetail,
+  parseCandidateListItem,
+  parseCandidateUploadResponse,
+  parseInviteByCandidateIdsResponse,
+  unwrapArrayPayload,
+} from '../utils/campaignCandidatesApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
@@ -570,85 +586,101 @@ export const campaignManagementService = {
   },
 
   /**
-   * Mock: POST /api/v1/campaign/{id}/candidates (multipart files).
-   * Campaign must be Active.
+   * Live: POST /api/v1/campaign/{id}/candidates — multipart `files` (202 Accepted).
+   * Call only when campaign is Active and Employer presses Analyze.
    */
-  async uploadCandidateCvs(
+  async analyzeCandidateCvs(id: string, files: File[]): Promise<CandidateUploadResponse> {
+    if (!files.length) throw new CampaignRequestError(400, 'NO_FILES');
+    for (const file of files) {
+      const code = validateCampaignPdf(file);
+      if (code === 'notPdf') throw new CampaignRequestError(400, 'NOT_PDF');
+      if (code === 'tooLarge') throw new CampaignRequestError(400, 'TOO_LARGE');
+      if (code === 'corrupt') throw new CampaignRequestError(400, 'CORRUPT');
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.candidates(id),
+      formData,
+      {
+        transformRequest: [
+          (data: unknown, headers?: Record<string, unknown>) => {
+            if (data instanceof FormData && headers) {
+              delete headers['Content-Type'];
+            }
+            return data;
+          },
+        ],
+        validateStatus: (status) => status === 200 || status === 202,
+      },
+    );
+    return parseCandidateUploadResponse(response.data);
+  },
+
+  /** @deprecated Prefer analyzeCandidateCvs. */
+  async uploadCandidateCvs(id: string, files: File[]): Promise<CandidateUploadResponse> {
+    return this.analyzeCandidateCvs(id, files);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/candidates */
+  async getCampaignCandidates(
     id: string,
-    files: File[],
-  ): Promise<{
-    received: number;
-    rejected: number;
-    candidates: Array<{
-      id: string;
-      fullName: string;
-      email: string;
-      status: string;
-      overallMatch: number;
-    }>;
-  }> {
-    await mockDelay(600);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (campaign.status !== 'active') throw new Error('CAMPAIGN_NOT_ACTIVE');
-
-    const candidates = files.map((file, index) => {
-      const stem = file.name.replace(/\.[^.]+$/, '') || `Candidate ${index + 1}`;
-      const email = `${stem.toLowerCase().replace(/[^a-z0-9]+/g, '.')}@example.com`;
-      return {
-        id: `cv-${Date.now().toString(36)}-${index}`,
-        fullName: stem,
-        email,
-        status: 'Filtered',
-        overallMatch: Math.max(55, 95 - index * 8),
-      };
+    query?: CandidateListQuery,
+  ): Promise<CampaignCandidateListItem[]> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.candidates(id), {
+      params: buildCandidateListParams(query),
     });
+    return unwrapArrayPayload(response.data)
+      .map(parseCandidateListItem)
+      .filter((item): item is CampaignCandidateListItem => item != null);
+  },
 
-    return {
-      received: files.length,
-      rejected: 0,
-      candidates,
-    };
+  /** Live: GET /api/v1/campaign/{id}/candidates/{candidateId} */
+  async getCampaignCandidateDetail(
+    id: string,
+    candidateId: string,
+  ): Promise<CampaignCandidateDetail> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.candidateDetail(id, candidateId),
+    );
+    const parsed = parseCandidateDetail(response.data);
+    if (!parsed) throw new CampaignRequestError(404, 'CANDIDATE_NOT_FOUND');
+    return parsed;
   },
 
   /**
-   * Mock: POST /api/v1/campaign/{id}/candidates/invite
+   * Live: POST /api/v1/campaign/{id}/candidates/invite — `{ candidateIds }`.
    */
+  async inviteCampaignCandidates(
+    id: string,
+    payload: InviteCampaignCandidatesRequest,
+  ): Promise<InviteCampaignCandidatesResponse> {
+    const candidateIds = Array.from(
+      new Set(payload.candidateIds.map((item) => item.trim()).filter(Boolean)),
+    );
+    if (candidateIds.length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_CANDIDATE_IDS');
+    }
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.inviteCandidates(id),
+      { candidateIds } satisfies InviteCampaignCandidatesRequest,
+    );
+    return parseInviteByCandidateIdsResponse(response.data);
+  },
+
+  /** @deprecated Prefer inviteCampaignCandidates. */
   async inviteCandidateIds(
     id: string,
     candidateIds: string[],
-    candidates: Array<{ id: string; email: string; fullName: string }>,
-  ): Promise<{
-    invited: Array<{ candidateId: string; invitationId: string; email: string }>;
-    failed: Array<{ candidateId: string; reason: string }>;
-  }> {
-    await mockDelay(450);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (campaign.status !== 'active') throw new Error('CAMPAIGN_NOT_ACTIVE');
+  ): Promise<InviteCampaignCandidatesResponse> {
+    return this.inviteCampaignCandidates(id, { candidateIds });
+  },
 
-    const invited: Array<{ candidateId: string; invitationId: string; email: string }> = [];
-    const failed: Array<{ candidateId: string; reason: string }> = [];
-    const emails: string[] = [];
-
-    for (const candidateId of candidateIds) {
-      const row = candidates.find((item) => item.id === candidateId);
-      if (!row?.email.includes('@')) {
-        failed.push({ candidateId, reason: 'Invalid email' });
-        continue;
-      }
-      invited.push({
-        candidateId,
-        invitationId: `inv-${candidateId}`,
-        email: row.email,
-      });
-      emails.push(row.email);
-    }
-
-    if (emails.length > 0) {
-      await this.inviteCandidates(id, emails);
-    }
-
-    return { invited, failed };
+  /** Live: GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+  async getCampaignResults(id: string): Promise<CampaignResultsResponse> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.results(id));
+    return parseCampaignResultsResponse(response.data);
   },
 };

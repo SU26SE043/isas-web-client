@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
-import { CampaignCandidateTable } from './CampaignCandidateTable';
+import { CampaignTalentTabs } from './screening/CampaignTalentTabs';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
 import { ChangeCampaignStatusDialog } from './ChangeCampaignStatusDialog';
 import { DeleteCampaignDialog } from './DeleteCampaignDialog';
@@ -73,7 +73,7 @@ export function CampaignDetailView({
 
             {isActive ? (
               <>
-                <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
+                <Button render={<Link to={`/employer/campaigns/${campaign.id}?tab=screening`} />}>
                   {t('employer.campaigns.detail.inviteCandidates')}
                 </Button>
                 <Button
@@ -219,14 +219,11 @@ export function CampaignDetailView({
         </Card>
 
         {!isDraft ? (
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader>
-              <CardTitle>{t('employer.campaigns.detail.candidates')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CampaignCandidateTable candidates={campaign.candidates} />
-            </CardContent>
-          </Card>
+          <CampaignTalentTabs
+            campaignId={campaign.id}
+            isActive={isActive}
+            passScorePct={campaign.passScorePct}
+          />
         ) : null}
       </div>
     </div>

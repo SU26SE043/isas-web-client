@@ -163,3 +163,112 @@ export type CampaignInviteByEmailResponse = {
   created: CampaignInvitationCreatedItem[];
   failed: CampaignInvitationFailedItem[];
 };
+
+/** POST /api/v1/campaign/{id}/candidates — multipart field `files` (202 Accepted). */
+export type CandidateUploadResult = {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  status: 'Filtered' | 'Rejected' | string;
+  rejectReason?: string | null;
+};
+
+export type CandidateUploadResponse = {
+  received: number;
+  rejected: number;
+  filtered: number;
+  skipped: number;
+  candidates: CandidateUploadResult[];
+};
+
+/** GET /api/v1/campaign/{id}/candidates query. */
+export type CandidateListQuery = {
+  status?: string;
+  minScore?: number;
+  skill?: string;
+  sort?: 'score' | 'name';
+};
+
+export type CampaignCandidateListItem = {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  status: string;
+  overallMatchScore?: number | null;
+  skills?: string[] | null;
+};
+
+export type CandidateCriterionScore = {
+  criterionId: string;
+  criterionName: string;
+  matchScore: number;
+  maxScore: number;
+  reasoning?: string | null;
+};
+
+export type CampaignCandidateDetail = {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  status: string;
+  overallMatchScore?: number | null;
+  skills?: string[] | null;
+  yearsExperience?: number | null;
+  summary?: string | null;
+  rejectReason?: string | null;
+  /** S3 key — not a public URL unless backend returns an absolute http(s) URL. */
+  cvFileUrl?: string | null;
+  criterionScores: CandidateCriterionScore[];
+};
+
+/** POST /api/v1/campaign/{id}/candidates/invite */
+export type InviteCampaignCandidatesRequest = {
+  candidateIds: string[];
+};
+
+export type InvitedCandidateResult = {
+  candidateId: string;
+  invitationId: string;
+  email: string;
+};
+
+export type FailedCandidateInvitation = {
+  candidateId: string;
+  reason: string;
+};
+
+export type InviteCampaignCandidatesResponse = {
+  invited: InvitedCandidateResult[];
+  failed: FailedCandidateInvitation[];
+};
+
+/** GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+export type CampaignResultFlag = {
+  type: string;
+  count: number;
+  note?: string | null;
+};
+
+export type CampaignResultItem = {
+  rank: number;
+  candidateId: string;
+  sessionId: string;
+  fullName?: string | null;
+  email?: string | null;
+  totalScore: number;
+  aiScore: number;
+  overrideScore?: number | null;
+  overrideResult?: string | null;
+  overrideNote?: string | null;
+  overriddenAt?: string | null;
+  result?: 'Pass' | 'Fail' | null;
+  scoredAt: string;
+  flags: CampaignResultFlag[];
+};
+
+export type CampaignResultsResponse = {
+  campaignId: string;
+  passScorePct?: number | null;
+  totalCandidates: number;
+  results: CampaignResultItem[];
+};
