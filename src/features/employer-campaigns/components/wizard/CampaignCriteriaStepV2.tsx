@@ -1,4 +1,14 @@
+import { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
@@ -43,6 +53,7 @@ export function CampaignCriteriaStepV2({
   isSaving,
 }: CampaignCriteriaStepV2Props) {
   const { t } = useLanguage();
+  const [pendingMethod, setPendingMethod] = useState<CriteriaInputMethod | null>(null);
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
   const totalMaxScore = rubric.reduce((sum, item) => sum + Number(item.maxScore || 0), 0);
   const weightValid = Math.round(totalWeight * 10) / 10 === 100;
@@ -61,7 +72,19 @@ export function CampaignCriteriaStepV2({
 
   const requestMethodChange = (next: CriteriaInputMethod) => {
     if (next === criteria.inputMethod) return;
+    const hasFile = Boolean(criteria.criteriaFile || criteria.fileName);
+    const hasManual = rubric.some((item) => item.name.trim());
+    if ((criteria.inputMethod === 'file' && hasFile) || (criteria.inputMethod === 'manual' && hasManual)) {
+      setPendingMethod(next);
+      return;
+    }
     onChangeCriteria({ inputMethod: next });
+  };
+
+  const confirmMethodChange = () => {
+    if (!pendingMethod) return;
+    onChangeCriteria({ inputMethod: pendingMethod });
+    setPendingMethod(null);
   };
 
   const handleFileSelect = (file: File | null) => {
@@ -172,6 +195,29 @@ export function CampaignCriteriaStepV2({
           />
         )}
       </div>
+
+      <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('employer.campaigns.wizard.criteriaSwitchTitle')}</DialogTitle>
+            <DialogDescription>
+              {pendingMethod === 'manual'
+                ? t('employer.campaigns.wizard.criteriaSwitchToManual')
+                : t('employer.campaigns.wizard.criteriaSwitchToFile')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingMethod(null)}>
+              {t('employer.campaigns.wizard.jdSwitchCancel')}
+            </Button>
+            <Button type="button" onClick={confirmMethodChange}>
+              {pendingMethod === 'manual'
+                ? t('employer.campaigns.wizard.criteriaTab.manual')
+                : t('employer.campaigns.wizard.criteriaTab.file')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SectionPanel>
   );
 }
