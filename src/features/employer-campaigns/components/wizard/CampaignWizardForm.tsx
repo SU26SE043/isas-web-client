@@ -27,6 +27,11 @@ interface CampaignWizardFormProps {
     campaignId: string,
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
+  onUploadFiles: (
+    campaignId: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+    options?: { replace?: boolean },
+  ) => Promise<EmployerCampaign>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
 
@@ -36,6 +41,7 @@ export function CampaignWizardForm({
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
+  onUploadFiles,
   onAfterSubmit,
 }: CampaignWizardFormProps) {
   const { t } = useLanguage();
@@ -46,6 +52,7 @@ export function CampaignWizardForm({
     onCreateCampaign,
     onUpdateCampaign,
     onUpdateQuestions,
+    onUploadFiles,
     onAfterSubmit,
   });
   const { state, step } = wizard;
@@ -109,7 +116,8 @@ export function CampaignWizardForm({
           jd={state.jd}
           error={wizard.stepError}
           onChange={wizard.patchJd}
-          onRetryUpload={() => undefined}
+          onUploadFile={(file) => void wizard.uploadJdFile(file)}
+          onRetryUpload={wizard.retryJdUpload}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
@@ -119,11 +127,15 @@ export function CampaignWizardForm({
       {step === 2 ? (
         <CampaignCriteriaStepV2
           rubric={state.rubric}
+          criteria={state.criteria}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
           }
           error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
+          onChangeCriteria={wizard.patchCriteria}
+          onUploadFile={(file) => void wizard.uploadCriteriaFile(file)}
+          onRetryUpload={wizard.retryCriteriaUpload}
           onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}

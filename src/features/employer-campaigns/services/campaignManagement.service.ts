@@ -464,31 +464,70 @@ export const campaignManagementService = {
   },
 
   /**
-   * Mock: POST /api/v1/campaign/{id}/files (multipart field `jdFile`).
-   * Campaign must be Draft. Used after create when JD source is a PDF.
+   * Live: POST or PUT /api/v1/campaign/{id}/files — multipart jdFile / criteriaFile (PDF, ≤10MB).
+   * Use POST for first upload, PUT to replace (Draft only → 409 if not Draft).
    */
-  async uploadCampaignJdFile(id: string, jdFile: File): Promise<EmployerCampaign> {
-    await mockDelay(700);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (campaign.status !== 'draft') throw new Error('ONLY_DRAFT_EDITABLE');
+  async uploadCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+    options?: { replace?: boolean },
+  ): Promise<EmployerCampaign> {
+    const jdFile = files.jdFile ?? null;
+    const criteriaFile = files.criteriaFile ?? null;
+    if (!jdFile && !criteriaFile) {
+      throw new CampaignRequestError(400, 'NO_FILES');
+    }
 
-    const isPdf =
-      jdFile.type === 'application/pdf' || jdFile.name.toLowerCase().endsWith('.pdf');
-    if (!isPdf) throw new Error('JD_FILE_NOT_PDF');
-    if (jdFile.size > 10 * 1024 * 1024) throw new Error('JD_FILE_TOO_LARGE');
-    if (jdFile.size <= 0) throw new Error('JD_FILE_CORRUPT');
-
-    const updated: EmployerCampaign = {
-      ...campaign,
-      jobDescription: campaign.jobDescription.trim()
-        ? campaign.jobDescription
-        : `[Uploaded JD: ${jdFile.name}]`,
-      summary: campaign.summary.trim() ? campaign.summary : campaign.title,
-      updatedAt: new Date().toISOString(),
+    const validate = (file: File, label: string) => {
+      const isPdf =
+        file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      if (!isPdf) throw new CampaignRequestError(400, `${label}_NOT_PDF`);
+      if (file.size > 10 * 1024 * 1024) throw new CampaignRequestError(400, `${label}_TOO_LARGE`);
+      if (file.size <= 0) throw new CampaignRequestError(400, `${label}_CORRUPT`);
     };
-    campaigns = campaigns.map((item) => (item.id === id ? updated : item));
-    return updated;
+    if (jdFile) validate(jdFile, 'JD');
+    if (criteriaFile) validate(criteriaFile, 'CRITERIA');
+
+    const formData = new FormData();
+    if (jdFile) formData.append('jdFile', jdFile);
+    if (criteriaFile) formData.append('criteriaFile', criteriaFile);
+
+    const url = campaignManagementEndpoints.files(id);
+    const request = options?.replace
+      ? apiClient.put<unknown>(url, formData, {
+          transformRequest: [
+            (data, headers) => {
+              if (data instanceof FormData && headers) {
+                delete (headers as Record<string, unknown>)['Content-Type'];
+              }
+              return data;
+            },
+          ],
+        })
+      : apiClient.post<unknown>(url, formData, {
+          transformRequest: [
+            (data, headers) => {
+              if (data instanceof FormData && headers) {
+                delete (headers as Record<string, unknown>)['Content-Type'];
+              }
+              return data;
+            },
+          ],
+        });
+
+    const response = await request;
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid upload campaign files response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /** @deprecated Prefer uploadCampaignFiles. */
+  async uploadCampaignJdFile(id: string, jdFile: File): Promise<EmployerCampaign> {
+    return this.uploadCampaignFiles(id, { jdFile }, { replace: false });
   },
 
   /**

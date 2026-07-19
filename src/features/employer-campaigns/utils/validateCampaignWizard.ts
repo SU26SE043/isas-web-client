@@ -58,12 +58,15 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 1) {
-    // File JD is UI-only for create; text JD must be non-empty.
     if (jd.inputMethod === 'file') {
+      if (!jd.jdFile && !jd.fileName) return 'employer.campaigns.wizard.jdFileRequired';
       if (jd.jdFile) {
         const code = validateCampaignJdPdf(jd.jdFile);
         if (code) return `employer.campaigns.wizard.jdFileError.${code}`;
       }
+      if (jd.fileStatus === 'failed') return 'employer.campaigns.wizard.jdUploadFailed';
+      if (jd.fileStatus === 'uploading') return 'employer.campaigns.wizard.jdUploadingWait';
+      if (jd.fileStatus !== 'uploaded') return 'employer.campaigns.wizard.jdUploadRequired';
       return null;
     }
     const text = jd.jdText.trim();
@@ -73,6 +76,22 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 2) {
+    const criteria = state.criteria;
+    if (criteria?.inputMethod === 'file') {
+      if (!criteria.criteriaFile && !criteria.fileName) {
+        return 'employer.campaigns.wizard.criteriaFileRequired';
+      }
+      if (criteria.criteriaFile) {
+        const code = validateCampaignJdPdf(criteria.criteriaFile);
+        if (code) return `employer.campaigns.wizard.criteriaFileError.${code}`;
+      }
+      if (criteria.fileStatus === 'failed') return 'employer.campaigns.wizard.criteriaUploadFailed';
+      if (criteria.fileStatus === 'uploading') return 'employer.campaigns.wizard.criteriaUploadingWait';
+      if (criteria.fileStatus !== 'uploaded') {
+        return 'employer.campaigns.wizard.criteriaUploadRequired';
+      }
+      return null;
+    }
     if (rubric.length === 0) return 'employer.campaigns.wizard.criteriaRequired';
     if (rubric.some((item) => !item.name.trim())) {
       return 'employer.campaigns.wizard.rubric.nameRequired';

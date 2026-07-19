@@ -18,16 +18,18 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Invite by email live** — Active detail → invite/email → `POST /api/v1/campaign/{id}/invitations` with `{ emails }`. Response `{ created, failed }` shown on result page. Errors: 400 · 404 · 409 (not Active).
 
-**CV invite / file upload** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds, JD files).
+**JD / Criteria PDF live** — Wizard step 2/3 file upload → ensure Draft exists → `POST /api/v1/campaign/{id}/files` (first upload) or `PUT …/files` (replace). Fields `jdFile` / `criteriaFile` (PDF ≤10MB, ≥1 file).
+
+**CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
 ## Flow 1 — Create & publish
 
 Wizard at `/employer/campaigns/new` (and draft edit): **4 steps** (current UI)
 
 1. Campaign information
-2. Job description (text sent on create; file selection is UI-only until a later file API)
-3. Evaluation criteria
-4. Question configuration → **Create campaign** (`POST`) → navigate to **Campaign Detail (Draft preview)**
+2. Job description (text on create body, **or** PDF via `POST/PUT …/files`)
+3. Evaluation criteria (manual rubric **or** PDF via `POST/PUT …/files`)
+4. Question configuration → **Create campaign** (`POST`) or **Save** (`PUT` + questions) if draft already created for file upload → Campaign Detail
 
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
 
@@ -76,6 +78,8 @@ Legacy `/selection` redirects to `/invite`.
 | Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
 | Soft-delete | `DELETE /api/v1/campaign/{id}` |
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
+| Upload JD/Criteria PDF | `POST /api/v1/campaign/{id}/files` (multipart) |
+| Replace JD/Criteria PDF | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
 
 ## Validation
 

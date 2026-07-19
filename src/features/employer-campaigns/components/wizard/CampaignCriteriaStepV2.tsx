@@ -1,38 +1,42 @@
-import { ClipboardList, Plus } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
+import type { CriteriaFileState, CriteriaInputMethod } from '../../types/campaignWizard.types';
+import { CampaignCriteriaManualList } from './CampaignCriteriaManualList';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
-import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionCard';
 import { CampaignRubricTotalWeight } from './criteria/CampaignRubricTotalWeight';
+import {
+  JobDescriptionFilePanel,
+  validateCampaignJdPdf,
+} from './jd/JobDescriptionFilePanel';
+import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 
 interface CampaignCriteriaStepV2Props {
   rubric: RubricCriterion[];
+  criteria: CriteriaFileState;
   contextLabel: string;
   error?: string | null;
   onChangeRubric: (rubric: RubricCriterion[]) => void;
+  onChangeCriteria: (patch: Partial<CriteriaFileState>) => void;
+  onUploadFile?: (file: File) => void;
+  onRetryUpload?: () => void;
   onReset: () => void;
   onBack: () => void;
   onNext: () => void;
   isSaving?: boolean;
 }
 
-function createEmptyCriterion(): RubricCriterion {
-  return {
-    id: `new-${crypto.randomUUID().slice(0, 8)}`,
-    name: '',
-    description: '',
-    weight: 0,
-    maxScore: 10,
-  };
-}
-
 export function CampaignCriteriaStepV2({
   rubric,
+  criteria,
   contextLabel,
   error,
   onChangeRubric,
+  onChangeCriteria,
+  onUploadFile,
+  onRetryUpload,
   onReset,
   onBack,
   onNext,
@@ -46,17 +50,54 @@ export function CampaignCriteriaStepV2({
     (item) => Number.isFinite(item.maxScore) && item.maxScore >= 1 && item.maxScore <= 10,
   );
   const hasEmptyName = rubric.some((item) => !item.name.trim());
-  const canNext =
-    weightValid &&
-    maxScoreValid &&
-    rubric.length > 0 &&
-    !hasEmptyName &&
-    !isSaving;
+  const isFile = criteria.inputMethod === 'file';
+  const canNext = isFile
+    ? criteria.fileStatus === 'uploaded' && !isSaving
+    : weightValid && maxScoreValid && rubric.length > 0 && !hasEmptyName && !isSaving;
+  const localError =
+    isFile && criteria.fileError
+      ? t(`employer.campaigns.wizard.criteriaFileError.${criteria.fileError}`)
+      : null;
 
-  const updateCriterion = (index: number, patch: Partial<RubricCriterion>) => {
-    onChangeRubric(
-      rubric.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
-    );
+  const requestMethodChange = (next: CriteriaInputMethod) => {
+    if (next === criteria.inputMethod) return;
+    onChangeCriteria({ inputMethod: next });
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    if (!file) {
+      onChangeCriteria({
+        criteriaFile: null,
+        fileName: null,
+        fileSize: null,
+        fileStatus: 'idle',
+        fileError: null,
+        uploadProgress: null,
+      });
+      return;
+    }
+    const code = validateCampaignJdPdf(file);
+    if (code) {
+      onChangeCriteria({
+        criteriaFile: null,
+        fileName: file.name,
+        fileSize: file.size,
+        fileStatus: 'failed',
+        fileError: code,
+        uploadProgress: null,
+      });
+      return;
+    }
+    onChangeCriteria({
+      criteriaFile: file,
+      fileName: file.name,
+      fileSize: file.size,
+      fileStatus: 'selected',
+      fileError: null,
+      uploadProgress: null,
+      inputMethod: 'file',
+    });
+    onUploadFile?.(file);
   };
 
   return (
@@ -65,64 +106,71 @@ export function CampaignCriteriaStepV2({
       title={t('employer.campaigns.wizard.steps.criteria')}
       description={t('employer.campaigns.wizard.steps.criteriaDesc')}
       headerAside={
-        <CampaignRubricTotalWeight
-          totalWeight={totalWeight}
-          totalMaxScore={totalMaxScore}
-          weightValid={weightValid}
-          maxScoreValid={maxScoreValid}
-          resetDisabled={Boolean(isSaving)}
-          onReset={onReset}
-        />
+        !isFile ? (
+          <CampaignRubricTotalWeight
+            totalWeight={totalWeight}
+            totalMaxScore={totalMaxScore}
+            weightValid={weightValid}
+            maxScoreValid={maxScoreValid}
+            resetDisabled={Boolean(isSaving)}
+            onReset={onReset}
+          />
+        ) : null
       }
       footer={
         <CampaignWizardNav
           onBack={onBack}
           onNext={onNext}
           isSaving={isSaving}
-          nextDisabled={!canNext}
-          backDisabled={Boolean(isSaving)}
+          nextDisabled={!canNext || criteria.fileStatus === 'uploading'}
+          backDisabled={Boolean(isSaving) || criteria.fileStatus === 'uploading'}
         />
       }
     >
       <div className="space-y-4">
         {error ? <FieldError message={error} /> : null}
 
-        <div className="mb-3 hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] gap-3 px-1 text-caption text-muted-foreground lg:grid">
-          <span>{t('employer.campaigns.wizard.rubric.colCriterion')}</span>
-          <span>{t('employer.campaigns.wizard.rubric.colDescription')}</span>
-          <span>{t('employer.campaigns.wizard.rubric.colWeight')}</span>
-          <span>{t('employer.campaigns.wizard.rubric.colMaxScore')}</span>
-          <span className="sr-only">{t('employer.campaigns.wizard.rubric.remove')}</span>
-        </div>
+        <JobDescriptionMethodTabs
+          active={isFile ? 'file' : 'text'}
+          fileLabel={t('employer.campaigns.wizard.criteriaTab.file')}
+          textLabel={t('employer.campaigns.wizard.criteriaTab.manual')}
+          listLabel={t('employer.campaigns.wizard.criteriaTab.list')}
+          onChange={(method) => requestMethodChange(method === 'file' ? 'file' : 'manual')}
+          disabled={criteria.fileStatus === 'uploading'}
+        />
 
-        <div className="space-y-3">
-          {rubric.map((criterion, index) => (
-            <CampaignRubricCriterionCard
-              key={criterion.id}
-              criterion={criterion}
-              index={index}
-              contextLabel={contextLabel}
-              disabled={Boolean(isSaving)}
-              onChange={(patch) => updateCriterion(index, patch)}
-              onRemove={() => onChangeRubric(rubric.filter((item) => item.id !== criterion.id))}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          disabled={Boolean(isSaving)}
-          onClick={() => onChangeRubric([...rubric, createEmptyCriterion()])}
-          className="mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin bg-transparent px-4 py-5 text-center transition-[background-color,border-color] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-            <Plus className="size-4" aria-hidden />
-            {t('employer.campaigns.wizard.rubric.add')}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {t('employer.campaigns.wizard.rubric.addHint')}
-          </span>
-        </button>
+        {isFile ? (
+          <JobDescriptionFilePanel
+            file={criteria.criteriaFile}
+            fileName={criteria.fileName}
+            fileSize={criteria.fileSize}
+            status={criteria.fileStatus}
+            progress={criteria.uploadProgress}
+            error={localError}
+            dropTitle={t('employer.campaigns.wizard.criteriaDropzone')}
+            dropSecondary={t('employer.campaigns.wizard.criteriaDropSecondary')}
+            chooseFileLabel={t('employer.campaigns.wizard.jdBrowse')}
+            changeFileLabel={t('employer.campaigns.wizard.jdReplace')}
+            removeLabel={t('employer.campaigns.wizard.jdRemove')}
+            pendingLabel={t('employer.campaigns.wizard.jdPendingUpload')}
+            uploadingLabel={t('employer.campaigns.wizard.jdUploading')}
+            successLabel={t('employer.campaigns.wizard.jdUploadSuccess')}
+            failureLabel={t('employer.campaigns.wizard.criteriaUploadFailed')}
+            retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
+            chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
+            supportLabel={t('employer.campaigns.wizard.jdFormats')}
+            onFileSelect={handleFileSelect}
+            onRetry={onRetryUpload}
+            disabled={criteria.fileStatus === 'uploading'}
+          />
+        ) : (
+          <CampaignCriteriaManualList
+            rubric={rubric}
+            contextLabel={contextLabel}
+            disabled={Boolean(isSaving)}
+            onChangeRubric={onChangeRubric}
+          />
+        )}
       </div>
     </SectionPanel>
   );

@@ -2,6 +2,7 @@ import type { CampaignTargetLevel, CampaignDomainOption } from '../components/wi
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
 
 export type JobDescriptionMethod = 'file' | 'text';
+export type CriteriaInputMethod = 'manual' | 'file';
 
 export type DeferredJdFileStatus = 'idle' | 'selected' | 'uploading' | 'uploaded' | 'failed';
 
@@ -14,6 +15,19 @@ export type JobDescriptionState = {
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
+  /** True after at least one successful server upload (POST/PUT …/files). */
+  serverUploaded: boolean;
+};
+
+export type CriteriaFileState = {
+  inputMethod: CriteriaInputMethod;
+  criteriaFile: File | null;
+  fileName: string | null;
+  fileSize: number | null;
+  fileStatus: DeferredJdFileStatus;
+  fileError: string | null;
+  uploadProgress: number | null;
+  serverUploaded: boolean;
 };
 
 /** @deprecated Alias kept for gradual rename. */
@@ -42,6 +56,7 @@ export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
 export type CampaignWizardPersistedState = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
+  criteria: CriteriaFileState;
   rubricSource: RubricSource;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
@@ -101,6 +116,20 @@ export function createEmptyJdState(): JobDescriptionState {
     fileStatus: 'idle',
     fileError: null,
     uploadProgress: null,
+    serverUploaded: false,
+  };
+}
+
+export function createEmptyCriteriaFileState(): CriteriaFileState {
+  return {
+    inputMethod: 'manual',
+    criteriaFile: null,
+    fileName: null,
+    fileSize: null,
+    fileStatus: 'idle',
+    fileError: null,
+    uploadProgress: null,
+    serverUploaded: false,
   };
 }
 

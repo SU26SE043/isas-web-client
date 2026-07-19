@@ -191,8 +191,26 @@ export function useEmployerCampaign(id: string | undefined) {
 
   const uploadJdFile = useCallback(
     async (campaignId: string, jdFile: File) => {
-      const next = await campaignManagementService.uploadCampaignJdFile(campaignId, jdFile);
+      const next = await campaignManagementService.uploadCampaignFiles(
+        campaignId,
+        { jdFile },
+        { replace: false },
+      );
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      return next;
+    },
+    [queryClient],
+  );
+
+  const uploadFiles = useCallback(
+    async (
+      campaignId: string,
+      files: { jdFile?: File | null; criteriaFile?: File | null },
+      options?: { replace?: boolean },
+    ) => {
+      const next = await campaignManagementService.uploadCampaignFiles(campaignId, files, options);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
       return next;
     },
     [queryClient],
@@ -256,6 +274,7 @@ export function useEmployerCampaign(id: string | undefined) {
     updateCampaignQuestions,
     saveCampaignQuestions,
     uploadJdFile,
+    uploadFiles,
     publish,
     updateStatus,
     deleteCampaign,

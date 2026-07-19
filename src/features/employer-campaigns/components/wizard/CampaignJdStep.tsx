@@ -25,6 +25,7 @@ interface CampaignJdStepProps {
   jd: JobDescriptionState;
   error?: string | null;
   onChange: (patch: Partial<JobDescriptionState>) => void;
+  onUploadFile?: (file: File) => void;
   onRetryUpload?: () => void;
   onBack: () => void;
   onNext: () => void;
@@ -35,6 +36,7 @@ export function CampaignJdStep({
   jd,
   error,
   onChange,
+  onUploadFile,
   onRetryUpload,
   onBack,
   onNext,
@@ -100,6 +102,7 @@ export function CampaignJdStep({
       uploadProgress: null,
       inputMethod: 'file',
     });
+    onUploadFile?.(file);
   };
 
   return (

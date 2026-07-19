@@ -20,18 +20,19 @@ import {
   validateAllCampaignWizardSteps,
   validateCampaignWizardStep,
 } from '../utils/validateCampaignWizard';
-import type {
-  CampaignInfoState,
-  CampaignWizardPersistedState,
-  JobDescriptionState,
-  QuestionSource,
-  RubricSource,
-} from '../types/campaignWizard.types';
 import {
+  createEmptyCriteriaFileState,
   createEmptyJdState,
   decimalWeightsToPercent,
 } from '../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
+import type {
+  CampaignInfoState,
+  CampaignWizardPersistedState,
+  CriteriaFileState,
+  JobDescriptionState,
+  QuestionSource,
+  RubricSource,
+} from '../types/campaignWizard.types';import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -98,6 +99,7 @@ function buildInitialState(
           }
         : {}),
     },
+    criteria: createEmptyCriteriaFileState(),
     rubricSource: campaign?.rubric?.length ? 'manual' : 'ai',
     rubric: initialRubric,
     rubricSavedAt: campaign?.rubric?.length ? new Date().toISOString() : null,
@@ -204,6 +206,11 @@ interface UseCampaignWizardArgs {
     campaignId: string,
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
+  onUploadFiles: (
+    campaignId: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+    options?: { replace?: boolean },
+  ) => Promise<EmployerCampaign>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
 
@@ -213,6 +220,7 @@ export function useCampaignWizard({
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
+  onUploadFiles,
   onAfterSubmit,
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
@@ -258,6 +266,186 @@ export function useCampaignWizard({
   const patchJd = useCallback((patch: Partial<JobDescriptionState>) => {
     setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'dirty' }));
   }, []);
+
+  const patchCriteria = useCallback((patch: Partial<CriteriaFileState>) => {
+    setState((prev) => ({
+      ...prev,
+      criteria: { ...prev.criteria, ...patch },
+      autosaveStatus: 'dirty',
+    }));
+  }, []);
+
+  const ensureDraftId = useCallback(async (): Promise<string> => {
+    const existing = state.draftId ?? campaign?.id;
+    if (existing) return existing;
+
+    const infoError = validateCampaignWizardStep(state, 0, { mode: 'create' });
+    if (infoError) {
+      throw new Error(infoError);
+    }
+
+    const request = buildCampaignCreateRequest({
+      info: state.info,
+      jd: state.jd,
+      rubric: state.rubric,
+      questions:
+        state.questions.length > 0
+          ? state.questions
+          : [
+              {
+                id: 'placeholder',
+                prompt: 'Temporary question — replace before publish',
+                skill: '',
+                difficulty: 'middle',
+              },
+            ],
+      questionSource: state.questionSource ?? 'manual',
+      criteriaText: null,
+    });
+    const created = await onCreateCampaign(request);
+    setState((prev) => ({
+      ...prev,
+      draftId: created.id,
+      lastSavedAt: created.updatedAt,
+      autosaveStatus: 'saved',
+    }));
+    return created.id;
+  }, [campaign?.id, onCreateCampaign, state]);
+
+  const mapFileUploadError = useCallback(
+    (error: unknown): string => {
+      const status = getApiStatusCode(error);
+      if (status === 404) return 'notFound';
+      if (status === 409) return 'notDraft';
+      if (status === 400) {
+        const message = getApiErrorMessage(error, '').toLowerCase();
+        if (message.includes('10') || message.includes('size') || message.includes('large')) {
+          return 'tooLarge';
+        }
+        if (message.includes('pdf')) return 'notPdf';
+        return 'server';
+      }
+      return 'server';
+    },
+    [],
+  );
+
+  const uploadJdFile = useCallback(
+    async (file: File) => {
+      if (requestLockRef.current) return;
+      requestLockRef.current = true;
+      setIsSavingStep(true);
+      patchJd({
+        jdFile: file,
+        fileName: file.name,
+        fileSize: file.size,
+        fileStatus: 'uploading',
+        fileError: null,
+        uploadProgress: 10,
+        inputMethod: 'file',
+      });
+      try {
+        const id = await ensureDraftId();
+        const replace = Boolean(state.jd.serverUploaded);
+        await onUploadFiles(id, { jdFile: file }, { replace });
+        patchJd({
+          jdFile: file,
+          fileName: file.name,
+          fileSize: file.size,
+          fileStatus: 'uploaded',
+          fileError: null,
+          uploadProgress: 100,
+          serverUploaded: true,
+        });
+        setStepError(null);
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith('employer.campaigns.')) {
+          setStepError(t(error.message));
+          setState((prev) => ({
+            ...prev,
+            currentStep: 0,
+            errorSteps: Array.from(new Set([...prev.errorSteps, 0])),
+          }));
+        }
+        patchJd({
+          fileStatus: 'failed',
+          fileError: mapFileUploadError(error),
+          uploadProgress: null,
+        });
+      } finally {
+        requestLockRef.current = false;
+        setIsSavingStep(false);
+      }
+    },
+    [ensureDraftId, mapFileUploadError, onUploadFiles, patchJd, state.jd.serverUploaded, t],
+  );
+
+  const uploadCriteriaFile = useCallback(
+    async (file: File) => {
+      if (requestLockRef.current) return;
+      requestLockRef.current = true;
+      setIsSavingStep(true);
+      patchCriteria({
+        criteriaFile: file,
+        fileName: file.name,
+        fileSize: file.size,
+        fileStatus: 'uploading',
+        fileError: null,
+        uploadProgress: 10,
+        inputMethod: 'file',
+      });
+      try {
+        const id = await ensureDraftId();
+        const replace = Boolean(state.criteria.serverUploaded);
+        await onUploadFiles(id, { criteriaFile: file }, { replace });
+        patchCriteria({
+          criteriaFile: file,
+          fileName: file.name,
+          fileSize: file.size,
+          fileStatus: 'uploaded',
+          fileError: null,
+          uploadProgress: 100,
+          serverUploaded: true,
+        });
+        setStepError(null);
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith('employer.campaigns.')) {
+          setStepError(t(error.message));
+          setState((prev) => ({
+            ...prev,
+            currentStep: 0,
+            errorSteps: Array.from(new Set([...prev.errorSteps, 0])),
+          }));
+        }
+        patchCriteria({
+          fileStatus: 'failed',
+          fileError: mapFileUploadError(error),
+          uploadProgress: null,
+        });
+      } finally {
+        requestLockRef.current = false;
+        setIsSavingStep(false);
+      }
+    },
+    [
+      ensureDraftId,
+      mapFileUploadError,
+      onUploadFiles,
+      patchCriteria,
+      state.criteria.serverUploaded,
+      t,
+    ],
+  );
+
+  const retryJdUpload = useCallback(() => {
+    const file = state.jd.jdFile;
+    if (file) void uploadJdFile(file);
+  }, [state.jd.jdFile, uploadJdFile]);
+
+  const retryCriteriaUpload = useCallback(() => {
+    const file = state.criteria.criteriaFile;
+    if (file) void uploadCriteriaFile(file);
+  }, [state.criteria.criteriaFile, uploadCriteriaFile]);
 
   const setRubricSource = useCallback((rubricSource: RubricSource) => {
     setState((prev) => ({ ...prev, rubricSource, autosaveStatus: 'dirty' }));
@@ -338,6 +526,7 @@ export function useCampaignWizard({
 
   const handleCreateCampaign = useCallback(async () => {
     if (requestLockRef.current || isSubmitting || mode !== 'create') return;
+    if (state.draftId) return;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
@@ -359,12 +548,40 @@ export function useCampaignWizard({
     try {
       const request = buildCampaignCreateRequest(snapshot());
       const created = await onCreateCampaign(request);
+
+      const jdFile =
+        state.jd.inputMethod === 'file' && state.jd.jdFile && !state.jd.serverUploaded
+          ? state.jd.jdFile
+          : null;
+      const criteriaFile =
+        state.criteria.inputMethod === 'file' &&
+        state.criteria.criteriaFile &&
+        !state.criteria.serverUploaded
+          ? state.criteria.criteriaFile
+          : null;
+      if (jdFile || criteriaFile) {
+        await onUploadFiles(created.id, { jdFile, criteriaFile }, { replace: false });
+      }
+
       setState((prev) => ({
         ...prev,
         draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
         completedSteps: markCompleted(prev.completedSteps, 3),
+        jd:
+          jdFile != null
+            ? { ...prev.jd, fileStatus: 'uploaded', serverUploaded: true, uploadProgress: 100 }
+            : prev.jd,
+        criteria:
+          criteriaFile != null
+            ? {
+                ...prev.criteria,
+                fileStatus: 'uploaded',
+                serverUploaded: true,
+                uploadProgress: 100,
+              }
+            : prev.criteria,
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
       onAfterSubmit(created);
@@ -387,21 +604,23 @@ export function useCampaignWizard({
     mode,
     onAfterSubmit,
     onCreateCampaign,
+    onUploadFiles,
     snapshot,
     state,
     t,
   ]);
 
   const handleUpdateDraft = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'edit') return;
+    if (requestLockRef.current || isSubmitting) return;
     if (!campaignId) {
       setActionError(t('employer.campaigns.wizard.campaignNotFound'));
       return;
     }
-    if (!isDraftEditable) {
+    if (mode === 'edit' && !isDraftEditable) {
       setActionError(t('employer.campaigns.wizard.notDraftEditable'));
       return;
     }
+    if (mode === 'create' && !state.draftId) return;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'edit' });
     if (!validation.isValid) {
@@ -536,12 +755,12 @@ export function useCampaignWizard({
   ]);
 
   const handleFinalSubmit = useCallback(() => {
-    if (mode === 'create') {
+    if (mode === 'create' && !state.draftId) {
       void handleCreateCampaign();
       return;
     }
     void handleUpdateDraft();
-  }, [handleCreateCampaign, handleUpdateDraft, mode]);
+  }, [handleCreateCampaign, handleUpdateDraft, mode, state.draftId]);
 
   const generateQuestionsWithAi = useCallback(() => {
     const count = Math.max(1, Math.min(state.questionCount, QUESTION_BANK.length));
@@ -597,6 +816,11 @@ export function useCampaignWizard({
     domainLabel,
     patchInfo,
     patchJd,
+    patchCriteria,
+    uploadJdFile,
+    uploadCriteriaFile,
+    retryJdUpload,
+    retryCriteriaUpload,
     setRubricSource,
     setRubric,
     saveRubric,
