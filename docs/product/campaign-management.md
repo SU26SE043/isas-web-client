@@ -18,18 +18,20 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Invite by email live** — Active detail → invite/email → `POST /api/v1/campaign/{id}/invitations` with `{ emails }`. Response `{ created, failed }` shown on result page. Errors: 400 · 404 · 409 (not Active).
 
-**JD / Criteria PDF live** — Wizard step 2/3 file upload → ensure Draft exists → `POST /api/v1/campaign/{id}/files` (first upload) or `PUT …/files` (replace). Fields `jdFile` / `criteriaFile` (PDF ≤10MB, ≥1 file).
+**JD PDF live** — Create mode keeps the JD file local (browser-only) until the final `POST /api/v1/campaign` succeeds, then a single `POST /api/v1/campaign/{id}/files`. Edit mode uploads immediately via `POST` (first upload) or `PUT …/files` (replace). Field `jdFile` (PDF ≤10MB). Criteria no longer supports file upload — replaced by a manual rubric (step 3) plus a freeform `criteriaText` note (step 2).
 
 **CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
 ## Flow 1 — Create & publish
 
-Wizard at `/employer/campaigns/new` (and draft edit): **4 steps** (current UI)
+Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
-1. Campaign information
-2. Job description (text on create body, **or** PDF via `POST/PUT …/files`)
-3. Evaluation criteria (manual rubric **or** PDF via `POST/PUT …/files`)
-4. Question configuration → **Create campaign** (`POST`) or **Save** (`PUT` + questions) if draft already created for file upload → Campaign Detail
+1. Campaign information — title, domain, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt
+2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
+3. Evaluation criteria — manual rubric only (name, description, weight %, maxScore); weights shown as % summing to 100, converted to 0–1 decimals on submit
+4. Questions — AI-generated or HR-authored, each with `prompt`, `source` (`AiGenerated`/`CustomHr`), `isRequired`; add/edit/delete/reorder, tracked against `maxQuestions` when adaptive is on
+5. Settings — `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; when adaptive is on, `maxFollowUps` (>=0) and `maxQuestions` (0–20)
+6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
 
@@ -39,7 +41,7 @@ Closed detail: **Pipeline** · **Lưu trữ** (confirm → status Archived) · *
 
 Archived detail: **Pipeline** · **Xóa**.
 
-There is **no** “Save draft” button mid-wizard. Create produces `Draft` from the backend. Publish is only from Campaign Detail.
+There is **no** “Save draft” button mid-wizard, and no API call at all while navigating between steps — every field lives in local wizard state until the Review step's final submit. Create calls `POST /api/v1/campaign` exactly once (Review step only); if a JD file is pending it uploads right after via `POST …/files`. Edit mode sends only dirty/changed metadata fields via `PUT /api/v1/campaign/{id}` (see `buildDirtyUpdateRequest`), plus the full question list via `PUT …/questions`; criteria/questions edits only apply while the campaign is Draft. Publish is only from Campaign Detail.
 
 Candidate invitation is **not** part of Flow 1.
 
@@ -70,16 +72,15 @@ Legacy `/selection` redirects to `/invite`.
 
 | Case | API |
 | --- | --- |
-| Next step while creating | None |
-| Finish wizard (create) | `POST /api/v1/campaign` |
-| Next step while editing Draft | None |
-| Save changes (edit) | `PUT /api/v1/campaign/{id}` then `PUT …/questions` |
+| Next/back through any step (create or edit) | None |
+| Finish wizard on Review (create) | `POST /api/v1/campaign`, then `POST …/files` once if a JD file is pending |
+| Save on Review (edit) | `PUT /api/v1/campaign/{id}` (dirty fields only) then `PUT …/questions` |
 | Publish | `POST /api/v1/campaign/{id}/publish` |
 | Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
 | Soft-delete | `DELETE /api/v1/campaign/{id}` |
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
-| Upload JD/Criteria PDF | `POST /api/v1/campaign/{id}/files` (multipart) |
-| Replace JD/Criteria PDF | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
+| Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |
+| Replace JD PDF (edit mode) | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
 
 ## Validation
 

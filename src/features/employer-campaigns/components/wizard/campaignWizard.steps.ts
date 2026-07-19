@@ -1,7 +1,7 @@
 import type { FlowStepStatus } from '@/components/ui/flow-stepper';
 
 /**
- * Flow 1 — Create & publish campaign (4 wizard steps in current UI).
+ * Flow 1 — Create & publish campaign (6 wizard steps).
  * Candidate invitation is Flow 2, after campaign is Active.
  */
 export const CAMPAIGN_WIZARD_STEPS = [
@@ -25,22 +25,23 @@ export const CAMPAIGN_WIZARD_STEPS = [
     titleKey: 'employer.campaigns.wizard.steps.questions',
     descKey: 'employer.campaigns.wizard.steps.questionsDesc',
   },
+  {
+    id: 'settings',
+    titleKey: 'employer.campaigns.wizard.steps.settings',
+    descKey: 'employer.campaigns.wizard.steps.settingsDesc',
+  },
+  {
+    id: 'review',
+    titleKey: 'employer.campaigns.wizard.steps.review',
+    descKey: 'employer.campaigns.wizard.steps.reviewDesc',
+  },
 ] as const;
 
 export type CampaignWizardStepId = (typeof CAMPAIGN_WIZARD_STEPS)[number]['id'];
 export const CAMPAIGN_WIZARD_STEP_COUNT = CAMPAIGN_WIZARD_STEPS.length;
-export type CampaignWizardStepIndex = 0 | 1 | 2 | 3;
+export type CampaignWizardStepIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
 export const CAMPAIGN_WIZARD_STEP_KEYS = CAMPAIGN_WIZARD_STEPS.map((step) => step.titleKey);
-
-export const CAMPAIGN_TARGET_LEVELS = [
-  'Fresher',
-  'Junior',
-  'Middle',
-  'Senior',
-] as const;
-
-export type CampaignTargetLevel = (typeof CAMPAIGN_TARGET_LEVELS)[number];
 
 /** Campaign domains shown in create wizard. */
 export const CAMPAIGN_DOMAIN_OPTIONS = [

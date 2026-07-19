@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type {
+  CampaignDraftInput,
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,

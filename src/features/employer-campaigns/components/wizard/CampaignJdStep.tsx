@@ -14,18 +14,17 @@ import { useLanguage } from '@/shared/languages';
 import type { JobDescriptionState, JobDescriptionMethod } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
-import {
-  JobDescriptionFilePanel,
-  validateCampaignJdPdf,
-} from './jd/JobDescriptionFilePanel';
+import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
+import { JobDescriptionFilePanel } from './jd/JobDescriptionFilePanel';
 import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
   jd: JobDescriptionState;
   error?: string | null;
+  isEditMode?: boolean;
   onChange: (patch: Partial<JobDescriptionState>) => void;
-  onUploadFile?: (file: File) => void;
+  onSelectFile: (file: File | null) => void;
   onRetryUpload?: () => void;
   onBack: () => void;
   onNext: () => void;
@@ -35,8 +34,9 @@ interface CampaignJdStepProps {
 export function CampaignJdStep({
   jd,
   error,
+  isEditMode = false,
   onChange,
-  onUploadFile,
+  onSelectFile,
   onRetryUpload,
   onBack,
   onNext,
@@ -69,42 +69,6 @@ export function CampaignJdStep({
     setPendingMethod(null);
   };
 
-  const handleFileSelect = (file: File | null) => {
-    if (!file) {
-      onChange({
-        jdFile: null,
-        fileName: null,
-        fileSize: null,
-        fileStatus: 'idle',
-        fileError: null,
-        uploadProgress: null,
-      });
-      return;
-    }
-    const code = validateCampaignJdPdf(file);
-    if (code) {
-      onChange({
-        jdFile: null,
-        fileName: file.name,
-        fileSize: file.size,
-        fileStatus: 'failed',
-        fileError: code,
-        uploadProgress: null,
-      });
-      return;
-    }
-    onChange({
-      jdFile: file,
-      fileName: file.name,
-      fileSize: file.size,
-      fileStatus: 'selected',
-      fileError: null,
-      uploadProgress: null,
-      inputMethod: 'file',
-    });
-    onUploadFile?.(file);
-  };
-
   return (
     <SectionPanel
       icon={<FileText className="size-4" aria-hidden />}
@@ -133,29 +97,36 @@ export function CampaignJdStep({
         />
 
         {jd.inputMethod === 'file' ? (
-          <JobDescriptionFilePanel
-            file={jd.jdFile}
-            fileName={jd.fileName}
-            fileSize={jd.fileSize}
-            status={jd.fileStatus}
-            progress={jd.uploadProgress}
-            error={localError}
-            dropTitle={t('employer.campaigns.wizard.jdDropzone')}
-            dropSecondary={t('employer.campaigns.wizard.jdDropSecondary')}
-            chooseFileLabel={t('employer.campaigns.wizard.jdBrowse')}
-            changeFileLabel={t('employer.campaigns.wizard.jdReplace')}
-            removeLabel={t('employer.campaigns.wizard.jdRemove')}
-            pendingLabel={t('employer.campaigns.wizard.jdPendingUpload')}
-            uploadingLabel={t('employer.campaigns.wizard.jdUploading')}
-            successLabel={t('employer.campaigns.wizard.jdUploadSuccess')}
-            failureLabel={t('employer.campaigns.wizard.jdUploadFailed')}
-            retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
-            chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
-            supportLabel={t('employer.campaigns.wizard.jdFormats')}
-            onFileSelect={handleFileSelect}
-            onRetry={onRetryUpload}
-            disabled={jd.fileStatus === 'uploading'}
-          />
+          <>
+            <p className="text-xs text-muted-foreground">
+              {isEditMode
+                ? t('employer.campaigns.wizard.jdEditUploadHint')
+                : t('employer.campaigns.wizard.jdLocalOnlyHint')}
+            </p>
+            <JobDescriptionFilePanel
+              file={jd.jdFile}
+              fileName={jd.fileName}
+              fileSize={jd.fileSize}
+              status={jd.fileStatus}
+              progress={jd.uploadProgress}
+              error={localError}
+              dropTitle={t('employer.campaigns.wizard.jdDropzone')}
+              dropSecondary={t('employer.campaigns.wizard.jdDropSecondary')}
+              chooseFileLabel={t('employer.campaigns.wizard.jdBrowse')}
+              changeFileLabel={t('employer.campaigns.wizard.jdReplace')}
+              removeLabel={t('employer.campaigns.wizard.jdRemove')}
+              pendingLabel={t('employer.campaigns.wizard.jdPendingUpload')}
+              uploadingLabel={t('employer.campaigns.wizard.jdUploading')}
+              successLabel={t('employer.campaigns.wizard.jdUploadSuccess')}
+              failureLabel={t('employer.campaigns.wizard.jdUploadFailed')}
+              retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
+              chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
+              supportLabel={t('employer.campaigns.wizard.jdFormats')}
+              onFileSelect={onSelectFile}
+              onRetry={onRetryUpload}
+              disabled={jd.fileStatus === 'uploading'}
+            />
+          </>
         ) : (
           <JobDescriptionTextEditor
             value={jd.jdText}
@@ -172,6 +143,11 @@ export function CampaignJdStep({
             }}
           />
         )}
+
+        <CampaignCriteriaTextField
+          value={jd.criteriaText}
+          onChange={(criteriaText) => onChange({ criteriaText })}
+        />
       </div>
 
       <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>

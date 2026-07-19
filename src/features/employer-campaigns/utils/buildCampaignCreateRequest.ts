@@ -5,7 +5,11 @@ import type {
   CampaignUpdateRequest,
 } from '../types/campaign.api.types';
 import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
-import type { CampaignInfoState, JobDescriptionState, QuestionSource } from '../types/campaignWizard.types';
+import type {
+  CampaignInfoState,
+  CampaignSettingsState,
+  JobDescriptionState,
+} from '../types/campaignWizard.types';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
 
 const DOMAIN_API_LABEL: Record<CampaignDomainOption, string> = {
@@ -52,18 +56,16 @@ export function mapRubricToCreateCriteria(
     });
 }
 
+/** Each question carries its own source/isRequired (per-question, not wizard-wide). */
 export function mapQuestionsToApiRequest(
   questions: CampaignQuestion[],
-  questionSource: QuestionSource,
 ): CampaignCreateQuestionRequest[] {
-  const source: CampaignCreateQuestionRequest['source'] =
-    questionSource === 'ai' ? 'AiGenerated' : 'CustomHr';
   return questions
     .filter((item) => item.prompt.trim())
     .map((item) => ({
       questionText: item.prompt.trim(),
-      source,
-      isRequired: true,
+      source: item.source === 'ai' ? ('AiGenerated' as const) : ('CustomHr' as const),
+      isRequired: item.isRequired,
     }));
 }
 
@@ -87,6 +89,8 @@ function questionRequestToUi(
     prompt: item.questionText,
     skill: '',
     difficulty: 'middle' as const,
+    source: item.source === 'AiGenerated' ? ('ai' as const) : ('manual' as const),
+    isRequired: item.isRequired,
   }));
 }
 
@@ -152,23 +156,23 @@ export type CampaignWizardSubmitSnapshot = {
   jd: JobDescriptionState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
-  questionSource: QuestionSource;
-  criteriaText?: string | null;
+  settings: CampaignSettingsState;
 };
 
 /**
- * Build POST /api/v1/campaign body from the full wizard (all steps).
- * File-based JD is omitted (jdText: null) — file upload is a later update.
+ * Build POST /api/v1/campaign body from the full wizard (all 6 steps).
+ * File-based JD is omitted (jdText: null) — the file itself is uploaded once,
+ * right after this create call succeeds (see useCampaignWizard.handleCreateCampaign).
  */
 export function buildCampaignCreateRequest(
   snapshot: CampaignWizardSubmitSnapshot,
 ): CampaignCreateRequest {
-  const { info } = snapshot;
+  const { info, settings } = snapshot;
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
 
-  const questions = mapQuestionsToApiRequest(snapshot.questions, snapshot.questionSource);
+  const questions = mapQuestionsToApiRequest(snapshot.questions);
   if (questions.length === 0) {
     throw new Error('QUESTIONS_REQUIRED');
   }
@@ -180,9 +184,13 @@ export function buildCampaignCreateRequest(
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
     passScorePct: info.passScorePct ?? null,
-    antiCheatEnabled: info.antiCheatEnabled,
+    antiCheatEnabled: settings.antiCheatEnabled,
+    faceVerifyEnabled: settings.faceVerifyEnabled,
+    adaptiveEnabled: settings.adaptiveEnabled,
+    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : null,
+    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : null,
     jdText: resolveJdTextForCreate(snapshot.jd),
-    criteriaText: snapshot.criteriaText?.trim() || null,
+    criteriaText: snapshot.jd.criteriaText.trim() || null,
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),
@@ -191,13 +199,13 @@ export function buildCampaignCreateRequest(
 }
 
 /**
- * Build PUT /api/v1/campaign/{id} body (no questions).
- * Omits undefined fields so Axios/JSON do not send "keep-as-null" clears.
+ * Build PUT /api/v1/campaign/{id} body (no questions) with every updatable field set.
+ * Prefer `buildDirtyUpdateRequest` when editing so only changed fields are sent.
  */
 export function buildCampaignUpdateRequest(
   snapshot: CampaignWizardSubmitSnapshot,
 ): CampaignUpdateRequest {
-  const { info } = snapshot;
+  const { info, settings } = snapshot;
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
@@ -208,12 +216,39 @@ export function buildCampaignUpdateRequest(
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
-    antiCheatEnabled: info.antiCheatEnabled,
+    antiCheatEnabled: settings.antiCheatEnabled,
+    faceVerifyEnabled: settings.faceVerifyEnabled,
+    adaptiveEnabled: settings.adaptiveEnabled,
+    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : null,
+    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : null,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
-    criteriaText: snapshot.criteriaText?.trim() || undefined,
+    criteriaText: snapshot.jd.criteriaText.trim() || undefined,
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),
   };
+}
+
+/**
+ * Diff two full update payloads and keep only the fields that changed.
+ * Used on edit-mode save so PUT /api/v1/campaign/{id} only sends dirty fields.
+ */
+export function buildDirtyUpdateRequest(
+  baseline: CampaignWizardSubmitSnapshot,
+  current: CampaignWizardSubmitSnapshot,
+): CampaignUpdateRequest {
+  const baselinePayload = buildCampaignUpdateRequest(baseline);
+  const currentPayload = buildCampaignUpdateRequest(current);
+  const dirty: CampaignUpdateRequest = {};
+
+  (Object.keys(currentPayload) as Array<keyof CampaignUpdateRequest>).forEach((key) => {
+    const before = baselinePayload[key];
+    const after = currentPayload[key];
+    if (JSON.stringify(before) !== JSON.stringify(after)) {
+      (dirty as Record<string, unknown>)[key] = after;
+    }
+  });
+
+  return dirty;
 }

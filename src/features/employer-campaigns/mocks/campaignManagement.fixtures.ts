@@ -12,24 +12,32 @@ export const QUESTION_BANK: CampaignQuestion[] = [
     prompt: 'Explain how you would manage server and client state in a React assessment dashboard.',
     skill: 'React',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-api-contract',
     prompt: 'Design an API contract for a paginated candidate ranking table.',
     skill: 'API Design',
     difficulty: 'senior',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-sql-funnel',
     prompt: 'Write a query to calculate pass-through rate by campaign stage.',
     skill: 'SQL',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-test-plan',
     prompt: 'Create a Playwright test plan for a multi-step campaign wizard.',
     skill: 'Testing',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
 ];
 

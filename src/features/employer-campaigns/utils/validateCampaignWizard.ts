@@ -2,7 +2,8 @@ import type { CampaignWizardPersistedState } from '../types/campaignWizard.types
 import { validateCampaignJdPdf } from '../components/wizard/jd/JobDescriptionFilePanel';
 
 const MIN_JD_TEXT_LENGTH = 50;
-const LAST_STEP_INDEX = 3;
+const LAST_STEP_INDEX = 5;
+const MAX_QUESTIONS_LIMIT = 20;
 
 export type WizardValidationError = {
   step: number;
@@ -29,7 +30,7 @@ export function validateCampaignWizardStep(
   step: number,
   options?: { mode?: 'create' | 'edit' },
 ): string | null {
-  const { info, jd, questions, rubric } = state;
+  const { info, jd, questions, rubric, settings } = state;
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
   const mode = options?.mode ?? 'create';
 
@@ -66,7 +67,10 @@ export function validateCampaignWizardStep(
       }
       if (jd.fileStatus === 'failed') return 'employer.campaigns.wizard.jdUploadFailed';
       if (jd.fileStatus === 'uploading') return 'employer.campaigns.wizard.jdUploadingWait';
-      if (jd.fileStatus !== 'uploaded') return 'employer.campaigns.wizard.jdUploadRequired';
+      // Create mode keeps the file local until final submit; edit mode uploads immediately.
+      if (mode === 'edit' && jd.fileStatus !== 'uploaded') {
+        return 'employer.campaigns.wizard.jdUploadRequired';
+      }
       return null;
     }
     const text = jd.jdText.trim();
@@ -76,22 +80,6 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 2) {
-    const criteria = state.criteria;
-    if (criteria?.inputMethod === 'file') {
-      if (!criteria.criteriaFile && !criteria.fileName) {
-        return 'employer.campaigns.wizard.criteriaFileRequired';
-      }
-      if (criteria.criteriaFile) {
-        const code = validateCampaignJdPdf(criteria.criteriaFile);
-        if (code) return `employer.campaigns.wizard.criteriaFileError.${code}`;
-      }
-      if (criteria.fileStatus === 'failed') return 'employer.campaigns.wizard.criteriaUploadFailed';
-      if (criteria.fileStatus === 'uploading') return 'employer.campaigns.wizard.criteriaUploadingWait';
-      if (criteria.fileStatus !== 'uploaded') {
-        return 'employer.campaigns.wizard.criteriaUploadRequired';
-      }
-      return null;
-    }
     if (rubric.length === 0) return 'employer.campaigns.wizard.criteriaRequired';
     if (rubric.some((item) => !item.name.trim())) {
       return 'employer.campaigns.wizard.rubric.nameRequired';
@@ -114,9 +102,29 @@ export function validateCampaignWizardStep(
   if (step === 3) {
     if (questions.length === 0) return 'employer.campaigns.wizard.questionsRequired';
     if (questions.some((q) => !q.prompt.trim())) return 'employer.campaigns.form.required';
+    if (settings.maxQuestions > 0 && questions.length > settings.maxQuestions) {
+      return 'employer.campaigns.wizard.questionsExceedMax';
+    }
     return null;
   }
 
+  if (step === 4) {
+    if (
+      !Number.isFinite(settings.maxQuestions) ||
+      settings.maxQuestions < 0 ||
+      settings.maxQuestions > MAX_QUESTIONS_LIMIT
+    ) {
+      return 'employer.campaigns.wizard.maxQuestionsInvalid';
+    }
+    if (settings.adaptiveEnabled) {
+      if (!Number.isFinite(settings.maxFollowUps) || settings.maxFollowUps < 0) {
+        return 'employer.campaigns.wizard.maxFollowUpsInvalid';
+      }
+    }
+    return null;
+  }
+
+  // Step 5 (Review) has no own fields — it only surfaces errors from earlier steps.
   return null;
 }
 

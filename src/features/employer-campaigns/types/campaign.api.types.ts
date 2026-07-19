@@ -55,6 +55,10 @@ export type CampaignResponse = {
   timeLimitMinutes?: number | null;
   passScorePct?: number | null;
   antiCheatEnabled?: boolean | null;
+  faceVerifyEnabled?: boolean | null;
+  adaptiveEnabled?: boolean | null;
+  maxFollowUps?: number | null;
+  maxQuestions?: number | null;
   locale?: string | null;
   organizationId?: string | null;
   welcomeMessage?: string | null;
@@ -92,6 +96,12 @@ export type CampaignCreateRequest = {
   /** 0..100; null = HR decides */
   passScorePct?: number | null;
   antiCheatEnabled: boolean;
+  faceVerifyEnabled: boolean;
+  adaptiveEnabled: boolean;
+  /** Only meaningful when adaptiveEnabled; null when adaptive is off. */
+  maxFollowUps?: number | null;
+  /** Cap on total questions (0–20). Independent of adaptive interview. */
+  maxQuestions?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
   criteria?: CampaignCreateCriterionRequest[] | null;
@@ -110,7 +120,10 @@ export type CampaignStatusUpdateRequest = {
 
 /**
  * PUT /api/v1/campaign/{id} — update Draft metadata / JD / criteria.
- * Omit fields you do not want to change. Do not put questions here.
+ * Every field is optional so callers can send only dirty/changed fields
+ * (see `buildDirtyUpdateRequest`) — omit a field to leave it unchanged.
+ * For nullable fields (e.g. `passScorePct`), sending `null` explicitly clears it;
+ * omitting the field entirely keeps the current server value.
  */
 export type CampaignUpdateRequest = {
   title?: string;
@@ -118,6 +131,10 @@ export type CampaignUpdateRequest = {
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
   antiCheatEnabled?: boolean;
+  faceVerifyEnabled?: boolean;
+  adaptiveEnabled?: boolean;
+  maxFollowUps?: number | null;
+  maxQuestions?: number | null;
   passScorePct?: number | null;
   jdText?: string;
   criteriaText?: string;

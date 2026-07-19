@@ -13,6 +13,8 @@ import { CampaignCriteriaStepV2 } from './CampaignCriteriaStepV2';
 import { CampaignInfoStep } from './CampaignInfoStep';
 import { CampaignJdStep } from './CampaignJdStep';
 import { CampaignQuestionsStep } from './CampaignQuestionsStep';
+import { CampaignReviewStep } from './CampaignReviewStep';
+import { CampaignSettingsStep } from './CampaignSettingsStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
 
 interface CampaignWizardFormProps {
@@ -115,8 +117,9 @@ export function CampaignWizardForm({
         <CampaignJdStep
           jd={state.jd}
           error={wizard.stepError}
+          isEditMode={mode === 'edit'}
           onChange={wizard.patchJd}
-          onUploadFile={(file) => void wizard.uploadJdFile(file)}
+          onSelectFile={wizard.selectJdFile}
           onRetryUpload={wizard.retryJdUpload}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
@@ -127,15 +130,11 @@ export function CampaignWizardForm({
       {step === 2 ? (
         <CampaignCriteriaStepV2
           rubric={state.rubric}
-          criteria={state.criteria}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
           }
           error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
-          onChangeCriteria={wizard.patchCriteria}
-          onUploadFile={(file) => void wizard.uploadCriteriaFile(file)}
-          onRetryUpload={wizard.retryCriteriaUpload}
           onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
@@ -145,14 +144,46 @@ export function CampaignWizardForm({
 
       {step === 3 ? (
         <CampaignQuestionsStep
-          questionSource={state.questionSource}
-          questionCount={state.questionCount}
           questions={state.questions}
+          questionCount={state.questionCount}
+          maxQuestions={
+            state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null
+          }
           error={wizard.stepError}
-          onSelectSource={wizard.setQuestionSource}
           onQuestionCount={wizard.setQuestionCount}
           onGenerateAi={wizard.generateQuestionsWithAi}
-          onChangeQuestions={wizard.setQuestions}
+          onAddManual={wizard.addManualQuestion}
+          onChangePrompt={(id, prompt) => wizard.updateQuestion(id, { prompt })}
+          onToggleRequired={(id, isRequired) => wizard.updateQuestion(id, { isRequired })}
+          onMoveQuestion={wizard.moveQuestion}
+          onRemoveQuestion={wizard.removeQuestion}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+          isSaving={wizard.isSavingStep}
+        />
+      ) : null}
+
+      {step === 4 ? (
+        <CampaignSettingsStep
+          settings={state.settings}
+          error={wizard.stepError}
+          onChange={wizard.patchSettings}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+          isSaving={wizard.isSavingStep}
+        />
+      ) : null}
+
+      {step === 5 ? (
+        <CampaignReviewStep
+          info={state.info}
+          jd={state.jd}
+          rubric={state.rubric}
+          questions={state.questions}
+          settings={state.settings}
+          domainLabel={wizard.domainLabel}
+          error={wizard.stepError}
+          onGoToStep={wizard.goToStep}
           onBack={wizard.goBack}
           onSubmit={wizard.handleFinalSubmit}
           submitLabel={finalSubmitLabel}

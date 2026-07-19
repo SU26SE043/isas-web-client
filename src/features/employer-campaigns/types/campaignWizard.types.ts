@@ -1,8 +1,7 @@
-import type { CampaignTargetLevel, CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
+import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
 
 export type JobDescriptionMethod = 'file' | 'text';
-export type CriteriaInputMethod = 'manual' | 'file';
 
 export type DeferredJdFileStatus = 'idle' | 'selected' | 'uploading' | 'uploaded' | 'failed';
 
@@ -12,43 +11,40 @@ export type JobDescriptionState = {
   fileName: string | null;
   fileSize: number | null;
   jdText: string;
+  /** Freeform criteria notes captured alongside JD (step 1); maps to API `criteriaText`. */
+  criteriaText: string;
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
-  /** True after at least one successful server upload (POST/PUT …/files). */
-  serverUploaded: boolean;
-};
-
-export type CriteriaFileState = {
-  inputMethod: CriteriaInputMethod;
-  criteriaFile: File | null;
-  fileName: string | null;
-  fileSize: number | null;
-  fileStatus: DeferredJdFileStatus;
-  fileError: string | null;
-  uploadProgress: number | null;
+  /** True after at least one successful server upload (POST/PUT …/files). Edit mode only. */
   serverUploaded: boolean;
 };
 
 /** @deprecated Alias kept for gradual rename. */
 export type JdAnalysisState = JobDescriptionState;
 
-export type RubricSource = 'ai' | 'upload' | 'manual' | null;
-export type QuestionSource = 'ai' | 'upload' | 'manual' | null;
-
-/** Maps to POST /api/v1/campaign campaign fields. */
+/** Manual rubric only — criteria step no longer supports file upload. */
 export type CampaignInfoState = {
   title: string;
   domain: CampaignDomainOption | '';
-  targetLevel: CampaignTargetLevel | '';
   maxCandidates: number | null;
   timeLimitMinutes: number;
   /** Optional 0–100; null = HR decides. */
   passScorePct: number | null;
-  antiCheatEnabled: boolean;
   startsAt: string;
   expiresAt: string;
   timezone: string;
+};
+
+/** New step 4 — moved out of Info (antiCheat) and net-new proctoring/adaptive fields. */
+export type CampaignSettingsState = {
+  antiCheatEnabled: boolean;
+  faceVerifyEnabled: boolean;
+  adaptiveEnabled: boolean;
+  /** >= 0; only sent to API when adaptiveEnabled. */
+  maxFollowUps: number;
+  /** 0..20; only sent to API when adaptiveEnabled. */
+  maxQuestions: number;
 };
 
 export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
@@ -56,14 +52,12 @@ export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
 export type CampaignWizardPersistedState = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
-  criteria: CriteriaFileState;
-  rubricSource: RubricSource;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
-  rubricSavedAt: string | null;
-  questionSource: QuestionSource;
-  questionCount: number;
   questions: CampaignQuestion[];
+  /** Count used by the "generate with AI" action on the Questions step. */
+  questionCount: number;
+  settings: CampaignSettingsState;
   currentStep: number;
   completedSteps: number[];
   errorSteps: number[];
@@ -113,6 +107,7 @@ export function createEmptyJdState(): JobDescriptionState {
     fileName: null,
     fileSize: null,
     jdText: '',
+    criteriaText: '',
     fileStatus: 'idle',
     fileError: null,
     uploadProgress: null,
@@ -120,16 +115,13 @@ export function createEmptyJdState(): JobDescriptionState {
   };
 }
 
-export function createEmptyCriteriaFileState(): CriteriaFileState {
+export function createDefaultSettingsState(): CampaignSettingsState {
   return {
-    inputMethod: 'manual',
-    criteriaFile: null,
-    fileName: null,
-    fileSize: null,
-    fileStatus: 'idle',
-    fileError: null,
-    uploadProgress: null,
-    serverUploaded: false,
+    antiCheatEnabled: true,
+    faceVerifyEnabled: false,
+    adaptiveEnabled: false,
+    maxFollowUps: 2,
+    maxQuestions: 5,
   };
 }
 

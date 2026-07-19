@@ -4,12 +4,7 @@ import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInfoState } from '../../types/campaignWizard.types';
-import {
-  CAMPAIGN_DOMAIN_OPTIONS,
-  CAMPAIGN_TARGET_LEVELS,
-  type CampaignDomainOption,
-  type CampaignTargetLevel,
-} from './campaignWizard.steps';
+import { CAMPAIGN_DOMAIN_OPTIONS, type CampaignDomainOption } from './campaignWizard.steps';
 import { CampaignInfoScheduleSection } from './CampaignInfoScheduleSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
@@ -93,25 +88,6 @@ export function CampaignInfoStep({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-level">{t('employer.campaigns.form.targetLevel')}</Label>
-              <select
-                id="campaign-level"
-                className={selectClass}
-                value={info.targetLevel}
-                onChange={(e) =>
-                  onChange({ targetLevel: e.target.value as CampaignTargetLevel | '' })
-                }
-              >
-                <option value="">{t('employer.campaigns.form.targetLevelPlaceholder')}</option>
-                {CAMPAIGN_TARGET_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="campaign-max">{t('employer.campaigns.form.maxCandidates')}</Label>
               <Input
                 id="campaign-max"
@@ -133,34 +109,52 @@ export function CampaignInfoStep({
 
             <div className="space-y-2">
               <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
-              <Input
-                id="campaign-pass-score"
-                type="number"
-                min={0}
-                max={100}
-                value={info.passScorePct ?? ''}
-                placeholder={t('employer.campaigns.form.passScorePlaceholder')}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({
-                    passScorePct: raw === '' ? null : Math.min(100, Math.max(0, Number(raw) || 0)),
-                  });
-                }}
-              />
+              <div className="flex flex-wrap gap-4 text-sm text-foreground">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="pass-score-mode"
+                    className="size-4 border-satin"
+                    checked={info.passScorePct != null}
+                    onChange={() => onChange({ passScorePct: info.passScorePct ?? 70 })}
+                  />
+                  {t('employer.campaigns.form.passScoreSystem')}
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="pass-score-mode"
+                    className="size-4 border-satin"
+                    checked={info.passScorePct == null}
+                    onChange={() => onChange({ passScorePct: null })}
+                  />
+                  {t('employer.campaigns.form.passScoreHrDecide')}
+                </label>
+              </div>
+              {info.passScorePct != null ? (
+                <Input
+                  id="campaign-pass-score"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={info.passScorePct}
+                  placeholder={t('employer.campaigns.form.passScorePlaceholder')}
+                  onChange={(e) => {
+                    onChange({
+                      passScorePct: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
+                    });
+                  }}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t('employer.campaigns.form.passScoreHrDecideHelp')}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {t('employer.campaigns.form.passScoreHelp')}
               </p>
             </div>
-          </div>
-        </section>
 
-        <CampaignInfoScheduleSection info={info} onChange={onChange} />
-
-        <section className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t('employer.campaigns.form.section.settings')}
-          </h3>
-          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="campaign-time-limit">{t('employer.campaigns.form.timeLimitMinutes')}</Label>
               <Input
@@ -176,23 +170,10 @@ export function CampaignInfoStep({
                 {t('employer.campaigns.form.timeLimitHelp')}
               </p>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-4 py-3">
-              <input
-                id="campaign-anti-cheat"
-                type="checkbox"
-                className="mt-1 size-4 rounded border-satin"
-                checked={info.antiCheatEnabled}
-                onChange={(e) => onChange({ antiCheatEnabled: e.target.checked })}
-              />
-              <div>
-                <Label htmlFor="campaign-anti-cheat">{t('employer.campaigns.form.antiCheat')}</Label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('employer.campaigns.form.antiCheatHelp')}
-                </p>
-              </div>
-            </div>
           </div>
         </section>
+
+        <CampaignInfoScheduleSection info={info} onChange={onChange} />
       </div>
     </SectionPanel>
   );

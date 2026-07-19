@@ -24,11 +24,16 @@ export interface RubricCriterion {
   maxScore: number;
 }
 
+export type CampaignQuestionSource = 'ai' | 'manual';
+
 export interface CampaignQuestion {
   id: string;
   prompt: string;
   skill: string;
   difficulty: 'junior' | 'middle' | 'senior';
+  /** UI-level source; maps to API `AiGenerated` | `CustomHr`. */
+  source: CampaignQuestionSource;
+  isRequired: boolean;
 }
 
 export interface EmployerCampaign {
@@ -49,6 +54,10 @@ export interface EmployerCampaign {
   durationMinutes: number;
   passScorePct?: number | null;
   antiCheatEnabled?: boolean;
+  faceVerifyEnabled?: boolean;
+  adaptiveEnabled?: boolean;
+  maxFollowUps?: number | null;
+  maxQuestions?: number | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];

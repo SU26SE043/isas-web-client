@@ -56,6 +56,14 @@ function pickNumber(record: Record<string, unknown>, ...keys: string[]): number 
   return undefined;
 }
 
+function pickBoolean(record: Record<string, unknown>, ...keys: string[]): boolean | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'boolean') return value;
+  }
+  return undefined;
+}
+
 export function unwrapCampaignListPayload(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
   const record = asRecord(data);
@@ -199,12 +207,11 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
       pickNumber(record, 'durationMinutes', 'DurationMinutes', 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
     timeLimitMinutes: pickNumber(record, 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
     passScorePct: pickNumber(record, 'passScorePct', 'PassScorePct') ?? null,
-    antiCheatEnabled:
-      typeof record.antiCheatEnabled === 'boolean'
-        ? record.antiCheatEnabled
-        : typeof record.AntiCheatEnabled === 'boolean'
-          ? record.AntiCheatEnabled
-          : null,
+    antiCheatEnabled: pickBoolean(record, 'antiCheatEnabled', 'AntiCheatEnabled') ?? null,
+    faceVerifyEnabled: pickBoolean(record, 'faceVerifyEnabled', 'FaceVerifyEnabled') ?? null,
+    adaptiveEnabled: pickBoolean(record, 'adaptiveEnabled', 'AdaptiveEnabled') ?? null,
+    maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
+    maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
@@ -268,12 +275,18 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
   }));
 }
 
+function mapQuestionSource(value: string | null | undefined): CampaignQuestion['source'] {
+  return (value ?? '').trim().toLowerCase() === 'aigenerated' ? 'ai' : 'manual';
+}
+
 function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): CampaignQuestion[] {
   return (items ?? []).map((item, index) => ({
     id: item.id?.trim() || `question-${index}`,
     prompt: item.prompt,
     skill: item.skill?.trim() || '',
     difficulty: mapDifficulty(item.difficulty),
+    source: mapQuestionSource(item.source),
+    isRequired: item.isRequired ?? true,
   }));
 }
 
@@ -327,6 +340,10 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     antiCheatEnabled:
       item.antiCheatEnabled ??
       (mapProctoring(item.proctoring).maxViolations > 0),
+    faceVerifyEnabled: item.faceVerifyEnabled ?? false,
+    adaptiveEnabled: item.adaptiveEnabled ?? false,
+    maxFollowUps: item.maxFollowUps ?? null,
+    maxQuestions: item.maxQuestions ?? null,
     locale: mapLocale(item.locale),
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
