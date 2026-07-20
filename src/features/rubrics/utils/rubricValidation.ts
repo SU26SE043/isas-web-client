@@ -2,6 +2,7 @@ import type { EditableRubricCriterion, RubricValidationCode, WeightStatus } from
 
 export const WEIGHT_TOLERANCE_MIN = 0.99;
 export const WEIGHT_TOLERANCE_MAX = 1.01;
+export const MAX_SCORE_TARGET = 100;
 
 export function computeTotalWeightDecimal(criteria: EditableRubricCriterion[]): number {
   return criteria.reduce((sum, criterion) => sum + criterion.weightPercent / 100, 0);
@@ -14,6 +15,13 @@ export function computeTotalMaxScore(criteria: EditableRubricCriterion[]): numbe
 export function getWeightStatus(totalWeight: number): WeightStatus {
   if (totalWeight < WEIGHT_TOLERANCE_MIN) return 'under';
   if (totalWeight > WEIGHT_TOLERANCE_MAX) return 'over';
+  return 'valid';
+}
+
+/** Total max score must equal 100 (same under/valid/over model as weight). */
+export function getMaxScoreStatus(totalMaxScore: number): WeightStatus {
+  if (totalMaxScore < MAX_SCORE_TARGET) return 'under';
+  if (totalMaxScore > MAX_SCORE_TARGET) return 'over';
   return 'valid';
 }
 
@@ -35,6 +43,11 @@ export function validateRubric(criteria: EditableRubricCriterion[]): RubricValid
   const totalWeight = computeTotalWeightDecimal(criteria);
   if (totalWeight < WEIGHT_TOLERANCE_MIN || totalWeight > WEIGHT_TOLERANCE_MAX) {
     return 'invalidWeight';
+  }
+
+  const totalMaxScore = computeTotalMaxScore(criteria);
+  if (totalMaxScore !== MAX_SCORE_TARGET) {
+    return 'invalidTotalMaxScore';
   }
 
   return null;

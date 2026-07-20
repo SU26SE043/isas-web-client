@@ -8,6 +8,7 @@ interface RubricSummaryProps {
   totalWeightLabel: string;
   totalMaxScore: number;
   weightStatus: WeightStatus;
+  maxScoreStatus: WeightStatus;
 }
 
 export function RubricSummary({
@@ -15,15 +16,19 @@ export function RubricSummary({
   totalWeightLabel,
   totalMaxScore,
   weightStatus,
+  maxScoreStatus,
 }: RubricSummaryProps) {
   const { t } = useLanguage();
 
-  const statusValid = weightStatus === 'valid';
+  const weightValid = weightStatus === 'valid';
+  const maxScoreValid = maxScoreStatus === 'valid';
+  const statusValid = weightValid && maxScoreValid;
+
   const statusLabel = statusValid
     ? t('rubrics.summary.statusValid')
-    : weightStatus === 'under'
-      ? t('rubrics.summary.statusUnder')
-      : t('rubrics.summary.statusOver');
+    : weightStatus === 'over' || maxScoreStatus === 'over'
+      ? t('rubrics.summary.statusOver')
+      : t('rubrics.summary.statusUnder');
 
   const items = [
     {
@@ -37,14 +42,14 @@ export function RubricSummary({
       label: t('rubrics.summary.totalWeight'),
       value: totalWeightLabel,
       icon: <PieChart className="size-4 text-muted-foreground" aria-hidden />,
-      tone: statusValid ? ('success' as const) : ('warning' as const),
+      tone: weightValid ? ('success' as const) : ('error' as const),
       hint: undefined,
     },
     {
       label: t('rubrics.summary.totalMaxScore'),
       value: String(totalMaxScore),
       icon: <Star className="size-4 text-muted-foreground" aria-hidden />,
-      tone: 'default' as const,
+      tone: maxScoreValid ? ('success' as const) : ('error' as const),
       hint: undefined,
     },
     {
@@ -52,11 +57,11 @@ export function RubricSummary({
       value: statusLabel,
       icon: (
         <BadgeCheck
-          className={cn('size-4', statusValid ? 'text-success' : 'text-warning')}
+          className={cn('size-4', statusValid ? 'text-success' : 'text-error')}
           aria-hidden
         />
       ),
-      tone: statusValid ? ('success' as const) : ('warning' as const),
+      tone: statusValid ? ('success' as const) : ('error' as const),
       hint: statusValid ? t('rubrics.summary.statusValidHint') : undefined,
     },
   ];
@@ -76,7 +81,7 @@ export function RubricSummary({
             className={cn(
               'mt-2 text-2xl font-semibold tracking-tight text-foreground',
               item.tone === 'success' && 'text-success',
-              item.tone === 'warning' && 'text-warning',
+              item.tone === 'error' && 'text-error',
             )}
           >
             {item.value}

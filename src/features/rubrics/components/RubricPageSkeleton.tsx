@@ -8,7 +8,10 @@ export function RubricPageSkeleton() {
           <Skeleton key={index} className="h-20 rounded-xl" />
         ))}
       </div>
-      <Skeleton className="h-24 rounded-xl" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl" />
+      </div>
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <Skeleton key={index} className="h-44 rounded-xl" />

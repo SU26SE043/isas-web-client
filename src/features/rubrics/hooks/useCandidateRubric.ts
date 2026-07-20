@@ -21,6 +21,7 @@ import {
   computeTotalMaxScore,
   computeTotalWeightDecimal,
   formatWeightPercentFromDecimal,
+  getMaxScoreStatus,
   getWeightStatus,
   validateRubric,
 } from '../utils/rubricValidation';
@@ -61,6 +62,7 @@ export function useCandidateRubric() {
   const totalWeight = useMemo(() => computeTotalWeightDecimal(criteria), [criteria]);
   const totalMaxScore = useMemo(() => computeTotalMaxScore(criteria), [criteria]);
   const weightStatus = useMemo(() => getWeightStatus(totalWeight), [totalWeight]);
+  const maxScoreStatus = useMemo(() => getMaxScoreStatus(totalMaxScore), [totalMaxScore]);
   const validationCode = useMemo(() => validateRubric(criteria), [criteria]);
   const totalWeightLabel = useMemo(() => formatWeightPercentFromDecimal(totalWeight), [totalWeight]);
 
@@ -188,6 +190,7 @@ export function useCandidateRubric() {
     totalWeightLabel,
     totalMaxScore,
     weightStatus,
+    maxScoreStatus,
     validationCode,
     saveError,
     unsavedDialogOpen,
