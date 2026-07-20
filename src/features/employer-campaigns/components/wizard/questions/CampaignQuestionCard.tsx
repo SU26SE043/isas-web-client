@@ -48,8 +48,8 @@ export function CampaignQuestionCard({
           >
             {isAi ? <Sparkles className="size-3" aria-hidden /> : <User className="size-3" aria-hidden />}
             {isAi
-              ? t('employer.campaigns.wizard.questionSource.ai')
-              : t('employer.campaigns.wizard.questionSource.manual')}
+              ? t('employer.campaigns.campaignQuestions.source.aiGenerated')
+              : t('employer.campaigns.campaignQuestions.source.customHr')}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -59,7 +59,7 @@ export function CampaignQuestionCard({
             size="icon-sm"
             disabled={disabled || index === 0}
             onClick={onMoveUp}
-            aria-label={t('employer.campaigns.wizard.questionMoveUp')}
+            aria-label={t('employer.campaigns.campaignQuestions.question.moveUp')}
           >
             <ArrowUp className="size-4" aria-hidden />
           </Button>
@@ -69,7 +69,7 @@ export function CampaignQuestionCard({
             size="icon-sm"
             disabled={disabled || index === total - 1}
             onClick={onMoveDown}
-            aria-label={t('employer.campaigns.wizard.questionMoveDown')}
+            aria-label={t('employer.campaigns.campaignQuestions.question.moveDown')}
           >
             <ArrowDown className="size-4" aria-hidden />
           </Button>
@@ -79,7 +79,7 @@ export function CampaignQuestionCard({
             size="icon-sm"
             disabled={disabled}
             onClick={onRemove}
-            aria-label={t('employer.campaigns.wizard.questionRemove')}
+            aria-label={t('employer.campaigns.campaignQuestions.question.delete')}
             className="text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="size-4" aria-hidden />
@@ -89,15 +89,16 @@ export function CampaignQuestionCard({
 
       <div className="space-y-2">
         <Label htmlFor={`q-${question.id}`} className="sr-only">
-          {t('employer.campaigns.form.questionN').replace('{n}', String(index + 1))}
+          {t('employer.campaigns.campaignQuestions.question.contentLabel')}
         </Label>
         <textarea
           id={`q-${question.id}`}
-          rows={2}
+          rows={3}
           disabled={disabled}
-          className="w-full rounded-lg border border-satin bg-surface-base px-3 py-2 text-sm outline-none transition focus-visible:border-[var(--border-focus)]"
+          className="w-full whitespace-normal rounded-lg border border-satin bg-surface-base px-3 py-2 text-sm outline-none transition focus-visible:border-[var(--border-focus)]"
+          style={{ overflowWrap: 'anywhere' }}
           value={question.prompt}
-          placeholder={t('employer.campaigns.wizard.questionPromptPlaceholder')}
+          placeholder={t('employer.campaigns.campaignQuestions.question.contentPlaceholder')}
           onChange={(e) => onChangePrompt(e.target.value)}
         />
       </div>
@@ -110,7 +111,9 @@ export function CampaignQuestionCard({
           checked={question.isRequired}
           onChange={(e) => onToggleRequired(e.target.checked)}
         />
-        {t('employer.campaigns.wizard.questionRequired')}
+        {question.isRequired
+          ? t('employer.campaigns.campaignQuestions.question.required')
+          : t('employer.campaigns.campaignQuestions.question.optional')}
       </label>
     </li>
   );

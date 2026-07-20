@@ -361,6 +361,7 @@ export function useCampaignFileActions({
     retryCriteriaUpload,
     downloadJdFile: () => void downloadCampaignPdf('jd'),
     downloadCriteriaFile: () => void downloadCampaignPdf('criteria'),
+    ensureDraftId,
     isJdBusy:
       state.jd.fileStatus === 'uploading' ||
       state.jd.fileStatus === 'replacing' ||

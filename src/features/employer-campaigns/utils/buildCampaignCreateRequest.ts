@@ -11,6 +11,7 @@ import type {
   JobDescriptionState,
 } from '../types/campaignWizard.types';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
+import { isServerQuestionId } from './campaignQuestionLimits';
 
 const DOMAIN_API_LABEL: Record<CampaignDomainOption, string> = {
   frontend: 'Frontend',
@@ -62,11 +63,17 @@ export function mapQuestionsToApiRequest(
 ): CampaignCreateQuestionRequest[] {
   return questions
     .filter((item) => item.prompt.trim())
-    .map((item) => ({
-      questionText: item.prompt.trim(),
-      source: item.source === 'ai' ? ('AiGenerated' as const) : ('CustomHr' as const),
-      isRequired: item.isRequired,
-    }));
+    .map((item) => {
+      const payload: CampaignCreateQuestionRequest = {
+        questionText: item.prompt.trim(),
+        source: item.source === 'ai' ? ('AiGenerated' as const) : ('CustomHr' as const),
+        isRequired: item.isRequired,
+      };
+      if (isServerQuestionId(item.id)) {
+        payload.id = item.id.trim();
+      }
+      return payload;
+    });
 }
 
 function criteriaRequestToRubric(

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import { DEFAULT_RUBRIC, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_RUBRIC } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignQuestion,
   EmployerCampaign,
@@ -12,6 +12,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
 import {
   buildCampaignCreateRequest,
@@ -41,6 +42,15 @@ import type {
 import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
 import { useCampaignFileActions } from './useCampaignFileActions';
 import type { BlobDownloadResult, CampaignFileType } from '../utils/campaignFiles';
+import {
+  getGenerateQuestionsErrorKey,
+  getGenerateQuestionsErrorMessage,
+} from '../utils/generateQuestionsError';
+import {
+  effectiveMaxQuestions,
+  hasWizardJd,
+  validateGenerateCount,
+} from '../utils/campaignQuestionLimits';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -232,6 +242,7 @@ interface UseCampaignWizardArgs {
     campaignId: string,
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
+  onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -253,6 +264,7 @@ export function useCampaignWizard({
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
+  onGenerateQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
@@ -263,11 +275,14 @@ export function useCampaignWizard({
     buildInitialState(campaign, mode),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [isSavingQuestions, setIsSavingQuestions] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
+  const generateLockRef = useRef(false);
   const hydratedIdRef = useRef<string | null>(campaign?.id ?? null);
   const baselineSnapshotRef = useRef<CampaignWizardSubmitSnapshot | null>(
     mode === 'edit' ? toSnapshot(state) : null,
@@ -367,39 +382,206 @@ export function useCampaignWizard({
     }));
   }, []);
 
-  const generateQuestionsWithAi = useCallback(() => {
-    const count = Math.max(1, Math.min(state.questionCount, QUESTION_BANK.length));
-    const generated = QUESTION_BANK.slice(0, count).map((item, index) => ({
-      ...item,
-      id: `ai-q-${index}-${Date.now().toString(36)}`,
-      source: 'ai' as const,
-      isRequired: true,
-    }));
-    setState((prev) => ({
-      ...prev,
-      questions: generated,
-      autosaveStatus: 'dirty',
-      errorSteps: clearError(prev.errorSteps, 3),
-    }));
-  }, [state.questionCount]);
+  const generateQuestionsWithAi = useCallback(
+    async (options?: { useDefaultCount?: boolean }) => {
+      if (generateLockRef.current || isGeneratingQuestions) return;
+      if (!isDraftEditable) {
+        setStepError(t('employer.campaigns.campaignQuestions.errors.draftOnly'));
+        return;
+      }
+      if (!hasWizardJd(state.jd) && !(campaign?.jobDescription?.trim())) {
+        setStepError(t('employer.campaigns.campaignQuestions.errors.jdRequired'));
+        return;
+      }
+
+      const useDefaultCount = Boolean(options?.useDefaultCount);
+      let count: number | undefined;
+      if (!useDefaultCount) {
+        const validated = validateGenerateCount(
+          state.questionCount,
+          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
+        );
+        if (!validated.ok) {
+          const key =
+            validated.code === 'countCampaignMax'
+              ? 'employer.campaigns.campaignQuestions.validation.countCampaignMax'
+              : validated.code === 'countMaximum'
+                ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
+                : validated.code === 'countPositive'
+                  ? 'employer.campaigns.campaignQuestions.validation.countPositive'
+                  : validated.code === 'countInteger'
+                    ? 'employer.campaigns.campaignQuestions.validation.countInteger'
+                    : 'employer.campaigns.campaignQuestions.validation.countRequired';
+          setStepError(
+            t(key)
+              .replace('{{max}}', String(validated.max ?? effectiveMaxQuestions(null)))
+              .replace(
+                '{{maxQuestions}}',
+                String(validated.max ?? effectiveMaxQuestions(null)),
+              ),
+          );
+          return;
+        }
+        count = validated.count;
+      }
+
+      generateLockRef.current = true;
+      setIsGeneratingQuestions(true);
+      setStepError(null);
+      try {
+        const id = await fileActions.ensureDraftId();
+        const updated = await onGenerateQuestions({
+          campaignId: id,
+          ...(count == null ? {} : { count }),
+        });
+        setState((prev) => ({
+          ...prev,
+          draftId: updated.id,
+          questions: updated.questions,
+          lastSavedAt: updated.updatedAt,
+          autosaveStatus: 'saved',
+          errorSteps: clearError(prev.errorSteps, 3),
+          settings: {
+            ...prev.settings,
+            maxQuestions:
+              updated.maxQuestions != null && updated.maxQuestions > 0
+                ? updated.maxQuestions
+                : prev.settings.maxQuestions,
+          },
+        }));
+        setQuestionsSaved(true);
+        const received = updated.questions.length;
+        if (count == null) {
+          toast.success(
+            t('employer.campaigns.campaignQuestions.success.generated').replace(
+              '{{count}}',
+              String(received),
+            ),
+          );
+        } else if (received < count) {
+          toast(
+            t('employer.campaigns.campaignQuestions.success.generatedLimited')
+              .replace('{{requested}}', String(count))
+              .replace('{{received}}', String(received)),
+          );
+        } else {
+          toast.success(
+            t('employer.campaigns.campaignQuestions.success.generatedExact').replace(
+              '{{count}}',
+              String(received),
+            ),
+          );
+        }
+      } catch (error) {
+        const key = getGenerateQuestionsErrorKey(error);
+        setStepError(getGenerateQuestionsErrorMessage(error, t(key)));
+      } finally {
+        setIsGeneratingQuestions(false);
+        generateLockRef.current = false;
+      }
+    },
+    [
+      campaign?.jobDescription,
+      fileActions,
+      isDraftEditable,
+      isGeneratingQuestions,
+      onGenerateQuestions,
+      state.jd,
+      state.questionCount,
+      state.settings.maxQuestions,
+      t,
+    ],
+  );
+
+  const saveQuestionsNow = useCallback(async () => {
+    if (!isDraftEditable || isSavingQuestions || isGeneratingQuestions) return;
+    if (state.questions.length === 0) {
+      setStepError(t('employer.campaigns.campaignQuestions.validation.listRequired'));
+      return;
+    }
+    if (state.questions.some((item) => !item.prompt.trim())) {
+      setStepError(t('employer.campaigns.campaignQuestions.validation.questionRequired'));
+      return;
+    }
+    const max = effectiveMaxQuestions(
+      state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
+    );
+    if (state.questions.length > max) {
+      setStepError(
+        t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
+          '{{max}}',
+          String(max),
+        ),
+      );
+      return;
+    }
+
+    setIsSavingQuestions(true);
+    setStepError(null);
+    try {
+      const id = await fileActions.ensureDraftId();
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+      setState((prev) => ({
+        ...prev,
+        draftId: updated.id,
+        questions: updated.questions,
+        lastSavedAt: updated.updatedAt,
+        autosaveStatus: 'saved',
+      }));
+      setQuestionsSaved(true);
+      toast.success(t('employer.campaigns.campaignQuestions.success.saved'));
+    } catch (error) {
+      setStepError(
+        getGenerateQuestionsErrorMessage(
+          error,
+          t('employer.campaigns.campaignQuestions.errors.saveFailed'),
+        ),
+      );
+    } finally {
+      setIsSavingQuestions(false);
+    }
+  }, [
+    fileActions,
+    isDraftEditable,
+    isGeneratingQuestions,
+    isSavingQuestions,
+    onUpdateQuestions,
+    state.questions,
+    state.settings.maxQuestions,
+    t,
+  ]);
 
   const addManualQuestion = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      questions: [
-        ...prev.questions,
-        {
-          id: `manual-${Date.now().toString(36)}-${prev.questions.length}`,
-          prompt: '',
-          skill: '',
-          difficulty: 'middle' as const,
-          source: 'manual' as const,
-          isRequired: true,
-        },
-      ],
-      autosaveStatus: 'dirty',
-    }));
-  }, []);
+    setState((prev) => {
+      const max = effectiveMaxQuestions(
+        prev.settings.maxQuestions > 0 ? prev.settings.maxQuestions : null,
+      );
+      if (prev.questions.length >= max) {
+        setStepError(
+          t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
+            '{{max}}',
+            String(max),
+          ),
+        );
+        return prev;
+      }
+      return {
+        ...prev,
+        questions: [
+          ...prev.questions,
+          {
+            id: `client-${crypto.randomUUID()}`,
+            prompt: '',
+            skill: '',
+            difficulty: 'middle' as const,
+            source: 'manual' as const,
+            isRequired: true,
+          },
+        ],
+        autosaveStatus: 'dirty',
+      };
+    });
+  }, [t]);
 
   const updateQuestion = useCallback((id: string, patch: Partial<CampaignQuestion>) => {
     setState((prev) => ({
@@ -441,7 +623,7 @@ export function useCampaignWizard({
   }, []);
 
   const goNext = useCallback(() => {
-    if (requestLockRef.current || isSubmitting) return;
+    if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions) return;
     const step = state.currentStep;
     const errorKey = validateCampaignWizardStep(state, step, { mode });
     if (errorKey) {
@@ -462,10 +644,17 @@ export function useCampaignWizard({
       currentStep: Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1),
       autosaveStatus: 'dirty',
     }));
-  }, [isSubmitting, mode, state, t]);
+  }, [isGeneratingQuestions, isSavingQuestions, isSubmitting, mode, state, t]);
 
   const goBack = useCallback(() => {
-    if (requestLockRef.current || isSubmitting || fileActions.isJdBusy || fileActions.isCriteriaBusy) {
+    if (
+      requestLockRef.current ||
+      isSubmitting ||
+      isGeneratingQuestions ||
+      isSavingQuestions ||
+      fileActions.isJdBusy ||
+      fileActions.isCriteriaBusy
+    ) {
       return;
     }
     setStepError(null);
@@ -473,7 +662,13 @@ export function useCampaignWizard({
       ...prev,
       currentStep: Math.max(0, prev.currentStep - 1),
     }));
-  }, [fileActions.isCriteriaBusy, fileActions.isJdBusy, isSubmitting]);
+  }, [
+    fileActions.isCriteriaBusy,
+    fileActions.isJdBusy,
+    isGeneratingQuestions,
+    isSavingQuestions,
+    isSubmitting,
+  ]);
 
   /** POST create only when no Draft exists yet (file upload may have created one already). */
   const handleCreateCampaign = useCallback(async () => {
@@ -689,7 +884,13 @@ export function useCampaignWizard({
     completedSteps: state.completedSteps,
     stepError,
     actionError,
-    isSavingStep: fileActions.isJdBusy || fileActions.isCriteriaBusy,
+    isSavingStep:
+      fileActions.isJdBusy ||
+      fileActions.isCriteriaBusy ||
+      isGeneratingQuestions ||
+      isSavingQuestions,
+    isGeneratingQuestions,
+    isSavingQuestions,
     isSubmitting,
     metadataSaved,
     questionsSaved,
@@ -712,6 +913,7 @@ export function useCampaignWizard({
     setQuestionCount,
     setQuestions,
     generateQuestionsWithAi,
+    saveQuestionsNow,
     addManualQuestion,
     updateQuestion,
     removeQuestion,

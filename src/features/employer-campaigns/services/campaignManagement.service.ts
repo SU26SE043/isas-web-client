@@ -10,11 +10,13 @@ import type {
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
+  GenerateCampaignQuestionsParams,
   CandidateListQuery,
   CandidateUploadResponse,
   CampaignCandidateDetail,
   CampaignCandidateListItem,
   CampaignResultsResponse,
+  GenerateCampaignQuestionsParams,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
 } from '../types/campaign.api.types';
@@ -349,6 +351,30 @@ export const campaignManagementService = {
     if (!mapped.rubric.length && existing?.rubric.length) {
       mapped.rubric = existing.rubric;
     }
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/questions/generate?count=
+   * No request body. Optional `count` query. Returns CampaignResponse; questions replace fully.
+   */
+  async generateCampaignQuestions(
+    params: GenerateCampaignQuestionsParams,
+  ): Promise<EmployerCampaign> {
+    const { campaignId, count } = params;
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.questionsGenerate(campaignId),
+      null,
+      {
+        params: count == null ? undefined : { count },
+      },
+    );
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid generate questions response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
   },

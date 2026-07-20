@@ -8,7 +8,9 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
+import { campaignManagementService } from '../services/campaignManagement.service';
 
 export function CampaignWizardPage() {
   const { id } = useParams();
@@ -43,6 +45,10 @@ export function CampaignWizardPage() {
     questions: CampaignCreateQuestionRequest[],
   ) => {
     return updateCampaignQuestions(campaignId, questions);
+  };
+
+  const handleGenerateQuestions = async (params: GenerateCampaignQuestionsParams) => {
+    return campaignManagementService.generateCampaignQuestions(params);
   };
 
   const handleUploadFiles = async (
@@ -126,6 +132,7 @@ export function CampaignWizardPage() {
       onCreateCampaign={handleCreateCampaign}
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}
+      onGenerateQuestions={handleGenerateQuestions}
       onUploadFiles={handleUploadFiles}
       onReplaceFiles={handleReplaceFiles}
       onDownloadFile={handleDownloadFile}

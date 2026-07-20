@@ -7,6 +7,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  GenerateCampaignQuestionsParams,
 } from '../../types/campaign.api.types';
 import { CAMPAIGN_WIZARD_STEP_COUNT } from './campaignWizard.steps';
 import { CampaignCriteriaStepV2 } from './CampaignCriteriaStepV2';
@@ -16,6 +17,7 @@ import { CampaignQuestionsStep } from './CampaignQuestionsStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 import { CampaignSettingsStep } from './CampaignSettingsStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
+import { hasWizardJd } from '../../utils/campaignQuestionLimits';
 
 interface CampaignWizardFormProps {
   campaign?: EmployerCampaign | null;
@@ -29,6 +31,7 @@ interface CampaignWizardFormProps {
     campaignId: string,
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
+  onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -50,6 +53,7 @@ export function CampaignWizardForm({
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
+  onGenerateQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
@@ -63,6 +67,7 @@ export function CampaignWizardForm({
     onCreateCampaign,
     onUpdateCampaign,
     onUpdateQuestions,
+    onGenerateQuestions,
     onUploadFiles,
     onReplaceFiles,
     onDownloadFile,
@@ -161,6 +166,10 @@ export function CampaignWizardForm({
 
       {step === 3 ? (
         <CampaignQuestionsStep
+          campaignTitle={state.info.title}
+          domainLabel={wizard.domainLabel}
+          isDraft={wizard.isDraftEditable}
+          hasJd={hasWizardJd(state.jd) || Boolean(campaign?.jobDescription?.trim())}
           questions={state.questions}
           questionCount={state.questionCount}
           maxQuestions={
@@ -168,7 +177,8 @@ export function CampaignWizardForm({
           }
           error={wizard.stepError}
           onQuestionCount={wizard.setQuestionCount}
-          onGenerateAi={wizard.generateQuestionsWithAi}
+          onGenerateAi={(opts) => void wizard.generateQuestionsWithAi(opts)}
+          onSaveQuestions={() => void wizard.saveQuestionsNow()}
           onAddManual={wizard.addManualQuestion}
           onChangePrompt={(id, prompt) => wizard.updateQuestion(id, { prompt })}
           onToggleRequired={(id, isRequired) => wizard.updateQuestion(id, { isRequired })}
@@ -176,7 +186,8 @@ export function CampaignWizardForm({
           onRemoveQuestion={wizard.removeQuestion}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
-          isSaving={wizard.isSavingStep}
+          isGenerating={wizard.isGeneratingQuestions}
+          isSaving={wizard.isSavingQuestions || wizard.isSavingStep}
         />
       ) : null}
 

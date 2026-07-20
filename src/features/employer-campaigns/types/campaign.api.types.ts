@@ -82,9 +82,20 @@ export type CampaignCreateCriterionRequest = {
 };
 
 export type CampaignCreateQuestionRequest = {
+  /** Preserve when replacing an existing server question; omit for new HR questions. */
+  id?: string;
   questionText: string;
   source: 'AiGenerated' | 'CustomHr';
   isRequired: boolean;
+};
+
+/** PUT /api/v1/campaign/{id}/questions — full replace array body. */
+export type UpdateCampaignQuestionRequest = CampaignCreateQuestionRequest;
+
+export type GenerateCampaignQuestionsParams = {
+  campaignId: string;
+  /** When omitted, backend uses its default count. */
+  count?: number;
 };
 
 /** POST /api/v1/campaign — create Draft after wizard completes (Employer). */
