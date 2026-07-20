@@ -9,12 +9,13 @@ import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 
 export const WIZARD_STEP_KEYS = [
-  'practice.wizard.steps.domain',
-  'practice.wizard.steps.level',
-  'practice.wizard.steps.cv',
-  'practice.wizard.steps.questions',
-  'practice.wizard.steps.rubric',
-  'practice.wizard.steps.confirm',
+  'practice.setup.steps.jobCategory',
+  'practice.setup.steps.cv',
+  'practice.setup.steps.jd',
+  'practice.setup.steps.timeLimit',
+  'practice.setup.steps.questionCount',
+  'practice.setup.steps.device',
+  'practice.setup.steps.summary',
 ] as const;
 
 interface PracticeWizardShellProps {

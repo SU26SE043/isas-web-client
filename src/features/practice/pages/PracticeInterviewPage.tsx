@@ -7,6 +7,7 @@ import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
 import { CandidateCameraPanel } from '../components/CandidateCameraPanel';
 import { InterviewQuestionPanel } from '../components/InterviewQuestionPanel';
 import { InterviewControls } from '../components/InterviewControls';
+import { B2cPracticeInterviewRoom } from '../components/B2cPracticeInterviewRoom';
 import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner';
 import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
@@ -21,13 +22,25 @@ import { useInterviewRecording } from '../hooks/useInterviewRecording';
 import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring';
 import { useLearningLiveFeedback } from '../hooks/useLearningLiveFeedback';
 import { useLearningAnswerCapture } from '../hooks/useLearningAnswerCapture';
-import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
-import { paymentService } from '@/features/payment/services/payment.service';
-import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
-import { requiresIdentityVerification } from '../types/interviewFlow.types';
+import {
+  isCampaignSessionId,
+  isLearningSessionId,
+  requiresIdentityVerification,
+} from '../types/interviewFlow.types';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
+  const isB2cPractice =
+    Boolean(sessionId) && !isLearningSessionId(sessionId) && !isCampaignSessionId(sessionId);
+
+  if (isB2cPractice) {
+    return <B2cPracticeInterviewRoom sessionId={sessionId} />;
+  }
+
+  return <LegacyInterviewRoom sessionId={sessionId} />;
+};
+
+function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
@@ -50,8 +63,6 @@ export const PracticeInterviewPage: React.FC = () => {
     videoRef: media.videoRef,
   });
 
-  // Keep the same shared room recording UI for learning + B2C/B2B.
-  // Learning still uploads a dedicated answer blob on Submit via answerCapture.
   const recording = useInterviewRecording({
     sessionId,
     stream: media.stream,
@@ -103,14 +114,6 @@ export const PracticeInterviewPage: React.FC = () => {
         titleKey={session.isLearning ? 'practice.learningPath.practiceSession' : undefined}
       />
       {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
-      {!session.isLearning && paymentService.hasReservation(sessionId) ? (
-        <div className="px-6 pt-4">
-          <ReserveSettleBanner
-            mode="reserved"
-            reservedTokens={paymentService.getReservationAmount(sessionId) || PRACTICE_RESERVE_ESTIMATE}
-          />
-        </div>
-      ) : null}
 
       {antiCheatEnabled && session.isAutoSubmitted ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
@@ -144,6 +147,17 @@ export const PracticeInterviewPage: React.FC = () => {
           currentIndex={session.currentIndex}
           totalQuestions={session.totalQuestions}
           remainingSeconds={session.remainingSeconds}
+          question={
+            session.currentQuestion
+              ? {
+                  id: session.currentQuestion.id,
+                  orderNo: session.currentIndex + 1,
+                  content: session.currentQuestion.content,
+                  timeLimitSec: session.currentQuestion.timeLimitSeconds ?? 120,
+                  kind: 'question',
+                }
+              : null
+          }
         />
       </main>
 
@@ -183,4 +197,4 @@ export const PracticeInterviewPage: React.FC = () => {
       ) : null}
     </div>
   );
-};
+}
