@@ -176,6 +176,41 @@ export type CreateCampaignInvitationsResponse = {
   failed: FailedCampaignInvitation[];
 };
 
+/** GET /api/v1/campaign/{id}/invitations — invitation history (keyset pagination). */
+export type CampaignInvitationStatus =
+  | 'Queued'
+  | 'Sent'
+  | 'Joined'
+  | 'Expired'
+  | 'Revoked';
+
+export type CampaignInvitation = {
+  id: string;
+  email: string;
+  status: CampaignInvitationStatus;
+  createdAt: string;
+  expiresAt: string;
+  emailSentAt?: string | null;
+  joinedAt?: string | null;
+};
+
+export type GetCampaignInvitationsQuery = {
+  cursor?: string;
+  limit?: number;
+};
+
+export type CampaignInvitationsPage = {
+  items: CampaignInvitation[];
+  nextCursor: string | null;
+};
+
+/** POST /api/v1/campaign/{id}/invitations/{invitationId}/reissue — no body. */
+export type ReissuedCampaignInvitation = {
+  id: string;
+  email: string;
+  expiresAt: string;
+};
+
 /** @deprecated Prefer CreateCampaignInvitationsRequest */
 export type CampaignInviteByEmailRequest = CreateCampaignInvitationsRequest;
 /** @deprecated Prefer CreatedCampaignInvitation */

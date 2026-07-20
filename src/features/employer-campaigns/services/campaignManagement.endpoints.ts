@@ -25,5 +25,7 @@ export const campaignManagementEndpoints = {
   inviteCandidates: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/invite`,
   invitations: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/invitations`,
+  invitationReissue: (id: string, invitationId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/invitations/${encodeURIComponent(invitationId)}/reissue`,
   results: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results`,
 } as const;

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EMPLOYER_CAMPAIGNS_QUERY_KEY, employerCampaignDetailQueryKey } from './useEmployerCampaigns';
+import { campaignInvitationsQueryKey } from './useCampaignInvitations';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type { CreateCampaignInvitationsRequest } from '../types/campaign.api.types';
 
@@ -15,6 +16,9 @@ export function useCreateCampaignInvitations(campaignId: string | undefined) {
       if (!campaignId) return;
       void queryClient.invalidateQueries({ queryKey: employerCampaignDetailQueryKey(campaignId) });
       void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: campaignInvitationsQueryKey(campaignId),
+      });
     },
   });
 }

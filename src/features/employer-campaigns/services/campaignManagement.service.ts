@@ -7,18 +7,20 @@ import type {
   CampaignCreateRequest,
   CreateCampaignInvitationsRequest,
   CreateCampaignInvitationsResponse,
+  CampaignInvitationsPage,
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
-  GenerateCampaignQuestionsParams,
   CandidateListQuery,
   CandidateUploadResponse,
   CampaignCandidateDetail,
   CampaignCandidateListItem,
   CampaignResultsResponse,
   GenerateCampaignQuestionsParams,
+  GetCampaignInvitationsQuery,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
+  ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
 import type {
   CampaignCandidateRow,
@@ -51,6 +53,7 @@ import {
   parseInviteByCandidateIdsResponse,
   unwrapArrayPayload,
 } from '../utils/campaignCandidatesApi';
+import { parseCampaignInvitationsPage } from '../utils/campaignInvitationsApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
@@ -458,6 +461,74 @@ export const campaignManagementService = {
       { emails } satisfies CreateCampaignInvitationsRequest,
     );
     return unwrapInviteByEmailPayload(response.data);
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id}/invitations?cursor&limit
+   * Body = CampaignInvitation[]. Next page via response header `X-Next-Cursor`.
+   */
+  async getCampaignInvitations(
+    id: string,
+    query?: GetCampaignInvitationsQuery,
+  ): Promise<CampaignInvitationsPage> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
+      params: {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
+        ...(query?.limit != null ? { limit: query.limit } : {}),
+      },
+    });
+    return parseCampaignInvitationsPage(response.data, response.headers);
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/invitations/{invitationId}/reissue — no body.
+   * Returns the newly issued invitation stub; list must be refetched for Revoked + new rows.
+   */
+  async reissueCampaignInvitation(
+    campaignId: string,
+    invitationId: string,
+  ): Promise<ReissuedCampaignInvitation> {
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.invitationReissue(campaignId, invitationId),
+      null,
+    );
+    const root =
+      response.data && typeof response.data === 'object' && !Array.isArray(response.data)
+        ? (response.data as Record<string, unknown>)
+        : null;
+    const inner =
+      root && root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+        ? (root.data as Record<string, unknown>)
+        : root;
+    if (!inner) {
+      throw new Error('Invalid reissue response');
+    }
+    const id =
+      typeof inner.id === 'string'
+        ? inner.id
+        : typeof inner.Id === 'string'
+          ? inner.Id
+          : '';
+    const email =
+      typeof inner.email === 'string'
+        ? inner.email
+        : typeof inner.Email === 'string'
+          ? inner.Email
+          : '';
+    const expiresAt =
+      typeof inner.expiresAt === 'string'
+        ? inner.expiresAt
+        : typeof inner.ExpiresAt === 'string'
+          ? inner.ExpiresAt
+          : '';
+    if (!id.trim() || !email.trim() || !expiresAt.trim()) {
+      throw new Error('Invalid reissue response');
+    }
+    return {
+      id: id.trim(),
+      email: email.trim().toLowerCase(),
+      expiresAt: expiresAt.trim(),
+    };
   },
 
   /** Maps invitation response onto local InviteResolution (legacy callers). */
