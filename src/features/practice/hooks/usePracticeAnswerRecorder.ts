@@ -25,8 +25,10 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef<number>(0);
   const mimeRef = useRef(pickMimeType());
+  const discardOnStopRef = useRef(false);
 
   const clearRecording = useCallback(() => {
+    discardOnStopRef.current = false;
     setAudioFile(null);
     setDurationSec(0);
     setErrorKey(null);
@@ -41,12 +43,28 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     }
   }, []);
 
+  const stopRecordingAndDiscard = useCallback(() => {
+    discardOnStopRef.current = true;
+    chunksRef.current = [];
+    setAudioFile(null);
+    setDurationSec(0);
+    setErrorKey(null);
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop();
+    } else {
+      discardOnStopRef.current = false;
+      setRecordingStatus('idle');
+    }
+  }, [setRecordingStatus]);
+
   const startRecording = useCallback(() => {
     if (!stream) {
       setErrorKey('practice.flow.device.denied');
       setRecordingStatus('error');
       return;
     }
+    discardOnStopRef.current = false;
     setErrorKey(null);
     chunksRef.current = [];
     const mimeType = pickMimeType();
@@ -55,9 +73,18 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     recorderRef.current = recorder;
     startedAtRef.current = Date.now();
     recorder.ondataavailable = (event) => {
+      if (discardOnStopRef.current) return;
       if (event.data.size > 0) chunksRef.current.push(event.data);
     };
     recorder.onstop = () => {
+      if (discardOnStopRef.current) {
+        discardOnStopRef.current = false;
+        chunksRef.current = [];
+        setAudioFile(null);
+        setDurationSec(0);
+        setRecordingStatus('idle');
+        return;
+      }
       const blob = new Blob(chunksRef.current, { type: mimeRef.current });
       const elapsed = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
       const file = new File([blob], `answer-${Date.now()}.webm`, {
@@ -87,6 +114,7 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     errorKey,
     startRecording,
     stopRecording: stopRecorder,
+    stopRecordingAndDiscard,
     clearRecording,
     setUploading: () => setRecordingStatus('uploading'),
     setSubmitted: () => setRecordingStatus('submitted'),

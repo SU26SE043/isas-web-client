@@ -186,8 +186,22 @@ export async function submitPracticeSession(sessionId: string): Promise<void> {
     return;
   }
 
-  await apiClient.post(b2cPracticeSessionEndpoints.submit(sessionId), null, {
+  // Empty body: do not send JSON `null` with Content-Type application/json —
+  // ASP.NET often responds 400 for that on no-body POST endpoints.
+  await apiClient.post(b2cPracticeSessionEndpoints.submit(sessionId), undefined, {
     validateStatus: (status) => status === 204,
+    transformRequest: [
+      (data, headers) => {
+        if (headers && typeof headers === 'object') {
+          if ('delete' in headers && typeof (headers as { delete: (key: string) => void }).delete === 'function') {
+            (headers as { delete: (key: string) => void }).delete('Content-Type');
+          } else {
+            delete (headers as Record<string, unknown>)['Content-Type'];
+          }
+        }
+        return data;
+      },
+    ],
   });
 }
 

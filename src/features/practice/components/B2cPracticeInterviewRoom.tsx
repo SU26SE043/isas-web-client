@@ -41,9 +41,7 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
 
   const submitLabel = room.isSubmittingAnswer
     ? t('practice.recording.submitting')
-    : room.remainingSeconds === 0 && room.canSubmitAnswer
-      ? t('practice.recording.submitNow')
-      : t('practice.recording.submit');
+    : t('practice.recording.submit');
 
   const finishLabel = room.interviewComplete
     ? t('practice.finish.complete')
@@ -109,6 +107,12 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
           showWarning={room.showTimerWarning}
           nextActionLabel={nextActionLabel}
           speechStatus={speechStatus}
+          isTimingOut={room.isTimingOut}
+          hasNextQuestion={
+            room.currentQuestion
+              ? room.currentIndex < room.questions.length - 1
+              : false
+          }
         />
 
         {answer ? (
@@ -158,7 +162,7 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
         onFinish={() => room.setFinishOpen(true)}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
-        disabled={room.isSubmittingSession}
+        disabled={room.isSubmittingSession || room.isTimingOut}
       />
 
       {room.finishOpen ? (

@@ -14,6 +14,8 @@ interface InterviewQuestionPanelProps {
   showWarning?: boolean;
   nextActionLabel?: string | null;
   speechStatus?: string | null;
+  isTimingOut?: boolean;
+  hasNextQuestion?: boolean;
 }
 
 export function InterviewQuestionPanel({
@@ -26,6 +28,8 @@ export function InterviewQuestionPanel({
   showWarning,
   nextActionLabel,
   speechStatus,
+  isTimingOut,
+  hasNextQuestion,
 }: InterviewQuestionPanelProps) {
   const { t } = useLanguage();
   const timerClass = getTimerColorClass(getTimerSeverity(remainingSeconds));
@@ -87,6 +91,11 @@ export function InterviewQuestionPanel({
           {t('practice.timer.expired')}
         </p>
       ) : null}
+      {isTimingOut ? (
+        <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+          {t(hasNextQuestion === false ? 'practice.timer.readyToFinish' : 'practice.timer.autoAdvance')}
+        </p>
+      ) : null}
 
       <ol className="flex flex-wrap items-center justify-center gap-0 pt-1" aria-label={t('practice.room.progressLabel')}>
         {steps.map((item, index) => {
@@ -94,13 +103,16 @@ export function InterviewQuestionPanel({
           const isActive = index === currentIndex;
           const qid = item?.id;
           const state = qid && questionStates ? questionStates[qid] : undefined;
-          const isDone = state === 'submitted' || (!state && index < currentIndex);
+          const isSubmitted = state === 'submitted' || (!state && index < currentIndex);
+          const isUnanswered = state === 'unanswered';
           const label =
             state === 'submitted'
               ? t('practice.recording.submitted')
-              : isActive
-                ? t('practice.recording.recording')
-                : t('practice.recording.idle');
+              : state === 'unanswered'
+                ? t('practice.recording.unanswered')
+                : isActive
+                  ? t('practice.recording.recording')
+                  : t('practice.recording.idle');
           return (
             <li key={qid ?? step} className="flex items-center">
               {index > 0 ? (
@@ -110,8 +122,9 @@ export function InterviewQuestionPanel({
                 className={cn(
                   'flex size-8 items-center justify-center rounded-full border text-xs font-semibold',
                   isActive && 'border-white bg-white text-black',
-                  isDone && !isActive && 'border-success/50 bg-success/15 text-success',
-                  !isActive && !isDone && 'border-satin bg-transparent text-muted-foreground',
+                  isSubmitted && !isActive && 'border-success/50 bg-success/15 text-success',
+                  isUnanswered && !isActive && 'border-error/50 bg-error/10 text-error',
+                  !isActive && !isSubmitted && !isUnanswered && 'border-satin bg-transparent text-muted-foreground',
                 )}
                 aria-current={isActive ? 'step' : undefined}
                 aria-label={`${t('practice.room.questionOf').replace('{current}', String(step)).replace('{total}', String(steps.length))}: ${label}`}
