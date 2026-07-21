@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import { downloadBlobAsFile } from '@/shared/utils/downloadBlob';
 import type {
   AnalyzeCvRequest,
   CvAnalysisResult,
@@ -165,6 +166,12 @@ async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord>
   }
 }
 
+function fetchFileRecords(): Promise<FileRecord[]> {
+  return apiClient
+    .get<unknown>(cvAnalysisEndpoints.listFiles)
+    .then((response) => unwrapList(response.data).map(parseFileRecord));
+}
+
 /**
  * Live Interview CV Analysis API only — no mock fixtures.
  * Auth: Bearer token via `apiClient` interceptor (Candidate).
@@ -214,15 +221,54 @@ export const cvAnalysisService = {
     }
   },
 
+  async listFiles(): Promise<FileRecord[]> {
+    try {
+      return await fetchFileRecords();
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load uploaded files.');
+    }
+  },
+
   async listUploadedCvs(): Promise<UploadedCvFile[]> {
     try {
-      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listFiles);
-      return unwrapList(response.data)
-        .map(parseFileRecord)
+      const files = await fetchFileRecords();
+      return files
         .filter((file) => String(file.fileType).toLowerCase() === 'cv')
         .map(toUploadedCvFile);
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not load uploaded CVs.');
+    }
+  },
+
+  async downloadFile(id: string, originalName: string): Promise<void> {
+    try {
+      const response = await apiClient.get<Blob>(cvAnalysisEndpoints.downloadFile(id), {
+        responseType: 'blob',
+      });
+      downloadBlobAsFile(response.data, originalName);
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not download file.');
+    }
+  },
+
+  async replaceFile(id: string, newFile: File): Promise<void> {
+    const formData = new FormData();
+    formData.append('newFile', newFile);
+
+    try {
+      await apiClient.put(cvAnalysisEndpoints.replaceFile(id), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not replace file.');
+    }
+  },
+
+  async deleteFile(id: string): Promise<void> {
+    try {
+      await apiClient.delete(cvAnalysisEndpoints.deleteFile(id));
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not delete file.');
     }
   },
 

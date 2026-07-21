@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
 import type { InterviewHistoryItem } from '../types/history.types';
@@ -12,6 +15,7 @@ import {
 
 export function useRoadmapWizardFlow() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
@@ -19,6 +23,7 @@ export function useRoadmapWizardFlow() {
   const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
+  const [cvId, setCvId] = useState<string | undefined>();
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,17 +32,21 @@ export function useRoadmapWizardFlow() {
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
     try {
-      const response = await fetchInterviewHistory({
-        page: 1,
-        pageSize: 100,
-        includeDeleted: false,
-      });
-      const filtered = response.interviews
+      const [history, cvs] = await Promise.all([
+        fetchInterviewHistory({
+          page: 1,
+          pageSize: 100,
+          includeDeleted: false,
+        }),
+        cvAnalysisService.listUploadedCvs().catch(() => []),
+      ]);
+      const filtered = history.interviews
         .filter((item) => item.status === 'completed' && item.domainId === nextDomainId)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, ROADMAP_REPORT_PREVIEW_LIMIT);
       setAllReports(filtered);
       setSelectedIds([]);
+      setCvId(cvs[0]?.id);
     } finally {
       setLoadingReports(false);
     }
@@ -81,8 +90,11 @@ export function useRoadmapWizardFlow() {
       await learningService.createRoadmap({
         domainId,
         targetLevel,
+        // Selected in UI only — not sent until API accepts reportIds.
         reportIds: selectedIds,
+        cvId,
       });
+      await invalidateLearningRoadmaps(queryClient);
       navigate('/candidate/learning', { replace: true });
     } catch {
       setSubmitError(true);

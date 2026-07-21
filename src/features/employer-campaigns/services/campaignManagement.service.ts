@@ -1,29 +1,79 @@
-import { mockDelay, usesMockData } from '@/shared/mock';
-import { employerService } from '@/features/employer/services/employer.service';
+import { apiClient } from '@/shared/api/apiClient';
+import { getApiStatusCode } from '@/shared/api/apiError';
+import { mockDelay } from '@/shared/mock';
 import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import type {
+  CampaignCreateQuestionRequest,
+  CampaignCreateRequest,
+  CreateCampaignInvitationsRequest,
+  CreateCampaignInvitationsResponse,
+  CampaignInvitationsPage,
+  CampaignResponse,
+  CampaignStatusUpdateRequest,
+  CampaignUpdateRequest,
+  CandidateListQuery,
+  CandidateUploadResponse,
+  CampaignCandidateDetail,
+  CampaignCandidateListItem,
+  CampaignResultsResponse,
+  GenerateCampaignQuestionsParams,
+  GetCampaignInvitationsQuery,
+  InviteCampaignCandidatesRequest,
+  InviteCampaignCandidatesResponse,
+  ReissuedCampaignInvitation,
+} from '../types/campaign.api.types';
 import type {
   CampaignCandidateRow,
   CampaignDraftInput,
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,
-  InviteRejectedEmail,
   InviteResolution,
   PublishResult,
 } from '../types/campaignManagement.types';
+import {
+  mapCampaignResponseToEmployerCampaign,
+  parseCampaignResponse,
+  parseCampaignResponseList,
+  unwrapCampaignDetailPayload,
+} from '../utils/campaignMapper';
+import { mergeCampaignWriteResult } from '../utils/buildCampaignCreateRequest';
+import {
+  parseContentDispositionFilename,
+  validateCampaignPdf,
+  type BlobDownloadResult,
+  type CampaignFileType,
+} from '../utils/campaignFiles';
+import {
+  buildCandidateListParams,
+  parseCampaignResultsResponse,
+  parseCandidateDetail,
+  parseCandidateListItem,
+  parseCandidateUploadResponse,
+  parseInviteByCandidateIdsResponse,
+  unwrapArrayPayload,
+} from '../utils/campaignCandidatesApi';
+import { parseCampaignInvitationsPage } from '../utils/campaignInvitationsApi';
+import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
 
-const MOCK_REGISTERED_CANDIDATES: Record<string, { candidateId: string; displayName: string }> = {
-  'candidate@isas.dev': { candidateId: 'e2e-candidate', displayName: 'E2E Candidate' },
-  'mai.nguyen@example.com': { candidateId: 'cand-mai', displayName: 'Mai Nguyen' },
-  'new.candidate@example.com': { candidateId: 'cand-new', displayName: 'New Candidate' },
-};
+/** Live Campaign API expects a Guid; mock/slug ids must not hit the network. */
+const CAMPAIGN_GUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const EMPLOYER_EMAILS = new Set(['hrmember@isas.dev', 'orgadmin@isas.dev', 'admin@isas.dev']);
+export function isLiveCampaignId(id: string): boolean {
+  return CAMPAIGN_GUID_RE.test(id.trim());
+}
 
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+export class CampaignRequestError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'CampaignRequestError';
+    this.status = status;
+  }
 }
 
 function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
@@ -37,28 +87,6 @@ function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
   return matchesQuery && matchesStatus;
 }
 
-function resolveEmail(email: string): { row?: CampaignCandidateRow; rejected?: InviteRejectedEmail } {
-  const normalized = normalizeEmail(email);
-  if (!normalized.includes('@')) {
-    return { rejected: { email, reason: 'INVALID_EMAIL' } };
-  }
-  if (EMPLOYER_EMAILS.has(normalized)) {
-    return { rejected: { email: normalized, reason: 'EMPLOYER_EMAIL' } };
-  }
-  const registered = MOCK_REGISTERED_CANDIDATES[normalized];
-  if (registered) {
-    return {
-      row: {
-        email: normalized,
-        displayName: registered.displayName,
-        candidateId: registered.candidateId,
-        status: 'invited',
-      },
-    };
-  }
-  return { row: { email: normalized, status: 'invite_pending' } };
-}
-
 function mergeCandidates(existing: CampaignCandidateRow[], incoming: CampaignCandidateRow[]) {
   const map = new Map(existing.map((row) => [row.email, row]));
   for (const row of incoming) {
@@ -67,36 +95,134 @@ function mergeCandidates(existing: CampaignCandidateRow[], incoming: CampaignCan
   return Array.from(map.values());
 }
 
-async function validatePublish(campaign: EmployerCampaign): Promise<string[]> {
-  const warnings: string[] = [];
-  const workspace = await employerService.getWorkspace();
-  if (workspace.verification.status !== 'verified') warnings.push('ORG_NOT_VERIFIED');
-  const totalWeight = campaign.rubric.reduce((sum, item) => sum + item.weight, 0);
-  if (totalWeight !== 100) warnings.push('RUBRIC_WEIGHT_INVALID');
-  if (campaign.questions.length === 0) warnings.push('QUESTIONS_REQUIRED');
-  if (!campaign.jobDescription.trim()) warnings.push('JOB_DESCRIPTION_REQUIRED');
-  if (campaign.capacity <= 0) warnings.push('CAPACITY_REQUIRED');
-  if (campaigns.filter((item) => item.status === 'active' && item.id !== campaign.id).length >= 5) {
-    warnings.push('ACTIVE_LIMIT_REACHED');
+function unwrapInviteByEmailPayload(data: unknown): CreateCampaignInvitationsResponse {
+  const root =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : null;
+  const inner =
+    root && root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+      ? (root.data as Record<string, unknown>)
+      : root;
+  if (!inner) {
+    return { created: [], failed: [] };
   }
-  return warnings;
+
+  const createdRaw = Array.isArray(inner.created)
+    ? inner.created
+    : Array.isArray(inner.Created)
+      ? inner.Created
+      : [];
+  const failedRaw = Array.isArray(inner.failed)
+    ? inner.failed
+    : Array.isArray(inner.Failed)
+      ? inner.Failed
+      : [];
+
+  const created = createdRaw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const id = typeof record.id === 'string' ? record.id : typeof record.Id === 'string' ? record.Id : '';
+      const email =
+        typeof record.email === 'string'
+          ? record.email
+          : typeof record.Email === 'string'
+            ? record.Email
+            : '';
+      if (!id.trim() || !email.trim()) return null;
+      const expiresAt =
+        typeof record.expiresAt === 'string'
+          ? record.expiresAt
+          : typeof record.ExpiresAt === 'string'
+            ? record.ExpiresAt
+            : '';
+      return { id: id.trim(), email: email.trim().toLowerCase(), expiresAt };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  const failed = failedRaw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const email =
+        typeof record.email === 'string'
+          ? record.email
+          : typeof record.Email === 'string'
+            ? record.Email
+            : '';
+      const reason =
+        typeof record.reason === 'string'
+          ? record.reason
+          : typeof record.Reason === 'string'
+            ? record.Reason
+            : 'UNKNOWN';
+      if (!email.trim()) return null;
+      return { email: email.trim().toLowerCase(), reason };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  return { created, failed };
 }
 
 export const campaignManagementService = {
+  /**
+   * Live: GET /api/v1/campaign → CampaignResponse[] (Bearer employer token via apiClient).
+   * Client-side search/status filters match existing list UI.
+   */
   async listCampaigns(filters: CampaignFilters): Promise<EmployerCampaign[]> {
-    if (!usesMockData('enterprise')) {
-      throw new Error('Campaign API is not wired yet. Keep usesMockData("enterprise") true.');
-    }
-    await mockDelay(250);
-    return campaigns.filter((campaign) => matchesFilters(campaign, filters));
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.list);
+    const items: CampaignResponse[] = parseCampaignResponseList(response.data);
+    return items
+      .map(mapCampaignResponseToEmployerCampaign)
+      .filter((campaign) => matchesFilters(campaign, filters));
   },
 
-  async getCampaign(id: string): Promise<EmployerCampaign | null> {
-    if (!usesMockData('enterprise')) {
-      throw new Error('Campaign API is not wired yet. Keep usesMockData("enterprise") true.');
+  getErrorStatus(error: unknown): number | undefined {
+    if (error instanceof CampaignRequestError) return error.status;
+    return getApiStatusCode(error);
+  },
+
+  /** @deprecated Prefer getErrorStatus */
+  getListErrorStatus(error: unknown): number | undefined {
+    return this.getErrorStatus(error);
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id} → CampaignResponse (Bearer employer token via apiClient).
+   * Throws on HTTP errors (404/401/403/…) so React Query can surface status codes.
+   * Non-GUID ids skip the network (avoids 400 from backends that validate Guid route params)
+   * and resolve from in-memory cache when present (same-session create/update).
+   */
+  async getCampaign(id: string): Promise<EmployerCampaign> {
+    if (!isLiveCampaignId(id)) {
+      const cached = campaigns.find((item) => item.id === id);
+      if (cached) return cached;
+      throw new CampaignRequestError(400, 'Invalid campaign id');
     }
-    await mockDelay(200);
-    return campaigns.find((campaign) => campaign.id === id) ?? null;
+
+    try {
+      const response = await apiClient.get<unknown>(campaignManagementEndpoints.detail(id));
+      const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+      if (!parsed) {
+        throw new Error('Invalid campaign detail response');
+      }
+      const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+      campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+      return mapped;
+    } catch (error) {
+      const status = getApiStatusCode(error);
+      if (status === 400 || status === 404) {
+        const cached = campaigns.find((item) => item.id === id);
+        if (cached) return cached;
+      }
+      throw error;
+    }
+  },
+
+  /** In-memory campaign from create/update in this session (not a network call). */
+  getCachedCampaign(id: string): EmployerCampaign | undefined {
+    return campaigns.find((item) => item.id === id);
   },
 
   async listQuestions(): Promise<CampaignQuestion[]> {
@@ -104,76 +230,566 @@ export const campaignManagementService = {
     return QUESTION_BANK;
   },
 
+  /**
+   * Live: POST /api/v1/campaign (Bearer employer) → create Draft.
+   * Body matches CampaignCreateRequest (title, domain, schedule, optional JD/criteria, questions).
+   * Never falls back to mock IDs — invalid/missing response id fails the create.
+   */
+  async createCampaign(input: CampaignCreateRequest): Promise<EmployerCampaign> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.create, input);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid create campaign response: missing id');
+    }
+    const mapped = mergeCampaignWriteResult(mapCampaignResponseToEmployerCampaign(parsed), {
+      criteria: input.criteria,
+      questions: input.questions,
+      jdText: input.jdText,
+      title: input.title,
+      domain: input.domain,
+      maxCandidates: input.maxCandidates,
+      timeLimitMinutes: input.timeLimitMinutes,
+      startsAt: input.startsAt,
+      expiresAt: input.expiresAt,
+    });
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /**
+   * Mock update of an existing Draft only. New campaigns must use createCampaign (live POST)
+   * so the URL id is a real Guid — never a client-generated slug.
+   */
   async saveDraft(input: CampaignDraftInput, id?: string): Promise<EmployerCampaign> {
+    if (!id) {
+      throw new CampaignRequestError(400, 'Use createCampaign for new drafts');
+    }
     await mockDelay(500);
     const now = new Date().toISOString();
     const proctoring = input.proctoring ?? DEFAULT_PROCTORING;
-    if (id) {
-      const existing = campaigns.find((campaign) => campaign.id === id);
-      if (!existing) throw new Error('CAMPAIGN_NOT_FOUND');
-      if (existing.status !== 'draft') throw new Error('ONLY_DRAFT_EDITABLE');
-      const updated = { ...existing, ...input, proctoring, updatedAt: now };
-      campaigns = campaigns.map((campaign) => (campaign.id === id ? updated : campaign));
-      return updated;
-    }
-
-    const campaign: EmployerCampaign = {
-      ...input,
-      proctoring,
-      id: `${input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36)}`,
-      status: 'draft',
-      applicants: 0,
-      invitedEmails: [],
-      candidates: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    campaigns = [campaign, ...campaigns];
-    return campaign;
+    const existing = campaigns.find((campaign) => campaign.id === id);
+    if (!existing) throw new Error('CAMPAIGN_NOT_FOUND');
+    if (existing.status !== 'draft') throw new Error('ONLY_DRAFT_EDITABLE');
+    const updated = { ...existing, ...input, proctoring, updatedAt: now };
+    campaigns = campaigns.map((campaign) => (campaign.id === id ? updated : campaign));
+    return updated;
   },
 
+  /**
+   * Live: PUT /api/v1/campaign/{id} — update Draft metadata / JD / criteria.
+   * Questions are updated separately via updateCampaignQuestions.
+   */
+  async updateCampaign(
+    id: string,
+    payload: CampaignUpdateRequest,
+  ): Promise<EmployerCampaign> {
+    const response = await apiClient.put<unknown>(
+      campaignManagementEndpoints.update(id),
+      payload,
+    );
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid update campaign response: missing id');
+    }
+    const existing = campaigns.find((item) => item.id === id);
+    const mapped = mergeCampaignWriteResult(mapCampaignResponseToEmployerCampaign(parsed), {
+      criteria: payload.criteria,
+      jdText: payload.jdText,
+      title: payload.title,
+      domain: payload.domain,
+      maxCandidates: payload.maxCandidates,
+      timeLimitMinutes: payload.timeLimitMinutes,
+      startsAt: payload.startsAt,
+      expiresAt: payload.expiresAt,
+      questions: existing?.questions.length
+        ? existing.questions.map((item) => ({
+            questionText: item.prompt,
+            source: 'CustomHr' as const,
+            isRequired: true,
+          }))
+        : undefined,
+    });
+    // Prefer existing questions when update metadata response omits them.
+    if (!mapped.questions.length && existing?.questions.length) {
+      mapped.questions = existing.questions;
+    }
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /**
+   * Live: PUT /api/v1/campaign/{id}/questions — replace full question list.
+   * Body must be a JSON array (not `{ questions: [...] }`).
+   */
+  async updateCampaignQuestions(
+    id: string,
+    questions: CampaignCreateQuestionRequest[],
+  ): Promise<EmployerCampaign> {
+    if (questions.length === 0) {
+      throw new CampaignRequestError(400, 'Questions array must not be empty');
+    }
+    const response = await apiClient.put<unknown>(
+      campaignManagementEndpoints.questions(id),
+      questions,
+    );
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid update questions response: missing id');
+    }
+    const existing = campaigns.find((item) => item.id === id);
+    const mapped = mergeCampaignWriteResult(mapCampaignResponseToEmployerCampaign(parsed), {
+      questions,
+      criteria: existing?.rubric.length
+        ? existing.rubric.map((item) => ({
+            name: item.name,
+            description: item.description || null,
+            weight: Number(item.weight) > 1 ? Number(item.weight) / 100 : Number(item.weight),
+            maxScore: item.maxScore,
+          }))
+        : undefined,
+      jdText: existing?.jobDescription,
+      title: existing?.title,
+      domain: existing?.domain ?? existing?.company,
+    });
+    if (!mapped.rubric.length && existing?.rubric.length) {
+      mapped.rubric = existing.rubric;
+    }
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/questions/generate?count=
+   * No request body. Optional `count` query. Returns CampaignResponse; questions replace fully.
+   */
+  async generateCampaignQuestions(
+    params: GenerateCampaignQuestionsParams,
+  ): Promise<EmployerCampaign> {
+    const { campaignId, count } = params;
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.questionsGenerate(campaignId),
+      null,
+      {
+        params: count == null ? undefined : { count },
+      },
+    );
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid generate questions response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /** @deprecated Prefer updateCampaignQuestions with API DTOs. */
+  async saveCampaignQuestions(
+    id: string,
+    questions: CampaignQuestion[],
+  ): Promise<EmployerCampaign> {
+    return this.updateCampaignQuestions(
+      id,
+      questions
+        .filter((item) => item.prompt.trim())
+        .map((item) => ({
+          questionText: item.prompt.trim(),
+          source: 'CustomHr' as const,
+          isRequired: true,
+        })),
+    );
+  },
+
+  /** Live: POST /api/v1/campaign/{id}/publish — Draft → Active. */
   async publishCampaign(id: string): Promise<PublishResult> {
-    await mockDelay(450);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
-    const warnings = await validatePublish(campaign);
-    if (warnings.length > 0) return { campaign, warnings };
-    const updated = { ...campaign, status: 'active' as const, updatedAt: new Date().toISOString() };
-    campaigns = campaigns.map((item) => (item.id === id ? updated : item));
-    return { campaign: updated, warnings: [] };
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.publish(id));
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid publish campaign response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return { campaign: mapped, warnings: [] };
   },
 
-  async inviteCandidates(id: string, emails: string[]): Promise<InviteResolution> {
-    await mockDelay(400);
-    const campaign = campaigns.find((item) => item.id === id);
-    if (!campaign) throw new Error('CAMPAIGN_NOT_FOUND');
+  /**
+   * Live: PUT /api/v1/campaign/{id}/status — Active→Closed→Archived.
+   * Draft→Active uses publish. Invalid transitions → 409.
+   */
+  async updateCampaignStatus(
+    id: string,
+    status: CampaignStatusUpdateRequest['status'],
+  ): Promise<EmployerCampaign> {
+    const response = await apiClient.put<unknown>(campaignManagementEndpoints.status(id), {
+      status,
+    } satisfies CampaignStatusUpdateRequest);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid update campaign status response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
 
-    const linked: CampaignCandidateRow[] = [];
-    const pending: CampaignCandidateRow[] = [];
-    const rejected: InviteRejectedEmail[] = [];
-    const accepted: CampaignCandidateRow[] = [];
+  /** Live: DELETE /api/v1/campaign/{id} — soft-delete (204). */
+  async deleteCampaign(id: string): Promise<void> {
+    await apiClient.delete(campaignManagementEndpoints.delete(id));
+    campaigns = campaigns.filter((item) => item.id !== id);
+  },
 
-    for (const rawEmail of emails) {
-      const result = resolveEmail(rawEmail);
-      if (result.rejected) {
-        rejected.push(result.rejected);
-        continue;
-      }
-      if (!result.row) continue;
-      accepted.push(result.row);
-      if (result.row.status === 'invited') linked.push(result.row);
-      else pending.push(result.row);
+  /**
+   * Live: POST /api/v1/campaign/{id}/invitations — invite by email list (Active only).
+   * Body `{ emails }` (non-empty). 200 → `{ created, failed }`. Errors: 400 · 404 · 409.
+   */
+  async createCampaignInvitations(
+    id: string,
+    payload: CreateCampaignInvitationsRequest,
+  ): Promise<CreateCampaignInvitationsResponse> {
+    const emails = Array.from(
+      new Set(
+        payload.emails
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    );
+    if (emails.length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_EMAILS');
     }
 
-    const candidates = mergeCandidates(campaign.candidates, accepted);
-    const invitedEmails = Array.from(new Set([...campaign.invitedEmails, ...accepted.map((row) => row.email)]));
-    const updated = {
-      ...campaign,
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.invitations(id),
+      { emails } satisfies CreateCampaignInvitationsRequest,
+    );
+    return unwrapInviteByEmailPayload(response.data);
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id}/invitations?cursor&limit
+   * Body = CampaignInvitation[]. Next page via response header `X-Next-Cursor`.
+   */
+  async getCampaignInvitations(
+    id: string,
+    query?: GetCampaignInvitationsQuery,
+  ): Promise<CampaignInvitationsPage> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
+      params: {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
+        ...(query?.limit != null ? { limit: query.limit } : {}),
+      },
+    });
+    return parseCampaignInvitationsPage(response.data, response.headers);
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/invitations/{invitationId}/reissue — no body.
+   * Returns the newly issued invitation stub; list must be refetched for Revoked + new rows.
+   */
+  async reissueCampaignInvitation(
+    campaignId: string,
+    invitationId: string,
+  ): Promise<ReissuedCampaignInvitation> {
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.invitationReissue(campaignId, invitationId),
+      null,
+    );
+    const root =
+      response.data && typeof response.data === 'object' && !Array.isArray(response.data)
+        ? (response.data as Record<string, unknown>)
+        : null;
+    const inner =
+      root && root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+        ? (root.data as Record<string, unknown>)
+        : root;
+    if (!inner) {
+      throw new Error('Invalid reissue response');
+    }
+    const id =
+      typeof inner.id === 'string'
+        ? inner.id
+        : typeof inner.Id === 'string'
+          ? inner.Id
+          : '';
+    const email =
+      typeof inner.email === 'string'
+        ? inner.email
+        : typeof inner.Email === 'string'
+          ? inner.Email
+          : '';
+    const expiresAt =
+      typeof inner.expiresAt === 'string'
+        ? inner.expiresAt
+        : typeof inner.ExpiresAt === 'string'
+          ? inner.ExpiresAt
+          : '';
+    if (!id.trim() || !email.trim() || !expiresAt.trim()) {
+      throw new Error('Invalid reissue response');
+    }
+    return {
+      id: id.trim(),
+      email: email.trim().toLowerCase(),
+      expiresAt: expiresAt.trim(),
+    };
+  },
+
+  /** Maps invitation response onto local InviteResolution (legacy callers). */
+  async inviteCandidates(id: string, emails: string[]): Promise<InviteResolution> {
+    const payload = await this.createCampaignInvitations(id, { emails });
+
+    const linked: CampaignCandidateRow[] = payload.created.map((item) => ({
+      email: item.email,
+      status: 'invited' as const,
+    }));
+    const rejected = payload.failed.map((item) => ({
+      email: item.email,
+      reason: item.reason,
+    }));
+
+    const existing = campaigns.find((item) => item.id === id);
+    const base =
+      existing ??
+      ({
+        id,
+        title: '',
+        company: '',
+        location: '',
+        mode: 'remote' as const,
+        status: 'active' as const,
+        summary: '',
+        jobDescription: '',
+        capacity: 0,
+        applicants: 0,
+        deadline: '',
+        durationMinutes: 0,
+        locale: 'vi' as const,
+        rubric: [],
+        questions: [],
+        invitedEmails: [],
+        candidates: [],
+        proctoring: DEFAULT_PROCTORING,
+        welcomeMessage: '',
+        completionMessage: '',
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      } satisfies EmployerCampaign);
+
+    const candidates = mergeCandidates(base.candidates, linked);
+    const invitedEmails = Array.from(
+      new Set([...base.invitedEmails, ...linked.map((row) => row.email)]),
+    );
+    const updated: EmployerCampaign = {
+      ...base,
       candidates,
       invitedEmails,
+      applicants: candidates.length,
       updatedAt: new Date().toISOString(),
     };
-    campaigns = campaigns.map((item) => (item.id === id ? updated : item));
-    return { campaign: updated, linked, pending, rejected };
+    campaigns = [updated, ...campaigns.filter((item) => item.id !== id)];
+
+    return {
+      campaign: updated,
+      created: payload.created,
+      linked,
+      pending: [],
+      rejected,
+    };
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/files — first upload (multipart jdFile / criteriaFile).
+   * Send only the field that changed.
+   */
+  async uploadCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ): Promise<EmployerCampaign> {
+    return this.sendCampaignFiles(id, files, 'post');
+  },
+
+  /**
+   * Live: PUT /api/v1/campaign/{id}/files — replace (Draft only).
+   * Send only the field that changed.
+   */
+  async replaceCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+  ): Promise<EmployerCampaign> {
+    return this.sendCampaignFiles(id, files, 'put');
+  },
+
+  /** @deprecated Prefer uploadCampaignFiles / replaceCampaignFiles. */
+  async uploadCampaignJdFile(id: string, jdFile: File): Promise<EmployerCampaign> {
+    return this.uploadCampaignFiles(id, { jdFile });
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/files/download?fileType=jd|criteria — PDF blob.
+   */
+  async downloadCampaignFile(
+    id: string,
+    fileType: CampaignFileType,
+  ): Promise<BlobDownloadResult> {
+    const response = await apiClient.post<Blob>(
+      campaignManagementEndpoints.filesDownload(id),
+      null,
+      {
+        params: { fileType },
+        responseType: 'blob',
+      },
+    );
+
+    const header = response.headers?.['content-disposition'] as string | undefined;
+    return {
+      blob: response.data,
+      filename: parseContentDispositionFilename(header),
+    };
+  },
+
+  async sendCampaignFiles(
+    id: string,
+    files: { jdFile?: File | null; criteriaFile?: File | null },
+    method: 'post' | 'put',
+  ): Promise<EmployerCampaign> {
+    const jdFile = files.jdFile ?? null;
+    const criteriaFile = files.criteriaFile ?? null;
+    if (!jdFile && !criteriaFile) {
+      throw new CampaignRequestError(400, 'NO_FILES');
+    }
+
+    const validate = (file: File, label: string) => {
+      const code = validateCampaignPdf(file);
+      if (code === 'notPdf') throw new CampaignRequestError(400, `${label}_NOT_PDF`);
+      if (code === 'tooLarge') throw new CampaignRequestError(400, `${label}_TOO_LARGE`);
+      if (code === 'corrupt') throw new CampaignRequestError(400, `${label}_CORRUPT`);
+    };
+    if (jdFile) validate(jdFile, 'JD');
+    if (criteriaFile) validate(criteriaFile, 'CRITERIA');
+
+    const formData = new FormData();
+    if (jdFile) formData.append('jdFile', jdFile);
+    if (criteriaFile) formData.append('criteriaFile', criteriaFile);
+
+    const url = campaignManagementEndpoints.files(id);
+    const formDataConfig = {
+      transformRequest: [
+        (data: unknown, headers?: Record<string, unknown>) => {
+          if (data instanceof FormData && headers) {
+            delete headers['Content-Type'];
+          }
+          return data;
+        },
+      ],
+    };
+    const request =
+      method === 'put'
+        ? apiClient.put<unknown>(url, formData, formDataConfig)
+        : apiClient.post<unknown>(url, formData, formDataConfig);
+
+    const response = await request;
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) {
+      throw new Error('Invalid upload campaign files response: missing id');
+    }
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/candidates — multipart `files` (202 Accepted).
+   * Call only when campaign is Active and Employer presses Analyze.
+   */
+  async analyzeCandidateCvs(id: string, files: File[]): Promise<CandidateUploadResponse> {
+    if (!files.length) throw new CampaignRequestError(400, 'NO_FILES');
+    for (const file of files) {
+      const code = validateCampaignPdf(file);
+      if (code === 'notPdf') throw new CampaignRequestError(400, 'NOT_PDF');
+      if (code === 'tooLarge') throw new CampaignRequestError(400, 'TOO_LARGE');
+      if (code === 'corrupt') throw new CampaignRequestError(400, 'CORRUPT');
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.candidates(id),
+      formData,
+      {
+        transformRequest: [
+          (data: unknown, headers?: Record<string, unknown>) => {
+            if (data instanceof FormData && headers) {
+              delete headers['Content-Type'];
+            }
+            return data;
+          },
+        ],
+        validateStatus: (status) => status === 200 || status === 202,
+      },
+    );
+    return parseCandidateUploadResponse(response.data);
+  },
+
+  /** @deprecated Prefer analyzeCandidateCvs. */
+  async uploadCandidateCvs(id: string, files: File[]): Promise<CandidateUploadResponse> {
+    return this.analyzeCandidateCvs(id, files);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/candidates */
+  async getCampaignCandidates(
+    id: string,
+    query?: CandidateListQuery,
+  ): Promise<CampaignCandidateListItem[]> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.candidates(id), {
+      params: buildCandidateListParams(query),
+    });
+    return unwrapArrayPayload(response.data)
+      .map(parseCandidateListItem)
+      .filter((item): item is CampaignCandidateListItem => item != null);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/candidates/{candidateId} */
+  async getCampaignCandidateDetail(
+    id: string,
+    candidateId: string,
+  ): Promise<CampaignCandidateDetail> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.candidateDetail(id, candidateId),
+    );
+    const parsed = parseCandidateDetail(response.data);
+    if (!parsed) throw new CampaignRequestError(404, 'CANDIDATE_NOT_FOUND');
+    return parsed;
+  },
+
+  /**
+   * Live: POST /api/v1/campaign/{id}/candidates/invite — `{ candidateIds }`.
+   */
+  async inviteCampaignCandidates(
+    id: string,
+    payload: InviteCampaignCandidatesRequest,
+  ): Promise<InviteCampaignCandidatesResponse> {
+    const candidateIds = Array.from(
+      new Set(payload.candidateIds.map((item) => item.trim()).filter(Boolean)),
+    );
+    if (candidateIds.length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_CANDIDATE_IDS');
+    }
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.inviteCandidates(id),
+      { candidateIds } satisfies InviteCampaignCandidatesRequest,
+    );
+    return parseInviteByCandidateIdsResponse(response.data);
+  },
+
+  /** @deprecated Prefer inviteCampaignCandidates. */
+  async inviteCandidateIds(
+    id: string,
+    candidateIds: string[],
+  ): Promise<InviteCampaignCandidatesResponse> {
+    return this.inviteCampaignCandidates(id, { candidateIds });
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+  async getCampaignResults(id: string): Promise<CampaignResultsResponse> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.results(id));
+    return parseCampaignResultsResponse(response.data);
   },
 };

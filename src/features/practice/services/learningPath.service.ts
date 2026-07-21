@@ -17,7 +17,9 @@ import {
 } from '../mocks/learningPath.fixtures';
 import { buildLessonHtml } from '../mocks/lessonContent.fixtures';
 import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
-import { registerLearningPracticeSession } from './learningPracticeSession.registry';
+import { getLearningPracticeSession } from './learningPracticeSession.registry';
+import { roadmapService } from './roadmap.service';
+import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
 
 let store: LearningRoadmapDetail[] = structuredClone(MOCK_LEARNING_PATH_ROADMAPS);
 
@@ -138,15 +140,6 @@ function recompute(roadmap: LearningRoadmapDetail): LearningRoadmapDetail {
   };
 }
 
-function toCard(roadmap: LearningRoadmapDetail): LearningRoadmapCard {
-  const {
-    milestones: _m,
-    reports: _r,
-    ...card
-  } = roadmap;
-  return card;
-}
-
 function findLesson(roadmap: LearningRoadmapDetail, lessonId: string) {
   for (const milestone of roadmap.milestones) {
     const lesson = milestone.lessons.find((item) => item.id === lessonId);
@@ -172,46 +165,14 @@ function instantFeedback(): LearningPracticeQuestionFeedback {
 }
 
 export const learningPathService = {
+  /** Always live — GET /api/v1/interview/practice/roadmaps */
   async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(300);
-    store = store.map((item) => recompute(item));
-
-    let items = store.map(toCard);
-    const search = query.search?.trim().toLowerCase();
-    if (search) {
-      items = items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search) ||
-          item.nameVi.toLowerCase().includes(search) ||
-          item.domainLabel.toLowerCase().includes(search),
-      );
-    }
-    if (query.domainId && query.domainId !== 'all') {
-      items = items.filter((item) => item.domainId === query.domainId);
-    }
-    if (query.status && query.status !== 'all') {
-      items = items.filter((item) => item.status === query.status);
-    }
-    if (query.sort === 'progress') {
-      items = items.slice().sort((a, b) => b.progressPercent - a.progressPercent);
-    } else {
-      items = items.slice().sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-    }
-    return items;
+    return roadmapService.listRoadmaps(query);
   },
 
+  /** Always live — GET /api/v1/interview/practice/roadmaps/{id} */
   async getRoadmap(roadmapId: string): Promise<LearningRoadmapDetail> {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(250);
-    const index = store.findIndex((item) => item.id === roadmapId);
-    if (index < 0) throw new Error('ROADMAP_NOT_FOUND');
-    store[index] = recompute(store[index]);
-    return structuredClone(store[index]);
+    return roadmapService.getRoadmap(roadmapId);
   },
 
   async registerCreatedRoadmap(input: CreateRoadmapInput & { roadmapId?: string }): Promise<LearningRoadmapDetail> {
@@ -292,8 +253,15 @@ export const learningPathService = {
     lessonId: string;
     title: string;
   }) {
-    await mockDelay(150);
-    return registerLearningPracticeSession(input);
+    const result = await startLearningLessonPractice(input);
+    if (!result.ok) {
+      throw new Error(result.code);
+    }
+    const meta = getLearningPracticeSession(result.session.sessionId);
+    if (!meta) {
+      throw new Error('SESSION_NOT_REGISTERED');
+    }
+    return meta;
   },
 
   async evaluateAnswer(questionId: string): Promise<LearningPracticeQuestionFeedback> {

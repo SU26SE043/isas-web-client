@@ -7,12 +7,25 @@ import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 export function CampaignSelectionPage() {
   const { id } = useParams();
   const { t } = useLanguage();
-  const { campaign, isLoading, invite } = useEmployerCampaign(id);
+  const { campaign, isLoading, isError, invite } = useEmployerCampaign(id);
 
-  if (isLoading || !campaign) {
+  if (isLoading) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
         <div className="page-container page-section mx-auto max-w-4xl"><Skeleton className="h-72 w-full" /></div>
+      </div>
+    );
+  }
+
+  if (isError || !campaign) {
+    return (
+      <div className="h-full overflow-y-auto bg-surface-base">
+        <div className="page-container page-section mx-auto max-w-4xl space-y-4">
+          <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
+            {t('employer.campaigns.detail.back')}
+          </Link>
+          <p className="text-sm text-muted-foreground">{t('employer.campaigns.detail.notFoundDescription')}</p>
+        </div>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import type { TimerSeverity } from '../types/interviewSession.types';
 
-const WARNING_THRESHOLD_SECONDS = 120;
-const CRITICAL_THRESHOLD_SECONDS = 30;
+const WARNING_THRESHOLD_SECONDS = 30;
+const CRITICAL_THRESHOLD_SECONDS = 10;
 
 export function getTimerSeverity(remainingSeconds: number): TimerSeverity {
   if (remainingSeconds <= CRITICAL_THRESHOLD_SECONDS) return 'critical';

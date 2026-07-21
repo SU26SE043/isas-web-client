@@ -79,7 +79,7 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
   onSpeakAgain,
   speakAgainDisabled = false,
   learningMode = false,
-  isLastQuestion = false,
+  isLastQuestion: _isLastQuestion = false,
   isEvaluating = false,
   exitHref,
 }) => {
@@ -95,16 +95,11 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
 
   const primaryLabel = (() => {
     if (isEvaluating || isSubmitting) {
-      if (learningMode && isLastQuestion && isSubmitting) {
-        return t('practice.learningPath.completing');
-      }
       return learningMode
         ? t('practice.learningPath.evaluating')
         : t('practice.room.submitting');
     }
-    if (learningMode && isLastQuestion) {
-      return t('practice.learningPath.finish');
-    }
+    // Learning: always submit answer; finish CTA lives on the question report page.
     return t('practice.room.submitAnswer');
   })();
 

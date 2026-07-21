@@ -107,6 +107,36 @@ export function useCvAnalysisFlow() {
     [clearFailure, failedStep],
   );
 
+  const selectExistingCv = useCallback(
+    (record: FileRecord) => {
+      cvUploadGenerationRef.current += 1;
+      setCvFile(null);
+      setCvId(record.id);
+      setCvRecord(record);
+      setCvUploadStatus('completed');
+      uploadedCvKeyRef.current = null;
+      setFileError(null);
+      setIsUploading(false);
+      if (failedStep === 'upload') clearFailure();
+    },
+    [clearFailure, failedStep],
+  );
+
+  const selectExistingJd = useCallback(
+    (record: FileRecord) => {
+      jdUploadGenerationRef.current += 1;
+      setJdFile(null);
+      setJdId(record.id);
+      setJdRecord(record);
+      setJdUploadStatus('completed');
+      uploadedJdKeyRef.current = null;
+      setJdFileError(null);
+      setIsUploading(false);
+      if (failedStep === 'job-description') clearFailure();
+    },
+    [clearFailure, failedStep],
+  );
+
   const selectCvFile = useCallback(
     async (next: File | null) => {
       if (!next) {
@@ -410,7 +440,9 @@ export function useCvAnalysisFlow() {
     currentTimelineStep,
     selectDomain,
     selectCvFile,
+    selectExistingCv,
     selectJdFile,
+    selectExistingJd,
     goBack,
     goNextFromUpload,
     goNextFromJd,

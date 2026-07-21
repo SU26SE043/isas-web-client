@@ -1,7 +1,16 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
+import { apiClient } from '@/shared/api/apiClient';
+import {
+  domainToJobCategoryEnum,
+  isJobDomainId,
+  resolveJobDomainFromCategory,
+  type JobCategoryEnum,
+} from '@/shared/domain/jobDomains';
+import { resolvePracticeLevel, type PracticeLevel } from '@/shared/domain/practiceLevels';
 import type {
   Achievement,
   CertificateRecord,
+  CreateRoadmapApiRequest,
   CreateRoadmapInput,
   LeaderboardEntry,
   LearningModule,
@@ -9,6 +18,7 @@ import type {
   LearningPracticeSession,
   ProgressDashboardData,
   RoadmapResponse,
+  RoadmapStep,
 } from '../types/learning.types';
 import {
   MOCK_CERTIFICATES,
@@ -23,9 +33,75 @@ import {
   MOCK_PROGRESS_DASHBOARD,
 } from '../mocks/progress.fixtures';
 import { learningPathService } from './learningPath.service';
+import { learningEndpoints } from './learning.endpoints';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 let latestCreatedRoadmap: RoadmapResponse | null = null;
+
+function resolveJobCategoryFromDomainId(domainId: string): JobCategoryEnum {
+  if (domainId === 'FE' || domainId === 'BE' || domainId === 'BA') {
+    return domainId;
+  }
+  if (isJobDomainId(domainId)) {
+    return domainToJobCategoryEnum(domainId);
+  }
+  return resolveJobDomainFromCategory(domainId)?.jobCategoryEnum ?? 'FE';
+}
+
+/** Map wizard UI levels (incl. intern/lead) → API Fresher|Junior|Middle|Senior. */
+function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
+  const mapped: Record<string, PracticeLevel> = {
+    intern: 'Fresher',
+    fresher: 'Fresher',
+    junior: 'Junior',
+    middle: 'Middle',
+    senior: 'Senior',
+    lead: 'Senior',
+  };
+  const key = targetLevel.trim().toLowerCase();
+  return mapped[key] ?? resolvePracticeLevel(targetLevel) ?? 'Fresher';
+}
+
+function normalizeRoadmapSteps(raw: unknown): RoadmapStep[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, index) => {
+    const step = (item ?? {}) as Partial<RoadmapStep> & Record<string, unknown>;
+    return {
+      id: String(step.id ?? `step-${index + 1}`),
+      title: String(step.title ?? ''),
+      titleVi: String(step.titleVi ?? step.title ?? ''),
+      description: String(step.description ?? ''),
+      descriptionVi: String(step.descriptionVi ?? step.description ?? ''),
+      skillTag: String(step.skillTag ?? ''),
+      skillTagVi: String(step.skillTagVi ?? step.skillTag ?? ''),
+      estimatedWeeks: Number(step.estimatedWeeks ?? 1),
+      moduleId: typeof step.moduleId === 'string' ? step.moduleId : undefined,
+      completed: Boolean(step.completed),
+    };
+  });
+}
+
+function normalizeCreateRoadmapResponse(
+  data: Record<string, unknown> | null | undefined,
+  input: CreateRoadmapInput,
+): RoadmapResponse {
+  const payload = data ?? {};
+  const id =
+    (typeof payload.id === 'string' && payload.id) ||
+    (typeof payload.roadmapId === 'string' && payload.roadmapId) ||
+    undefined;
+  const steps = normalizeRoadmapSteps(payload.steps);
+  return {
+    id,
+    steps: steps.length > 0 ? steps : MOCK_ROADMAP.steps,
+    regenerateCount: Number(payload.regenerateCount ?? 0),
+    regenerateLimit: Number(payload.regenerateLimit ?? MOCK_ROADMAP.regenerateLimit),
+    domainId: input.domainId,
+    targetLevel: input.targetLevel,
+    // Reports are not sent to the API yet — keep UI selection locally only.
+    sourceReportIds: input.reportIds ? [...input.reportIds] : [],
+  };
+}
 
 export const learningService = {
   async getRoadmap(): Promise<RoadmapResponse> {
@@ -46,34 +122,45 @@ export const learningService = {
     };
   },
 
+  /**
+   * Create personalized roadmap.
+   * Always calls live POST `/api/v1/interview/practice/roadmaps`.
+   * Body: `{ jobCategory, level, cvId? }` — reportIds intentionally omitted until API supports them.
+   */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
-    if (!usesMockData('practice')) {
-      throw new Error('Practice learning API is not wired yet. Keep usesMockData("practice") true.');
-    }
-
-    if (!input.domainId || !input.targetLevel || input.reportIds.length === 0) {
+    if (!input.domainId || !input.targetLevel) {
       throw new Error('INVALID_ROADMAP_INPUT');
     }
 
-    await mockDelay(1200);
+    const level = resolveApiRoadmapLevel(input.targetLevel);
 
-    const created: RoadmapResponse = {
-      ...MOCK_ROADMAP,
-      regenerateCount: 0,
-      domainId: input.domainId,
-      targetLevel: input.targetLevel,
-      sourceReportIds: [...input.reportIds],
-      steps: MOCK_ROADMAP.steps.map((step, index) => ({
-        ...step,
-        title: `${step.title} (${input.targetLevel})`,
-        titleVi: `${step.titleVi} (${input.targetLevel})`,
-        estimatedWeeks: step.estimatedWeeks + (index === 0 ? 0 : Math.min(input.reportIds.length, 3)),
-      })),
+    const body: CreateRoadmapApiRequest = {
+      jobCategory: resolveJobCategoryFromDomainId(input.domainId),
+      level,
     };
+    if (input.cvId) {
+      body.cvId = input.cvId;
+    }
+
+    const response = await apiClient.post<Record<string, unknown>>(
+      learningEndpoints.createRoadmap,
+      body,
+      { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
+    );
+
+    const created = normalizeCreateRoadmapResponse(response.data, {
+      ...input,
+      targetLevel: level,
+    });
 
     latestCreatedRoadmap = created;
-    roadmapRegenerateCount = 0;
-    await learningPathService.registerCreatedRoadmap(input);
+    roadmapRegenerateCount = created.regenerateCount;
+    await learningPathService.registerCreatedRoadmap({
+      ...input,
+      targetLevel: level,
+      roadmapId: created.id,
+      reportIds: input.reportIds ?? [],
+    });
     return created;
   },
 

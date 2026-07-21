@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
+import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { FullscreenLayout } from '@/layouts/FullscreenLayout';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { RequireRole } from '@/routes/RequireRole';
@@ -16,7 +17,10 @@ export const interviewRoutes: RouteObject[] = [
   {
     element: <RequireRole roles={[UserRole.CANDIDATE, UserRole.ADMIN]} />,
     children: [
-      { path: '/practice', element: <PracticeEntryPage /> },
+      {
+        element: <DashboardLayout />,
+        children: [{ path: '/practice', element: <PracticeEntryPage /> }],
+      },
       { path: '/practice/result', element: <InterviewResultPage /> },
       { path: '/practice/interview/:id', element: <InterviewResultPage /> },
       {

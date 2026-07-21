@@ -14,6 +14,7 @@ import { LearningPracticeDeviceCheckPage } from '@/features/practice/pages/Learn
 import { LearningLessonPracticePage } from '@/features/practice/pages/LearningLessonPracticePage';
 import { LearningPracticeReportPage } from '@/features/practice/pages/LearningPracticeReportPage';
 import { LearningQuestionReportPage } from '@/features/practice/pages/LearningQuestionReportPage';
+import { LearningRoadmapReportPage } from '@/features/practice/pages/LearningRoadmapReportPage';
 import { CandidateReportsPage } from '@/features/practice/pages/CandidateReportsPage';
 import { LearningReaderLayout } from '@/features/practice/components/learning-path/LearningReaderLayout';
 import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
@@ -42,6 +43,7 @@ import { SkillsPage } from '@/features/profile/pages/SkillsPage';
 import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
 import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
 import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
+import { CandidateRubricsPage } from '@/features/rubrics/pages/CandidateRubricsPage';
 import { CandidateCampaignsPage } from '@/features/campaigns/pages/CandidateCampaignsPage';
 import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/CandidateCampaignBriefingPage';
 import { RequireAuth } from '@/routes/RequireAuth';
@@ -63,6 +65,10 @@ export const candidateRoutes: RouteObject[] = [
             children: [
               { index: true, element: <LearningHubPage /> },
               { path: 'roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
+              {
+                path: 'roadmaps/:roadmapId/report',
+                element: <LearningRoadmapReportPage />,
+              },
               {
                 path: 'roadmaps/:roadmapId/lessons/:lessonId',
                 element: <LearningReaderLayout />,
@@ -110,6 +116,7 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'practice/history/compare', element: <CompareResultsPage /> },
               { path: 'practice/history/:id', element: <InterviewResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },
+              { path: 'rubrics', element: <CandidateRubricsPage /> },
               { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },
               { path: 'history', element: <CandidateHistoryLegacyRedirect /> },
               { path: 'roadmap', element: <RoadmapPage /> },

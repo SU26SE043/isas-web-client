@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
@@ -7,7 +7,10 @@ import {
   advanceLearningQuestion,
   getLearningAnswerByQuestionId,
   getLearningPracticeSession,
+  isLastLearningQuestion,
 } from '../services/learningPracticeSession.registry';
+import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { learningRoadmapReportPath } from '../utils/launchLearningInterviewPractice';
 
 export function LearningQuestionReportPage() {
   const { roadmapId = '', lessonId = '', questionId = '' } = useParams();
@@ -16,6 +19,8 @@ export function LearningQuestionReportPage() {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const [isContinuing, setIsContinuing] = useState(false);
+  const [completeError, setCompleteError] = useState(false);
+  const inFlightRef = useRef(false);
 
   const entry = useMemo(() => {
     if (!sessionId || !questionId) return undefined;
@@ -26,12 +31,29 @@ export function LearningQuestionReportPage() {
   const questionNumber = meta
     ? meta.questions.findIndex((item) => item.id === questionId) + 1
     : 0;
+  const isLast = sessionId && questionId ? isLastLearningQuestion(sessionId, questionId) : false;
 
   const handleContinue = () => {
-    if (!sessionId || isContinuing) return;
+    if (!sessionId || inFlightRef.current || isContinuing) return;
+    inFlightRef.current = true;
     setIsContinuing(true);
     advanceLearningQuestion(sessionId);
     navigate(`/interview/${sessionId}/room`, { replace: true });
+  };
+
+  const handleCompletePractice = async () => {
+    if (!sessionId || !roadmapId || inFlightRef.current || isContinuing) return;
+    inFlightRef.current = true;
+    setIsContinuing(true);
+    setCompleteError(false);
+    try {
+      await roadmapPracticeService.completePracticeSession(sessionId);
+      navigate(learningRoadmapReportPath(roadmapId), { replace: true });
+    } catch {
+      setCompleteError(true);
+      inFlightRef.current = false;
+      setIsContinuing(false);
+    }
   };
 
   if (!sessionId || !entry) {
@@ -39,10 +61,10 @@ export function LearningQuestionReportPage() {
       <div className="page-container page-section space-y-4 py-8">
         <p className="text-sm text-error">{t('practice.learningPath.questionReportMissing')}</p>
         <Link
-          to={`/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/practice/device-check`}
+          to={`/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/theory`}
           className="btn-secondary inline-flex"
         >
-          {t('practice.learningPath.startPractice')}
+          {t('practice.learningPath.backToTheory')}
         </Link>
       </div>
     );
@@ -63,22 +85,44 @@ export function LearningQuestionReportPage() {
         prompt={entry.prompt}
         promptVi={entry.promptVi}
         questionNumber={questionNumber > 0 ? questionNumber : undefined}
+        transcript={entry.transcript}
+        scoringStatus={entry.scoringStatus}
       />
 
       <div className="flex flex-wrap gap-3 border-t border-subtle pt-6">
-        <button
-          type="button"
-          className="btn-primary inline-flex items-center gap-2"
-          disabled={isContinuing}
-          onClick={handleContinue}
-        >
-          {isContinuing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-          {t('practice.learningPath.continueAfterReport')}
-        </button>
+        {isLast ? (
+          <button
+            type="button"
+            className="btn-primary inline-flex items-center gap-2"
+            disabled={isContinuing}
+            onClick={() => void handleCompletePractice()}
+          >
+            {isContinuing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {isContinuing
+              ? t('practice.learningPath.completing')
+              : t('practice.learningPath.finishPractice')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn-primary inline-flex items-center gap-2"
+            disabled={isContinuing}
+            onClick={handleContinue}
+          >
+            {isContinuing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {t('practice.learningPath.nextQuestion')}
+          </button>
+        )}
         <Link to={`/candidate/learning/roadmaps/${roadmapId}`} className="btn-secondary inline-flex">
           {t('practice.learningPath.backToRoadmap')}
         </Link>
       </div>
+
+      {completeError ? (
+        <p className="text-sm text-error" role="alert">
+          {t('practice.learningPath.completeSessionError')}
+        </p>
+      ) : null}
     </div>
   );
 }

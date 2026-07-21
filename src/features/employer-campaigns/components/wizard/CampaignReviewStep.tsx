@@ -1,127 +1,146 @@
-import { ClipboardCheck } from 'lucide-react';
+import { ListChecks } from 'lucide-react';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignWizardValues } from '../../hooks/useCampaignWizard';
+import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
 import type {
-  CampaignProctoringConfig,
-  CampaignQuestion,
-  RubricCriterion,
-} from '../../types/campaignManagement.types';
+  CampaignInfoState,
+  CampaignSettingsState,
+  JobDescriptionState,
+} from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
+import { FieldError } from './FieldError';
+import { CampaignReviewSection } from './review/CampaignReviewSection';
 
 interface CampaignReviewStepProps {
-  values: CampaignWizardValues;
+  info: CampaignInfoState;
+  jd: JobDescriptionState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
-  proctoring: CampaignProctoringConfig;
-  publishError?: string | null;
+  settings: CampaignSettingsState;
+  domainLabel: string;
+  error?: string | null;
+  onGoToStep: (step: number) => void;
   onBack: () => void;
-  onSaveDraft: () => void;
-  onPublish: () => void;
-  isSaving?: boolean;
-  isPublishing?: boolean;
+  onSubmit: () => void;
+  submitLabel: string;
+  submittingLabel: string;
+  isSubmitting?: boolean;
+  submitDisabled?: boolean;
 }
 
-function ReviewRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-satin py-2 text-sm">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="max-w-[60%] text-right font-medium text-foreground">{value}</dd>
-    </div>
-  );
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
 export function CampaignReviewStep({
-  values,
+  info,
+  jd,
   rubric,
   questions,
-  proctoring,
-  publishError,
+  settings,
+  domainLabel,
+  error,
+  onGoToStep,
   onBack,
-  onSaveDraft,
-  onPublish,
-  isSaving,
-  isPublishing,
+  onSubmit,
+  submitLabel,
+  submittingLabel,
+  isSubmitting = false,
+  submitDisabled = false,
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
-  const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
+  const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
 
   return (
     <SectionPanel
-      icon={<ClipboardCheck className="size-4" aria-hidden />}
+      icon={<ListChecks className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.review')}
       description={t('employer.campaigns.wizard.steps.reviewDesc')}
       footer={
         <CampaignWizardNav
           onBack={onBack}
-          onSaveDraft={onSaveDraft}
-          onPublish={onPublish}
-          showPublish
-          isSaving={isSaving}
-          isPublishing={isPublishing}
+          onNext={onSubmit}
+          nextLabel={isSubmitting ? submittingLabel : submitLabel}
+          nextDisabled={submitDisabled || isSubmitting}
+          isSaving={isSubmitting}
+          backDisabled={isSubmitting}
         />
       }
     >
-      <div className="space-y-6">
-        {publishError ? (
-          <p className="rounded-lg border border-error/40 bg-error-bg px-3 py-2 text-sm text-error" role="alert">
-            {publishError}
-          </p>
-        ) : null}
+      <div className="space-y-4">
+        {error ? <FieldError message={error} /> : null}
 
-        <dl>
-          <ReviewRow label={t('employer.campaigns.form.title')} value={values.title || '—'} />
-          <ReviewRow label={t('employer.campaigns.form.company')} value={values.company || '—'} />
-          <ReviewRow label={t('employer.campaigns.form.location')} value={values.location || '—'} />
-          <ReviewRow
-            label={t('employer.campaigns.form.mode')}
-            value={t(`employer.campaigns.mode.${values.mode}`)}
-          />
-          <ReviewRow label={t('employer.campaigns.form.summary')} value={values.summary || '—'} />
-          <ReviewRow
-            label={t('employer.campaigns.form.duration')}
-            value={String(values.durationMinutes ?? '—')}
-          />
-          <ReviewRow
-            label={t('employer.campaigns.form.capacity')}
-            value={String(values.capacity ?? '—')}
-          />
-          <ReviewRow label={t('employer.campaigns.form.deadline')} value={values.deadline || '—'} />
-          <ReviewRow
-            label={t('employer.campaigns.form.weightTotal')}
-            value={`${totalWeight}%`}
-          />
-          <ReviewRow
-            label={t('employer.campaigns.form.selectQuestions')}
-            value={String(questions.length)}
-          />
-          <ReviewRow
-            label={t('employer.campaigns.form.maxViolations')}
-            value={String(proctoring.maxViolations)}
-          />
-        </dl>
-
-        <div className="rounded-xl border border-satin bg-surface-overlay p-4">
-          <p className="text-sm font-medium text-foreground">
-            {t('employer.campaigns.form.jobDescription')}
+        <CampaignReviewSection title={t('employer.campaigns.wizard.check.info')} onEdit={() => onGoToStep(0)}>
+          <p>{info.title || t('employer.campaigns.form.noQuestions')}</p>
+          <p>
+            {domainLabel} · {t('employer.campaigns.form.maxCandidates')}:{' '}
+            {info.maxCandidates ?? t('employer.campaigns.form.unlimited')}
           </p>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
-            {values.jobDescription || t('employer.campaigns.wizard.emptyJd')}
+          <p>
+            {t('employer.campaigns.form.timeLimitMinutes')}: {info.timeLimitMinutes} ·{' '}
+            {t('employer.campaigns.form.passScorePct')}:{' '}
+            {info.passScorePct != null
+              ? `${info.passScorePct}%`
+              : t('employer.campaigns.form.passScoreHrDecide')}
           </p>
-        </div>
+          <p>
+            {formatDateTime(info.startsAt)} → {formatDateTime(info.expiresAt)}
+          </p>
+        </CampaignReviewSection>
 
-        {questions.length > 0 ? (
-          <ul className="space-y-2">
-            {questions.map((question) => (
-              <li
-                key={question.id}
-                className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-foreground"
-              >
-                {question.prompt}
+        <CampaignReviewSection title={t('employer.campaigns.wizard.check.jd')} onEdit={() => onGoToStep(1)}>
+          <p>
+            {jd.inputMethod === 'file'
+              ? jd.fileName || t('employer.campaigns.wizard.jdFileRequired')
+              : jd.jdText.trim().slice(0, 160) || t('employer.campaigns.wizard.jdTextRequired')}
+          </p>
+          {jd.criteriaText.trim() ? (
+            <p className="line-clamp-2">{jd.criteriaText.trim().slice(0, 160)}</p>
+          ) : null}
+        </CampaignReviewSection>
+
+        <CampaignReviewSection title={t('employer.campaigns.wizard.check.criteria')} onEdit={() => onGoToStep(2)}>
+          <p>
+            {rubric.length} {t('employer.campaigns.wizard.rubric.name').toLowerCase()} ·{' '}
+            {Math.round(totalWeight * 10) / 10}%
+          </p>
+          <ul className="list-inside list-disc">
+            {rubric.map((item) => (
+              <li key={item.id}>
+                {item.name} — {item.weight}% ({item.maxScore})
               </li>
             ))}
           </ul>
-        ) : null}
+        </CampaignReviewSection>
+
+        <CampaignReviewSection title={t('employer.campaigns.wizard.check.questions')} onEdit={() => onGoToStep(3)}>
+          <p>
+            {questions.length} {t('employer.campaigns.form.questionsUnit')}
+          </p>
+          <ul className="list-inside list-disc">
+            {questions.slice(0, 5).map((question) => (
+              <li key={question.id} className="line-clamp-1">
+                {question.prompt || t('employer.campaigns.wizard.questionPromptPlaceholder')}
+              </li>
+            ))}
+          </ul>
+        </CampaignReviewSection>
+
+        <CampaignReviewSection title={t('employer.campaigns.wizard.steps.settings')} onEdit={() => onGoToStep(4)}>
+          <p>
+            {t('employer.campaigns.form.antiCheat')}: {settings.antiCheatEnabled ? t('employer.campaigns.form.yes') : t('employer.campaigns.form.no')}
+            {' · '}
+            {t('employer.campaigns.form.faceVerify')}: {settings.faceVerifyEnabled ? t('employer.campaigns.form.yes') : t('employer.campaigns.form.no')}
+          </p>
+          <p>
+            {t('employer.campaigns.form.adaptive')}: {settings.adaptiveEnabled ? t('employer.campaigns.form.yes') : t('employer.campaigns.form.no')}
+            {settings.adaptiveEnabled
+              ? ` · ${t('employer.campaigns.form.maxFollowUps')}: ${settings.maxFollowUps}`
+              : null}
+            {` · ${t('employer.campaigns.form.maxQuestionsSetting')}: ${settings.maxQuestions}`}
+          </p>
+        </CampaignReviewSection>
       </div>
     </SectionPanel>
   );

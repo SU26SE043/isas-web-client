@@ -35,6 +35,7 @@ export function CampaignFilters({ value, onChange }: CampaignFiltersProps) {
           <option value="active">{t('employer.campaigns.status.active')}</option>
           <option value="paused">{t('employer.campaigns.status.paused')}</option>
           <option value="closed">{t('employer.campaigns.status.closed')}</option>
+          <option value="archived">{t('employer.campaigns.status.archived')}</option>
         </select>
       </label>
     </section>

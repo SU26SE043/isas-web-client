@@ -1,4 +1,4 @@
-export type EmployerCampaignStatus = 'draft' | 'active' | 'paused' | 'closed';
+export type EmployerCampaignStatus = 'draft' | 'active' | 'paused' | 'closed' | 'archived';
 export type EmployerCampaignMode = 'remote' | 'hybrid' | 'onsite';
 export type CampaignLocale = 'vi' | 'en';
 export type CampaignCandidateStatus = 'invited' | 'invite_pending';
@@ -21,18 +21,26 @@ export interface RubricCriterion {
   name: string;
   weight: number;
   description: string;
+  maxScore: number;
 }
+
+export type CampaignQuestionSource = 'ai' | 'manual';
 
 export interface CampaignQuestion {
   id: string;
   prompt: string;
   skill: string;
   difficulty: 'junior' | 'middle' | 'senior';
+  /** UI-level source; maps to API `AiGenerated` | `CustomHr`. */
+  source: CampaignQuestionSource;
+  isRequired: boolean;
 }
 
 export interface EmployerCampaign {
   id: string;
   title: string;
+  /** API domain label when present (e.g. Frontend). */
+  domain?: string;
   company: string;
   location: string;
   mode: EmployerCampaignMode;
@@ -42,7 +50,14 @@ export interface EmployerCampaign {
   capacity: number;
   applicants: number;
   deadline: string;
+  startsAt?: string;
   durationMinutes: number;
+  passScorePct?: number | null;
+  antiCheatEnabled?: boolean;
+  faceVerifyEnabled?: boolean;
+  adaptiveEnabled?: boolean;
+  maxFollowUps?: number | null;
+  maxQuestions?: number | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
@@ -72,11 +87,18 @@ export interface PublishResult {
 
 export interface InviteRejectedEmail {
   email: string;
-  reason: 'EMPLOYER_EMAIL' | 'INVALID_EMAIL';
+  reason: string;
+}
+
+export interface InviteCreatedItem {
+  id: string;
+  email: string;
+  expiresAt?: string | null;
 }
 
 export interface InviteResolution {
   campaign: EmployerCampaign;
+  created: InviteCreatedItem[];
   linked: CampaignCandidateRow[];
   pending: CampaignCandidateRow[];
   rejected: InviteRejectedEmail[];

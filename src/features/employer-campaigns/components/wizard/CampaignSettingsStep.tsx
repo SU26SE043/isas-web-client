@@ -1,34 +1,60 @@
-import type { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Settings } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignProctoringConfig } from '../../types/campaignManagement.types';
-import type { CampaignWizardValues } from '../../hooks/useCampaignWizard';
-import { ProctoringSettingsFields } from '../ProctoringSettingsFields';
+import type { CampaignSettingsState } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
 interface CampaignSettingsStepProps {
-  register: UseFormRegister<CampaignWizardValues>;
-  errors: FieldErrors<CampaignWizardValues>;
-  proctoring: CampaignProctoringConfig;
-  onProctoringChange: (next: CampaignProctoringConfig) => void;
+  settings: CampaignSettingsState;
+  error?: string | null;
+  onChange: (patch: Partial<CampaignSettingsState>) => void;
   onBack: () => void;
   onNext: () => void;
-  onSaveDraft: () => void;
   isSaving?: boolean;
 }
 
+function ToggleRow({
+  id,
+  checked,
+  label,
+  help,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  checked: boolean;
+  label: string;
+  help: string;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-4 py-3">
+      <input
+        id={id}
+        type="checkbox"
+        className="mt-1 size-4 rounded border-satin"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <div>
+        <Label htmlFor={id}>{label}</Label>
+        <p className="mt-1 text-xs text-muted-foreground">{help}</p>
+      </div>
+    </div>
+  );
+}
+
 export function CampaignSettingsStep({
-  register,
-  errors,
-  proctoring,
-  onProctoringChange,
+  settings,
+  error,
+  onChange,
   onBack,
   onNext,
-  onSaveDraft,
   isSaving,
 }: CampaignSettingsStepProps) {
   const { t } = useLanguage();
@@ -42,63 +68,101 @@ export function CampaignSettingsStep({
         <CampaignWizardNav
           onBack={onBack}
           onNext={onNext}
-          onSaveDraft={onSaveDraft}
           isSaving={isSaving}
+          nextDisabled={isSaving}
+          backDisabled={isSaving}
         />
       }
     >
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="capacity">{t('employer.campaigns.form.capacity')}</Label>
-          <Input
-            id="capacity"
-            type="number"
-            aria-invalid={!!errors.capacity}
-            {...register('capacity', { valueAsNumber: true })}
+      <div className="space-y-6">
+        {error ? <FieldError message={error} /> : null}
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <ToggleRow
+            id="settings-anti-cheat"
+            checked={settings.antiCheatEnabled}
+            disabled={isSaving}
+            label={t('employer.campaigns.form.antiCheat')}
+            help={t('employer.campaigns.form.antiCheatHelp')}
+            onChange={(antiCheatEnabled) => onChange({ antiCheatEnabled })}
           />
-          <FieldError message={errors.capacity?.message} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="deadline">{t('employer.campaigns.form.deadline')}</Label>
-          <Input
-            id="deadline"
-            type="date"
-            aria-invalid={!!errors.deadline}
-            {...register('deadline')}
+          <ToggleRow
+            id="settings-face-verify"
+            checked={settings.faceVerifyEnabled}
+            disabled={isSaving}
+            label={t('employer.campaigns.form.faceVerify')}
+            help={t('employer.campaigns.form.faceVerifyHelp')}
+            onChange={(faceVerifyEnabled) => onChange({ faceVerifyEnabled })}
           />
-          <FieldError message={errors.deadline?.message} />
-        </div>
-        <label className="grid gap-2 text-sm font-medium text-foreground">
-          {t('employer.campaigns.form.locale')}
-          <select
-            className="h-8 rounded-lg border border-satin bg-surface-overlay px-2 text-sm"
-            {...register('locale')}
-          >
-            <option value="en">{t('employer.campaigns.form.locale.en')}</option>
-            <option value="vi">{t('employer.campaigns.form.locale.vi')}</option>
-          </select>
-        </label>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="welcomeMessage">{t('employer.campaigns.form.welcome')}</Label>
-          <Input
-            id="welcomeMessage"
-            aria-invalid={!!errors.welcomeMessage}
-            {...register('welcomeMessage')}
+          <ToggleRow
+            id="settings-adaptive"
+            checked={settings.adaptiveEnabled}
+            disabled={isSaving}
+            label={t('employer.campaigns.form.adaptive')}
+            help={t('employer.campaigns.form.adaptiveHelp')}
+            onChange={(adaptiveEnabled) => onChange({ adaptiveEnabled })}
           />
-          <FieldError message={errors.welcomeMessage?.message} />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="completionMessage">{t('employer.campaigns.form.completion')}</Label>
-          <Input
-            id="completionMessage"
-            aria-invalid={!!errors.completionMessage}
-            {...register('completionMessage')}
-          />
-          <FieldError message={errors.completionMessage?.message} />
-        </div>
-        <div className="md:col-span-2">
-          <ProctoringSettingsFields value={proctoring} onChange={onProctoringChange} />
-        </div>
+        </section>
+
+        {settings.adaptiveEnabled ? (
+          <section className="grid gap-4 rounded-xl border border-satin bg-surface-overlay p-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="settings-max-follow-ups">{t('employer.campaigns.form.maxFollowUps')}</Label>
+              <Input
+                id="settings-max-follow-ups"
+                type="number"
+                min={0}
+                disabled={isSaving}
+                value={settings.maxFollowUps}
+                onChange={(e) =>
+                  onChange({ maxFollowUps: Math.max(0, Number(e.target.value) || 0) })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.maxFollowUpsHelp')}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="settings-max-questions">{t('employer.campaigns.form.maxQuestionsSetting')}</Label>
+              <Input
+                id="settings-max-questions"
+                type="number"
+                min={0}
+                max={20}
+                disabled={isSaving}
+                value={settings.maxQuestions}
+                onChange={(e) =>
+                  onChange({
+                    maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.maxQuestionsSettingHelp')}
+              </p>
+            </div>
+          </section>
+        ) : (
+          <section className="max-w-sm space-y-2 rounded-xl border border-satin bg-surface-overlay p-4">
+            <Label htmlFor="settings-max-questions">{t('employer.campaigns.form.maxQuestionsSetting')}</Label>
+            <Input
+              id="settings-max-questions"
+              type="number"
+              min={0}
+              max={20}
+              disabled={isSaving}
+              value={settings.maxQuestions}
+              onChange={(e) =>
+                onChange({
+                  maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('employer.campaigns.form.maxQuestionsSettingHelp')}
+            </p>
+          </section>
+        )}
       </div>
     </SectionPanel>
   );

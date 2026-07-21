@@ -7,6 +7,7 @@ import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
 import { CandidateCameraPanel } from '../components/CandidateCameraPanel';
 import { InterviewQuestionPanel } from '../components/InterviewQuestionPanel';
 import { InterviewControls } from '../components/InterviewControls';
+import { B2cPracticeInterviewRoom } from '../components/B2cPracticeInterviewRoom';
 import { ProctoringAlertBanner } from '../components/room/ProctoringAlertBanner';
 import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
@@ -20,13 +21,26 @@ import { useInterviewMedia } from '../hooks/useInterviewMedia';
 import { useInterviewRecording } from '../hooks/useInterviewRecording';
 import { useInterviewRoomProctoring } from '../hooks/useInterviewRoomProctoring';
 import { useLearningLiveFeedback } from '../hooks/useLearningLiveFeedback';
-import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
-import { paymentService } from '@/features/payment/services/payment.service';
-import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
-import { requiresIdentityVerification } from '../types/interviewFlow.types';
+import { useLearningAnswerCapture } from '../hooks/useLearningAnswerCapture';
+import {
+  isCampaignSessionId,
+  isLearningSessionId,
+  requiresIdentityVerification,
+} from '../types/interviewFlow.types';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
+  const isB2cPractice =
+    Boolean(sessionId) && !isLearningSessionId(sessionId) && !isCampaignSessionId(sessionId);
+
+  if (isB2cPractice) {
+    return <B2cPracticeInterviewRoom sessionId={sessionId} />;
+  }
+
+  return <LegacyInterviewRoom sessionId={sessionId} />;
+};
+
+function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   useInterviewFlowSession(sessionId);
@@ -37,6 +51,10 @@ export const PracticeInterviewPage: React.FC = () => {
   const setAiState = useInterviewSessionStore((state) => state.setAiState);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
   const learning = useLearningLiveFeedback(sessionId, session.isLearning);
+  const answerCapture = useLearningAnswerCapture(
+    media.stream,
+    session.isLearning && session.isRoomActive && !session.isLoading,
+  );
 
   const { antiCheatEnabled } = useInterviewRoomProctoring({
     sessionId,
@@ -70,15 +88,9 @@ export const PracticeInterviewPage: React.FC = () => {
     void media.startMedia();
   }, [media.startMedia, session.isLoading, session.status]);
 
-  const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
-
   const handleSubmit = () => {
     if (session.isLearning) {
-      if (isLastQuestion) {
-        void learning.completeSession(session.currentQuestion, session.submitCurrentAnswer);
-        return;
-      }
-      void learning.submitForReport(session.currentQuestion);
+      void learning.submitForReport(session.currentQuestion, answerCapture.stopAndGetBlob);
       return;
     }
     void session.submitAnswer();
@@ -102,14 +114,6 @@ export const PracticeInterviewPage: React.FC = () => {
         titleKey={session.isLearning ? 'practice.learningPath.practiceSession' : undefined}
       />
       {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
-      {!session.isLearning && paymentService.hasReservation(sessionId) ? (
-        <div className="px-6 pt-4">
-          <ReserveSettleBanner
-            mode="reserved"
-            reservedTokens={paymentService.getReservationAmount(sessionId) || PRACTICE_RESERVE_ESTIMATE}
-          />
-        </div>
-      ) : null}
 
       {antiCheatEnabled && session.isAutoSubmitted ? (
         <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
@@ -143,6 +147,17 @@ export const PracticeInterviewPage: React.FC = () => {
           currentIndex={session.currentIndex}
           totalQuestions={session.totalQuestions}
           remainingSeconds={session.remainingSeconds}
+          question={
+            session.currentQuestion
+              ? {
+                  id: session.currentQuestion.id,
+                  orderNo: session.currentIndex + 1,
+                  content: session.currentQuestion.content,
+                  timeLimitSec: session.currentQuestion.timeLimitSeconds ?? 120,
+                  kind: 'question',
+                }
+              : null
+          }
         />
       </main>
 
@@ -163,7 +178,7 @@ export const PracticeInterviewPage: React.FC = () => {
         onSpeakAgain={() => setAiState('speaking')}
         speakAgainDisabled={session.isManualPaused || session.isViolationPaused}
         learningMode={session.isLearning}
-        isLastQuestion={isLastQuestion}
+        isLastQuestion={false}
         isEvaluating={learning.isEvaluating}
         exitHref={learning.exitHref}
       />
@@ -182,4 +197,4 @@ export const PracticeInterviewPage: React.FC = () => {
       ) : null}
     </div>
   );
-};
+}

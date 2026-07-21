@@ -36,10 +36,12 @@ export const CVAnalysisPage: React.FC = () => {
         {flow.step === 2 ? (
           <UploadCV
             file={flow.cvFile}
+            selectedFileId={flow.cvId}
             fileError={flow.fileError}
             isUploading={flow.isUploading}
             uploadStatus={flow.cvUploadStatus}
             onFileSelect={(file) => void flow.selectCvFile(file)}
+            onExistingSelect={flow.selectExistingCv}
             onNext={flow.goNextFromUpload}
             onBack={flow.goBack}
           />
@@ -48,12 +50,14 @@ export const CVAnalysisPage: React.FC = () => {
         {flow.step === 3 ? (
           <UploadJD
             jdFile={flow.jdFile}
+            selectedFileId={flow.jdId}
             jdFileError={flow.jdFileError}
             isUploading={flow.isUploading}
             uploadStatus={flow.jdUploadStatus}
             fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
             domain={flow.domain}
             onJdFileSelect={(file) => void flow.selectJdFile(file)}
+            onExistingSelect={flow.selectExistingJd}
             onBack={flow.goBack}
             onNext={flow.goNextFromJd}
           />
@@ -64,8 +68,8 @@ export const CVAnalysisPage: React.FC = () => {
             parseProgress={flow.parseProgress}
             isAnalyzing={flow.isAnalyzing}
             parseError={flow.analyzeError}
-            fileName={flow.cvFile?.name}
-            jdFileName={flow.jdFile?.name}
+            fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
+            jdFileName={flow.jdRecord?.originalName ?? flow.jdFile?.name}
             domain={flow.domain}
             hasJd={Boolean(flow.jdId)}
             onAnalyze={() => void flow.runAnalysis()}

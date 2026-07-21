@@ -11,6 +11,8 @@ interface QuestionFeedbackReportProps {
   questionNumber?: number;
   className?: string;
   compact?: boolean;
+  transcript?: string | null;
+  scoringStatus?: string;
 }
 
 export const QuestionFeedbackReport: React.FC<QuestionFeedbackReportProps> = ({
@@ -21,6 +23,8 @@ export const QuestionFeedbackReport: React.FC<QuestionFeedbackReportProps> = ({
   questionNumber,
   className,
   compact = false,
+  transcript,
+  scoringStatus,
 }) => {
   const { t } = useLanguage();
   const promptText = language === 'vi' ? (promptVi ?? prompt) : (prompt ?? promptVi);
@@ -44,6 +48,11 @@ export const QuestionFeedbackReport: React.FC<QuestionFeedbackReportProps> = ({
             </p>
           ) : null}
           {promptText ? <h3 className="text-sm font-medium text-foreground">{promptText}</h3> : null}
+          {scoringStatus ? (
+            <p className="text-caption text-muted-foreground">
+              {t('practice.learningPath.scoringStatus')}: {scoringStatus}
+            </p>
+          ) : null}
         </header>
       )}
 
@@ -73,6 +82,14 @@ export const QuestionFeedbackReport: React.FC<QuestionFeedbackReportProps> = ({
           label={t('practice.learningPath.tips')}
           items={language === 'vi' ? feedback.tipsVi : feedback.tips}
         />
+        {transcript ? (
+          <div className="md:col-span-2 lg:col-span-3">
+            <p className="text-sm font-medium text-foreground">
+              {t('practice.learningPath.transcript')}
+            </p>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{transcript}</p>
+          </div>
+        ) : null}
       </div>
     </article>
   );

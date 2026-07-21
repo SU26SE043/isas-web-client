@@ -68,7 +68,12 @@ export function CandidateSelectionPanel({ onImport }: CandidateSelectionPanelPro
                 <p className="font-medium">{t('employer.campaigns.invite.rejectedTitle')}</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {result.rejected.map((item) => (
-                    <li key={item.email}>{item.email}: {t(`employer.campaigns.invite.rejected.${item.reason}`)}</li>
+                    <li key={item.email}>
+                      {item.email}:{' '}
+                      {item.reason === 'EMPLOYER_EMAIL' || item.reason === 'INVALID_EMAIL'
+                        ? t(`employer.campaigns.invite.rejected.${item.reason}`)
+                        : item.reason}
+                    </li>
                   ))}
                 </ul>
               </AlertDescription>

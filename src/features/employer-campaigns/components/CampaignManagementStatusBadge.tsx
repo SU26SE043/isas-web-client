@@ -8,6 +8,7 @@ const statusClass: Record<EmployerCampaignStatus, string> = {
   active: 'border-success/30 bg-success-bg text-success',
   paused: 'border-warning/30 bg-warning-bg text-warning',
   closed: 'border-error/30 bg-error-bg text-error',
+  archived: 'border-subtle bg-surface-overlay text-muted-foreground',
 };
 
 export function CampaignManagementStatusBadge({ status }: { status: EmployerCampaignStatus }) {

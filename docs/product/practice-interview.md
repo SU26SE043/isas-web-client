@@ -1,123 +1,41 @@
 # Practice Interview (B2C)
 
-BRD: FR-009–019, SCR-CAN-029–048, `BRD/User_Flows.md` (practice + results + learning flows).
+BRD: FR-009–019, SCR-CAN-029–048. Live Interview Practice APIs for standalone B2C sessions.
 
-## Candidate sidebar (B2C + B2B entry)
+## Candidate sidebar
 
 | Item | Route | Role |
 | --- | --- | --- |
-| **Practice** | `/practice` | B2C — create practice session (token reserve) |
-| **Campaigns** | `/candidate/campaigns` | B2B — my invited assessments only |
-| **Reports** | `/candidate/reports` | Hub of interview / learning / CV reports (collapsible categories) |
+| **Practice** | `/practice` | B2C — create practice session (1 credit) |
+| **Campaigns** | `/candidate/campaigns` | B2B — invited assessments |
+| **Reports** | `/candidate/reports` | Interview / learning / CV reports hub |
 
-Interview history list remains at `/candidate/practice/history` (also linked from the Reports hub). Legacy `/practice/history` redirects to `/candidate/practice/history`.
+History: `/candidate/practice/history`.
 
-## User flow
+## User flow (live API)
 
-1. Candidate opens **Practice** at `/practice` (role-guarded: Candidate + Admin).
-2. **Pre-session wizard** (steps 1–6 on `/practice`):
-   1. **Chọn Domain** — field/industry for the session.
-   2. **Chọn Level** — Intern, Fresher, Junior, Middle, Senior.
-   3. **Upload CV** — upload new or select an existing uploaded CV.
-   4. **Chọn số lượng câu hỏi** — question count for the session (3 / 5 / 7 / 10).
-   5. **Rubric chấm điểm** — AI-generated rubric; user can view and edit weights (must total 100%).
-   6. **Confirm** — review summary → **create practice session** + **reserve tokens** → navigate to `/interview/:sessionId/prepare`.
-3. **Prepare** — profile/credit gate, checklist, recording consent.
-4. **Device check** — `/interview/:sessionId/device-check` — camera/mic preview.
-5. **Terms** (B2B campaign sessions only) — `/interview/:sessionId/terms` — assessment terms acceptance.
-6. **Identity** (B2B campaign sessions only) — `/interview/:sessionId/identity` — baseline face photo capture.
-7. **Waiting** — `/interview/:sessionId/waiting` — question poll / buffer.
-8. **Room** — `/interview/:sessionId/room` — AI panel, candidate camera, question progress + answer timer, controls (mic/camera, **AI replay**, submit), recording.
-9. Session completes → upload → `/interview/:sessionId/complete` → result/history.
-10. Result tabs: Overview (radar + score dial), Skill breakdown, Per-question feedback, Roadmap preview.
-11. History at `/candidate/practice/history` and detail `/candidate/practice/history/:id`.
-12. Learning dashboard at `/candidate/learning` (roadmap cards, search/filter/sort) — see [`learning.md`](./learning.md).
-13. Roadmap detail + Theory → Practice (device check, live feedback, Complete Practice Session, Practice Report).
-14. Roadmap creation wizard at `/candidate/roadmap` then redirect to Learning. Detail create flow: [`learning-roadmap.md`](./learning-roadmap.md).
-14. Certificates at `/candidate/certificates/:id`.
-15. Compare results from history compare mode → `/candidate/practice/history/compare?left=&right=`.
-16. Minimal Progress dashboard (3 charts) at `/candidate/progress`; leaderboard and achievements linked from elsewhere.
-17. Guided learning practice at `/candidate/learning/:moduleId/practice`.
-18. Optional **date filter** on history via `?date=YYYY-MM-DD` (linked from dashboard heatmap).
+1. Open `/practice` — setup wizard (no session API until Start).
+2. Setup fields: `jobCategory` (BA|BE|FE), optional `cvId`, JD via `jdId` or `jdText` (text wins), `timeLimitSec` (60|120|240), `questionCount` (1–20), device check.
+3. **Start interview** → `POST /api/v1/interview/practice/sessions` → navigate `/interview/:sessionId/room`.
+4. Room: TTS `GET .../questions/{id}/speech` (blob), MediaRecorder answer, `POST .../answers` multipart (`questionId`, `file`, `durationSec`), timer with 10s warning. If the answer timer hits `0` without a submitted answer: stop/discard recording, mark the question `unanswered`, register a silent answer so scoring can assign 0, auto-advance (TTS + new timer). Finish confirm → `POST .../submit` (204, empty body).
+5. Scoring: `/interview/:sessionId/complete` polls `GET .../sessions/{id}` every 3s until `status === Scored`, then render `result` (`overallScore`, `criteriaScores`, `needsImprovement`, `overallComment`, `cvVsAnswer`).
 
-Legacy `/practice/history` redirects to `/candidate/practice/history`.
+Rubric editing lives at `/candidate/rubrics` (not part of create payload).
 
 ## Routes
 
 | Path | Component |
 | --- | --- |
-| `/practice` | `PracticeWizardPage` — 6-step pre-session wizard → create session → `/interview/:sessionId/prepare` |
-| `/interview/:sessionId/prepare` | `InterviewPrepPage` |
-| `/interview/:sessionId/device-check` | `DeviceCheckPage` |
-| `/interview/:sessionId/terms` | `TermsAcceptancePage` (B2B campaign sessions) |
-| `/interview/:sessionId/identity` | `IdentityVerifyPage` (B2B campaign sessions only) |
-| `/interview/:sessionId/waiting` | `WaitingRoomPage` |
-| `/interview/:sessionId/room` | `PracticeInterviewPage` |
-| `/interview/:sessionId/complete` | `InterviewCompletePage` |
-| `/practice/result` | `InterviewResultPage` (query: `assessmentId`) |
-| `/practice/interview/:id` | `InterviewResultPage` |
-| `/candidate/practice/history` | `InterviewHistoryPage` |
-| `/candidate/results/:id` | Redirect → `/candidate/practice/history/:id` |
-| `/candidate/history` | Redirect → `/candidate/practice/history` |
-| `/candidate/practice/history/:id` | `InterviewResultPage` |
-| `/candidate/roadmap` | `RoadmapPage` → creation wizard (`RoadmapWizardPage`) |
-| `/candidate/learning` | `LearningHubPage` |
-| `/candidate/learning/:moduleId` | `LearningModulePage` |
-| `/candidate/learning/:moduleId/practice` | `LearningPracticePage` |
-| `/candidate/progress` | `ProgressDashboardPage` |
-| `/candidate/leaderboard` | `LeaderboardPage` |
-| `/candidate/achievements` | `AchievementsPage` |
-| `/candidate/practice/history/compare` | `CompareResultsPage` |
-| `/candidate/certificates/:id` | `CertificateViewerPage` |
-
-## UI contract
-
-- Recording indicator uses semantic `error` color (status only).
-- AI state badges: speaking / listening / thinking — semantic status colors.
-- Result page: scoring poll UI, tabbed report, score dial, skill radar, gap analysis, question feedback accordion.
-- History toolbar: status filter + optional date filter chip with clear action.
-- Learning module pass threshold: 80% (BRL-011).
-
-## Phase 6 coverage
-
-FS-090 through FS-103 implemented on mock services:
-
-- **Results:** scoring poll, tabbed report (`ReportTabs`), `ScoreDial`, `SkillRadarChart`, `SkillBreakdownAccordion` (alias), question feedback, roadmap preview via `learningService.getRoadmap()`.
-- **History:** `HistoryTable`, pagination, status/date filters, compare mode, soft-delete (hide/restore).
-- **Learning:** roadmap **creation wizard** (not list-first); Learning Hub catalog; module viewer with `passThreshold`; guided practice. Regen of an existing path is secondary to create flow (`learning-roadmap.md`).
-- **Progress:** dashboard, leaderboard, achievements.
-- **Certificates:** viewer with PDF download (minimal PDF blob).
-- **Route aliases:** `/candidate/results/:id` and `/candidate/history` redirect to practice history routes.
-
-E2E: `e2e/specs/b2c/results-learning.spec.ts`, extended `interview-happy-path.spec.ts` (view result after complete).
-
-Live API integration TBD.
+| `/practice` | Setup wizard → create session on Start |
+| `/interview/:sessionId/room` | B2C practice room (live) / learning+campaign legacy room |
+| `/interview/:sessionId/complete` | Scoring poll + live report |
+| `/candidate/practice/history` | History list |
+| Prepare / device-check / waiting | Still used by campaign/learning; B2C device check is in setup |
 
 ## Engine reuse
 
-Interview room components must stay campaign-agnostic so B2B magic-link flow can reuse them later (BRD D1).
-
-### Interview room — camera & proctoring split
-
-| Rule | B2C practice / learning | B2B campaign exam |
-| --- | --- | --- |
-| Camera during room | **Toggle allowed** — user may turn camera on/off | **Forced ON** — no disable control |
-| Anti-cheat (`visibilitychange`, focus loss) | **Off** — no listeners registered | **Strict** — violations logged + pause UI |
-| Periodic webcam snapshots | **Off** — no intervals | **On** — interval from campaign proctoring config |
-| Implementation | `useInterviewRoomProctoring` + `ProctoringConfig.cameraAlwaysOn` / `antiCheatEnabled` | same hook, strict mode |
-
-### B2B campaign assessment (proctoring)
-
-When `campaign_id` is set (session id prefix `campaign-`), the full assessment flow applies: device check, **terms** (`/interview/:sessionId/terms`), identity baseline photo, **camera always on**, periodic face capture (mock), tab/focus monitoring, violation pause overlay, auto-submit at max violations — see [`campaign-assessment.md`](./campaign-assessment.md).
-
-Flow progress is persisted per session in `sessionStorage` (`isas-interview-flow:{sessionId}`).
-
-B2C practice (`/practice`, `campaign_id = null`) and learning practice sessions use the same interview routes **without** terms, **without identity verification**, and **without anti-cheat** (no tab listeners, no snapshot intervals, no violation pause). **Camera toggle is available** in these non-exam flows (`ProctoringConfig.cameraAlwaysOn = false`).
+Interview room UI stays campaign-agnostic for B2B. B2C practice uses dedicated hooks/services under `b2cPractice*`.
 
 ## Status
 
-Phase 5 interview engine + Phase 6 results/learning on mock services. Live Interview API integration TBD.
-
-## Related
-
-- Dashboard heatmap: `docs/product/dashboard.md`
+B2C practice session lifecycle wired to live Interview Practice APIs when `practice` is in `LIVE_API_DOMAINS`.

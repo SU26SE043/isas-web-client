@@ -12,24 +12,32 @@ export const QUESTION_BANK: CampaignQuestion[] = [
     prompt: 'Explain how you would manage server and client state in a React assessment dashboard.',
     skill: 'React',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-api-contract',
     prompt: 'Design an API contract for a paginated candidate ranking table.',
     skill: 'API Design',
     difficulty: 'senior',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-sql-funnel',
     prompt: 'Write a query to calculate pass-through rate by campaign stage.',
     skill: 'SQL',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
   {
     id: 'q-test-plan',
     prompt: 'Create a Playwright test plan for a multi-step campaign wizard.',
     skill: 'Testing',
     difficulty: 'middle',
+    source: 'ai',
+    isRequired: true,
   },
 ];
 
@@ -39,24 +47,28 @@ export const DEFAULT_RUBRIC = [
     name: 'Technical depth',
     weight: 40,
     description: 'Problem solving, architecture, and correctness.',
+    maxScore: 10,
   },
   {
     id: 'communication',
     name: 'Communication',
     weight: 25,
     description: 'Clarity, structure, and tradeoff explanation.',
+    maxScore: 10,
   },
   {
     id: 'delivery',
     name: 'Delivery readiness',
     weight: 20,
     description: 'Pragmatism, testing, and production judgment.',
+    maxScore: 10,
   },
   {
     id: 'culture',
     name: 'Team fit',
     weight: 15,
     description: 'Collaboration and learning posture.',
+    maxScore: 10,
   },
 ];
 

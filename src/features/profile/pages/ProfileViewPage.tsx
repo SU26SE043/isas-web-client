@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { EditProfileModal } from '@/features/auth/components/EditProfileModal';
-import { useUploadedCvFiles } from '@/features/cv-analysis/hooks/useUploadedCvFiles';
-import { useLanguage } from '@/shared/languages';
-import { CandidateProfileHeader } from '../components/profile-view/CandidateProfileHeader';
+import { useInterviewFiles } from '@/features/cv-analysis/hooks/useInterviewFiles';
+import {
+  CandidateProfileHeader,
+  ProfilePageHeader,
+} from '../components/profile-view/CandidateProfileHeader';
 import { ProfileBasicInfoCard } from '../components/profile-view/ProfileBasicInfoCard';
-import { ProfileUploadedCvSection } from '../components/profile-view/ProfileUploadedCvSection';
+import { ProfileUploadedFilesSection } from '../components/profile-view/ProfileUploadedFilesSection';
 import { ProfileViewLoading } from '../components/profile-view/ProfileViewLoading';
+import { countProfileFilesByType } from '../components/profile-view/profileFilesFilter';
 
 export const ProfileViewPage: React.FC = () => {
-  const { t } = useLanguage();
   const { user, isLoading } = useAuth();
-  const { files, isLoading: cvLoading } = useUploadedCvFiles();
+  const { files, isLoading: isFilesLoading, error, reload } = useInterviewFiles();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const fileCounts = useMemo(() => countProfileFilesByType(files), [files]);
 
   if (isLoading || !user) {
     return <ProfileViewLoading />;
@@ -20,21 +24,24 @@ export const ProfileViewPage: React.FC = () => {
 
   return (
     <div className="dashboard-content min-h-full">
-      <header className="mb-6 space-y-1">
-        <p className="text-label text-muted-foreground">{t('profile.breadcrumb')}</p>
-        <h1 className="heading-primary text-2xl text-foreground">{t('profile.view.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('profile.view.subtitleSimple')}</p>
-      </header>
+      <ProfilePageHeader onEditClick={() => setIsEditModalOpen(true)} />
 
-      <div className="mx-auto max-w-4xl space-y-4">
+      <div className="mx-auto max-w-6xl space-y-4">
         <CandidateProfileHeader
-          fullName={user.fullName || t('profile.view.notSet')}
+          fullName={user.fullName || user.email}
           title={user.title}
-          location={user.location}
-          onEditClick={() => setIsEditModalOpen(true)}
+          email={user.email}
+          memberSince={user.createdAt}
+          cvCount={fileCounts.cv}
+          jdCount={fileCounts.jd}
         />
         <ProfileBasicInfoCard user={user} />
-        <ProfileUploadedCvSection files={files} isLoading={cvLoading} />
+        <ProfileUploadedFilesSection
+          files={files}
+          isLoading={isFilesLoading}
+          error={error}
+          reload={reload}
+        />
       </div>
 
       <EditProfileModal

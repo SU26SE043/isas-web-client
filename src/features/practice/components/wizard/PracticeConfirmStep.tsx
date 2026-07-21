@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
+import { practiceLevelI18nKey } from '@/shared/domain/practiceLevels';
 import type { PracticeDomain, PracticeLevel, PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -33,7 +34,7 @@ export const PracticeConfirmStep: React.FC<PracticeConfirmStepProps> = ({
 
   const rows = [
     { label: t('practice.wizard.confirm.domain'), value: domainLabel },
-    { label: t('practice.wizard.confirm.level'), value: level ? t(`practice.wizard.level.${level}`) : '—' },
+    { label: t('practice.wizard.confirm.level'), value: level ? t(`practice.wizard.level.${practiceLevelI18nKey(level)}`) : '—' },
     { label: t('practice.wizard.confirm.cv'), value: cvFile?.fileName ?? '—' },
     { label: t('practice.wizard.confirm.questions'), value: String(questionCount) },
     { label: t('practice.wizard.confirm.rubric'), value: rubric.map((item) => item.name).join(', ') || '—' },

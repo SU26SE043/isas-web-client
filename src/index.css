@@ -74,14 +74,40 @@
 
 html {
   color-scheme: dark;
+  background-color: var(--surface-base);
+  background-image: var(--app-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 html,
 body,
 #root {
   min-height: 100%;
-  background-color: var(--surface-base);
+  background-color: transparent;
   color: var(--foreground);
+}
+
+body {
+  position: relative;
+  isolation: isolate;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--app-background-scrim);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    background-attachment: scroll;
+  }
 }
 
 body {
@@ -125,6 +151,27 @@ select {
   .surface-base {
     background-color: var(--surface-base);
     color: var(--foreground);
+  }
+
+  /* Page shells — transparent so global background art shows through */
+  .surface-page {
+    background-color: transparent;
+    color: var(--foreground);
+  }
+
+  .bg-surface-page {
+    background-color: transparent;
+  }
+
+  .min-h-screen.surface-base,
+  .min-h-screen.surface-page,
+  .min-h-screen.bg-surface-base,
+  .min-h-full.bg-surface-base,
+  .flex.min-h-screen.flex-col.surface-base,
+  .flex.min-h-screen.flex-col.surface-page,
+  main.bg-surface-base,
+  .h-full.overflow-y-auto.bg-surface-base {
+    background-color: transparent;
   }
 
   .surface-sunken {
