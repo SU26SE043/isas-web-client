@@ -7,8 +7,15 @@ interface JDMatchCardProps {
   jdMatch: JdMatch;
 }
 
+function matchTierLabel(score: number, t: (key: string) => string) {
+  if (score >= 80) return t('cv.report.matchGood');
+  if (score >= 60) return t('cv.report.matchFair');
+  return t('cv.report.matchLow');
+}
+
 export const JDMatchCard: React.FC<JDMatchCardProps> = ({ jdMatch }) => {
   const { t } = useLanguage();
+  const tier = matchTierLabel(jdMatch.score, t);
 
   return (
     <section className="frame-satin rounded-3xl bg-[var(--glass-bg)] p-6 backdrop-blur-xl sm:p-8">
@@ -16,8 +23,11 @@ export const JDMatchCard: React.FC<JDMatchCardProps> = ({ jdMatch }) => {
       <p className="mt-1.5 text-sm text-muted-foreground">{t('cv.report.jdMatchDesc')}</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <CvMatchScoreRing score={jdMatch.score} className="size-40 [&_svg]:size-40" />
+          <p className="text-sm font-medium text-foreground">
+            {t('cv.report.jdMatchScore')}: {jdMatch.score}% · {tier}
+          </p>
         </div>
 
         <div className="space-y-5">

@@ -38,10 +38,14 @@ export interface CvAnalysisResult {
 
 export interface AnalyzeCvRequest {
   cvId: string;
-  jdId: string;
   /** API `jobCategory` enum: FE · BE · BA */
   jobCategory: string;
+  jdId?: string;
+  jdText?: string;
 }
+
+/** API list/detail response shape. */
+export type CvAnalysisResponse = CvAnalysisResult;
 
 /** Local UI attachment metadata (not computed scores). */
 export interface AnalysisFileMeta {

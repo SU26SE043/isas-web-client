@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { profileService } from '@/features/profile/services/profile.service';
@@ -10,6 +11,9 @@ import { isCvAnalysisDomain } from '../types/cvDomain.types';
 import type { FileRecord } from '../types/cvAnalysis.types';
 import { domainToJobCategoryLabel } from '../types/cvAnalysis.types';
 import { validatePdfFile } from '../utils/cvFileValidation';
+import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
+import { prependCvAnalysisToCache } from './useCvAnalyses';
+import { cvAnalysisDetailQueryKey } from './useCvAnalysisDetail';
 import {
   buildCvTimelineStatuses,
   type CvTimelineStatuses,
@@ -65,6 +69,7 @@ function resolveAnalyzeMessage(error: unknown, t: (key: string) => string): stri
  */
 export function useCvAnalysisFlow() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [step, setStep] = useState<CvFlowStep>(1);
   const [domain, setDomainState] = useState<CvAnalysisDomain | null>(() => readStoredDomain());
@@ -83,6 +88,10 @@ export function useCvAnalysisFlow() {
   const [parseProgress, setParseProgress] = useState(0);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
+  const [jdText, setJdText] = useState('');
+  const [jdSkipped, setJdSkipped] = useState(false);
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [insufficientCreditOpen, setInsufficientCreditOpen] = useState(false);
 
   const uploadedCvKeyRef = useRef<string | null>(null);
   const uploadedJdKeyRef = useRef<string | null>(null);
@@ -337,10 +346,25 @@ export function useCvAnalysisFlow() {
 
   /** Advance only — never calls upload API. */
   const goNextFromJd = useCallback(() => {
-    if (isUploading || jdUploadStatus !== 'completed' || !jdId) return;
+    if (isUploading) return;
+    const hasFileJd = jdUploadStatus === 'completed' && Boolean(jdId);
+    const hasTextJd = jdText.trim().length > 0;
+    if (!hasFileJd && !hasTextJd && !jdSkipped) return;
     clearFailure();
     setStep(4);
-  }, [clearFailure, isUploading, jdId, jdUploadStatus]);
+  }, [clearFailure, isUploading, jdId, jdSkipped, jdText, jdUploadStatus]);
+
+  const skipJd = useCallback(() => {
+    setJdSkipped(true);
+    setJdText('');
+    setJdFile(null);
+    setJdId(null);
+    setJdRecord(null);
+    setJdUploadStatus('idle');
+    setJdFileError(null);
+    clearFailure();
+    setStep(4);
+  }, [clearFailure]);
 
   const retryFromUpload = useCallback(() => {
     setAnalyzeError(null);
@@ -350,8 +374,8 @@ export function useCvAnalysisFlow() {
     setStep(2);
   }, [clearFailure]);
 
-  const runAnalysis = useCallback(async () => {
-    if (!cvId || !jdId || !domain || isAnalyzing) return;
+  const executeAnalysis = useCallback(async () => {
+    if (!cvId || !domain || isAnalyzing) return;
 
     setIsAnalyzing(true);
     setParseProgress(35);
@@ -359,11 +383,13 @@ export function useCvAnalysisFlow() {
     clearFailure();
 
     try {
-      const result = await cvAnalysisService.analyze({
+      const payload = buildCreateCvAnalysisRequest({
         cvId,
-        jdId,
         jobCategory: domainToJobCategoryLabel(domain),
+        jdId,
+        jdText,
       });
+      const result = await cvAnalysisService.analyze(payload);
 
       writeStorage(CV_ANALYSIS_ID_KEY, result.id);
       writeStorage(CV_ANALYSIS_DOMAIN_KEY, domain);
@@ -375,6 +401,9 @@ export function useCvAnalysisFlow() {
         }),
       );
 
+      prependCvAnalysisToCache(queryClient, result);
+      queryClient.setQueryData(cvAnalysisDetailQueryKey(result.id), result);
+
       try {
         await profileService.markCvUploaded();
       } catch {
@@ -382,12 +411,22 @@ export function useCvAnalysisFlow() {
       }
 
       setParseProgress(100);
-      navigate(`/candidate/cv/analysis/report?analysisId=${encodeURIComponent(result.id)}`);
+      setCreditDialogOpen(false);
+      toast.success(t('cv.createSuccess'));
+      navigate('/candidate/reports', { replace: true });
     } catch (error) {
+      if (error instanceof CvAnalysisError && error.code === 'insufficientCredits') {
+        setCreditDialogOpen(false);
+        setInsufficientCreditOpen(true);
+        setParseProgress(0);
+        setIsAnalyzing(false);
+        return;
+      }
       const message = resolveAnalyzeMessage(error, t);
       setAnalyzeError(message);
       setParseProgress(0);
       setIsAnalyzing(false);
+      setCreditDialogOpen(false);
       failStep('analysis', message);
     }
   }, [
@@ -401,9 +440,20 @@ export function useCvAnalysisFlow() {
     jdFile?.name,
     jdId,
     jdRecord?.originalName,
+    jdText,
     navigate,
+    queryClient,
     t,
   ]);
+
+  const runAnalysis = useCallback(() => {
+    if (!cvId || !domain || isAnalyzing) return;
+    setCreditDialogOpen(true);
+  }, [cvId, domain, isAnalyzing]);
+
+  const confirmAnalysis = useCallback(() => {
+    void executeAnalysis();
+  }, [executeAnalysis]);
 
   const timelineStatuses = useMemo<CvTimelineStatuses>(() => {
     const isProcessing =
@@ -431,11 +481,17 @@ export function useCvAnalysisFlow() {
     jdUploadStatus,
     fileError,
     jdFileError,
+    jdText,
+    setJdText,
     isUploading,
     isAnalyzing,
     parseProgress,
     analyzeError,
     failedStep,
+    creditDialogOpen,
+    setCreditDialogOpen,
+    insufficientCreditOpen,
+    setInsufficientCreditOpen,
     timelineStatuses,
     currentTimelineStep,
     selectDomain,
@@ -446,11 +502,13 @@ export function useCvAnalysisFlow() {
     goBack,
     goNextFromUpload,
     goNextFromJd,
+    skipJd,
     goNext: () => {
       if (failedStep) return;
       setStep((current) => (current < 4 ? ((current + 1) as CvFlowStep) : current));
     },
     retryFromUpload,
     runAnalysis,
+    confirmAnalysis,
   };
 }

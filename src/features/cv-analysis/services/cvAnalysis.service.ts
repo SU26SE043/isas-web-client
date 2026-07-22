@@ -8,6 +8,7 @@ import type {
   JdMatch,
   UploadedCvFile,
 } from '../types/cvAnalysis.types';
+import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
 import { cvAnalysisEndpoints } from './cvAnalysis.endpoints';
 
 export type CvAnalysisErrorCode =
@@ -187,16 +188,23 @@ export const cvAnalysisService = {
 
   async analyze(input: AnalyzeCvRequest): Promise<CvAnalysisResult> {
     try {
-      const body = {
-        cvId: input.cvId,
-        jdId: input.jdId,
-        jobCategory: input.jobCategory,
-      };
+      const body = buildCreateCvAnalysisRequest(input);
       const response = await apiClient.post<unknown>(cvAnalysisEndpoints.analyze, body);
       return parseAnalysis(unwrapData(response.data));
     } catch (error) {
+      if (error instanceof Error && error.message === 'CV_ID_REQUIRED') {
+        throw new CvAnalysisError('badRequest', 'CV id is required.');
+      }
+      if (error instanceof Error && error.message === 'JOB_CATEGORY_REQUIRED') {
+        throw new CvAnalysisError('badRequest', 'Job category is required.');
+      }
       throw toCvAnalysisError(error, 'CV analysis failed.');
     }
+  },
+
+  /** Alias for create flow — POST /practice/cv-analysis */
+  createAnalysis(input: AnalyzeCvRequest): Promise<CvAnalysisResult> {
+    return this.analyze(input);
   },
 
   async listAnalyses(): Promise<CvAnalysisResult[]> {

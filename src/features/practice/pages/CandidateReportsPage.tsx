@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { CvAnalysisReportsSection } from '@/features/cv-analysis/components/report/CvAnalysisReportsSection';
 import { useLanguage } from '@/shared/languages';
 import { ReportCategoryAccordion } from '../components/reports/ReportCategoryAccordion';
 import { ReportListItem } from '../components/reports/ReportListItem';
@@ -48,11 +49,13 @@ export function CandidateReportsPage() {
   const scoreLabel = t('practice.reports.score');
 
   return (
-    <div className="page-container page-section min-h-full space-y-6 py-8">
+    <div className="page-container page-section min-h-full space-y-8 py-8">
       <header className="space-y-2">
         <h1 className="heading-primary text-3xl text-foreground">{t('practice.reports.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('practice.reports.subtitle')}</p>
       </header>
+
+      <CvAnalysisReportsSection />
 
       <div className="space-y-4">
         <ReportCategoryAccordion
@@ -94,24 +97,6 @@ export function CandidateReportsPage() {
             />
           ) : (
             hub.learning.map((item) => (
-              <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />
-            ))
-          )}
-        </ReportCategoryAccordion>
-
-        <ReportCategoryAccordion
-          title={t('practice.reports.category.cv')}
-          count={hub.cv.length}
-          defaultOpen={hub.cv.length > 0}
-        >
-          {hub.cv.length === 0 ? (
-            <EmptyCategory
-              message={t('practice.reports.empty.cv')}
-              href="/candidate/cv/analysis"
-              cta={t('practice.reports.openCvAnalysis')}
-            />
-          ) : (
-            hub.cv.map((item) => (
               <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />
             ))
           )}

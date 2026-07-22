@@ -1,6 +1,10 @@
 import React from 'react';
 import { useLanguage } from '@/shared/languages';
 import { CvAnalysisFlowShell } from '../components/flow/CvAnalysisFlowShell';
+import {
+  CvAnalysisCreditDialog,
+  CvAnalysisInsufficientCreditDialog,
+} from '../components/flow/CvAnalysisCreditDialog';
 import { CvDomainStep } from '../components/flow/CvDomainStep';
 import { UploadCV } from '../components/flow/UploadCV';
 import { UploadJD } from '../components/flow/UploadJD';
@@ -10,6 +14,7 @@ import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 export const CVAnalysisPage: React.FC = () => {
   const { t } = useLanguage();
   const flow = useCvAnalysisFlow();
+  const hasJd = Boolean(flow.jdId) || flow.jdText.trim().length > 0;
 
   return (
     <div className="min-h-full px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
@@ -52,12 +57,15 @@ export const CVAnalysisPage: React.FC = () => {
             jdFile={flow.jdFile}
             selectedFileId={flow.jdId}
             jdFileError={flow.jdFileError}
+            jdText={flow.jdText}
             isUploading={flow.isUploading}
             uploadStatus={flow.jdUploadStatus}
             fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
             domain={flow.domain}
             onJdFileSelect={(file) => void flow.selectJdFile(file)}
             onExistingSelect={flow.selectExistingJd}
+            onJdTextChange={flow.setJdText}
+            onSkip={flow.skipJd}
             onBack={flow.goBack}
             onNext={flow.goNextFromJd}
           />
@@ -71,13 +79,24 @@ export const CVAnalysisPage: React.FC = () => {
             fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
             jdFileName={flow.jdRecord?.originalName ?? flow.jdFile?.name}
             domain={flow.domain}
-            hasJd={Boolean(flow.jdId)}
-            onAnalyze={() => void flow.runAnalysis()}
+            hasJd={hasJd}
+            onAnalyze={flow.runAnalysis}
             onBack={flow.goBack}
             onRetryUpload={flow.analyzeError ? flow.retryFromUpload : undefined}
           />
         ) : null}
       </CvAnalysisFlowShell>
+
+      <CvAnalysisCreditDialog
+        open={flow.creditDialogOpen}
+        onOpenChange={flow.setCreditDialogOpen}
+        onConfirm={flow.confirmAnalysis}
+        isSubmitting={flow.isAnalyzing}
+      />
+      <CvAnalysisInsufficientCreditDialog
+        open={flow.insufficientCreditOpen}
+        onOpenChange={flow.setInsufficientCreditOpen}
+      />
     </div>
   );
 };
