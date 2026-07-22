@@ -134,8 +134,28 @@ export interface VerifyOtpRequest {
   otp: string;
 }
 
+export type VerifyOtpResponse = 'OTP verified, you can reset your password';
+
 export interface ResetPasswordRequest {
   email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export type ResetPasswordResponse = 'Password reset successful';
+
+export interface GoogleExchangeRequest {
+  code: string;
+}
+
+export interface GoogleExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
   newPassword: string;
 }
 

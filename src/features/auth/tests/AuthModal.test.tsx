@@ -14,6 +14,8 @@ import { useLanguage } from '../../../shared/languages';
 vi.mock('../services/authService', () => ({
   authService: {
     forgotPassword: vi.fn(),
+    verifyOtp: vi.fn(),
+    resetPassword: vi.fn(),
     login: vi.fn(),
     loginWithGoogle: vi.fn(),
   },
@@ -157,6 +159,44 @@ describe('AuthModal integration', () => {
       expect(mockedAuthService.forgotPassword).toHaveBeenCalledWith({ email: 'user@isas.dev' });
     });
     expect(await screen.findByText('auth.verifyOtpTitle')).toBeInTheDocument();
+  });
+
+  it('keeps the verified OTP and sends it with the new password', async () => {
+    const user = userEvent.setup();
+    mockedAuthService.forgotPassword.mockResolvedValueOnce('OTP sent to your email');
+    mockedAuthService.verifyOtp.mockResolvedValueOnce(
+      'OTP verified, you can reset your password',
+    );
+    mockedAuthService.resetPassword.mockResolvedValueOnce('Password reset successful');
+
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'auth.forgotPassword' }));
+    const sendButton = await screen.findByRole('button', { name: 'auth.sendLink' });
+    fireEvent.change(screen.getByLabelText('auth.emailPlaceholder'), {
+      target: { value: 'user@isas.dev' },
+    });
+    fireEvent.click(sendButton);
+    fireEvent.change(await screen.findByLabelText('auth.otpPlaceholder'), {
+      target: { value: '123456' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.verify' }));
+    fireEvent.change(await screen.findByLabelText('auth.newPasswordPlaceholder'), {
+      target: { value: 'ValidPass123!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.reset' }));
+
+    await waitFor(() => {
+      expect(mockedAuthService.resetPassword).toHaveBeenCalledWith({
+        email: 'user@isas.dev',
+        otp: '123456',
+        newPassword: 'ValidPass123!',
+      });
+    });
   });
 
   it('calls loginWithGoogle when clicking Google button', async () => {

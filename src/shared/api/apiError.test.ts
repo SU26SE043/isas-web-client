@@ -60,6 +60,26 @@ describe('apiError', () => {
     expect(getApiErrorMessage(error)).toBe('Email already exists');
   });
 
+  it('joins password validation arrays into a user-facing message', () => {
+    const error = new axios.AxiosError(
+      'Request failed',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: HttpStatus.BAD_REQUEST,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {} as never,
+        data: ['Password is too short', { message: 'Password requires a number' }],
+      },
+    );
+
+    expect(getApiErrorMessage(error)).toBe(
+      'Password is too short. Password requires a number',
+    );
+  });
+
   it('falls back to getHttpErrorMessage when body and axios message are empty', () => {
     const error = new axios.AxiosError(
       'Request failed',

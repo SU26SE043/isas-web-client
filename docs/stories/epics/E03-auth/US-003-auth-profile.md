@@ -2,7 +2,7 @@
 
 ## Status
 
-implemented
+in_progress
 
 ## Lane
 
@@ -32,7 +32,10 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - [x] Protected routes redirect unauthenticated users.
 - [x] E2E smoke: `e2e/specs/smoke/auth-login.spec.ts`.
 - [x] Forgot-password email submit calls public `POST /api/v1/auth/forgot-password` with `{ email }`, advances only after the exact success response, and preserves `400 "User not found"` for form error handling.
-- [x] Forgot-password API slice does not modify `verify-otp` or `reset-password` behavior.
+- [x] Verify OTP is public, validates the exact success contract, and retains the submitted OTP for reset.
+- [x] Reset password sends `{ email, otp, newPassword }`; weak-password failures do not clear the OTP in UI state.
+- [x] Google callback exchanges a one-time `code` for tokens before establishing the session.
+- [x] Authenticated profile password change sends `{ oldPassword, newPassword }` and expects `204`.
 
 ## Design Notes
 
@@ -47,6 +50,8 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 | --- | --- |
 | Unit | `src/features/auth/tests/AuthModal.test.tsx` |
 | Unit | `src/features/auth/services/authService.forgotPassword.test.ts` |
+| Unit | `src/features/auth/services/authService.passwordFlows.test.ts` |
+| Unit | `src/features/auth/tests/ChangePasswordModal.test.tsx` |
 | E2E | `e2e/specs/smoke/auth-login.spec.ts` |
 | Platform | `npm run build` |
 
@@ -55,3 +60,4 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - `src/features/auth/**`
 - `src/routes/groups/authRoutes.tsx`
 - `e2e/specs/smoke/auth-login.spec.ts`
+- `docs/decisions/0010-auth-otp-google-exchange-contract.md`

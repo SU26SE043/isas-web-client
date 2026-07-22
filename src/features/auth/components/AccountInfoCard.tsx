@@ -146,7 +146,6 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
 
       <ChangePasswordModal
         isOpen={isChangePasswordOpen}
-        email={email}
         onClose={() => setIsChangePasswordOpen(false)}
       />
     </div>
