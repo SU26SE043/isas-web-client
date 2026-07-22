@@ -41,60 +41,72 @@ export function CandidateReportsPage() {
         <p className="text-sm text-muted-foreground">{t('practice.reports.subtitle')}</p>
       </header>
 
-      <CvAnalysisReportsSection />
+      <div className="space-y-3">
+        <CvAnalysisReportsSection />
 
-      {isHubLoading ? (
-        <div className="flex items-center gap-3 rounded-xl border border-subtle bg-surface-overlay/40 px-5 py-6">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden />
-          <span className="text-sm text-muted-foreground">{t('practice.reports.loading')}</span>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <ReportCategoryAccordion
-            title={t('practice.reports.category.interview')}
-            count={hub.interview.length}
-            defaultOpen={hub.interview.length > 0}
-          >
-            {hub.interview.length === 0 ? (
-              <EmptyCategory
-                message={t('practice.reports.empty.interview')}
-                href="/candidate/practice/history"
-                cta={t('practice.reports.viewHistory')}
-              />
-            ) : (
-              <>
-                {hub.interview.map((item) => (
-                  <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />
-                ))}
-                <Link
-                  to="/candidate/practice/history"
-                  className="inline-flex pt-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
-                >
-                  {t('practice.reports.viewHistory')}
-                </Link>
-              </>
-            )}
-          </ReportCategoryAccordion>
+        {isHubLoading ? (
+          <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-4">
+            <Loader2 className="size-5 animate-spin text-zinc-400" aria-hidden />
+            <span className="text-sm text-zinc-400">{t('practice.reports.loading')}</span>
+          </div>
+        ) : (
+          <>
+            <ReportCategoryAccordion
+              title={t('practice.reports.category.interview')}
+              count={hub.interview.length}
+              defaultOpen={false}
+            >
+              {hub.interview.length === 0 ? (
+                <EmptyCategory
+                  message={t('practice.reports.empty.interview')}
+                  href="/candidate/practice/history"
+                  cta={t('practice.reports.viewHistory')}
+                />
+              ) : (
+                <>
+                  {hub.interview.map((item) => (
+                    <ReportListItem
+                      key={item.id}
+                      item={item}
+                      language={language}
+                      scoreLabel={scoreLabel}
+                    />
+                  ))}
+                  <Link
+                    to="/candidate/practice/history"
+                    className="inline-flex pt-1 text-sm font-medium text-zinc-100 underline-offset-4 hover:underline"
+                  >
+                    {t('practice.reports.viewHistory')}
+                  </Link>
+                </>
+              )}
+            </ReportCategoryAccordion>
 
-          <ReportCategoryAccordion
-            title={t('practice.reports.category.learning')}
-            count={hub.learning.length}
-            defaultOpen={hub.learning.length > 0}
-          >
-            {hub.learning.length === 0 ? (
-              <EmptyCategory
-                message={t('practice.reports.empty.learning')}
-                href="/candidate/learning"
-                cta={t('practice.reports.openLearning')}
-              />
-            ) : (
-              hub.learning.map((item) => (
-                <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />
-              ))
-            )}
-          </ReportCategoryAccordion>
-        </div>
-      )}
+            <ReportCategoryAccordion
+              title={t('practice.reports.category.learning')}
+              count={hub.learning.length}
+              defaultOpen={false}
+            >
+              {hub.learning.length === 0 ? (
+                <EmptyCategory
+                  message={t('practice.reports.empty.learning')}
+                  href="/candidate/learning"
+                  cta={t('practice.reports.openLearning')}
+                />
+              ) : (
+                hub.learning.map((item) => (
+                  <ReportListItem
+                    key={item.id}
+                    item={item}
+                    language={language}
+                    scoreLabel={scoreLabel}
+                  />
+                ))
+              )}
+            </ReportCategoryAccordion>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -109,8 +121,8 @@ function EmptyCategory({
   cta: string;
 }) {
   return (
-    <div className="space-y-3 rounded-lg border border-dashed border-subtle bg-surface-overlay/60 px-4 py-5 text-center">
-      <p className="text-sm text-muted-foreground">{message}</p>
+    <div className="space-y-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/40 px-4 py-5 text-center">
+      <p className="text-sm text-zinc-400">{message}</p>
       <Link to={href} className="btn-secondary inline-flex text-sm">
         {cta}
       </Link>

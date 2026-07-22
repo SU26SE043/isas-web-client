@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ReportCategoryAccordion } from '@/features/practice/components/reports/ReportCategoryAccordion';
 import { useLanguage } from '@/shared/languages';
 import { useCvAnalyses } from '../../hooks/useCvAnalyses';
 import { CvAnalysisAccordionItem } from './CvAnalysisAccordionItem';
@@ -16,21 +17,22 @@ export function CvAnalysisReportsSection() {
     setOpenId((current) => (current === id ? null : id));
   };
 
-  return (
-    <section className="space-y-4" aria-labelledby="cv-analysis-reports-heading">
-      <header className="space-y-1">
-        <h2 id="cv-analysis-reports-heading" className="heading-secondary text-lg text-foreground">
-          {t('cv.report.sectionTitle')}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t('cv.report.sectionSubtitle')}</p>
-      </header>
+  const count = isLoading || isError ? 0 : analyses.length;
 
+  return (
+    <ReportCategoryAccordion title={t('practice.reports.category.cv')} count={count} defaultOpen={false}>
       {isLoading ? <CvAnalysisListSkeleton /> : null}
 
       {isError ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-8 text-center">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-5 py-8 text-center">
           <p className="text-sm text-rose-400">{t('cv.report.errorList')}</p>
-          <Button type="button" className="mt-4" variant="outline" onClick={() => void refetch()} disabled={isFetching}>
+          <Button
+            type="button"
+            className="mt-4"
+            variant="outline"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
             <AlertCircle className="size-4" aria-hidden />
             {t('cv.report.retry')}
           </Button>
@@ -38,10 +40,10 @@ export function CvAnalysisReportsSection() {
       ) : null}
 
       {!isLoading && !isError && analyses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 px-5 py-10 text-center">
+        <div className="space-y-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/40 px-4 py-5 text-center">
           <p className="text-sm font-medium text-zinc-100">{t('cv.report.emptyTitle')}</p>
-          <p className="mt-2 text-sm text-zinc-400">{t('cv.report.emptyDescription')}</p>
-          <Link to="/candidate/cv/analysis" className="btn-primary mt-5 inline-flex text-sm">
+          <p className="text-sm text-zinc-400">{t('cv.report.emptyDescription')}</p>
+          <Link to="/candidate/cv/analysis" className="btn-primary inline-flex text-sm">
             {t('cv.report.emptyCta')}
           </Link>
         </div>
@@ -59,6 +61,6 @@ export function CvAnalysisReportsSection() {
           ))}
         </div>
       ) : null}
-    </section>
+    </ReportCategoryAccordion>
   );
 }
