@@ -5,6 +5,8 @@ import { getApiBaseUrl } from '../../../shared/config';
 import { HttpStatus } from '@/shared/constants/http-status';
 import type {
   AuthTokensResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
@@ -113,8 +115,13 @@ export const authService = {
     await apiClient.put(authEndpoints.me, payload);
     return authService.me();
   },
-  forgotPassword: async (payload: { email: string }) => {
-    const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);
+  forgotPassword: async (payload: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.forgotPassword, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'OTP sent to your email') {
+      throw new Error('Invalid forgot-password response from Auth API');
+    }
     return data;
   },
   verifyOtp: async (payload: { email: string; otp: string }) => {

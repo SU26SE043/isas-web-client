@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthModal } from '../components/AuthModal';
@@ -13,6 +13,7 @@ import { useLanguage } from '../../../shared/languages';
 
 vi.mock('../services/authService', () => ({
   authService: {
+    forgotPassword: vi.fn(),
     login: vi.fn(),
     loginWithGoogle: vi.fn(),
   },
@@ -133,6 +134,29 @@ describe('AuthModal integration', () => {
 
     expect(await screen.findByText('auth.forgotTitle')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'auth.signInTitle' })).not.toBeInTheDocument();
+  });
+
+  it('submits forgot-password email and advances to the OTP step', async () => {
+    const user = userEvent.setup();
+    mockedAuthService.forgotPassword.mockResolvedValueOnce('OTP sent to your email');
+
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'auth.forgotPassword' }));
+    const sendButton = await screen.findByRole('button', { name: 'auth.sendLink' });
+    fireEvent.change(screen.getByLabelText('auth.emailPlaceholder'), {
+      target: { value: '  user@isas.dev  ' },
+    });
+    fireEvent.click(sendButton);
+
+    await waitFor(() => {
+      expect(mockedAuthService.forgotPassword).toHaveBeenCalledWith({ email: 'user@isas.dev' });
+    });
+    expect(await screen.findByText('auth.verifyOtpTitle')).toBeInTheDocument();
   });
 
   it('calls loginWithGoogle when clicking Google button', async () => {

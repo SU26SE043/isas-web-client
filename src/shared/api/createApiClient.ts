@@ -50,7 +50,8 @@ const isPublicAuthUrl = (url?: string) =>
       (url.includes('/auth/refresh') ||
         url.includes('/auth/login') ||
         url.includes('/auth/register') ||
-        url.includes('/auth/register-org')),
+        url.includes('/auth/register-org') ||
+        url.includes('/auth/forgot-password')),
   );
 
 export const createApiClient = () => {

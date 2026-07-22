@@ -86,6 +86,10 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
 | Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
+| Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; `200` returns `"OTP sent to your email"`; `400` returns `"User not found"`. |
+
+This slice intentionally wires only the forgot-password OTP request. Existing `verify-otp` and
+`reset-password` behavior is unchanged; the new OTP-required reset contract remains deferred.
 
 ## E2E
 

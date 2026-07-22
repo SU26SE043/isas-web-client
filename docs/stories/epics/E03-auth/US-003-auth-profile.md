@@ -31,6 +31,8 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - [x] `/profile` shows user info; change password modal works.
 - [x] Protected routes redirect unauthenticated users.
 - [x] E2E smoke: `e2e/specs/smoke/auth-login.spec.ts`.
+- [x] Forgot-password email submit calls public `POST /api/v1/auth/forgot-password` with `{ email }`, advances only after the exact success response, and preserves `400 "User not found"` for form error handling.
+- [x] Forgot-password API slice does not modify `verify-otp` or `reset-password` behavior.
 
 ## Design Notes
 
@@ -44,6 +46,7 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 | Layer | Expected proof |
 | --- | --- |
 | Unit | `src/features/auth/tests/AuthModal.test.tsx` |
+| Unit | `src/features/auth/services/authService.forgotPassword.test.ts` |
 | E2E | `e2e/specs/smoke/auth-login.spec.ts` |
 | Platform | `npm run build` |
 
