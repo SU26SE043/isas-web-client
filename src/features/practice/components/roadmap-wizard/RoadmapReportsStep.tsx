@@ -1,7 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import { ROADMAP_MIN_REPORTS } from '../../mocks/practiceSetup.fixtures';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 
@@ -27,8 +26,6 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
   onNext,
 }) => {
   const { language, t } = useLanguage();
-  const eligible = reports.length >= ROADMAP_MIN_REPORTS;
-  const canContinue = eligible && selectedIds.length >= 1;
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
@@ -49,10 +46,13 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
     <section className="rounded-xl border border-subtle bg-surface-raised p-6">
       <h2 className="heading-secondary text-lg">{t('practice.roadmapWizard.reports.title')}</h2>
       <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.reports.description')}</p>
+      <p className="mt-2 text-caption text-muted-foreground">
+        {t('practice.roadmapWizard.reports.futureNote')}
+      </p>
 
-      {!eligible ? (
+      {reports.length === 0 ? (
         <p className="mt-6 rounded-lg border border-subtle bg-surface-overlay px-4 py-6 text-sm text-muted-foreground" role="status">
-          {t('practice.roadmapWizard.reports.empty')}
+          {t('practice.roadmapWizard.reports.emptyOptional')}
         </p>
       ) : (
         <>
@@ -107,7 +107,7 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
         </>
       )}
 
-      <RoadmapWizardNav onBack={onBack} onNext={onNext} nextDisabled={!canContinue} />
+      <RoadmapWizardNav onBack={onBack} onNext={onNext} />
     </section>
   );
 };

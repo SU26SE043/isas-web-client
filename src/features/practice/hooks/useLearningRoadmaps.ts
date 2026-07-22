@@ -132,3 +132,18 @@ export function useLearningLesson(roadmapId: string, lessonId: string, enabled =
 export function invalidateLearningRoadmaps(queryClient: ReturnType<typeof useQueryClient>) {
   return queryClient.invalidateQueries({ queryKey: LEARNING_ROADMAPS_QUERY_KEY });
 }
+
+export function invalidateLearningRoadmapDetail(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roadmapId: string,
+) {
+  return queryClient.invalidateQueries({ queryKey: learningRoadmapDetailQueryKey(roadmapId) });
+}
+
+export function invalidateLearningLesson(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roadmapId: string,
+  lessonId: string,
+) {
+  return queryClient.invalidateQueries({ queryKey: learningLessonQueryKey(roadmapId, lessonId) });
+}

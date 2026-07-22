@@ -9,6 +9,7 @@ interface RoadmapConfirmStepProps {
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
   selectedReports: InterviewHistoryItem[];
+  cvId?: string;
   isSubmitting: boolean;
   onBack: () => void;
   onConfirm: () => void;
@@ -18,6 +19,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
   targetLevel,
   selectedReports,
+  cvId,
   isSubmitting,
   onBack,
   onConfirm,
@@ -45,32 +47,44 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
             {targetLevel ? t(`practice.roadmapWizard.level.${targetLevel}`) : '—'}
           </dd>
         </div>
+        {cvId ? (
+          <div className="flex justify-between gap-4 border-b border-subtle py-2">
+            <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.cv')}</dt>
+            <dd className="font-medium text-foreground">{cvId}</dd>
+          </div>
+        ) : null}
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.count')}</dt>
           <dd className="font-medium text-foreground">{selectedReports.length}</dd>
         </div>
       </dl>
 
-      <ul className="mt-4 space-y-2">
-        {selectedReports.map((report) => (
-          <li
-            key={report.id}
-            className="rounded-lg border border-subtle bg-surface-overlay px-4 py-3 text-sm text-foreground"
-          >
-            {report.jobTitle}
-            <span className="mt-1 block text-caption text-muted-foreground">
-              {t(`practice.roadmapWizard.level.${report.level}`)} · {report.overallScore}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {selectedReports.length > 0 ? (
+        <ul className="mt-4 space-y-2">
+          {selectedReports.map((report) => (
+            <li
+              key={report.id}
+              className="rounded-lg border border-subtle bg-surface-overlay px-4 py-3 text-sm text-foreground"
+            >
+              {report.jobTitle}
+              <span className="mt-1 block text-caption text-muted-foreground">
+                {t(`practice.roadmapWizard.level.${report.level}`)} · {report.overallScore}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <p className="mt-4 text-caption text-muted-foreground">
+        {t('practice.roadmapWizard.confirm.reportsNotSent')}
+      </p>
 
       <RoadmapWizardNav
         onBack={onBack}
         onNext={onConfirm}
         nextLabel={t('practice.roadmapWizard.confirm.create')}
         isLoading={isSubmitting}
-        nextDisabled={!domain || !targetLevel || selectedReports.length === 0}
+        nextDisabled={!domain || !targetLevel || isSubmitting}
       />
     </section>
   );

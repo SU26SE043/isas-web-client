@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
@@ -5,9 +6,10 @@ import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.typ
 interface PracticeLiveResultReportProps {
   session: PracticeSessionResponse;
   onLeave?: () => void;
+  actions?: ReactNode;
 }
 
-export function PracticeLiveResultReport({ session, onLeave }: PracticeLiveResultReportProps) {
+export function PracticeLiveResultReport({ session, onLeave, actions }: PracticeLiveResultReportProps) {
   const { t } = useLanguage();
   const result = session.result;
   if (!result) return null;
@@ -125,15 +127,19 @@ export function PracticeLiveResultReport({ session, onLeave }: PracticeLiveResul
       ) : null}
 
       <div className="flex flex-wrap gap-3 pb-8">
-        <Link to="/practice" className="btn-primary" onClick={onLeave}>
-          {t('practice.result.practiceAgain')}
-        </Link>
-        <Link to="/candidate/practice/history" className="btn-secondary" onClick={onLeave}>
-          {t('practice.result.history')}
-        </Link>
-        <Link to="/candidate/dashboard" className="btn-ghost" onClick={onLeave}>
-          {t('practice.result.dashboard')}
-        </Link>
+        {actions ?? (
+          <>
+            <Link to="/practice" className="btn-primary" onClick={onLeave}>
+              {t('practice.result.practiceAgain')}
+            </Link>
+            <Link to="/candidate/practice/history" className="btn-secondary" onClick={onLeave}>
+              {t('practice.result.history')}
+            </Link>
+            <Link to="/candidate/dashboard" className="btn-ghost" onClick={onLeave}>
+              {t('practice.result.dashboard')}
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Check, Loader2, X } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import type { RoadmapLevelEvaluationItem } from '../types/roadmapPractice.api.types';
 
 export function LearningRoadmapReportPage() {
   const { roadmapId = '' } = useParams();
@@ -48,10 +49,10 @@ export function LearningRoadmapReportPage() {
     data.kind === 'snapshot'
       ? t('practice.learningPath.reportKindSnapshot')
       : t('practice.learningPath.reportKindInterim');
-  const level =
+  const levelText =
     language === 'vi'
-      ? data.levelEvaluationVi || data.levelEvaluation
-      : data.levelEvaluation || data.levelEvaluationVi;
+      ? data.levelEvaluationVi || data.levelEvaluationText
+      : data.levelEvaluationText || data.levelEvaluationVi;
   const comment =
     language === 'vi'
       ? data.overallCommentVi || data.overallComment
@@ -75,12 +76,23 @@ export function LearningRoadmapReportPage() {
         <p className="text-sm text-muted-foreground">{t('practice.learningPath.radarEmpty')}</p>
       )}
 
-      {level ? (
+      {data.levelEvaluation.length > 0 ? (
+        <section className="space-y-4 rounded-xl border border-subtle bg-surface-raised p-5">
+          <h2 className="heading-secondary text-lg text-foreground">
+            {t('practice.learningPath.levelEvaluation')}
+          </h2>
+          <ul className="space-y-4">
+            {data.levelEvaluation.map((item) => (
+              <LevelEvaluationRow key={item.criterionName} item={item} t={t} />
+            ))}
+          </ul>
+        </section>
+      ) : levelText ? (
         <section className="rounded-xl border border-subtle bg-surface-raised p-5">
           <h2 className="heading-secondary text-lg text-foreground">
             {t('practice.learningPath.levelEvaluation')}
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">{level}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{levelText}</p>
         </section>
       ) : null}
 
@@ -117,6 +129,51 @@ export function LearningRoadmapReportPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function LevelEvaluationRow({
+  item,
+  t,
+}: {
+  item: RoadmapLevelEvaluationItem;
+  t: (key: string) => string;
+}) {
+  const pct = Math.max(0, Math.min(100, item.percentage));
+  const threshold = Math.max(0, Math.min(100, item.levelThreshold));
+  return (
+    <li className="rounded-lg border border-subtle bg-surface-overlay p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-foreground">{item.criterionName}</p>
+        <span
+          className={`inline-flex items-center gap-1 text-xs font-medium ${
+            item.passed ? 'text-success' : 'text-warning'
+          }`}
+        >
+          {item.passed ? <Check className="size-3.5" aria-hidden /> : <X className="size-3.5" aria-hidden />}
+          {item.passed
+            ? t('practice.learningPath.levelEvaluationPassed')
+            : t('practice.learningPath.levelEvaluationFailed')}
+        </span>
+      </div>
+      <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+        <span>{pct}%</span>
+        <span>
+          {t('practice.learningPath.levelThreshold')}: {threshold}%
+        </span>
+      </div>
+      <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-surface-base">
+        <div
+          className={`h-full rounded-full ${item.passed ? 'bg-success' : 'bg-warning'}`}
+          style={{ width: `${pct}%` }}
+        />
+        <div
+          className="absolute inset-y-0 w-0.5 bg-foreground/60"
+          style={{ left: `${threshold}%` }}
+          aria-hidden
+        />
+      </div>
+    </li>
   );
 }
 

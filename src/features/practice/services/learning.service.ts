@@ -34,6 +34,7 @@ import {
 } from '../mocks/progress.fixtures';
 import { learningPathService } from './learningPath.service';
 import { learningEndpoints } from './learning.endpoints';
+import { CreateRoadmapError, mapCreateRoadmapError } from '../utils/roadmapCreateErrors';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 let latestCreatedRoadmap: RoadmapResponse | null = null;
@@ -129,7 +130,7 @@ export const learningService = {
    */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
     if (!input.domainId || !input.targetLevel) {
-      throw new Error('INVALID_ROADMAP_INPUT');
+      throw new CreateRoadmapError('invalid_input');
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
@@ -142,26 +143,30 @@ export const learningService = {
       body.cvId = input.cvId;
     }
 
-    const response = await apiClient.post<Record<string, unknown>>(
-      learningEndpoints.createRoadmap,
-      body,
-      { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
-    );
+    try {
+      const response = await apiClient.post<Record<string, unknown>>(
+        learningEndpoints.createRoadmap,
+        body,
+        { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
+      );
 
-    const created = normalizeCreateRoadmapResponse(response.data, {
-      ...input,
-      targetLevel: level,
-    });
+      const created = normalizeCreateRoadmapResponse(response.data, {
+        ...input,
+        targetLevel: level,
+      });
 
-    latestCreatedRoadmap = created;
-    roadmapRegenerateCount = created.regenerateCount;
-    await learningPathService.registerCreatedRoadmap({
-      ...input,
-      targetLevel: level,
-      roadmapId: created.id,
-      reportIds: input.reportIds ?? [],
-    });
-    return created;
+      latestCreatedRoadmap = created;
+      roadmapRegenerateCount = created.regenerateCount;
+      await learningPathService.registerCreatedRoadmap({
+        ...input,
+        targetLevel: level,
+        roadmapId: created.id,
+        reportIds: input.reportIds ?? [],
+      });
+      return created;
+    } catch (error) {
+      throw mapCreateRoadmapError(error);
+    }
   },
 
   async regenerateRoadmap(): Promise<RoadmapResponse> {

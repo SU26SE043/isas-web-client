@@ -19,7 +19,15 @@ export function RoadmapWizardPage() {
     >
       {flow.submitError ? (
         <p className="mb-4 text-sm text-error" role="alert">
-          {t('practice.roadmapWizard.confirm.error')}
+          {flow.submitError === 'invalid_input'
+            ? t('practice.roadmapWizard.confirm.errorInvalid')
+            : flow.submitError === 'forbidden'
+              ? t('practice.roadmapWizard.confirm.errorForbidden')
+              : flow.submitError === 'cv_not_found'
+                ? t('practice.roadmapWizard.confirm.errorCvNotFound')
+                : flow.submitError === 'ai_failed'
+                  ? t('practice.roadmapWizard.confirm.errorAi')
+                  : t('practice.roadmapWizard.confirm.error')}
         </p>
       ) : null}
 
@@ -60,6 +68,7 @@ export function RoadmapWizardPage() {
           domain={flow.selectedDomain}
           targetLevel={flow.targetLevel}
           selectedReports={flow.selectedReports}
+          cvId={flow.cvId}
           isSubmitting={flow.isSubmitting}
           onBack={() => flow.goToStep(2)}
           onConfirm={() => void flow.handleCreate()}

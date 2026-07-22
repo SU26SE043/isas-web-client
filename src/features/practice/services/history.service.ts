@@ -16,7 +16,10 @@ export async function fetchInterviewHistory(
   query: InterviewHistoryQuery = {},
 ): Promise<InterviewHistoryResponse> {
   if (!usesMockData('practice')) {
-    throw new Error('Practice history API is not wired yet. Keep usesMockData("practice") true.');
+    // Report selection is UI-only until history list API is wired for roadmap wizard.
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+    return { interviews: [], total: 0, page, pageSize };
   }
 
   await mockDelay(300);

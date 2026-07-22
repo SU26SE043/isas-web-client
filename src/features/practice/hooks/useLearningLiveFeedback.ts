@@ -79,18 +79,17 @@ export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) 
         fileName: 'answer.webm',
       });
 
-      const scored = await roadmapPracticeService.waitForAnswerScore(
+      const scored = await roadmapPracticeService.waitForSessionQuestionFeedback(
         sessionId,
-        submitted.answerId,
-        submitted,
+        question.id,
       );
 
       appendLearningAnswer(sessionId, {
         questionId: question.id,
         prompt: question.content,
         promptVi: question.content,
-        feedback: toFeedback(scored),
-        transcript: scored.transcript,
+        feedback: toFeedback({ ...submitted, ...scored }),
+        transcript: scored.transcript ?? submitted.transcript,
         scoringStatus: scored.scoringStatus ?? scored.status,
       });
 

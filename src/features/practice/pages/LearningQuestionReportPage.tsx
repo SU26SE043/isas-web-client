@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { QuestionFeedbackReport } from '../components/learning-path/QuestionFeedbackReport';
@@ -10,13 +11,21 @@ import {
   isLastLearningQuestion,
 } from '../services/learningPracticeSession.registry';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
-import { learningRoadmapReportPath } from '../utils/launchLearningInterviewPractice';
+import {
+  invalidateLearningRoadmapDetail,
+  invalidateLearningRoadmaps,
+} from '../hooks/useLearningRoadmaps';
+
+function sessionReportPath(roadmapId: string, lessonId: string, sessionId: string) {
+  return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/report?sessionId=${encodeURIComponent(sessionId)}`;
+}
 
 export function LearningQuestionReportPage() {
   const { roadmapId = '', lessonId = '', questionId = '' } = useParams();
   const [params] = useSearchParams();
   const sessionId = params.get('sessionId') ?? '';
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { language, t } = useLanguage();
   const [isContinuing, setIsContinuing] = useState(false);
   const [completeError, setCompleteError] = useState(false);
@@ -42,13 +51,17 @@ export function LearningQuestionReportPage() {
   };
 
   const handleCompletePractice = async () => {
-    if (!sessionId || !roadmapId || inFlightRef.current || isContinuing) return;
+    if (!sessionId || !roadmapId || !lessonId || inFlightRef.current || isContinuing) return;
     inFlightRef.current = true;
     setIsContinuing(true);
     setCompleteError(false);
     try {
       await roadmapPracticeService.completePracticeSession(sessionId);
-      navigate(learningRoadmapReportPath(roadmapId), { replace: true });
+      await Promise.all([
+        invalidateLearningRoadmapDetail(queryClient, roadmapId),
+        invalidateLearningRoadmaps(queryClient),
+      ]);
+      navigate(sessionReportPath(roadmapId, lessonId, sessionId), { replace: true });
     } catch {
       setCompleteError(true);
       inFlightRef.current = false;
@@ -100,7 +113,7 @@ export function LearningQuestionReportPage() {
             {isContinuing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
             {isContinuing
               ? t('practice.learningPath.completing')
-              : t('practice.learningPath.finishPractice')}
+              : t('practice.learningPath.viewSessionReport')}
           </button>
         ) : (
           <button

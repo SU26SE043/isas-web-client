@@ -123,6 +123,15 @@ export function LearningRoadmapDetailPage() {
         </div>
       </header>
 
+      {roadmap.status === 'completed' ? (
+        <Link
+          to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
+          className="btn-secondary mt-4 inline-flex text-sm"
+        >
+          {t('practice.learningPath.viewRoadmapReport')}
+        </Link>
+      ) : null}
+
       <div className="mt-8 space-y-4">
         {roadmap.milestones.map((milestone) => {
           const locked = milestone.status === 'locked';
@@ -199,8 +208,18 @@ export function LearningRoadmapDetailPage() {
                             >
                               {launchingLessonId === lessonItem.id
                                 ? t('practice.learningPath.saving')
-                                : t('practice.learningPath.openPractice')}
+                                : lessonItem.apiStatus === 'Practicing'
+                                  ? t('practice.learningPath.continuePracticeSession')
+                                  : t('practice.learningPath.openPractice')}
                             </button>
+                          ) : null}
+                          {lessonItem.apiStatus === 'Done' ? (
+                            <Link
+                              to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`}
+                              className="btn-secondary inline-flex text-xs"
+                            >
+                              {t('practice.learningPath.reviewLesson')}
+                            </Link>
                           ) : null}
                           {reportLink ? (
                             <Link to={reportLink} className="btn-ghost inline-flex text-xs">

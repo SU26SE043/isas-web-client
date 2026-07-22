@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { useLanguage } from '@/shared/languages';
 import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
@@ -12,10 +14,15 @@ import {
   ROADMAP_REPORT_PREVIEW_LIMIT,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
+import {
+  CreateRoadmapError,
+  type CreateRoadmapErrorCode,
+} from '../utils/roadmapCreateErrors';
 
 export function useRoadmapWizardFlow() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState(0);
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
@@ -27,7 +34,7 @@ export function useRoadmapWizardFlow() {
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(false);
+  const [submitError, setSubmitError] = useState<CreateRoadmapErrorCode | null>(null);
 
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
@@ -83,21 +90,23 @@ export function useRoadmapWizardFlow() {
   };
 
   const handleCreate = async () => {
-    if (!domainId || !targetLevel || selectedIds.length === 0) return;
+    if (!domainId || !targetLevel) return;
     setIsSubmitting(true);
-    setSubmitError(false);
+    setSubmitError(null);
     try {
       await learningService.createRoadmap({
         domainId,
         targetLevel,
-        // Selected in UI only — not sent until API accepts reportIds.
         reportIds: selectedIds,
         cvId,
       });
       await invalidateLearningRoadmaps(queryClient);
+      toast.success(t('practice.roadmapWizard.createSuccess'));
       navigate('/candidate/learning', { replace: true });
-    } catch {
-      setSubmitError(true);
+    } catch (error) {
+      const mapped =
+        error instanceof CreateRoadmapError ? error : new CreateRoadmapError('generic');
+      setSubmitError(mapped.code);
       setIsSubmitting(false);
     }
   };
@@ -119,6 +128,7 @@ export function useRoadmapWizardFlow() {
     allReports,
     selectedIds,
     targetLevel,
+    cvId,
     loadingDomains,
     loadingReports,
     isSubmitting,
