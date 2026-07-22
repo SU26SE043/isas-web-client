@@ -118,6 +118,7 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     clearRecording,
     setUploading: () => setRecordingStatus('uploading'),
     setSubmitted: () => setRecordingStatus('submitted'),
+    setStopped: () => setRecordingStatus('stopped'),
     setIdle: () => setRecordingStatus('idle'),
   };
 }

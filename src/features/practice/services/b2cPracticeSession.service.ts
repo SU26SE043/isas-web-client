@@ -14,6 +14,7 @@ import {
   mapPracticeSessionResponse,
   mapSubmitPracticeAnswerResponse,
 } from '../utils/mapB2cPracticeSession';
+import { multipartFormDataConfig } from '../utils/multipartFormDataConfig';
 
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
@@ -170,6 +171,7 @@ export async function submitPracticeAnswer(
   const response = await apiClient.post<unknown>(
     b2cPracticeSessionEndpoints.answers(input.sessionId),
     formData,
+    multipartFormDataConfig,
   );
   return mapSubmitPracticeAnswerResponse(response.data);
 }

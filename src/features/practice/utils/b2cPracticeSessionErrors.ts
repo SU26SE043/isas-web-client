@@ -38,15 +38,11 @@ export function mapCreatePracticeSessionError(error: unknown): {
   return { code: 'generic', message, status };
 }
 
-export function mapPracticeHttpErrorKey(
-  status: number | undefined,
-  fallbackKey: string,
-): string {
+export function mapSubmitPracticeAnswerErrorKey(status: number | undefined): string {
+  if (status === 400) return 'practice.errors.audioRequired';
   if (status === 403) return 'practice.errors.forbidden';
-  if (status === 404) return 'practice.errors.sessionNotFound';
-  if (status === 400) return fallbackKey;
+  if (status === 404) return 'practice.errors.questionNotFound';
   if (status === 409) return 'practice.errors.conflict';
   if (status === 500) return 'practice.errors.submitAnswerFailed';
-  if (status === 502) return 'practice.errors.speechUnavailable';
-  return fallbackKey;
+  return 'practice.errors.submitAnswerFailed';
 }

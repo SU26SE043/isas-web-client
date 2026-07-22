@@ -6,7 +6,10 @@ import { AIInterviewerPanel } from './AIInterviewerPanel';
 import { CandidateCameraPanel } from './CandidateCameraPanel';
 import { InterviewQuestionPanel } from './InterviewQuestionPanel';
 import { B2cInterviewControls } from './B2cInterviewControls';
+import { PracticeAnswerPreview } from './PracticeAnswerPreview';
+import { B2cPracticeRoomModals } from './B2cPracticeRoomModals';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
+import { useAnswerPlayback } from '../hooks/useAnswerPlayback';
 import { useState } from 'react';
 
 interface B2cPracticeInterviewRoomProps {
@@ -17,6 +20,7 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
   const { t } = useLanguage();
   const navigate = useNavigate();
   const room = useB2cPracticeRoom(sessionId);
+  const answerPlayback = useAnswerPlayback(room.recorder.audioFile);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
 
@@ -51,6 +55,11 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
     ? room.answersByQuestionId[room.currentQuestion.id]
     : undefined;
 
+  const canRetrySubmit =
+    Boolean(room.recorder.audioFile) &&
+    room.recorder.recordingStatus !== 'uploading' &&
+    room.recorder.recordingStatus !== 'submitted';
+
   return (
     <div className="flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={room.recorder.recordingStatus === 'recording'} />
@@ -63,7 +72,7 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
       {room.answerError ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
           {t(room.answerError)}
-          {room.answerError === 'practice.errors.submitAnswerFailed' ? (
+          {canRetrySubmit ? (
             <button type="button" className="ml-3 underline" onClick={() => void room.submitAnswer()}>
               {t('practice.recording.retrySubmit')}
             </button>
@@ -115,6 +124,17 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
           }
         />
 
+        {room.recorder.audioFile &&
+        (room.recorder.recordingStatus === 'stopped' || room.recorder.recordingStatus === 'uploading') ? (
+          <PracticeAnswerPreview
+            durationSec={room.recorder.durationSec}
+            recordingStatus={room.recorder.recordingStatus}
+            isPlaying={answerPlayback.isPlaying}
+            onPlay={() => void answerPlayback.play()}
+            disabled={room.isSubmittingAnswer || room.isTimingOut}
+          />
+        ) : null}
+
         {answer ? (
           <div className="rounded-xl border border-satin bg-surface-raised p-4 text-sm">
             <p className="font-medium text-foreground">{t('practice.recording.submitted')}</p>
@@ -165,61 +185,22 @@ export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoom
         disabled={room.isSubmittingSession || room.isTimingOut}
       />
 
-      {room.finishOpen ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal>
-          <div className="w-full max-w-md rounded-2xl border border-satin bg-surface-raised p-6">
-            <h2 className="text-lg font-semibold text-foreground">{t('practice.finish.confirmTitle')}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{t('practice.finish.confirmDescription')}</p>
-            <ul className="mt-4 space-y-1 text-sm text-foreground">
-              <li>{t('practice.finish.submittedCount').replace('{count}', String(room.submittedCount))}</li>
-              <li>{t('practice.finish.unansweredCount').replace('{count}', String(room.unansweredCount))}</li>
-              {room.hasPendingRecording ? <li>{t('practice.finish.pendingRecording')}</li> : null}
-            </ul>
-            {room.isSubmittingSession ? (
-              <p className="mt-4 flex items-center gap-2 text-sm" aria-live="polite">
-                <Loader2 className="size-4 animate-spin" />
-                {t('practice.finish.submitting')}
-              </p>
-            ) : null}
-            <div className="mt-6 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={room.isSubmittingSession}
-                onClick={() => room.setFinishOpen(false)}
-              >
-                {t('practice.finish.continue')}
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={room.isSubmittingSession}
-                onClick={() => void room.confirmFinish()}
-              >
-                {t('practice.finish.confirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <B2cPracticeRoomModals
+        finishOpen={room.finishOpen}
+        isSubmittingSession={room.isSubmittingSession}
+        submittedCount={room.submittedCount}
+        unansweredCount={room.unansweredCount}
+        hasPendingRecording={room.hasPendingRecording}
+        onCloseFinish={() => room.setFinishOpen(false)}
+        onConfirmFinish={() => void room.confirmFinish()}
+        overwriteConfirmOpen={room.overwriteConfirmOpen}
+        onCloseOverwrite={() => room.setOverwriteConfirmOpen(false)}
+        onConfirmOverwrite={room.confirmOverwriteSubmit}
+        retryConfirmOpen={room.retryConfirmOpen}
+        onCloseRetry={() => room.setRetryConfirmOpen(false)}
+        onConfirmRetry={room.confirmRetryRecording}
+      />
 
-      {room.retryConfirmOpen ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal>
-          <div className="w-full max-w-md rounded-2xl border border-satin bg-surface-raised p-6">
-            <p className="text-sm text-foreground">{t('practice.recording.retryConfirm')}</p>
-            <div className="mt-6 flex justify-end gap-2">
-              <button type="button" className="btn-secondary" onClick={() => room.setRetryConfirmOpen(false)}>
-                {t('practice.finish.continue')}
-              </button>
-              <button type="button" className="btn-primary" onClick={room.confirmRetryRecording}>
-                {t('practice.recording.retry')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Keep navigate available for header exit flows if needed later */}
       <span className="sr-only">{navigate.length}</span>
     </div>
   );
