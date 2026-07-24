@@ -35,7 +35,8 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.detail.enrolled': 'Bạn đã đăng ký',
     'campaigns.detail.unavailable': 'Không thể đăng ký',
     'campaigns.detail.notFound': 'Không tìm thấy chiến dịch',
-    'campaigns.detail.notFoundHint': 'Chiến dịch có thể đã bị đóng hoặc không còn công khai.',
+    'campaigns.detail.notFoundHint':
+      'Không tìm thấy chiến dịch hoặc bạn chưa tham gia chiến dịch này.',
     'campaigns.detail.responsibilities': 'Trách nhiệm chính',
     'campaigns.detail.requirements': 'Yêu cầu ứng viên',
     'campaigns.detail.benefits': 'Quyền lợi',
@@ -133,6 +134,17 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.my.cta.viewDetail': 'Xem chi tiết',
     'campaigns.my.cta.continue': 'Tiếp tục phỏng vấn',
     'campaigns.my.cta.viewResult': 'Xem kết quả',
+    'campaigns.detail.loading': 'Đang tải thông tin chiến dịch...',
+    'campaigns.detail.badge': 'Chiến dịch tuyển dụng',
+    'campaigns.detail.retry': 'Thử tải lại',
+    'campaigns.detail.examInfo': 'Thông tin bài thi',
+    'campaigns.detail.startedYes': 'Bài thi đã được bắt đầu.',
+    'campaigns.detail.startedNo': 'Bài thi chưa bắt đầu.',
+    'campaigns.detail.sessionId': 'Mã phiên',
+    'campaigns.detail.deviceHint':
+      'Bạn cần chuẩn bị microphone và camera. Phiên phỏng vấn có thể được giám sát.',
+    'campaigns.detail.start': 'Bắt đầu bài phỏng vấn',
+    'campaigns.detail.continue': 'Tiếp tục bài phỏng vấn',
   },
   en: {
     'campaigns.browse.eyebrow': 'Phase 8 · Campaign Discovery',
@@ -168,7 +180,8 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.detail.enrolled': 'You are enrolled',
     'campaigns.detail.unavailable': 'Unavailable',
     'campaigns.detail.notFound': 'Campaign not found',
-    'campaigns.detail.notFoundHint': 'This campaign may be closed or no longer public.',
+    'campaigns.detail.notFoundHint':
+      'Campaign was not found or you have not joined this campaign.',
     'campaigns.detail.responsibilities': 'Responsibilities',
     'campaigns.detail.requirements': 'Candidate requirements',
     'campaigns.detail.benefits': 'Benefits',
@@ -267,5 +280,19 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.my.cta.viewDetail': 'View details',
     'campaigns.my.cta.continue': 'Continue interview',
     'campaigns.my.cta.viewResult': 'View results',
+    'campaigns.detail.loading': 'Loading campaign details...',
+    'campaigns.detail.badge': 'Recruitment campaign',
+    'campaigns.detail.notFound': 'Campaign not found',
+    'campaigns.detail.notFoundHint':
+      'Campaign was not found or you have not joined this campaign.',
+    'campaigns.detail.retry': 'Retry',
+    'campaigns.detail.examInfo': 'Interview details',
+    'campaigns.detail.startedYes': 'The interview has already been started.',
+    'campaigns.detail.startedNo': 'The interview has not started yet.',
+    'campaigns.detail.sessionId': 'Session id',
+    'campaigns.detail.deviceHint':
+      'Prepare your microphone and camera. The interview session may be monitored.',
+    'campaigns.detail.start': 'Start interview',
+    'campaigns.detail.continue': 'Continue interview',
   },
 };

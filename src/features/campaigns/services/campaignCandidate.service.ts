@@ -5,6 +5,7 @@ import type {
   CampaignCriterion,
   CampaignInterviewStatus,
   CampaignInvitationResponse,
+  CandidateCampaignDetailResponse,
   CandidateCampaignListItem,
   JoinCampaignResponse,
 } from '../types/campaignCandidate.types';
@@ -181,6 +182,36 @@ function unwrapList(payload: unknown): unknown[] {
   return [];
 }
 
+function parseDetail(raw: unknown): CandidateCampaignDetailResponse {
+  if (!raw || typeof raw !== 'object') {
+    throw new CampaignCandidateError('unknown', 'Invalid campaign detail response.');
+  }
+  const data = raw as Record<string, unknown>;
+  const campaignId = String(data.campaignId ?? '').trim();
+  const title = String(data.title ?? '').trim();
+  if (!campaignId || !title) {
+    throw new CampaignCandidateError('unknown', 'Invalid campaign detail response.');
+  }
+
+  const criteriaRaw = Array.isArray(data.criteria) ? data.criteria : [];
+  const criteria = criteriaRaw
+    .map(parseCriterion)
+    .filter((item): item is CampaignCriterion => item != null);
+
+  return {
+    campaignId,
+    title,
+    jobTitle: asOptionalString(data.jobTitle),
+    description: asOptionalString(data.description),
+    deadline: asOptionalString(data.deadline),
+    criteria,
+    membershipStatus: String(data.membershipStatus ?? ''),
+    interviewStatus: parseInterviewStatus(data.interviewStatus),
+    sessionId: asOptionalString(data.sessionId),
+    started: Boolean(data.started),
+  };
+}
+
 /** Live Candidate Campaign APIs — no mock fixtures. */
 export const campaignCandidateService = {
   async getInvitationByToken(token: string): Promise<CampaignInvitationResponse> {
@@ -219,6 +250,20 @@ export const campaignCandidateService = {
         .filter((item): item is CandidateCampaignListItem => item != null);
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not load campaigns.');
+    }
+  },
+
+  async getMyCampaignById(campaignId: string): Promise<CandidateCampaignDetailResponse> {
+    const id = campaignId.trim();
+    if (!id) {
+      throw new CampaignCandidateError('badRequest', 'Missing campaign id.');
+    }
+
+    try {
+      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.myCampaign(id));
+      return parseDetail(unwrapData(response.data));
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not load campaign detail.');
     }
   },
 };
