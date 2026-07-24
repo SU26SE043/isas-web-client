@@ -47,7 +47,9 @@ import { CandidateRubricsPage } from '@/features/rubrics/pages/CandidateRubricsP
 import { CandidateCampaignsPage } from '@/features/campaigns/pages/CandidateCampaignsPage';
 import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/CandidateCampaignBriefingPage';
 import { CandidateCampaignDetailPage } from '@/features/campaigns/pages/CandidateCampaignDetailPage';
-import { CampaignInterviewRouteShell } from '@/features/campaigns/pages/CampaignInterviewRouteShell';
+import { CampaignFaceEnrollPage } from '@/features/campaigns/pages/CampaignFaceEnrollPage';
+import { CampaignInterviewPage } from '@/features/campaigns/pages/CampaignInterviewPage';
+import { CampaignInterviewCompletedPage } from '@/features/campaigns/pages/CampaignInterviewCompletedPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -115,15 +117,15 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'campaigns/:id', element: <CandidateCampaignDetailPage /> },
               {
                 path: 'campaigns/:campaignId/face-enroll/:sessionId',
-                element: <CampaignInterviewRouteShell kind="face-enroll" />,
+                element: <CampaignFaceEnrollPage />,
               },
               {
                 path: 'campaigns/:campaignId/interview/:sessionId',
-                element: <CampaignInterviewRouteShell kind="interview" />,
+                element: <CampaignInterviewPage />,
               },
               {
                 path: 'campaigns/:campaignId/completed/:sessionId',
-                element: <CampaignInterviewRouteShell kind="completed" />,
+                element: <CampaignInterviewCompletedPage />,
               },
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },

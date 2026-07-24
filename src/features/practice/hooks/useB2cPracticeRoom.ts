@@ -16,8 +16,9 @@ import { useInterviewMedia } from './useInterviewMedia';
 
 const TIMEOUT_ADVANCE_DELAY_MS = 1000;
 
-export function useB2cPracticeRoom(sessionId: string) {
+export function useB2cPracticeRoom(sessionId: string, options?: { completePath?: string }) {
   const navigate = useNavigate();
+  const completePath = options?.completePath;
   const store = useB2cPracticeInterviewStore();
   const [isSubmittingSession, setIsSubmittingSession] = useState(false);
   const [isTimingOut, setIsTimingOut] = useState(false);
@@ -46,6 +47,7 @@ export function useB2cPracticeRoom(sessionId: string) {
     answersByQuestionId: store.answersByQuestionId,
     onStopSpeech: () => speech.stopPlayback(),
     onStopMedia: () => media.stopMedia(),
+    completePath,
   });
 
   useEffect(() => {
@@ -251,7 +253,7 @@ export function useB2cPracticeRoom(sessionId: string) {
 
       await submitPracticeSession(sessionId);
       media.stopMedia();
-      navigate(`/interview/${sessionId}/complete`, { replace: true });
+      navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
     } catch (error) {
       const status = getApiStatusCode(error);
       const message = getApiErrorMessage(error, '').toLowerCase();
@@ -262,7 +264,7 @@ export function useB2cPracticeRoom(sessionId: string) {
           message.includes('đã submit') ||
           message.includes('da submit')
         ) {
-          navigate(`/interview/${sessionId}/complete`, { replace: true });
+          navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
           return;
         }
         answerSubmit.setAnswerError('practice.errors.noAnswers');
@@ -274,7 +276,7 @@ export function useB2cPracticeRoom(sessionId: string) {
       setIsSubmittingSession(false);
       setFinishOpen(false);
     }
-  }, [answerSubmit, media, navigate, recorder, sessionId, speech, store]);
+  }, [answerSubmit, completePath, media, navigate, recorder, sessionId, speech, store]);
 
   const submittedCount = store.questions.filter(
     (question) => store.questionStates[question.id] === 'submitted',

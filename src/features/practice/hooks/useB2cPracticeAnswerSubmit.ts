@@ -22,6 +22,7 @@ interface UseB2cPracticeAnswerSubmitOptions {
   answersByQuestionId: Record<string, unknown>;
   onStopSpeech: () => void;
   onStopMedia: () => void;
+  completePath?: string;
 }
 
 export function useB2cPracticeAnswerSubmit({
@@ -34,6 +35,7 @@ export function useB2cPracticeAnswerSubmit({
   answersByQuestionId,
   onStopSpeech,
   onStopMedia,
+  completePath,
 }: UseB2cPracticeAnswerSubmitOptions) {
   const navigate = useNavigate();
   const store = useB2cPracticeInterviewStore();
@@ -89,7 +91,7 @@ export function useB2cPracticeAnswerSubmit({
         try {
           await submitPracticeSession(sessionId);
           onStopMedia();
-          navigate(`/interview/${sessionId}/complete`, { replace: true });
+          navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
         } catch {
           store.setStage('ready_to_finish');
         }
@@ -106,7 +108,16 @@ export function useB2cPracticeAnswerSubmit({
       setIsSubmittingAnswer(false);
       setOverwriteConfirmOpen(false);
     }
-  }, [currentQuestion, navigate, onStopMedia, onStopSpeech, recorder, sessionId, store]);
+  }, [
+    completePath,
+    currentQuestion,
+    navigate,
+    onStopMedia,
+    onStopSpeech,
+    recorder,
+    sessionId,
+    store,
+  ]);
 
   const submitAnswer = useCallback(async () => {
     if (!canSubmitAnswer) {

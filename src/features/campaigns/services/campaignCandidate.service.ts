@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import { multipartFormDataConfig } from '@/features/practice/utils/multipartFormDataConfig';
 import type {
   CampaignCandidateErrorCode,
   CampaignCriterion,
@@ -7,6 +8,8 @@ import type {
   CampaignInvitationResponse,
   CandidateCampaignDetailResponse,
   CandidateCampaignListItem,
+  CreateCampaignFlagRequest,
+  FaceCheckResponse,
   JoinCampaignResponse,
   StartCampaignInterviewResponse,
 } from '../types/campaignCandidate.types';
@@ -255,6 +258,24 @@ function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCamp
   };
 }
 
+function parseFaceCheck(raw: unknown): FaceCheckResponse {
+  if (!raw || typeof raw !== 'object') {
+    throw new CampaignCandidateError('unknown', 'Invalid face-check response.');
+  }
+  const data = raw as Record<string, unknown>;
+  const signals = Array.isArray(data.signals)
+    ? data.signals.filter((item): item is string => typeof item === 'string')
+    : [];
+  const faceCount =
+    typeof data.faceCount === 'number' ? data.faceCount : Number(data.faceCount ?? 0);
+
+  return {
+    match: Boolean(data.match),
+    faceCount: Number.isFinite(faceCount) ? faceCount : 0,
+    signals,
+  };
+}
+
 /** Live Candidate Campaign APIs — no mock fixtures. */
 export const campaignCandidateService = {
   async getInvitationByToken(token: string): Promise<CampaignInvitationResponse> {
@@ -321,6 +342,60 @@ export const campaignCandidateService = {
       return parseStartResponse(unwrapData(response.data), id);
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not start campaign interview.');
+    }
+  },
+
+  async enrollCampaignFace(
+    campaignId: string,
+    sessionId: string,
+    imageFile: File,
+  ): Promise<void> {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    try {
+      await apiClient.post(
+        campaignCandidateEndpoints.faceEnroll(campaignId, sessionId),
+        formData,
+        multipartFormDataConfig,
+      );
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not enroll face image.');
+    }
+  },
+
+  async checkCampaignFace(
+    campaignId: string,
+    sessionId: string,
+    imageFile: File,
+  ): Promise<FaceCheckResponse | null> {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    try {
+      const response = await apiClient.post<unknown>(
+        campaignCandidateEndpoints.faceCheck(campaignId, sessionId),
+        formData,
+        multipartFormDataConfig,
+      );
+      if (response.status === 204 || response.data == null || response.data === '') {
+        return null;
+      }
+      return parseFaceCheck(unwrapData(response.data));
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not run face check.');
+    }
+  },
+
+  async createCampaignFlag(
+    campaignId: string,
+    sessionId: string,
+    payload: CreateCampaignFlagRequest,
+  ): Promise<void> {
+    try {
+      await apiClient.post(campaignCandidateEndpoints.flags(campaignId, sessionId), payload);
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not report monitoring signal.');
     }
   },
 };

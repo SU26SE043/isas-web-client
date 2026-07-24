@@ -14,12 +14,13 @@ import { useState } from 'react';
 
 interface B2cPracticeInterviewRoomProps {
   sessionId: string;
+  completePath?: string;
 }
 
-export function B2cPracticeInterviewRoom({ sessionId }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId);
+  const room = useB2cPracticeRoom(sessionId, { completePath });
   const answerPlayback = useAnswerPlayback(room.recorder.audioFile);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
