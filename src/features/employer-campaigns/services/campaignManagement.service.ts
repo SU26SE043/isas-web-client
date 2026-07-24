@@ -1,7 +1,7 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { mockDelay } from '@/shared/mock';
-import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_PROCTORING, MOCK_CAMPAIGN_INVITATIONS, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
@@ -471,6 +471,11 @@ export const campaignManagementService = {
     id: string,
     query?: GetCampaignInvitationsQuery,
   ): Promise<CampaignInvitationsPage> {
+    if (!isLiveCampaignId(id)) {
+      await mockDelay(200);
+      return { items: MOCK_CAMPAIGN_INVITATIONS, nextCursor: null };
+    }
+
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
       params: {
         ...(query?.cursor ? { cursor: query.cursor } : {}),

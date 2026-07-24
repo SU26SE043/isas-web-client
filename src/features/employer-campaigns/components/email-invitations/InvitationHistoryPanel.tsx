@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
 import { EmailInviteCampaignSummary } from './EmailInviteCampaignSummary';
 import { InvitationDetailDrawer } from './InvitationDetailDrawer';
 import { InvitationFilterBar } from './InvitationFilterBar';
+import { InvitationHistoryFooter } from './InvitationHistoryFooter';
 import { InvitationList } from './InvitationList';
 import { InvitationStatusSummary } from './InvitationStatusSummary';
 import { ReissueConfirmModal } from './ReissueConfirmModal';
@@ -47,23 +48,35 @@ export function InvitationHistoryPanel({
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<CampaignInvitationStatus | 'all'>('all');
   const [sort, setSort] = useState<InvitationSortMode>('newest');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [detail, setDetail] = useState<CampaignInvitation | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<CampaignInvitation | null>(null);
   const [reissuingInvitationId, setReissuingInvitationId] = useState<string | null>(null);
 
   const loadedItems = useMemo(
-    () => mergeInvitationsById([], query.data?.pages.flatMap((page) => page.items) ?? []),
+    () => mergeInvitationsById([], query.data?.pages.flatMap((pageData) => pageData.items) ?? []),
     [query.data?.pages],
   );
   const filtered = useMemo(
     () => filterAndSortInvitations(loadedItems, { search, status, sort }),
     [loadedItems, search, sort, status],
   );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const pagedItems = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, pageSize, safePage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, status, sort, pageSize]);
+
   const hasMore = Boolean(query.hasNextPage);
-  const listError =
-    query.isError
-      ? getInvitationApiErrorMessage(query.error, t(getInvitationListErrorKey(query.error)))
-      : null;
+  const listError = query.isError
+    ? getInvitationApiErrorMessage(query.error, t(getInvitationListErrorKey(query.error)))
+    : null;
 
   const clearFilters = () => {
     setSearch('');
@@ -100,9 +113,7 @@ export function InvitationHistoryPanel({
       );
       await query.refetch();
     } catch (error) {
-      toast.error(
-        getInvitationApiErrorMessage(error, t(getInvitationReissueErrorKey(error))),
-      );
+      toast.error(getInvitationApiErrorMessage(error, t(getInvitationReissueErrorKey(error))));
     } finally {
       setReissuingInvitationId(null);
     }
@@ -134,21 +145,6 @@ export function InvitationHistoryPanel({
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h2 className="text-xl font-semibold text-foreground">
-          {t('employer.campaigns.campaignInvitations.history.title')}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {t('employer.campaigns.campaignInvitations.history.description')}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {t('employer.campaigns.campaignInvitations.history.loadedCount').replace(
-            '{{count}}',
-            String(loadedItems.length),
-          )}
-        </p>
-      </header>
-
       <EmailInviteCampaignSummary campaign={campaign} />
       <InvitationStatusSummary items={loadedItems} hasMore={hasMore} />
       <InvitationFilterBar
@@ -186,34 +182,26 @@ export function InvitationHistoryPanel({
           }
         />
       ) : (
-        <InvitationList
-          items={filtered}
-          isActiveCampaign={isActive}
-          reissuingInvitationId={reissuingInvitationId}
-          onViewDetail={setDetail}
-          onReissue={openReissue}
-        />
+        <>
+          <InvitationList
+            items={pagedItems}
+            isActiveCampaign={isActive}
+            reissuingInvitationId={reissuingInvitationId}
+            onViewDetail={setDetail}
+            onReissue={openReissue}
+          />
+          <InvitationHistoryFooter
+            total={filtered.length}
+            page={safePage}
+            pageSize={pageSize}
+            hasMoreFromServer={hasMore}
+            isLoadingMore={query.isFetchingNextPage}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            onLoadMore={() => void query.fetchNextPage()}
+          />
+        </>
       )}
-
-      <div className="flex flex-wrap items-center gap-3">
-        {hasMore ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={query.isFetchingNextPage}
-            loading={query.isFetchingNextPage}
-            onClick={() => void query.fetchNextPage()}
-          >
-            {query.isFetchingNextPage
-              ? t('employer.campaigns.campaignInvitations.actions.loadingMore')
-              : t('employer.campaigns.campaignInvitations.actions.loadMore')}
-          </Button>
-        ) : loadedItems.length > 0 ? (
-          <p className="text-xs text-muted-foreground">
-            {t('employer.campaigns.campaignInvitations.empty.allLoaded')}
-          </p>
-        ) : null}
-      </div>
 
       <InvitationDetailDrawer
         invitation={detail}

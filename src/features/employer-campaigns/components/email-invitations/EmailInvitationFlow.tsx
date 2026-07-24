@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -40,7 +41,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
     <div
       role="tablist"
       aria-label={t('employer.campaigns.campaignInvitations.tabs.listLabel')}
-      className="flex flex-wrap gap-2 rounded-xl border border-subtle bg-surface-overlay p-1"
+      className="grid gap-2 sm:grid-cols-2"
     >
       {(
         [
@@ -60,10 +61,10 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
             aria-selected={isActive}
             onClick={() => setTab(item.id)}
             className={cn(
-              'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out',
+              'rounded-xl px-4 py-3 text-sm font-semibold transition-[background-color,color,box-shadow,border-color] duration-200 ease-out',
               isActive
-                ? 'bg-white/[0.08] text-foreground shadow-[var(--satin-inset)]'
-                : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                ? 'border border-violet-400/30 bg-gradient-to-r from-violet-600/80 to-violet-500/60 text-white shadow-[0_8px_24px_rgba(124,58,237,0.25)]'
+                : 'frame-satin bg-surface-raised text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
             )}
           >
             {item.label}
@@ -75,19 +76,37 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <Link
-          to={`/employer/campaigns/${campaign.id}/invite`}
-          className="text-sm text-muted-foreground hover:text-foreground"
+      <header className="space-y-3">
+        <nav
+          aria-label={t('employer.campaigns.campaignInvitations.breadcrumb.label')}
+          className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
         >
-          {t('employer.campaigns.inviteFlow.backToMethod')}
-        </Link>
-        <h1 className="heading-primary text-3xl text-foreground">
-          {t('employer.campaigns.emailInvitations.title')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('employer.campaigns.emailInvitations.description')}
-        </p>
+          <Link
+            to={`/employer/campaigns/${campaign.id}/invite`}
+            className="inline-flex items-center gap-1 hover:text-foreground"
+          >
+            {t('employer.campaigns.campaignInvitations.breadcrumb.back')}
+          </Link>
+          <ChevronRight className="size-3.5 shrink-0 opacity-60" aria-hidden />
+          <Link
+            to={`/employer/campaigns/${campaign.id}/invite`}
+            className="hover:text-foreground"
+          >
+            {t('employer.campaigns.campaignInvitations.breadcrumb.candidates')}
+          </Link>
+          <ChevronRight className="size-3.5 shrink-0 opacity-60" aria-hidden />
+          <span className="text-foreground">
+            {t('employer.campaigns.emailInvitations.title')}
+          </span>
+        </nav>
+        <div className="space-y-1">
+          <h1 className="heading-primary text-3xl text-foreground">
+            {t('employer.campaigns.emailInvitations.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t('employer.campaigns.emailInvitations.description')}
+          </p>
+        </div>
       </header>
 
       {tabs}
