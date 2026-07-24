@@ -4,6 +4,7 @@ import type {
   CampaignCandidateErrorCode,
   CampaignCriterion,
   CampaignInvitationResponse,
+  JoinCampaignResponse,
 } from '../types/campaignCandidate.types';
 import { campaignCandidateEndpoints } from './campaignCandidate.endpoints';
 
@@ -123,6 +124,26 @@ function parseInvitation(raw: unknown): CampaignInvitationResponse {
   };
 }
 
+function parseJoinResponse(raw: unknown): JoinCampaignResponse {
+  if (!raw || typeof raw !== 'object') {
+    throw new CampaignCandidateError('unknown', 'Invalid join response.');
+  }
+  const data = raw as Record<string, unknown>;
+  const accessToken = String(data.accessToken ?? '').trim();
+  const campaignId = String(data.campaignId ?? '').trim();
+  const candidateId = String(data.candidateId ?? '').trim();
+  if (!accessToken || !campaignId || !candidateId) {
+    throw new CampaignCandidateError('unknown', 'Invalid join response.');
+  }
+
+  return {
+    accessToken,
+    campaignId,
+    candidateId,
+    membershipStatus: String(data.membershipStatus ?? 'Joined'),
+  };
+}
+
 /** Live Candidate Campaign APIs — no mock fixtures. */
 export const campaignCandidateService = {
   async getInvitationByToken(token: string): Promise<CampaignInvitationResponse> {
@@ -136,6 +157,20 @@ export const campaignCandidateService = {
       return parseInvitation(unwrapData(response.data));
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not load invitation.');
+    }
+  },
+
+  async joinCampaignByToken(token: string): Promise<JoinCampaignResponse> {
+    const trimmed = token.trim();
+    if (!trimmed) {
+      throw new CampaignCandidateError('badRequest', 'Missing invitation token.');
+    }
+
+    try {
+      const response = await apiClient.post<unknown>(campaignCandidateEndpoints.join(trimmed));
+      return parseJoinResponse(unwrapData(response.data));
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not join campaign.');
     }
   },
 };

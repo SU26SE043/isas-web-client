@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { authService } from '@/features/auth/services/authService';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
+import { authTokenStorage } from '@/shared/api/authTokenStorage';
 import { useLanguage } from '@/shared/languages';
 import { InvitationDetailPanel } from '../components/InvitationDetailPanel';
 import { InviteExpiredState } from '../components/InviteExpiredState';
@@ -12,7 +15,9 @@ import {
 } from '../services/campaignCandidate.service';
 import type { CampaignInvitationResponse } from '../types/campaignCandidate.types';
 import {
+  clearPendingInviteToken,
   invitationPath,
+  readPendingInviteToken,
   savePendingInviteToken,
 } from '../utils/inviteContinuation';
 
@@ -23,17 +28,32 @@ type InviteLoadState =
   | { status: 'gone' }
   | { status: 'error'; message: string };
 
+function joinErrorMessage(error: unknown, t: (key: string) => string): string {
+  if (error instanceof CampaignCandidateError) {
+    if (error.code === 'notFound') return t('campaigns.invite.joinNotFound');
+    if (error.code === 'gone') return t('campaigns.invite.joinGone');
+    if (error.code === 'identityError') return t('campaigns.invite.joinIdentityError');
+    return error.message || t('campaigns.invite.joinUnknown');
+  }
+  return t('campaigns.invite.joinUnknown');
+}
+
 export function MagicLinkLandingPage() {
   const { token = '' } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const authLoading = useAuthStore((state) => state.isLoading);
   const [authHydrated, setAuthHydrated] = useState(() => useAuthStore.persist.hasHydrated());
   const [loadState, setLoadState] = useState<InviteLoadState>({ status: 'loading' });
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const joinStartedRef = useRef(false);
 
   const invitePath = invitationPath(token);
+  const canJoin = isAuthenticated && user?.role === UserRole.CANDIDATE;
 
   useEffect(() => {
     return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
@@ -42,6 +62,8 @@ export function MagicLinkLandingPage() {
   useEffect(() => {
     let active = true;
     setLoadState({ status: 'loading' });
+    setJoinError(null);
+    joinStartedRef.current = false;
 
     void campaignCandidateService
       .getInvitationByToken(token)
@@ -70,18 +92,62 @@ export function MagicLinkLandingPage() {
     };
   }, [token, t]);
 
+  const performJoin = useCallback(async () => {
+    if (!token.trim() || joinStartedRef.current) return;
+    joinStartedRef.current = true;
+    setIsJoining(true);
+    setJoinError(null);
+    savePendingInviteToken(token);
+
+    try {
+      const result = await campaignCandidateService.joinCampaignByToken(token);
+      authTokenStorage.setAccessToken(result.accessToken);
+
+      try {
+        const me = await authService.me();
+        setUser(me);
+      } catch {
+        /* keep existing user if /me fails after token swap */
+      }
+
+      clearPendingInviteToken();
+      toast.success(t('campaigns.invite.joinSuccess'));
+      navigate(
+        `/candidate/campaigns?highlight=${encodeURIComponent(result.campaignId)}`,
+        { replace: true },
+      );
+    } catch (error) {
+      joinStartedRef.current = false;
+      setJoinError(joinErrorMessage(error, t));
+      if (error instanceof CampaignCandidateError && error.code === 'gone') {
+        setLoadState({ status: 'gone' });
+      }
+      if (error instanceof CampaignCandidateError && error.code === 'notFound') {
+        setLoadState({ status: 'notFound' });
+      }
+    } finally {
+      setIsJoining(false);
+    }
+  }, [navigate, setUser, t, token]);
+
   const handleJoin = useCallback(() => {
     if (!token.trim()) return;
     savePendingInviteToken(token);
 
-    if (!isAuthenticated || user?.role !== UserRole.CANDIDATE) {
+    if (!canJoin) {
       navigate('/login', { state: { from: { pathname: invitePath } } });
       return;
     }
 
-    // Join POST is wired in the next slice; keep token and stay for continuation.
-    navigate(invitePath, { replace: true, state: { pendingJoin: true } });
-  }, [invitePath, isAuthenticated, navigate, token, user?.role]);
+    void performJoin();
+  }, [canJoin, invitePath, navigate, performJoin, token]);
+
+  useEffect(() => {
+    if (loadState.status !== 'ready' || !canJoin || isJoining) return;
+    const pending = readPendingInviteToken();
+    if (!pending || pending !== token.trim()) return;
+    void performJoin();
+  }, [canJoin, isJoining, loadState.status, performJoin, token]);
 
   const isBootstrapping = !authHydrated || authLoading;
 
@@ -119,27 +185,7 @@ export function MagicLinkLandingPage() {
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => {
-            setLoadState({ status: 'loading' });
-            void campaignCandidateService
-              .getInvitationByToken(token)
-              .then((invitation) => setLoadState({ status: 'ready', invitation }))
-              .catch((error: unknown) => {
-                if (error instanceof CampaignCandidateError && error.code === 'notFound') {
-                  setLoadState({ status: 'notFound' });
-                  return;
-                }
-                if (error instanceof CampaignCandidateError && error.code === 'gone') {
-                  setLoadState({ status: 'gone' });
-                  return;
-                }
-                setLoadState({
-                  status: 'error',
-                  message:
-                    error instanceof Error ? error.message : t('campaigns.invite.loadError'),
-                });
-              });
-          }}
+          onClick={() => window.location.reload()}
         >
           {t('campaigns.invite.retryLoad')}
         </button>
@@ -150,17 +196,17 @@ export function MagicLinkLandingPage() {
     );
   }
 
-  const needsAuth = !isAuthenticated || user?.role !== UserRole.CANDIDATE;
-
   return (
     <div className="page-container page-section min-h-[70vh] space-y-6 py-8">
       <InvitationDetailPanel
         invitation={loadState.invitation}
         onJoin={handleJoin}
-        joinDisabled={false}
+        isJoining={isJoining}
+        joinDisabled={isJoining}
+        joinError={joinError}
       />
 
-      {needsAuth ? (
+      {!canJoin ? (
         <p className="mx-auto max-w-3xl text-center text-sm text-zinc-500">
           {t('campaigns.invite.authRequiredHint')}{' '}
           <Link
