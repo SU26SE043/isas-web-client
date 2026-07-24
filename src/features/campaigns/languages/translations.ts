@@ -282,9 +282,6 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.my.cta.viewResult': 'View results',
     'campaigns.detail.loading': 'Loading campaign details...',
     'campaigns.detail.badge': 'Recruitment campaign',
-    'campaigns.detail.notFound': 'Campaign not found',
-    'campaigns.detail.notFoundHint':
-      'Campaign was not found or you have not joined this campaign.',
     'campaigns.detail.retry': 'Retry',
     'campaigns.detail.examInfo': 'Interview details',
     'campaigns.detail.startedYes': 'The interview has already been started.',
