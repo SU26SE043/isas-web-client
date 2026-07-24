@@ -3,7 +3,9 @@ import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import type {
   CampaignCandidateErrorCode,
   CampaignCriterion,
+  CampaignInterviewStatus,
   CampaignInvitationResponse,
+  CandidateCampaignListItem,
   JoinCampaignResponse,
 } from '../types/campaignCandidate.types';
 import { campaignCandidateEndpoints } from './campaignCandidate.endpoints';
@@ -144,6 +146,41 @@ function parseJoinResponse(raw: unknown): JoinCampaignResponse {
   };
 }
 
+function parseInterviewStatus(value: unknown): CampaignInterviewStatus {
+  const raw = String(value ?? '');
+  if (raw === 'InProgress' || raw === 'Completed' || raw === 'NotStarted') return raw;
+  return 'NotStarted';
+}
+
+function parseListItem(raw: unknown): CandidateCampaignListItem | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  const campaignId = String(data.campaignId ?? '').trim();
+  const title = String(data.title ?? '').trim();
+  if (!campaignId || !title) return null;
+
+  return {
+    campaignId,
+    title,
+    company: asOptionalString(data.company),
+    jobTitle: asOptionalString(data.jobTitle),
+    deadline: asOptionalString(data.deadline),
+    membershipStatus: String(data.membershipStatus ?? ''),
+    interviewStatus: parseInterviewStatus(data.interviewStatus),
+  };
+}
+
+function unwrapList(payload: unknown): unknown[] {
+  const data = unwrapData(payload);
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.results)) return obj.results;
+  }
+  return [];
+}
+
 /** Live Candidate Campaign APIs — no mock fixtures. */
 export const campaignCandidateService = {
   async getInvitationByToken(token: string): Promise<CampaignInvitationResponse> {
@@ -171,6 +208,17 @@ export const campaignCandidateService = {
       return parseJoinResponse(unwrapData(response.data));
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not join campaign.');
+    }
+  },
+
+  async getMyCampaigns(): Promise<CandidateCampaignListItem[]> {
+    try {
+      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.myCampaigns);
+      return unwrapList(response.data)
+        .map(parseListItem)
+        .filter((item): item is CandidateCampaignListItem => item != null);
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not load campaigns.');
     }
   },
 };

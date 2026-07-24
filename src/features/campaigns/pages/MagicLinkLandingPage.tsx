@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/services/authService';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -9,6 +10,7 @@ import { authTokenStorage } from '@/shared/api/authTokenStorage';
 import { useLanguage } from '@/shared/languages';
 import { InvitationDetailPanel } from '../components/InvitationDetailPanel';
 import { InviteExpiredState } from '../components/InviteExpiredState';
+import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
 import {
   CampaignCandidateError,
   campaignCandidateService,
@@ -42,6 +44,7 @@ export function MagicLinkLandingPage() {
   const { token = '' } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
@@ -111,6 +114,7 @@ export function MagicLinkLandingPage() {
       }
 
       clearPendingInviteToken();
+      await queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY });
       toast.success(t('campaigns.invite.joinSuccess'));
       navigate(
         `/candidate/campaigns?highlight=${encodeURIComponent(result.campaignId)}`,
@@ -128,7 +132,7 @@ export function MagicLinkLandingPage() {
     } finally {
       setIsJoining(false);
     }
-  }, [navigate, setUser, t, token]);
+  }, [navigate, queryClient, setUser, t, token]);
 
   const handleJoin = useCallback(() => {
     if (!token.trim()) return;
