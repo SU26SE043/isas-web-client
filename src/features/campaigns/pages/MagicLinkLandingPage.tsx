@@ -116,10 +116,7 @@ export function MagicLinkLandingPage() {
       clearPendingInviteToken();
       await queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY });
       toast.success(t('campaigns.invite.joinSuccess'));
-      navigate(
-        `/candidate/campaigns?highlight=${encodeURIComponent(result.campaignId)}`,
-        { replace: true },
-      );
+      navigate(`/candidate/campaigns/${encodeURIComponent(result.campaignId)}`, { replace: true });
     } catch (error) {
       joinStartedRef.current = false;
       setJoinError(joinErrorMessage(error, t));
