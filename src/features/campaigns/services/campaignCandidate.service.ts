@@ -8,6 +8,7 @@ import type {
   CandidateCampaignDetailResponse,
   CandidateCampaignListItem,
   JoinCampaignResponse,
+  StartCampaignInterviewResponse,
 } from '../types/campaignCandidate.types';
 import { campaignCandidateEndpoints } from './campaignCandidate.endpoints';
 
@@ -212,6 +213,48 @@ function parseDetail(raw: unknown): CandidateCampaignDetailResponse {
   };
 }
 
+function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCampaignInterviewResponse {
+  if (!raw || typeof raw !== 'object') {
+    throw new CampaignCandidateError('unknown', 'Invalid start interview response.');
+  }
+  const data = raw as Record<string, unknown>;
+  const sessionId = String(data.sessionId ?? '').trim();
+  const campaignId = String(data.campaignId ?? fallbackCampaignId).trim();
+  if (!sessionId || !campaignId) {
+    throw new CampaignCandidateError('unknown', 'Invalid start interview response.');
+  }
+
+  const questionsRaw = Array.isArray(data.questions) ? data.questions : [];
+  const questions = questionsRaw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const q = item as Record<string, unknown>;
+      const id = String(q.id ?? '').trim();
+      const content = String(q.content ?? '').trim();
+      if (!id || !content) return null;
+      const orderNo = typeof q.orderNo === 'number' ? q.orderNo : Number(q.orderNo ?? 0);
+      const timeLimitSec =
+        typeof q.timeLimitSec === 'number' ? q.timeLimitSec : Number(q.timeLimitSec ?? 0);
+      return {
+        id,
+        orderNo: Number.isFinite(orderNo) ? orderNo : 0,
+        content,
+        timeLimitSec: Number.isFinite(timeLimitSec) ? timeLimitSec : 0,
+      };
+    })
+    .filter((item): item is StartCampaignInterviewResponse['questions'][number] => item != null)
+    .sort((a, b) => a.orderNo - b.orderNo);
+
+  return {
+    sessionId,
+    campaignId,
+    questions,
+    antiCheatEnabled: Boolean(data.antiCheatEnabled),
+    faceEnrollRequired: Boolean(data.faceEnrollRequired),
+    adaptiveEnabled: Boolean(data.adaptiveEnabled),
+  };
+}
+
 /** Live Candidate Campaign APIs — no mock fixtures. */
 export const campaignCandidateService = {
   async getInvitationByToken(token: string): Promise<CampaignInvitationResponse> {
@@ -264,6 +307,20 @@ export const campaignCandidateService = {
       return parseDetail(unwrapData(response.data));
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not load campaign detail.');
+    }
+  },
+
+  async startCampaignInterview(campaignId: string): Promise<StartCampaignInterviewResponse> {
+    const id = campaignId.trim();
+    if (!id) {
+      throw new CampaignCandidateError('badRequest', 'Missing campaign id.');
+    }
+
+    try {
+      const response = await apiClient.post<unknown>(campaignCandidateEndpoints.start(id));
+      return parseStartResponse(unwrapData(response.data), id);
+    } catch (error) {
+      throw toCampaignCandidateError(error, 'Could not start campaign interview.');
     }
   },
 };

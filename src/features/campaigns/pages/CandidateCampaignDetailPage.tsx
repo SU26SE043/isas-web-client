@@ -1,12 +1,20 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Briefcase, CalendarClock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { useLanguage } from '@/shared/languages';
-import { useMyCampaignDetail } from '../hooks/useMyCampaignDetail';
-import { CampaignCandidateError } from '../services/campaignCandidate.service';
+import { StartCampaignConfirmDialog } from '../components/StartCampaignConfirmDialog';
+import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
+import { myCampaignDetailQueryKey, useMyCampaignDetail } from '../hooks/useMyCampaignDetail';
+import {
+  CampaignCandidateError,
+  campaignCandidateService,
+} from '../services/campaignCandidate.service';
 import type { CampaignInterviewStatus } from '../types/campaignCandidate.types';
+import { saveCampaignInterviewSession } from '../utils/campaignInterviewSession';
 
 function interviewStatusLabelKey(status: CampaignInterviewStatus) {
   if (status === 'InProgress') return 'campaigns.my.interview.inProgress';
@@ -14,20 +22,36 @@ function interviewStatusLabelKey(status: CampaignInterviewStatus) {
   return 'campaigns.my.interview.notStarted';
 }
 
+function startErrorMessage(error: unknown, t: (key: string) => string): string {
+  if (!(error instanceof CampaignCandidateError)) return t('campaigns.detail.startUnknown');
+  if (error.code === 'unauthorized') return t('campaigns.detail.startUnauthorized');
+  if (error.code === 'paymentRequired') return t('campaigns.detail.startPaymentRequired');
+  if (error.code === 'forbidden') return t('campaigns.detail.startForbidden');
+  if (error.code === 'conflict') return error.message || t('campaigns.detail.startConflict');
+  if (error.code === 'identityError' || error.code === 'serverError') {
+    return t('campaigns.detail.startServerError');
+  }
+  return error.message || t('campaigns.detail.startUnknown');
+}
+
 export function CandidateCampaignDetailPage() {
   const { id = '' } = useParams();
   const { language, t } = useLanguage();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const { data, isLoading, isError, error, refetch, isFetching } = useMyCampaignDetail(id);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+
+  const detailPath = useMemo(
+    () => `/candidate/campaigns/${encodeURIComponent(id)}`,
+    [id],
+  );
 
   if (!user || user.role !== UserRole.CANDIDATE) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: { pathname: `/candidate/campaigns/${encodeURIComponent(id)}` } }}
-      />
-    );
+    return <Navigate to="/login" replace state={{ from: { pathname: detailPath } }} />;
   }
 
   if (isLoading) {
@@ -39,16 +63,8 @@ export function CandidateCampaignDetailPage() {
     );
   }
 
-  const isUnauthorized =
-    error instanceof CampaignCandidateError && error.code === 'unauthorized';
-  if (isUnauthorized) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: { pathname: `/candidate/campaigns/${encodeURIComponent(id)}` } }}
-      />
-    );
+  if (error instanceof CampaignCandidateError && error.code === 'unauthorized') {
+    return <Navigate to="/login" replace state={{ from: { pathname: detailPath } }} />;
   }
 
   const isNotFound = error instanceof CampaignCandidateError && error.code === 'notFound';
@@ -83,6 +99,31 @@ export function CandidateCampaignDetailPage() {
   const canContinue = data.started && Boolean(data.sessionId) && data.interviewStatus !== 'Completed';
   const isCompleted = data.interviewStatus === 'Completed';
 
+  const handleStartConfirm = async () => {
+    setIsStarting(true);
+    setStartError(null);
+    try {
+      const started = await campaignCandidateService.startCampaignInterview(data.campaignId);
+      saveCampaignInterviewSession(started);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: myCampaignDetailQueryKey(data.campaignId) }),
+      ]);
+      setConfirmOpen(false);
+
+      const base = `/candidate/campaigns/${encodeURIComponent(started.campaignId)}`;
+      if (started.faceEnrollRequired) {
+        navigate(`${base}/face-enroll/${encodeURIComponent(started.sessionId)}`);
+      } else {
+        navigate(`${base}/interview/${encodeURIComponent(started.sessionId)}`);
+      }
+    } catch (startErr) {
+      setStartError(startErrorMessage(startErr, t));
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-4xl space-y-6 py-6">
@@ -112,11 +153,6 @@ export function CandidateCampaignDetailPage() {
               {t('campaigns.invite.deadline')}: {deadlineLabel}
             </p>
           ) : null}
-          {data.membershipStatus ? (
-            <p className="text-xs text-zinc-500">
-              {t('campaigns.my.membership')}: {data.membershipStatus}
-            </p>
-          ) : null}
         </header>
 
         {data.description ? (
@@ -139,25 +175,9 @@ export function CandidateCampaignDetailPage() {
                   key={criterion.id ?? `${criterion.name}-${index}`}
                   className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-zinc-100">{criterion.name}</p>
-                    <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
-                      {criterion.weight != null ? (
-                        <span className="rounded-md border border-zinc-800 px-2 py-0.5">
-                          {t('campaigns.invite.weight')}: {criterion.weight}
-                        </span>
-                      ) : null}
-                      {criterion.maxScore != null ? (
-                        <span className="rounded-md border border-zinc-800 px-2 py-0.5">
-                          {t('campaigns.invite.maxScore')}: {criterion.maxScore}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
+                  <p className="text-sm font-medium text-zinc-100">{criterion.name}</p>
                   {criterion.description ? (
-                    <p className="mt-2 text-sm text-zinc-500 [overflow-wrap:anywhere]">
-                      {criterion.description}
-                    </p>
+                    <p className="mt-2 text-sm text-zinc-500">{criterion.description}</p>
                   ) : null}
                 </li>
               ))}
@@ -168,16 +188,7 @@ export function CandidateCampaignDetailPage() {
         <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
           <h2 className="text-sm font-semibold text-zinc-100">{t('campaigns.detail.examInfo')}</h2>
           <ul className="space-y-2 text-sm text-zinc-400">
-            <li>
-              {data.started
-                ? t('campaigns.detail.startedYes')
-                : t('campaigns.detail.startedNo')}
-            </li>
-            {data.sessionId ? (
-              <li>
-                {t('campaigns.detail.sessionId')}: {data.sessionId}
-              </li>
-            ) : null}
+            <li>{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li>
             <li>{t('campaigns.detail.deviceHint')}</li>
           </ul>
 
@@ -201,13 +212,28 @@ export function CandidateCampaignDetailPage() {
             ) : null}
 
             {!isCompleted && !canContinue ? (
-              <button type="button" className="btn-primary inline-flex" data-start-campaign>
+              <button
+                type="button"
+                className="btn-primary inline-flex"
+                onClick={() => {
+                  setStartError(null);
+                  setConfirmOpen(true);
+                }}
+              >
                 {t('campaigns.detail.start')}
               </button>
             ) : null}
           </div>
         </section>
       </div>
+
+      <StartCampaignConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={() => void handleStartConfirm()}
+        isSubmitting={isStarting}
+        errorMessage={startError}
+      />
     </div>
   );
 }
