@@ -37,6 +37,7 @@ export const publicRoutes: RouteObject[] = [
       { path: 'terms', element: <TermsPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'maintenance', element: <MaintenancePage /> },
+      { path: 'invitations/:token', element: <MagicLinkLandingPage /> },
       { path: 'invite/:token', element: <MagicLinkLandingPage /> },
       ...devRoutes,
     ],

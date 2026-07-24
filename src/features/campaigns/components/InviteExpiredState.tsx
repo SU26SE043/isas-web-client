@@ -14,14 +14,14 @@ export function InviteExpiredState({ variant }: InviteExpiredStateProps) {
 
   const titleKey =
     variant === 'expired'
-      ? 'campaigns.invite.expiredTitle'
+      ? 'campaigns.invite.goneTitle'
       : variant === 'revoked'
         ? 'campaigns.invite.revokedTitle'
         : 'campaigns.invite.notFound';
 
   const hintKey =
     variant === 'expired'
-      ? 'campaigns.invite.expired'
+      ? 'campaigns.invite.goneHint'
       : variant === 'revoked'
         ? 'campaigns.invite.revokedHint'
         : 'campaigns.invite.notFoundHint';
