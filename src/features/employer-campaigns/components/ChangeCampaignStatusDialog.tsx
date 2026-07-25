@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Archive, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -55,6 +56,7 @@ export function ChangeCampaignStatusDialog({
       }}
     >
       <DialogTrigger render={<Button type="button" variant="outline" disabled={disabled} />}>
+        {targetStatus === 'Closed' ? <X aria-hidden /> : <Archive aria-hidden />}
         {t(`employer.campaigns.detail.${key}`)}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" showCloseButton={!isSubmitting}>

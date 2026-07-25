@@ -1,3 +1,17 @@
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 */
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  Clock3,
+  LayoutGrid,
+  ListChecks,
+  MessageSquareText,
+  Settings,
+  Trophy,
+  UsersRound,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,12 +46,16 @@ export function CampaignDetailView({
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
-        <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
+      <div className="page-container page-section mx-auto max-w-[1440px] space-y-4">
+        <Link
+          to="/employer/campaigns"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
           {t('employer.campaigns.detail.back')}
         </Link>
 
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <CampaignManagementStatusBadge status={campaign.status} />
@@ -47,7 +65,9 @@ export function CampaignDetailView({
                 </span>
               ) : null}
             </div>
-            <h1 className="heading-primary text-3xl text-foreground">{campaign.title}</h1>
+            <h1 className="heading-primary max-w-4xl text-3xl text-foreground sm:text-4xl">
+              {campaign.title}
+            </h1>
             <p className="body-text max-w-3xl text-sm text-muted-foreground">
               {campaign.summary || campaign.jobDescription.slice(0, 180)}
             </p>
@@ -85,23 +105,28 @@ export function CampaignDetailView({
           </Alert>
         ) : null}
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader>
-              <CardTitle>{t('employer.campaigns.detail.overview')}</CardTitle>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
+          <Card className="frame-satin bg-info/[0.035]">
+            <CardHeader className="pb-3">
+              <IconTitle icon={LayoutGrid} tone="info">
+                {t('employer.campaigns.detail.overview')}
+              </IconTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <p>{campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')}</p>
               <div className="grid gap-3 md:grid-cols-3">
                 <Info
+                  icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
                   value={`${campaign.applicants}/${campaign.capacity}`}
                 />
                 <Info
+                  icon={Clock3}
                   label={t('employer.campaigns.form.duration')}
                   value={`${campaign.durationMinutes}`}
                 />
                 <Info
+                  icon={MessageSquareText}
                   label={t('employer.campaigns.form.questionsUnit')}
                   value={`${campaign.questions.length}`}
                 />
@@ -109,24 +134,30 @@ export function CampaignDetailView({
             </CardContent>
           </Card>
 
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader>
-              <CardTitle>{t('employer.campaigns.detail.settings')}</CardTitle>
+          <Card className="frame-satin bg-surface-raised">
+            <CardHeader className="pb-3">
+              <IconTitle icon={Settings} tone="info">
+                {t('employer.campaigns.detail.settings')}
+              </IconTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>
+              <p className="flex items-center gap-2">
+                <CalendarDays className="size-4 shrink-0" aria-hidden />
                 {t('employer.campaigns.form.deadline')}: {campaign.deadline}
               </p>
-              <p>
+              <p className="flex items-center gap-2">
+                <Building2 className="size-4 shrink-0" aria-hidden />
                 {t('employer.campaigns.form.company')}: {campaign.company}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border border-subtle bg-surface-raised">
-          <CardHeader>
-            <CardTitle>{t('employer.campaigns.detail.rubric')}</CardTitle>
+        <Card className="frame-satin bg-chart-cat-6/[0.035]">
+          <CardHeader className="pb-3">
+            <IconTitle icon={Trophy} tone="violet">
+              {t('employer.campaigns.detail.rubric')}
+            </IconTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {campaign.rubric.map((item) => (
@@ -143,9 +174,11 @@ export function CampaignDetailView({
           </CardContent>
         </Card>
 
-        <Card className="border border-subtle bg-surface-raised">
-          <CardHeader>
-            <CardTitle>{t('employer.campaigns.detail.questions')}</CardTitle>
+        <Card className="frame-satin bg-chart-cat-6/[0.025]">
+          <CardHeader className="pb-3">
+            <IconTitle icon={ListChecks} tone="violet">
+              {t('employer.campaigns.detail.questions')}
+            </IconTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {campaign.questions.map((item, index) => (
@@ -168,11 +201,39 @@ export function CampaignDetailView({
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function IconTitle({
+  children,
+  icon: Icon,
+  tone,
+}: {
+  children: React.ReactNode;
+  icon: LucideIcon;
+  tone: 'info' | 'violet';
+}) {
+  const toneClass =
+    tone === 'info'
+      ? 'border-info/30 bg-info/15 text-info-light'
+      : 'border-chart-cat-6/30 bg-chart-cat-6/15 text-chart-cat-6';
   return (
-    <div className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-medium text-foreground">{value}</p>
+    <CardTitle className="flex items-center gap-3">
+      <span className={`flex size-9 items-center justify-center rounded-lg border ${toneClass}`}>
+        <Icon className="size-4" aria-hidden />
+      </span>
+      {children}
+    </CardTitle>
+  );
+}
+
+function Info({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-info/15 bg-info/[0.05] px-3 py-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-info/10 text-info-light">
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="mt-1 text-lg font-semibold text-foreground">{value}</p>
+      </div>
     </div>
   );
 }

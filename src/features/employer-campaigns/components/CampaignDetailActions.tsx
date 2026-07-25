@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BarChart3, Pencil, Send, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { ChangeCampaignStatusDialog } from './ChangeCampaignStatusDialog';
@@ -33,6 +34,7 @@ export function CampaignDetailActions({
       {isDraft ? (
         <>
           <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
+            <Pencil aria-hidden />
             {t('employer.campaigns.detail.edit')}
           </Button>
           <PublishCampaignDialog onPublish={onPublish} />
@@ -45,12 +47,15 @@ export function CampaignDetailActions({
       {isActive ? (
         <>
           <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
+            <Send aria-hidden />
             {t('employer.campaigns.detail.inviteCandidates')}
           </Button>
           <Button variant="outline" render={<Link to={resultsTo} />}>
+            <BarChart3 aria-hidden />
             {t('employer.campaigns.results.title')}
           </Button>
           <Button variant="outline" render={<Link to={pipelineTo} />}>
+            <UsersRound aria-hidden />
             {t('employer.campaigns.detail.pipeline')}
           </Button>
           <ChangeCampaignStatusDialog
@@ -63,9 +68,11 @@ export function CampaignDetailActions({
       {isClosed ? (
         <>
           <Button variant="outline" render={<Link to={resultsTo} />}>
+            <BarChart3 aria-hidden />
             {t('employer.campaigns.results.title')}
           </Button>
           <Button variant="outline" render={<Link to={pipelineTo} />}>
+            <UsersRound aria-hidden />
             {t('employer.campaigns.detail.pipeline')}
           </Button>
           <ChangeCampaignStatusDialog
@@ -81,6 +88,7 @@ export function CampaignDetailActions({
       {campaign.status === 'archived' || campaign.status === 'paused' ? (
         <>
           <Button variant="outline" render={<Link to={pipelineTo} />}>
+            <UsersRound aria-hidden />
             {t('employer.campaigns.detail.pipeline')}
           </Button>
           {canDelete && onDelete ? (
