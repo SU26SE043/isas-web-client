@@ -40,9 +40,13 @@ export function CampaignDetailView({
   onChangeStatus,
   onDelete,
 }: CampaignDetailViewProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isActive = campaign.status === 'active';
   const isDraft = campaign.status === 'draft';
+  const formattedDeadline = new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(campaign.deadline));
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -68,7 +72,7 @@ export function CampaignDetailView({
             <h1 className="heading-primary max-w-4xl text-3xl text-foreground sm:text-4xl">
               {campaign.title}
             </h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">
+            <p className="max-w-3xl text-sm font-medium leading-relaxed text-foreground/90">
               {campaign.summary || campaign.jobDescription.slice(0, 180)}
             </p>
           </div>
@@ -113,7 +117,9 @@ export function CampaignDetailView({
               </IconTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
-              <p>{campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')}</p>
+              <p className="font-medium leading-relaxed text-foreground/90">
+                {campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')}
+              </p>
               <div className="grid gap-3 md:grid-cols-3">
                 <Info
                   icon={UsersRound}
@@ -142,12 +148,14 @@ export function CampaignDetailView({
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p className="flex items-center gap-2">
-                <CalendarDays className="size-4 shrink-0" aria-hidden />
-                {t('employer.campaigns.form.deadline')}: {campaign.deadline}
+                <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
+                <span>{t('employer.campaigns.form.deadline')}:</span>
+                <strong className="font-semibold text-foreground">{formattedDeadline}</strong>
               </p>
               <p className="flex items-center gap-2">
-                <Building2 className="size-4 shrink-0" aria-hidden />
-                {t('employer.campaigns.form.company')}: {campaign.company}
+                <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
+                <span>{t('employer.campaigns.form.company')}:</span>
+                <strong className="font-semibold text-foreground">{campaign.company}</strong>
               </p>
             </CardContent>
           </Card>
