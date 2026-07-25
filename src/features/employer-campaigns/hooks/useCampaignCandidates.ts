@@ -3,6 +3,7 @@ import { campaignManagementService } from '../services/campaignManagement.servic
 import type {
   CandidateListQuery,
   InviteCampaignCandidatesRequest,
+  UpdateCampaignCandidatePayload,
 } from '../types/campaign.api.types';
 
 export const EMPLOYER_CAMPAIGN_CANDIDATES_QUERY_KEY = ['employer', 'campaign', 'candidates'] as const;
@@ -23,6 +24,18 @@ export function campaignCandidateDetailQueryKey(campaignId: string, candidateId:
 
 export function campaignResultsQueryKey(campaignId: string) {
   return [...EMPLOYER_CAMPAIGN_RESULTS_QUERY_KEY, campaignId] as const;
+}
+
+function invalidateCampaignCandidates(
+  queryClient: ReturnType<typeof useQueryClient>,
+  campaignId: string,
+) {
+  void queryClient.invalidateQueries({
+    queryKey: [...EMPLOYER_CAMPAIGN_CANDIDATES_QUERY_KEY, campaignId],
+  });
+  void queryClient.invalidateQueries({
+    queryKey: [...EMPLOYER_CAMPAIGN_CANDIDATE_DETAIL_QUERY_KEY, campaignId],
+  });
 }
 
 export function useCampaignCandidates(
@@ -46,10 +59,7 @@ export function useCampaignCandidateDetail(
     queryKey: campaignCandidateDetailQueryKey(campaignId ?? '', candidateId ?? ''),
     queryFn: () =>
       campaignManagementService.getCampaignCandidateDetail(campaignId!, candidateId!),
-    enabled:
-      Boolean(campaignId) &&
-      Boolean(candidateId) &&
-      (options?.enabled ?? true),
+    enabled: Boolean(campaignId) && Boolean(candidateId) && (options?.enabled ?? true),
   });
 }
 
@@ -73,9 +83,7 @@ export function useAnalyzeCandidateCvs(campaignId: string | undefined) {
     },
     onSuccess: () => {
       if (!campaignId) return;
-      void queryClient.invalidateQueries({
-        queryKey: [...EMPLOYER_CAMPAIGN_CANDIDATES_QUERY_KEY, campaignId],
-      });
+      invalidateCampaignCandidates(queryClient, campaignId);
     },
   });
 }
@@ -89,8 +97,29 @@ export function useInviteCampaignCandidates(campaignId: string | undefined) {
     },
     onSuccess: () => {
       if (!campaignId) return;
+      invalidateCampaignCandidates(queryClient, campaignId);
+    },
+  });
+}
+
+export function useUpdateCampaignCandidate(campaignId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      candidateId,
+      payload,
+    }: {
+      candidateId: string;
+      payload: UpdateCampaignCandidatePayload;
+    }) => {
+      if (!campaignId) throw new Error('CAMPAIGN_ID_REQUIRED');
+      return campaignManagementService.updateCampaignCandidate(campaignId, candidateId, payload);
+    },
+    onSuccess: (_data, variables) => {
+      if (!campaignId) return;
+      invalidateCampaignCandidates(queryClient, campaignId);
       void queryClient.invalidateQueries({
-        queryKey: [...EMPLOYER_CAMPAIGN_CANDIDATES_QUERY_KEY, campaignId],
+        queryKey: campaignCandidateDetailQueryKey(campaignId, variables.candidateId),
       });
     },
   });

@@ -312,6 +312,27 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.match': 'Điểm phù hợp',
     'employer.campaigns.screening.detail.max': 'Điểm tối đa',
     'employer.campaigns.screening.detail.reasoning': 'Phân tích',
+    'employer.campaigns.screening.actions.viewCv': 'Xem CV',
+    'employer.campaigns.screening.actions.edit': 'Chỉnh sửa thông tin',
+    'employer.campaigns.screening.actions.menuFor': 'Mở thao tác của {{name}}',
+    'employer.campaigns.screening.edit.title': 'Chỉnh sửa thông tin ứng viên',
+    'employer.campaigns.screening.edit.description':
+      'Cập nhật thông tin khi dữ liệu được trích xuất từ CV chưa chính xác.',
+    'employer.campaigns.screening.edit.fullName': 'Họ và tên',
+    'employer.campaigns.screening.edit.email': 'Email',
+    'employer.campaigns.screening.edit.cancel': 'Hủy',
+    'employer.campaigns.screening.edit.save': 'Lưu thay đổi',
+    'employer.campaigns.screening.edit.saving': 'Đang lưu...',
+    'employer.campaigns.screening.edit.success': 'Đã cập nhật thông tin ứng viên.',
+    'employer.campaigns.screening.edit.emailInvalid':
+      'Email không đúng định dạng. Vui lòng kiểm tra lại.',
+    'employer.campaigns.screening.edit.fullNameRequired': 'Họ và tên không được để trống.',
+    'employer.campaigns.screening.edit.invitedDisabled':
+      'Không thể chỉnh sửa vì ứng viên đã được gửi lời mời.',
+    'employer.campaigns.screening.cv.title': 'CV của {{name}}',
+    'employer.campaigns.screening.cv.loading': 'Đang tải CV...',
+    'employer.campaigns.screening.cv.openTab': 'Mở trong tab mới',
+    'employer.campaigns.screening.cv.download': 'Tải xuống',
     'employer.campaigns.screening.invitation.send': 'Gửi lời mời',
     'employer.campaigns.screening.invitation.confirmTitle': 'Xác nhận gửi lời mời',
     'employer.campaigns.screening.invitation.confirmDesc': 'Gửi lời mời tới {count} ứng viên đã chọn.',
@@ -344,6 +365,17 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.errors.loadCandidatesFailed': 'Không thể tải danh sách ứng viên.',
     'employer.campaigns.screening.errors.loadResultsFailed': 'Không thể tải kết quả phỏng vấn.',
     'employer.campaigns.screening.errors.retry': 'Thử lại',
+    'employer.campaigns.screening.errors.updateBadRequest':
+      'Email không hợp lệ hoặc đã được sử dụng bởi một ứng viên khác trong chiến dịch.',
+    'employer.campaigns.screening.errors.updateNotFound':
+      'Không tìm thấy ứng viên hoặc chiến dịch.',
+    'employer.campaigns.screening.errors.updateInvited':
+      'Ứng viên đã được gửi lời mời nên không thể chỉnh sửa.',
+    'employer.campaigns.screening.errors.updateFailed':
+      'Không thể cập nhật thông tin ứng viên. Vui lòng thử lại.',
+    'employer.campaigns.screening.errors.cvNotFound':
+      'Không tìm thấy file CV của ứng viên này.',
+    'employer.campaigns.screening.errors.cvLoadFailed': 'Không thể tải CV. Vui lòng thử lại.',
     'employer.campaigns.inviteFlow.cvTitle': 'Phân tích CV',
     'employer.campaigns.inviteFlow.cvDesc': 'Upload nhiều CV, để AI phân tích, xếp hạng và hỗ trợ chọn ứng viên phù hợp.',
     'employer.campaigns.inviteFlow.cvCta': 'Bắt đầu phân tích CV',
@@ -1210,6 +1242,27 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.match': 'Match score',
     'employer.campaigns.screening.detail.max': 'Max score',
     'employer.campaigns.screening.detail.reasoning': 'Reasoning',
+    'employer.campaigns.screening.actions.viewCv': 'View CV',
+    'employer.campaigns.screening.actions.edit': 'Edit information',
+    'employer.campaigns.screening.actions.menuFor': 'Open actions for {{name}}',
+    'employer.campaigns.screening.edit.title': 'Edit candidate information',
+    'employer.campaigns.screening.edit.description':
+      'Update details when CV extraction data is inaccurate.',
+    'employer.campaigns.screening.edit.fullName': 'Full name',
+    'employer.campaigns.screening.edit.email': 'Email',
+    'employer.campaigns.screening.edit.cancel': 'Cancel',
+    'employer.campaigns.screening.edit.save': 'Save changes',
+    'employer.campaigns.screening.edit.saving': 'Saving...',
+    'employer.campaigns.screening.edit.success': 'Candidate information updated.',
+    'employer.campaigns.screening.edit.emailInvalid':
+      'Email format is invalid. Please check and try again.',
+    'employer.campaigns.screening.edit.fullNameRequired': 'Full name cannot be empty.',
+    'employer.campaigns.screening.edit.invitedDisabled':
+      'Cannot edit because this candidate has already been invited.',
+    'employer.campaigns.screening.cv.title': 'CV for {{name}}',
+    'employer.campaigns.screening.cv.loading': 'Loading CV...',
+    'employer.campaigns.screening.cv.openTab': 'Open in new tab',
+    'employer.campaigns.screening.cv.download': 'Download',
     'employer.campaigns.screening.invitation.send': 'Send invites',
     'employer.campaigns.screening.invitation.confirmTitle': 'Confirm invitations',
     'employer.campaigns.screening.invitation.confirmDesc': 'Send invitations to {count} selected candidates.',
@@ -1242,6 +1295,17 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.errors.loadCandidatesFailed': 'Could not load candidates.',
     'employer.campaigns.screening.errors.loadResultsFailed': 'Could not load interview results.',
     'employer.campaigns.screening.errors.retry': 'Retry',
+    'employer.campaigns.screening.errors.updateBadRequest':
+      'Email is invalid or already used by another candidate in this campaign.',
+    'employer.campaigns.screening.errors.updateNotFound':
+      'Candidate or campaign was not found.',
+    'employer.campaigns.screening.errors.updateInvited':
+      'This candidate has already been invited and cannot be edited.',
+    'employer.campaigns.screening.errors.updateFailed':
+      'Could not update candidate information. Please try again.',
+    'employer.campaigns.screening.errors.cvNotFound':
+      'No CV file was found for this candidate.',
+    'employer.campaigns.screening.errors.cvLoadFailed': 'Could not load the CV. Please try again.',
     'employer.campaigns.inviteFlow.cvTitle': 'Analyze CVs',
     'employer.campaigns.inviteFlow.cvDesc': 'Upload multiple CVs for AI analysis, ranking, and selection.',
     'employer.campaigns.inviteFlow.cvCta': 'Start CV analysis',

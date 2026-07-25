@@ -20,6 +20,7 @@ import type {
   GetCampaignInvitationsQuery,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
+  UpdateCampaignCandidatePayload,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
 import type {
@@ -762,6 +763,43 @@ export const campaignManagementService = {
     const parsed = parseCandidateDetail(response.data);
     if (!parsed) throw new CampaignRequestError(404, 'CANDIDATE_NOT_FOUND');
     return parsed;
+  },
+
+  /**
+   * Live: PATCH /api/v1/campaign/{id}/candidates/{candidateId}
+   * Body may include only changed fields. 204 No Content — do not parse JSON.
+   */
+  async updateCampaignCandidate(
+    id: string,
+    candidateId: string,
+    payload: UpdateCampaignCandidatePayload,
+  ): Promise<void> {
+    const body: UpdateCampaignCandidatePayload = {};
+    if (typeof payload.email === 'string') body.email = payload.email;
+    if (typeof payload.fullName === 'string') body.fullName = payload.fullName;
+    if (Object.keys(body).length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_CANDIDATE_PATCH');
+    }
+    await apiClient.patch(campaignManagementEndpoints.candidateDetail(id, candidateId), body, {
+      validateStatus: (status) => status === 204 || status === 200,
+    });
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id}/candidates/{candidateId}/cv — PDF blob.
+   */
+  async getCampaignCandidateCv(id: string, candidateId: string): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+      campaignManagementEndpoints.candidateCv(id, candidateId),
+      { responseType: 'blob' },
+    );
+    const blob = response.data;
+    if (!(blob instanceof Blob) || blob.size <= 0) {
+      throw new CampaignRequestError(404, 'CANDIDATE_CV_NOT_FOUND');
+    }
+    return blob.type === 'application/pdf'
+      ? blob
+      : new Blob([blob], { type: 'application/pdf' });
   },
 
   /**

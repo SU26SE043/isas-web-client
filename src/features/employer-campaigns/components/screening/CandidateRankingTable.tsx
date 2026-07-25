@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { canSelectCandidate } from './screeningUtils';
+import { CandidateActionsMenu } from './CandidateActionsMenu';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -18,6 +19,8 @@ interface CandidateRankingTableProps {
   onToggle: (id: string) => void;
   onToggleAll: (ids: string[]) => void;
   onViewDetail: (id: string) => void;
+  onViewCv: (candidate: CampaignCandidateListItem) => void;
+  onEdit: (candidate: CampaignCandidateListItem) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
 }
@@ -28,6 +31,8 @@ export function CandidateRankingTable({
   onToggle,
   onToggleAll,
   onViewDetail,
+  onViewCv,
+  onEdit,
   hasActiveFilters,
   onClearFilters,
 }: CandidateRankingTableProps) {
@@ -79,7 +84,7 @@ export function CandidateRankingTable({
         </div>
       </div>
 
-      <Table className="min-w-[720px]">
+      <Table className="min-w-[820px]">
         <TableHeader>
           <TableRow>
             <TableHead>{t('employer.campaigns.screening.ranking.selectAll')}</TableHead>
@@ -106,12 +111,12 @@ export function CandidateRankingTable({
                     aria-label={item.fullName ?? item.email ?? item.id}
                   />
                 </TableCell>
-                <TableCell>{index + 1}</TableCell>
+                <TableCell className="font-semibold text-foreground">{index + 1}</TableCell>
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
                 </TableCell>
-                <TableCell className="text-foreground">
+                <TableCell className="font-semibold text-foreground">
                   {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
                 </TableCell>
                 <TableCell>
@@ -119,14 +124,12 @@ export function CandidateRankingTable({
                 </TableCell>
                 <TableCell className="text-foreground">{item.status}</TableCell>
                 <TableCell>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onViewDetail(item.id)}
-                  >
-                    {t('employer.campaigns.screening.ranking.viewDetail')}
-                  </Button>
+                  <CandidateActionsMenu
+                    candidate={item}
+                    onViewCv={() => onViewCv(item)}
+                    onEdit={() => onEdit(item)}
+                    onViewDetail={() => onViewDetail(item.id)}
+                  />
                 </TableCell>
               </TableRow>
             );

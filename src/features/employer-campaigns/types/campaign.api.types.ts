@@ -279,6 +279,12 @@ export type CampaignCandidateDetail = {
   criterionScores: CandidateCriterionScore[];
 };
 
+/** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */
+export type UpdateCampaignCandidatePayload = {
+  email?: string;
+  fullName?: string;
+};
+
 /** POST /api/v1/campaign/{id}/candidates/invite */
 export type InviteCampaignCandidatesRequest = {
   candidateIds: string[];
