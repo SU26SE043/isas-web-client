@@ -116,20 +116,23 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 
 ## Data table template (bắt buộc)
 
-Mọi **data table** trong app dùng chung primitive `@/components/ui/table` — **không** tự dựng `<table>` + `border-subtle` / Card frame ad-hoc.
+**Khung chuẩn = Employer Pipeline table** (glass rounded shell, header chữ hoa trắng, divider mỏng, badge semantic, nút outline + primary trong cột thao tác).
+
+Mọi **data table** dùng `@/components/ui/table` — **không** tự dựng `<table>` + `border-subtle` / Card frame ad-hoc.
 
 | Template | File | Khi dùng |
 |----------|------|----------|
-| `Table` (+ Header/Body/Row/Head/Cell) | `src/components/ui/table.tsx` | Danh sách dữ liệu, lịch sử, ranking, admin grids, billing |
-| `GlassTableContainer` | `src/components/ui/glass-table-container.tsx` | Chỉ khi cần wrapper glass riêng; mặc định đã nằm trong `Table` |
+| `Table` (+ Header/Body/Row/Head/Cell) | `src/components/ui/table.tsx` | Ranking, lịch sử, admin, billing, invitations… |
+| `GlassTableContainer` | `src/components/ui/glass-table-container.tsx` | Đã nằm trong `Table`; chỉ dùng riêng khi layout đặc biệt |
 
 ### Quy tắc dùng table
 
 1. Import `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell` từ `@/components/ui/table`.
-2. **Không** bọc thêm `Card` / `rounded-xl border border-subtle` bên ngoài `Table` (tránh double frame).
-3. Nested detail table (ví dụ expand row) → `<Table framed={false}>`.
-4. Mobile: giữ card/list riêng; desktop table dùng `hidden md:block` / `lg:block` khi cần.
-5. Status / semantic colors chỉ trong cell content (badge), không đổi chrome của table.
+2. **Không** bọc thêm `Card` / `rounded-xl border` bên ngoài `Table` (tránh double frame).
+3. Nested detail table → `<Table framed={false}>`.
+4. Mobile: card/list riêng; desktop `hidden md:block` / `lg:block` khi cần.
+5. Primary cell text: `className="font-medium text-foreground"` (hoặc `font-semibold`); secondary line: `text-xs text-muted-foreground`.
+6. Status chỉ dùng badge semantic; không đổi chrome của khung glass.
 
 ```tsx
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -137,19 +140,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 <Table>
   <TableHeader>
     <TableRow>
-      <TableHead>Email</TableHead>
-      <TableHead>Status</TableHead>
+      <TableHead>Hạng</TableHead>
+      <TableHead>Ứng viên</TableHead>
+      <TableHead className="text-right">Thao tác</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
     <TableRow>
-      <TableCell className="font-medium text-foreground">a@b.com</TableCell>
-      <TableCell>Sent</TableCell>
+      <TableCell className="font-semibold text-foreground">#1</TableCell>
+      <TableCell>
+        <p className="font-medium text-foreground">CND-1042</p>
+        <p className="text-xs text-muted-foreground">Frontend · React</p>
+      </TableCell>
+      <TableCell className="text-right">…</TableCell>
     </TableRow>
   </TableBody>
 </Table>
 ```
 
+> Không nhầm với `SelectionOption` (ô chọn domain/wizard). Selection list ≠ data table.
 ## Section & selection templates (bắt buộc khi gen UI lựa chọn)
 
 Hai primitive dùng chung toàn project — **không** dựng lại border/glass/ô chọn ad-hoc trong feature.

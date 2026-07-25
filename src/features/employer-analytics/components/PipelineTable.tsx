@@ -32,7 +32,7 @@ export function PipelineTable({ candidates, blindHiringEnabled = true }: Pipelin
             <TableRow>
               <TableHead>{t('employerAnalytics.pipeline.rank')}</TableHead>
               <TableHead>{t('employerAnalytics.pipeline.candidate')}</TableHead>
-              <TableHead>{t('employerAnalytics.pipeline.score')}</TableHead>
+              <TableHead className="text-center">{t('employerAnalytics.pipeline.score')}</TableHead>
               <TableHead>{t('employerAnalytics.pipeline.status')}</TableHead>
               <TableHead>{t('employerAnalytics.pipeline.completed')}</TableHead>
               <TableHead className="text-right">{t('employerAnalytics.pipeline.actions')}</TableHead>
@@ -53,8 +53,8 @@ export function PipelineTable({ candidates, blindHiringEnabled = true }: Pipelin
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className="font-semibold text-foreground">
-                  {candidate.score || '-'}
+                <TableCell className="text-center font-semibold text-foreground">
+                  {candidate.score || '—'}
                 </TableCell>
                 <TableCell>
                   <PipelineStatusBadge status={candidate.status} />
@@ -62,7 +62,7 @@ export function PipelineTable({ candidates, blindHiringEnabled = true }: Pipelin
                 <TableCell>
                   {candidate.completedAt
                     ? new Date(candidate.completedAt).toLocaleDateString(locale)
-                    : '-'}
+                    : '—'}
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
