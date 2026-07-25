@@ -35,28 +35,26 @@ export function TeamMemberTable({ team, onInvite }: TeamMemberTableProps) {
           {t('engagement.team.invite')}
         </Button>
       </div>
-      <div className="overflow-hidden rounded-xl border border-subtle bg-surface-raised">
-        <Table>
-          <TableHeader className="bg-surface-base text-xs uppercase tracking-wide text-muted-foreground">
-            <TableRow>
-              <TableHead>{t('engagement.team.member')}</TableHead>
-              <TableHead>{t('engagement.team.role')}</TableHead>
-              <TableHead>{t('engagement.team.status')}</TableHead>
-              <TableHead>{t('engagement.team.lastActive')}</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('engagement.team.member')}</TableHead>
+            <TableHead>{t('engagement.team.role')}</TableHead>
+            <TableHead>{t('engagement.team.status')}</TableHead>
+            <TableHead>{t('engagement.team.lastActive')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {team.map((member) => (
+            <TableRow key={member.id}>
+              <TableCell><p className="font-medium text-foreground">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell>
+              <TableCell className="text-foreground">{t(`engagement.team.role.${member.role}`)}</TableCell>
+              <TableCell className="text-foreground">{t(`engagement.team.status.${member.status}`)}</TableCell>
+              <TableCell>{new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(member.lastActiveAt))}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {team.map((member) => (
-              <TableRow key={member.id}>
-                <TableCell><p className="font-medium text-foreground">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell>
-                <TableCell>{t(`engagement.team.role.${member.role}`)}</TableCell>
-                <TableCell>{t(`engagement.team.status.${member.status}`)}</TableCell>
-                <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(member.lastActiveAt))}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
       <p className="text-xs text-muted-foreground">{t('engagement.team.roleRule')}</p>
     </section>
   );

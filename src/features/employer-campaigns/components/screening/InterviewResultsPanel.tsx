@@ -2,6 +2,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/patterns/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import { useCampaignResults } from '../../hooks/useCampaignCandidates';
 import type { CampaignResultItem } from '../../types/campaign.api.types';
@@ -34,7 +42,9 @@ export function InterviewResultsPanel({
     return (
       <div className="space-y-3">
         <Alert variant="error">
-          <AlertDescription>{t('employer.campaigns.screening.errors.loadResultsFailed')}</AlertDescription>
+          <AlertDescription>
+            {t('employer.campaigns.screening.errors.loadResultsFailed')}
+          </AlertDescription>
         </Alert>
         <Button type="button" variant="outline" onClick={() => void refetch()}>
           {t('employer.campaigns.screening.errors.retry')}
@@ -77,27 +87,25 @@ export function InterviewResultsPanel({
         <StatCard label={t('employer.campaigns.screening.interview.pending')} value={pendingCount} />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-satin">
-        <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="border-b border-satin bg-surface-overlay text-xs text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.rank')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.candidate')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.interview.effectiveScore')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.interview.aiScore')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.interview.overrideScore')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.status')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.interview.flags')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.interview.scoredAt')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.results.map((item) => (
-              <ResultRow key={`${item.candidateId}-${item.sessionId}`} item={item} t={t} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table className="min-w-[880px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('employer.campaigns.screening.ranking.rank')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.candidate')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.interview.effectiveScore')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.interview.aiScore')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.interview.overrideScore')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.status')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.interview.flags')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.interview.scoredAt')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.results.map((item) => (
+            <ResultRow key={`${item.candidateId}-${item.sessionId}`} item={item} t={t} />
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -127,15 +135,15 @@ function ResultRow({
         : t('employer.campaigns.screening.interview.pending');
 
   return (
-    <tr className="border-b border-satin last:border-0">
-      <td className="px-3 py-2 text-muted-foreground">{item.rank}</td>
-      <td className="px-3 py-2">
+    <TableRow>
+      <TableCell>{item.rank}</TableCell>
+      <TableCell>
         <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
         <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
-      </td>
-      <td className="px-3 py-2 text-foreground">{effectiveScore}</td>
-      <td className="px-3 py-2 text-muted-foreground">{item.aiScore}</td>
-      <td className="px-3 py-2 text-muted-foreground">
+      </TableCell>
+      <TableCell className="text-foreground">{effectiveScore}</TableCell>
+      <TableCell>{item.aiScore}</TableCell>
+      <TableCell>
         {item.overrideScore != null ? (
           <>
             {item.overrideScore}
@@ -148,14 +156,14 @@ function ResultRow({
         ) : (
           '—'
         )}
-      </td>
-      <td className="px-3 py-2 text-foreground">{resultLabel}</td>
-      <td className="px-3 py-2 text-xs text-muted-foreground">
+      </TableCell>
+      <TableCell className="text-foreground">{resultLabel}</TableCell>
+      <TableCell className="text-xs">
         {item.flags.length
           ? item.flags.map((flag) => `${flag.type} (${flag.count})`).join(', ')
           : '—'}
-      </td>
-      <td className="px-3 py-2 text-xs text-muted-foreground">{item.scoredAt}</td>
-    </tr>
+      </TableCell>
+      <TableCell className="text-xs">{item.scoredAt}</TableCell>
+    </TableRow>
   );
 }

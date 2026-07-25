@@ -1,6 +1,13 @@
 import { Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GlassTableContainer } from '@/components/ui/glass-table-container';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInvitation } from '../../types/campaign.api.types';
 import { InvitationStatusBadge } from './InvitationStatusBadge';
@@ -36,101 +43,82 @@ export function InvitationList({
   return (
     <>
       <div className="hidden lg:block">
-        <GlassTableContainer className="overflow-x-auto rounded-xl">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-satin bg-surface-overlay/80 text-xs tracking-wide text-muted-foreground uppercase">
-              <tr>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.email')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.status')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.createdAt')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.emailSentAt')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.expiresAt')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.joinedAt')}
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  {t('employer.campaigns.campaignInvitations.table.actions')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((invitation) => {
-                const canReissue = isActiveCampaign && invitation.status !== 'Joined';
-                const isRowReissuing = reissuingInvitationId === invitation.id;
-                return (
-                  <tr
-                    key={invitation.id}
-                    className="border-b border-satin/50 align-top transition-colors hover:bg-white/[0.03]"
+        <Table className="min-w-[960px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.email')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.status')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.createdAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.emailSentAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.expiresAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.joinedAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.actions')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((invitation) => {
+              const canReissue = isActiveCampaign && invitation.status !== 'Joined';
+              const isRowReissuing = reissuingInvitationId === invitation.id;
+              return (
+                <TableRow key={invitation.id} className="align-top">
+                  <TableCell
+                    className="max-w-[16rem] break-words font-medium whitespace-normal text-foreground"
+                    style={{ overflowWrap: 'anywhere' }}
                   >
-                    <td
-                      className="max-w-[16rem] px-4 py-3.5 break-words font-medium text-foreground"
-                      style={{ overflowWrap: 'anywhere' }}
-                    >
-                      {invitation.email}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <InvitationStatusBadge status={invitation.status} />
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                      {formatDateTime(invitation.createdAt, language, empty)}
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                      {invitation.emailSentAt
-                        ? formatDateTime(invitation.emailSentAt, language, empty)
-                        : t('employer.campaigns.campaignInvitations.table.notSent')}
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                      {formatDateTime(invitation.expiresAt, language, empty)}
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                      {formatDateTime(invitation.joinedAt, language, empty)}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-wrap gap-2">
+                    {invitation.email}
+                  </TableCell>
+                  <TableCell>
+                    <InvitationStatusBadge status={invitation.status} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(invitation.createdAt, language, empty)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {invitation.emailSentAt
+                      ? formatDateTime(invitation.emailSentAt, language, empty)
+                      : t('employer.campaigns.campaignInvitations.table.notSent')}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(invitation.expiresAt, language, empty)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(invitation.joinedAt, language, empty)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onViewDetail(invitation)}
+                      >
+                        <Eye className="size-3.5" aria-hidden />
+                        {t('employer.campaigns.campaignInvitations.actions.viewDetail')}
+                      </Button>
+                      {canReissue ? (
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
-                          onClick={() => onViewDetail(invitation)}
+                          disabled={isRowReissuing}
+                          loading={isRowReissuing}
+                          aria-label={t(
+                            'employer.campaigns.campaignInvitations.actions.reissueFor',
+                          ).replace('{{email}}', invitation.email)}
+                          onClick={() => onReissue(invitation)}
                         >
-                          <Eye className="size-3.5" aria-hidden />
-                          {t('employer.campaigns.campaignInvitations.actions.viewDetail')}
+                          <RefreshCw className="size-3.5" aria-hidden />
+                          {isRowReissuing
+                            ? t('employer.campaigns.campaignInvitations.actions.reissuing')
+                            : t('employer.campaigns.campaignInvitations.actions.reissue')}
                         </Button>
-                        {canReissue ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            disabled={isRowReissuing}
-                            loading={isRowReissuing}
-                            aria-label={t(
-                              'employer.campaigns.campaignInvitations.actions.reissueFor',
-                            ).replace('{{email}}', invitation.email)}
-                            onClick={() => onReissue(invitation)}
-                          >
-                            <RefreshCw className="size-3.5" aria-hidden />
-                            {isRowReissuing
-                              ? t('employer.campaigns.campaignInvitations.actions.reissuing')
-                              : t('employer.campaigns.campaignInvitations.actions.reissue')}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </GlassTableContainer>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
 
       <ul className="space-y-3 lg:hidden">

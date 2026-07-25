@@ -21,37 +21,35 @@ export function AdminUsersPage() {
         <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
         <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('admin.users.search')} />
       </div>
-      <div className="overflow-hidden rounded-xl border border-subtle bg-surface-raised">
-        <Table>
-          <TableHeader className="bg-surface-base text-xs uppercase tracking-wide text-muted-foreground">
-            <TableRow>
-              <TableHead>{t('admin.users.user')}</TableHead>
-              <TableHead>{t('admin.users.role')}</TableHead>
-              <TableHead>{t('admin.users.tenant')}</TableHead>
-              <TableHead>{t('admin.users.mfa')}</TableHead>
-              <TableHead>{t('admin.table.status')}</TableHead>
-              <TableHead className="text-right">{t('admin.table.actions')}</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('admin.users.user')}</TableHead>
+            <TableHead>{t('admin.users.role')}</TableHead>
+            <TableHead>{t('admin.users.tenant')}</TableHead>
+            <TableHead>{t('admin.users.mfa')}</TableHead>
+            <TableHead>{t('admin.table.status')}</TableHead>
+            <TableHead className="text-right">{t('admin.table.actions')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell><p className="font-medium text-foreground">{user.name}</p><p className="text-xs text-muted-foreground">{user.email}</p></TableCell>
+              <TableCell>{t(`admin.userRole.${user.role}`)}</TableCell>
+              <TableCell>{user.tenant}</TableCell>
+              <TableCell>{user.mfaEnabled ? t('admin.common.yes') : t('admin.common.no')}</TableCell>
+              <TableCell><AdminStatusBadge status={user.status} /></TableCell>
+              <TableCell className="text-right">
+                <Button variant="outline" size="sm" onClick={() => suspendUser(user.id)}>
+                  <Ban aria-hidden />
+                  {t('admin.users.suspend')}
+                </Button>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell><p className="font-medium text-foreground">{user.name}</p><p className="text-xs text-muted-foreground">{user.email}</p></TableCell>
-                <TableCell>{t(`admin.userRole.${user.role}`)}</TableCell>
-                <TableCell className="text-muted-foreground">{user.tenant}</TableCell>
-                <TableCell>{user.mfaEnabled ? t('admin.common.yes') : t('admin.common.no')}</TableCell>
-                <TableCell><AdminStatusBadge status={user.status} /></TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm" onClick={() => suspendUser(user.id)}>
-                    <Ban aria-hidden />
-                    {t('admin.users.suspend')}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
       <p className="text-xs text-muted-foreground">{t('admin.users.sessionRule')} · {new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date())}</p>
     </AdminPageShell>
   );

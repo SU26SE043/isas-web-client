@@ -1,6 +1,13 @@
 import { Plus, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/patterns/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { EditableRubricCriterion } from '../types/rubric.types';
 import { RubricCriterionRow } from './RubricCriterionRow';
@@ -61,38 +68,34 @@ export function RubricCriteriaTable({
           }
         />
       ) : (
-        <div className="frame-satin overflow-hidden rounded-xl border border-satin bg-surface-raised">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-[color:var(--satin-border)] bg-surface-overlay/60 text-caption text-muted-foreground">
-                  <th className="w-8 px-2 py-3" aria-hidden />
-                  <th className="w-10 px-2 py-3">#</th>
-                  <th className="px-2 py-3 font-medium">{t('rubrics.criterion.name')}</th>
-                  <th className="px-2 py-3 font-medium">{t('rubrics.criterion.description')}</th>
-                  <th className="w-28 px-2 py-3 font-medium">{t('rubrics.criterion.weight')}</th>
-                  <th className="w-24 px-2 py-3 font-medium">{t('rubrics.criterion.maxScore')}</th>
-                  <th className="w-12 px-2 py-3">
-                    <span className="sr-only">{t('rubrics.criterion.remove')}</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[color:var(--satin-border)]">
-                {criteria.map((criterion, index) => (
-                  <RubricCriterionRow
-                    key={criterion.clientId}
-                    criterion={criterion}
-                    index={index}
-                    disabled={disabled}
-                    autoFocus={focusClientId === criterion.clientId}
-                    onChange={(patch) => onUpdate(criterion.clientId, patch)}
-                    onRemove={() => onRemove(criterion.clientId)}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table className="min-w-[56rem] border-collapse">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8 px-2" aria-hidden />
+              <TableHead className="w-10 px-2">#</TableHead>
+              <TableHead className="px-2">{t('rubrics.criterion.name')}</TableHead>
+              <TableHead className="px-2">{t('rubrics.criterion.description')}</TableHead>
+              <TableHead className="w-28 px-2">{t('rubrics.criterion.weight')}</TableHead>
+              <TableHead className="w-24 px-2">{t('rubrics.criterion.maxScore')}</TableHead>
+              <TableHead className="w-12 px-2">
+                <span className="sr-only">{t('rubrics.criterion.remove')}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {criteria.map((criterion, index) => (
+              <RubricCriterionRow
+                key={criterion.clientId}
+                criterion={criterion}
+                index={index}
+                disabled={disabled}
+                autoFocus={focusClientId === criterion.clientId}
+                onChange={(patch) => onUpdate(criterion.clientId, patch)}
+                onRemove={() => onRemove(criterion.clientId)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {validationMessage && isDirty ? (

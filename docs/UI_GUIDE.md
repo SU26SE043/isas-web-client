@@ -105,7 +105,7 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Header | `h-16`, glass-topbar + satin edge |
 | Sidebar | `glass-sidebar`, active `bg-surface-elevated` |
 | Card | `frame-satin` + `Card` primitive |
-| Table | `GlassTableContainer` / `.glass-table-container` (specular glass) |
+| Table | `Table` + `TableHeader` / `TableBody` / `TableRow` / `TableHead` / `TableCell` from `@/components/ui/table` (wraps `GlassTableContainer`) |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
 | **SelectionOption** | Satin selectable tile — **default** for choice grids |
 | Modal | Dialog + `border-satin` |
@@ -113,6 +113,42 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Primary button | `btn-primary` (white bg, black text) |
 | Secondary button | `btn-secondary` (satin outline) |
 | Ghost button | `btn-ghost` |
+
+## Data table template (bắt buộc)
+
+Mọi **data table** trong app dùng chung primitive `@/components/ui/table` — **không** tự dựng `<table>` + `border-subtle` / Card frame ad-hoc.
+
+| Template | File | Khi dùng |
+|----------|------|----------|
+| `Table` (+ Header/Body/Row/Head/Cell) | `src/components/ui/table.tsx` | Danh sách dữ liệu, lịch sử, ranking, admin grids, billing |
+| `GlassTableContainer` | `src/components/ui/glass-table-container.tsx` | Chỉ khi cần wrapper glass riêng; mặc định đã nằm trong `Table` |
+
+### Quy tắc dùng table
+
+1. Import `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell` từ `@/components/ui/table`.
+2. **Không** bọc thêm `Card` / `rounded-xl border border-subtle` bên ngoài `Table` (tránh double frame).
+3. Nested detail table (ví dụ expand row) → `<Table framed={false}>`.
+4. Mobile: giữ card/list riêng; desktop table dùng `hidden md:block` / `lg:block` khi cần.
+5. Status / semantic colors chỉ trong cell content (badge), không đổi chrome của table.
+
+```tsx
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Email</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell className="font-medium text-foreground">a@b.com</TableCell>
+      <TableCell>Sent</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
 
 ## Section & selection templates (bắt buộc khi gen UI lựa chọn)
 
