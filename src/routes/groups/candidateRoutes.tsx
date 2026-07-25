@@ -129,6 +129,7 @@ export const candidateRoutes: RouteObject[] = [
               },
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },
+              { path: 'interview-history', element: <Navigate to="/candidate/practice/history" replace /> },
               { path: 'practice/history/compare', element: <CompareResultsPage /> },
               { path: 'practice/history/:id', element: <InterviewResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },
