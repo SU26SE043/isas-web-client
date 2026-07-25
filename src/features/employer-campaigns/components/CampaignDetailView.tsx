@@ -17,11 +17,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
+import { CampaignOverviewDescription } from './CampaignOverviewDescription';
+import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignTalentTabs } from './screening/CampaignTalentTabs';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
-
 interface CampaignDetailViewProps {
   campaign: EmployerCampaign;
   published: boolean;
@@ -117,9 +118,11 @@ export function CampaignDetailView({
               </IconTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
-              <p className="font-medium leading-relaxed text-foreground/90">
-                {campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')}
-              </p>
+              <CampaignOverviewDescription
+                description={
+                  campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')
+                }
+              />
               <div className="grid gap-3 md:grid-cols-3">
                 <Info
                   icon={UsersRound}
@@ -161,13 +164,12 @@ export function CampaignDetailView({
           </Card>
         </div>
 
-        <Card className="frame-satin bg-chart-cat-6/[0.035]">
-          <CardHeader className="pb-3">
-            <IconTitle icon={Trophy} tone="violet">
-              {t('employer.campaigns.detail.rubric')}
-            </IconTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <CollapsibleDetailCard
+          title={t('employer.campaigns.detail.rubric')}
+          icon={Trophy}
+          className="frame-satin bg-chart-cat-6/[0.035]"
+        >
+          <div className="space-y-3">
             {campaign.rubric.map((item) => (
               <div key={item.id} className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
                 <p className="text-sm font-medium text-foreground">
@@ -179,23 +181,22 @@ export function CampaignDetailView({
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleDetailCard>
 
-        <Card className="frame-satin bg-chart-cat-6/[0.025]">
-          <CardHeader className="pb-3">
-            <IconTitle icon={ListChecks} tone="violet">
-              {t('employer.campaigns.detail.questions')}
-            </IconTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <CollapsibleDetailCard
+          title={t('employer.campaigns.detail.questions')}
+          icon={ListChecks}
+          className="frame-satin bg-chart-cat-6/[0.025]"
+        >
+          <div className="space-y-2">
             {campaign.questions.map((item, index) => (
               <p key={item.id} className="text-sm text-foreground">
                 {index + 1}. {item.prompt}
               </p>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleDetailCard>
 
         {!isDraft ? (
           <CampaignTalentTabs

@@ -58,7 +58,11 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                   <div className="flex flex-wrap gap-2">
                     <Link
                       to={`/employer/campaigns/${campaign.id}`}
-                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                      className={cn(
+                        buttonVariants({ variant: 'outline', size: 'sm' }),
+                        'border-foreground/30 bg-foreground/[0.06] text-foreground shadow-sm',
+                        'hover:border-foreground/50 hover:bg-foreground/10',
+                      )}
                     >
                       <Eye className="size-3.5" aria-hidden />
                       {t('employer.campaigns.list.view')}{' '}
@@ -75,7 +79,11 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                     {campaign.status === 'active' ? (
                       <Link
                         to={`/employer/campaigns/${campaign.id}/invite`}
-                        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+                        className={cn(
+                          buttonVariants({ size: 'sm' }),
+                          'bg-foreground text-background shadow-sm',
+                          'hover:bg-foreground/85',
+                        )}
                       >
                         <Send className="size-3.5" aria-hidden />
                         {t('employer.campaigns.list.invite')}
