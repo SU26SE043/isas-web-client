@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { validateCampaignPdf } from '../../utils/campaignFiles';
@@ -71,19 +70,34 @@ export function CvUploadZone({
           if (event.dataTransfer.files.length) addFiles(event.dataTransfer.files);
         }}
       >
-        <Upload className="mx-auto size-8 text-muted-foreground" aria-hidden />
+        <button
+          type="button"
+          className={cn(
+            'mx-auto grid size-12 place-items-center rounded-xl border border-info/40',
+            'bg-info/10 text-info shadow-sm transition-all',
+            'hover:border-info/70 hover:bg-info/20 hover:text-info-foreground',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2',
+            'focus-visible:ring-offset-surface-overlay disabled:cursor-not-allowed disabled:opacity-50',
+          )}
+          aria-label={t('employer.campaigns.screening.upload.selectFiles')}
+          disabled={!isActive || isAnalyzing}
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className="size-7" aria-hidden />
+        </button>
         <p className="mt-3 text-sm font-medium text-foreground">
           {t('employer.campaigns.screening.upload.selectFiles')}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {t('employer.campaigns.screening.upload.pdfOnly')}
         </p>
-        <Input
+        <input
           ref={inputRef}
           type="file"
           accept=".pdf,application/pdf"
           multiple
-          className="mt-4"
+          className="sr-only"
+          tabIndex={-1}
           disabled={!isActive || isAnalyzing}
           onChange={(event) => {
             if (event.target.files?.length) addFiles(event.target.files);
