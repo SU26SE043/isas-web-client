@@ -2,6 +2,7 @@ import type {
   CampaignCandidateDetail,
   CampaignCandidateListItem,
   CampaignResultsResponse,
+  CampaignTranscriptResponse,
   CandidateListQuery,
   CandidateUploadResponse,
   InviteCampaignCandidatesResponse,
@@ -238,6 +239,9 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
       const resultRaw = pickString(record, 'result', 'Result');
       const result =
         resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null;
+      const overrideResultRaw = pickString(record, 'overrideResult', 'OverrideResult');
+      const overrideResult =
+        overrideResultRaw === 'Pass' || overrideResultRaw === 'Fail' ? overrideResultRaw : null;
       return {
         rank: pickNumber(record, 'rank', 'Rank') ?? 0,
         candidateId,
@@ -247,7 +251,7 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
         totalScore: pickNumber(record, 'totalScore', 'TotalScore') ?? 0,
         aiScore: pickNumber(record, 'aiScore', 'AiScore') ?? 0,
         overrideScore: pickNumber(record, 'overrideScore', 'OverrideScore') ?? null,
-        overrideResult: pickString(record, 'overrideResult', 'OverrideResult') ?? null,
+        overrideResult,
         overrideNote: pickString(record, 'overrideNote', 'OverrideNote') ?? null,
         overriddenAt: pickString(record, 'overriddenAt', 'OverriddenAt') ?? null,
         result,
@@ -263,6 +267,52 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
   };
+}
+
+export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscriptResponse {
+  const root = asRecord(data);
+  const body = asRecord(root?.data) ?? root ?? {};
+  const sessionId = pickString(body, 'sessionId', 'SessionId') ?? '';
+  const questionsRaw = unwrapArrayPayload(body.questions ?? body.Questions);
+  const questions = questionsRaw
+    .map((item) => {
+      const record = asRecord(item);
+      if (!record) return null;
+      const questionId = pickString(record, 'questionId', 'QuestionId');
+      const content = pickString(record, 'content', 'Content');
+      if (!questionId || !content) return null;
+      const scoresRaw = record.scores ?? record.Scores;
+      const scores = Array.isArray(scoresRaw)
+        ? scoresRaw
+            .map((scoreItem) => {
+              const scoreRecord = asRecord(scoreItem);
+              if (!scoreRecord) return null;
+              const criterionId = pickString(scoreRecord, 'criterionId', 'CriterionId');
+              const score = pickNumber(scoreRecord, 'score', 'Score');
+              if (!criterionId || score == null) return null;
+              return {
+                criterionId,
+                criterionName: pickString(scoreRecord, 'criterionName', 'CriterionName') ?? null,
+                score,
+                maxScore: pickNumber(scoreRecord, 'maxScore', 'MaxScore') ?? null,
+                reasoning: pickString(scoreRecord, 'reasoning', 'Reasoning') ?? null,
+              };
+            })
+            .filter((score): score is NonNullable<typeof score> => score != null)
+        : [];
+      return {
+        questionId,
+        orderNo: pickNumber(record, 'orderNo', 'OrderNo') ?? 0,
+        content,
+        transcript: pickString(record, 'transcript', 'Transcript') ?? null,
+        needsReview: Boolean(record.needsReview ?? record.NeedsReview),
+        scores,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null)
+    .sort((a, b) => a.orderNo - b.orderNo);
+
+  return { sessionId, questions };
 }
 
 /** Only treat absolute http(s) URLs as safe download links. */

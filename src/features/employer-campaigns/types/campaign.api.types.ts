@@ -307,6 +307,8 @@ export type InviteCampaignCandidatesResponse = {
 };
 
 /** GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+export type CampaignResultStatus = 'Pass' | 'Fail' | null;
+
 export type CampaignResultFlag = {
   type: string;
   count: number;
@@ -322,17 +324,50 @@ export type CampaignResultItem = {
   totalScore: number;
   aiScore: number;
   overrideScore?: number | null;
-  overrideResult?: string | null;
+  overrideResult?: CampaignResultStatus;
   overrideNote?: string | null;
   overriddenAt?: string | null;
-  result?: 'Pass' | 'Fail' | null;
+  result: CampaignResultStatus;
   scoredAt: string;
   flags: CampaignResultFlag[];
 };
+
+/** Spec alias — same shape as CampaignResultItem. */
+export type CampaignRankingResult = CampaignResultItem;
 
 export type CampaignResultsResponse = {
   campaignId: string;
   passScorePct?: number | null;
   totalCandidates: number;
   results: CampaignResultItem[];
+};
+
+export type CampaignResultExportFormat = 'csv' | 'pdf';
+
+export type TranscriptCriterionScore = {
+  criterionId: string;
+  criterionName?: string | null;
+  score: number;
+  maxScore?: number | null;
+  reasoning?: string | null;
+};
+
+export type TranscriptQuestion = {
+  questionId: string;
+  orderNo: number;
+  content: string;
+  transcript?: string | null;
+  needsReview: boolean;
+  scores: TranscriptCriterionScore[];
+};
+
+export type CampaignTranscriptResponse = {
+  sessionId: string;
+  questions: TranscriptQuestion[];
+};
+
+export type OverrideCampaignResultPayload = {
+  score: number | null;
+  result: 'Pass' | 'Fail' | null;
+  note: string;
 };

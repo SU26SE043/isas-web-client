@@ -1,13 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
+import { CampaignDetailActions } from './CampaignDetailActions';
 import { CampaignTalentTabs } from './screening/CampaignTalentTabs';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
-import { ChangeCampaignStatusDialog } from './ChangeCampaignStatusDialog';
-import { DeleteCampaignDialog } from './DeleteCampaignDialog';
-import { PublishCampaignDialog } from './PublishCampaignDialog';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
 
@@ -32,8 +29,6 @@ export function CampaignDetailView({
   const { t } = useLanguage();
   const isActive = campaign.status === 'active';
   const isDraft = campaign.status === 'draft';
-  const isClosed = campaign.status === 'closed';
-  const canDelete = isDraft || isClosed || campaign.status === 'archived';
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -58,69 +53,12 @@ export function CampaignDetailView({
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {isDraft ? (
-              <>
-                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
-                  {t('employer.campaigns.detail.edit')}
-                </Button>
-                <PublishCampaignDialog onPublish={onPublish} />
-                {onDelete ? (
-                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
-                ) : null}
-              </>
-            ) : null}
-
-            {isActive ? (
-              <>
-                <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
-                  {t('employer.campaigns.detail.inviteCandidates')}
-                </Button>
-                <Button
-                  variant="outline"
-                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
-                >
-                  {t('employer.campaigns.detail.pipeline')}
-                </Button>
-                <ChangeCampaignStatusDialog
-                  targetStatus="Closed"
-                  onConfirm={() => onChangeStatus('Closed')}
-                />
-              </>
-            ) : null}
-
-            {isClosed ? (
-              <>
-                <Button
-                  variant="outline"
-                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
-                >
-                  {t('employer.campaigns.detail.pipeline')}
-                </Button>
-                <ChangeCampaignStatusDialog
-                  targetStatus="Archived"
-                  onConfirm={() => onChangeStatus('Archived')}
-                />
-                {onDelete ? (
-                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
-                ) : null}
-              </>
-            ) : null}
-
-            {campaign.status === 'archived' || campaign.status === 'paused' ? (
-              <>
-                <Button
-                  variant="outline"
-                  render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}
-                >
-                  {t('employer.campaigns.detail.pipeline')}
-                </Button>
-                {canDelete && onDelete ? (
-                  <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
-                ) : null}
-              </>
-            ) : null}
-          </div>
+          <CampaignDetailActions
+            campaign={campaign}
+            onPublish={onPublish}
+            onChangeStatus={onChangeStatus}
+            onDelete={onDelete}
+          />
         </header>
 
         {isDraft ? (

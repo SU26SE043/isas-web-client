@@ -30,4 +30,10 @@ export const campaignManagementEndpoints = {
   invitationReissue: (id: string, invitationId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/invitations/${encodeURIComponent(invitationId)}/reissue`,
   results: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results`,
+  resultsExport: (id: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/export`,
+  resultTranscript: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/transcript`,
+  resultOverride: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override`,
 } as const;

@@ -8,6 +8,7 @@ import { CampaignInvitePage } from '@/features/employer-campaigns/pages/Campaign
 import { CampaignInviteCvPage } from '@/features/employer-campaigns/pages/CampaignInviteCvPage';
 import { CampaignInviteEmailPage } from '@/features/employer-campaigns/pages/CampaignInviteEmailPage';
 import { CampaignInviteResultPage } from '@/features/employer-campaigns/pages/CampaignInviteResultPage';
+import { CampaignResultsPage } from '@/features/employer-campaigns/pages/CampaignResultsPage';
 import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
 import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
@@ -67,6 +68,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'campaigns/:id/invite/cv', element: <CampaignInviteCvPage /> },
               { path: 'campaigns/:id/invite/email', element: <CampaignInviteEmailPage /> },
               { path: 'campaigns/:id/invite/result', element: <CampaignInviteResultPage /> },
+              { path: 'campaigns/:id/results', element: <CampaignResultsPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id', element: <CampaignDetailPage /> },
               { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },

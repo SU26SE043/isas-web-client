@@ -15,8 +15,11 @@ import type {
   CandidateUploadResponse,
   CampaignCandidateDetail,
   CampaignCandidateListItem,
+  CampaignResultExportFormat,
   CampaignResultsResponse,
+  CampaignTranscriptResponse,
   GenerateCampaignQuestionsParams,
+  OverrideCampaignResultPayload,
   GetCampaignInvitationsQuery,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
@@ -48,6 +51,7 @@ import {
 import {
   buildCandidateListParams,
   parseCampaignResultsResponse,
+  parseCampaignTranscriptResponse,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -834,5 +838,58 @@ export const campaignManagementService = {
   async getCampaignResults(id: string): Promise<CampaignResultsResponse> {
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.results(id));
     return parseCampaignResultsResponse(response.data);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results/export?format=csv|pdf — binary blob. */
+  async exportCampaignResults(
+    id: string,
+    format: CampaignResultExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> {
+    const response = await apiClient.get<Blob>(campaignManagementEndpoints.resultsExport(id), {
+      params: { format },
+      responseType: 'blob',
+    });
+    const blob = response.data;
+    if (!(blob instanceof Blob) || blob.size <= 0) {
+      throw new CampaignRequestError(404, 'RESULTS_EXPORT_EMPTY');
+    }
+    const disposition = response.headers?.['content-disposition'] as string | undefined;
+    return {
+      blob,
+      filename: parseContentDispositionFilename(disposition),
+    };
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results/{sessionId}/transcript */
+  async getCampaignResultTranscript(
+    id: string,
+    sessionId: string,
+  ): Promise<CampaignTranscriptResponse> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.resultTranscript(id, sessionId),
+    );
+    return parseCampaignTranscriptResponse(response.data);
+  },
+
+  /**
+   * Live: PUT /api/v1/campaign/{id}/results/{sessionId}/override
+   * 204 No Content — do not parse JSON.
+   */
+  async overrideCampaignResult(
+    id: string,
+    sessionId: string,
+    payload: OverrideCampaignResultPayload,
+  ): Promise<void> {
+    const note = payload.note.trim();
+    if (!note) throw new CampaignRequestError(400, 'OVERRIDE_NOTE_REQUIRED');
+    await apiClient.put(
+      campaignManagementEndpoints.resultOverride(id, sessionId),
+      {
+        score: payload.score,
+        result: payload.result,
+        note,
+      } satisfies OverrideCampaignResultPayload,
+      { validateStatus: (status) => status === 204 || status === 200 },
+    );
   },
 };
