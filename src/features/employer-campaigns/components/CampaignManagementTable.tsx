@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Pencil } from 'lucide-react';
+import { ArrowRight, Eye, Pencil, Send } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Table,
@@ -26,7 +26,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
   return (
     <>
       <div className="hidden md:block">
-        <Table className="min-w-[720px]">
+        <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow>
               <TableHead>{t('employer.campaigns.list.campaign')}</TableHead>
@@ -39,9 +39,9 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
           </TableHeader>
           <TableBody>
             {campaigns.map((campaign) => (
-              <TableRow key={campaign.id}>
+              <TableRow key={campaign.id} className="group">
                 <TableCell>
-                  <p className="font-medium text-foreground">{campaign.title}</p>
+                  <p className="max-w-[320px] truncate font-semibold text-foreground">{campaign.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {campaign.location} · {t(`employer.campaigns.mode.${campaign.mode}`)}
                   </p>
@@ -60,15 +60,15 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                       to={`/employer/campaigns/${campaign.id}`}
                       className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
                     >
+                      <Eye className="size-3.5" aria-hidden />
                       {t('employer.campaigns.list.view')}{' '}
-                      <ArrowRight className="size-3" aria-hidden />
                     </Link>
                     {campaign.status === 'draft' ? (
                       <Link
                         to={`/employer/campaigns/${campaign.id}/edit`}
                         className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
                       >
-                        <Pencil className="size-3" aria-hidden />{' '}
+                        <Pencil className="size-3.5" aria-hidden />{' '}
                         {t('employer.campaigns.list.continueSetup')}
                       </Link>
                     ) : null}
@@ -77,6 +77,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                         to={`/employer/campaigns/${campaign.id}/invite`}
                         className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
                       >
+                        <Send className="size-3.5" aria-hidden />
                         {t('employer.campaigns.list.invite')}
                       </Link>
                     ) : null}
@@ -102,6 +103,18 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <CampaignManagementStatusBadge status={campaign.status} />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">{campaign.summary}</p>
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-white/8 py-3 text-xs">
+              <div>
+                <dt className="text-muted-foreground">{t('employer.campaigns.list.deadline')}</dt>
+                <dd className="mt-1 font-medium text-foreground">{formatDate(campaign.deadline, language)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">{t('employer.campaigns.list.capacity')}</dt>
+                <dd className="mt-1 font-medium text-foreground">
+                  {campaign.applicants}/{campaign.capacity}
+                </dd>
+              </div>
+            </dl>
             <Link
               to={`/employer/campaigns/${campaign.id}`}
               className={cn(buttonVariants({ variant: 'outline' }), 'mt-4 w-full')}

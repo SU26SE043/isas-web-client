@@ -505,7 +505,7 @@ select {
     background-color: var(--primary-main);
     color: var(--primary-foreground);
     border: 1px solid transparent;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1.125rem;
     font-size: var(--text-sm);
     font-weight: 600;
@@ -543,7 +543,7 @@ select {
     background-color: transparent;
     color: var(--foreground);
     border: 1px solid var(--satin-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.5625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -568,7 +568,7 @@ select {
     background-color: var(--surface-overlay);
     color: var(--isas-gray-200);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -588,7 +588,7 @@ select {
     background-color: transparent;
     color: var(--isas-gray-400);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -606,7 +606,7 @@ select {
     --c2: var(--isas-white);
     background-color: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     cursor: pointer;
     overflow: hidden;
     position: relative;
