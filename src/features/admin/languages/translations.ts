@@ -115,7 +115,6 @@ export const adminTranslations: TranslationDictionary = {
     'admin.campaignsManage.filters.allStatuses': 'Tat ca trang thai',
     'admin.campaignsManage.filters.orgId': 'Organization ID',
     'admin.campaignsManage.filters.orgIdPlaceholder': 'Loc theo orgId (Enter de ap dung)',
-    'admin.campaignsManage.filters.pageSize': 'So dong moi trang',
     'admin.campaignsManage.filters.refresh': 'Lam moi',
     'admin.campaignsManage.status.Draft': 'Draft',
     'admin.campaignsManage.status.Active': 'Active',
@@ -135,11 +134,7 @@ export const adminTranslations: TranslationDictionary = {
     'admin.campaignsManage.table.expiresAt': 'Ket thuc',
     'admin.campaignsManage.table.upcoming': 'Sap dien ra',
     'admin.campaignsManage.table.ended': 'Da ket thuc',
-    'admin.campaignsManage.pagination.previous': 'Truoc',
-    'admin.campaignsManage.pagination.next': 'Tiep',
-    'admin.campaignsManage.pagination.page': 'Trang {{page}}',
-    'admin.campaignsManage.pagination.pageItems':
-      '{{count}} chien dich tren trang {{page}}',
+    'admin.campaignsManage.pagination.itemLabel': 'chien dich',
     'admin.campaignsManage.empty.title': 'Chua co chien dich nao tren nen tang.',
     'admin.campaignsManage.empty.description':
       'Khi to chuc tao chien dich, danh sach se xuat hien tai day.',
@@ -342,7 +337,6 @@ export const adminTranslations: TranslationDictionary = {
     'admin.campaignsManage.filters.allStatuses': 'All statuses',
     'admin.campaignsManage.filters.orgId': 'Organization ID',
     'admin.campaignsManage.filters.orgIdPlaceholder': 'Filter by orgId (press Enter)',
-    'admin.campaignsManage.filters.pageSize': 'Rows per page',
     'admin.campaignsManage.filters.refresh': 'Refresh',
     'admin.campaignsManage.status.Draft': 'Draft',
     'admin.campaignsManage.status.Active': 'Active',
@@ -362,11 +356,7 @@ export const adminTranslations: TranslationDictionary = {
     'admin.campaignsManage.table.expiresAt': 'Ends',
     'admin.campaignsManage.table.upcoming': 'Upcoming',
     'admin.campaignsManage.table.ended': 'Ended',
-    'admin.campaignsManage.pagination.previous': 'Previous',
-    'admin.campaignsManage.pagination.next': 'Next',
-    'admin.campaignsManage.pagination.page': 'Page {{page}}',
-    'admin.campaignsManage.pagination.pageItems':
-      '{{count}} campaigns on page {{page}}',
+    'admin.campaignsManage.pagination.itemLabel': 'campaigns',
     'admin.campaignsManage.empty.title': 'No campaigns on the platform yet.',
     'admin.campaignsManage.empty.description':
       'Campaigns will appear here after organizations create them.',

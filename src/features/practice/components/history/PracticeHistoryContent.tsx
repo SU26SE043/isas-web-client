@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionHistoryItem } from '../../types/history.types';
-import { PracticeHistoryPagination } from './PracticeHistoryPagination';
 import { PracticeHistoryTable } from './PracticeHistoryTable';
 
 interface PracticeHistoryContentProps {
@@ -17,6 +17,7 @@ interface PracticeHistoryContentProps {
   compareMode: boolean;
   selectedIds: string[];
   pageIndex: number;
+  pageSize: number;
   canGoPrevious: boolean;
   canGoNext: boolean;
   onRetry: () => void;
@@ -26,6 +27,7 @@ interface PracticeHistoryContentProps {
   onResume: (id: string) => void;
   onPrevious: () => void;
   onNext: () => void;
+  onPageSizeChange: (value: number) => void;
 }
 
 export function PracticeHistoryContent({
@@ -38,6 +40,7 @@ export function PracticeHistoryContent({
   compareMode,
   selectedIds,
   pageIndex,
+  pageSize,
   canGoPrevious,
   canGoNext,
   onRetry,
@@ -47,6 +50,7 @@ export function PracticeHistoryContent({
   onResume,
   onPrevious,
   onNext,
+  onPageSizeChange,
 }: PracticeHistoryContentProps) {
   const { t } = useLanguage();
 
@@ -124,14 +128,18 @@ export function PracticeHistoryContent({
         onViewResult={onViewResult}
         onResume={onResume}
       />
-      <PracticeHistoryPagination
-        pageIndex={pageIndex}
+      <AppPagination
+        mode="cursor"
+        currentPage={pageIndex}
+        pageSize={pageSize}
         itemCount={pageItems.length}
-        canGoPrevious={canGoPrevious}
-        canGoNext={canGoNext}
-        isFetching={isFetching}
-        onPrevious={onPrevious}
-        onNext={onNext}
+        itemLabel={t('practice.history.pagination.itemLabel')}
+        hasPreviousPage={canGoPrevious}
+        hasNextPage={canGoNext}
+        isLoading={isFetching}
+        onPageSizeChange={onPageSizeChange}
+        onPreviousPage={onPrevious}
+        onNextPage={onNext}
       />
     </div>
   );

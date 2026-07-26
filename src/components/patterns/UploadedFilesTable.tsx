@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, Eye, FileText, Trash2 } from 'lucide-react';
+import { Eye, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
 import {
   Table,
   TableBody,
@@ -34,11 +35,7 @@ export interface UploadedFilesTableLabels {
   selectPage: string;
   preview: string;
   remove: string;
-  show: string;
-  perPage: string;
-  page: string;
-  previous: string;
-  next: string;
+  itemLabel: string;
 }
 
 interface UploadedFilesTableProps {
@@ -205,31 +202,15 @@ export function UploadedFilesTable({
         </TableBody>
       </Table>
 
-      <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex items-center gap-2">
-          {labels.show}
-          <select
-            value={pageSize}
-            className="h-8 rounded-lg border border-input bg-surface-overlay px-2 text-foreground"
-            onChange={(event) => {
-              setPageSize(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            {PAGE_SIZES.map((size) => <option key={size}>{size}</option>)}
-          </select>
-          {labels.perPage}
-        </label>
-        <div className="flex items-center justify-center gap-1">
-          <Button type="button" variant="outline" size="icon-sm" disabled={safePage === 1} aria-label={labels.previous} onClick={() => setPage(safePage - 1)}>
-            <ChevronLeft aria-hidden />
-          </Button>
-          <span className="px-2 text-foreground">{labels.page.replace('{page}', String(safePage)).replace('{total}', String(totalPages))}</span>
-          <Button type="button" variant="outline" size="icon-sm" disabled={safePage === totalPages} aria-label={labels.next} onClick={() => setPage(safePage + 1)}>
-            <ChevronRight aria-hidden />
-          </Button>
-        </div>
-      </div>
+      <AppPagination
+        currentPage={safePage}
+        pageSize={pageSize}
+        totalItems={files.length}
+        pageSizeOptions={PAGE_SIZES}
+        itemLabel={labels.itemLabel}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }

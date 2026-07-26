@@ -45,11 +45,7 @@ export function CvUploadFileQueue({
     selectPage: t('employer.campaigns.screening.upload.selectPage'),
     preview: t('employer.campaigns.screening.upload.preview'),
     remove: t('employer.campaigns.screening.upload.remove'),
-    show: t('employer.campaigns.list.pagination.show'),
-    perPage: t('employer.campaigns.list.pagination.perPage'),
-    page: t('employer.campaigns.screening.upload.page'),
-    previous: t('employer.campaigns.list.pagination.previous'),
-    next: t('employer.campaigns.list.pagination.next'),
+    itemLabel: t('employer.campaigns.screening.upload.itemLabel'),
   };
 
   const findIndex = (id: string) =>

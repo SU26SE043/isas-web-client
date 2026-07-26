@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Spinner } from '@/components/ui/spinner';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
 import {
   useCampaignInvitations,
@@ -24,7 +26,6 @@ import {
 import { EmailInviteCampaignSummary } from './EmailInviteCampaignSummary';
 import { InvitationDetailDrawer } from './InvitationDetailDrawer';
 import { InvitationFilterBar } from './InvitationFilterBar';
-import { InvitationHistoryFooter } from './InvitationHistoryFooter';
 import { InvitationList } from './InvitationList';
 import { InvitationStatusSummary } from './InvitationStatusSummary';
 import { ReissueConfirmModal } from './ReissueConfirmModal';
@@ -42,9 +43,6 @@ export function InvitationHistoryPanel({
 }: InvitationHistoryPanelProps) {
   const { t, language } = useLanguage();
   const isActive = campaign.status === 'active';
-  const query = useCampaignInvitations(campaign.id, { enabled });
-  const reissueMutation = useReissueCampaignInvitation(campaign.id);
-
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<CampaignInvitationStatus | 'all'>('all');
   const [sort, setSort] = useState<InvitationSortMode>('newest');
@@ -53,27 +51,24 @@ export function InvitationHistoryPanel({
   const [detail, setDetail] = useState<CampaignInvitation | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<CampaignInvitation | null>(null);
   const [reissuingInvitationId, setReissuingInvitationId] = useState<string | null>(null);
+  const query = useCampaignInvitations(campaign.id, { enabled, pageSize });
+  const reissueMutation = useReissueCampaignInvitation(campaign.id);
 
+  const loadedPages = query.data?.pages ?? [];
+  const currentPageItems = loadedPages[page - 1]?.items ?? [];
   const loadedItems = useMemo(
-    () => mergeInvitationsById([], query.data?.pages.flatMap((pageData) => pageData.items) ?? []),
-    [query.data?.pages],
+    () => mergeInvitationsById([], currentPageItems),
+    [currentPageItems],
   );
   const filtered = useMemo(
     () => filterAndSortInvitations(loadedItems, { search, status, sort }),
     [loadedItems, search, sort, status],
   );
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, pageCount);
-  const pagedItems = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, pageSize, safePage]);
-
   useEffect(() => {
     setPage(1);
-  }, [search, status, sort, pageSize]);
+  }, [search, status, sort]);
 
-  const hasMore = Boolean(query.hasNextPage);
+  const hasMore = page < loadedPages.length || Boolean(query.hasNextPage);
   const listError = query.isError
     ? getInvitationApiErrorMessage(query.error, t(getInvitationListErrorKey(query.error)))
     : null;
@@ -184,22 +179,44 @@ export function InvitationHistoryPanel({
       ) : (
         <>
           <InvitationList
-            items={pagedItems}
+            items={filtered}
             isActiveCampaign={isActive}
             reissuingInvitationId={reissuingInvitationId}
             onViewDetail={setDetail}
             onReissue={openReissue}
           />
-          <InvitationHistoryFooter
-            total={filtered.length}
-            page={safePage}
+          <AppPagination
+            mode="cursor"
+            currentPage={page}
             pageSize={pageSize}
-            hasMoreFromServer={hasMore}
-            isLoadingMore={query.isFetchingNextPage}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            onLoadMore={() => void query.fetchNextPage()}
+            itemCount={filtered.length}
+            itemLabel={t('employer.campaigns.campaignInvitations.pagination.itemLabel')}
+            hasPreviousPage={page > 1}
+            hasNextPage={hasMore}
+            isLoading={query.isFetchingNextPage}
+            onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
+            onNextPage={() => {
+              if (page < loadedPages.length) {
+                setPage((current) => current + 1);
+                return;
+              }
+              void query.fetchNextPage().then((result) => {
+                if (result.data && result.data.pages.length > page) {
+                  setPage((current) => current + 1);
+                }
+              });
+            }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
+          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span>
+              {t('employer.campaigns.campaignInvitations.history.realtimeNote')}
+            </span>
+          </p>
         </>
       )}
 

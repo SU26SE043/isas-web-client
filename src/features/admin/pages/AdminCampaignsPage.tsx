@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { AdminPageShell } from '../components/AdminPageShell';
-import { AdminCampaignsPagination } from '../components/campaigns/AdminCampaignsPagination';
 import { AdminCampaignsTable } from '../components/campaigns/AdminCampaignsTable';
 import { AdminCampaignsToolbar } from '../components/campaigns/AdminCampaignsToolbar';
 import { useAdminCampaigns } from '../hooks/useAdminCampaigns';
@@ -113,13 +113,11 @@ export function AdminCampaignsPage() {
         search={search}
         status={status}
         orgId={orgIdInput}
-        pageSize={pageSize}
         isFetching={campaignsQuery.isFetching}
         onSearchChange={setSearch}
         onStatusChange={handleStatusChange}
         onOrgIdChange={setOrgIdInput}
         onOrgIdCommit={applyOrgIdFilter}
-        onPageSizeChange={handlePageSizeChange}
         onRefresh={() => {
           const next = orgIdInput.trim();
           if (next !== orgId) {
@@ -208,14 +206,18 @@ export function AdminCampaignsPage() {
         ) : (
           <div className="space-y-4 rounded-xl border border-satin bg-surface-raised p-4">
             <AdminCampaignsTable items={visibleItems} />
-            <AdminCampaignsPagination
-              pageNumber={pageNumber}
+            <AppPagination
+              mode="cursor"
+              currentPage={pageNumber}
+              pageSize={pageSize}
               itemCount={campaignsQuery.data.items.length}
-              canGoPrevious={cursorHistory.length > 0}
-              canGoNext={Boolean(nextCursor)}
-              isFetching={campaignsQuery.isFetching}
-              onPrevious={goToPreviousPage}
-              onNext={goToNextPage}
+              itemLabel={t('admin.campaignsManage.pagination.itemLabel')}
+              hasPreviousPage={cursorHistory.length > 0}
+              hasNextPage={Boolean(nextCursor)}
+              isLoading={campaignsQuery.isFetching}
+              onPageSizeChange={handlePageSizeChange}
+              onPreviousPage={goToPreviousPage}
+              onNextPage={goToNextPage}
             />
           </div>
         )

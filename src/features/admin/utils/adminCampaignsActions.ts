@@ -97,4 +97,3 @@ export const ADMIN_CAMPAIGN_STATUS_OPTIONS: AdminCampaignStatus[] = [
   'Archived',
 ];
 
-export const ADMIN_CAMPAIGN_PAGE_SIZES = [10, 20, 50, 100] as const;

@@ -3,10 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/shared/languages';
 import type { AdminCampaignStatusFilter } from '../../types/adminCampaigns.types';
-import {
-  ADMIN_CAMPAIGN_PAGE_SIZES,
-  ADMIN_CAMPAIGN_STATUS_OPTIONS,
-} from '../../utils/adminCampaignsActions';
+import { ADMIN_CAMPAIGN_STATUS_OPTIONS } from '../../utils/adminCampaignsActions';
 
 const selectClass =
   'h-9 rounded-lg border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring';
@@ -15,13 +12,11 @@ interface AdminCampaignsToolbarProps {
   search: string;
   status: AdminCampaignStatusFilter;
   orgId: string;
-  pageSize: number;
   isFetching: boolean;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: AdminCampaignStatusFilter) => void;
   onOrgIdChange: (value: string) => void;
   onOrgIdCommit: (value: string) => void;
-  onPageSizeChange: (value: number) => void;
   onRefresh: () => void;
 }
 
@@ -29,20 +24,18 @@ export function AdminCampaignsToolbar({
   search,
   status,
   orgId,
-  pageSize,
   isFetching,
   onSearchChange,
   onStatusChange,
   onOrgIdChange,
   onOrgIdCommit,
-  onPageSizeChange,
   onRefresh,
 }: AdminCampaignsToolbarProps) {
   const { t } = useLanguage();
 
   return (
     <div className="space-y-2 rounded-xl border border-satin bg-surface-raised p-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_auto]">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,1fr))_auto]">
         <div className="space-y-1">
           <label className="flex items-center gap-2">
             <Search className="size-4 text-muted-foreground" aria-hidden />
@@ -86,19 +79,6 @@ export function AdminCampaignsToolbar({
           placeholder={t('admin.campaignsManage.filters.orgIdPlaceholder')}
           aria-label={t('admin.campaignsManage.filters.orgId')}
         />
-
-        <select
-          className={selectClass}
-          value={pageSize}
-          onChange={(event) => onPageSizeChange(Number(event.target.value))}
-          aria-label={t('admin.campaignsManage.filters.pageSize')}
-        >
-          {ADMIN_CAMPAIGN_PAGE_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
 
         <Button
           type="button"

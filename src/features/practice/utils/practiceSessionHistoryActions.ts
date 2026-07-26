@@ -198,4 +198,3 @@ export function computePracticeHistoryPageStats(items: PracticeSessionHistoryIte
   };
 }
 
-export const PRACTICE_HISTORY_PAGE_SIZES = [10, 20, 50, 100] as const;

@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
+import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import {
   Table,
@@ -35,12 +37,11 @@ export function CandidateRankingTable({
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
-  const pageCount = Math.max(1, Math.ceil(candidates.length / pageSize));
   const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
@@ -144,39 +145,14 @@ export function CandidateRankingTable({
           })}
         </TableBody>
       </Table>
-      {pageCount > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>
-            {t('employer.campaigns.screening.ranking.page')
-              .replace('{page}', String(page))
-              .replace('{pages}', String(pageCount))}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => current - 1)}
-              aria-label={t('employer.campaigns.screening.ranking.previous')}
-            >
-              <ChevronLeft aria-hidden />
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={page >= pageCount}
-              onClick={() => setPage((current) => current + 1)}
-              aria-label={t('employer.campaigns.screening.ranking.next')}
-            >
-              <ChevronRight aria-hidden />
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <AppPagination
+        currentPage={page}
+        pageSize={pageSize}
+        totalItems={candidates.length}
+        itemLabel={t('employer.campaigns.screening.ranking.itemLabel')}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useState } from 'react';

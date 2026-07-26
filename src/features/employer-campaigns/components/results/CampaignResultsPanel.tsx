@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { useCampaignResults } from '../../hooks/useCampaignResults';
@@ -17,7 +18,6 @@ import { ClearOverrideDialog } from './ClearOverrideDialog';
 import { OverrideResultModal } from './OverrideResultModal';
 import { ResultsExportMenu } from './ResultsExportMenu';
 import { ResultsRankingTable } from './ResultsRankingTable';
-import { ResultsPagination } from './ResultsPagination';
 import { ResultsSummaryCards, ResultsSummarySkeleton } from './ResultsSummaryCards';
 import { ResultsToolbar } from './ResultsToolbar';
 import { ResultTranscriptDrawer } from './ResultTranscriptDrawer';
@@ -46,7 +46,7 @@ export function CampaignResultsPanel({
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     if (!selected || !resultsQuery.data) return;
@@ -64,7 +64,6 @@ export function CampaignResultsPanel({
       }),
     [outcome, resultsQuery.data?.results, review, search, sort],
   );
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
@@ -176,11 +175,13 @@ export function CampaignResultsPanel({
               onClearOverride={openClear}
             />
           )}
-          <ResultsPagination
-            page={page}
-            pageCount={pageCount}
-            total={filtered.length}
+          <AppPagination
+            currentPage={page}
+            pageSize={pageSize}
+            totalItems={filtered.length}
+            itemLabel={t('employer.campaigns.results.pagination.itemLabel')}
             onPageChange={setPage}
+            onPageSizeChange={setPageSize}
           />
         </>
       ) : null}

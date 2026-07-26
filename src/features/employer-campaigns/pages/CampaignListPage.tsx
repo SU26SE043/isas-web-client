@@ -3,12 +3,12 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignFilters } from '../components/CampaignFilters';
 import { CampaignManagementTable } from '../components/CampaignManagementTable';
-import { CampaignPagination } from '../components/CampaignPagination';
 import { CampaignSummaryCards } from '../components/CampaignSummaryCards';
 import { useEmployerCampaigns } from '../hooks/useEmployerCampaigns';
 import type { CampaignFilters as CampaignFiltersValue } from '../types/campaignManagement.types';
@@ -105,10 +105,11 @@ export function CampaignListPage() {
         {!isLoading && !isError && campaigns.length > 0 ? (
           <div className="space-y-3">
             <CampaignManagementTable campaigns={paginatedCampaigns} />
-            <CampaignPagination
+            <AppPagination
               currentPage={safePage}
               pageSize={pageSize}
               totalItems={campaigns.length}
+              itemLabel={t('employer.campaigns.list.pagination.itemLabel')}
               onPageChange={setCurrentPage}
               onPageSizeChange={handlePageSizeChange}
             />

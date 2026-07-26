@@ -114,17 +114,12 @@ export function InterviewHistoryPage() {
           search={search}
           status={status}
           sort={sort}
-          pageSize={pageSize}
           isFetching={historyQuery.isFetching}
           compareMode={compareMode}
           dateFilter={dateFilter || undefined}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
           onSortChange={setSort}
-          onPageSizeChange={(value) => {
-            setPageSize(Math.min(Math.max(value, 1), 500));
-            resetPagination();
-          }}
           onRefresh={() => void historyQuery.refetch()}
           onToggleCompareMode={() => {
             setCompareMode((value) => !value);
@@ -164,6 +159,7 @@ export function InterviewHistoryPage() {
             compareMode={compareMode}
             selectedIds={selectedIds}
             pageIndex={pageIndex}
+            pageSize={pageSize}
             canGoPrevious={cursorHistory.length > 0}
             canGoNext={Boolean(nextCursor)}
             onRetry={() => void historyQuery.refetch()}
@@ -192,6 +188,10 @@ export function InterviewHistoryPage() {
               setCursorHistory((previous) => [...previous, currentCursor]);
               setCurrentCursor(nextCursor);
               setPageIndex((previous) => previous + 1);
+            }}
+            onPageSizeChange={(value) => {
+              setPageSize(value);
+              resetPagination();
             }}
           />
         ) : null}
