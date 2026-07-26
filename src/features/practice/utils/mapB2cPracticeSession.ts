@@ -4,6 +4,7 @@ import type {
   PracticeCvVsAnswer,
   PracticeNextAction,
   PracticeQuestionResponse,
+  PracticeSpeakingMetrics,
   PracticeSessionResponse,
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
@@ -100,10 +101,31 @@ function mapResult(raw: unknown): PracticeSessionResult | null {
   };
 }
 
+function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
+  if (raw == null) return null;
+  const item = asRecord(raw);
+  const metrics: PracticeSpeakingMetrics = {
+    speechRate:
+      pickNumber(item.speechRate, item.syllablesPerMinute, item.wordsPerMinute) ?? null,
+    longestPauseSec:
+      pickNumber(item.longestPauseSec, item.longestPauseSeconds, item.maxPauseSec) ?? null,
+    hesitationCount:
+      pickNumber(item.hesitationCount, item.pauseCount, item.longPauseCount) ?? null,
+    silenceRatio:
+      pickNumber(item.silenceRatio, item.silencePercent, item.silencePercentage) ?? null,
+    fillerWordCount:
+      pickNumber(item.fillerWordCount, item.fillerWordsCount, item.fillerCount) ?? null,
+  };
+  return Object.values(metrics).some((value) => value != null) ? metrics : null;
+}
+
 function mapAnswerReview(raw: unknown): PracticeAnswerReview | null {
   const item = asRecord(raw);
+  const evaluation = asRecord(item.evaluation ?? item.result ?? item.aiEvaluation);
   const questionId = pickString(item.questionId, item.id);
   if (!questionId) return null;
+  const criteriaRaw =
+    evaluation.criteriaScores ?? evaluation.criteria ?? item.criteriaScores ?? item.criteria;
   return {
     questionId,
     answerId: pickString(item.answerId) || null,
@@ -112,8 +134,24 @@ function mapAnswerReview(raw: unknown): PracticeAnswerReview | null {
     kind: pickString(item.kind) || undefined,
     transcript: typeof item.transcript === 'string' ? item.transcript : item.transcript === null ? null : undefined,
     status: pickString(item.status) || null,
-    score: pickNumber(item.score) ?? null,
-    comment: pickString(item.comment, item.feedback) || null,
+    score: pickNumber(item.score, evaluation.score, evaluation.overallScore) ?? null,
+    comment:
+      pickString(item.comment, item.feedback, evaluation.comment, evaluation.feedback) || null,
+    criteriaScores: Array.isArray(criteriaRaw)
+      ? criteriaRaw.map(mapCriteriaScore).filter((score): score is PracticeCriteriaScore => score != null)
+      : [],
+    speakingMetrics: mapSpeakingMetrics(
+      evaluation.speakingMetrics ?? evaluation.speechMetrics ?? item.speakingMetrics,
+    ),
+    suggestedAnswer:
+      pickString(
+        item.suggestedAnswer,
+        item.sampleAnswer,
+        item.modelAnswer,
+        evaluation.suggestedAnswer,
+        evaluation.sampleAnswer,
+        evaluation.modelAnswer,
+      ) || null,
   };
 }
 
@@ -127,10 +165,35 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
         .filter((q): q is PracticeQuestionResponse => q != null)
     : [];
 
-  const answersRaw = data.answers;
+  const explicitAnswers = data.answers ?? data.answerReviews ?? data.evaluatedAnswers;
+  const answersRaw = Array.isArray(explicitAnswers)
+    ? explicitAnswers
+    : Array.isArray(questionsRaw)
+      ? questionsRaw.map((rawQuestion) => {
+          const question = asRecord(rawQuestion);
+          const answer = asRecord(question.answer ?? question.answerReview);
+          return {
+            ...answer,
+            questionId: pickString(answer.questionId, question.id, question.questionId),
+            orderNo: answer.orderNo ?? question.orderNo ?? question.order,
+            content: answer.content ?? question.content ?? question.prompt,
+            kind: answer.kind ?? question.kind ?? question.type,
+          };
+        })
+      : [];
   const answers = Array.isArray(answersRaw)
     ? answersRaw.map(mapAnswerReview).filter((a): a is PracticeAnswerReview => a != null)
     : null;
+  const enrichedAnswers =
+    answers?.map((answer) => {
+      const question = questions.find((item) => item.id === answer.questionId);
+      return {
+        ...answer,
+        orderNo: answer.orderNo ?? question?.orderNo,
+        content: answer.content ?? question?.content,
+        kind: answer.kind ?? question?.kind,
+      };
+    }) ?? null;
 
   return {
     id,
@@ -140,9 +203,11 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     questionCount: pickNumber(data.questionCount),
     cvId: pickString(data.cvId) || null,
     jdId: pickString(data.jdId) || null,
+    createdAt: pickString(data.createdAt) || null,
+    completedAt: pickString(data.completedAt, data.scoredAt) || null,
     questions,
     result: mapResult(data.result),
-    answers,
+    answers: enrichedAnswers,
   };
 }
 

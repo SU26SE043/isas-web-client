@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
+import { SkillRadarChart } from '../SkillRadarChart';
+import { PracticeQuestionResultCard } from './PracticeQuestionResultCard';
 
 interface PracticeLiveResultReportProps {
   session: PracticeSessionResponse;
@@ -10,14 +12,37 @@ interface PracticeLiveResultReportProps {
 }
 
 export function PracticeLiveResultReport({ session, onLeave, actions }: PracticeLiveResultReportProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const result = session.result;
   if (!result) return null;
+  const radarData = result.criteriaScores.map((criterion) => {
+    const max = criterion.maxScore && criterion.maxScore > 0 ? criterion.maxScore : 100;
+    return {
+      subject: criterion.name,
+      subjectVi: criterion.name,
+      A: Math.round(Math.max(0, Math.min(100, (criterion.score / max) * 100))),
+      B: 50,
+      fullMark: 100,
+    };
+  });
 
   return (
     <div className="page-container page-section mx-auto max-w-4xl space-y-8 py-8">
       <header className="space-y-2">
         <h1 className="heading-primary text-3xl text-foreground">{t('practice.result.liveTitle')}</h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {session.jobCategory ? <span>{session.jobCategory}</span> : null}
+          <span>·</span>
+          <span>{session.status}</span>
+          {session.completedAt ? (
+            <>
+              <span>·</span>
+              <time dateTime={session.completedAt}>
+                {new Date(session.completedAt).toLocaleString()}
+              </time>
+            </>
+          ) : null}
+        </div>
       </header>
 
       <section className="frame-satin rounded-2xl border border-satin bg-surface-raised p-6">
@@ -26,7 +51,31 @@ export function PracticeLiveResultReport({ session, onLeave, actions }: Practice
           {result.overallScore}
           <span className="text-lg text-muted-foreground"> / 100</span>
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {(session.answers ?? []).filter((answer) => Boolean(answer.transcript)).length}/
+          {session.questionCount ?? session.questions.length}{' '}
+          {t('practice.result.questionsAnswered')}
+        </p>
       </section>
+
+      {session.answers?.length ? (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">
+            {t('practice.result.questionReview')}
+          </h2>
+          {session.answers.map((answer, index) => (
+            <PracticeQuestionResultCard
+              key={answer.answerId ?? answer.questionId}
+              answer={answer}
+              fallbackOrder={index + 1}
+              timeLimitSec={
+                session.questions.find((question) => question.id === answer.questionId)
+                  ?.timeLimitSec ?? session.timeLimitSec
+              }
+            />
+          ))}
+        </section>
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">{t('practice.result.criteriaScores')}</h2>
@@ -56,6 +105,10 @@ export function PracticeLiveResultReport({ session, onLeave, actions }: Practice
           })}
         </ul>
       </section>
+
+      {radarData.length >= 3 ? (
+        <SkillRadarChart data={radarData} language={language} />
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">{t('practice.result.needsImprovement')}</h2>
@@ -99,32 +152,6 @@ export function PracticeLiveResultReport({ session, onLeave, actions }: Practice
           </div>
         )}
       </section>
-
-      {session.answers && session.answers.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">{t('practice.result.questionReview')}</h2>
-          <ul className="space-y-3">
-            {session.answers.map((item) => (
-              <li key={item.questionId} className="rounded-xl border border-satin bg-surface-raised p-4 text-sm">
-                <p className="font-medium text-foreground">
-                  {item.orderNo != null ? `#${item.orderNo} · ` : null}
-                  {item.content ?? item.questionId}
-                </p>
-                {item.kind ? <p className="mt-1 text-xs text-muted-foreground">{item.kind}</p> : null}
-                <p className="mt-2 text-muted-foreground">
-                  {item.transcript ?? t('practice.answer.transcriptPending')}
-                </p>
-                {item.score != null ? (
-                  <p className="mt-1 tabular-nums text-foreground">{item.score}</p>
-                ) : null}
-                {item.comment ? (
-                  <p className="mt-1 whitespace-normal [overflow-wrap:anywhere]">{item.comment}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
 
       <div className="flex flex-wrap gap-3 pb-8">
         {actions ?? (
