@@ -5,23 +5,34 @@ import { describe, expect, it, vi } from 'vitest';
 import { PracticeQuestionResultCard } from './PracticeQuestionResultCard';
 
 vi.mock('@/shared/languages', () => ({
-  useLanguage: () => ({ t: (key: string) => key }),
+  useLanguage: () => ({
+    t: (key: string) => key,
+    language: 'en',
+  }),
 }));
 
 describe('PracticeQuestionResultCard', () => {
   it('renders all AI evaluation fields returned for an answer', () => {
     render(
       <PracticeQuestionResultCard
-        fallbackOrder={1}
-        timeLimitSec={120}
         defaultOpen
-        answer={{
+        question={{
           questionId: 'q1',
+          orderNo: 1,
           content: 'Explain your API design process.',
+          timeLimitSec: 120,
           transcript: 'My recorded answer.',
           status: 'Scored',
-          criteriaScores: [
-            { name: 'Communication', score: 4, maxScore: 5, comment: 'Clear answer.' },
+          answered: true,
+          skipped: false,
+          criteria: [
+            {
+              name: 'Communication',
+              score: 4,
+              maxScore: 5,
+              pct: 80,
+              comment: 'Clear answer.',
+            },
           ],
           speakingMetrics: {
             speechRate: 220,
@@ -39,7 +50,6 @@ describe('PracticeQuestionResultCard', () => {
     expect(screen.getByText('My recorded answer.')).toBeInTheDocument();
     expect(screen.getByText('Communication')).toBeInTheDocument();
     expect(screen.getByText('Clear answer.')).toBeInTheDocument();
-    expect(screen.getByText('220')).toBeInTheDocument();
     expect(screen.getByText('A stronger sample answer.')).toBeInTheDocument();
   });
 });

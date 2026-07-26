@@ -11,10 +11,16 @@ import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.typ
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
 import {
   extractSessionIdFromCreateResponse,
+  applyRubricCatalogToSession,
   mapPracticeSessionResponse,
   mapSubmitPracticeAnswerResponse,
+  sessionNeedsRubricEnrichment,
 } from '../utils/mapB2cPracticeSession';
 import { multipartFormDataConfig } from '../utils/multipartFormDataConfig';
+import { practiceSetupEndpoints } from './practiceSetup.endpoints';
+import { resolveJobDomainFromCategory } from '@/shared/domain/jobDomains';
+import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
+import type { PracticeRubricCriterionRef } from '../types/b2cPracticeSession.types';
 
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
@@ -66,6 +72,13 @@ export async function createPracticeSession(
   return { ...mapped, id };
 }
 
+/** Alias for session detail / report screens. Same endpoint as `getPracticeSession`. */
+export async function getPracticeSessionDetail(
+  sessionId: string,
+): Promise<PracticeSessionResponse> {
+  return getPracticeSession(sessionId);
+}
+
 export async function getPracticeSession(sessionId: string): Promise<PracticeSessionResponse> {
   if (usesMockData('practice')) {
     await mockDelay(250);
@@ -103,8 +116,35 @@ export async function getPracticeSession(sessionId: string): Promise<PracticeSes
   }
 
   const response = await apiClient.get<unknown>(b2cPracticeSessionEndpoints.session(sessionId));
-  const mapped = mapPracticeSessionResponse(response.data);
-  return { ...mapped, id: mapped.id || sessionId };
+  let mapped = mapPracticeSessionResponse(response.data);
+  mapped = { ...mapped, id: mapped.id || sessionId };
+  return enrichSessionWithRubricCatalog(mapped);
+}
+
+async function enrichSessionWithRubricCatalog(
+  session: PracticeSessionResponse,
+): Promise<PracticeSessionResponse> {
+  if (!sessionNeedsRubricEnrichment(session)) return session;
+  const jobCategory =
+    resolveJobDomainFromCategory(String(session.jobCategory ?? ''))?.jobCategoryEnum ??
+    (session.jobCategory === 'FE' || session.jobCategory === 'BE' || session.jobCategory === 'BA'
+      ? session.jobCategory
+      : null);
+  if (!jobCategory) return session;
+  try {
+    const response = await apiClient.get<RubricResponse>(
+      practiceSetupEndpoints.rubric(jobCategory),
+    );
+    const rubric: PracticeRubricCriterionRef[] = (response.data?.criteria ?? []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      maxScore: item.maxScore,
+      description: item.description ?? null,
+    }));
+    return applyRubricCatalogToSession(session, rubric);
+  } catch {
+    return session;
+  }
 }
 
 export async function getQuestionSpeech(sessionId: string, questionId: string): Promise<Blob> {

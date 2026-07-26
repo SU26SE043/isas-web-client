@@ -52,6 +52,14 @@ export interface PracticeCriteriaScore {
   score: number;
   maxScore?: number | null;
   comment?: string | null;
+  criterionId?: string | null;
+}
+
+export interface PracticeRubricCriterionRef {
+  id: string;
+  name: string;
+  maxScore?: number | null;
+  description?: string | null;
 }
 
 export interface PracticeCvVsAnswer {
@@ -67,6 +75,8 @@ export interface PracticeSessionResult {
   overallScore: number;
   maxScore?: number | null;
   passThreshold?: number | null;
+  /** Backend explanation for the threshold line (optional). */
+  passThresholdNote?: string | null;
   criteriaScores: PracticeCriteriaScore[];
   strengths?: string[];
   needsImprovement: string[];
@@ -84,6 +94,12 @@ export interface PracticeSpeakingMetrics {
   audioDurationSec?: number | null;
   wordCount?: number | null;
   referenceText?: string | null;
+  speechRateNote?: string | null;
+  longestPauseNote?: string | null;
+  hesitationNote?: string | null;
+  silenceRatioNote?: string | null;
+  fillerWordNote?: string | null;
+  notes?: string[] | null;
 }
 
 export interface PracticeAnswerReview {
@@ -102,6 +118,7 @@ export interface PracticeAnswerReview {
   criteriaScores?: PracticeCriteriaScore[];
   speakingMetrics?: PracticeSpeakingMetrics | null;
   suggestedAnswer?: string | null;
+  isClarify?: boolean;
 }
 
 export interface PracticeSessionResponse {
@@ -116,6 +133,8 @@ export interface PracticeSessionResponse {
   jdId?: string | null;
   createdAt?: string | null;
   completedAt?: string | null;
+  /** Rubric catalog used to resolve criterionId → name on scores. */
+  rubric?: PracticeRubricCriterionRef[] | null;
   questions: PracticeQuestionResponse[];
   result?: PracticeSessionResult | null;
   answers?: PracticeAnswerReview[] | null;

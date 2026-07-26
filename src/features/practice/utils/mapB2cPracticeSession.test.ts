@@ -94,6 +94,96 @@ describe('mapPracticeSessionResponse', () => {
       comment: 'Well structured.',
     });
   });
+
+  it('resolves criterionId scores, speech metrics, and UUID needsImprovement', () => {
+    const communicationId = '0be00000-0000-0000-0000-000000000001';
+    const technicalId = '0be00000-0000-0000-0000-000000000002';
+    const fluencyId = '0be00000-0000-0000-0000-000000000003';
+    const mapped = mapPracticeSessionResponse({
+      id: 'session-uuid',
+      status: 'Scored',
+      jobCategory: 'BE',
+      rubric: [
+        { id: communicationId, name: 'Giao tiếp & trình bày', maxScore: 5 },
+        { id: technicalId, name: 'Chiều sâu kỹ thuật', maxScore: 5 },
+        { id: fluencyId, name: 'Độ trôi chảy & tự tin', maxScore: 5 },
+      ],
+      questions: [
+        {
+          id: 'q1',
+          orderNo: 1,
+          content: 'Describe REST API flow.',
+          timeLimitSec: 120,
+          kind: 'question',
+        },
+      ],
+      answers: [
+        {
+          questionId: 'q1',
+          transcript: 'Cảm ơn các bạn đã theo dõi và hẹn gặp lại.',
+          status: 'Scored',
+          evaluation: {
+            criteria: [
+              {
+                criterionId: communicationId,
+                score: 0,
+                comment: 'Không giải thích giải pháp kỹ thuật.',
+              },
+              {
+                criterionId: technicalId,
+                score: 0,
+                comment: 'Không có thông tin kỹ thuật.',
+              },
+              {
+                criterionId: fluencyId,
+                score: 1,
+                comment: 'Câu quá ngắn.',
+              },
+            ],
+            speakingMetrics: {
+              speechRate: { value: 22, note: 'chậm hơn dải tham khảo' },
+              longestPauseSec: 0,
+              hesitationCount: { value: 0, note: 'tính lần dừng lâu hơn 0.7 giây' },
+              silenceRatio: 0,
+              fillerWordCount: 0,
+              notes: [
+                'Số từ đệm là mức tối thiểu — máy nhận dạng giọng nói thường bỏ bớt từ đệm.',
+                'Tham khảo: tiếng Việt nói tự nhiên thường vào khoảng 180–320 âm tiết/phút.',
+              ],
+            },
+            sampleAnswer: 'A sample answer.',
+          },
+        },
+      ],
+      result: {
+        overallScore: 5.7,
+        maxScore: 100,
+        needsImprovement: [communicationId, technicalId, fluencyId],
+        overallComment: 'Cần cải thiện chiều sâu kỹ thuật.',
+      },
+    });
+
+    expect(mapped.answers?.[0]?.criteriaScores).toHaveLength(3);
+    expect(mapped.answers?.[0]?.criteriaScores?.[0]).toMatchObject({
+      name: 'Giao tiếp & trình bày',
+      score: 0,
+      comment: 'Không giải thích giải pháp kỹ thuật.',
+    });
+    expect(mapped.answers?.[0]?.speakingMetrics).toMatchObject({
+      speechRate: 22,
+      speechRateNote: 'chậm hơn dải tham khảo',
+      hesitationCount: 0,
+      hesitationNote: 'tính lần dừng lâu hơn 0.7 giây',
+    });
+    expect(mapped.answers?.[0]?.suggestedAnswer).toBe('A sample answer.');
+    expect(mapped.result?.criteriaScores.length).toBeGreaterThanOrEqual(3);
+    expect(mapped.result?.needsImprovement).toEqual([
+      'Giao tiếp & trình bày',
+      'Chiều sâu kỹ thuật',
+      'Độ trôi chảy & tự tin',
+    ]);
+    expect(mapped.result?.passThreshold).toBe(50);
+  });
 });
 
 describe('mapSubmitPracticeAnswerResponse', () => {
