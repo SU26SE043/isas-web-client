@@ -32,9 +32,3 @@ export type PendingCvFile = {
   file: File;
   errorKey?: string;
 };
-
-export type ScreeningTab = 'screening' | 'interview';
-
-export function parseScreeningTab(value: string | null): ScreeningTab {
-  return value === 'interview' ? 'interview' : 'screening';
-}

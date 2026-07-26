@@ -6,7 +6,6 @@ export const InterviewHistoryHeader: React.FC = () => {
 
   return (
     <div className="flex-shrink-0 relative h-28 md:h-32 bg-gradient-to-r from-surface-raised to-surface-overlay overflow-hidden border-b border-subtle">
-      <div className="absolute inset-0 right-0 bg-[url('/history-bg.jpg')] bg-right bg-no-repeat bg-contain opacity-30" />
       <div className="absolute inset-0 px-8 flex flex-col justify-center z-10 max-w-[1400px] mx-auto w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
           {t('practice.history.title')}
