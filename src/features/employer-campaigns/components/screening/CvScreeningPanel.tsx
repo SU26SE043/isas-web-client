@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { useCampaignInvitationStore } from '../../stores/campaignInvitationStore';
@@ -32,7 +33,7 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
       );
       state.setPendingFiles([]);
       state.setUploadSummary(result);
-      state.setView('ranking');
+      await state.candidatesQuery.refetch();
     } catch {
       state.setAnalyzeError(t('employer.campaigns.screening.errors.analyzeFailed'));
     }
@@ -46,37 +47,61 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
         </Alert>
       ) : null}
 
-      {state.candidatesQuery.isError ? (
-        <Alert variant="error">
-          <AlertDescription>
-            {t('employer.campaigns.screening.errors.loadCandidatesFailed')}
-          </AlertDescription>
-        </Alert>
-      ) : null}
+      <CvUploadZone
+        files={state.pendingFiles}
+        onFilesChange={state.setPendingFiles}
+        onAnalyze={() => void handleAnalyze()}
+        isAnalyzing={state.analyzeMutation.isPending}
+        canAnalyze={state.canAnalyze}
+        isActive={isActive}
+      />
+      {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
 
-      {state.view === 'upload' ? (
-        <>
-          <CvUploadZone
-            files={state.pendingFiles}
-            onFilesChange={state.setPendingFiles}
-            onAnalyze={() => void handleAnalyze()}
-            isAnalyzing={state.analyzeMutation.isPending}
-            canAnalyze={state.canAnalyze}
-            isActive={isActive}
-          />
-          {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
-          {state.uploadSummary ? (
-            <Button type="button" variant="outline" onClick={() => state.setView('ranking')}>
-              {t('employer.campaigns.screening.upload.goRanking')}
-            </Button>
-          ) : null}
-        </>
-      ) : (
-        <>
-          {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
-          <Button type="button" variant="outline" onClick={() => state.setView('upload')}>
-            {t('employer.campaigns.screening.ranking.uploadMore')}
-          </Button>
+      <section className="space-y-4 border-t border-satin pt-5">
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-base font-semibold text-foreground">
+              {t('employer.campaigns.screening.ranking.title')}
+            </h3>
+            {!state.candidatesQuery.isLoading && !state.candidatesQuery.isError ? (
+              <span className="text-sm text-muted-foreground">
+                {t('employer.campaigns.screening.ranking.count').replace(
+                  '{count}',
+                  String(state.candidates.length),
+                )}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('employer.campaigns.screening.ranking.description')}
+          </p>
+        </div>
+
+        {state.candidatesQuery.isLoading ? (
+          <div className="space-y-2" aria-busy="true">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+        ) : state.candidatesQuery.isError ? (
+          <Alert variant="error">
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>
+                {t('employer.campaigns.screening.errors.loadCandidatesDescription')}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void state.candidatesQuery.refetch()}
+              >
+                {t('employer.campaigns.screening.errors.retry')}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <>
           <CandidateFilterBar
             filters={state.filters}
             onChange={state.setFilters}
@@ -90,6 +115,12 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
             onViewDetail={state.setDetailCandidateId}
             hasActiveFilters={state.hasActiveFilters}
             onClearFilters={() => state.setFilters(state.DEFAULT_FILTERS)}
+            onChooseFiles={() =>
+              document.getElementById('campaign-cv-upload')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }
           />
           {state.selectedCandidateIds.size > 0 ? (
             <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
@@ -133,8 +164,9 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
               </div>
             </div>
           ) : null}
-        </>
-      )}
+          </>
+        )}
+      </section>
 
       <CvScreeningModals
         campaignId={campaignId}

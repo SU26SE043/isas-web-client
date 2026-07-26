@@ -448,6 +448,9 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.summary.rejected': 'Bị loại',
     'employer.campaigns.screening.summary.skipped': 'Bị bỏ qua',
     'employer.campaigns.screening.ranking.title': 'Xếp hạng hồ sơ ứng viên',
+    'employer.campaigns.screening.ranking.description':
+      'Danh sách CV đã được phân tích và xếp hạng theo mức độ phù hợp với chiến dịch.',
+    'employer.campaigns.screening.ranking.count': '{count} ứng viên',
     'employer.campaigns.screening.ranking.matchScore': 'Điểm phù hợp',
     'employer.campaigns.screening.ranking.skills': 'Kỹ năng',
     'employer.campaigns.screening.ranking.status': 'Trạng thái',
@@ -459,7 +462,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.selectAll': 'Chọn tất cả',
     'employer.campaigns.screening.ranking.clearSelection': 'Bỏ chọn tất cả',
     'employer.campaigns.screening.ranking.uploadMore': 'Upload thêm CV',
-    'employer.campaigns.screening.ranking.empty': 'Chưa có ứng viên trong chiến dịch này.',
+    'employer.campaigns.screening.ranking.empty':
+      'Chưa có CV nào trong chiến dịch. Tải CV ứng viên lên để hệ thống phân tích và tạo bảng xếp hạng.',
     'employer.campaigns.screening.ranking.emptyFilter': 'Không có ứng viên phù hợp với bộ lọc hiện tại.',
     'employer.campaigns.screening.ranking.clearFilters': 'Xóa bộ lọc',
     'employer.campaigns.screening.filters.status': 'Trạng thái',
@@ -537,6 +541,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.errors.candidateNotFound': 'Không tìm thấy ứng viên.',
     'employer.campaigns.screening.errors.inviteFailed': 'Không thể gửi lời mời.',
     'employer.campaigns.screening.errors.loadCandidatesFailed': 'Không thể tải danh sách ứng viên.',
+    'employer.campaigns.screening.errors.loadCandidatesDescription':
+      'Đã xảy ra lỗi khi tải dữ liệu CV của chiến dịch. Vui lòng thử lại.',
     'employer.campaigns.screening.errors.loadResultsFailed': 'Không thể tải kết quả phỏng vấn.',
     'employer.campaigns.screening.errors.retry': 'Thử lại',
     'employer.campaigns.screening.errors.updateBadRequest':
@@ -1562,6 +1568,9 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.summary.rejected': 'Rejected',
     'employer.campaigns.screening.summary.skipped': 'Skipped',
     'employer.campaigns.screening.ranking.title': 'Candidate CV ranking',
+    'employer.campaigns.screening.ranking.description':
+      'CVs analyzed and ranked by their fit for this campaign.',
+    'employer.campaigns.screening.ranking.count': '{count} candidates',
     'employer.campaigns.screening.ranking.matchScore': 'Match score',
     'employer.campaigns.screening.ranking.skills': 'Skills',
     'employer.campaigns.screening.ranking.status': 'Status',
@@ -1573,7 +1582,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.selectAll': 'Select all',
     'employer.campaigns.screening.ranking.clearSelection': 'Clear selection',
     'employer.campaigns.screening.ranking.uploadMore': 'Upload more CVs',
-    'employer.campaigns.screening.ranking.empty': 'No candidates in this campaign yet.',
+    'employer.campaigns.screening.ranking.empty':
+      'No CVs have been uploaded to this campaign. Upload candidate CVs to analyze and build the ranking.',
     'employer.campaigns.screening.ranking.emptyFilter': 'No candidates match the current filters.',
     'employer.campaigns.screening.ranking.clearFilters': 'Clear filters',
     'employer.campaigns.screening.filters.status': 'Status',
@@ -1651,6 +1661,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.errors.candidateNotFound': 'Candidate not found.',
     'employer.campaigns.screening.errors.inviteFailed': 'Could not send invitations.',
     'employer.campaigns.screening.errors.loadCandidatesFailed': 'Could not load candidates.',
+    'employer.campaigns.screening.errors.loadCandidatesDescription':
+      'An error occurred while loading campaign CV data. Please try again.',
     'employer.campaigns.screening.errors.loadResultsFailed': 'Could not load interview results.',
     'employer.campaigns.screening.errors.retry': 'Retry',
     'employer.campaigns.screening.errors.updateBadRequest':

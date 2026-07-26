@@ -20,6 +20,7 @@ interface CandidateRankingTableProps {
   onViewDetail: (id: string) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onChooseFiles: () => void;
 }
 
 export function CandidateRankingTable({
@@ -30,6 +31,7 @@ export function CandidateRankingTable({
   onViewDetail,
   hasActiveFilters,
   onClearFilters,
+  onChooseFiles,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
 
@@ -52,7 +54,11 @@ export function CandidateRankingTable({
             <Button type="button" variant="outline" onClick={onClearFilters}>
               {t('employer.campaigns.screening.ranking.clearFilters')}
             </Button>
-          ) : undefined
+          ) : (
+            <Button type="button" variant="outline" onClick={onChooseFiles}>
+              {t('employer.campaigns.screening.upload.selectFiles')}
+            </Button>
+          )
         }
       />
     );
@@ -60,11 +66,7 @@ export function CandidateRankingTable({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-foreground">
-          {t('employer.campaigns.screening.ranking.title')}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
           <Button
             type="button"
             variant="outline"
@@ -76,7 +78,6 @@ export function CandidateRankingTable({
               ? t('employer.campaigns.screening.ranking.clearSelection')
               : t('employer.campaigns.screening.ranking.selectAll')}
           </Button>
-        </div>
       </div>
 
       <Table className="min-w-[820px]">

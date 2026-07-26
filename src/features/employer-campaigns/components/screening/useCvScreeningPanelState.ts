@@ -34,7 +34,6 @@ export function toCandidateListItem(item: {
 
 export function useCvScreeningPanelState(campaignId: string, isActive: boolean) {
   const [pendingFiles, setPendingFiles] = useState<PendingCvFile[]>([]);
-  const [view, setView] = useState<'upload' | 'ranking'>('upload');
   const [uploadSummary, setUploadSummary] = useState<CandidateUploadResponse | null>(null);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Set<string>>(new Set());
   const [detailCandidateId, setDetailCandidateId] = useState<string | null>(null);
@@ -45,9 +44,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const analyzeMutation = useAnalyzeCandidateCvs(campaignId);
-  const candidatesQuery = useCampaignCandidates(campaignId, filters, {
-    enabled: view === 'ranking',
-  });
+  const candidatesQuery = useCampaignCandidates(campaignId, filters);
   const detailQuery = useCampaignCandidateDetail(campaignId, detailCandidateId, {
     enabled: Boolean(detailCandidateId),
   });
@@ -71,6 +68,16 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const candidates = candidatesQuery.data ?? [];
   const detailCandidate = candidates.find((item) => item.id === detailCandidateId);
   const detailForActions = detailQuery.data ?? detailCandidate ?? null;
+
+  useEffect(() => {
+    setSelectedCandidateIds(new Set());
+    setDetailCandidateId(null);
+    setEditingCandidate(null);
+    setViewingCvCandidate(null);
+    setPendingFiles([]);
+    setUploadSummary(null);
+    setAnalyzeError(null);
+  }, [campaignId]);
 
   useEffect(() => {
     if (!candidatesQuery.data) return;
@@ -99,8 +106,6 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
     DEFAULT_FILTERS,
     pendingFiles,
     setPendingFiles,
-    view,
-    setView,
     uploadSummary,
     setUploadSummary,
     selectedCandidateIds,
