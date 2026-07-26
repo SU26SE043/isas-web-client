@@ -1,12 +1,7 @@
-import type {
-  CampaignCandidateListItem,
-  InviteCampaignCandidatesResponse,
-} from '../../types/campaign.api.types';
+import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { CandidateCvViewerModal } from './CandidateCvViewerModal';
 import { CandidateDetailDrawer } from './CandidateDetailDrawer';
 import { EditCandidateModal } from './EditCandidateModal';
-import { InviteConfirmModal } from './InviteConfirmModal';
-import { InviteResultModal } from './InviteResultModal';
 
 interface CvScreeningModalsProps {
   campaignId: string;
@@ -24,14 +19,6 @@ interface CvScreeningModalsProps {
   onCloseEdit: () => void;
   viewingCvCandidate: CampaignCandidateListItem | null;
   onCloseCv: () => void;
-  inviteConfirmOpen: boolean;
-  inviteCount: number;
-  inviteConfirming: boolean;
-  onCancelInvite: () => void;
-  onConfirmInvite: () => void;
-  inviteResult: InviteCampaignCandidatesResponse | null;
-  onCloseInviteResult: () => void;
-  onRetryInviteFailed: () => void;
 }
 
 export function CvScreeningModals({
@@ -50,14 +37,6 @@ export function CvScreeningModals({
   onCloseEdit,
   viewingCvCandidate,
   onCloseCv,
-  inviteConfirmOpen,
-  inviteCount,
-  inviteConfirming,
-  onCancelInvite,
-  onConfirmInvite,
-  inviteResult,
-  onCloseInviteResult,
-  onRetryInviteFailed,
 }: CvScreeningModalsProps) {
   return (
     <>
@@ -87,21 +66,6 @@ export function CvScreeningModals({
         candidateId={viewingCvCandidate?.id ?? null}
         candidateName={viewingCvCandidate?.fullName}
         onClose={onCloseCv}
-      />
-
-      <InviteConfirmModal
-        open={inviteConfirmOpen}
-        count={inviteCount}
-        isConfirming={inviteConfirming}
-        onCancel={onCancelInvite}
-        onConfirm={onConfirmInvite}
-      />
-
-      <InviteResultModal
-        open={Boolean(inviteResult)}
-        result={inviteResult}
-        onClose={onCloseInviteResult}
-        onRetryFailed={onRetryInviteFailed}
       />
     </>
   );

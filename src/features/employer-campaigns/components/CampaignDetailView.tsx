@@ -19,7 +19,7 @@ import { CampaignContextHeader } from './CampaignContextHeader';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
-import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
+import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
   campaign: EmployerCampaign;
   published: boolean;
@@ -27,7 +27,6 @@ interface CampaignDetailViewProps {
   onPublish: () => Promise<void>;
   onChangeStatus: (status: CampaignStatusUpdateRequest['status']) => Promise<void>;
   onDelete?: () => Promise<void>;
-  onInvite?: (emails: string[]) => Promise<InviteResolution>;
 }
 
 export function CampaignDetailView({

@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { useCampaignInvitationStore } from '../../stores/campaignInvitationStore';
 import { CandidateFilterBar } from './CandidateFilterBar';
 import { CandidateRankingTable } from './CandidateRankingTable';
 import { CandidateUploadSummary } from './CandidateUploadSummary';
@@ -17,6 +18,9 @@ interface CvScreeningPanelProps {
 export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const setInvitationCandidates = useCampaignInvitationStore(
+    (store) => store.setSelectedCandidates,
+  );
   const state = useCvScreeningPanelState(campaignId, isActive);
 
   const handleAnalyze = async () => {
@@ -31,24 +35,6 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
       state.setView('ranking');
     } catch {
       state.setAnalyzeError(t('employer.campaigns.screening.errors.analyzeFailed'));
-    }
-  };
-
-  const handleInviteConfirm = async () => {
-    try {
-      const result = await state.inviteMutation.mutateAsync({
-        candidateIds: Array.from(state.selectedCandidateIds),
-      });
-      state.setInviteConfirmOpen(false);
-      state.setInviteResult(result);
-      state.setSelectedCandidateIds((prev) => {
-        const next = new Set(prev);
-        for (const item of result.invited) next.delete(item.candidateId);
-        return next;
-      });
-    } catch {
-      state.setAnalyzeError(t('employer.campaigns.screening.errors.inviteFailed'));
-      state.setInviteConfirmOpen(false);
     }
   };
 
@@ -102,8 +88,6 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
             onToggle={state.toggleSelection}
             onToggleAll={(ids) => state.setSelectedCandidateIds(new Set(ids))}
             onViewDetail={state.setDetailCandidateId}
-            onViewCv={state.setViewingCvCandidate}
-            onEdit={state.openEdit}
             hasActiveFilters={state.hasActiveFilters}
             onClearFilters={() => state.setFilters(state.DEFAULT_FILTERS)}
           />
@@ -127,16 +111,24 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
                   type="button"
                   disabled={!isActive}
                   onClick={() => {
-                    const emails = state.candidates
+                    const candidates = state.candidates
                       .filter((candidate) => state.selectedCandidateIds.has(candidate.id))
-                      .map((candidate) => candidate.email)
-                      .filter((email): email is string => Boolean(email));
-                    navigate(`/employer/campaigns/${campaignId}/invitations/new`, {
-                      state: { draftEmails: emails.join('\n') },
-                    });
+                      .filter(
+                        (candidate): candidate is typeof candidate & { email: string } =>
+                          Boolean(candidate.email),
+                      )
+                      .map((candidate) => ({
+                        id: candidate.id,
+                        fullName: candidate.fullName ?? undefined,
+                        email: candidate.email,
+                        matchScore: candidate.overallMatchScore ?? undefined,
+                        source: 'cv-screening' as const,
+                      }));
+                    setInvitationCandidates(campaignId, candidates);
+                    navigate(`/employer/campaigns/${campaignId}/invitations/new`);
                   }}
                 >
-                  {t('employer.campaigns.screening.invitation.send')}
+                  {t('employer.campaigns.screening.invitation.continue')}
                 </Button>
               </div>
             </div>
@@ -172,21 +164,6 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
         onCloseEdit={() => state.setEditingCandidate(null)}
         viewingCvCandidate={state.viewingCvCandidate}
         onCloseCv={() => state.setViewingCvCandidate(null)}
-        inviteConfirmOpen={state.inviteConfirmOpen}
-        inviteCount={state.selectedCandidateIds.size}
-        inviteConfirming={state.inviteMutation.isPending}
-        onCancelInvite={() => state.setInviteConfirmOpen(false)}
-        onConfirmInvite={() => void handleInviteConfirm()}
-        inviteResult={state.inviteResult}
-        onCloseInviteResult={() => state.setInviteResult(null)}
-        onRetryInviteFailed={() => {
-          if (!state.inviteResult) return;
-          state.setInviteResult(null);
-          state.setSelectedCandidateIds(
-            new Set(state.inviteResult.failed.map((item) => item.candidateId)),
-          );
-          state.setInviteConfirmOpen(true);
-        }}
       />
     </div>
   );

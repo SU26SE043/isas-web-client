@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
@@ -11,7 +12,9 @@ import { EmailInviteInputs } from './EmailInviteInputs';
 import { EmailInviteListPanel } from './EmailInviteListPanel';
 import { EmailInviteResultPanel } from './EmailInviteResultPanel';
 import { InvitationHistoryPanel } from './InvitationHistoryPanel';
+import { SelectedScreeningCandidates } from './SelectedScreeningCandidates';
 import { useEmailInvitationFlow } from './useEmailInvitationFlow';
+import type { SelectedInvitationCandidate } from '../../stores/campaignInvitationStore';
 
 type InviteTab = 'send' | 'history';
 
@@ -19,12 +22,18 @@ interface EmailInvitationFlowProps {
   campaign: EmployerCampaign;
   initialEmails?: string[];
   view?: 'combined' | 'send' | 'history';
+  selectedCandidates?: SelectedInvitationCandidate[];
+  onRemoveSelectedCandidate?: (email: string) => void;
+  onClearSelectedCandidates?: () => void;
 }
 
 export function EmailInvitationFlow({
   campaign,
   initialEmails = [],
   view = 'combined',
+  selectedCandidates = [],
+  onRemoveSelectedCandidate,
+  onClearSelectedCandidates,
 }: EmailInvitationFlowProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -34,8 +43,24 @@ export function EmailInvitationFlow({
 
   useEffect(() => {
     if (view !== 'send' || flow.step !== 'result' || flow.failed.length > 0) return;
+    onClearSelectedCandidates?.();
+    toast.success(
+      t('employer.campaigns.emailInvitations.result.sendSuccess').replace(
+        '{count}',
+        String(flow.created.length),
+      ),
+    );
     navigate(`/employer/campaigns/${campaign.id}/invitations`, { replace: true });
-  }, [campaign.id, flow.failed.length, flow.step, navigate, view]);
+  }, [
+    campaign.id,
+    flow.created.length,
+    flow.failed.length,
+    flow.step,
+    navigate,
+    onClearSelectedCandidates,
+    t,
+    view,
+  ]);
 
   const confirmModal = (
     <EmailInviteConfirmModal
@@ -163,6 +188,14 @@ export function EmailInvitationFlow({
           ) : null}
 
           <EmailInviteCampaignSummary campaign={campaign} />
+          <SelectedScreeningCandidates
+            candidates={selectedCandidates}
+            disabled={!flow.isActive || flow.isSending}
+            onRemove={(email) => {
+              flow.removeEmail(email);
+              onRemoveSelectedCandidate?.(email);
+            }}
+          />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-lg border border-satin bg-surface-overlay p-4">
@@ -170,6 +203,7 @@ export function EmailInvitationFlow({
                 disabled={!flow.isActive || flow.isSending}
                 onAddSingle={flow.addSingle}
                 onAddBulk={flow.addBulk}
+                onRemoveEmail={flow.removeEmail}
               />
             </section>
             <EmailInviteListPanel

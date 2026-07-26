@@ -28,6 +28,7 @@ export function CampaignSubNavigation({ campaign }: CampaignSubNavigationProps) 
       label: t('employer.campaigns.workspace.invitations'),
       to: `${base}/invitations`,
       enabled: canViewHistory,
+      end: true,
     },
     {
       label: t('employer.campaigns.workspace.results'),

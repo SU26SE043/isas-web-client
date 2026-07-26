@@ -1,4 +1,4 @@
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
@@ -6,19 +6,34 @@ import { EmailInvitationFlow } from '../components/email-invitations/EmailInvita
 import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { tokenizeEmailList } from '../utils/emailInvitationUtils';
+import { useCampaignInvitationStore } from '../stores/campaignInvitationStore';
 
 export function CampaignInviteEmailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
   const { t } = useLanguage();
   const { campaign, isLoading, isError, errorStatus } = useEmployerCampaign(id);
+  const invitationCampaignId = useCampaignInvitationStore((store) => store.campaignId);
+  const storedCandidates = useCampaignInvitationStore((store) => store.selectedCandidates);
+  const removeCandidate = useCampaignInvitationStore((store) => store.removeCandidate);
+  const clearCandidates = useCampaignInvitationStore((store) => store.clearCandidates);
 
   const draftFromRetry =
     typeof (location.state as { draftEmails?: unknown } | null)?.draftEmails === 'string'
       ? (location.state as { draftEmails: string }).draftEmails
       : '';
-  const initialEmails = draftFromRetry ? tokenizeEmailList(draftFromRetry) : [];
+  const selectedCandidates = invitationCampaignId === id ? storedCandidates : [];
+  const initialEmails = Array.from(
+    new Set([
+      ...selectedCandidates.map((candidate) => candidate.email),
+      ...(draftFromRetry ? tokenizeEmailList(draftFromRetry) : []),
+    ]),
+  );
   const isHistory = location.pathname.endsWith('/invitations');
+
+  if (location.pathname.includes('/invite/email')) {
+    return <Navigate to={`/employer/campaigns/${id}/invitations/new`} replace />;
+  }
 
   if (isLoading) {
     return (
@@ -67,6 +82,9 @@ export function CampaignInviteEmailPage() {
             campaign={campaign}
             initialEmails={initialEmails}
             view={isHistory ? 'history' : 'send'}
+            selectedCandidates={isHistory ? [] : selectedCandidates}
+            onRemoveSelectedCandidate={removeCandidate}
+            onClearSelectedCandidates={clearCandidates}
           />
         </div>
       </div>

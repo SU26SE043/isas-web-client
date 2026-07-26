@@ -11,7 +11,6 @@ import {
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { canSelectCandidate } from './screeningUtils';
-import { CandidateActionsMenu } from './CandidateActionsMenu';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -19,8 +18,6 @@ interface CandidateRankingTableProps {
   onToggle: (id: string) => void;
   onToggleAll: (ids: string[]) => void;
   onViewDetail: (id: string) => void;
-  onViewCv: (candidate: CampaignCandidateListItem) => void;
-  onEdit: (candidate: CampaignCandidateListItem) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
 }
@@ -31,8 +28,6 @@ export function CandidateRankingTable({
   onToggle,
   onToggleAll,
   onViewDetail,
-  onViewCv,
-  onEdit,
   hasActiveFilters,
   onClearFilters,
 }: CandidateRankingTableProps) {
@@ -124,12 +119,14 @@ export function CandidateRankingTable({
                 </TableCell>
                 <TableCell className="text-foreground">{item.status}</TableCell>
                 <TableCell>
-                  <CandidateActionsMenu
-                    candidate={item}
-                    onViewCv={() => onViewCv(item)}
-                    onEdit={() => onEdit(item)}
-                    onViewDetail={() => onViewDetail(item.id)}
-                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewDetail(item.id)}
+                  >
+                    {t('employer.campaigns.screening.ranking.viewDetail')}
+                  </Button>
                 </TableCell>
               </TableRow>
             );

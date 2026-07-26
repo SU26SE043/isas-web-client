@@ -14,7 +14,7 @@ export function CampaignDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign, invite } =
+  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
@@ -148,7 +148,6 @@ export function CampaignDetailPage() {
       onPublish={handlePublish}
       onChangeStatus={handleChangeStatus}
       onDelete={handleDelete}
-      onInvite={(emails) => invite(campaign.id, emails)}
     />
   );
 }

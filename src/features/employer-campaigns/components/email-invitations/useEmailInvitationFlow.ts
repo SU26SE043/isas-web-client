@@ -118,6 +118,12 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
         return Array.from(map.values());
       });
       setDuplicateEmails((prev) => Array.from(new Set([...prev, ...parsed.duplicateEmails])));
+      return {
+        validEmails: parsed.validEmails,
+        validCount: parsed.validEmails.length,
+        invalidCount: parsed.invalidEmails.length,
+        duplicateCount: parsed.duplicateEmails.length,
+      };
     },
     [validEmails],
   );

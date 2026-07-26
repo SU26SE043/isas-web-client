@@ -3,13 +3,11 @@ import {
   useAnalyzeCandidateCvs,
   useCampaignCandidateDetail,
   useCampaignCandidates,
-  useInviteCampaignCandidates,
 } from '../../hooks/useCampaignCandidates';
 import type {
   CampaignCandidateListItem,
   CandidateListQuery,
   CandidateUploadResponse,
-  InviteCampaignCandidatesResponse,
 } from '../../types/campaign.api.types';
 import { canEditCandidate } from '../../utils/campaignCandidateActions';
 import { canSelectCandidate, type PendingCvFile } from './screeningUtils';
@@ -43,13 +41,10 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const [editingCandidate, setEditingCandidate] = useState<CampaignCandidateListItem | null>(null);
   const [viewingCvCandidate, setViewingCvCandidate] =
     useState<CampaignCandidateListItem | null>(null);
-  const [inviteConfirmOpen, setInviteConfirmOpen] = useState(false);
-  const [inviteResult, setInviteResult] = useState<InviteCampaignCandidatesResponse | null>(null);
   const [filters, setFilters] = useState<CandidateListQuery>(DEFAULT_FILTERS);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const analyzeMutation = useAnalyzeCandidateCvs(campaignId);
-  const inviteMutation = useInviteCampaignCandidates(campaignId);
   const candidatesQuery = useCampaignCandidates(campaignId, filters, {
     enabled: view === 'ranking',
   });
@@ -116,16 +111,11 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
     setEditingCandidate,
     viewingCvCandidate,
     setViewingCvCandidate,
-    inviteConfirmOpen,
-    setInviteConfirmOpen,
-    inviteResult,
-    setInviteResult,
     filters,
     setFilters,
     analyzeError,
     setAnalyzeError,
     analyzeMutation,
-    inviteMutation,
     candidatesQuery,
     detailQuery,
     validFiles,
