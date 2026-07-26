@@ -65,8 +65,12 @@ export interface PracticeCvVsAnswer {
 
 export interface PracticeSessionResult {
   overallScore: number;
+  maxScore?: number | null;
+  passThreshold?: number | null;
   criteriaScores: PracticeCriteriaScore[];
+  strengths?: string[];
   needsImprovement: string[];
+  nextSteps?: string[];
   overallComment: string;
   cvVsAnswer: PracticeCvVsAnswer | null;
 }
@@ -77,6 +81,9 @@ export interface PracticeSpeakingMetrics {
   hesitationCount?: number | null;
   silenceRatio?: number | null;
   fillerWordCount?: number | null;
+  audioDurationSec?: number | null;
+  wordCount?: number | null;
+  referenceText?: string | null;
 }
 
 export interface PracticeAnswerReview {
@@ -86,6 +93,9 @@ export interface PracticeAnswerReview {
   content?: string;
   kind?: string;
   transcript?: string | null;
+  textAnswer?: string | null;
+  audioUrl?: string | null;
+  durationSec?: number | null;
   status?: string | null;
   score?: number | null;
   comment?: string | null;
@@ -100,6 +110,8 @@ export interface PracticeSessionResponse {
   jobCategory?: PracticeJobCategory | string;
   timeLimitSec?: number;
   questionCount?: number;
+  level?: string | null;
+  durationSeconds?: number | null;
   cvId?: string | null;
   jdId?: string | null;
   createdAt?: string | null;

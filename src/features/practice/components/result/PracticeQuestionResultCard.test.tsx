@@ -14,6 +14,7 @@ describe('PracticeQuestionResultCard', () => {
       <PracticeQuestionResultCard
         fallbackOrder={1}
         timeLimitSec={120}
+        defaultOpen
         answer={{
           questionId: 'q1',
           content: 'Explain your API design process.',

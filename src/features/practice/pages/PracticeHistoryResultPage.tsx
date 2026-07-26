@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { usesMockData } from '@/shared/mock';
 import { PracticeLiveResultReport } from '../components/result/PracticeLiveResultReport';
+import { PracticeResultSkeleton } from '../components/result/PracticeResultSkeleton';
 import { getPracticeSession } from '../services/b2cPracticeSession.service';
 import { InterviewResultPage } from './InterviewResultPage';
 
@@ -21,31 +22,34 @@ function LivePracticeHistoryResult({ sessionId }: { sessionId: string }) {
   });
 
   if (query.isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="size-9 animate-spin text-muted-foreground" aria-hidden />
-        <span className="sr-only">{t('practice.result.loading')}</span>
-      </div>
-    );
+    return <PracticeResultSkeleton />;
   }
 
   const status = getApiStatusCode(query.error);
   if (query.isError || !query.data?.result) {
     const message =
       status === 403
-        ? t('practice.errors.forbidden')
+        ? t('practice.result.forbiddenDescription')
         : status === 404
-          ? t('practice.errors.sessionNotFound')
+          ? t('practice.result.notFoundDescription')
           : query.data
             ? t('practice.result.notAvailable')
             : t('practice.result.error');
+    const title =
+      status === 403
+        ? t('practice.result.forbiddenTitle')
+        : status === 404
+          ? t('practice.result.notFoundTitle')
+          : query.data
+            ? t('practice.result.notReadyTitle')
+            : t('practice.result.loadErrorTitle');
 
     return (
       <div className="page-container page-section flex min-h-[50vh] items-center justify-center">
         <div className="max-w-lg text-center">
           <AlertCircle className="mx-auto size-10 text-error" aria-hidden />
           <h1 className="mt-4 text-2xl font-semibold text-foreground">
-            {t('practice.result.errorTitle')}
+            {title}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">{message}</p>
           <div className="mt-6 flex justify-center gap-3">

@@ -1,4 +1,6 @@
-import { AudioLines, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { AudioLines, ChevronDown, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeAnswerReview } from '../../types/b2cPracticeSession.types';
 
@@ -15,16 +17,27 @@ export function PracticeQuestionResultCard({
   answer,
   fallbackOrder,
   timeLimitSec,
+  defaultOpen = false,
 }: {
   answer: PracticeAnswerReview;
   fallbackOrder: number;
   timeLimitSec?: number;
+  defaultOpen?: boolean;
 }) {
   const { t } = useLanguage();
   const metrics = answer.speakingMetrics;
+  const [open, setOpen] = useState(defaultOpen);
+  const questionScore = answer.criteriaScores?.reduce((sum, item) => sum + item.score, 0);
+  const questionMax = answer.criteriaScores?.reduce(
+    (sum, item) => sum + (item.maxScore ?? 0),
+    0,
+  );
 
   return (
-    <article className="frame-satin overflow-hidden rounded-2xl border border-satin bg-surface-raised">
+    <article
+      id={`question-${answer.orderNo ?? fallbackOrder}`}
+      className="frame-satin scroll-mt-24 overflow-hidden rounded-2xl border border-satin bg-surface-raised"
+    >
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-satin p-5">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -39,21 +52,51 @@ export function PracticeQuestionResultCard({
             {answer.content || answer.questionId}
           </p>
         </div>
-        {answer.status ? (
-          <span className="rounded-full border border-success/30 bg-success-bg px-3 py-1 text-xs font-medium text-success-light">
-            {answer.status}
-          </span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {questionScore != null && questionMax ? (
+            <span className="text-sm font-semibold tabular-nums text-foreground">
+              {questionScore}/{questionMax}
+            </span>
+          ) : null}
+          {answer.status ? (
+            <span className="rounded-full border border-success/30 bg-success-bg px-3 py-1 text-xs font-medium text-success-light">
+              {answer.status}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="btn-ghost size-9 p-0"
+            aria-expanded={open}
+            aria-label={t(open ? 'practice.result.collapseQuestion' : 'practice.result.expandQuestion')}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
+          </button>
+        </div>
       </header>
 
-      <div className="space-y-6 p-5">
+      {open ? <div className="space-y-6 p-5">
         <div className="rounded-xl bg-surface-overlay p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('practice.result.transcript')}
           </p>
-          <p className="mt-2 leading-relaxed text-foreground">
-            {answer.transcript || t('practice.answer.transcriptPending')}
-          </p>
+          {answer.transcript || answer.textAnswer ? (
+            <p className="mt-2 whitespace-pre-wrap leading-relaxed text-foreground">
+              {answer.transcript || answer.textAnswer}
+            </p>
+          ) : (
+            <div className="mt-2">
+              <p className="font-medium text-foreground">{t('practice.result.skippedAnswer')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('practice.result.skippedAnswerDescription')}
+              </p>
+            </div>
+          )}
+          {answer.audioUrl ? (
+            <audio className="mt-4 w-full" controls preload="metadata" src={answer.audioUrl}>
+              {t('practice.result.audioUnsupported')}
+            </audio>
+          ) : null}
         </div>
 
         {answer.criteriaScores?.length ? (
@@ -71,6 +114,20 @@ export function PracticeQuestionResultCard({
                   <p className="mt-2 leading-relaxed text-muted-foreground">
                     {criterion.comment}
                   </p>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t('practice.result.noCriterionComment')}
+                  </p>
+                )}
+                {criterion.maxScore ? (
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-highlight">
+                    <div
+                      className="h-full rounded-full bg-info"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, (criterion.score / criterion.maxScore) * 100))}%`,
+                      }}
+                    />
+                  </div>
                 ) : null}
               </div>
             ))}
@@ -89,7 +146,18 @@ export function PracticeQuestionResultCard({
               <Metric label={t('practice.result.hesitations')} value={metrics.hesitationCount == null ? '—' : String(metrics.hesitationCount)} />
               <Metric label={t('practice.result.silenceRatio')} value={metrics.silenceRatio == null ? '—' : `${metrics.silenceRatio}%`} />
               <Metric label={t('practice.result.fillerWords')} value={metrics.fillerWordCount == null ? '—' : String(metrics.fillerWordCount)} />
+              {metrics.audioDurationSec != null ? (
+                <Metric label={t('practice.result.audioDuration')} value={`${metrics.audioDurationSec}s`} />
+              ) : null}
+              {metrics.wordCount != null ? (
+                <Metric label={t('practice.result.wordCount')} value={String(metrics.wordCount)} />
+              ) : null}
             </div>
+            {metrics.referenceText ? (
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                {metrics.referenceText}
+              </p>
+            ) : null}
           </section>
         ) : null}
 
@@ -104,7 +172,7 @@ export function PracticeQuestionResultCard({
             </p>
           </section>
         ) : null}
-      </div>
+      </div> : null}
     </article>
   );
 }

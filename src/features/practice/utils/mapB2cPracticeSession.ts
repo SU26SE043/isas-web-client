@@ -94,8 +94,13 @@ function mapResult(raw: unknown): PracticeSessionResult | null {
 
   return {
     overallScore,
+    maxScore: pickNumber(item.maxScore, item.totalMaxScore, item.scoreScale) ?? null,
+    passThreshold:
+      pickNumber(item.passThreshold, item.passingScore, item.passScore) ?? null,
     criteriaScores,
+    strengths: pickStringArray(item.strengths),
     needsImprovement,
+    nextSteps: pickStringArray(item.nextSteps ?? item.recommendations),
     overallComment: pickString(item.overallComment, item.comment, item.summary),
     cvVsAnswer: mapCvVsAnswer(item.cvVsAnswer ?? item.cvComparison),
   };
@@ -115,6 +120,10 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
       pickNumber(item.silenceRatio, item.silencePercent, item.silencePercentage) ?? null,
     fillerWordCount:
       pickNumber(item.fillerWordCount, item.fillerWordsCount, item.fillerCount) ?? null,
+    audioDurationSec:
+      pickNumber(item.audioDurationSec, item.durationSec, item.audioLengthSec) ?? null,
+    wordCount: pickNumber(item.wordCount, item.syllableCount) ?? null,
+    referenceText: pickString(item.referenceText, item.reference, item.note) || null,
   };
   return Object.values(metrics).some((value) => value != null) ? metrics : null;
 }
@@ -133,6 +142,9 @@ function mapAnswerReview(raw: unknown): PracticeAnswerReview | null {
     content: pickString(item.content, item.questionContent) || undefined,
     kind: pickString(item.kind) || undefined,
     transcript: typeof item.transcript === 'string' ? item.transcript : item.transcript === null ? null : undefined,
+    textAnswer: pickString(item.textAnswer, item.answerText) || null,
+    audioUrl: pickString(item.audioUrl, item.recordingUrl) || null,
+    durationSec: pickNumber(item.durationSec, item.answerDurationSec) ?? null,
     status: pickString(item.status) || null,
     score: pickNumber(item.score, evaluation.score, evaluation.overallScore) ?? null,
     comment:
@@ -201,6 +213,8 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     jobCategory: pickString(data.jobCategory) || undefined,
     timeLimitSec: pickNumber(data.timeLimitSec, data.timeLimitSeconds),
     questionCount: pickNumber(data.questionCount),
+    level: pickString(data.level, data.seniorityLevel) || null,
+    durationSeconds: pickNumber(data.durationSeconds, data.durationSec, data.totalDurationSec) ?? null,
     cvId: pickString(data.cvId) || null,
     jdId: pickString(data.jdId) || null,
     createdAt: pickString(data.createdAt) || null,
