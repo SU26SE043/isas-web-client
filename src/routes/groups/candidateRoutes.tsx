@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
-import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
+import { PracticeHistoryResultPage } from '@/features/practice/pages/PracticeHistoryResultPage';
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
 import { LearningHubPage } from '@/features/practice/pages/LearningHubPage';
@@ -131,7 +131,7 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'practice/history', element: <InterviewHistoryPage /> },
               { path: 'interview-history', element: <Navigate to="/candidate/practice/history" replace /> },
               { path: 'practice/history/compare', element: <CompareResultsPage /> },
-              { path: 'practice/history/:id', element: <InterviewResultPage /> },
+              { path: 'practice/history/:id', element: <PracticeHistoryResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },
               { path: 'rubrics', element: <CandidateRubricsPage /> },
               { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },

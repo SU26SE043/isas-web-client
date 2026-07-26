@@ -95,10 +95,12 @@ export function InterviewHistoryPage() {
           <PracticeHistoryStatCard
             label={t('practice.history.stats.pageCompleted')}
             value={String(stats.completed)}
+            tone="success"
           />
           <PracticeHistoryStatCard
             label={t('practice.history.stats.pageInProgress')}
             value={String(stats.inProgress)}
+            tone="warning"
           />
           <PracticeHistoryStatCard
             label={t('practice.history.stats.pageAvgScore')}
@@ -107,6 +109,7 @@ export function InterviewHistoryPage() {
                 ? t('practice.history.scoreUnavailable')
                 : stats.avgScore.toFixed(1)
             }
+            tone="info"
           />
         </div>
 
