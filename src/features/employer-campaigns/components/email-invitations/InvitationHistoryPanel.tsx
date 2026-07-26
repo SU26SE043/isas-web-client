@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Spinner } from '@/components/ui/spinner';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
 import {
   useCampaignInvitations,
@@ -47,7 +47,7 @@ export function InvitationHistoryPanel({
   const [status, setStatus] = useState<CampaignInvitationStatus | 'all'>('all');
   const [sort, setSort] = useState<InvitationSortMode>('newest');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [detail, setDetail] = useState<CampaignInvitation | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<CampaignInvitation | null>(null);
   const [reissuingInvitationId, setReissuingInvitationId] = useState<string | null>(null);

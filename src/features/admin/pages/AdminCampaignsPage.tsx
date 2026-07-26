@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
@@ -23,7 +23,7 @@ export function AdminCampaignsPage() {
   const [status, setStatus] = useState<AdminCampaignStatusFilter>('all');
   const [orgIdInput, setOrgIdInput] = useState('');
   const [orgId, setOrgId] = useState('');
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentCursor, setCurrentCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import {
   fetchInterviewHistory,
   restoreInterview,
@@ -13,7 +14,7 @@ interface UseInterviewHistoryOptions {
 }
 
 export function useInterviewHistory(options: UseInterviewHistoryOptions = {}) {
-  const { page = 1, pageSize = 10, includeDeleted = false } = options;
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, includeDeleted = false } = options;
   const [interviews, setInterviews] = useState<InterviewHistoryItem[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);

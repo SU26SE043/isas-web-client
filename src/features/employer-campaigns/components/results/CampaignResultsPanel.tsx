@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { useCampaignResults } from '../../hooks/useCampaignResults';
@@ -46,7 +46,7 @@ export function CampaignResultsPanel({
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     if (!selected || !resultsQuery.data) return;

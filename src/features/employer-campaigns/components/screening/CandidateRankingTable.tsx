@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import {
@@ -37,7 +37,7 @@ export function CandidateRankingTable({
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
   const allSelected =

@@ -1,4 +1,5 @@
 import { getApiStatusCode } from '@/shared/api/apiError';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import type {
   AdminCampaignListItem,
   AdminCampaignStatus,
@@ -10,7 +11,7 @@ export function buildAdminCampaignQueryParams(
   params: GetAdminCampaignsParams,
 ): Record<string, string | number> {
   const query: Record<string, string | number> = {
-    limit: params.limit ?? 20,
+    limit: params.limit ?? DEFAULT_PAGE_SIZE,
   };
   if (params.status) query.status = params.status;
   if (params.orgId?.trim()) query.orgId = params.orgId.trim();

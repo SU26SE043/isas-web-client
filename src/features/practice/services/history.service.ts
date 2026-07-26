@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/apiClient';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import type {
   GetPracticeSessionHistoryParams,
@@ -42,7 +43,7 @@ export async function fetchInterviewHistory(
   query: InterviewHistoryQuery = {},
 ): Promise<InterviewHistoryResponse> {
   const page = query.page ?? 1;
-  const pageSize = clampPracticeHistoryLimit(query.pageSize ?? 10);
+  const pageSize = clampPracticeHistoryLimit(query.pageSize ?? DEFAULT_PAGE_SIZE);
 
   if (!usesMockData('practice')) {
     const pageData = await getPracticeSessionHistory({

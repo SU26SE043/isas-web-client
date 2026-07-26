@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
@@ -19,7 +19,7 @@ const statusClass = {
 
 export function PracticeQuestionResultCard({
   question,
-  defaultOpen = false,
+  defaultOpen = true,
 }: {
   question: QuestionResultViewModel;
   defaultOpen?: boolean;
@@ -56,12 +56,16 @@ export function PracticeQuestionResultCard({
           </Badge>
           <button
             type="button"
-            className="btn-ghost size-9 p-0"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             aria-expanded={open}
             aria-label={t(open ? 'practice.result.collapseQuestion' : 'practice.result.expandQuestion')}
             onClick={() => setOpen((value) => !value)}
           >
-            <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
+            {open ? (
+              <ChevronUp size={22} absoluteStrokeWidth strokeWidth={2.5} aria-hidden />
+            ) : (
+              <ChevronDown size={22} absoluteStrokeWidth strokeWidth={2.5} aria-hidden />
+            )}
           </button>
         </div>
       </header>

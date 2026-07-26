@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Eye, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import {
   Table,
   TableBody,
@@ -60,7 +60,7 @@ export function UploadedFilesTable({
   disabled = false,
 }: UploadedFilesTableProps) {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const totalPages = Math.max(1, Math.ceil(files.length / pageSize));
   const safePage = Math.min(page, totalPages);

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AppPagination } from '@/components/ui/app-pagination';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
@@ -19,7 +19,7 @@ export function CampaignListPage() {
   const { t } = useLanguage();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const stableFilters = useMemo(() => filters, [filters]);
   const summaryFilters = useMemo(() => DEFAULT_FILTERS, []);
   const summaryQuery = useEmployerCampaigns(summaryFilters);

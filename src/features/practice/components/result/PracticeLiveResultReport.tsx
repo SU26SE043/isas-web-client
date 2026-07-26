@@ -61,11 +61,11 @@ export function PracticeLiveResultReport({
           {t('practice.result.questionReview')}
         </h2>
         {view.questions.length ? (
-          view.questions.map((question, index) => (
+          view.questions.map((question) => (
             <PracticeQuestionResultCard
               key={question.answerId ?? question.questionId}
               question={question}
-              defaultOpen={index === 0}
+              defaultOpen
             />
           ))
         ) : (

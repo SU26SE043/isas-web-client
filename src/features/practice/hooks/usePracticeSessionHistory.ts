@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { getPracticeSessionHistory } from '../services/history.service';
 import type { GetPracticeSessionHistoryParams } from '../types/history.types';
 
@@ -12,12 +13,12 @@ export function usePracticeSessionHistory(params: GetPracticeSessionHistoryParam
   return useQuery({
     queryKey: practiceHistoryKeys.list({
       cursor: params.cursor || undefined,
-      limit: params.limit ?? 20,
+      limit: params.limit ?? DEFAULT_PAGE_SIZE,
     }),
     queryFn: () =>
       getPracticeSessionHistory({
         cursor: params.cursor || undefined,
-        limit: params.limit ?? 20,
+        limit: params.limit ?? DEFAULT_PAGE_SIZE,
       }),
     placeholderData: (previous) => previous,
   });

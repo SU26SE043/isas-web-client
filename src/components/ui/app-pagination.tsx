@@ -137,4 +137,5 @@ export function AppPagination(props: AppPaginationProps) {
   );
 }
 
+export { DEFAULT_PAGE_SIZE, DEFAULT_PAGE_SIZE_OPTIONS } from './pagination.types';
 export type { AppPaginationProps } from './pagination.types';

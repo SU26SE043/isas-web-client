@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import type {
   InterviewHistoryItem,
   PracticeHistorySort,
@@ -50,7 +51,7 @@ export function getPracticeHistoryStatusGroup(
 }
 
 export function clampPracticeHistoryLimit(limit?: number): number {
-  const value = limit ?? 20;
+  const value = limit ?? DEFAULT_PAGE_SIZE;
   return Math.min(Math.max(value, 1), 500);
 }
 

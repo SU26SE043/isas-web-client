@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
 import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { PracticeHistoryContent } from '../components/history/PracticeHistoryContent';
@@ -25,7 +26,7 @@ export function InterviewHistoryPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<PracticeHistoryStatusFilter>('all');
   const [sort, setSort] = useState<PracticeHistorySort>('newest');
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentCursor, setCurrentCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
   const [pageIndex, setPageIndex] = useState(1);
