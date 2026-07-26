@@ -1,6 +1,7 @@
 import type {
   CampaignCandidateDetail,
   CampaignCandidateListItem,
+  CampaignResultStatus,
   CampaignResultsResponse,
   CampaignTranscriptResponse,
   CandidateListQuery,
@@ -237,10 +238,10 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
             .filter((flag): flag is NonNullable<typeof flag> => flag != null)
         : [];
       const resultRaw = pickString(record, 'result', 'Result');
-      const result =
+      const result: CampaignResultStatus =
         resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null;
       const overrideResultRaw = pickString(record, 'overrideResult', 'OverrideResult');
-      const overrideResult =
+      const overrideResult: CampaignResultStatus =
         overrideResultRaw === 'Pass' || overrideResultRaw === 'Fail' ? overrideResultRaw : null;
       return {
         rank: pickNumber(record, 'rank', 'Rank') ?? 0,

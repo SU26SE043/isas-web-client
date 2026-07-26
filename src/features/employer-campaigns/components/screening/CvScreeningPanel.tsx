@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { CandidateFilterBar } from './CandidateFilterBar';
 import { CandidateRankingTable } from './CandidateRankingTable';
@@ -15,6 +16,7 @@ interface CvScreeningPanelProps {
 
 export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const state = useCvScreeningPanelState(campaignId, isActive);
 
   const handleAnalyze = async () => {
@@ -113,13 +115,30 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
                   String(state.selectedCandidateIds.size),
                 )}
               </p>
-              <Button
-                type="button"
-                disabled={!isActive || state.inviteMutation.isPending}
-                onClick={() => state.setInviteConfirmOpen(true)}
-              >
-                {t('employer.campaigns.screening.invitation.send')}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => state.setSelectedCandidateIds(new Set())}
+                >
+                  {t('employer.campaigns.screening.ranking.clearSelection')}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!isActive}
+                  onClick={() => {
+                    const emails = state.candidates
+                      .filter((candidate) => state.selectedCandidateIds.has(candidate.id))
+                      .map((candidate) => candidate.email)
+                      .filter((email): email is string => Boolean(email));
+                    navigate(`/employer/campaigns/${campaignId}/invitations/new`, {
+                      state: { draftEmails: emails.join('\n') },
+                    });
+                  }}
+                >
+                  {t('employer.campaigns.screening.invitation.send')}
+                </Button>
+              </div>
             </div>
           ) : null}
         </>

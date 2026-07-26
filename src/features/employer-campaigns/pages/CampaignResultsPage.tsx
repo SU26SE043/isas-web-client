@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useLanguage } from '@/shared/languages';
 import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
+import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 
 export function CampaignResultsPage() {
   const { id = '' } = useParams();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, refetch } = useEmployerCampaign(id);
+  const { campaign, isLoading, isError, reload } = useEmployerCampaign(id);
 
   if (isLoading) {
     return (
@@ -27,7 +28,7 @@ export function CampaignResultsPage() {
             <AlertDescription>{t('employer.campaigns.results.errors.notFound')}</AlertDescription>
           </Alert>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => void refetch()}>
+            <Button type="button" variant="outline" onClick={reload}>
               {t('employer.campaigns.results.errors.retry')}
             </Button>
             <Button type="button" variant="outline" render={<Link to="/employer/campaigns" />}>
@@ -42,15 +43,11 @@ export function CampaignResultsPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-6xl space-y-6">
-        <Link
-          to={`/employer/campaigns/${campaign.id}`}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          {t('employer.campaigns.detail.back')}
-        </Link>
-        <div>
-          <p className="text-sm text-muted-foreground">{campaign.title}</p>
-        </div>
+        <CampaignContextHeader
+          campaign={campaign}
+          title={t('employer.campaigns.workspace.resultsTitle')}
+          description={t('employer.campaigns.workspace.resultsDescription')}
+        />
         <CampaignResultsPanel
           campaignId={campaign.id}
           passScorePct={campaign.passScorePct}

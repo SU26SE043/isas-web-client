@@ -1,7 +1,6 @@
 /* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 */
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowLeft,
   Building2,
   CalendarDays,
   Clock3,
@@ -12,15 +11,13 @@ import {
   Trophy,
   UsersRound,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
+import { CampaignContextHeader } from './CampaignContextHeader';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
-import { CampaignTalentTabs } from './screening/CampaignTalentTabs';
-import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign, InviteResolution } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -42,7 +39,6 @@ export function CampaignDetailView({
   onDelete,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
-  const isActive = campaign.status === 'active';
   const isDraft = campaign.status === 'draft';
   const formattedDeadline = new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
     dateStyle: 'medium',
@@ -52,39 +48,15 @@ export function CampaignDetailView({
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-[1440px] space-y-4">
-        <Link
-          to="/employer/campaigns"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          {t('employer.campaigns.detail.back')}
-        </Link>
-
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <CampaignManagementStatusBadge status={campaign.status} />
-              {isDraft ? (
-                <span className="text-xs text-muted-foreground">
-                  {t('employer.campaigns.detail.previewHint')}
-                </span>
-              ) : null}
-            </div>
-            <h1 className="heading-primary max-w-4xl text-3xl text-foreground sm:text-4xl">
-              {campaign.title}
-            </h1>
-            <p className="max-w-3xl text-sm font-medium leading-relaxed text-foreground/90">
-              {campaign.summary || campaign.jobDescription.slice(0, 180)}
-            </p>
-          </div>
-
+        <CampaignContextHeader campaign={campaign} />
+        <div className="flex justify-end">
           <CampaignDetailActions
             campaign={campaign}
             onPublish={onPublish}
             onChangeStatus={onChangeStatus}
             onDelete={onDelete}
           />
-        </header>
+        </div>
 
         {isDraft ? (
           <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
@@ -198,13 +170,6 @@ export function CampaignDetailView({
           </div>
         </CollapsibleDetailCard>
 
-        {!isDraft ? (
-          <CampaignTalentTabs
-            campaignId={campaign.id}
-            isActive={isActive}
-            passScorePct={campaign.passScorePct}
-          />
-        ) : null}
       </div>
     </div>
   );

@@ -128,7 +128,7 @@ export function CampaignResultsPanel({
             <Button
               type="button"
               variant="outline"
-              render={<Link to={`/employer/campaigns/${campaignId}?tab=screening`} />}
+              render={<Link to={`/employer/campaigns/${campaignId}/cv-screening`} />}
             >
               {t('employer.campaigns.results.empty.viewCandidates')}
             </Button>

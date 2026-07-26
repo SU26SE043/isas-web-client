@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { CheckCircle2, Download, FileText, RefreshCw, Upload } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type { DeferredJdFileStatus } from '../../../types/campaignWizard.types';

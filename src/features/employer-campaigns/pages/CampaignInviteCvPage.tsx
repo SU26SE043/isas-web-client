@@ -18,11 +18,11 @@ export function CampaignInviteCvPage() {
   }
 
   if (campaign?.status === 'active') {
-    return <Navigate to={`/employer/campaigns/${id}?tab=screening`} replace />;
+    return <Navigate to={`/employer/campaigns/${id}/cv-screening`} replace />;
   }
 
-  if (campaign && campaign.status !== 'active') {
-    return <Navigate to={`/employer/campaigns/${id}/invite`} replace />;
+  if (campaign) {
+    return <Navigate to={`/employer/campaigns/${id}`} replace />;
   }
 
   return (

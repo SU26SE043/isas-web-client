@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { EmailInvitationFlow } from '../components/email-invitations/EmailInvitationFlow';
+import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { tokenizeEmailList } from '../utils/emailInvitationUtils';
 
@@ -17,6 +18,7 @@ export function CampaignInviteEmailPage() {
       ? (location.state as { draftEmails: string }).draftEmails
       : '';
   const initialEmails = draftFromRetry ? tokenizeEmailList(draftFromRetry) : [];
+  const isHistory = location.pathname.endsWith('/invitations');
 
   if (isLoading) {
     return (
@@ -47,7 +49,26 @@ export function CampaignInviteEmailPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-6xl">
-        <EmailInvitationFlow campaign={campaign} initialEmails={initialEmails} />
+        <div className="space-y-6">
+          <CampaignContextHeader
+            campaign={campaign}
+            title={t(
+              isHistory
+                ? 'employer.campaigns.workspace.invitationsTitle'
+                : 'employer.campaigns.workspace.inviteTitle',
+            )}
+            description={t(
+              isHistory
+                ? 'employer.campaigns.workspace.invitationsDescription'
+                : 'employer.campaigns.workspace.inviteDescription',
+            )}
+          />
+          <EmailInvitationFlow
+            campaign={campaign}
+            initialEmails={initialEmails}
+            view={isHistory ? 'history' : 'send'}
+          />
+        </div>
       </div>
     </div>
   );

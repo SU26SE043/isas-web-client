@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
@@ -18,13 +18,24 @@ type InviteTab = 'send' | 'history';
 interface EmailInvitationFlowProps {
   campaign: EmployerCampaign;
   initialEmails?: string[];
+  view?: 'combined' | 'send' | 'history';
 }
 
-export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvitationFlowProps) {
+export function EmailInvitationFlow({
+  campaign,
+  initialEmails = [],
+  view = 'combined',
+}: EmailInvitationFlowProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const flow = useEmailInvitationFlow(campaign, initialEmails);
   const [tab, setTab] = useState<InviteTab>('send');
+  const activeView = view === 'combined' ? tab : view;
+
+  useEffect(() => {
+    if (view !== 'send' || flow.step !== 'result' || flow.failed.length > 0) return;
+    navigate(`/employer/campaigns/${campaign.id}/invitations`, { replace: true });
+  }, [campaign.id, flow.failed.length, flow.step, navigate, view]);
 
   const confirmModal = (
     <EmailInviteConfirmModal
@@ -76,7 +87,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
+      {view === 'combined' ? <header className="space-y-3">
         <nav
           aria-label={t('employer.campaigns.campaignInvitations.breadcrumb.label')}
           className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
@@ -107,11 +118,11 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
             {t('employer.campaigns.emailInvitations.description')}
           </p>
         </div>
-      </header>
+      </header> : null}
 
-      {tabs}
+      {view === 'combined' ? tabs : null}
 
-      {tab === 'history' ? (
+      {activeView === 'history' ? (
         <InvitationHistoryPanel
           campaign={campaign}
           enabled
@@ -130,7 +141,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
               )
             }
             onInviteMore={flow.inviteMore}
-            onClose={() => navigate(`/employer/campaigns/${campaign.id}/invite`)}
+            onClose={() => navigate(`/employer/campaigns/${campaign.id}/invitations`)}
             onBackToCampaign={() => navigate(`/employer/campaigns/${campaign.id}`)}
           />
           {confirmModal}

@@ -78,7 +78,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                     ) : null}
                     {campaign.status === 'active' ? (
                       <Link
-                        to={`/employer/campaigns/${campaign.id}/invite`}
+                        to={`/employer/campaigns/${campaign.id}/invitations/new`}
                         className={cn(
                           buttonVariants({ size: 'sm' }),
                           'bg-foreground text-background shadow-sm',

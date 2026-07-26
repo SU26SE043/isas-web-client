@@ -46,7 +46,7 @@ export function CampaignDetailActions({
 
       {isActive ? (
         <>
-          <Button render={<Link to={`/employer/campaigns/${campaign.id}/invite`} />}>
+          <Button render={<Link to={`/employer/campaigns/${campaign.id}/invitations/new`} />}>
             <Send aria-hidden />
             {t('employer.campaigns.detail.inviteCandidates')}
           </Button>
