@@ -156,7 +156,7 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
                         source: 'cv-screening' as const,
                       }));
                     setInvitationCandidates(campaignId, candidates);
-                    navigate(`/employer/campaigns/${campaignId}/invitations/new`);
+                    navigate(`/employer/campaigns/${campaignId}/invitations?tab=invite`);
                   }}
                 >
                   {t('employer.campaigns.screening.invitation.continue')}

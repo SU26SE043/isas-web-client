@@ -1,41 +1,57 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 
 interface CampaignSubNavigationProps {
   campaign: EmployerCampaign;
+  mode: 'overview' | 'invitations';
 }
 
-export function CampaignSubNavigation({ campaign }: CampaignSubNavigationProps) {
+export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationProps) {
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
   const base = `/employer/campaigns/${campaign.id}`;
   const canOperate = campaign.status === 'active';
   const canViewHistory = campaign.status !== 'draft';
-  const items = [
-    { label: t('employer.campaigns.workspace.detail'), to: base, enabled: true, end: true },
-    {
-      label: t('employer.campaigns.workspace.screening'),
-      to: `${base}/cv-screening`,
-      enabled: canOperate,
-    },
-    {
-      label: t('employer.campaigns.workspace.invite'),
-      to: `${base}/invitations/new`,
-      enabled: canOperate,
-    },
-    {
-      label: t('employer.campaigns.workspace.invitations'),
-      to: `${base}/invitations`,
-      enabled: canViewHistory,
-      end: true,
-    },
-    {
-      label: t('employer.campaigns.workspace.results'),
-      to: `${base}/results`,
-      enabled: canViewHistory,
-    },
-  ];
+  const activeTab =
+    searchParams.get('tab') ?? (mode === 'overview' ? 'details' : 'cv-screening');
+  const items =
+    mode === 'overview'
+      ? [
+          {
+            id: 'details',
+            label: t('employer.campaigns.workspace.detail'),
+            to: `${base}/overview?tab=details`,
+            enabled: true,
+          },
+          {
+            id: 'results',
+            label: t('employer.campaigns.workspace.results'),
+            to: `${base}/overview?tab=results`,
+            enabled: canViewHistory,
+          },
+        ]
+      : [
+          {
+            id: 'cv-screening',
+            label: t('employer.campaigns.workspace.screening'),
+            to: `${base}/invitations?tab=cv-screening`,
+            enabled: canOperate,
+          },
+          {
+            id: 'invite',
+            label: t('employer.campaigns.workspace.invite'),
+            to: `${base}/invitations?tab=invite`,
+            enabled: canOperate,
+          },
+          {
+            id: 'invitation-list',
+            label: t('employer.campaigns.workspace.invitations'),
+            to: `${base}/invitations?tab=invitation-list`,
+            enabled: canViewHistory,
+          },
+        ];
 
   return (
     <nav
@@ -45,21 +61,19 @@ export function CampaignSubNavigation({ campaign }: CampaignSubNavigationProps) 
       <div className="flex min-w-max gap-1">
         {items.map((item) =>
           item.enabled ? (
-            <NavLink
+            <Link
               key={item.to}
               to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground',
-                )
-              }
+              aria-current={activeTab === item.id ? 'page' : undefined}
+              className={cn(
+                'rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200',
+                activeTab === item.id
+                  ? 'bg-foreground text-background shadow-sm'
+                  : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground',
+              )}
             >
               {item.label}
-            </NavLink>
+            </Link>
           ) : (
             <span
               key={item.to}

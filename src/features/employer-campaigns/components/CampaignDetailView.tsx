@@ -15,7 +15,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
-import { CampaignContextHeader } from './CampaignContextHeader';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
@@ -27,6 +26,7 @@ interface CampaignDetailViewProps {
   onPublish: () => Promise<void>;
   onChangeStatus: (status: CampaignStatusUpdateRequest['status']) => Promise<void>;
   onDelete?: () => Promise<void>;
+  embedded?: boolean;
 }
 
 export function CampaignDetailView({
@@ -36,6 +36,7 @@ export function CampaignDetailView({
   onPublish,
   onChangeStatus,
   onDelete,
+  embedded = false,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
   const isDraft = campaign.status === 'draft';
@@ -43,11 +44,15 @@ export function CampaignDetailView({
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(campaign.deadline));
+  const formattedStart = campaign.startsAt
+    ? new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(campaign.startsAt))
+    : '—';
 
-  return (
-    <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px] space-y-4">
-        <CampaignContextHeader campaign={campaign} />
+  const content = (
+    <div className="space-y-4">
         <div className="flex justify-end">
           <CampaignDetailActions
             campaign={campaign}
@@ -80,7 +85,6 @@ export function CampaignDetailView({
             </AlertDescription>
           </Alert>
         ) : null}
-
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
           <Card className="frame-satin bg-info/[0.035]">
             <CardHeader className="pb-3">
@@ -123,6 +127,11 @@ export function CampaignDetailView({
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p className="flex items-center gap-2">
                 <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
+                <span>{t('employer.campaigns.form.startsAt')}:</span>
+                <strong className="font-semibold text-foreground">{formattedStart}</strong>
+              </p>
+              <p className="flex items-center gap-2">
+                <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
                 <span>{t('employer.campaigns.form.deadline')}:</span>
                 <strong className="font-semibold text-foreground">{formattedDeadline}</strong>
               </p>
@@ -130,6 +139,28 @@ export function CampaignDetailView({
                 <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
                 <span>{t('employer.campaigns.form.company')}:</span>
                 <strong className="font-semibold text-foreground">{campaign.company}</strong>
+              </p>
+              <p className="text-muted-foreground">
+                {t('employer.campaigns.form.passScorePct')}:{' '}
+                <strong className="font-semibold text-foreground">
+                  {campaign.passScorePct != null ? `${campaign.passScorePct}%` : '—'}
+                </strong>
+              </p>
+              <p className="text-muted-foreground">
+                {t('employer.campaigns.form.antiCheat')}:{' '}
+                <strong className="font-semibold text-foreground">
+                  {campaign.antiCheatEnabled
+                    ? t('employer.campaigns.detail.enabled')
+                    : t('employer.campaigns.detail.disabled')}
+                </strong>
+              </p>
+              <p className="text-muted-foreground">
+                {t('employer.campaigns.form.faceVerify')}:{' '}
+                <strong className="font-semibold text-foreground">
+                  {campaign.faceVerifyEnabled
+                    ? t('employer.campaigns.detail.enabled')
+                    : t('employer.campaigns.detail.disabled')}
+                </strong>
               </p>
             </CardContent>
           </Card>
@@ -154,7 +185,6 @@ export function CampaignDetailView({
             ))}
           </div>
         </CollapsibleDetailCard>
-
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.questions')}
           icon={ListChecks}
@@ -168,8 +198,14 @@ export function CampaignDetailView({
             ))}
           </div>
         </CollapsibleDetailCard>
-
       </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <div className="h-full overflow-y-auto bg-surface-base">
+      <div className="page-container page-section mx-auto max-w-[1440px]">{content}</div>
     </div>
   );
 }

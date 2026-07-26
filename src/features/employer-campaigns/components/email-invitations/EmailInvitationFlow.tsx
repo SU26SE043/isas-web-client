@@ -50,7 +50,9 @@ export function EmailInvitationFlow({
         String(flow.created.length),
       ),
     );
-    navigate(`/employer/campaigns/${campaign.id}/invitations`, { replace: true });
+    navigate(`/employer/campaigns/${campaign.id}/invitations?tab=invitation-list`, {
+      replace: true,
+    });
   }, [
     campaign.id,
     flow.created.length,

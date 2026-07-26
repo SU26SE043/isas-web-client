@@ -34,10 +34,18 @@ export function CandidateRankingTable({
   onChooseFiles,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+  const pageCount = Math.max(1, Math.ceil(candidates.length / pageSize));
+  const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [candidates]);
 
   if (candidates.length === 0) {
     return (
@@ -93,7 +101,7 @@ export function CandidateRankingTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {candidates.map((item, index) => {
+          {pageItems.map((item, index) => {
             const selectable = canSelectCandidate(item);
             return (
               <TableRow key={item.id}>
@@ -107,7 +115,9 @@ export function CandidateRankingTable({
                     aria-label={item.fullName ?? item.email ?? item.id}
                   />
                 </TableCell>
-                <TableCell className="font-semibold text-foreground">{index + 1}</TableCell>
+                <TableCell className="font-semibold text-foreground">
+                  {(page - 1) * pageSize + index + 1}
+                </TableCell>
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
@@ -134,6 +144,39 @@ export function CandidateRankingTable({
           })}
         </TableBody>
       </Table>
+      {pageCount > 1 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            {t('employer.campaigns.screening.ranking.page')
+              .replace('{page}', String(page))
+              .replace('{pages}', String(pageCount))}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => current - 1)}
+              aria-label={t('employer.campaigns.screening.ranking.previous')}
+            >
+              <ChevronLeft aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={page >= pageCount}
+              onClick={() => setPage((current) => current + 1)}
+              aria-label={t('employer.campaigns.screening.ranking.next')}
+            >
+              <ChevronRight aria-hidden />
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';

@@ -1,9 +1,12 @@
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 */
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { EmailInvitationFlow } from '../components/email-invitations/EmailInvitationFlow';
 import { CampaignContextHeader } from '../components/CampaignContextHeader';
+import { CampaignSummaryBar } from '../components/CampaignSummaryBar';
+import { CvScreeningPanel } from '../components/screening/CvScreeningPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { tokenizeEmailList } from '../utils/emailInvitationUtils';
 import { useCampaignInvitationStore } from '../stores/campaignInvitationStore';
@@ -11,6 +14,7 @@ import { useCampaignInvitationStore } from '../stores/campaignInvitationStore';
 export function CampaignInviteEmailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { campaign, isLoading, isError, errorStatus } = useEmployerCampaign(id);
   const invitationCampaignId = useCampaignInvitationStore((store) => store.campaignId);
@@ -29,10 +33,14 @@ export function CampaignInviteEmailPage() {
       ...(draftFromRetry ? tokenizeEmailList(draftFromRetry) : []),
     ]),
   );
-  const isHistory = location.pathname.endsWith('/invitations');
+  const tab = searchParams.get('tab') ?? 'cv-screening';
 
   if (location.pathname.includes('/invite/email')) {
-    return <Navigate to={`/employer/campaigns/${id}/invitations/new`} replace />;
+    return <Navigate to={`/employer/campaigns/${id}/invitations?tab=invite`} replace />;
+  }
+
+  if (!['cv-screening', 'invite', 'invitation-list'].includes(tab)) {
+    return <Navigate to={`/employer/campaigns/${id}/invitations?tab=cv-screening`} replace />;
   }
 
   if (isLoading) {
@@ -63,29 +71,34 @@ export function CampaignInviteEmailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl">
+      <div className="page-container page-section mx-auto max-w-[1440px]">
         <div className="space-y-6">
           <CampaignContextHeader
             campaign={campaign}
-            title={t(
-              isHistory
-                ? 'employer.campaigns.workspace.invitationsTitle'
-                : 'employer.campaigns.workspace.inviteTitle',
-            )}
-            description={t(
-              isHistory
-                ? 'employer.campaigns.workspace.invitationsDescription'
-                : 'employer.campaigns.workspace.inviteDescription',
-            )}
+            mode="invitations"
           />
-          <EmailInvitationFlow
-            campaign={campaign}
-            initialEmails={initialEmails}
-            view={isHistory ? 'history' : 'send'}
-            selectedCandidates={isHistory ? [] : selectedCandidates}
-            onRemoveSelectedCandidate={removeCandidate}
-            onClearSelectedCandidates={clearCandidates}
-          />
+          <div className="motion-safe:animate-in motion-safe:fade-in">
+            <div className="space-y-5" hidden={tab !== 'cv-screening'}>
+              <CampaignSummaryBar campaign={campaign} />
+              <CvScreeningPanel
+                campaignId={campaign.id}
+                isActive={campaign.status === 'active'}
+              />
+            </div>
+            <div hidden={tab !== 'invite'}>
+              <EmailInvitationFlow
+                campaign={campaign}
+                initialEmails={initialEmails}
+                view="send"
+                selectedCandidates={selectedCandidates}
+                onRemoveSelectedCandidate={removeCandidate}
+                onClearSelectedCandidates={clearCandidates}
+              />
+            </div>
+            <div hidden={tab !== 'invitation-list'}>
+              <EmailInvitationFlow campaign={campaign} view="history" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

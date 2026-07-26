@@ -43,6 +43,7 @@ export function CampaignCvScreeningPage() {
       <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
         <CampaignContextHeader
           campaign={campaign}
+          mode="invitations"
           title={t('employer.campaigns.workspace.screeningTitle')}
           description={t('employer.campaigns.workspace.screeningDescription')}
         />

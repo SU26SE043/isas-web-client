@@ -8,8 +8,7 @@ import { CampaignInvitePage } from '@/features/employer-campaigns/pages/Campaign
 import { CampaignInviteCvPage } from '@/features/employer-campaigns/pages/CampaignInviteCvPage';
 import { CampaignInviteEmailPage } from '@/features/employer-campaigns/pages/CampaignInviteEmailPage';
 import { CampaignInviteResultPage } from '@/features/employer-campaigns/pages/CampaignInviteResultPage';
-import { CampaignResultsPage } from '@/features/employer-campaigns/pages/CampaignResultsPage';
-import { CampaignCvScreeningPage } from '@/features/employer-campaigns/pages/CampaignCvScreeningPage';
+import { CampaignWorkspaceRedirect } from '@/features/employer-campaigns/pages/CampaignWorkspaceRedirect';
 import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
 import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
@@ -69,12 +68,25 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'campaigns/:id/invite/cv', element: <CampaignInviteCvPage /> },
               { path: 'campaigns/:id/invite/email', element: <CampaignInviteEmailPage /> },
               { path: 'campaigns/:id/invite/result', element: <CampaignInviteResultPage /> },
-              { path: 'campaigns/:id/cv-screening', element: <CampaignCvScreeningPage /> },
-              { path: 'campaigns/:id/invitations/new', element: <CampaignInviteEmailPage /> },
+              {
+                path: 'campaigns/:id/cv-screening',
+                element: <CampaignWorkspaceRedirect target="invitation-screening" />,
+              },
+              {
+                path: 'campaigns/:id/invitations/new',
+                element: <CampaignWorkspaceRedirect target="invitation-compose" />,
+              },
               { path: 'campaigns/:id/invitations', element: <CampaignInviteEmailPage /> },
-              { path: 'campaigns/:id/results', element: <CampaignResultsPage /> },
+              {
+                path: 'campaigns/:id/results',
+                element: <CampaignWorkspaceRedirect target="overview-results" />,
+              },
+              { path: 'campaigns/:id/overview', element: <CampaignDetailPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
-              { path: 'campaigns/:id', element: <CampaignDetailPage /> },
+              {
+                path: 'campaigns/:id',
+                element: <CampaignWorkspaceRedirect target="overview-details" />,
+              },
               { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },
               { path: 'candidates/:id/report', element: <EmployerCandidateReportPage /> },
               { path: 'analytics', element: <EmployerAnalyticsPage /> },

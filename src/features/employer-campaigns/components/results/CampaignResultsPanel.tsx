@@ -17,6 +17,7 @@ import { ClearOverrideDialog } from './ClearOverrideDialog';
 import { OverrideResultModal } from './OverrideResultModal';
 import { ResultsExportMenu } from './ResultsExportMenu';
 import { ResultsRankingTable } from './ResultsRankingTable';
+import { ResultsPagination } from './ResultsPagination';
 import { ResultsSummaryCards, ResultsSummarySkeleton } from './ResultsSummaryCards';
 import { ResultsToolbar } from './ResultsToolbar';
 import { ResultTranscriptDrawer } from './ResultTranscriptDrawer';
@@ -44,6 +45,8 @@ export function CampaignResultsPanel({
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     if (!selected || !resultsQuery.data) return;
@@ -61,6 +64,12 @@ export function CampaignResultsPanel({
       }),
     [outcome, resultsQuery.data?.results, review, search, sort],
   );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [outcome, review, search, sort]);
 
   const openTranscript = (item: CampaignResultItem) => {
     setSelected(item);
@@ -128,7 +137,11 @@ export function CampaignResultsPanel({
             <Button
               type="button"
               variant="outline"
-              render={<Link to={`/employer/campaigns/${campaignId}/cv-screening`} />}
+              render={
+                <Link
+                  to={`/employer/campaigns/${campaignId}/invitations?tab=cv-screening`}
+                />
+              }
             >
               {t('employer.campaigns.results.empty.viewCandidates')}
             </Button>
@@ -157,12 +170,18 @@ export function CampaignResultsPanel({
             />
           ) : (
             <ResultsRankingTable
-              items={filtered}
+              items={paginated}
               onViewDetails={openTranscript}
               onOverride={openOverride}
               onClearOverride={openClear}
             />
           )}
+          <ResultsPagination
+            page={page}
+            pageCount={pageCount}
+            total={filtered.length}
+            onPageChange={setPage}
+          />
         </>
       ) : null}
 

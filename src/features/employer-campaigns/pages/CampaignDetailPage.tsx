@@ -1,11 +1,14 @@
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 */
 import { useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailView } from '../components/CampaignDetailView';
+import { CampaignContextHeader } from '../components/CampaignContextHeader';
+import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
@@ -13,11 +16,17 @@ import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 export function CampaignDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
+  const tab = searchParams.get('tab') ?? 'details';
+
+  if (tab !== 'details' && tab !== 'results') {
+    return <Navigate to={`/employer/campaigns/${id}/overview?tab=details`} replace />;
+  }
 
   const handlePublish = async () => {
     if (!campaign) return;
@@ -141,14 +150,31 @@ export function CampaignDetailPage() {
   if (!campaign) return null;
 
   return (
-    <CampaignDetailView
-      campaign={campaign}
-      published={published}
-      warnings={warnings}
-      onPublish={handlePublish}
-      onChangeStatus={handleChangeStatus}
-      onDelete={handleDelete}
-    />
+    <div className="h-full overflow-y-auto bg-surface-base">
+      <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
+        <CampaignContextHeader campaign={campaign} mode="overview" />
+        <div className="motion-safe:animate-in motion-safe:fade-in">
+          <div hidden={tab !== 'details'}>
+            <CampaignDetailView
+              campaign={campaign}
+              published={published}
+              warnings={warnings}
+              onPublish={handlePublish}
+              onChangeStatus={handleChangeStatus}
+              onDelete={handleDelete}
+              embedded
+            />
+          </div>
+          <div hidden={tab !== 'results'}>
+            <CampaignResultsPanel
+              campaignId={campaign.id}
+              passScorePct={campaign.passScorePct}
+              enabled
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -45,6 +45,7 @@ export function CampaignResultsPage() {
       <div className="page-container page-section mx-auto max-w-6xl space-y-6">
         <CampaignContextHeader
           campaign={campaign}
+          mode="overview"
           title={t('employer.campaigns.workspace.resultsTitle')}
           description={t('employer.campaigns.workspace.resultsDescription')}
         />
