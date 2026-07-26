@@ -1,4 +1,3 @@
-import { Check, Mail } from 'lucide-react';
 import { CampaignManagementStatusBadge } from '../CampaignManagementStatusBadge';
 import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
@@ -53,14 +52,6 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
   return (
     <section className="frame-satin relative overflow-hidden rounded-2xl bg-surface-raised p-5 sm:p-6">
       <div className="pointer-events-none absolute -right-6 -top-8 size-40 rounded-full bg-violet-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-8 hidden opacity-90 sm:block">
-        <div className="relative flex size-28 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 via-blue-500/10 to-transparent">
-          <Mail className="size-12 text-violet-300" aria-hidden />
-          <span className="absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/20 text-emerald-300">
-            <Check className="size-3.5" aria-hidden />
-          </span>
-        </div>
-      </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="heading-secondary text-base text-foreground">
@@ -69,7 +60,7 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
         <CampaignManagementStatusBadge status={campaign.status} />
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 sm:pr-32">
+      <div className="grid gap-6 sm:grid-cols-2">
         <dl className="space-y-3">
           {leftRows.map((row) => (
             <div key={row.label} className="min-w-0">

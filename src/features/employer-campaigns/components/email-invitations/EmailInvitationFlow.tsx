@@ -63,7 +63,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
             className={cn(
               'rounded-xl px-4 py-3 text-sm font-semibold transition-[background-color,color,box-shadow,border-color] duration-200 ease-out',
               isActive
-                ? 'border border-violet-400/30 bg-gradient-to-r from-violet-600/80 to-violet-500/60 text-white shadow-[0_8px_24px_rgba(124,58,237,0.25)]'
+                ? 'border border-foreground bg-foreground text-background shadow-sm'
                 : 'frame-satin bg-surface-raised text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
             )}
           >

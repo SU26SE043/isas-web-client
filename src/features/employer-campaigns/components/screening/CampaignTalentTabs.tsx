@@ -1,5 +1,4 @@
 import { useSearchParams } from 'react-router-dom';
-import { BarChart3, FileSearch } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
@@ -32,9 +31,9 @@ export function CampaignTalentTabs({
     setSearchParams(next, { replace: true });
   };
 
-  const tabs: Array<{ id: ScreeningTab; label: string; icon: typeof FileSearch }> = [
-    { id: 'screening', label: t('employer.campaigns.screening.tabs.cv'), icon: FileSearch },
-    { id: 'interview', label: t('employer.campaigns.screening.tabs.interview'), icon: BarChart3 },
+  const tabs: Array<{ id: ScreeningTab; label: string }> = [
+    { id: 'screening', label: t('employer.campaigns.screening.tabs.cv') },
+    { id: 'interview', label: t('employer.campaigns.screening.tabs.interview') },
   ];
 
   return (
@@ -52,7 +51,6 @@ export function CampaignTalentTabs({
       >
         {tabs.map((tab) => {
           const selected = activeTab === tab.id;
-          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
@@ -63,11 +61,10 @@ export function CampaignTalentTabs({
               className={cn(
                 'flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] duration-200 ease-out',
                 selected
-                  ? 'border-info/40 bg-info/10 text-foreground shadow-[var(--satin-inset)]'
+                  ? 'border-foreground bg-foreground text-background shadow-sm'
                   : 'border-transparent text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
               )}
             >
-              <Icon className="size-4" aria-hidden />
               {tab.label}
             </button>
           );
