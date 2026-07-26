@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { UserRoundPen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   Dialog,
@@ -6,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -93,6 +95,9 @@ export function EditCandidateModal({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
+          <DialogIcon>
+            <UserRoundPen aria-hidden />
+          </DialogIcon>
           <DialogTitle>{t('employer.campaigns.screening.edit.title')}</DialogTitle>
           <DialogDescription>{t('employer.campaigns.screening.edit.description')}</DialogDescription>
         </DialogHeader>
@@ -104,6 +109,7 @@ export function EditCandidateModal({
             </Label>
             <Input
               id="edit-candidate-name"
+              className="focus-visible:border-foreground focus-visible:ring-foreground/15"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={updateMutation.isPending}
@@ -124,6 +130,7 @@ export function EditCandidateModal({
             <Input
               id="edit-candidate-email"
               type="email"
+              className="focus-visible:border-foreground focus-visible:ring-foreground/15"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -154,6 +161,7 @@ export function EditCandidateModal({
           </Button>
           <Button
             type="button"
+            className="bg-foreground text-background hover:bg-foreground/85"
             disabled={!canSubmit}
             loading={updateMutation.isPending}
             onClick={() => void handleSubmit()}

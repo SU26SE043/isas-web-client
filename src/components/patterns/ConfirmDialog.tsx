@@ -5,6 +5,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -39,37 +40,19 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="frame-satin gap-0 overflow-hidden rounded-3xl border-satin bg-[var(--glass-bg)] p-0 shadow-[var(--satin-inset),var(--shadow-lg)] backdrop-blur-xl sm:max-w-md"
+        className="sm:max-w-md"
       >
-        <div className="space-y-4 px-6 pt-6 pb-5">
-          <DialogHeader className="gap-3 text-left">
-            <div className="flex items-center gap-3">
-              {icon ? (
-                <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
-                  {icon}
-                </span>
-              ) : null}
-              <DialogTitle className="text-lg font-semibold tracking-tight text-foreground">
-                {title}
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-[0.95rem] leading-relaxed text-foreground/90">
-              {description}
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+        <DialogHeader>
+          {icon ? <DialogIcon>{icon}</DialogIcon> : null}
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
 
-        <div
-          className="mx-6 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--satin-border)_85%,transparent)] to-transparent"
-          aria-hidden
-        />
-
-        <DialogFooter className="-mx-0 -mb-0 gap-3 rounded-none border-0 bg-transparent p-6 pt-4 sm:justify-end">
+        <DialogFooter>
           <Button
             type="button"
             variant="outline"
             disabled={loading}
-            className="h-10 rounded-full border-satin bg-transparent px-5 text-muted-foreground shadow-none hover:border-[var(--satin-border-hover)] hover:bg-white/[0.04] hover:text-foreground"
             onClick={() => onOpenChange(false)}
           >
             {cancelLabel}
@@ -79,10 +62,9 @@ export function ConfirmDialog({
             loading={loading}
             variant="default"
             className={cn(
-              'h-10 rounded-full px-5 font-semibold shadow-none',
               destructive
                 ? 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/30'
-                : null,
+                : 'bg-foreground text-background hover:bg-foreground/85',
             )}
             onClick={onConfirm}
           >
