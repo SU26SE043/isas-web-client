@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import {
@@ -42,6 +42,7 @@ export function useB2cPracticeAnswerSubmit({
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [overwriteConfirmOpen, setOverwriteConfirmOpen] = useState(false);
+  const pendingOverrideRef = useRef<{ file: File; durationSec: number } | null>(null);
 
   const canSubmitAnswer =
     Boolean(recorder.audioFile) &&
@@ -53,10 +54,12 @@ export function useB2cPracticeAnswerSubmit({
     stage !== 'submitting_session' &&
     recorder.recordingStatus !== 'uploading';
 
-  const performSubmit = useCallback(async () => {
-    if (!currentQuestion || !recorder.audioFile) {
+  const performSubmit = useCallback(async (override?: { file: File; durationSec: number }) => {
+    const file = override?.file ?? recorder.audioFile;
+    const durationSec = override?.durationSec ?? recorder.durationSec;
+    if (!currentQuestion || !file) {
       setAnswerError('practice.errors.audioRequired');
-      return;
+      throw new Error('audio-required');
     }
     setIsSubmittingAnswer(true);
     setAnswerError(null);
@@ -66,8 +69,8 @@ export function useB2cPracticeAnswerSubmit({
       const response = await submitPracticeAnswer({
         sessionId,
         questionId: currentQuestion.id,
-        file: recorder.audioFile,
-        durationSec: recorder.durationSec,
+        file,
+        durationSec,
       });
       store.setAnswer(currentQuestion.id, {
         answerId: response.answerId,
@@ -104,6 +107,7 @@ export function useB2cPracticeAnswerSubmit({
       store.setStage('interviewing');
       store.setQuestionState(currentQuestion.id, 'error');
       recorder.setStopped();
+      throw error;
     } finally {
       setIsSubmittingAnswer(false);
       setOverwriteConfirmOpen(false);
@@ -131,11 +135,32 @@ export function useB2cPracticeAnswerSubmit({
       setOverwriteConfirmOpen(true);
       return;
     }
-    await performSubmit();
+    try {
+      await performSubmit();
+    } catch {
+      // Error surfaced via answerError
+    }
   }, [answersByQuestionId, canSubmitAnswer, currentQuestion, performSubmit]);
 
+  const submitAnswerWithFile = useCallback(
+    async (file: File, durationSec: number) => {
+      if (!currentQuestion) {
+        setAnswerError('practice.errors.audioRequired');
+        throw new Error('missing-question');
+      }
+      if (isSubmittingAnswer || isTimingOut || remainingSeconds <= 0) {
+        throw new Error('submit-blocked');
+      }
+      // Modal retake + submit is an intentional overwrite of any prior answer.
+      await performSubmit({ file, durationSec });
+    },
+    [currentQuestion, isSubmittingAnswer, isTimingOut, performSubmit, remainingSeconds],
+  );
+
   const confirmOverwriteSubmit = useCallback(() => {
-    void performSubmit();
+    const pending = pendingOverrideRef.current;
+    pendingOverrideRef.current = null;
+    void performSubmit(pending ?? undefined).catch(() => undefined);
   }, [performSubmit]);
 
   return {
@@ -144,6 +169,7 @@ export function useB2cPracticeAnswerSubmit({
     setAnswerError,
     canSubmitAnswer,
     submitAnswer,
+    submitAnswerWithFile,
     overwriteConfirmOpen,
     setOverwriteConfirmOpen,
     confirmOverwriteSubmit,

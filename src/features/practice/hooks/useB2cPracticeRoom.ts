@@ -313,6 +313,7 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
     canSubmitAnswer: answerSubmit.canSubmitAnswer,
     canReplay,
     submitAnswer: answerSubmit.submitAnswer,
+    submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
     overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
     setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
     confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,

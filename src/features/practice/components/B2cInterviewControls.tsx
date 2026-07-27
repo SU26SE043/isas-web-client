@@ -1,4 +1,4 @@
-import { Mic, MicOff, RotateCcw, Send, Square, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, RotateCcw, Video, VideoOff } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 
@@ -7,15 +7,11 @@ interface B2cInterviewControlsProps {
   cameraEnabled: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
-  recordingStatus: string;
-  onStartRecording: () => void;
-  onStopRecording: () => void;
+  onOpenRecorder: () => void;
+  openRecorderDisabled?: boolean;
   onReplay: () => void;
   replayDisabled: boolean;
   replaying: boolean;
-  onSubmit: () => void;
-  submitDisabled: boolean;
-  submitLabel: string;
   onFinish: () => void;
   finishLabel: string;
   finishPrimary?: boolean;
@@ -27,22 +23,17 @@ export function B2cInterviewControls({
   cameraEnabled,
   onToggleMic,
   onToggleCamera,
-  recordingStatus,
-  onStartRecording,
-  onStopRecording,
+  onOpenRecorder,
+  openRecorderDisabled,
   onReplay,
   replayDisabled,
   replaying,
-  onSubmit,
-  submitDisabled,
-  submitLabel,
   onFinish,
   finishLabel,
   finishPrimary,
   disabled,
 }: B2cInterviewControlsProps) {
   const { t } = useLanguage();
-  const isRecording = recordingStatus === 'recording';
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-satin bg-surface-raised/95 backdrop-blur-md">
@@ -80,44 +71,18 @@ export function B2cInterviewControls({
             <RotateCcw className="size-4" aria-hidden />
             {replaying ? t('practice.speech.replaying') : t('practice.speech.replay')}
           </button>
-          {isRecording ? (
-            <button
-              type="button"
-              className="btn-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm"
-              disabled={disabled}
-              onClick={onStopRecording}
-            >
-              <Square className="size-4" aria-hidden />
-              {t('practice.recording.stop')}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm"
-              disabled={disabled}
-              onClick={onStartRecording}
-            >
-              <Mic className="size-4" aria-hidden />
-              {recordingStatus === 'stopped' || recordingStatus === 'submitted'
-                ? t('practice.recording.retry')
-                : t('practice.recording.start')}
-            </button>
-          )}
+          <button
+            type="button"
+            className="btn-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm"
+            disabled={openRecorderDisabled || disabled}
+            onClick={onOpenRecorder}
+          >
+            <Mic className="size-4" aria-hidden />
+            {t('practice.audioRecorder.open')}
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm',
-              finishPrimary ? 'btn-secondary' : 'btn-primary',
-            )}
-            disabled={submitDisabled || disabled}
-            onClick={onSubmit}
-          >
-            <Send className="size-4" aria-hidden />
-            {submitLabel}
-          </button>
           <button
             type="button"
             className={cn(
