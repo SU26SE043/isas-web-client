@@ -12,7 +12,7 @@ import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { authService } from '../services/authService';
 import { validatePassword } from '../utils/passwordPolicy';
 
-type ForgotOtpLocationState = { email?: string };
+type ForgotOtpLocationState = { email?: string; otp?: string };
 
 export function ForgotPasswordOtpPage() {
   const { t } = useLanguage();
@@ -41,7 +41,7 @@ export function ForgotPasswordOtpPage() {
     setIsSubmitting(true);
     try {
       await authService.verifyOtp({ email, otp: otp.trim() });
-      navigate('/reset-password', { replace: true, state: { email } });
+      navigate('/reset-password', { replace: true, state: { email, otp: otp.trim() } });
     } catch (err) {
       setError(getApiErrorMessage(err, t('auth.otpInvalid')));
     } finally {
@@ -162,6 +162,7 @@ export function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = (location.state as ForgotOtpLocationState)?.email ?? '';
+  const otp = (location.state as ForgotOtpLocationState)?.otp ?? '';
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -169,7 +170,7 @@ export function ResetPasswordPage() {
 
   usePageTitle(t('auth.resetPasswordTitle'));
 
-  if (!email) {
+  if (!email || !otp) {
     return <Navigate to="/forgot-password" replace />;
   }
 
@@ -185,7 +186,7 @@ export function ResetPasswordPage() {
 
     setIsSubmitting(true);
     try {
-      await authService.resetPassword({ email, newPassword: password });
+      await authService.resetPassword({ email, otp, newPassword: password });
       setSuccess(true);
       setTimeout(() => navigate('/login', { replace: true }), 2500);
     } catch (err) {
