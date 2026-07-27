@@ -125,29 +125,34 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
           </div>
         </div>
 
-        <InterviewQuestionPanel
-          currentIndex={room.currentIndex}
-          totalQuestions={room.questions.length}
-          remainingSeconds={room.remainingSeconds}
-          question={room.currentQuestion}
-          questions={room.questions}
-          questionStates={room.questionStates}
-          showWarning={room.showTimerWarning}
-          nextActionLabel={nextActionLabel}
-          speechStatus={speechStatus}
-          isTimingOut={room.isTimingOut}
-          hasNextQuestion={
-            room.currentQuestion
-              ? room.currentIndex < room.questions.length - 1
-              : false
-          }
-        />
-
-        <AnswerRecorderCard
-          status={cardStatus}
-          disabled={room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
-          onOpenRecorder={openRecorder}
-        />
+        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-7 lg:gap-5">
+          <div className="min-w-0 lg:col-span-5">
+            <InterviewQuestionPanel
+              currentIndex={room.currentIndex}
+              totalQuestions={room.questions.length}
+              remainingSeconds={room.remainingSeconds}
+              question={room.currentQuestion}
+              questions={room.questions}
+              questionStates={room.questionStates}
+              showWarning={room.showTimerWarning}
+              nextActionLabel={nextActionLabel}
+              speechStatus={speechStatus}
+              isTimingOut={room.isTimingOut}
+              hasNextQuestion={
+                room.currentQuestion
+                  ? room.currentIndex < room.questions.length - 1
+                  : false
+              }
+            />
+          </div>
+          <div className="min-w-0 lg:col-span-2">
+            <AnswerRecorderCard
+              status={cardStatus}
+              disabled={room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
+              onOpenRecorder={openRecorder}
+            />
+          </div>
+        </div>
 
         {answer ? (
           <div className="rounded-xl border border-satin bg-surface-raised p-4 text-sm">
@@ -184,11 +189,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
             track.enabled = next;
           });
         }}
-        onOpenRecorder={openRecorder}
-        openRecorderDisabled={room.isSubmittingAnswer || room.isTimingOut || room.remainingSeconds <= 0}
-        onReplay={() => void room.speech.replay()}
-        replayDisabled={!room.canReplay || room.isSubmittingAnswer}
-        replaying={room.speech.isPlaying}
         onFinish={() => room.setFinishOpen(true)}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}

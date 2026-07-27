@@ -74,7 +74,7 @@
 
 html {
   color-scheme: dark;
-  background-color: var(--surface-base);
+  background-color: #000000;
   background-image: var(--app-background-image);
   background-size: cover;
   background-position: center;

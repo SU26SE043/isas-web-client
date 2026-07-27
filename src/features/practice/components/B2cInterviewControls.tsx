@@ -1,4 +1,4 @@
-import { Mic, MicOff, RotateCcw, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 
@@ -7,11 +7,6 @@ interface B2cInterviewControlsProps {
   cameraEnabled: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
-  onOpenRecorder: () => void;
-  openRecorderDisabled?: boolean;
-  onReplay: () => void;
-  replayDisabled: boolean;
-  replaying: boolean;
   onFinish: () => void;
   finishLabel: string;
   finishPrimary?: boolean;
@@ -23,11 +18,6 @@ export function B2cInterviewControls({
   cameraEnabled,
   onToggleMic,
   onToggleCamera,
-  onOpenRecorder,
-  openRecorderDisabled,
-  onReplay,
-  replayDisabled,
-  replaying,
   onFinish,
   finishLabel,
   finishPrimary,
@@ -37,7 +27,7 @@ export function B2cInterviewControls({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-satin bg-surface-raised/95 backdrop-blur-md">
-      <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -61,40 +51,17 @@ export function B2cInterviewControls({
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <button
-            type="button"
-            className="btn-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm"
-            disabled={replayDisabled || disabled}
-            onClick={onReplay}
-          >
-            <RotateCcw className="size-4" aria-hidden />
-            {replaying ? t('practice.speech.replaying') : t('practice.speech.replay')}
-          </button>
-          <button
-            type="button"
-            className="btn-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm"
-            disabled={openRecorderDisabled || disabled}
-            onClick={onOpenRecorder}
-          >
-            <Mic className="size-4" aria-hidden />
-            {t('practice.audioRecorder.open')}
-          </button>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10',
-              finishPrimary && 'btn-primary border-transparent text-black',
-            )}
-            disabled={disabled}
-            onClick={onFinish}
-          >
-            {finishLabel}
-          </button>
-        </div>
+        <button
+          type="button"
+          className={cn(
+            'inline-flex items-center gap-2 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10',
+            finishPrimary && 'btn-primary border-transparent text-black',
+          )}
+          disabled={disabled}
+          onClick={onFinish}
+        >
+          {finishLabel}
+        </button>
       </div>
     </div>
   );
