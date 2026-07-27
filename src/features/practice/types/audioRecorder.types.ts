@@ -26,6 +26,8 @@ export interface AudioRecorderState {
   previewUrl: string | null;
   errorMessage: string | null;
   errorKind: AudioRecorderErrorKind | null;
+  playbackError: string | null;
+  isPlaying: boolean;
   maxDurationReached: boolean;
   uploadProgress: number | null;
 }

@@ -7,10 +7,12 @@ import { AudioRecorderResultStates } from './AudioRecorderResultStates';
 
 interface AudioRecorderBodyProps {
   state: AudioRecorderState;
+  audioElementRef: React.RefObject<HTMLAudioElement | null>;
   disabled?: boolean;
   onStart: () => void;
   onStop: () => void;
   onRetake: () => void;
+  onReplay: () => void;
   onSubmit: () => void;
   onRetrySubmit: () => void;
   onContinueSuccess: () => void;
@@ -19,10 +21,12 @@ interface AudioRecorderBodyProps {
 
 export function AudioRecorderBody({
   state,
+  audioElementRef,
   disabled,
   onStart,
   onStop,
   onRetake,
+  onReplay,
   onSubmit,
   onRetrySubmit,
   onContinueSuccess,
@@ -39,9 +43,11 @@ export function AudioRecorderBody({
     return (
       <AudioRecorderResultStates
         state={state}
+        audioElementRef={audioElementRef}
         disabled={disabled}
         onStart={onStart}
         onRetake={onRetake}
+        onReplay={onReplay}
         onSubmit={onSubmit}
         onRetrySubmit={onRetrySubmit}
         onContinueSuccess={onContinueSuccess}

@@ -19,6 +19,7 @@ interface AudioRecorderModalProps {
   questionContent: string;
   questionLabel: string;
   maxDurationSeconds: number;
+  sharedStream?: MediaStream | null;
   disabled?: boolean;
   onSubmitRecording: (file: File, durationSec: number) => Promise<void>;
   mapSubmitErrorKey?: (error: unknown) => string;
@@ -33,6 +34,7 @@ export function AudioRecorderModal({
   questionContent,
   questionLabel,
   maxDurationSeconds,
+  sharedStream = null,
   disabled,
   onSubmitRecording,
   mapSubmitErrorKey,
@@ -43,6 +45,7 @@ export function AudioRecorderModal({
     sessionId,
     questionId,
     maxDurationSeconds,
+    sharedStream,
   });
   const [confirmClose, setConfirmClose] = useState(false);
   const submittingLockRef = useRef(false);
@@ -138,10 +141,12 @@ export function AudioRecorderModal({
         ) : (
           <AudioRecorderBody
             state={recorder.state}
+            audioElementRef={recorder.audioElementRef}
             disabled={disabled || recorder.state.status === 'submitting'}
             onStart={() => void recorder.startRecording()}
             onStop={recorder.stopRecording}
             onRetake={recorder.resetRecording}
+            onReplay={() => void recorder.replayAudio()}
             onSubmit={() => void submitOnce()}
             onRetrySubmit={() => void submitOnce()}
             onContinueSuccess={forceClose}

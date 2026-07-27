@@ -28,8 +28,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
   const { t } = useLanguage();
   const navigate = useNavigate();
   const room = useB2cPracticeRoom(sessionId, { completePath });
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [cameraEnabled, setCameraEnabled] = useState(true);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
 
@@ -93,6 +91,18 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
     <div className="flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} />
 
+      {room.media.state === 'error' ? (
+        <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
+          {t('practice.flow.device.denied')}
+          <button
+            type="button"
+            className="ml-3 underline underline-offset-2"
+            onClick={() => void room.media.startMedia()}
+          >
+            {t('practice.flow.device.retry')}
+          </button>
+        </div>
+      ) : null}
       {room.speechWarning ? (
         <div role="status" className="border-b border-warning/30 bg-warning/10 px-6 py-2 text-sm text-warning">
           {t(room.speechWarning)}
@@ -119,8 +129,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
               videoRef={room.media.videoRef}
               setVideoElement={room.media.setVideoElement}
               stream={room.media.stream}
-              micEnabled={micEnabled}
-              cameraEnabled={cameraEnabled}
+              micEnabled={room.micEnabled}
+              cameraEnabled={room.cameraEnabled}
             />
           </div>
         </div>
@@ -173,22 +183,10 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
       </main>
 
       <B2cInterviewControls
-        micEnabled={micEnabled}
-        cameraEnabled={cameraEnabled}
-        onToggleMic={() => {
-          const next = !micEnabled;
-          setMicEnabled(next);
-          room.media.stream?.getAudioTracks().forEach((track) => {
-            track.enabled = next;
-          });
-        }}
-        onToggleCamera={() => {
-          const next = !cameraEnabled;
-          setCameraEnabled(next);
-          room.media.stream?.getVideoTracks().forEach((track) => {
-            track.enabled = next;
-          });
-        }}
+        micEnabled={room.micEnabled}
+        cameraEnabled={room.cameraEnabled}
+        onToggleMic={room.toggleMic}
+        onToggleCamera={room.toggleCamera}
         onFinish={() => room.setFinishOpen(true)}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
@@ -207,6 +205,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
           questionContent={room.currentQuestion.content}
           questionLabel={questionLabel}
           maxDurationSeconds={maxDurationSeconds}
+          sharedStream={room.media.stream}
           disabled={room.isTimingOut || room.remainingSeconds <= 0}
           onStatusChange={setModalStatus}
           onSubmitRecording={async (file, durationSec) => {

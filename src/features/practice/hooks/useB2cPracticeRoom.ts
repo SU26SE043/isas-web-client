@@ -25,9 +25,11 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   const [finishOpen, setFinishOpen] = useState(false);
   const [retryConfirmOpen, setRetryConfirmOpen] = useState(false);
   const [showTimerWarning, setShowTimerWarning] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
-  const media = useInterviewMedia(true, true);
+  const media = useInterviewMedia(micEnabled, cameraEnabled);
   const recorder = usePracticeAnswerRecorder(media.stream);
   const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId);
 
@@ -303,6 +305,10 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
     lastNextAction: store.lastNextAction,
     speechWarning: store.speechWarning,
     media,
+    micEnabled,
+    cameraEnabled,
+    toggleMic: () => setMicEnabled((value) => !value),
+    toggleCamera: () => setCameraEnabled((value) => !value),
     speech,
     recorder,
     isSubmittingAnswer: answerSubmit.isSubmittingAnswer,

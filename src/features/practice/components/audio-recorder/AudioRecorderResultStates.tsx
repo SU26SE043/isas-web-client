@@ -1,5 +1,5 @@
-import { AlertCircle, CheckCircle2, Loader2, Pause, Play, RotateCcw } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, Loader2, RotateCcw, RotateCw } from 'lucide-react';
+import type { RefObject } from 'react';
 import { useLanguage } from '@/shared/languages';
 import type { AudioRecorderState } from '../../types/audioRecorder.types';
 import {
@@ -9,9 +9,11 @@ import {
 
 interface Props {
   state: AudioRecorderState;
+  audioElementRef: RefObject<HTMLAudioElement | null>;
   disabled?: boolean;
   onStart: () => void;
   onRetake: () => void;
+  onReplay: () => void;
   onSubmit: () => void;
   onRetrySubmit: () => void;
   onContinueSuccess: () => void;
@@ -20,45 +22,17 @@ interface Props {
 
 export function AudioRecorderResultStates({
   state,
+  audioElementRef,
   disabled,
   onStart,
   onRetake,
+  onReplay,
   onSubmit,
   onRetrySubmit,
   onContinueSuccess,
   onCloseError,
 }: Props) {
   const { t } = useLanguage();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    setPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  }, [state.previewUrl]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return undefined;
-    const onEnded = () => setPlaying(false);
-    audio.addEventListener('ended', onEnded);
-    return () => audio.removeEventListener('ended', onEnded);
-  }, [state.previewUrl]);
-
-  const togglePlay = async () => {
-    const audio = audioRef.current;
-    if (!audio || !state.previewUrl) return;
-    if (playing) {
-      audio.pause();
-      setPlaying(false);
-      return;
-    }
-    await audio.play();
-    setPlaying(true);
-  };
 
   if (state.status === 'submitting') {
     return (
@@ -99,24 +73,17 @@ export function AudioRecorderResultStates({
         <AlertCircle className="size-12 text-destructive" aria-hidden />
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-foreground">
-            {state.errorKind === 'submit-failed'
-              ? t('practice.audioRecorder.submitFailed')
-              : state.errorKind === 'permission-denied'
-                ? t('practice.audioRecorder.permissionDeniedTitle')
-                : state.errorKind === 'device-not-found'
-                  ? t('practice.audioRecorder.deviceNotFoundTitle')
-                  : t('practice.audioRecorder.errorTitle')}
+            {state.errorKind === 'permission-denied'
+              ? t('practice.audioRecorder.permissionDeniedTitle')
+              : state.errorKind === 'device-not-found'
+                ? t('practice.audioRecorder.deviceNotFoundTitle')
+                : t('practice.audioRecorder.errorTitle')}
           </h3>
           <p className="max-w-md text-sm text-muted-foreground">
             {state.errorMessage ? t(state.errorMessage) : t('practice.audioRecorder.unknownError')}
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          {state.errorKind === 'submit-failed' && state.audioFile ? (
-            <button type="button" className="btn-primary" onClick={onRetrySubmit} disabled={disabled}>
-              {t('practice.audioRecorder.retry')}
-            </button>
-          ) : null}
           {state.errorKind === 'permission-denied' || state.errorKind === 'device-not-found' ? (
             <button type="button" className="btn-primary" onClick={onStart} disabled={disabled}>
               {t('practice.audioRecorder.retry')}
@@ -136,23 +103,37 @@ export function AudioRecorderResultStates({
 
   if (state.status !== 'recorded') return null;
 
+  const submitFailed = state.errorKind === 'submit-failed' && state.errorMessage;
+
   return (
     <div className="space-y-6 py-4">
       <div className="space-y-2 text-center">
         <h3 className="text-lg font-semibold text-foreground">
-          {t('practice.audioRecorder.preview')}
+          {t('practice.audioRecorder.previewTitle')}
         </h3>
-        <p className="text-sm text-muted-foreground">{t('practice.audioRecorder.previewReady')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t('practice.audioRecorder.previewDescription')}
+        </p>
         {state.maxDurationReached ? (
           <p className="text-sm text-warning" role="status">
             {t('practice.audioRecorder.maxDurationReached')}
           </p>
         ) : null}
       </div>
-      {state.previewUrl ? (
-        <audio ref={audioRef} src={state.previewUrl} preload="metadata" className="hidden" />
+
+      {submitFailed && state.errorMessage ? (
+        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {t(state.errorMessage)}
+        </div>
       ) : null}
-      <div className="frame-satin rounded-xl bg-surface-overlay px-4 py-4">
+
+      {state.playbackError ? (
+        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {t(state.playbackError)}
+        </div>
+      ) : null}
+
+      <div className="frame-satin space-y-4 rounded-xl bg-surface-overlay px-4 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-foreground">
@@ -164,26 +145,64 @@ export function AudioRecorderResultStates({
               </p>
             ) : null}
           </div>
-          <button
-            type="button"
-            className="btn-secondary inline-flex items-center gap-2"
-            onClick={() => void togglePlay()}
-            disabled={disabled || !state.previewUrl}
-            aria-label={playing ? t('practice.audioRecorder.pause') : t('practice.audioRecorder.play')}
-          >
-            {playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
-            {playing ? t('practice.audioRecorder.pause') : t('practice.audioRecorder.play')}
-          </button>
+          {state.isPlaying ? (
+            <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+              {t('practice.audioRecorder.playing')}
+            </p>
+          ) : null}
         </div>
+
+        {state.previewUrl ? (
+          <audio
+            ref={audioElementRef}
+            src={state.previewUrl}
+            controls
+            preload="metadata"
+            className="w-full"
+            aria-label={t('practice.audioRecorder.previewPlayer')}
+          />
+        ) : null}
       </div>
+
       <div className="flex flex-wrap justify-center gap-2">
-        <button type="button" className="btn-secondary inline-flex items-center gap-2" onClick={onRetake} disabled={disabled}>
+        <button
+          type="button"
+          className="btn-secondary inline-flex items-center gap-2"
+          onClick={() => void onReplay()}
+          disabled={disabled || !state.previewUrl}
+          aria-label={t('practice.audioRecorder.replay')}
+        >
+          <RotateCw className="size-4" aria-hidden />
+          {state.isPlaying ? t('practice.audioRecorder.playing') : t('practice.audioRecorder.replay')}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary inline-flex items-center gap-2"
+          onClick={onRetake}
+          disabled={disabled}
+        >
           <RotateCcw className="size-4" aria-hidden />
           {t('practice.audioRecorder.retake')}
         </button>
-        <button type="button" className="btn-primary" onClick={onSubmit} disabled={disabled || !state.audioFile}>
-          {t('practice.audioRecorder.submit')}
-        </button>
+        {submitFailed ? (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onRetrySubmit}
+            disabled={disabled || !state.audioFile}
+          >
+            {t('practice.audioRecorder.retrySubmit')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onSubmit}
+            disabled={disabled || !state.audioFile}
+          >
+            {t('practice.audioRecorder.submit')}
+          </button>
+        )}
       </div>
     </div>
   );
