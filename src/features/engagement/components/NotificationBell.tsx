@@ -17,12 +17,15 @@ interface NotificationBellProps {
   scope: EngagementScope;
   /** Where the dropdown panel anchors relative to the trigger. */
   panelPlacement?: 'bottom-end' | 'sidebar';
+  /** Quieter trigger that matches sidebar nav icons. */
+  variant?: 'default' | 'sidebar';
   className?: string;
 }
 
 export function NotificationBell({
   scope,
   panelPlacement = 'bottom-end',
+  variant = 'default',
   className,
 }: NotificationBellProps) {
   const { t, language } = useLanguage();
@@ -52,7 +55,12 @@ export function NotificationBell({
     <div ref={rootRef} className={cn('relative', className)}>
       <button
         type="button"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-subtle bg-surface-overlay text-muted-foreground transition hover:bg-surface-elevated hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
+        className={cn(
+          'relative inline-flex items-center justify-center text-muted-foreground transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
+          variant === 'sidebar'
+            ? 'h-4 w-4 shrink-0 hover:text-foreground'
+            : 'h-9 w-9 rounded-lg border border-subtle bg-surface-overlay hover:bg-surface-elevated hover:text-foreground',
+        )}
         aria-label={t('engagement.notifications.bell')}
         aria-expanded={open}
         aria-controls={panelId}
@@ -60,7 +68,12 @@ export function NotificationBell({
       >
         <Bell className="h-4 w-4" aria-hidden />
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 min-w-[1.125rem] rounded-full bg-error px-1 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
+          <span
+            className={cn(
+              'absolute min-w-[1.125rem] rounded-full bg-error px-1 py-0.5 text-center text-[10px] font-semibold leading-none text-white',
+              variant === 'sidebar' ? '-right-2.5 -top-2.5' : '-right-1 -top-1',
+            )}
+          >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         ) : null}

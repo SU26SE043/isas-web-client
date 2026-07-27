@@ -396,7 +396,7 @@ select {
   }
 
   .glass-sidebar {
-    background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
+    background: color-mix(in srgb, var(--surface-sunken) 94%, transparent);
     border-color: var(--satin-border);
     backdrop-filter: blur(var(--blur-lg));
     -webkit-backdrop-filter: blur(var(--blur-lg));
