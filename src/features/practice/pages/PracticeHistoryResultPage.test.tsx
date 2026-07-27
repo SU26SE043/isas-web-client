@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PracticeHistoryResultPage } from './PracticeHistoryResultPage';
 
 const mockUsesMockData = vi.fn();
-const mockGetPracticeSession = vi.fn();
+const mockGetPracticeSessionDetail = vi.fn();
 
 vi.mock('@/shared/mock', () => ({
   usesMockData: (...args: unknown[]) => mockUsesMockData(...args),
@@ -22,7 +22,7 @@ vi.mock('./InterviewResultPage', () => ({
 }));
 
 vi.mock('../services/b2cPracticeSession.service', () => ({
-  getPracticeSession: (...args: unknown[]) => mockGetPracticeSession(...args),
+  getPracticeSessionDetail: (...args: unknown[]) => mockGetPracticeSessionDetail(...args),
 }));
 
 vi.mock('../components/result/PracticeLiveResultReport', () => ({
@@ -57,16 +57,26 @@ afterEach(() => {
 describe('PracticeHistoryResultPage', () => {
   it('gets an existing live session once and renders its AI result', async () => {
     mockUsesMockData.mockReturnValue(false);
-    mockGetPracticeSession.mockResolvedValue({
+    mockGetPracticeSessionDetail.mockResolvedValue({
       id: 'session-123',
       status: 'Scored',
+      questions: [
+        {
+          id: 'question-1',
+          orderNo: 1,
+          content: 'Tell me about yourself.',
+          timeLimitSec: 120,
+          kind: 'question',
+        },
+      ],
+      answers: [],
       result: { overallScore: 85 },
     });
     renderRoute();
 
     expect(await screen.findByText('Live result session-123')).toBeInTheDocument();
-    expect(mockGetPracticeSession).toHaveBeenCalledOnce();
-    expect(mockGetPracticeSession).toHaveBeenCalledWith('session-123');
+    expect(mockGetPracticeSessionDetail).toHaveBeenCalledTimes(1);
+    expect(mockGetPracticeSessionDetail).toHaveBeenCalledWith('session-123');
     expect(mockUsesMockData).toHaveBeenCalledWith('practice');
   });
 
@@ -79,15 +89,17 @@ describe('PracticeHistoryResultPage', () => {
 
   it('does not render a report when the session has no AI evaluation', async () => {
     mockUsesMockData.mockReturnValue(false);
-    mockGetPracticeSession.mockResolvedValue({
+    mockGetPracticeSessionDetail.mockResolvedValue({
       id: 'session-123',
       status: 'Scoring',
+      questions: [],
+      answers: [],
       result: null,
     });
     renderRoute();
 
-    expect(await screen.findByText('practice.result.notAvailable')).toBeInTheDocument();
+    expect(await screen.findByText('practice.result.notReadyTitle')).toBeInTheDocument();
     expect(screen.queryByText(/Live result/)).not.toBeInTheDocument();
-    expect(mockGetPracticeSession).toHaveBeenCalledOnce();
+    expect(mockGetPracticeSessionDetail).toHaveBeenCalledTimes(1);
   });
 });
