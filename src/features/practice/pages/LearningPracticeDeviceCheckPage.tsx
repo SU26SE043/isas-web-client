@@ -1,24 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { learningPathService } from '../services/learningPath.service';
 import {
-  launchLearningInterviewPractice,
   learningInterviewPreparePath,
+  startLearningLessonPractice,
 } from '../utils/launchLearningInterviewPractice';
 
 /**
- * Legacy Learning device-check route — redirects into the shared interview prepare flow
- * (same Device Check / Waiting / Room UI as B2C & B2B).
+ * Legacy Learning device-check route — starts lesson practice then redirects
+ * into the shared interview prepare flow.
  */
 export function LearningPracticeDeviceCheckPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const [error, setError] = useState(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
     let active = true;
     void (async () => {
       try {
@@ -28,13 +31,17 @@ export function LearningPracticeDeviceCheckPage() {
           .find((item) => item.id === lessonId);
         if (!lesson) throw new Error('LESSON_NOT_FOUND');
         const title = language === 'vi' ? lesson.titleVi : lesson.title;
-        const sessionId = await launchLearningInterviewPractice({
+        const result = await startLearningLessonPractice({
           roadmapId,
           lessonId,
           title,
         });
         if (!active) return;
-        navigate(learningInterviewPreparePath(sessionId), { replace: true });
+        if (!result.ok) {
+          setError(true);
+          return;
+        }
+        navigate(learningInterviewPreparePath(result.session.sessionId), { replace: true });
       } catch {
         if (active) setError(true);
       }
@@ -51,9 +58,11 @@ export function LearningPracticeDeviceCheckPage() {
         <button
           type="button"
           className="btn-secondary mt-4"
-          onClick={() => navigate(`/candidate/learning/roadmaps/${roadmapId}`)}
+          onClick={() =>
+            navigate(`/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/theory`)
+          }
         >
-          {t('practice.learningPath.backToRoadmap')}
+          {t('practice.learningPath.backToTheory')}
         </button>
       </div>
     );
@@ -62,7 +71,7 @@ export function LearningPracticeDeviceCheckPage() {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
       <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-      <p className="text-sm text-muted-foreground">{t('practice.learningPath.startPractice')}</p>
+      <p className="text-sm text-muted-foreground">{t('practice.learningPath.startingPractice')}</p>
     </div>
   );
 }

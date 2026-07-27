@@ -1,17 +1,17 @@
 import React from 'react';
-import { Award, Briefcase, GraduationCap, Sparkles, Target } from 'lucide-react';
+import { Award, Briefcase, Sparkles, Target } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { practiceLevelI18nKey } from '@/shared/domain/practiceLevels';
 import type { PracticeLevel } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
 const LEVEL_ICONS: Record<PracticeLevel, React.ReactNode> = {
-  intern: <GraduationCap className="size-4" aria-hidden />,
-  fresher: <Sparkles className="size-4" aria-hidden />,
-  junior: <Briefcase className="size-4" aria-hidden />,
-  middle: <Target className="size-4" aria-hidden />,
-  senior: <Award className="size-4" aria-hidden />,
+  Fresher: <Sparkles className="size-4" aria-hidden />,
+  Junior: <Briefcase className="size-4" aria-hidden />,
+  Middle: <Target className="size-4" aria-hidden />,
+  Senior: <Award className="size-4" aria-hidden />,
 };
 
 interface PracticeLevelStepProps {
@@ -39,16 +39,19 @@ export const PracticeLevelStep: React.FC<PracticeLevelStepProps> = ({
       footer={<PracticeWizardNav onBack={onBack} onNext={onNext} nextDisabled={!selectedLevel} />}
     >
       <div className="grid gap-6 sm:grid-cols-2">
-        {levels.map((level) => (
+        {levels.map((level) => {
+          const levelKey = practiceLevelI18nKey(level);
+          return (
           <PracticeWizardOptionCard
             key={level}
-            title={t(`practice.wizard.level.${level}`)}
-            description={t(`practice.wizard.level.${level}.desc`)}
+            title={t(`practice.wizard.level.${levelKey}`)}
+            description={t(`practice.wizard.level.${levelKey}.desc`)}
             icon={LEVEL_ICONS[level]}
             selected={level === selectedLevel}
             onClick={() => onSelect(level)}
           />
-        ))}
+          );
+        })}
       </div>
     </PracticeWizardStepCard>
   );

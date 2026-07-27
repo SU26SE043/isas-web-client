@@ -1,136 +1,149 @@
-import React from 'react';
 import {
+  ClipboardList,
   Layers,
   MessageCircle,
-  Pencil,
   Rocket,
+  Trash2,
   Users,
-  ClipboardList,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
-import { PracticeRubricWeightRing } from './PracticeRubricWeightRing';
 
-const CRITERION_ICONS: Record<string, React.ReactNode> = {
-  'technical-depth': <Layers className="size-4" aria-hidden />,
-  communication: <MessageCircle className="size-4" aria-hidden />,
-  delivery: <Rocket className="size-4" aria-hidden />,
-  'culture-fit': <Users className="size-4" aria-hidden />,
-};
+const CRITERION_ICONS = [
+  <Layers className="size-4" aria-hidden key="layers" />,
+  <MessageCircle className="size-4" aria-hidden key="message" />,
+  <Rocket className="size-4" aria-hidden key="rocket" />,
+  <Users className="size-4" aria-hidden key="users" />,
+];
 
 interface PracticeRubricCriterionCardProps {
   criterion: PracticeRubricCriterion;
   index: number;
-  isEditing: boolean;
-  onToggleEdit: () => void;
+  contextLabel: string;
+  disabled?: boolean;
   onChange: (patch: Partial<PracticeRubricCriterion>) => void;
+  onRemove: () => void;
 }
 
-export const PracticeRubricCriterionCard: React.FC<PracticeRubricCriterionCardProps> = ({
+export function PracticeRubricCriterionCard({
   criterion,
   index,
-  isEditing,
-  onToggleEdit,
+  contextLabel,
+  disabled = false,
   onChange,
-}) => {
+  onRemove,
+}: PracticeRubricCriterionCardProps) {
   const { t } = useLanguage();
   const indexLabel = String(index + 1).padStart(2, '0');
+  const weight = Number(criterion.weight) || 0;
+  const clamped = Math.max(0, Math.min(100, weight));
+  const maxScoreValid = Number.isFinite(criterion.maxScore) && criterion.maxScore >= 1;
 
   return (
-    <article
-      className={cn(
-        'rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-[border-color,background-color] duration-200 ease-out',
-        isEditing ? 'border-white/20 bg-white/[0.05]' : null,
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-xs font-semibold text-foreground">
-          {indexLabel}
-        </span>
-
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-foreground">
-          {CRITERION_ICONS[criterion.id] ?? <ClipboardList className="size-4" aria-hidden />}
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-foreground">
-            <span className="text-muted-foreground">{t('practice.wizard.rubric.name')}</span>{' '}
-            <span className="font-semibold">{criterion.name}</span>
-          </p>
-          <p className="mt-1 text-sm leading-snug text-muted-foreground">
-            <span className="text-muted-foreground/80">{t('practice.wizard.rubric.criterionDesc')}</span>{' '}
-            {criterion.description}
-          </p>
+    <article className="frame-satin rounded-xl border border-satin bg-surface-raised/60 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] lg:items-start">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
+            {indexLabel}
+          </span>
+          <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-full text-foreground">
+            {CRITERION_ICONS[index % CRITERION_ICONS.length] ?? (
+              <ClipboardList className="size-4" aria-hidden />
+            )}
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <label className="sr-only" htmlFor={`practice-rubric-name-${criterion.id}`}>
+              {t('practice.wizard.rubric.name')}
+            </label>
+            <Input
+              id={`practice-rubric-name-${criterion.id}`}
+              value={criterion.name}
+              disabled={disabled}
+              onChange={(event) => onChange({ name: event.target.value })}
+              className="h-9 border-satin bg-surface-overlay/70 text-sm font-semibold"
+            />
+            <p className="truncate text-xs text-muted-foreground">{contextLabel}</p>
+          </div>
         </div>
 
-        <PracticeRubricWeightRing
-          weight={criterion.weight}
-          label={t('practice.wizard.rubric.weight')}
-          className="hidden shrink-0 sm:flex"
-        />
+        <div className="min-w-0">
+          <label className="sr-only" htmlFor={`practice-rubric-desc-${criterion.id}`}>
+            {t('practice.wizard.rubric.criterionDesc')}
+          </label>
+          <textarea
+            id={`practice-rubric-desc-${criterion.id}`}
+            rows={2}
+            value={criterion.description}
+            disabled={disabled}
+            onChange={(event) => onChange({ description: event.target.value })}
+            className="min-h-[72px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
 
-        <button
-          type="button"
-          onClick={onToggleEdit}
-          className={cn(
-            'mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-transparent text-muted-foreground transition-[background-color,color,border-color] duration-200 ease-out hover:border-white/20 hover:bg-white/[0.05] hover:text-foreground',
-            isEditing ? 'border-white/25 bg-white/[0.08] text-foreground' : null,
-          )}
-          aria-expanded={isEditing}
-          aria-label={
-            isEditing ? t('practice.wizard.rubric.doneEdit') : t('practice.wizard.rubric.edit')
-          }
-        >
-          <Pencil className="size-4" aria-hidden />
-        </button>
-      </div>
-
-      <div className="mt-3 flex justify-end sm:hidden">
-        <PracticeRubricWeightRing
-          weight={criterion.weight}
-          label={t('practice.wizard.rubric.weight')}
-        />
-      </div>
-
-      {isEditing ? (
-        <div className="mt-4 space-y-3 border-t border-white/8 pt-4">
-          <div className="grid gap-3 sm:grid-cols-[1fr_96px]">
-            <div>
-              <Label htmlFor={`rubric-name-${criterion.id}`}>{t('practice.wizard.rubric.name')}</Label>
-              <Input
-                id={`rubric-name-${criterion.id}`}
-                value={criterion.name}
-                onChange={(event) => onChange({ name: event.target.value })}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor={`rubric-weight-${criterion.id}`}>{t('practice.wizard.rubric.weight')}</Label>
-              <Input
-                id={`rubric-weight-${criterion.id}`}
-                type="number"
-                min={0}
-                max={100}
-                value={criterion.weight}
-                onChange={(event) => onChange({ weight: Number(event.target.value) })}
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor={`rubric-desc-${criterion.id}`}>{t('practice.wizard.rubric.criterionDesc')}</Label>
-            <Input
-              id={`rubric-desc-${criterion.id}`}
-              value={criterion.description}
-              onChange={(event) => onChange({ description: event.target.value })}
-              className="mt-1"
+        <div className="w-full lg:w-auto">
+          <label className="sr-only" htmlFor={`practice-rubric-weight-${criterion.id}`}>
+            {t('practice.wizard.rubric.weight')}
+          </label>
+          <Input
+            id={`practice-rubric-weight-${criterion.id}`}
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            disabled={disabled}
+            value={criterion.weight}
+            onChange={(event) => onChange({ weight: Number(event.target.value) })}
+            className="h-9 border-satin bg-surface-overlay/70 text-sm"
+          />
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-overlay">
+            <div
+              className={cn(
+                'h-full rounded-full transition-[width,background-color] duration-300 ease-out',
+                clamped > 0 ? 'bg-success' : 'bg-muted-foreground/40',
+              )}
+              style={{ width: `${clamped}%` }}
             />
           </div>
+          <p className="mt-1 text-right text-xs text-muted-foreground">{clamped}%</p>
         </div>
-      ) : null}
+
+        <div className="w-full lg:w-auto">
+          <label className="sr-only" htmlFor={`practice-rubric-max-${criterion.id}`}>
+            {t('practice.wizard.rubric.maxScore')}
+          </label>
+          <Input
+            id={`practice-rubric-max-${criterion.id}`}
+            type="number"
+            min={1}
+            step={1}
+            disabled={disabled}
+            value={criterion.maxScore}
+            aria-invalid={!maxScoreValid}
+            onChange={(event) => onChange({ maxScore: Number(event.target.value) })}
+            className={cn(
+              'h-9 border-satin bg-surface-overlay/70 text-sm',
+              !maxScoreValid && 'border-error text-error aria-invalid:border-error',
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end lg:pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            disabled={disabled}
+            onClick={onRemove}
+            aria-label={t('practice.wizard.rubric.remove')}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </Button>
+        </div>
+      </div>
     </article>
   );
-};
+}

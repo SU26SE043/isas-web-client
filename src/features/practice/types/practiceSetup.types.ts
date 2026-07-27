@@ -1,6 +1,7 @@
 import type { JobDomainId } from '@/shared/domain/jobDomains';
+import type { PracticeLevel } from '@/shared/domain/practiceLevels';
 
-export type PracticeLevel = 'intern' | 'fresher' | 'junior' | 'middle' | 'senior';
+export type { PracticeLevel };
 
 export interface PracticeDomain {
   id: JobDomainId | string;
@@ -15,10 +16,13 @@ export interface PracticeRubricCriterion {
   name: string;
   weight: number;
   description: string;
+  /** API maxScore; required when saving via PUT. */
+  maxScore: number;
 }
 
 export interface PracticeSessionCreateInput {
   domainId: string;
+  /** API `level` enum: Fresher · Junior · Middle · Senior */
   level: PracticeLevel;
   cvFileId?: string;
   questionCount: number;
@@ -31,7 +35,6 @@ export interface PracticeSessionCreateResult {
 }
 
 export interface GenerateRubricInput {
+  /** Practice domain id from wizard step 1 (`frontend` | `backend` | `business-analyst`). */
   domainId: string;
-  level: PracticeLevel;
-  cvFileId?: string;
 }

@@ -51,6 +51,7 @@ export interface CertificateRecord {
 }
 
 export interface RoadmapResponse {
+  id?: string;
   steps: RoadmapStep[];
   regenerateCount: number;
   regenerateLimit: number;
@@ -59,10 +60,23 @@ export interface RoadmapResponse {
   sourceReportIds?: string[];
 }
 
+/**
+ * Wizard input for creating a roadmap.
+ * Live API currently accepts jobCategory + level (+ optional cvId).
+ * `reportIds` are kept for UI / future API support — not sent yet.
+ */
 export interface CreateRoadmapInput {
   domainId: string;
   targetLevel: string;
-  reportIds: string[];
+  reportIds?: string[];
+  cvId?: string;
+}
+
+/** Request body for POST /api/v1/interview/practice/roadmaps */
+export interface CreateRoadmapApiRequest {
+  jobCategory: string;
+  level: string;
+  cvId?: string;
 }
 
 export interface ProgressWeekPoint {

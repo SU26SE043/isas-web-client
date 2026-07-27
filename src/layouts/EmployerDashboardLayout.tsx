@@ -35,7 +35,7 @@ export const EmployerDashboardLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen surface-base">
+    <div className="min-h-screen surface-page">
       <div className="flex min-h-screen">
         <aside
           className={cn(
@@ -66,7 +66,7 @@ export const EmployerDashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <nav className="flex-1 px-3 py-4" aria-label="Employer">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Employer">
             <div className="space-y-1">
               {navItems.map((item) => (
                 <NavLink
@@ -92,16 +92,32 @@ export const EmployerDashboardLayout: React.FC = () => {
             </div>
           </nav>
 
-          <div className="space-y-3 border-t border-subtle p-3">
-            <div className={isCollapsed ? 'flex justify-center' : 'flex items-center gap-2 px-0.5'}>
-              <NotificationBell scope="employer" panelPlacement="sidebar" />
-              {!isCollapsed ? (
-                <span className="hidden text-sm text-muted-foreground sm:inline">
-                  {t('engagement.nav.notifications')}
-                </span>
-              ) : null}
+          <div className="shrink-0 space-y-1 border-t border-subtle p-3">
+            <div
+              className={navLinkClassName(false, isCollapsed)}
+              title={isCollapsed ? t('engagement.nav.notifications') : undefined}
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('button')) return;
+                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
+              }}
+            >
+              <NotificationBell scope="employer" panelPlacement="sidebar" variant="sidebar" />
+              <span
+                className={cn(
+                  'overflow-hidden whitespace-nowrap transition-all duration-300',
+                  isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
+                )}
+                aria-hidden={isCollapsed}
+              >
+                {t('engagement.nav.notifications')}
+              </span>
             </div>
-            <div className={isCollapsed ? 'flex justify-center' : 'px-0.5'}>
+            <div
+              className={cn(
+                'flex items-center rounded-xl py-2.5',
+                isCollapsed ? 'justify-center px-0' : 'justify-center px-0 sm:justify-start sm:px-3',
+              )}
+            >
               <LanguageToggle compact />
             </div>
 
@@ -123,7 +139,7 @@ export const EmployerDashboardLayout: React.FC = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-base">
+        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
           <Outlet />
         </main>
       </div>

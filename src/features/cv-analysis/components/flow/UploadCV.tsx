@@ -1,128 +1,92 @@
-import React from 'react';
-import { CheckCircle2, FileText, Upload } from 'lucide-react';
+import React, { useState } from 'react';
 import { useLanguage } from '@/shared/languages';
-import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
+import type { FileRecord } from '../../types/cvAnalysis.types';
 import type { FileUploadStatus } from '../../hooks/useCvAnalysisFlow';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
+import { CvFlowFileSourceTabs, type CvFlowFileSourceTab } from './CvFlowFileSourceTabs';
+import { CvFlowUploadedFilesPanel } from './CvFlowUploadedFilesPanel';
+import { CvFlowNewPdfUploadPanel } from './CvFlowNewPdfUploadPanel';
+import { CvFlowStepActions } from './CvFlowStepActions';
 
 export interface UploadCVProps {
   file: File | null;
+  selectedFileId: string | null;
   fileError: string | null;
   isUploading?: boolean;
   uploadStatus?: FileUploadStatus;
   onFileSelect: (file: File | null) => void;
+  onExistingSelect: (record: FileRecord) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-/** Step 2 — upload starts on file Open; Next only advances when completed. */
+function resolveInitialTab(file: File | null, selectedFileId: string | null): CvFlowFileSourceTab {
+  if (file) return 'new';
+  if (selectedFileId) return 'uploaded';
+  return 'uploaded';
+}
+
+/** Step 2 — pick an uploaded CV or upload a new PDF. */
 export const UploadCV: React.FC<UploadCVProps> = ({
   file,
+  selectedFileId,
   fileError,
   isUploading = false,
   uploadStatus = 'idle',
   onFileSelect,
+  onExistingSelect,
   onNext,
   onBack,
 }) => {
   const { t } = useLanguage();
-  const isUploaded = uploadStatus === 'completed' && Boolean(file);
-  const canNext = isUploaded && !fileError && !isUploading;
+  const [activeTab, setActiveTab] = useState<CvFlowFileSourceTab>(() =>
+    resolveInitialTab(file, selectedFileId),
+  );
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = event.target.files?.[0] ?? null;
-    onFileSelect(selected);
-    event.target.value = '';
-  };
+  const isReady = uploadStatus === 'completed' && Boolean(selectedFileId);
+  const canNext = isReady && !fileError && !isUploading;
 
   return (
     <CvFlowSectionCard title={t('cv.step.upload')} description={t('cv.stepDesc.upload')}>
-      <label
-        className={cn(
-          'group relative flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl glass-well px-6 py-12 text-center transition-[border-color,background-color,box-shadow] duration-200 ease-out',
-          file ? 'border-[var(--satin-border-hover)] bg-white/[0.03] shadow-[var(--satin-inset)]' : null,
-          isUploading && 'pointer-events-none opacity-70',
-        )}
-      >
-        <input
-          type="file"
-          accept=".pdf,application/pdf"
-          onChange={handleChange}
-          className="sr-only"
-          aria-invalid={fileError ? true : undefined}
-          disabled={isUploading}
-        />
-        <span className="frame-satin-soft mb-5 flex size-14 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground transition-colors group-hover:text-foreground">
-          {isUploading ? (
-            <Spinner className="size-7 border-muted border-t-foreground" label={t('cv.uploading')} />
-          ) : (
-            <Upload className="size-7" aria-hidden />
-          )}
-        </span>
-        <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-          {isUploading ? t('cv.uploading') : isUploaded ? t('cv.changeFile') : t('cv.dropTitle')}
-        </p>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          {t('cv.dropDescription')}
-        </p>
-        <span className="btn-secondary mt-6 inline-flex rounded-xl px-4 py-2.5 text-sm">
-          {isUploaded ? t('cv.changeFile') : t('cv.chooseFile')}
-        </span>
-      </label>
+      <CvFlowFileSourceTabs
+        activeTab={activeTab}
+        uploadedLabel={t('cv.tab.uploadedCv')}
+        newLabel={t('cv.tab.uploadNewCv')}
+        onChange={setActiveTab}
+        disabled={isUploading}
+      />
 
-      {file ? (
-        <div className="frame-satin mt-4 flex items-center gap-3 rounded-xl bg-white/[0.04] px-4 py-3">
-          <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-          <div className="min-w-0 flex-1 text-left">
-            <p className="truncate text-sm font-medium text-foreground">{file.name}</p>
-            <p className="text-caption text-muted-foreground">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-          </div>
-          {isUploading ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Spinner className="size-3.5 border-muted border-t-foreground" label={t('cv.uploading')} />
-              {t('cv.uploading')}
-            </span>
-          ) : null}
-          {isUploaded ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
-              <CheckCircle2 className="size-3.5" aria-hidden />
-              {t('cv.uploadCompleted')}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      {fileError ? (
-        <p className="mt-3 text-sm text-error" role="alert">
-          {fileError}
-        </p>
-      ) : null}
-
-      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-        {onBack ? (
-          <button type="button" className="btn-secondary rounded-xl" onClick={onBack} disabled={isUploading}>
-            {t('cv.back')}
-          </button>
+      <div className="mt-4" role="tabpanel">
+        {activeTab === 'uploaded' ? (
+          <CvFlowUploadedFilesPanel
+            fileType="cv"
+            selectedFileId={selectedFileId}
+            disabled={isUploading}
+            onSelect={onExistingSelect}
+          />
         ) : (
-          <span />
+          <CvFlowNewPdfUploadPanel
+            file={file}
+            fileError={fileError}
+            isUploading={isUploading}
+            uploadStatus={uploadStatus}
+            dropTitle={t('cv.dropTitle')}
+            dropDescription={t('cv.dropDescription')}
+            chooseFileLabel={t('cv.chooseFile')}
+            changeFileLabel={t('cv.changeFile')}
+            uploadingLabel={t('cv.uploading')}
+            uploadCompletedLabel={t('cv.uploadCompleted')}
+            onFileSelect={onFileSelect}
+          />
         )}
-        <button
-          type="button"
-          className={cn(
-            'inline-flex min-w-[7.5rem] items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-[background-color,border-color,opacity,transform] duration-200 ease-out',
-            canNext
-              ? 'btn-primary'
-              : 'frame-satin cursor-not-allowed bg-white/[0.04] text-muted-foreground opacity-70',
-          )}
-          disabled={!canNext}
-          onClick={onNext}
-        >
-          {t('cv.next')}
-        </button>
       </div>
+
+      <CvFlowStepActions
+        canNext={canNext}
+        isBusy={isUploading}
+        onBack={onBack}
+        onNext={onNext}
+      />
     </CvFlowSectionCard>
   );
 };

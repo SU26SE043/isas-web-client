@@ -1,22 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
-import { isCampaignSessionId, requiresIdentityVerification } from '../types/interviewFlow.types';
+import {
+  isCampaignSessionId,
+  isLearningSessionId,
+  requiresIdentityVerification,
+} from '../types/interviewFlow.types';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
+import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingStartPanel';
+import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
+import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
+import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
+import { loadFlowProgress, saveFlowProgress } from '../utils/interviewFlowStorage';
+
+type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
 export const WaitingRoomPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   useInterviewFlowSession(sessionId);
   const { deviceCheckPassed, identityVerified } = useInterviewFlowStore();
   const isCampaign = isCampaignSessionId(sessionId);
+  const isLearning = isLearningSessionId(sessionId);
+  const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
+
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [questionCount, setQuestionCount] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [startError, setStartError] = useState<StartErrorUi>(null);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     if (!deviceCheckPassed) {
@@ -29,6 +49,12 @@ export const WaitingRoomPage: React.FC = () => {
   }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
 
   useEffect(() => {
+    if (isLearning) {
+      setStatus('ready');
+      setQuestionCount(learningMeta?.questions.length ?? 0);
+      return;
+    }
+
     let cancelled = false;
     let attempts = 0;
 
@@ -56,15 +82,66 @@ export const WaitingRoomPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [isLearning, learningMeta?.questions.length, sessionId]);
 
   useEffect(() => {
-    if (status !== 'ready') return;
+    if (isLearning || status !== 'ready') return;
     const timer = window.setTimeout(() => {
       navigate(`/interview/${sessionId}/room`);
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [navigate, sessionId, status]);
+  }, [isLearning, navigate, sessionId, status]);
+
+  const handleLearningStart = async () => {
+    if (!learningMeta || inFlightRef.current || isStarting) return;
+    inFlightRef.current = true;
+    setIsStarting(true);
+    setStartError(null);
+    try {
+      const result = await startLearningLessonPractice({
+        roadmapId: learningMeta.roadmapId,
+        lessonId: learningMeta.lessonId,
+        title: learningMeta.title,
+      });
+      if (!result.ok) {
+        if (result.code === 'insufficient_credits') {
+          setCreditOpen(true);
+          return;
+        }
+        if (result.code === 'forbidden') setStartError('forbidden');
+        else if (result.code === 'not_found') setStartError('not_found');
+        else if (result.code === 'ai_failed') setStartError('ai_failed');
+        else setStartError('generic');
+        return;
+      }
+      void queryClient.invalidateQueries({
+        queryKey: learningRoadmapDetailQueryKey(learningMeta.roadmapId),
+      });
+      const nextSessionId = result.session.sessionId;
+      if (nextSessionId !== sessionId) {
+        const progress = loadFlowProgress(sessionId) ?? {
+          consentAccepted: true,
+          deviceCheckPassed: true,
+          termsAccepted: false,
+          identityVerified: false,
+        };
+        saveFlowProgress(nextSessionId, {
+          consentAccepted: true,
+          deviceCheckPassed: true,
+          termsAccepted: Boolean(progress.termsAccepted),
+          identityVerified: Boolean(progress.identityVerified),
+          identitySnapshot: progress.identitySnapshot,
+        });
+        useInterviewFlowStore.getState().hydrate(nextSessionId);
+      }
+      navigate(`/interview/${nextSessionId}/room`, { replace: true });
+    } catch {
+      setStartError('generic');
+    } finally {
+      inFlightRef.current = false;
+      setIsStarting(false);
+    }
+  };
 
   return (
     <InterviewFlowShell
@@ -75,18 +152,30 @@ export const WaitingRoomPage: React.FC = () => {
       isCampaignSession={isCampaign}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">
-        {status === 'polling' ? (
+        {isLearning ? (
+          <LearningWaitingStartPanel
+            questionCount={questionCount}
+            isStarting={isStarting}
+            startError={startError}
+            creditOpen={creditOpen}
+            onCreditOpenChange={setCreditOpen}
+            onStart={() => void handleLearningStart()}
+            canStart={Boolean(learningMeta)}
+          />
+        ) : null}
+
+        {!isLearning && status === 'polling' ? (
           <>
             <Loader2 className="mx-auto size-10 animate-spin text-muted-foreground" aria-hidden />
             <p className="mt-4 text-sm text-foreground">{t('practice.flow.waiting.polling')}</p>
           </>
         ) : null}
-        {status === 'ready' ? (
+        {!isLearning && status === 'ready' ? (
           <p className="text-sm text-emerald-400">
             {t('practice.flow.waiting.ready').replace('{count}', String(questionCount))}
           </p>
         ) : null}
-        {status === 'error' ? (
+        {!isLearning && status === 'error' ? (
           <div>
             <p className="text-sm text-red-400">{t('practice.flow.waiting.error')}</p>
             <button

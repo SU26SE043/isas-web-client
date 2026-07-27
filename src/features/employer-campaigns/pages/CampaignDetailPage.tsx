@@ -1,157 +1,193 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 */
+import { useState, type ReactNode } from 'react';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
-import { CampaignCandidateTable } from '../components/CampaignCandidateTable';
-import { CandidateSelectionPanel } from '../components/CandidateSelectionPanel';
-import { CampaignManagementStatusBadge } from '../components/CampaignManagementStatusBadge';
-import { InviteCandidatesDialog } from '../components/InviteCandidatesDialog';
-import { PublishCampaignDialog } from '../components/PublishCampaignDialog';
+import { CampaignDetailView } from '../components/CampaignDetailView';
+import { CampaignContextHeader } from '../components/CampaignContextHeader';
+import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { campaignManagementService } from '../services/campaignManagement.service';
+import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 
 export function CampaignDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const { campaign, isLoading, publish, invite } = useEmployerCampaign(id);
+  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
+    useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
+  const tab = searchParams.get('tab') ?? 'details';
+
+  if (tab !== 'details' && tab !== 'results') {
+    return <Navigate to={`/employer/campaigns/${id}/overview?tab=details`} replace />;
+  }
 
   const handlePublish = async () => {
     if (!campaign) return;
-    const result = await publish(campaign.id);
-    setWarnings(result.warnings);
-    setPublished(result.warnings.length === 0);
+    try {
+      const result = await publish(campaign.id);
+      setWarnings(result.warnings);
+      setPublished(result.warnings.length === 0);
+      if (result.warnings.length === 0) {
+        toast.success(t('employer.campaigns.detail.publishSuccess'));
+        reload();
+      }
+    } catch {
+      setPublished(false);
+      setWarnings([]);
+      toast.error(t('employer.campaigns.wizard.publishFailed'));
+      throw new Error('PUBLISH_FAILED');
+    }
   };
 
-  if (isLoading || !campaign) {
+  const handleChangeStatus = async (status: CampaignStatusUpdateRequest['status']) => {
+    if (!campaign) return;
+    try {
+      await updateStatus(campaign.id, status);
+      toast.success(
+        t(
+          status === 'Closed'
+            ? 'employer.campaigns.detail.closeSuccess'
+            : 'employer.campaigns.detail.archiveSuccess',
+        ),
+      );
+      reload();
+    } catch (error) {
+      const code = campaignManagementService.getErrorStatus(error);
+      toast.error(
+        t(
+          code === 409
+            ? 'employer.campaigns.detail.statusConflict'
+            : status === 'Closed'
+              ? 'employer.campaigns.detail.closeFailed'
+              : 'employer.campaigns.detail.archiveFailed',
+        ),
+      );
+      throw new Error('STATUS_UPDATE_FAILED');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!campaign) return;
+    try {
+      await deleteCampaign(campaign.id);
+      toast.success(t('employer.campaigns.detail.deleteSuccess'));
+      navigate('/employer/campaigns', { replace: true });
+    } catch {
+      toast.error(t('employer.campaigns.detail.deleteFailed'));
+      throw new Error('DELETE_FAILED');
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto max-w-6xl"><Skeleton className="h-96 w-full" /></div>
+        <div className="page-container page-section mx-auto max-w-6xl space-y-3" aria-busy="true">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
       </div>
     );
   }
 
+  if (isError && errorStatus === 403) {
+    return (
+      <DetailShell>
+        <EmptyState
+          variant="no-permission"
+          title={t('employer.campaigns.detail.forbiddenTitle')}
+          description={t('employer.campaigns.detail.forbiddenDescription')}
+          action={
+            <Link to="/employer/campaigns" className="btn-secondary inline-flex">
+              {t('employer.campaigns.detail.back')}
+            </Link>
+          }
+        />
+      </DetailShell>
+    );
+  }
+
+  if ((isError && (errorStatus === 404 || errorStatus === 400)) || (!isError && !campaign)) {
+    return (
+      <DetailShell>
+        <EmptyState
+          variant="no-results"
+          title={t('employer.campaigns.detail.notFoundTitle')}
+          description={t('employer.campaigns.detail.notFoundDescription')}
+          action={
+            <Link to="/employer/campaigns" className="btn-secondary inline-flex">
+              {t('employer.campaigns.detail.back')}
+            </Link>
+          }
+        />
+      </DetailShell>
+    );
+  }
+
+  if (isError && errorStatus !== 401) {
+    return (
+      <DetailShell>
+        <EmptyState
+          variant="no-results"
+          title={t('employer.campaigns.detail.errorTitle')}
+          description={t('employer.campaigns.detail.errorDescription')}
+          action={
+            <Button type="button" onClick={reload}>
+              {t('employer.campaigns.detail.retry')}
+            </Button>
+          }
+        />
+      </DetailShell>
+    );
+  }
+
+  if (!campaign) return null;
+
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
-        <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
-          {t('employer.campaigns.detail.back')}
-        </Link>
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <CampaignManagementStatusBadge status={campaign.status} />
-              <p className="text-label text-muted-foreground">SCR-EMP-056</p>
-            </div>
-            <h1 className="heading-primary text-3xl text-foreground">{campaign.title}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{campaign.summary}</p>
+      <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
+        <CampaignContextHeader campaign={campaign} mode="overview" />
+        <div className="motion-safe:animate-in motion-safe:fade-in">
+          <div hidden={tab !== 'details'}>
+            <CampaignDetailView
+              campaign={campaign}
+              published={published}
+              warnings={warnings}
+              onPublish={handlePublish}
+              onChangeStatus={handleChangeStatus}
+              onDelete={handleDelete}
+              embedded
+            />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {campaign.status === 'draft' ? (
-              <>
-                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/edit`} />}>
-                  {t('employer.campaigns.detail.edit')}
-                </Button>
-                <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/selection`} />}>
-                  {t('employer.campaigns.selection.open')}
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" render={<Link to={`/employer/campaigns/${campaign.id}/candidates`} />}>
-                {t('employer.campaigns.detail.pipeline')}
-              </Button>
-            )}
-            <PublishCampaignDialog campaign={campaign} onPublish={handlePublish} disabled={campaign.status !== 'draft'} />
-            <InviteCandidatesDialog onInvite={(emails) => invite(campaign.id, emails)} />
+          <div hidden={tab !== 'results'}>
+            <CampaignResultsPanel
+              campaignId={campaign.id}
+              passScorePct={campaign.passScorePct}
+              enabled
+            />
           </div>
-        </header>
-
-        {published ? <Alert variant="success"><AlertDescription>{t('employer.campaigns.detail.publishSuccess')}</AlertDescription></Alert> : null}
-        {warnings.length > 0 ? (
-          <Alert variant="warning">
-            <AlertDescription>
-              <p className="font-medium">{t('employer.campaigns.detail.publishBlocked')}</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                {warnings.map((warning) => <li key={warning}>{t(`employer.campaigns.detail.warning.${warning}`)}</li>)}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {campaign.status === 'draft' ? (
-          <CandidateSelectionPanel onImport={(emails) => invite(campaign.id, emails)} />
-        ) : null}
-
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader><CardTitle>{t('employer.campaigns.detail.overview')}</CardTitle></CardHeader>
-            <CardContent className="space-y-4 text-sm text-muted-foreground">
-              <p>{campaign.jobDescription}</p>
-              <div className="grid gap-3 md:grid-cols-3">
-                <Info label={t('employer.campaigns.list.capacity')} value={`${campaign.applicants}/${campaign.capacity}`} />
-                <Info label={t('employer.campaigns.detail.duration')} value={`${campaign.durationMinutes} ${t('employer.campaigns.detail.minutes')}`} />
-                <Info label={t('employer.campaigns.detail.invited')} value={campaign.candidates.length} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader><CardTitle>{t('employer.campaigns.detail.settings')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <Info label={t('employer.campaigns.form.location')} value={campaign.location} />
-              <Info label={t('employer.campaigns.form.deadline')} value={campaign.deadline} />
-              <Info label={t('employer.campaigns.detail.locale')} value={campaign.locale.toUpperCase()} />
-              <Info label={t('employer.campaigns.form.faceInterval')} value={`${campaign.proctoring.faceCaptureIntervalSeconds}s`} />
-              <Info label={t('employer.campaigns.form.maxViolations')} value={campaign.proctoring.maxViolations} />
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border border-subtle bg-surface-raised">
-          <CardHeader><CardTitle>{t('employer.campaigns.detail.candidates')}</CardTitle></CardHeader>
-          <CardContent><CampaignCandidateTable candidates={campaign.candidates} /></CardContent>
-        </Card>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader><CardTitle>{t('employer.campaigns.detail.rubric')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {campaign.rubric.map((item) => (
-                <div key={item.id} className="rounded-xl border border-subtle bg-surface-overlay p-4">
-                  <div className="flex justify-between gap-3 text-sm font-medium text-foreground">
-                    <span>{item.name}</span><span>{item.weight}%</span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader><CardTitle>{t('employer.campaigns.detail.questions')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {campaign.questions.map((question) => (
-                <div key={question.id} className="flex gap-3 rounded-xl border border-subtle bg-surface-overlay p-4">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <p className="text-sm text-foreground">{question.prompt}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string | number }) {
+function DetailShell({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   return (
-    <div className="rounded-lg border border-subtle bg-surface-overlay p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 font-semibold text-foreground">{value}</p>
+    <div className="h-full overflow-y-auto bg-surface-base">
+      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
+        <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
+          {t('employer.campaigns.detail.back')}
+        </Link>
+        {children}
+      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { MarketingAuthModalProvider } from './MarketingAuthModalProvider';
 export const MarketingLayout: React.FC = () => {
   return (
     <MarketingAuthModalProvider>
-      <div className="flex min-h-screen flex-col surface-base">
+      <div className="flex min-h-screen flex-col surface-page">
         <MarketingHeader />
         <main className="flex-grow">
           <Outlet />

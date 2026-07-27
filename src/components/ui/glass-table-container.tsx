@@ -8,9 +8,10 @@ export interface GlassTableContainerProps extends React.ComponentProps<'div'> {
 
 /**
  * Specular dark-glass wrapper for data tables.
- * CSS class `.glass-table-container` paints edge streaks + diagonal shine
- * (see `src/index.css`). Pass a `<table>` or shadcn `Table` children without
- * nesting another framed container when possible.
+ * Prefer `@/components/ui/table` (`Table` already wraps this). Use this
+ * component directly only for rare custom layouts. CSS class
+ * `.glass-table-container` paints edge streaks + diagonal shine
+ * (see `src/index.css`).
  */
 export function GlassTableContainer({
   className,

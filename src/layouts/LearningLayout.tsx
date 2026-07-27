@@ -8,7 +8,7 @@ export function LearningLayout() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen surface-base">
+    <div className="min-h-screen surface-page">
       <header className="sticky top-0 z-40 border-b border-subtle bg-surface-base/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">

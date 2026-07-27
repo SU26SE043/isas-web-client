@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Loader2, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { Outlet, useParams } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
+import { AlertCircle, Loader2, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { EmptyState } from '@/components/patterns/EmptyState';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import {
@@ -12,7 +14,7 @@ import { LearningSidebar } from './LearningSidebar';
 function LearningReaderShell() {
   const { lessonId } = useParams();
   const { t } = useLanguage();
-  const { roadmap, isLoading, error } = useLearningWorkspace();
+  const { roadmap, isLoading, error, errorStatus, reload } = useLearningWorkspace();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (isLoading) {
@@ -25,10 +27,41 @@ function LearningReaderShell() {
   }
 
   if (error || !roadmap) {
+    const isNotFound = errorStatus === 404;
+    const isForbidden = errorStatus === 403;
     return (
-      <p className="page-container page-section text-sm text-error">
-        {t('practice.learningPath.error')}
-      </p>
+      <div className="page-container page-section min-h-[50vh]">
+        <EmptyState
+          className="frame-satin mx-auto max-w-lg"
+          variant={isForbidden ? 'no-permission' : 'no-results'}
+          title={
+            isNotFound
+              ? t('practice.learningPath.errorNotFoundTitle')
+              : isForbidden
+                ? t('practice.learningPath.errorForbiddenTitle')
+                : t('practice.learningPath.errorTitle')
+          }
+          description={
+            isNotFound
+              ? t('practice.learningPath.errorNotFound')
+              : isForbidden
+                ? t('practice.learningPath.errorForbidden')
+                : t('practice.learningPath.error')
+          }
+          action={
+            isNotFound || isForbidden ? (
+              <Link to="/candidate/learning" className="btn-secondary inline-flex">
+                {t('practice.learningPath.backToDashboard')}
+              </Link>
+            ) : (
+              <Button type="button" onClick={() => void reload()}>
+                <AlertCircle className="size-4" aria-hidden />
+                {t('practice.learningPath.retry')}
+              </Button>
+            )
+          }
+        />
+      </div>
     );
   }
 
@@ -64,7 +97,6 @@ function LearningReaderShell() {
           )}
         </button>
 
-        {/* Mobile drawer toggle + compact sidebar strip */}
         <details className="border-b border-subtle lg:hidden">
           <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground">
             {t('practice.learningPath.sidebarLessons')}

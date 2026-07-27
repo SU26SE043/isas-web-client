@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
 import { AdminAiConfigPage } from '@/features/admin/pages/AdminAiConfigPage';
 import { AdminAuditLogsPage } from '@/features/admin/pages/AdminAuditLogsPage';
+import { AdminCampaignsPage } from '@/features/admin/pages/AdminCampaignsPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { AdminFeatureFlagsPage } from '@/features/admin/pages/AdminFeatureFlagsPage';
 import { AdminHealthPage } from '@/features/admin/pages/AdminHealthPage';
@@ -39,7 +40,7 @@ export const adminRoutes: RouteObject[] = [
               { path: 'permissions', element: <AdminPermissionsPage /> },
               { path: 'approvals', element: <AdminResourcePage resourceKey="approvals" /> },
               { path: 'candidates', element: <AdminResourcePage resourceKey="candidates" /> },
-              { path: 'campaigns', element: <AdminResourcePage resourceKey="campaigns" /> },
+              { path: 'campaigns', element: <AdminCampaignsPage /> },
               { path: 'content', element: <AdminResourcePage resourceKey="content" /> },
               { path: 'learning', element: <AdminResourcePage resourceKey="learning" /> },
               { path: 'ai-config', element: <AdminAiConfigPage /> },

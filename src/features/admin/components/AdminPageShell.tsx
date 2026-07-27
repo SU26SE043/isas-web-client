@@ -10,7 +10,7 @@ interface AdminPageShellProps {
 
 export function AdminPageShell({ eyebrow, title, description, actions, children }: AdminPageShellProps) {
   return (
-    <div className="min-h-screen bg-surface-base px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-page px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>

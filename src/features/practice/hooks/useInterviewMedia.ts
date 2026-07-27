@@ -5,11 +5,25 @@ export type InterviewMediaState = 'idle' | 'starting' | 'ready' | 'error';
 export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const micEnabledRef = useRef(micEnabled);
   const cameraEnabledRef = useRef(cameraEnabled);
+  const startGenerationRef = useRef(0);
   const [state, setState] = useState<InterviewMediaState>('idle');
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  micEnabledRef.current = micEnabled;
   cameraEnabledRef.current = cameraEnabled;
+
+  const applyTrackEnabled = useCallback(() => {
+    const mediaStream = streamRef.current;
+    if (!mediaStream) return;
+    mediaStream.getAudioTracks().forEach((track) => {
+      track.enabled = micEnabledRef.current;
+    });
+    mediaStream.getVideoTracks().forEach((track) => {
+      track.enabled = cameraEnabledRef.current;
+    });
+  }, []);
 
   const attachStreamToVideo = useCallback(async () => {
     const video = videoRef.current;
@@ -25,11 +39,13 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
       setState('ready');
       return true;
     } catch {
+      // Autoplay can fail briefly; stream is still attached for retry.
       return false;
     }
   }, []);
 
   const stopMedia = useCallback(() => {
+    startGenerationRef.current += 1;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setStream(null);
@@ -40,11 +56,17 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
   }, []);
 
   const startMedia = useCallback(async () => {
-    stopMedia();
+    const generation = ++startGenerationRef.current;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setStream(null);
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setState('starting');
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setState('error');
+      if (generation === startGenerationRef.current) setState('error');
       return null;
     }
 
@@ -53,24 +75,31 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
         video: { facingMode: 'user' },
         audio: true,
       });
+
+      if (generation !== startGenerationRef.current) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        return null;
+      }
+
       streamRef.current = mediaStream;
       setStream(mediaStream);
-
-      mediaStream.getVideoTracks().forEach((track) => {
-        track.enabled = cameraEnabledRef.current;
-      });
+      applyTrackEnabled();
 
       const attached = await attachStreamToVideo();
+      if (generation !== startGenerationRef.current) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        return null;
+      }
       if (!attached) {
         setState('starting');
       }
 
       return mediaStream;
     } catch {
-      setState('error');
+      if (generation === startGenerationRef.current) setState('error');
       return null;
     }
-  }, [attachStreamToVideo, stopMedia]);
+  }, [applyTrackEnabled, attachStreamToVideo]);
 
   const setVideoElement = useCallback(
     (node: HTMLVideoElement | null) => {
@@ -83,16 +112,16 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
   );
 
   useEffect(() => {
-    streamRef.current?.getAudioTracks().forEach((track) => {
-      track.enabled = micEnabled;
-    });
-  }, [micEnabled]);
+    applyTrackEnabled();
+    if (cameraEnabled) {
+      void attachStreamToVideo();
+    }
+  }, [applyTrackEnabled, attachStreamToVideo, micEnabled, cameraEnabled]);
 
   useEffect(() => {
-    streamRef.current?.getVideoTracks().forEach((track) => {
-      track.enabled = cameraEnabled;
-    });
-  }, [cameraEnabled]);
+    if (!stream) return;
+    void attachStreamToVideo();
+  }, [attachStreamToVideo, stream]);
 
   useEffect(() => () => stopMedia(), [stopMedia]);
 

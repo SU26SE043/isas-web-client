@@ -2,18 +2,22 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from 'react';
-import { learningPathService } from '../services/learningPath.service';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  learningRoadmapDetailQueryKey,
+  useLearningRoadmapDetail,
+} from '../hooks/useLearningRoadmaps';
+import { roadmapService } from '../services/roadmap.service';
 import type { LearningRoadmapDetail } from '../types/learningPath.types';
 
 interface LearningWorkspaceValue {
   roadmap: LearningRoadmapDetail | null;
   isLoading: boolean;
   error: boolean;
+  errorStatus?: number;
   reload: () => Promise<void>;
 }
 
@@ -26,40 +30,30 @@ export function LearningWorkspaceProvider({
   roadmapId: string;
   children: ReactNode;
 }) {
-  const [roadmap, setRoadmap] = useState<LearningRoadmapDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const queryClient = useQueryClient();
+  const detailQuery = useLearningRoadmapDetail(roadmapId);
 
   const reload = useCallback(async () => {
-    const data = await learningPathService.getRoadmap(roadmapId);
-    setRoadmap(data);
-    setError(false);
-  }, [roadmapId]);
-
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    void learningPathService
-      .getRoadmap(roadmapId)
-      .then((data) => {
-        if (!active) return;
-        setRoadmap(data);
-        setError(false);
-      })
-      .catch(() => {
-        if (active) setError(true);
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [roadmapId]);
+    await queryClient.invalidateQueries({ queryKey: learningRoadmapDetailQueryKey(roadmapId) });
+  }, [queryClient, roadmapId]);
 
   const value = useMemo(
-    () => ({ roadmap, isLoading, error, reload }),
-    [error, isLoading, reload, roadmap],
+    () => ({
+      roadmap: detailQuery.data ?? null,
+      isLoading: detailQuery.isLoading,
+      error: detailQuery.isError,
+      errorStatus: detailQuery.isError
+        ? roadmapService.getErrorStatus(detailQuery.error)
+        : undefined,
+      reload,
+    }),
+    [
+      detailQuery.data,
+      detailQuery.error,
+      detailQuery.isError,
+      detailQuery.isLoading,
+      reload,
+    ],
   );
 
   return (

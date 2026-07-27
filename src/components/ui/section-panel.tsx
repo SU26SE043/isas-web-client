@@ -6,6 +6,7 @@ export interface SectionPanelProps {
   title: string;
   description?: string;
   icon?: React.ReactNode;
+  headerAside?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   footerHint?: string;
@@ -21,6 +22,7 @@ export function SectionPanel({
   title,
   description,
   icon,
+  headerAside,
   children,
   footer,
   footerHint,
@@ -48,20 +50,23 @@ export function SectionPanel({
       )}
     >
       <div className="shrink-0 border-b border-satin px-6 py-6 sm:px-8 sm:py-7">
-        <div className={icon ? 'flex items-start gap-4' : undefined}>
-          {icon ? (
-            <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
-              {icon}
-            </span>
-          ) : null}
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
-            {description ? (
-              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                {description}
-              </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className={icon ? 'flex items-start gap-4' : undefined}>
+            {icon ? (
+              <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
+                {icon}
+              </span>
             ) : null}
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
+              {description ? (
+                <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
+            </div>
           </div>
+          {headerAside ? <div className="shrink-0 sm:self-start">{headerAside}</div> : null}
         </div>
       </div>
 

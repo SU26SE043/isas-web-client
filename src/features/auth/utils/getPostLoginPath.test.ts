@@ -76,4 +76,11 @@ describe('resolvePostLoginPath', () => {
     expect(resolvePostLoginPath(UserRole.CANDIDATE, null)).toBe('/candidate/dashboard');
     expect(resolvePostLoginPath(UserRole.GUEST, '/employer/dashboard')).toBe('/login');
   });
+
+  it('restores invitation deep-link for Candidate', () => {
+    expect(resolvePostLoginPath(UserRole.CANDIDATE, '/invitations/abc-token')).toBe(
+      '/invitations/abc-token',
+    );
+    expect(resolvePostLoginPath(UserRole.CANDIDATE, '/invite/abc-token')).toBe('/invite/abc-token');
+  });
 });

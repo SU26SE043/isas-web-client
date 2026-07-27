@@ -1,14 +1,25 @@
 import { fetchInterviewHistory } from './history.service';
 import { learningPathService } from './learningPath.service';
-import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
 import type { CandidateReportsHub } from '../types/candidateReports.types';
 
+const EMPTY_HUB: CandidateReportsHub = { interview: [], learning: [], cv: [] };
+
 export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
-  const [history, learningReports, analyses] = await Promise.all([
+  const [historyResult, learningResult] = await Promise.allSettled([
     fetchInterviewHistory({ pageSize: 50 }),
     learningPathService.listAllPracticeReports(),
-    cvAnalysisService.listAnalyses().catch(() => []),
   ]);
+
+  if (historyResult.status === 'rejected' && learningResult.status === 'rejected') {
+    return EMPTY_HUB;
+  }
+
+  const history =
+    historyResult.status === 'fulfilled'
+      ? historyResult.value
+      : { interviews: [], total: 0, page: 1, pageSize: 50 };
+
+  const learningReports = learningResult.status === 'fulfilled' ? learningResult.value : [];
 
   const interview = history.interviews
     .filter((item) => item.status === 'completed')
@@ -36,17 +47,5 @@ export async function fetchCandidateReportsHub(): Promise<CandidateReportsHub> {
     score: report.overallScore,
   }));
 
-  const cv = analyses.map((item) => ({
-    id: item.id,
-    category: 'cv' as const,
-    title: item.jobCategory || 'CV Analysis',
-    titleVi: item.jobCategory || 'Phân tích CV',
-    subtitle: item.jdId ? 'With JD' : 'No JD',
-    subtitleVi: item.jdId ? 'Có JD' : 'Không có JD',
-    href: `/candidate/cv/analysis/report?analysisId=${encodeURIComponent(item.id)}`,
-    createdAt: item.createdAt,
-    score: item.jdMatch?.score,
-  }));
-
-  return { interview, learning, cv };
+  return { interview, learning, cv: [] };
 }

@@ -10,7 +10,7 @@ export const HeroSection: React.FC = () => {
   const { openAuthModal } = useMarketingAuthModal();
 
   return (
-    <section className="bg-gradient-to-b from-surface-raised to-surface-base pt-16 pb-24 overflow-hidden">
+    <section className="bg-transparent pt-16 pb-24 overflow-hidden">
       <div className="w-full px-6 lg:px-20 xl:px-32">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-16 xl:gap-24 items-center">
           {/* Text Content */}

@@ -1,133 +1,181 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Check, Loader2 } from 'lucide-react';
-import { useLanguage } from '@/shared/languages';
-import { cn } from '@/lib/utils';
-import type { LearningLesson, LearningRoadmapDetail } from '../../types/learningPath.types';
 import {
-  launchLearningInterviewPractice,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/shared/languages';
+import type { LearningRoadmapDetail } from '../../types/learningPath.types';
+import type { OpenedLearningLesson } from '../../utils/roadmapMapper';
+import {
   learningInterviewPreparePath,
+  startLearningLessonPractice,
 } from '../../utils/launchLearningInterviewPractice';
 import { findNextLesson, theoryPath } from '../../utils/learningPathNavigation';
 
 interface LearningTheoryActionsProps {
   roadmap: LearningRoadmapDetail;
-  lesson: LearningLesson;
-  onMarkedComplete: () => Promise<void>;
-  markComplete: () => Promise<void>;
+  opened: OpenedLearningLesson;
 }
 
-export function LearningTheoryActions({
-  roadmap,
-  lesson,
-  onMarkedComplete,
-  markComplete,
-}: LearningTheoryActionsProps) {
+export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActionsProps) {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [justCompleted, setJustCompleted] = useState(false);
+  const [theoryMarkedComplete, setTheoryMarkedComplete] = useState(
+    opened.theoryStatus === 'completed' ||
+      opened.apiStatus === 'Practicing' ||
+      opened.apiStatus === 'Done',
+  );
+  const [isOpening, setIsOpening] = useState(false);
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [startError, setStartError] = useState(false);
 
-  const isCompleted = lesson.theoryStatus === 'completed' || roadmap.readOnly;
-  const nextLesson = findNextLesson(roadmap, lesson.id);
-  const canPractice =
-    !roadmap.readOnly &&
-    (lesson.practiceStatus === 'available' ||
-      (lesson.theoryStatus === 'completed' && lesson.practiceStatus !== 'locked'));
-  const practiceDone = lesson.practiceStatus === 'completed';
+  const nextLesson = findNextLesson(roadmap, opened.id);
+  const isDone = opened.apiStatus === 'Done';
+  const title = language === 'vi' ? opened.titleVi : opened.title;
+  const canChoosePractice = theoryMarkedComplete || isDone;
 
-  const handleComplete = async () => {
-    if (isCompleted || lesson.theoryStatus === 'locked') return;
-    setIsSaving(true);
-    try {
-      await markComplete();
-      await onMarkedComplete();
-      setJustCompleted(true);
-      window.setTimeout(() => setJustCompleted(false), 1600);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleMarkCompleted = () => {
+    setTheoryMarkedComplete(true);
   };
 
-  const handlePractice = async () => {
-    setIsLaunching(true);
+  const handleEnterInterviewPractice = async () => {
+    if (isOpening) return;
+    setIsOpening(true);
+    setStartError(false);
+
+    if (opened.sessionId) {
+      navigate(learningInterviewPreparePath(opened.sessionId));
+      setIsOpening(false);
+      return;
+    }
+
     try {
-      const title = language === 'vi' ? lesson.titleVi : lesson.title;
-      const sessionId = await launchLearningInterviewPractice({
+      const result = await startLearningLessonPractice({
         roadmapId: roadmap.id,
-        lessonId: lesson.id,
+        lessonId: opened.id,
         title,
       });
-      navigate(learningInterviewPreparePath(sessionId));
+      if (!result.ok) {
+        if (result.code === 'insufficient_credits') {
+          setCreditOpen(true);
+          return;
+        }
+        if (result.code === 'ai_failed') {
+          toast.error(t('practice.learningPath.lessonAiErrorToast'));
+        } else if (result.code === 'forbidden') {
+          toast.error(t('practice.learningPath.errorForbidden'));
+        } else if (result.code === 'not_found') {
+          toast.error(t('practice.learningPath.errorNotFound'));
+        } else {
+          toast.error(t('practice.learningPath.startError'));
+        }
+        setStartError(true);
+        return;
+      }
+      if (result.resumed) {
+        toast.success(t('practice.learningPath.sessionResumed'));
+      }
+      navigate(learningInterviewPreparePath(result.session.sessionId));
     } catch {
-      setIsLaunching(false);
+      setStartError(true);
+      toast.error(t('practice.learningPath.startError'));
+    } finally {
+      setIsOpening(false);
     }
   };
 
-  if (!isCompleted) {
-    return (
-      <div className="mt-8 flex justify-start border-t border-subtle pt-6">
-        <button
-          type="button"
-          className="btn-primary"
-          disabled={isSaving || lesson.theoryStatus === 'locked'}
-          onClick={() => void handleComplete()}
-        >
-          {isSaving ? t('practice.learningPath.saving') : t('practice.learningPath.markCompleted')}
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="mt-8 space-y-3 border-t border-subtle pt-6">
-      <div
-        className={cn(
-          'inline-flex items-center gap-2 rounded-xl border border-subtle bg-surface-overlay px-4 py-2.5 text-sm font-medium text-foreground transition',
-          justCompleted && 'scale-[1.02] border-success/40 bg-success/10 text-success',
-        )}
-        role="status"
-      >
-        <Check className="size-4 text-success" aria-hidden />
-        {t('practice.learningPath.theoryCompleted')}
-      </div>
+    <div className="mt-8 space-y-4 border-t border-subtle pt-6">
+      {theoryMarkedComplete ? (
+        <div
+          className="inline-flex items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-4 py-2.5 text-sm font-medium text-success"
+          role="status"
+        >
+          <Check className="size-4" aria-hidden />
+          {isDone
+            ? t('practice.learningPath.lessonDone')
+            : t('practice.learningPath.theoryCompleted')}
+        </div>
+      ) : null}
 
-      <div className="flex flex-wrap gap-3">
-        {canPractice && !practiceDone ? (
+      {!theoryMarkedComplete ? (
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             className="btn-primary inline-flex items-center gap-2"
-            disabled={isLaunching}
-            onClick={() => void handlePractice()}
+            onClick={handleMarkCompleted}
           >
-            {isLaunching ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : null}
-            {isLaunching
-              ? t('practice.learningPath.saving')
-              : t('practice.learningPath.continueToPractice')}
+            {t('practice.learningPath.markCompleted')}
           </button>
-        ) : null}
-
-        {practiceDone && nextLesson ? (
           <Link
-            to={theoryPath(roadmap.id, nextLesson.id)}
-            className="btn-primary inline-flex"
+            to={`/candidate/learning/roadmaps/${roadmap.id}`}
+            className="btn-secondary inline-flex"
           >
-            {t('practice.learningPath.nextLesson')}
+            {t('practice.learningPath.backToRoadmap')}
           </Link>
-        ) : null}
+        </div>
+      ) : null}
 
-        {!canPractice && !practiceDone && nextLesson ? (
+      {canChoosePractice ? (
+        <div className="flex flex-wrap gap-3">
+          {!isDone ? (
+            <button
+              type="button"
+              className="btn-primary inline-flex items-center gap-2"
+              disabled={isOpening}
+              onClick={() => void handleEnterInterviewPractice()}
+            >
+              {isOpening ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              {isOpening
+                ? t('practice.learningPath.startingPractice')
+                : t('practice.learningPath.practiceWithInterviewRoom')}
+            </button>
+          ) : null}
+          {startError ? (
+            <p className="w-full text-sm text-error" role="alert">
+              {t('practice.learningPath.startError')}
+            </p>
+          ) : null}
+          {isDone && nextLesson ? (
+            <Link to={theoryPath(roadmap.id, nextLesson.id)} className="btn-primary inline-flex">
+              {t('practice.learningPath.nextLesson')}
+            </Link>
+          ) : null}
           <Link
-            to={theoryPath(roadmap.id, nextLesson.id)}
-            className="btn-primary inline-flex"
+            to={`/candidate/learning/roadmaps/${roadmap.id}`}
+            className="btn-secondary inline-flex"
           >
-            {t('practice.learningPath.nextLesson')}
+            {t('practice.learningPath.backToRoadmap')}
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
+
+      <Dialog open={creditOpen} onOpenChange={setCreditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('practice.learningPath.insufficientCreditsDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setCreditOpen(false)}>
+              {t('practice.learningPath.backToRoadmap')}
+            </Button>
+            <Link to="/candidate/credits" className="btn-primary inline-flex">
+              {t('practice.learningPath.buyCredits')}
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

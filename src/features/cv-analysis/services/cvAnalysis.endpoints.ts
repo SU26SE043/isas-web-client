@@ -6,6 +6,10 @@
  *
  * Spec:
  * - POST /api/v1/interview/files/upload?fileType=cv|jd
+ * - GET  /api/v1/interview/files/files
+ * - PUT  /api/v1/interview/files/{id}
+ * - DELETE /api/v1/interview/files/{id}
+ * - GET  /api/v1/interview/files/{id}/download
  * - POST /api/v1/interview/practice/cv-analysis
  * - GET  /api/v1/interview/practice/cv-analysis/{id}
  */
@@ -17,10 +21,11 @@ export const cvAnalysisEndpoints = {
   analyze: `${INTERVIEW_API_PREFIX}/practice/cv-analysis`,
   getAnalysis: (id: string) =>
     `${INTERVIEW_API_PREFIX}/practice/cv-analysis/${encodeURIComponent(id)}`,
-  /** Optional catalogue when backend exposes it */
   listAnalyses: `${INTERVIEW_API_PREFIX}/practice/cv-analysis`,
-  listFiles: `${INTERVIEW_API_PREFIX}/files`,
+  listFiles: `${INTERVIEW_API_PREFIX}/files/files`,
   getFile: (id: string) => `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}`,
+  replaceFile: (id: string) => `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}`,
+  deleteFile: (id: string) => `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}`,
   downloadFile: (id: string) =>
     `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}/download`,
 } as const;

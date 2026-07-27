@@ -1,6 +1,7 @@
 import React from 'react';
 import { BadgeCheck, FileText, CalendarClock } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { AnalysisFileMeta, CvAnalysisResult } from '../../types/cvAnalysis.types';
 
 interface ReportHeaderProps {
@@ -42,7 +43,9 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({ result, meta }) => {
       <dl className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-satin bg-white/[0.03] px-4 py-3">
           <dt className="text-caption text-muted-foreground">{t('cv.report.domain')}</dt>
-          <dd className="mt-1 text-sm font-semibold text-foreground">{result.jobCategory || '—'}</dd>
+          <dd className="mt-1 text-sm font-semibold text-foreground">
+            {formatJobCategoryDisplay(result.jobCategory, language) || '—'}
+          </dd>
         </div>
         <div className="rounded-2xl border border-satin bg-white/[0.03] px-4 py-3">
           <dt className="text-caption inline-flex items-center gap-1.5 text-muted-foreground">

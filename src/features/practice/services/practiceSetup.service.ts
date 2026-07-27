@@ -2,10 +2,19 @@ import { mockDelay, usesMockData } from '@/shared/mock';
 import { apiClient } from '@/shared/api/apiClient';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
+import type {
+  RubricCriterionResponse,
+  RubricResponse,
+} from '@/features/rubrics/types/rubric.types';
 import {
-  DEFAULT_PRACTICE_RUBRIC,
+  domainToJobCategoryEnum,
+  isJobDomainId,
+  resolveJobDomainFromCategory,
+  type JobCategoryEnum,
+} from '@/shared/domain/jobDomains';
+import {
   PRACTICE_DOMAINS,
-  PRACTICE_LEVELS,
+  PRACTICE_LEVELS_LIST,
 } from '../mocks/practiceSetup.fixtures';
 import type { PracticeQuestion, PracticeSession } from '../mocks/session.fixtures';
 import type {
@@ -16,6 +25,7 @@ import type {
   PracticeSessionCreateInput,
   PracticeSessionCreateResult,
 } from '../types/practiceSetup.types';
+import { normalizePracticeLevels } from '@/shared/domain/practiceLevels';
 import { practiceSetupEndpoints } from './practiceSetup.endpoints';
 
 const dynamicSessions = new Map<string, PracticeSession>();
@@ -28,21 +38,42 @@ function findDomain(domainId: string): PracticeDomain | undefined {
   return PRACTICE_DOMAINS.find((item) => item.id === domainId);
 }
 
-function levelLabel(level: PracticeLevel): string {
-  const labels: Record<PracticeLevel, string> = {
-    intern: 'Intern',
-    fresher: 'Fresher',
-    junior: 'Junior',
-    middle: 'Middle',
-    senior: 'Senior',
+function resolveJobCategoryFromDomainId(domainId: string): JobCategoryEnum {
+  if (domainId === 'FE' || domainId === 'BE' || domainId === 'BA') {
+    return domainId;
+  }
+  if (isJobDomainId(domainId)) {
+    return domainToJobCategoryEnum(domainId);
+  }
+  return resolveJobDomainFromCategory(domainId)?.jobCategoryEnum ?? 'FE';
+}
+
+function mapApiCriterionToPractice(criterion: RubricCriterionResponse): PracticeRubricCriterion {
+  const weightPercent = Math.round(criterion.weight * 10000) / 100;
+  return {
+    id: criterion.id,
+    name: criterion.name,
+    description: criterion.description ?? '',
+    weight: weightPercent,
+    maxScore: Number.isFinite(criterion.maxScore) && criterion.maxScore > 0 ? criterion.maxScore : 10,
   };
-  return labels[level];
+}
+
+function mapPracticeCriteriaToUpdatePayload(criteria: PracticeRubricCriterion[]) {
+  return {
+    criteria: criteria.map((criterion) => ({
+      name: criterion.name.trim(),
+      description: criterion.description.trim() || null,
+      weight: criterion.weight / 100,
+      maxScore: criterion.maxScore > 0 ? criterion.maxScore : 10,
+    })),
+  };
 }
 
 function buildSessionTitle(domainId: string, level: PracticeLevel): string {
   const domain = findDomain(domainId);
   const domainName = domain?.nameVi ?? domain?.name ?? domainId;
-  return `Phỏng vấn ${domainName} — ${levelLabel(level)}`;
+  return `Phỏng vấn ${domainName} — ${level}`;
 }
 
 function buildMockQuestions(sessionId: string, count: number, title: string): PracticeQuestion[] {
@@ -66,12 +97,12 @@ export const practiceSetupService = {
 
   async listLevels(): Promise<PracticeLevel[]> {
     if (!usesMockData('practice')) {
-      const response = await apiClient.get<PracticeLevel[]>(practiceSetupEndpoints.levels);
-      return response.data;
+      const response = await apiClient.get<string[]>(practiceSetupEndpoints.levels);
+      return normalizePracticeLevels(response.data);
     }
 
     await mockDelay(150);
-    return [...PRACTICE_LEVELS];
+    return [...PRACTICE_LEVELS_LIST];
   },
 
   async listUploadedCvs(): Promise<UploadedCvFile[]> {
@@ -100,22 +131,46 @@ export const practiceSetupService = {
     };
   },
 
-  async generateRubric(input: GenerateRubricInput): Promise<PracticeRubricCriterion[]> {
-    if (!usesMockData('practice')) {
-      const response = await apiClient.post<PracticeRubricCriterion[]>(
-        practiceSetupEndpoints.generateRubric,
-        input,
-      );
-      return response.data;
-    }
+  /**
+   * Wizard step 5: load rubric for the domain chosen in step 1.
+   * Always hits live GET `/api/v1/interview/practice/rubrics/{jobCategory}` (FE|BE|BA).
+   */
+  async getRubric(domainId: string): Promise<PracticeRubricCriterion[]> {
+    const jobCategory = resolveJobCategoryFromDomainId(domainId);
+    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory));
+    const criteria = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
+    return criteria.map(mapApiCriterionToPractice);
+  },
 
-    await mockDelay(600);
-    const domain = findDomain(input.domainId);
-    const domainLabel = domain?.name ?? input.domainId;
-    return DEFAULT_PRACTICE_RUBRIC.map((item) => ({
-      ...item,
-      description: `${item.description} (${domainLabel}, ${levelLabel(input.level)})`,
-    }));
+  /** @deprecated Prefer getRubric — kept for callers still using generateRubric name. */
+  async generateRubric(input: GenerateRubricInput): Promise<PracticeRubricCriterion[]> {
+    return this.getRubric(input.domainId);
+  },
+
+  /**
+   * Persist edited rubric for the domain (PUT).
+   * Always live API — no mock.
+   */
+  async updateRubric(domainId: string, criteria: PracticeRubricCriterion[]): Promise<PracticeRubricCriterion[]> {
+    const jobCategory = resolveJobCategoryFromDomainId(domainId);
+    const response = await apiClient.put<RubricResponse>(
+      practiceSetupEndpoints.rubric(jobCategory),
+      mapPracticeCriteriaToUpdatePayload(criteria),
+    );
+    const next = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
+    return next.map(mapApiCriterionToPractice);
+  },
+
+  /**
+   * Reset rubric to system default (DELETE), then reload via GET.
+   * Always live API — no mock.
+   */
+  async resetRubric(domainId: string): Promise<PracticeRubricCriterion[]> {
+    const jobCategory = resolveJobCategoryFromDomainId(domainId);
+    await apiClient.delete(practiceSetupEndpoints.rubric(jobCategory), {
+      validateStatus: (status) => status === 204 || (status >= 200 && status < 300),
+    });
+    return this.getRubric(domainId);
   },
 
   async createSession(input: PracticeSessionCreateInput): Promise<PracticeSessionCreateResult> {

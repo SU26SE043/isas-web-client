@@ -34,6 +34,10 @@
   --surface-elevated: #2a2a30;
   --surface-highlight: #34343c;
 
+  /* === GLOBAL APP BACKGROUND === */
+  --app-background-image: url('/backgrounds/global-background.png');
+  --app-background-scrim: color-mix(in srgb, var(--surface-base) 42%, transparent);
+
   /* Glass overlays — soft translucent charcoal (screenshot glass cards) */
   --glass-bg: rgb(36 36 40 / 0.55);
   --glass-bg-strong: rgb(40 40 46 / 0.72);

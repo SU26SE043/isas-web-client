@@ -1,34 +1,32 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BriefcaseBusiness } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, BriefcaseBusiness } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useLanguage } from '@/shared/languages';
-import { InvitedCampaignCard } from '../components/InvitedCampaignCard';
-import { useMyInvitedCampaigns } from '../hooks/useMyInvitedCampaigns';
+import { MyCampaignCard } from '../components/MyCampaignCard';
+import { useMyCampaigns } from '../hooks/useMyCampaigns';
 
 export function CandidateCampaignsPage() {
   const { t } = useLanguage();
-  const user = useAuthStore((state) => state.user);
   const [searchParams] = useSearchParams();
-  const highlightToken = searchParams.get('highlight') ?? searchParams.get('invite') ?? '';
-  const { invites, isLoading } = useMyInvitedCampaigns(user?.email);
+  const highlightId = searchParams.get('highlight') ?? '';
+  const { data: campaigns = [], isLoading, isError, refetch, isFetching } = useMyCampaigns();
 
-  const sortedInvites = useMemo(() => {
-    if (!highlightToken) return invites;
-    return [...invites].sort((left, right) => {
-      if (left.inviteToken === highlightToken) return -1;
-      if (right.inviteToken === highlightToken) return 1;
+  const sortedCampaigns = useMemo(() => {
+    if (!highlightId) return campaigns;
+    return [...campaigns].sort((left, right) => {
+      if (left.campaignId === highlightId) return -1;
+      if (right.campaignId === highlightId) return 1;
       return 0;
     });
-  }, [highlightToken, invites]);
+  }, [campaigns, highlightId]);
 
   useEffect(() => {
-    if (!highlightToken) return;
-    const element = document.querySelector(`[data-invite-token="${highlightToken}"]`);
+    if (!highlightId) return;
+    const element = document.querySelector(`[data-campaign-id="${CSS.escape(highlightId)}"]`);
     element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [highlightToken, sortedInvites]);
+  }, [highlightId, sortedCampaigns]);
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
@@ -42,28 +40,43 @@ export function CandidateCampaignsPage() {
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {Array.from({ length: 2 }).map((_, index) => (
-              <Skeleton key={index} className="h-44 w-full" />
+              <Skeleton key={index} className="h-44 w-full rounded-xl" />
             ))}
           </div>
         ) : null}
 
-        {!isLoading && sortedInvites.length === 0 ? (
-          <Card className="border border-subtle bg-surface-raised">
-            <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-              <BriefcaseBusiness className="size-10 text-muted-foreground" aria-hidden />
-              <h2 className="heading-secondary text-lg text-foreground">{t('campaigns.my.emptyTitle')}</h2>
-              <p className="max-w-md text-sm text-muted-foreground">{t('campaigns.my.emptyDescription')}</p>
-            </CardContent>
-          </Card>
+        {isError ? (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-10 text-center">
+            <p className="text-sm text-rose-400">{t('campaigns.my.loadError')}</p>
+            <Button
+              type="button"
+              className="mt-4"
+              variant="outline"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+            >
+              <AlertCircle className="size-4" aria-hidden />
+              {t('campaigns.my.retry')}
+            </Button>
+          </div>
         ) : null}
 
-        {!isLoading && sortedInvites.length > 0 ? (
+        {!isLoading && !isError && sortedCampaigns.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 px-6 py-12 text-center">
+            <BriefcaseBusiness className="size-10 text-zinc-500" aria-hidden />
+            <h2 className="heading-secondary text-lg text-zinc-100">{t('campaigns.my.emptyTitle')}</h2>
+            <p className="max-w-md text-sm text-zinc-400">{t('campaigns.my.emptyDescription')}</p>
+            <p className="text-sm text-zinc-500">{t('campaigns.my.emptyHint')}</p>
+          </div>
+        ) : null}
+
+        {!isLoading && !isError && sortedCampaigns.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {sortedInvites.map((invite) => (
-              <InvitedCampaignCard
-                key={invite.inviteToken}
-                invite={invite}
-                highlighted={invite.inviteToken === highlightToken}
+            {sortedCampaigns.map((campaign) => (
+              <MyCampaignCard
+                key={campaign.campaignId}
+                campaign={campaign}
+                highlighted={campaign.campaignId === highlightId}
               />
             ))}
           </div>

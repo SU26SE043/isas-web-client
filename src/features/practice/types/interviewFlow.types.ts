@@ -35,12 +35,16 @@ export interface InterviewFlowProgress {
   identitySnapshot?: string;
 }
 
+import { hasLearningPracticeSession } from '../services/learningPracticeSession.registry';
+import { isB2bCampaignSessionId } from '@/features/campaigns/utils/campaignInterviewSession';
+
 export function isCampaignSessionId(sessionId: string) {
-  return sessionId.startsWith('campaign-');
+  return sessionId.startsWith('campaign-') || isB2bCampaignSessionId(sessionId);
 }
 
+/** Learning practice: legacy `learning-` ids or sessions registered after lesson start. */
 export function isLearningSessionId(sessionId: string) {
-  return sessionId.startsWith('learning-');
+  return sessionId.startsWith('learning-') || hasLearningPracticeSession(sessionId);
 }
 
 export function requiresIdentityVerification(sessionId: string) {

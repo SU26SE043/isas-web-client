@@ -105,7 +105,7 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Header | `h-16`, glass-topbar + satin edge |
 | Sidebar | `glass-sidebar`, active `bg-surface-elevated` |
 | Card | `frame-satin` + `Card` primitive |
-| Table | `GlassTableContainer` / `.glass-table-container` (specular glass) |
+| Table | `Table` + `TableHeader` / `TableBody` / `TableRow` / `TableHead` / `TableCell` from `@/components/ui/table` (wraps `GlassTableContainer`) |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
 | **SelectionOption** | Satin selectable tile — **default** for choice grids |
 | Modal | Dialog + `border-satin` |
@@ -114,6 +114,51 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Secondary button | `btn-secondary` (satin outline) |
 | Ghost button | `btn-ghost` |
 
+## Data table template (bắt buộc)
+
+**Khung chuẩn = Employer Pipeline table** (glass rounded shell, header chữ hoa trắng, divider mỏng, badge semantic, nút outline + primary trong cột thao tác).
+
+Mọi **data table** dùng `@/components/ui/table` — **không** tự dựng `<table>` + `border-subtle` / Card frame ad-hoc.
+
+| Template | File | Khi dùng |
+|----------|------|----------|
+| `Table` (+ Header/Body/Row/Head/Cell) | `src/components/ui/table.tsx` | Ranking, lịch sử, admin, billing, invitations… |
+| `GlassTableContainer` | `src/components/ui/glass-table-container.tsx` | Đã nằm trong `Table`; chỉ dùng riêng khi layout đặc biệt |
+
+### Quy tắc dùng table
+
+1. Import `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell` từ `@/components/ui/table`.
+2. **Không** bọc thêm `Card` / `rounded-xl border` bên ngoài `Table` (tránh double frame).
+3. Nested detail table → `<Table framed={false}>`.
+4. Mobile: card/list riêng; desktop `hidden md:block` / `lg:block` khi cần.
+5. Primary cell text: `className="font-medium text-foreground"` (hoặc `font-semibold`); secondary line: `text-xs text-muted-foreground`.
+6. Status chỉ dùng badge semantic; không đổi chrome của khung glass.
+
+```tsx
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Hạng</TableHead>
+      <TableHead>Ứng viên</TableHead>
+      <TableHead className="text-right">Thao tác</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell className="font-semibold text-foreground">#1</TableCell>
+      <TableCell>
+        <p className="font-medium text-foreground">CND-1042</p>
+        <p className="text-xs text-muted-foreground">Frontend · React</p>
+      </TableCell>
+      <TableCell className="text-right">…</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
+
+> Không nhầm với `SelectionOption` (ô chọn domain/wizard). Selection list ≠ data table.
 ## Section & selection templates (bắt buộc khi gen UI lựa chọn)
 
 Hai primitive dùng chung toàn project — **không** dựng lại border/glass/ô chọn ad-hoc trong feature.

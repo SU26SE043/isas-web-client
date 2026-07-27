@@ -1,7 +1,8 @@
-import type { PracticeDomain, PracticeLevel, PracticeRubricCriterion } from '../types/practiceSetup.types';
+import type { PracticeDomain, PracticeRubricCriterion } from '../types/practiceSetup.types';
+import { PRACTICE_LEVELS } from '@/shared/domain/practiceLevels';
 import { JOB_DOMAINS } from '@/shared/domain/jobDomains';
 
-export const PRACTICE_LEVELS: PracticeLevel[] = ['intern', 'fresher', 'junior', 'middle', 'senior'];
+export const PRACTICE_LEVELS_LIST = [...PRACTICE_LEVELS];
 
 export const PRACTICE_QUESTION_COUNTS = [3, 5, 7, 10] as const;
 
@@ -38,23 +39,27 @@ export const DEFAULT_PRACTICE_RUBRIC: PracticeRubricCriterion[] = [
     name: 'Technical depth',
     weight: 40,
     description: 'Problem solving, architecture, and correctness.',
+    maxScore: 10,
   },
   {
     id: 'communication',
     name: 'Communication',
     weight: 25,
     description: 'Clarity, structure, and tradeoff explanation.',
+    maxScore: 10,
   },
   {
     id: 'delivery',
     name: 'Delivery',
     weight: 20,
     description: 'Confidence, pacing, and completeness of answers.',
+    maxScore: 10,
   },
   {
     id: 'culture-fit',
     name: 'Culture fit',
     weight: 15,
     description: 'Collaboration mindset and ownership signals.',
+    maxScore: 10,
   },
 ];

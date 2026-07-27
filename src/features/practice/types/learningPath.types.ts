@@ -52,6 +52,8 @@ export interface LearningPracticeReport {
   createdAt: string;
 }
 
+export type LearningLessonApiStatus = 'Theory' | 'Practicing' | 'Done';
+
 export interface LearningLesson {
   id: string;
   title: string;
@@ -59,11 +61,15 @@ export interface LearningLesson {
   order: number;
   theoryStatus: LessonPartStatus;
   practiceStatus: LessonPartStatus;
-  /** Lesson body HTML (English). */
+  /** Lesson body HTML (English). Populated only after open-lesson API. */
   content: string;
-  /** Lesson body HTML (Vietnamese). */
+  /** Lesson body HTML (Vietnamese). Populated only after open-lesson API. */
   contentVi: string;
   status: LearningPathStatus;
+  /** Backend lesson status when known from API. */
+  apiStatus?: LearningLessonApiStatus;
+  /** Practice session id when status is Practicing. */
+  sessionId?: string | null;
   practiceReportId?: string;
 }
 

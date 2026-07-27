@@ -31,7 +31,7 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
   return (
     <nav
       id="mobile-marketing-nav"
-      className="border-t border-subtle bg-surface-base md:hidden"
+      className="border-t border-subtle bg-surface-base/80 backdrop-blur-md md:hidden"
       aria-label={t('nav.mobileMenu')}
     >
       <ul className="page-container flex flex-col gap-1 py-4">

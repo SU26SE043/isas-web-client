@@ -1,91 +1,89 @@
 # Campaign Management
 
-Frontend contract for Phase 10: HR campaign lifecycle.
+Frontend contract for employer campaign list, create/publish (Flow 1), and invite (Flow 2).
 
 ## Status
 
-**Implemented (mock)** — employer list/wizard/detail/edit/selection, proctoring settings, invite email resolution, candidate table, org verification gate on publish, invitation email preview before publish.
+**List / detail GET live** — `GET /api/v1/campaign`, `GET /api/v1/campaign/{id}`.
 
-## Scope
+**Create Draft live** — `POST /api/v1/campaign` once after the wizard finishes (Employer Bearer). Body includes metadata, JD text (or null for file-later), criteria, schedule, and non-empty questions.
 
-Phase 10 covers employer-side campaign management:
+**Update Draft live** — `PUT /api/v1/campaign/{id}` (metadata/JD/criteria) + `PUT /api/v1/campaign/{id}/questions` (JSON array body).
 
-- `/employer/campaigns` campaign list with status filter and search.
-- `/employer/campaigns/new` campaign wizard.
-- `/employer/campaigns/:id` campaign detail with publish and invite actions.
-- `/employer/campaigns/:id/edit` draft campaign editing.
+**Publish live** — From Draft detail preview: **Xuất bản** → confirm modal → `POST /api/v1/campaign/{id}/publish`.
 
-Out of scope: candidate ranking/pipeline, employer analytics, billing, admin moderation, and live backend integration.
+**Status after Active** — From detail: **Đóng** (Active→Closed) / **Lưu trữ** (Closed→Archived) → confirm → `PUT /api/v1/campaign/{id}/status` with `{ status }`.
 
-## BRD Trace
+**Soft-delete** — From Draft / Closed / Archived detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}` (204).
 
-- Screens: `SCR-EMP-055`, `SCR-EMP-056`, `SCR-EMP-057`, `SCR-EMP-058`.
-- User flows: `UF-103`, `UF-104`, `UF-105`, `UF-106`, `UF-111`.
-- Functional requirements: `FR-095` to `FR-124`, `FR-125` to `FR-159`.
-- Rules: `BRL-012` publish readiness, `BRL-031` max 5 active campaigns, `BRL-036` rubric weights sum to 100%.
+**Invite by email live** — Active detail → invite/email → `POST /api/v1/campaign/{id}/invitations` with `{ emails }`. Response `{ created, failed }` shown on result page. Errors: 400 · 404 · 409 (not Active).
 
-## UI Contract
+**JD PDF live** — Create mode keeps the JD file local (browser-only) until the final `POST /api/v1/campaign` succeeds, then a single `POST /api/v1/campaign/{id}/files`. Edit mode uploads immediately via `POST` (first upload) or `PUT …/files` (replace). Field `jdFile` (PDF ≤10MB). Criteria no longer supports file upload — replaced by a manual rubric (step 3) plus a freeform `criteriaText` note (step 2).
 
-Campaign list provides:
+**CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
-- Search by title/company/role text.
-- Status filtering for draft, active, paused, closed.
-- Empty/loading states.
-- Create campaign CTA.
+## Flow 1 — Create & publish
 
-Campaign wizard provides six steps (Candidate-aligned vertical stepper UX):
+Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
-1. Basic information: title, company, location, working mode, summary.
-2. Job description: JD content.
-3. AI interview config: session duration and question bank selection.
-4. Evaluation criteria: weighted rubric must total 100%.
-5. Campaign settings: capacity, deadline, locale, welcome/completion messages, **proctoring** (face capture interval, similarity threshold, max violations — see [`campaign-assessment.md`](./campaign-assessment.md)).
-6. Review & Publish: summary review with **Save draft** and **Publish**.
+1. Campaign information — title, domain, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt
+2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
+3. Evaluation criteria — manual rubric only (name, description, weight %, maxScore); weights shown as % summing to 100, converted to 0–1 decimals on submit
+4. Questions — AI-generated or HR-authored, each with `prompt`, `source` (`AiGenerated`/`CustomHr`), `isRequired`; add/edit/delete/reorder, tracked against `maxQuestions` when adaptive is on
+5. Settings — `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; when adaptive is on, `maxFollowUps` (>=0) and `maxQuestions` (0–20)
+6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
-Back/Next preserves in-memory form state; Save draft calls `saveDraft`; Publish saves then `publishCampaign`.
+Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
 
-Campaign detail provides:
+Active detail: **Mời ứng viên** · **Pipeline** · **Đóng** (confirm → status Closed).
 
-- Campaign metadata, rubric summary, questions, settings.
-- Publish validation errors inline.
-- Publish action transitions draft to active.
-- Invite modal accepts comma/newline-separated emails and records invitations.
-- **Candidate list** on detail or pipeline: shows rows as soon as emails are processed (see invite resolution below).
+Closed detail: **Pipeline** · **Lưu trữ** (confirm → status Archived) · **Xóa**.
 
-## Invite email resolution
+Archived detail: **Pipeline** · **Xóa**.
 
-When HR adds emails (invite modal or candidate-selection upload), the client calls lookup (or mock equivalent) per [`product-scope.md`](./product-scope.md) BR-B2B-06–11:
+There is **no** “Save draft” button mid-wizard, and no API call at all while navigating between steps — every field lives in local wizard state until the Review step's final submit. Create calls `POST /api/v1/campaign` exactly once (Review step only); if a JD file is pending it uploads right after via `POST …/files`. Edit mode sends only dirty/changed metadata fields via `PUT /api/v1/campaign/{id}` (see `buildDirtyUpdateRequest`), plus the full question list via `PUT …/questions`; criteria/questions edits only apply while the campaign is Draft. Publish is only from Campaign Detail.
 
-| Result | UI behavior |
+Candidate invitation is **not** part of Flow 1.
+
+## Flow 2 — Invite candidates (Active only)
+
+| Route | Screen |
 | --- | --- |
-| Email is an existing **Candidate** | Row appears **immediately** in campaign candidate list with `candidate_id`, display name, status **`invited`** |
-| Email unknown | Row with email only, status **`invite_pending`** |
-| Email is HR / Organize / Admin | Inline error on that address; do not add to list |
+| `/employer/campaigns/:id/invite` | Choose method |
+| `/employer/campaigns/:id/invite/cv` | Upload CVs + ranking + invite by candidateIds |
+| `/employer/campaigns/:id/invite/email` | Enter emails → invite |
+| `/employer/campaigns/:id/invite/result` | Partial success result |
 
-After publish, magic-link email is sent. Existing candidates **sign in** via `/invite/:token`; new emails **register** first.
+Campaign Detail shows **Mời ứng viên** only when `status === active`. Draft shows helper copy to publish first, plus **Edit** and **Publish**.
 
-## Data Contract
+## Routes
 
-Until backend contracts are wired, the client uses a mock `EmployerCampaignService`:
+| Route | Screen |
+| --- | --- |
+| `/employer/campaigns` | List |
+| `/employer/campaigns/new` | Flow 1 wizard (create) |
+| `/employer/campaigns/:id/edit` | Edit Draft wizard |
+| `/employer/campaigns/:id` | Detail |
+| `/employer/campaigns/:id/invite/*` | Flow 2 |
 
-- `listCampaigns(filters)`
-- `getCampaign(id)`
-- `saveDraft(input, id?)`
-- `publishCampaign(id)`
-- `inviteCandidates(id, emails)` — resolves emails; links existing Candidate accounts immediately
-- `resolveInviteEmails(id, emails)` — optional explicit lookup returning `{ linked, pending, rejected }` per email (wire with Auth/Campaign API)
+Legacy `/selection` redirects to `/invite`.
 
-The mock is tenant-scoped in memory and uses the existing `enterprise` mock domain.
+## API call matrix
+
+| Case | API |
+| --- | --- |
+| Next/back through any step (create or edit) | None |
+| Finish wizard on Review (create) | `POST /api/v1/campaign`, then `POST …/files` once if a JD file is pending |
+| Save on Review (edit) | `PUT /api/v1/campaign/{id}` (dirty fields only) then `PUT …/questions` |
+| Publish | `POST /api/v1/campaign/{id}/publish` |
+| Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
+| Soft-delete | `DELETE /api/v1/campaign/{id}` |
+| Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
+| Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |
+| Replace JD PDF (edit mode) | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
 
 ## Validation
-
-Required gates:
 
 - `npm run check:ui-size`
 - `npm run check:i18n`
 - `npm run typecheck`
-- `npm test`
-- `npm run build`
-- `npm run test:e2e`
-
-Visible UI verification must include desktop and mobile screenshots plus a manual flow: create draft, edit/detail, publish, invite candidates.
