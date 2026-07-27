@@ -87,6 +87,10 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
 | Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
 
+| Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
+| Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
+| Reset password | `POST /api/v1/auth/reset-password` | Public — body `{ email, otp, newPassword }`; success is `"Password reset successful"`. |
+
 ## E2E
 
 - `e2e/specs/smoke/auth-login.spec.ts` — login, lockout, register → verify email.

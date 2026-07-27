@@ -127,15 +127,22 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
+export type ForgotPasswordResponse = 'OTP sent to your email';
+
 export interface VerifyOtpRequest {
   email: string;
   otp: string;
 }
 
+export type VerifyOtpResponse = 'OTP verified, you can reset your password';
+
 export interface ResetPasswordRequest {
   email: string;
+  otp: string;
   newPassword: string;
 }
+
+export type ResetPasswordResponse = 'Password reset successful';
 
 export interface MfaVerifyRequest {
   mfaToken: string;

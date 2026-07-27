@@ -64,7 +64,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
     setIsLoading(true);
     setError('');
     try {
-      await authService.resetPassword({ email: email.trim(), newPassword });
+      await authService.resetPassword({ email: email.trim(), otp: otp.trim(), newPassword });
       setSuccess(t('auth.resetSuccess'));
       setTimeout(() => {
         handleClose();

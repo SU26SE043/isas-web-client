@@ -26,6 +26,7 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 ## Acceptance Criteria
 
 - [x] Auth pages + modal: sign in, sign up, forgot password flows with validation errors.
+- [x] Password recovery calls the public forgot/verify/reset endpoints and retains the verified OTP in the reset request.
 - [x] Register redirects to `/verify-email`; login handles MFA, lockout, email verification gate.
 - [x] JWT session persisted; logout clears state; session timeout modal.
 - [x] `/profile` shows user info; change password modal works.

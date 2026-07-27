@@ -5,6 +5,8 @@ import { getApiBaseUrl } from '../../../shared/config';
 import { HttpStatus } from '@/shared/constants/http-status';
 import type {
   AuthTokensResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
@@ -12,8 +14,12 @@ import type {
   RegisterRequest,
   RegisterOrgRequest,
   ResendVerificationRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   User,
   UpdateProfileRequest,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
   VerifyEmailRequest,
 } from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
@@ -113,16 +119,31 @@ export const authService = {
     await apiClient.put(authEndpoints.me, payload);
     return authService.me();
   },
-  forgotPassword: async (payload: { email: string }) => {
-    const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);
+  forgotPassword: async (payload: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.forgotPassword, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'OTP sent to your email') {
+      throw new Error('Invalid forgot-password response from Auth API');
+    }
     return data;
   },
-  verifyOtp: async (payload: { email: string; otp: string }) => {
-    const { data } = await apiClient.post(authEndpoints.verifyOtp, payload);
+  verifyOtp: async (payload: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.verifyOtp, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'OTP verified, you can reset your password') {
+      throw new Error('Invalid verify-otp response from Auth API');
+    }
     return data;
   },
-  resetPassword: async (payload: { email: string; newPassword: string }) => {
-    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+  resetPassword: async (payload: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.resetPassword, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'Password reset successful') {
+      throw new Error('Invalid reset-password response from Auth API');
+    }
     return data;
   },
   verifyEmail: async (payload: VerifyEmailRequest) => {
