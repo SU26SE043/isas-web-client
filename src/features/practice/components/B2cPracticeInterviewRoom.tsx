@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
@@ -30,6 +31,14 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
   const room = useB2cPracticeRoom(sessionId, { completePath });
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
+  const interviewCompleteToastRef = useRef(false);
+
+  useEffect(() => {
+    if (room.interviewComplete && !interviewCompleteToastRef.current) {
+      interviewCompleteToastRef.current = true;
+      toast.success(t('practice.finish.aiComplete'), { duration: 6000 });
+    }
+  }, [room.interviewComplete, t]);
 
   if (room.isLoading) {
     return (
@@ -113,12 +122,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
           {t(room.answerError)}
         </div>
       ) : null}
-      {room.interviewComplete ? (
-        <div role="status" className="border-b border-satin bg-surface-raised px-6 py-2 text-sm text-foreground">
-          {t('practice.finish.aiComplete')}
-        </div>
-      ) : null}
-
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
           <div className="min-h-[240px] lg:col-span-8 lg:min-h-[320px]">
