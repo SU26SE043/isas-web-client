@@ -76,7 +76,6 @@ export function PracticeLiveResultReport({
       </section>
 
       <PracticeOverallFeedback
-        overallFeedback={undefined}
         strengths={view.strengths}
         improvements={view.improvements}
         nextSteps={view.nextSteps}

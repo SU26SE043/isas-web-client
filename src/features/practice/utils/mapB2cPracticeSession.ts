@@ -487,20 +487,21 @@ function mapRubricRefs(raw: unknown): PracticeRubricCriterionRef[] {
     if (Array.isArray(root.criteria)) return mapRubricRefs(root.criteria);
     return [];
   }
-  return raw
-    .map((entry) => {
-      const item = asRecord(entry);
-      const id = pickString(item.id, item.criterionId);
-      const name = pickString(item.name, item.criterionName, item.title);
-      if (!id || !name) return null;
-      return {
-        id,
-        name,
-        maxScore: pickNumber(item.maxScore, item.max) ?? null,
-        description: pickString(item.description) || null,
-      } satisfies PracticeRubricCriterionRef;
-    })
-    .filter((item): item is PracticeRubricCriterionRef => item != null);
+
+  const mapped: PracticeRubricCriterionRef[] = [];
+  for (const entry of raw) {
+    const item = asRecord(entry);
+    const id = pickString(item.id, item.criterionId);
+    const name = pickString(item.name, item.criterionName, item.title);
+    if (!id || !name) continue;
+    mapped.push({
+      id,
+      name,
+      maxScore: pickNumber(item.maxScore, item.max) ?? null,
+      description: pickString(item.description) || null,
+    });
+  }
+  return mapped;
 }
 
 export function mapPracticeSessionResponse(raw: unknown): PracticeSessionResponse {
