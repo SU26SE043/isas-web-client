@@ -1,60 +1,46 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { FlowWizardNav } from '@/components/patterns/flow-wizard/FlowWizardNav';
+import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import { practiceSessionService } from '../services/practiceSession.service';
-import {
-  isCampaignSessionId,
-  isLearningSessionId,
-  requiresIdentityVerification,
-} from '../types/interviewFlow.types';
-import { useInterviewFlowStore } from '../stores/interviewFlowStore';
-import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
-import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
-import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingStartPanel';
-import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
-import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
-import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
-import { loadFlowProgress, saveFlowProgress } from '../utils/interviewFlowStorage';
+import { practiceSessionService } from '../../services/practiceSession.service';
+import { isLearningSessionId } from '../../types/interviewFlow.types';
+import { LearningWaitingStartPanel } from '../flow/LearningWaitingStartPanel';
+import { getLearningPracticeSession } from '../../services/learningPracticeSession.registry';
+import { startLearningLessonPractice } from '../../utils/launchLearningInterviewPractice';
+import { learningRoadmapDetailQueryKey } from '../../hooks/useLearningRoadmaps';
+import { loadFlowProgress, saveFlowProgress } from '../../utils/interviewFlowStorage';
+import { useInterviewFlowStore } from '../../stores/interviewFlowStore';
+import type { PracticeSession } from '../../mocks/session.fixtures';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
-export const WaitingRoomPage: React.FC = () => {
-  const { sessionId = '' } = useParams();
-  const navigate = useNavigate();
+interface WaitingRoomStepProps {
+  sessionId: string;
+  session: PracticeSession;
+  onBack: () => void;
+}
+
+export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  useInterviewFlowSession(sessionId);
-  const { deviceCheckPassed, identityVerified } = useInterviewFlowStore();
-  const isCampaign = isCampaignSessionId(sessionId);
   const isLearning = isLearningSessionId(sessionId);
   const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
-  const redirectToPrep = !isCampaign && !isLearning;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
-  const [questionCount, setQuestionCount] = useState(0);
+  const [questionCount, setQuestionCount] = useState(session.questions?.length ?? 0);
   const [isStarting, setIsStarting] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
   const [startError, setStartError] = useState<StartErrorUi>(null);
   const inFlightRef = useRef(false);
 
   useEffect(() => {
-    if (!deviceCheckPassed) {
-      navigate(`/interview/${sessionId}/prepare?step=device`, { replace: true });
-      return;
-    }
-    if (requiresIdentityVerification(sessionId) && !identityVerified) {
-      navigate(`/interview/${sessionId}/identity`, { replace: true });
-    }
-  }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
-
-  useEffect(() => {
-    if (redirectToPrep || isLearning) {
-      if (isLearning) {
-        setStatus('ready');
-        setQuestionCount(learningMeta?.questions.length ?? 0);
-      }
+    if (isLearning) {
+      setStatus('ready');
+      setQuestionCount(learningMeta?.questions.length ?? 0);
       return;
     }
 
@@ -85,15 +71,11 @@ export const WaitingRoomPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isLearning, learningMeta?.questions.length, redirectToPrep, sessionId]);
+  }, [isLearning, learningMeta?.questions.length, sessionId]);
 
-  useEffect(() => {
-    if (redirectToPrep || isLearning || status !== 'ready') return;
-    const timer = window.setTimeout(() => {
-      navigate(`/interview/${sessionId}/room`);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [isLearning, navigate, redirectToPrep, sessionId, status]);
+  const handleStartInterview = () => {
+    navigate(`/interview/${sessionId}/room`);
+  };
 
   const handleLearningStart = async () => {
     if (!learningMeta || inFlightRef.current || isStarting) return;
@@ -146,18 +128,36 @@ export const WaitingRoomPage: React.FC = () => {
     }
   };
 
-  if (redirectToPrep) {
-    return <Navigate to={`/interview/${sessionId}/prepare?step=waiting`} replace />;
-  }
+  const canStart = isLearning ? Boolean(learningMeta) : status === 'ready';
 
   return (
-    <InterviewFlowShell
-      sessionId={sessionId}
-      currentStep="waiting"
+    <SectionPanel
       title={t('practice.flow.waiting.title')}
-      isCampaignSession={isCampaign}
+      footer={
+        <FlowWizardNav
+          backLabel={t('practice.flow.back')}
+          nextLabel={t('practice.flow.waiting.startInterview')}
+          onBack={onBack}
+          onNext={isLearning ? () => void handleLearningStart() : handleStartInterview}
+          nextDisabled={!canStart || isStarting}
+          isLoading={isStarting}
+        />
+      }
     >
-      <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">
+      <dl className="mb-6 grid gap-3 text-sm sm:grid-cols-2">
+        <div className="rounded-xl border border-satin bg-white/[0.03] px-4 py-3">
+          <dt className="text-muted-foreground">{t('practice.flow.waiting.position')}</dt>
+          <dd className="mt-1 font-semibold text-foreground">
+            {session.title || session.jobCategory || '—'}
+          </dd>
+        </div>
+        <div className="rounded-xl border border-satin bg-white/[0.03] px-4 py-3">
+          <dt className="text-muted-foreground">{t('practice.flow.waiting.questions')}</dt>
+          <dd className="mt-1 font-semibold text-foreground">{questionCount}</dd>
+        </div>
+      </dl>
+
+      <div className="rounded-xl border border-satin bg-white/[0.03] p-6 text-center">
         {isLearning ? (
           <LearningWaitingStartPanel
             questionCount={questionCount}
@@ -177,23 +177,14 @@ export const WaitingRoomPage: React.FC = () => {
           </>
         ) : null}
         {!isLearning && status === 'ready' ? (
-          <p className="text-sm text-emerald-400">
+          <p className="text-sm font-medium text-success">
             {t('practice.flow.waiting.ready').replace('{count}', String(questionCount))}
           </p>
         ) : null}
         {!isLearning && status === 'error' ? (
-          <div>
-            <p className="text-sm text-red-400">{t('practice.flow.waiting.error')}</p>
-            <button
-              type="button"
-              className="btn-primary mt-4"
-              onClick={() => navigate(`/interview/${sessionId}/room`)}
-            >
-              {t('practice.flow.waiting.enterAnyway')}
-            </button>
-          </div>
+          <p className="text-sm text-error">{t('practice.flow.waiting.error')}</p>
         ) : null}
       </div>
-    </InterviewFlowShell>
+    </SectionPanel>
   );
-};
+}

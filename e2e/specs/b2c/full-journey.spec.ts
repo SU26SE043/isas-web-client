@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { installMockMedia } from '../../fixtures/media';
-import { completePracticeSetupWizard } from '../../fixtures/practiceWizard';
+import { completeInterviewPreparation, completePracticeSetupWizard } from '../../fixtures/practiceWizard';
 
 test.describe('B2C full journey', () => {
   test.setTimeout(120_000);
@@ -68,11 +68,8 @@ test.describe('B2C full journey', () => {
 
     await installMockMedia(page);
     await completePracticeSetupWizard(page);
-    await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
-    await page.getByRole('button', { name: /^Continue$/i }).click();
-    await expect(page).toHaveURL(/\/device-check/);
-    await page.getByRole('button', { name: /^Continue$/i }).click();
-    await expect(page).toHaveURL(/\/waiting/);
+    await completeInterviewPreparation(page);
+    await page.getByRole('button', { name: /Start interview/i }).click();
     await expect(page).toHaveURL(/\/room/, { timeout: 8_000 });
 
     for (let index = 0; index < 3; index += 1) {

@@ -1,100 +1,12 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useLanguage } from '@/shared/languages';
-import { isCampaignSessionId } from '../types/interviewFlow.types';
-import { useMediaDevices } from '../hooks/useMediaDevices';
-import { useInterviewFlowStore } from '../stores/interviewFlowStore';
-import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
-import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
+import { Navigate, useParams } from 'react-router-dom';
+import { normalizePracticeSessionId } from '../utils/practiceSessionLoad';
 
-export const DeviceCheckPage: React.FC = () => {
-  const { sessionId = '' } = useParams();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  useInterviewFlowSession(sessionId);
-  const { consentAccepted, deviceCheckPassed, setDeviceCheckPassed } = useInterviewFlowStore();
-  const { videoRef, state, errorKey, startPreview, stopStream } = useMediaDevices();
-  const isCampaign = isCampaignSessionId(sessionId);
-
-  useEffect(() => {
-    if (!consentAccepted) {
-      navigate(`/interview/${sessionId}/prepare`, { replace: true });
-    }
-  }, [consentAccepted, navigate, sessionId]);
-
-  useEffect(() => {
-    void startPreview();
-    return () => stopStream();
-  }, [startPreview, stopStream]);
-
-  const handleContinue = () => {
-    if (state !== 'ready') return;
-    setDeviceCheckPassed(sessionId, true);
-    navigate(isCampaign ? `/interview/${sessionId}/terms` : `/interview/${sessionId}/waiting`);
-  };
-
-  const deviceFailed = state === 'denied' || state === 'unavailable';
-
-  return (
-    <InterviewFlowShell
-      sessionId={sessionId}
-      currentStep="device-check"
-      title={t('practice.flow.device.title')}
-      description={t('practice.flow.device.description')}
-      isCampaignSession={isCampaign}
-      failedStep={deviceFailed ? 'device-check' : undefined}
-    >
-      <div className="rounded-xl border border-subtle bg-surface-raised p-6">
-        <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-base">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            playsInline
-            muted
-            aria-label={t('practice.flow.device.previewLabel')}
-          />
-          {state === 'requesting' ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-surface-base/80 text-sm text-muted-foreground">
-              {t('practice.flow.device.requesting')}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="mt-4 space-y-2">
-          <p
-            className={
-              state === 'ready'
-                ? 'text-sm text-success'
-                : deviceFailed
-                  ? 'text-sm text-error'
-                  : 'text-sm text-foreground'
-            }
-          >
-            {state === 'ready'
-              ? t('practice.flow.device.passed')
-              : deviceFailed
-                ? t(errorKey ?? 'practice.flow.device.denied')
-                : t('practice.flow.device.hint')}
-          </p>
-          {deviceCheckPassed ? (
-            <p className="text-sm text-success">{t('practice.flow.device.alreadyPassed')}</p>
-          ) : null}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button type="button" className="btn-secondary" onClick={() => void startPreview()}>
-            {t('practice.flow.device.retry')}
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={state !== 'ready'}
-            onClick={handleContinue}
-          >
-            {t('practice.flow.continue')}
-          </button>
-        </div>
-      </div>
-    </InterviewFlowShell>
-  );
-};
+/** Legacy route — device check now lives in interview preparation step 2. */
+export function DeviceCheckPage() {
+  const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
+  const sessionId = normalizePracticeSessionId(routeSessionId);
+  if (!sessionId) {
+    return <Navigate to="/practice" replace />;
+  }
+  return <Navigate to={`/interview/${sessionId}/prepare?step=device`} replace />;
+}

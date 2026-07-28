@@ -25,9 +25,7 @@ const messages: Record<string, string> = {
   'practice.session.missingSessionId': 'Không tìm thấy mã phiên phỏng vấn.',
   'practice.session.retry': 'Thử lại',
   'practice.session.backToPractice': 'Quay lại luyện tập',
-  'practice.flow.prepare.checklistTitle': 'Danh sách chuẩn bị',
-  'practice.flow.prepare.checklistHint': 'Hãy hoàn tất các bước.',
-  'practice.flow.prepare.checkQuiet': 'Không gian yên tĩnh',
+  'practice.flow.prepare.checkQuiet': 'Không gian yên tĩnh và đủ ánh sáng',
   'practice.flow.prepare.checkCamera': 'Camera sẵn sàng',
   'practice.flow.prepare.checkTime': 'Đủ thời gian',
   'practice.flow.prepare.consentPractice': 'Tôi đã sẵn sàng',
@@ -126,15 +124,14 @@ describe('InterviewPrepPage session loading', () => {
     renderPage();
 
     expect(screen.getByText('Đang tải phiên phỏng vấn...')).toBeInTheDocument();
-    expect(screen.queryByText('Danh sách chuẩn bị')).not.toBeInTheDocument();
+    expect(screen.queryByText('Không gian yên tĩnh và đủ ánh sáng')).not.toBeInTheDocument();
   });
 
   it('loads once with the route session id and renders the session data', async () => {
     mocks.getSession.mockResolvedValue(session);
     renderPage('/interview/session-123/prepare', true);
 
-    expect(await screen.findByText('Danh sách chuẩn bị')).toBeInTheDocument();
-    expect(screen.getByText('FE')).toBeInTheDocument();
+    expect(await screen.findByText('Không gian yên tĩnh và đủ ánh sáng')).toBeInTheDocument();
     expect(screen.queryByText('Không thể tải phiên phỏng vấn')).not.toBeInTheDocument();
     expect(mocks.getSession).toHaveBeenCalledOnce();
     expect(mocks.getSession).toHaveBeenCalledWith('session-123');
@@ -162,7 +159,7 @@ describe('InterviewPrepPage session loading', () => {
     renderPage();
 
     await user.click(await screen.findByRole('button', { name: 'Thử lại' }));
-    expect(await screen.findByText('Danh sách chuẩn bị')).toBeInTheDocument();
+    expect(await screen.findByText('Không gian yên tĩnh và đủ ánh sáng')).toBeInTheDocument();
     expect(mocks.getSession).toHaveBeenCalledTimes(2);
   });
 
