@@ -33,6 +33,8 @@ export function PreparationChecklistStep({
   return (
     <SectionPanel
       icon={<CheckSquare className="size-4" aria-hidden />}
+      title={t('practice.flow.prepare.checklistTitle')}
+      description={t('practice.flow.prepare.checklistHint')}
       footer={
         <FlowWizardNav
           backLabel={t('practice.flow.cancel')}
