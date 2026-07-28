@@ -26,6 +26,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 ## Acceptance Criteria
 
 - `/practice` shows a 6-step setup wizard before the interview engine; confirm creates session + reserves tokens then navigates to prepare.
+- `/interview/:sessionId/prepare` fetches the live session detail once through TanStack Query, validates the route ID, and presents localized loading, `401`, `403`, `404`, generic error, retry, and success states without mock fallback.
 - B2C flow after confirm: prepare consent → device check → waiting room → interview room (skip `/identity`).
 - Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
 - B2C: **no** proctoring banner, tab listeners, periodic snapshots, or violation pause.
@@ -52,4 +53,5 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - `src/features/practice/**` — flow pages, `useInterviewRoomProctoring`, `CandidateCameraPanel`, `useInterviewMedia`
 - E2E: `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts`
 - Phase 6: `HistoryTable`, `certificatePdf`, `SkillBreakdownAccordion`, learning module `getModule` API
+- Practice preparation API fix: focused service/page tests 13/13 pass; Strict Mode mount is deduplicated by the stable query key.
 - B2B reuse: `e2e/specs/b2b/campaign-invite-interview.spec.ts`, `e2e/specs/b2b/full-journey.spec.ts`

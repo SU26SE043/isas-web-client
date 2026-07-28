@@ -27,11 +27,38 @@ import {
   updateLearningSessionQuestions,
 } from './learningPracticeSession.registry';
 import { roadmapPracticeService } from './roadmapPractice.service';
+import { getPracticeSession } from './b2cPracticeSession.service';
 
 let asyncQuestionPollCount = 0;
 const startedSessions = new Set<string>();
 const chunkCounts = new Map<string, number>();
 const proctoringCounts = new Map<string, number>();
+
+function requireSessionId(value: string): string {
+  const sessionId = value.trim();
+  if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+    throw new Error('SESSION_ID_REQUIRED');
+  }
+  return sessionId;
+}
+
+function toLegacySessionStatus(
+  status: string,
+  hasQuestions: boolean,
+): PracticeSession['status'] {
+  const normalized = status.toLowerCase();
+  if (normalized === 'inprogress' || normalized === 'in_progress') return 'in_progress';
+  if (
+    normalized === 'completed' ||
+    normalized === 'submitted' ||
+    normalized === 'scoring' ||
+    normalized === 'scored'
+  ) {
+    return 'completed';
+  }
+  if (normalized === 'generatingquestions' || normalized === 'created') return 'initializing';
+  return hasQuestions ? 'ready' : 'initializing';
+}
 
 export const practiceSessionService = {
   getProctoringConfig(sessionId: string): ProctoringConfig {
@@ -47,11 +74,12 @@ export const practiceSessionService = {
   },
 
   async getSession(sessionId: string): Promise<PracticeSession> {
-    const learning = getLearningPracticeSession(sessionId);
+    const normalizedSessionId = requireSessionId(sessionId);
+    const learning = getLearningPracticeSession(normalizedSessionId);
     if (learning) {
       if (learning.questions.length === 0) {
         try {
-          const detail = await roadmapPracticeService.getPracticeSession(sessionId);
+          const detail = await roadmapPracticeService.getPracticeSession(normalizedSessionId);
           if (detail.questions?.length) {
             const questions = detail.questions.map((item) => ({
               id: item.id,
@@ -69,14 +97,26 @@ export const practiceSessionService = {
     }
 
     if (!usesMockData('practice')) {
-      throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
+      const detail = await getPracticeSession(normalizedSessionId);
+      return {
+        sessionId: detail.id || normalizedSessionId,
+        title: '',
+        description: '',
+        jobCategory: detail.jobCategory ? String(detail.jobCategory) : undefined,
+        status: toLegacySessionStatus(detail.status, detail.questions.length > 0),
+        questions: detail.questions.map((question) => ({
+          id: question.id,
+          content: question.content,
+          timeLimitSeconds: question.timeLimitSec,
+        })),
+      };
     }
 
     await mockDelay(1000);
     return (
-      getDynamicPracticeSession(sessionId) ??
-      MOCK_PRACTICE_SESSIONS[sessionId] ??
-      { ...DEFAULT_PRACTICE_SESSION, sessionId }
+      getDynamicPracticeSession(normalizedSessionId) ??
+      MOCK_PRACTICE_SESSIONS[normalizedSessionId] ??
+      { ...DEFAULT_PRACTICE_SESSION, sessionId: normalizedSessionId }
     );
   },
 

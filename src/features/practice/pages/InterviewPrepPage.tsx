@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
+  AlertCircle,
   Camera,
   CheckSquare,
   ChevronRight,
@@ -9,6 +11,7 @@ import {
   Sun,
 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
@@ -18,6 +21,11 @@ import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
 import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
+import {
+  normalizePracticeSessionId,
+  practiceSessionErrorMessageKey,
+} from '../utils/practiceSessionLoad';
+import { getApiStatusCode } from '@/shared/api/apiError';
 
 const CHECKLIST = [
   { key: 'practice.flow.prepare.checkQuiet', icon: Sun },
@@ -26,51 +34,96 @@ const CHECKLIST = [
 ] as const;
 
 export const InterviewPrepPage: React.FC = () => {
-  const { sessionId = '' } = useParams();
+  const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
+  const sessionId = normalizePracticeSessionId(routeSessionId);
   const navigate = useNavigate();
   const { t } = useLanguage();
-  useInterviewFlowSession(sessionId);
-  const gate = useInterviewGate(sessionId);
+  useInterviewFlowSession(sessionId ?? '');
+  const gate = useInterviewGate(sessionId ?? undefined);
   const { consentAccepted, setConsentAccepted } = useInterviewFlowStore();
-  const [sessionTitle, setSessionTitle] = useState('');
-  const [loadingSession, setLoadingSession] = useState(true);
+  const sessionQuery = useQuery({
+    queryKey: ['practice', 'session', sessionId],
+    queryFn: () => {
+      if (!sessionId) throw new Error('SESSION_ID_REQUIRED');
+      return practiceSessionService.getSession(sessionId);
+    },
+    enabled: Boolean(sessionId),
+    staleTime: 30_000,
+    retryOnMount: false,
+    retry: (failureCount, error) => {
+      const status = getApiStatusCode(error);
+      if (status === 401 || status === 403 || status === 404) return false;
+      return failureCount < 2;
+    },
+  });
 
-  useEffect(() => {
-    let active = true;
-    void practiceSessionService.getSession(sessionId).then((session) => {
-      if (!active) return;
-      setSessionTitle(session.title);
-      setLoadingSession(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, [sessionId]);
-
-  const canContinue = gate.canStart && consentAccepted && !loadingSession;
-  const isCampaignSession = isCampaignSessionId(sessionId);
-  const isLearningSession = isLearningSessionId(sessionId);
-  const learningMeta = isLearningSession ? getLearningPracticeSession(sessionId) : undefined;
+  const canContinue = gate.canStart && consentAccepted && Boolean(sessionQuery.data);
+  const isCampaignSession = Boolean(sessionId && isCampaignSessionId(sessionId));
+  const isLearningSession = Boolean(sessionId && isLearningSessionId(sessionId));
+  const learningMeta = isLearningSession && sessionId
+    ? getLearningPracticeSession(sessionId)
+    : undefined;
   const cancelHref = learningMeta
     ? `/candidate/learning/roadmaps/${learningMeta.roadmapId}`
     : '/candidate/dashboard';
   const consentKey = isCampaignSession
     ? 'practice.flow.prepare.consent'
     : 'practice.flow.prepare.consentPractice';
+  const loadErrorKey = !sessionId
+    ? 'practice.session.missingSessionId'
+    : sessionQuery.isError
+      ? practiceSessionErrorMessageKey(sessionQuery.error)
+      : null;
+  const sessionDescription =
+    sessionQuery.data?.title ||
+    sessionQuery.data?.jobCategory ||
+    t('practice.flow.prepare.description');
+  const handleContinue = () => {
+    if (sessionId) navigate(`/interview/${sessionId}/device-check`);
+  };
+  const handleConsentChange = (checked: boolean) => {
+    if (sessionId) setConsentAccepted(sessionId, checked);
+  };
 
   return (
     <InterviewFlowShell
-      sessionId={sessionId}
+      sessionId={sessionId ?? '--'}
       currentStep="prepare"
       title={t('practice.flow.prepare.title')}
-      description={sessionTitle || t('practice.flow.prepare.description')}
+      description={sessionDescription}
       isCampaignSession={isCampaignSession}
+      failedStep={loadErrorKey ? 'prepare' : undefined}
     >
-      {gate.isLoading || loadingSession ? (
+      {loadErrorKey ? (
+        <div role="alert" className="frame-satin rounded-2xl bg-surface-raised p-6">
+          <AlertCircle className="size-7 text-error" aria-hidden />
+          <h3 className="mt-4 text-lg font-semibold text-foreground">
+            {t('practice.session.loadErrorTitle')}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {t(loadErrorKey)}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {sessionId && sessionQuery.isError ? (
+              <Button type="button" variant="outline" onClick={() => void sessionQuery.refetch()}>
+                {t('practice.session.retry')}
+              </Button>
+            ) : null}
+            <Button
+              render={<Link to="/practice" />}
+              nativeButton={false}
+              variant="ghost"
+            >
+              {t('practice.session.backToPractice')}
+            </Button>
+          </div>
+        </div>
+      ) : gate.isLoading || sessionQuery.isLoading ? (
         <div className="frame-satin flex min-h-[220px] items-center justify-center rounded-2xl">
           <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+          <span className="sr-only">{t('practice.session.loading')}</span>
         </div>
-      ) : (
+      ) : sessionQuery.data ? (
         <div className="space-y-5">
           {!isLearningSession ? (
             <InterviewGatePanel
@@ -92,7 +145,7 @@ export const InterviewPrepPage: React.FC = () => {
                   type="button"
                   className="btn-primary inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2.5"
                   disabled={!canContinue}
-                  onClick={() => navigate(`/interview/${sessionId}/device-check`)}
+                  onClick={handleContinue}
                 >
                   {t('practice.flow.continue')}
                   <ChevronRight className="size-4" aria-hidden />
@@ -120,13 +173,13 @@ export const InterviewPrepPage: React.FC = () => {
                 className="mt-0.5 size-4 rounded border-satin bg-surface-overlay accent-white"
                 checked={consentAccepted}
                 disabled={!gate.canStart}
-                onChange={(event) => setConsentAccepted(sessionId, event.target.checked)}
+                onChange={(event) => handleConsentChange(event.target.checked)}
               />
               <span className="text-sm text-foreground">{t(consentKey)}</span>
             </label>
           </SectionPanel>
         </div>
-      )}
+      ) : null}
     </InterviewFlowShell>
   );
 };
