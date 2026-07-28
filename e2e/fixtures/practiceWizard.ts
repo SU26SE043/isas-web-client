@@ -1,22 +1,36 @@
 import { expect, type Page } from '@playwright/test';
 
+/**
+ * Drive the current 7-step B2C practice setup wizard through to /prepare.
+ * CV/JD are optional; question count is set to 3 to match happy-path submit loops.
+ */
 export async function completePracticeSetupWizard(page: Page): Promise<string> {
   await page.goto('/practice');
-  await expect(page.getByRole('button', { name: /Frontend Development/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Choose a job category/i })).toBeVisible({
+    timeout: 15_000,
+  });
 
-  await page.getByRole('button', { name: /Frontend Development/i }).click();
+  await page.getByRole('button', { name: /^Frontend Developer$/i }).click();
   await page.getByRole('button', { name: /^Next$/i }).click();
 
-  await page.getByRole('button', { name: /^Junior$/i }).click();
+  // CV optional
+  await expect(page.getByRole('button', { name: /^Next$/i })).toBeEnabled({ timeout: 10_000 });
   await page.getByRole('button', { name: /^Next$/i }).click();
 
-  await expect(page.getByText('nguyen-van-a-cv.pdf')).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: /nguyen-van-a-cv\.pdf/i }).click();
+  // JD optional
   await page.getByRole('button', { name: /^Next$/i }).click();
 
+  // Time per question (default 120s is fine)
   await page.getByRole('button', { name: /^Next$/i }).click();
 
-  await expect(page.getByLabel(/^Criterion$/i).first()).toBeVisible({ timeout: 10_000 });
+  // Question count → 3 (matches interview-happy-path submit loop)
+  await page.getByRole('spinbutton', { name: /Question count/i }).fill('3');
+  await page.getByRole('button', { name: /^Next$/i }).click();
+
+  // Device check (requires installMockMedia)
+  await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible({
+    timeout: 15_000,
+  });
   await page.getByRole('button', { name: /^Next$/i }).click();
 
   await page.getByRole('button', { name: /Start interview/i }).click();

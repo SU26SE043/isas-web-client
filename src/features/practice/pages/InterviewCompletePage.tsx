@@ -6,8 +6,8 @@ import { useLanguage } from '@/shared/languages';
 import { getPracticeSession } from '../services/b2cPracticeSession.service';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
-import { PracticeLiveResultReport } from '../components/result/PracticeLiveResultReport';
 import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
+import { resultService } from '../services/result.service';
 
 export function InterviewCompletePage() {
   const { sessionId = '' } = useParams();
@@ -15,6 +15,7 @@ export function InterviewCompletePage() {
   const resetFlow = useInterviewFlowStore((state) => state.reset);
   const updateSession = useB2cPracticeInterviewStore((s) => s.updateSession);
   const isLegacy = isCampaignSessionId(sessionId) || isLearningSessionId(sessionId);
+  const assessmentId = `assessment-${sessionId}`;
 
   const query = useQuery({
     queryKey: ['practice-session', sessionId],
@@ -33,6 +34,11 @@ export function InterviewCompletePage() {
   useEffect(() => {
     if (session) updateSession(session);
   }, [session, updateSession]);
+
+  useEffect(() => {
+    if (!sessionId || isLegacy) return;
+    resultService.registerPendingAssessment(assessmentId);
+  }, [assessmentId, isLegacy, sessionId]);
 
   if (isLegacy) {
     return (
@@ -60,7 +66,7 @@ export function InterviewCompletePage() {
     );
   }
 
-  if (!isScored || !session?.result) {
+  if (!isScored) {
     return (
       <div className="page-container page-section flex min-h-screen items-center justify-center">
         <div className="w-full max-w-lg space-y-6 rounded-xl border border-subtle bg-surface-raised p-8 text-center">
@@ -83,9 +89,32 @@ export function InterviewCompletePage() {
   }
 
   return (
-    <PracticeLiveResultReport
-      session={session}
-      onLeave={() => resetFlow(sessionId)}
-    />
+    <div className="page-container page-section flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-lg rounded-xl border border-subtle bg-surface-raised p-8 text-center">
+        <h1 className="heading-primary text-2xl">{t('practice.flow.complete.title')}</h1>
+        <p className="body-text mt-3 text-sm text-muted-foreground">
+          {t('practice.flow.complete.description')}
+        </p>
+        <p className="mt-4 text-sm text-foreground">
+          {t('practice.flow.complete.assessmentId').replace('{id}', assessmentId)}
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link
+            to={`/practice/result?assessmentId=${encodeURIComponent(assessmentId)}`}
+            className="btn-primary inline-flex justify-center"
+            onClick={() => resetFlow(sessionId)}
+          >
+            {t('practice.flow.complete.viewResult')}
+          </Link>
+          <Link
+            to="/candidate/practice/history"
+            className="btn-secondary inline-flex justify-center"
+            onClick={() => resetFlow(sessionId)}
+          >
+            {t('practice.flow.complete.viewHistory')}
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import type {
   InterviewHistoryItem,
   InterviewHistoryQuery,
   InterviewHistoryResponse,
+  PracticeSessionHistoryItem,
   PracticeSessionHistoryPage,
 } from '../types/history.types';
 import { MOCK_INTERVIEW_HISTORY } from '../mocks/history.fixtures';
@@ -22,10 +23,43 @@ function getVisibleInterviews(includeDeleted: boolean) {
   return historyStore.filter((item) => includeDeleted || !item.deletedAt);
 }
 
+function mapInterviewItemToPracticeHistoryItem(
+  item: InterviewHistoryItem,
+): PracticeSessionHistoryItem {
+  const statusByLegacy: Record<InterviewHistoryItem['status'], string> = {
+    completed: 'Scored',
+    'in-progress': 'InProgress',
+    pending: 'Scoring',
+  };
+
+  return {
+    id: item.id,
+    status: item.rawStatus ?? statusByLegacy[item.status] ?? item.status,
+    jobCategory: item.jobCategory ?? item.jobTitle,
+    createdAt: item.createdAt ?? item.date,
+    completedAt:
+      item.completedAt ?? (item.status === 'completed' ? item.date : null),
+    overallScore: item.overallScoreNullable ?? item.overallScore,
+  };
+}
+
 export async function getPracticeSessionHistory(
   params: GetPracticeSessionHistoryParams = {},
 ): Promise<PracticeSessionHistoryPage> {
   const limit = clampPracticeHistoryLimit(params.limit);
+
+  if (usesMockData('practice')) {
+    await mockDelay(300);
+    const all = getVisibleInterviews(false).map(mapInterviewItemToPracticeHistoryItem);
+    const start = params.cursor ? Number.parseInt(params.cursor, 10) || 0 : 0;
+    const items = all.slice(start, start + limit);
+    const nextOffset = start + limit;
+    return {
+      items,
+      nextCursor: nextOffset < all.length ? String(nextOffset) : null,
+    };
+  }
+
   const response = await apiClient.get<unknown>(b2cPracticeSessionEndpoints.history, {
     params: {
       cursor: params.cursor || undefined,

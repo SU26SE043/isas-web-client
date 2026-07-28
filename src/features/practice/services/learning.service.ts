@@ -125,8 +125,8 @@ export const learningService = {
 
   /**
    * Create personalized roadmap.
-   * Always calls live POST `/api/v1/interview/practice/roadmaps`.
-   * Body: `{ jobCategory, level, cvId? }` — reportIds intentionally omitted until API supports them.
+   * Live: POST `/api/v1/interview/practice/roadmaps`.
+   * Mock / Playwright: in-app fixture so E2E can finish without a gateway.
    */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
     if (!input.domainId || !input.targetLevel) {
@@ -134,6 +134,27 @@ export const learningService = {
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
+
+    if (usesMockData('practice')) {
+      await mockDelay(500);
+      const created = normalizeCreateRoadmapResponse(
+        {
+          id: `roadmap-${crypto.randomUUID().slice(0, 8)}`,
+          regenerateCount: 0,
+          regenerateLimit: MOCK_ROADMAP.regenerateLimit,
+        },
+        { ...input, targetLevel: level },
+      );
+      latestCreatedRoadmap = created;
+      roadmapRegenerateCount = created.regenerateCount;
+      await learningPathService.registerCreatedRoadmap({
+        ...input,
+        targetLevel: level,
+        roadmapId: created.id ?? `roadmap-mock`,
+        reportIds: input.reportIds ?? [],
+      });
+      return created;
+    }
 
     const body: CreateRoadmapApiRequest = {
       jobCategory: resolveJobCategoryFromDomainId(input.domainId),

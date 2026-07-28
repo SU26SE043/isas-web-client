@@ -24,13 +24,19 @@ const statusClass: Record<AnswerCardStatus, string> = {
 interface AnswerRecorderCardProps {
   status: AnswerCardStatus;
   disabled?: boolean;
+  submitDisabled?: boolean;
+  isSubmitting?: boolean;
   onOpenRecorder: () => void;
+  onSubmitAnswer?: () => void;
 }
 
 export function AnswerRecorderCard({
   status,
   disabled,
+  submitDisabled,
+  isSubmitting,
   onOpenRecorder,
+  onSubmitAnswer,
 }: AnswerRecorderCardProps) {
   const { t } = useLanguage();
   const alreadySubmitted = status === 'submitted';
@@ -62,16 +68,28 @@ export function AnswerRecorderCard({
           </p>
         </div>
       </div>
-      <button
-        type="button"
-        className="btn-primary w-full shrink-0"
-        disabled={disabled || status === 'submitting'}
-        onClick={onOpenRecorder}
-      >
-        {alreadySubmitted
-          ? t('practice.audioRecorder.openAgain')
-          : t('practice.audioRecorder.open')}
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          className="btn-primary w-full shrink-0"
+          disabled={disabled || status === 'submitting'}
+          onClick={onOpenRecorder}
+        >
+          {alreadySubmitted
+            ? t('practice.audioRecorder.openAgain')
+            : t('practice.audioRecorder.open')}
+        </button>
+        {onSubmitAnswer ? (
+          <button
+            type="button"
+            className="btn-secondary w-full shrink-0"
+            disabled={disabled || submitDisabled || isSubmitting}
+            onClick={onSubmitAnswer}
+          >
+            {isSubmitting ? t('practice.room.submitting') : t('practice.room.submitAnswer')}
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }

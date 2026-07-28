@@ -124,9 +124,8 @@ export function usePracticeSetupFlow() {
       const session = await createPracticeSession(payload);
       hydrateFromSession(session);
       resetInterviewFlow(session.id);
-      useInterviewFlowStore.getState().setDeviceCheckPassed(session.id, true);
-      useInterviewFlowStore.getState().setConsentAccepted(session.id, true);
-      navigate(`/interview/${session.id}/room`, { replace: true });
+      // Prep → device-check → waiting → room (E2E + product consent gate).
+      navigate(`/interview/${session.id}/prepare`, { replace: true });
     } catch (error) {
       const mapped = mapCreatePracticeSessionError(error);
       setCreateErrorCode(mapped.code);
