@@ -6,6 +6,8 @@ export const authEndpoints = {
   registerOrg: `${AUTH_API_PREFIX}/register-org`,
   login: `${AUTH_API_PREFIX}/login`,
   loginGoogle: `${AUTH_API_PREFIX}/login-google`,
+  loginGoogleCallback: `${AUTH_API_PREFIX}/login-google-callback`,
+  googleExchange: `${AUTH_API_PREFIX}/google/exchange`,
   loginSso: `${AUTH_API_PREFIX}/login-sso`,
   refresh: `${AUTH_API_PREFIX}/refresh`,
   logout: `${AUTH_API_PREFIX}/logout`,

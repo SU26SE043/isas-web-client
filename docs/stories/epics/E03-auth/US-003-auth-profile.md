@@ -34,6 +34,9 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - [x] E2E smoke: `e2e/specs/smoke/auth-login.spec.ts`.
 - [x] Public Candidate and Organization registration use `/register` and `/register-org`, persist returned tokens, load `/me`, and redirect by role.
 - [x] Login distinguishes invalid credentials, account lockout, and banned-account `403` without creating a session.
+- [x] Refresh parses and persists the complete rotated token trio; `401` clears the revoked session.
+- [x] Google OAuth uses browser redirects and a one-time callback code exchange; tokens are never accepted from URL query parameters.
+- [x] Google callback reasons, including suspended accounts, render stable bilingual feedback.
 
 ## Design Notes
 
@@ -56,3 +59,5 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - `src/routes/groups/authRoutes.tsx`
 - `e2e/specs/smoke/auth-login.spec.ts`
 - `src/features/auth/utils/authErrors.test.ts`
+- `src/features/auth/services/authService.tokens.test.ts`
+- `e2e/specs/smoke/auth-google.spec.ts`

@@ -377,7 +377,7 @@ flowchart TB
 | **Components** | AuthModal, LoginForm, RegisterForm, MFAChallenge, PasswordStrengthMeter, SSOButton, SocialLoginButton |
 | **Shared** | `useAuth`, `AuthProvider`, `session-manager` |
 | **State** | JWT in HttpOnly cookie; user profile in React Query; idle timer |
-| **API** | Auth: register, login, logout, refresh, verify-email, forgot/reset password, MFA verify, SSO redirect |
+| **API** | Auth: register, login, logout, refresh, Google browser redirect + one-time code exchange, verify-email, forgot/reset password, MFA verify, SSO redirect |
 | **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password/:token`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
 | **Layout** | `AuthLayout` (centered card) |
 | **Validation** | VR-001–002, VR-005; SEC-012 password 12+ chars |

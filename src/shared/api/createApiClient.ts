@@ -51,6 +51,7 @@ const isPublicAuthUrl = (url?: string) =>
         url.includes('/auth/login') ||
         url.includes('/auth/register') ||
         url.includes('/auth/register-org') ||
+        url.includes('/auth/google/exchange') ||
         url.includes('/auth/forgot-password') ||
         url.includes('/auth/verify-otp') ||
         url.includes('/auth/reset-password')),
