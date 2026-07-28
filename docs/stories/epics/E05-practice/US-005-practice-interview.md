@@ -2,7 +2,7 @@
 
 ## Status
 
-implemented
+in_progress
 
 ## Lane
 
@@ -33,6 +33,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - B2B campaign sessions: terms gate → identity → camera always on → periodic face capture (mock) → violation pause → auto-submit at max violations.
 - Flow progress persisted per session in `sessionStorage`.
 - Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap preview via `learningService`, error/loading states.
+- Post-interview result uses `/practice/result?sessionId=<guid>` and `GET /api/v1/interview/practice/sessions/{sessionId}`. Invalid or prefixed IDs never call the API; pending evaluation polls every 3s and stops on `Scored` or failed status; `401`, `403`, `404`, generation failure, and generic failures have distinct localized states.
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
 - Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
@@ -54,4 +55,5 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - E2E: `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts`
 - Phase 6: `HistoryTable`, `certificatePdf`, `SkillBreakdownAccordion`, learning module `getModule` API
 - Practice preparation API fix: focused service/page tests 13/13 pass; Strict Mode mount is deduplicated by the stable query key.
+- Practice result API fix: focused post-interview redirect/service/page suite passes; frontend-generated `assessment-*` IDs removed from the live flow.
 - B2B reuse: `e2e/specs/b2b/campaign-invite-interview.spec.ts`, `e2e/specs/b2b/full-journey.spec.ts`

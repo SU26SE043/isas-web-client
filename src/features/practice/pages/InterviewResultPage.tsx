@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { useInterviewResult } from '../hooks/useInterviewResult';
 import { GapAnalysisList } from '../components/GapAnalysisList';
@@ -11,41 +11,23 @@ import { ReportTabs, type ReportTabId } from '../components/result/ReportTabs';
 import { ResultScoringPanel } from '../components/result/ResultScoringPanel';
 import { RoadmapTimeline } from '../components/learning/RoadmapTimeline';
 import { learningService } from '../services/learning.service';
-import { ReserveSettleBanner } from '@/features/payment/components/ReserveSettleBanner';
-import { useTokenSettlement } from '@/features/payment/hooks/useTokenSettlement';
-import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
 import type { RoadmapResponse } from '../types/learning.types';
 
 export const InterviewResultPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<ReportTabId>('overview');
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
   const [roadmapError, setRoadmapError] = useState(false);
 
-  const sessionId = searchParams.get('sessionId');
-  const assessmentId = searchParams.get('assessmentId');
-  const resultId = id ?? assessmentId ?? (sessionId ? `assessment-${sessionId}` : null);
+  const resultId = id ?? null;
   const isFromHistory = Boolean(id);
-  const isPostInterview = Boolean(assessmentId || sessionId) && !isFromHistory;
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
-
-  const settleSessionId = useMemo(() => {
-    if (sessionId) return sessionId;
-    if (assessmentId?.startsWith('assessment-')) return assessmentId.replace('assessment-', '');
-    return null;
-  }, [assessmentId, sessionId]);
 
   const { result, state, error } = useInterviewResult({
     resultId: resultId ?? '',
-    pollWhenScoring: isPostInterview,
-  });
-
-  useTokenSettlement({
-    sessionId: settleSessionId,
-    enabled: isPostInterview && state === 'ready',
+    pollWhenScoring: false,
   });
 
   useEffect(() => {
@@ -121,13 +103,6 @@ export const InterviewResultPage: React.FC = () => {
                 </button>
                 <span className="text-muted-foreground">{'>'}</span>
               </>
-            ) : isPostInterview ? (
-              <>
-                <Link to="/candidate/dashboard" className="text-foreground hover:underline">
-                  {t('practice.flow.backToDashboard')}
-                </Link>
-                <span className="text-muted-foreground">{'>'}</span>
-              </>
             ) : null}
             <span className="text-muted-foreground">{t('practice.result.breadcrumb')}</span>
             {result?.certificateId ? (
@@ -166,13 +141,6 @@ export const InterviewResultPage: React.FC = () => {
 
         {state === 'ready' && result ? (
           <div className="space-y-8">
-            {isPostInterview ? (
-              <ReserveSettleBanner
-                mode="settled"
-                reservedTokens={PRACTICE_RESERVE_ESTIMATE}
-                actualTokens={MOCK_SETTLE_ACTUAL_TOKENS}
-              />
-            ) : null}
             <ReportTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
             {activeTab === 'overview' ? (

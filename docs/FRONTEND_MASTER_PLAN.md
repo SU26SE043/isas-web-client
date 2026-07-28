@@ -469,9 +469,9 @@ flowchart TB
 | **Features** | F-RESULT-001–005, F-LEARN-001–004, F-HIST-001 |
 | **Components** | ScoreDial, RadarChart, SkillBreakdownAccordion, RoadmapTimeline, LearningModuleCard, ProgressDashboard, LeaderboardTable, AchievementBadge, CertificateViewer, HistoryTable |
 | **Shared** | `ReportTabs` (Overview/Breakdown/Roadmap) |
-| **State** | Poll assessment status until `scored`; cache reports |
-| **API** | Assessment results, roadmap, learning modules, certificates, history list |
-| **Routing** | `/candidate/results/:id`, `/candidate/learning`, `/candidate/learning/:moduleId`, `/candidate/progress`, `/candidate/certificates/:id`, `/candidate/history` |
+| **State** | B2C live flow polls practice session detail every 3s while evaluation is pending and stops on `Scored`/failed; legacy report surfaces retain their existing cache behavior |
+| **API** | B2C result: `GET /api/v1/interview/practice/sessions/{sessionId}`; roadmap, learning modules, certificates, history list |
+| **Routing** | B2C post-interview `/practice/result?sessionId=<guid>`; `/candidate/results/:id`, `/candidate/learning`, `/candidate/learning/:moduleId`, `/candidate/progress`, `/candidate/certificates/:id`, `/candidate/history` |
 | **Layout** | `CandidateDashboardLayout` |
 | **Validation** | Roadmap regen limit (BRL-026); learning pass 80% (BRL-011) |
 | **Error** | Score not ready → polling UI |

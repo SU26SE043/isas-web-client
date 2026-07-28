@@ -19,9 +19,10 @@ describe('getPracticeSession live API', () => {
   });
 
   it('calls the encoded session endpoint and maps the direct response object', async () => {
+    const sessionId = '685d10e7-af3c-4971-a207-54abfb6d7dee';
     vi.mocked(apiClient.get).mockResolvedValue({
       data: {
-        id: 'session/id',
+        id: sessionId,
         status: 'Ready',
         jobCategory: 'FE',
         questions: [
@@ -38,16 +39,24 @@ describe('getPracticeSession live API', () => {
       },
     });
 
-    const result = await getPracticeSession('session/id');
+    const result = await getPracticeSession(sessionId);
 
     expect(apiClient.get).toHaveBeenCalledWith(
-      '/api/v1/interview/practice/sessions/session%2Fid',
+      `/api/v1/interview/practice/sessions/${sessionId}`,
     );
     expect(result).toMatchObject({
-      id: 'session/id',
+      id: sessionId,
       status: 'Ready',
       jobCategory: 'FE',
       questions: [{ id: 'question-1', timeLimitSec: 120 }],
     });
+  });
+
+  it('rejects a prefixed assessment id without calling the API', async () => {
+    await expect(
+      getPracticeSession('assessment-685d10e7-af3c-4971-a207-54abfb6d7dee'),
+    ).rejects.toThrow('INVALID_PRACTICE_SESSION_ID');
+
+    expect(apiClient.get).not.toHaveBeenCalled();
   });
 });

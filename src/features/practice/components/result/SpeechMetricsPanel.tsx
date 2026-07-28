@@ -1,20 +1,37 @@
-import { AudioLines, Info } from 'lucide-react';
+import {
+  AudioLines,
+  Clock3,
+  Ellipsis,
+  Gauge,
+  Hash,
+  Info,
+  MessageSquareMore,
+  MicVocal,
+  TimerReset,
+  VolumeX,
+  type LucideIcon,
+} from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSpeakingMetrics } from '../../types/b2cPracticeSession.types';
 
-function Metric({
-  label,
-  value,
-  note,
-}: {
+type MetricRow = {
   label: string;
   value: string;
   note?: string | null;
-}) {
+  icon: LucideIcon;
+  tone: string;
+};
+
+function Metric({ label, value, note, icon: Icon, tone }: MetricRow) {
   return (
-    <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-semibold tabular-nums text-foreground">{value}</p>
+    <div className="frame-satin-soft min-w-0 rounded-lg p-3">
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex size-7 items-center justify-center rounded-lg bg-white/5 ${tone}`}>
+          <Icon className="size-4" aria-hidden />
+        </span>
+        <p className="text-xs leading-snug text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-2 text-lg font-semibold tabular-nums text-foreground">{value}</p>
       {note ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{note}</p> : null}
     </div>
   );
@@ -31,14 +48,15 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
   const fillerBreakdown = Object.entries(metrics.fillerBreakdown ?? {}).filter(
     ([, count]) => count != null && Number.isFinite(count),
   );
-
-  const rows: Array<{ label: string; value: string; note?: string | null }> = [];
+  const rows: MetricRow[] = [];
 
   const audioDuration = formatOptionalNumber(metrics.audioDurationSec);
   if (audioDuration != null) {
     rows.push({
       label: t('practice.result.audioDuration'),
       value: t('practice.result.secondsValue').replace('{{n}}', audioDuration),
+      icon: Clock3,
+      tone: 'text-info-light',
     });
   }
 
@@ -47,12 +65,19 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
     rows.push({
       label: t('practice.result.speechDuration'),
       value: t('practice.result.secondsValue').replace('{{n}}', speechSec),
+      icon: MicVocal,
+      tone: 'text-[var(--chart-cat-5)]',
     });
   }
 
   const wordCount = formatOptionalNumber(metrics.wordCount);
   if (wordCount != null) {
-    rows.push({ label: t('practice.result.wordCount'), value: wordCount });
+    rows.push({
+      label: t('practice.result.wordCount'),
+      value: wordCount,
+      icon: Hash,
+      tone: 'text-[var(--chart-cat-6)]',
+    });
   }
 
   const speechRate = formatOptionalNumber(metrics.speechRate);
@@ -61,6 +86,8 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
       label: t('practice.result.speechRate'),
       value: t('practice.result.speechRateValue').replace('{{n}}', speechRate),
       note: metrics.speechRateNote,
+      icon: Gauge,
+      tone: 'text-warning-light',
     });
   }
 
@@ -70,6 +97,8 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
       label: t('practice.result.longestPause'),
       value: t('practice.result.secondsValue').replace('{{n}}', longestPause),
       note: metrics.longestPauseNote,
+      icon: TimerReset,
+      tone: 'text-[var(--chart-cat-4)]',
     });
   }
 
@@ -79,6 +108,8 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
       label: t('practice.result.hesitations'),
       value: t('practice.result.timesValue').replace('{{n}}', pauseCount),
       note: metrics.hesitationNote,
+      icon: MessageSquareMore,
+      tone: 'text-[var(--chart-cat-6)]',
     });
   }
 
@@ -88,6 +119,8 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
       label: t('practice.result.silenceRatio'),
       value: `${silenceRatio}%`,
       note: metrics.silenceRatioNote,
+      icon: VolumeX,
+      tone: 'text-[var(--chart-cat-4)]',
     });
   }
 
@@ -97,6 +130,8 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
       label: t('practice.result.fillerWords'),
       value: t('practice.result.fillerValue').replace('{{n}}', fillerCount),
       note: metrics.fillerWordNote,
+      icon: Ellipsis,
+      tone: 'text-[var(--chart-cat-6)]',
     });
   }
 
@@ -105,22 +140,24 @@ export function SpeechMetricsPanel({ metrics }: { metrics: PracticeSpeakingMetri
     rows.push({
       label: t('practice.result.fillerPer100Words'),
       value: fillerPer100,
+      icon: AudioLines,
+      tone: 'text-[var(--chart-cat-5)]',
     });
   }
 
   return (
-    <section className="rounded-xl border border-satin bg-surface-overlay p-4">
+    <section className="rounded-xl border border-satin bg-surface-overlay p-3 sm:p-4">
       <h4 className="flex items-center gap-2 font-semibold text-foreground">
-        <AudioLines className="size-4 text-info" aria-hidden />
+        <AudioLines className="size-4 text-[var(--chart-cat-6)]" aria-hidden />
         {t('practice.result.speakingMetrics')}
       </h4>
 
       {rows.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">{t('practice.result.metricsEmpty')}</p>
       ) : (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {rows.map((row) => (
-            <Metric key={row.label} label={row.label} value={row.value} note={row.note} />
+            <Metric key={row.label} {...row} />
           ))}
         </div>
       )}

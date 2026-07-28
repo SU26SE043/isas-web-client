@@ -272,6 +272,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.collapseQuestion': 'Thu gọn câu hỏi',
     'practice.result.expandQuestion': 'Mở rộng câu hỏi',
     'practice.result.noCriterionComment': 'Chưa có nhận xét chi tiết cho tiêu chí này.',
+    'practice.result.invalidSessionTitle': 'Không tìm thấy phiên phỏng vấn',
+    'practice.result.invalidSessionDescription':
+      'Đường dẫn kết quả không hợp lệ hoặc phiên phỏng vấn không còn tồn tại.',
+    'practice.result.unauthorizedTitle': 'Bạn cần đăng nhập để xem báo cáo',
+    'practice.result.unauthorizedDescription':
+      'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi mở kết quả phỏng vấn.',
     'practice.result.forbiddenTitle': 'Bạn không có quyền xem báo cáo này',
     'practice.result.forbiddenDescription': 'Session này không thuộc tài khoản hiện tại hoặc quyền truy cập đã bị hạn chế.',
     'practice.result.notFoundTitle': 'Không tìm thấy buổi luyện',
@@ -279,6 +285,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.notReadyTitle': 'Báo cáo chưa sẵn sàng',
     'practice.result.notReadyDescription':
       'Hệ thống chưa hoàn tất việc đánh giá buổi luyện này. Vui lòng quay lại sau.',
+    'practice.result.generationFailedTitle': 'Không thể tạo báo cáo phỏng vấn',
+    'practice.result.generationFailedDescription':
+      'Hệ thống không thể hoàn tất việc đánh giá phiên phỏng vấn này.',
     'practice.result.loadErrorTitle': 'Không thể tải báo cáo',
     'practice.result.loadErrorDescription':
       'Đã xảy ra lỗi khi tải chi tiết buổi luyện. Vui lòng thử lại.',
@@ -1262,6 +1271,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.collapseQuestion': 'Collapse question',
     'practice.result.expandQuestion': 'Expand question',
     'practice.result.noCriterionComment': 'No detailed feedback is available for this criterion.',
+    'practice.result.invalidSessionTitle': 'Interview session not found',
+    'practice.result.invalidSessionDescription':
+      'The result link is invalid or the interview session no longer exists.',
+    'practice.result.unauthorizedTitle': 'Sign in to view this report',
+    'practice.result.unauthorizedDescription':
+      'Your session has expired. Sign in again, then reopen the interview result.',
     'practice.result.forbiddenTitle': 'You cannot view this report',
     'practice.result.forbiddenDescription': 'This session does not belong to the current account or access has been restricted.',
     'practice.result.notFoundTitle': 'Practice session not found',
@@ -1269,6 +1284,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.notReadyTitle': 'Report is not ready',
     'practice.result.notReadyDescription':
       'The system has not finished evaluating this practice session yet. Please come back later.',
+    'practice.result.generationFailedTitle': 'Unable to generate interview report',
+    'practice.result.generationFailedDescription':
+      'The system could not finish evaluating this interview session.',
     'practice.result.loadErrorTitle': 'Unable to load report',
     'practice.result.loadErrorDescription':
       'Something went wrong while loading this practice session. Please try again.',

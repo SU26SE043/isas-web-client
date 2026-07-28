@@ -234,7 +234,7 @@ export const practiceSessionService = {
     await mockDelay(1200);
     startedSessions.delete(sessionId);
 
-    const assessmentId = `assessment-${sessionId}`;
+    const assessmentId = sessionId;
     resultService.registerPendingAssessment(assessmentId);
 
     return {
