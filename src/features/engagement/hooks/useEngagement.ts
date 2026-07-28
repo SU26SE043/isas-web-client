@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getApiStatusCode } from '@/shared/api/apiError';
 import { engagementService } from '../services/engagement.service';
-import type { EngagementScope, NotificationPreferences, PlatformNotification, SupportTicket, SupportTicketInput, TeamInviteInput, TeamMember } from '../types/engagement.types';
+import type { EngagementScope, NotificationPreferences, PlatformNotification, SupportTicket, SupportTicketInput, TeamInviteInput, TeamMember, TeamRole } from '../types/engagement.types';
 
 export function useEngagement(scope: EngagementScope) {
   const [notifications, setNotifications] = useState<PlatformNotification[]>([]);
@@ -45,21 +46,69 @@ export function useEngagement(scope: EngagementScope) {
 export function useEmployerTeam() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setIsLoading(true);
+    setErrorKey(null);
     try {
       setTeam(await engagementService.listTeam());
+    } catch {
+      setErrorKey('engagement.team.error.load');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const invite = useCallback(async (input: TeamInviteInput) => setTeam(await engagementService.inviteTeamMember(input)), []);
+  const invite = useCallback(async (input: TeamInviteInput) => {
+    setIsMutating(true);
+    setErrorKey(null);
+    try {
+      const member = await engagementService.inviteTeamMember(input);
+      setTeam((current) => [member, ...current.filter((item) => item.userId !== member.userId)]);
+    } catch (error) {
+      setErrorKey(
+        getApiStatusCode(error) === 409
+          ? 'engagement.team.error.emailExists'
+          : getApiStatusCode(error) === 403
+            ? 'engagement.team.error.forbidden'
+            : 'engagement.team.error.invite',
+      );
+      throw error;
+    } finally {
+      setIsMutating(false);
+    }
+  }, []);
+
+  const updateRole = useCallback(async (userId: string, orgRole: TeamRole) => {
+    setIsMutating(true);
+    setErrorKey(null);
+    try {
+      const member = await engagementService.updateTeamMemberRole(userId, { orgRole });
+      setTeam((current) => current.map((item) => (item.userId === userId ? member : item)));
+    } catch (error) {
+      const status = getApiStatusCode(error);
+      setErrorKey(
+        status === 400
+          ? 'engagement.team.error.invalidRole'
+          : status === 403
+            ? 'engagement.team.error.forbidden'
+            : status === 404
+              ? 'engagement.team.error.notFound'
+              : status === 409
+                ? 'engagement.team.error.lastAdmin'
+                : 'engagement.team.error.update',
+      );
+      throw error;
+    } finally {
+      setIsMutating(false);
+    }
+  }, []);
 
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  return { team, isLoading, invite };
+  return { team, isLoading, isMutating, errorKey, invite, updateRole, reload };
 }
