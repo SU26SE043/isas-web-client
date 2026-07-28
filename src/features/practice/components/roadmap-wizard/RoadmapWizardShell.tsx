@@ -13,22 +13,18 @@ const ROADMAP_WIZARD_STEPS = [
   {
     id: 'domain',
     titleKey: 'practice.roadmapWizard.steps.domain',
-    descKey: 'practice.roadmapWizard.stepDesc.domain',
   },
   {
     id: 'reports',
     titleKey: 'practice.roadmapWizard.steps.reports',
-    descKey: 'practice.roadmapWizard.stepDesc.reports',
   },
   {
     id: 'level',
     titleKey: 'practice.roadmapWizard.steps.level',
-    descKey: 'practice.roadmapWizard.stepDesc.level',
   },
   {
     id: 'confirm',
     titleKey: 'practice.roadmapWizard.steps.confirm',
-    descKey: 'practice.roadmapWizard.stepDesc.confirm',
   },
 ] as const;
 
@@ -39,25 +35,23 @@ interface RoadmapWizardShellProps {
   currentStep: number;
   /** Extra heading shown on the first step only. */
   introTitle?: string;
-  introDescription?: string;
   children: React.ReactNode;
 }
 
 export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
   currentStep,
   introTitle,
-  introDescription,
   children,
 }) => {
   const { t } = useLanguage();
   const showIntro = currentStep === 0 && Boolean(introTitle);
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] justify-center overflow-y-auto bg-surface-base px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
+    <div className="flex min-h-dvh justify-center overflow-y-auto bg-transparent px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
         <nav
           aria-label={t('practice.roadmapWizard.stepperLabel')}
-          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[280px] lg:self-start"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-8 lg:w-[240px] lg:self-start"
         >
           <h1 className="sr-only">
             {t('practice.roadmapWizard.stepOf')
@@ -82,13 +76,10 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
                       />
                     ) : null}
                   </div>
-                  <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
-                    <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
+                  <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-8')}>
+                    <span className={cn('block text-base font-semibold leading-snug', flowStepLabelClass(status))}>
                       {t(step.titleKey)}
                     </span>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {t(step.descKey)}
-                    </p>
                   </div>
                 </li>
               );
@@ -100,18 +91,15 @@ export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
           <div className="shrink-0">
             <Link
               to="/candidate/dashboard"
-              className="text-sm text-muted-foreground transition hover:text-foreground"
+              className="text-sm font-medium text-text-secondary transition hover:text-text-primary"
             >
               {t('practice.flow.backToDashboard')}
             </Link>
 
             {showIntro ? (
-              <>
-                <h2 className="heading-primary mt-4 text-3xl text-foreground sm:text-4xl">{introTitle}</h2>
-                {introDescription ? (
-                  <p className="body-text mt-2 max-w-3xl">{introDescription}</p>
-                ) : null}
-              </>
+              <h2 className="mt-4 text-4xl font-bold tracking-tight text-text-primary sm:text-5xl">
+                {introTitle}
+              </h2>
             ) : null}
           </div>
 

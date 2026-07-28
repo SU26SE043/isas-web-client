@@ -15,7 +15,6 @@ export function RoadmapWizardPage() {
     <RoadmapWizardShell
       currentStep={flow.step}
       introTitle={flow.step === 0 ? t('practice.roadmapWizard.createTitle') : undefined}
-      introDescription={flow.step === 0 ? t('practice.roadmapWizard.subtitle') : undefined}
     >
       {flow.submitError ? (
         <p className="mb-4 text-sm text-error" role="alert">
