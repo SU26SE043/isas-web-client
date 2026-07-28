@@ -19,11 +19,13 @@ export function formatVnd(value: number, locale = 'vi-VN'): string {
 }
 
 export function formatDateTime(value: string | null | undefined, locale = 'vi-VN'): string {
-  if (!value) return '—';
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
   return new Intl.DateTimeFormat(locale, {
     dateStyle: 'short',
     timeStyle: 'short',
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function formatCreditDelta(delta: number): string {

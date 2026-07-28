@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
-import type { CreditTransactionResponse } from '../../types/employerPayment.types';
+import type { CreditTransaction } from '../../types/employerPayment.types';
 import { formatCreditDelta, formatDateTime, truncateId } from '../../utils/employerPayment';
 import { transactionReasonLabelKey } from '../../utils/employerPaymentLabels';
 
-export function TransactionsTable({ transactions }: { transactions: CreditTransactionResponse[] }) {
+export function TransactionsTable({ transactions }: { transactions: CreditTransaction[] }) {
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
@@ -45,7 +45,7 @@ export function TransactionsTable({ transactions }: { transactions: CreditTransa
                 <p className="font-medium text-foreground">{t(transactionReasonLabelKey(item.reason))}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(item.createdAt, locale)}</p>
               </div>
-              <Delta item={item} />
+              <Delta item={item} t={t} />
             </div>
             <div className="mt-3 text-sm text-muted-foreground"><Reference item={item} t={t} /></div>
           </article>
@@ -55,16 +55,17 @@ export function TransactionsTable({ transactions }: { transactions: CreditTransa
   );
 }
 
-function Delta({ item }: { item: CreditTransactionResponse }) {
+function Delta({ item, t }: { item: CreditTransaction; t: (key: string) => string }) {
+  const delta = formatCreditDelta(item.delta);
   return (
     <span className={item.delta > 0 ? 'inline-flex items-center gap-1 font-semibold text-success' : 'inline-flex items-center gap-1 font-semibold text-error'}>
       {item.delta > 0 ? <ArrowUp className="size-4" /> : <ArrowDown className="size-4" />}
-      {formatCreditDelta(item.delta)} credit
+      {t('employerBilling.transactions.creditUnit').replace('{delta}', delta)}
     </span>
   );
 }
 
-function Reference({ item, t }: { item: CreditTransactionResponse; t: (key: string) => string }) {
+function Reference({ item, t }: { item: CreditTransaction; t: (key: string) => string }) {
   if (item.orderId) {
     return <Link className="text-foreground underline-offset-4 hover:underline" to={`/employer/billing/orders/${item.orderId}`}>{t('employerBilling.transactions.orderLink').replace('{id}', truncateId(item.orderId))}</Link>;
   }
@@ -76,16 +77,16 @@ function Reference({ item, t }: { item: CreditTransactionResponse; t: (key: stri
       </span>
     );
   }
-  return '—';
+  return null;
 }
 
-function TransactionRow({ item, locale, t }: { item: CreditTransactionResponse; locale: string; t: (key: string) => string }) {
+function TransactionRow({ item, locale, t }: { item: CreditTransaction; locale: string; t: (key: string) => string }) {
   return (
     <TableRow>
       <TableCell>{formatDateTime(item.createdAt, locale)}</TableCell>
       <TableCell className="font-medium text-foreground">{t(transactionReasonLabelKey(item.reason))}</TableCell>
       <TableCell><Reference item={item} t={t} /></TableCell>
-      <TableCell className="text-right"><Delta item={item} /></TableCell>
+      <TableCell className="text-right"><Delta item={item} t={t} /></TableCell>
     </TableRow>
   );
 }

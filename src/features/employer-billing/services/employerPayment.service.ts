@@ -1,7 +1,8 @@
 import { apiClient } from '@/shared/api/apiClient';
 import type {
   CreateOrderRequest,
-  CreditTransactionResponse,
+  CreditTransaction,
+  CreditTransactionPage,
   CursorPage,
   OrderResponse,
   OrderStatusResponse,
@@ -89,12 +90,12 @@ export const employerPaymentService = {
   async getCreditTransactions(params?: {
     cursor?: string | null;
     limit?: number;
-  }): Promise<CursorPage<CreditTransactionResponse>> {
-    const response = await apiClient.get<unknown>(endpoint.transactions, {
+  }): Promise<CreditTransactionPage> {
+    const response = await apiClient.get<CreditTransaction[]>(endpoint.transactions, {
       params: pageParams(params?.cursor, params?.limit),
     });
     return {
-      data: unwrapList(response.data).map(parseTransaction),
+      items: Array.isArray(response.data) ? response.data.map(parseTransaction) : [],
       nextCursor: readNextCursor(response.headers),
     };
   },
@@ -104,4 +105,3 @@ export const employerPaymentService = {
     return parseSubscription(response.data);
   },
 };
-

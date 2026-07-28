@@ -76,7 +76,7 @@ export interface PaymentAccountResponse {
   updatedAt: string;
 }
 
-export interface CreditTransactionResponse {
+export interface CreditTransaction {
   id: string;
   ownerType: PaymentOwnerType;
   ownerId: string;
@@ -85,6 +85,11 @@ export interface CreditTransactionResponse {
   sessionId: string | null;
   orderId: string | null;
   createdAt: string;
+}
+
+export interface CreditTransactionPage {
+  items: CreditTransaction[];
+  nextCursor: string | null;
 }
 
 export interface SubscriptionResponse {

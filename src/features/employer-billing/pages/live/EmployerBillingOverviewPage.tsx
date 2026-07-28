@@ -60,8 +60,10 @@ export function EmployerBillingOverviewPage() {
           isLoading={transactions.isLoading}
           isError={transactions.isError}
           onRetry={() => void transactions.refetch()}
+          errorTitle={t('employerBilling.transactions.errorTitle')}
+          errorDescription={t('employerBilling.transactions.errorDescription')}
         >
-          <TransactionsTable transactions={transactions.data?.data ?? []} />
+          <TransactionsTable transactions={transactions.data?.items ?? []} />
         </QuerySection>
       </section>
     </div>

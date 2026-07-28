@@ -5,7 +5,7 @@ import {
   PaymentOrderStatus,
   PaymentOwnerType,
   PaymentPackageType,
-  type CreditTransactionResponse,
+  type CreditTransaction,
   type OrderResponse,
   type OrderStatusResponse,
   type OrderStatusText,
@@ -115,7 +115,7 @@ export function parseAccount(value: unknown): PaymentAccountResponse {
   };
 }
 
-export function parseTransaction(value: unknown): CreditTransactionResponse {
+export function parseTransaction(value: unknown): CreditTransaction {
   const raw = record(value);
   return {
     id: text(raw.id),
@@ -154,4 +154,3 @@ export function readNextCursor(headers: unknown): string | null {
       : source['x-next-cursor'] ?? source['X-Next-Cursor'];
   return typeof value === 'string' && value.trim() ? value : null;
 }
-

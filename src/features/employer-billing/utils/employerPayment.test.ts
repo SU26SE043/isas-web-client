@@ -7,6 +7,7 @@ import {
   canManageEmployerPayment,
   clearPendingPayment,
   formatCreditDelta,
+  formatDateTime,
   isTerminalStatus,
   persistPendingPayment,
   resolveCallbackOrderId,
@@ -15,6 +16,7 @@ import {
 import { PaymentOrderStatus } from '../types/employerPayment.types';
 import { PaymentPackageType } from '../types/employerPayment.types';
 import { UserRole } from '@/features/auth/types/auth.types';
+import { transactionReasonLabelKey } from './employerPaymentLabels';
 
 describe('employer payment utilities', () => {
   afterEach(() => sessionStorage.clear());
@@ -22,6 +24,17 @@ describe('employer payment utilities', () => {
   it('formats signed credit deltas', () => {
     expect(formatCreditDelta(50)).toBe('+50');
     expect(formatCreditDelta(-1)).toBe('-1');
+  });
+
+  it('formats transaction dates safely and falls back for invalid values', () => {
+    expect(formatDateTime('not-a-date')).toBe('--');
+    expect(formatDateTime(null)).toBe('--');
+    expect(formatDateTime('2026-07-28T05:00:00Z', 'en-US')).not.toBe('--');
+  });
+
+  it('uses the existing reason mapping and safely falls back for unknown reasons', () => {
+    expect(transactionReasonLabelKey(5)).toBe('employerBilling.transactions.grant');
+    expect(transactionReasonLabelKey(999)).toBe('employerBilling.transactions.generic');
   });
 
   it('maps every numeric order status and terminal state', () => {

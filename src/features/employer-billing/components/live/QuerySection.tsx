@@ -8,11 +8,15 @@ export function QuerySection({
   isLoading,
   isError,
   onRetry,
+  errorTitle,
+  errorDescription,
   children,
 }: {
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
+  errorTitle?: string;
+  errorDescription?: string;
   children: ReactNode;
 }) {
   const { t } = useLanguage();
@@ -29,7 +33,10 @@ export function QuerySection({
     return (
       <div className="frame-satin rounded-2xl bg-surface-raised p-6">
         <AlertCircle className="mb-3 size-6 text-error" aria-hidden />
-        <p className="text-sm text-muted-foreground">{t('employerBilling.errors.generic')}</p>
+        {errorTitle ? <p className="font-medium text-foreground">{errorTitle}</p> : null}
+        <p className={errorTitle ? 'mt-2 text-sm text-muted-foreground' : 'text-sm text-muted-foreground'}>
+          {errorDescription ?? t('employerBilling.errors.generic')}
+        </p>
         <Button className="mt-4" variant="outline" onClick={onRetry}>
           {t('employerBilling.live.retry')}
         </Button>
@@ -38,4 +45,3 @@ export function QuerySection({
   }
   return <>{children}</>;
 }
-
