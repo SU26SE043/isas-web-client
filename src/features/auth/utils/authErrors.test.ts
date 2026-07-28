@@ -83,4 +83,25 @@ describe('parseAuthError', () => {
 
     expect(parseAuthError(error, 'fallback').kind).toBe('accountLocked');
   });
+
+  it('maps 403 forbidden to accountBanned', () => {
+    const error = new axios.AxiosError(
+      'Request failed',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: 403,
+        statusText: 'Forbidden',
+        headers: {},
+        config: {} as never,
+        data: { error: 'Account banned' },
+      },
+    );
+
+    expect(parseAuthError(error, 'fallback')).toEqual({
+      kind: 'accountBanned',
+      message: 'Account banned',
+    });
+  });
 });

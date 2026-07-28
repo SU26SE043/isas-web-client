@@ -81,7 +81,9 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 
 | Action | Path | Auth |
 | --- | --- | --- |
-| Login | `POST /api/v1/auth/login` | Public |
+| Candidate registration | `POST /api/v1/auth/register` | Public — body `{ email, password, fullName }` → `{ accessToken, refreshToken, expiresAt }`; `409` email exists; `400` validation. API minimum is 6 characters; frontend keeps the stricter SEC-012 12+ complexity policy. |
+| Employer + organization registration | `POST /api/v1/auth/register-org` | Public — body `{ email, password, fullName, orgName, taxCode? }` → `{ accessToken, refreshToken, expiresAt }`; creator becomes `OrgAdmin`; `409` email exists. Frontend keeps the stricter SEC-012 password policy. |
+| Login | `POST /api/v1/auth/login` | Public — body `{ email, password }` → `{ accessToken, refreshToken, expiresAt }`; `401` invalid/locked; `403` banned account |
 | Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → `{ accessToken, refreshToken, expiresAt }` |
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |

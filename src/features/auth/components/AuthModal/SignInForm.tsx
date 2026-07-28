@@ -94,7 +94,11 @@ export const SignInForm: React.FC<SignInFormProps> = ({
         return;
       }
       setStatusMessage(
-        parsed.kind === 'invalidCredentials' ? t('auth.invalidCredentials') : parsed.message,
+        parsed.kind === 'invalidCredentials'
+          ? t('auth.invalidCredentials')
+          : parsed.kind === 'accountBanned'
+            ? t('auth.accountBanned')
+            : parsed.message,
       );
     } finally {
       setIsSubmitting(false);

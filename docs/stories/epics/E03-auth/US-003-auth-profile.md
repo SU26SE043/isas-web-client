@@ -32,6 +32,8 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - [x] `/profile` shows user info; change password modal works.
 - [x] Protected routes redirect unauthenticated users.
 - [x] E2E smoke: `e2e/specs/smoke/auth-login.spec.ts`.
+- [x] Public Candidate and Organization registration use `/register` and `/register-org`, persist returned tokens, load `/me`, and redirect by role.
+- [x] Login distinguishes invalid credentials, account lockout, and banned-account `403` without creating a session.
 
 ## Design Notes
 
@@ -53,3 +55,4 @@ Users can register, sign in, reset password via dedicated auth pages (`/login`, 
 - `src/features/auth/**`
 - `src/routes/groups/authRoutes.tsx`
 - `e2e/specs/smoke/auth-login.spec.ts`
+- `src/features/auth/utils/authErrors.test.ts`
