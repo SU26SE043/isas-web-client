@@ -637,7 +637,15 @@ flowchart TB
 
 ---
 
-### Phase 12 — Employer Billing (Postpaid Tokens)
+### Phase 12 — Employer Billing (Live Packages + PayOS)
+
+> **US-016 live-contract override (2026-07-28):** decision 0011 supersedes the
+> mock postpaid subscription/invoice implementation for the Employer surface.
+> Current target routes are `/employer/billing/*` and
+> `/employer/payment/{success,cancel}`. `OrgAdmin` can create/cancel orders;
+> `HrMember` is read-only. The frontend consumes the live package, order,
+> account, subscription, and credit-transaction APIs and verifies callback
+> outcomes with bounded polling. Candidate payment remains a separate flow.
 
 | Field | Chi tiết |
 |-------|----------|

@@ -12,6 +12,7 @@ import { employerTranslations } from '../../features/employer/languages/translat
 import { employerAnalyticsTranslations } from '../../features/employer-analytics/languages/translations';
 import { adminTranslations } from '../../features/admin/languages/translations';
 import { employerBillingTranslations } from '../../features/employer-billing/languages/translations';
+import { liveEmployerPaymentTranslations } from '../../features/employer-billing/languages/livePaymentTranslations';
 import { engagementTranslations } from '../../features/engagement/languages/translations';
 import { rubricsTranslations } from '../../features/rubrics/languages/translations';
 import { designSystemTranslations } from './designSystemTranslations';
@@ -32,6 +33,7 @@ export const translations = mergeTranslations(
   employerAnalyticsTranslations,
   adminTranslations,
   employerBillingTranslations,
+  liveEmployerPaymentTranslations,
   engagementTranslations,
   rubricsTranslations,
   designSystemTranslations,

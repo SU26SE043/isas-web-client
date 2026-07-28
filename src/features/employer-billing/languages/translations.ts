@@ -3,7 +3,7 @@ import type { TranslationDictionary } from '@/shared/languages';
 export const employerBillingTranslations: TranslationDictionary = {
   vi: {
     'employer.nav.subscription': 'Goi dang ky',
-    'employer.nav.billing': 'Thanh toan',
+    'employer.nav.billing': 'Thanh toán',
     'employer.nav.invoices': 'Hoa don',
 
     'employerBilling.cycle.monthly': 'Hang thang',
