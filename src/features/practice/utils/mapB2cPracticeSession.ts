@@ -1,5 +1,7 @@
 import type {
   PracticeAnswerReview,
+  PracticeBenchmark,
+  PracticeBenchmarkCriterion,
   PracticeCriteriaScore,
   PracticeCvVsAnswer,
   PracticeNextAction,
@@ -138,6 +140,7 @@ function mapCriteriaScore(
     ) || (criterionId && !isGuid(criterionId) ? criterionId : '');
   const score = pickNumber(
     item.score,
+    item.averageScore,
     item.value,
     item.rawScore,
     item.points,
@@ -146,44 +149,45 @@ function mapCriteriaScore(
   );
   // Keep criterionId-only rows so a later rubric fetch can resolve display names.
   if (score == null) return null;
+  const maxScore =
+    pickNumber(item.maxScore, item.max, item.maxPoints, item.scale, nested.maxScore) ??
+    lookedUp?.maxScore ??
+    null;
+  const comment =
+    pickString(
+      item.comment,
+      item.feedback,
+      item.reason,
+      item.explanation,
+      item.reasoning,
+      nested.comment,
+      nested.feedback,
+    ) || null;
+  const percentage = pickNumber(item.percentage, item.pct, item.percent);
+  const weight = pickNumber(item.weight);
+  const averageScore = pickNumber(item.averageScore);
   if (!name) {
     if (!criterionId) return null;
     return {
       name: criterionId,
       score,
-      maxScore:
-        pickNumber(item.maxScore, item.max, item.maxPoints, item.scale, nested.maxScore) ??
-        lookedUp?.maxScore ??
-        5,
-      comment:
-        pickString(
-          item.comment,
-          item.feedback,
-          item.reason,
-          item.explanation,
-          nested.comment,
-          nested.feedback,
-        ) || null,
+      maxScore: maxScore ?? 5,
+      comment,
       criterionId,
+      averageScore: averageScore ?? null,
+      percentage: percentage ?? null,
+      weight: weight ?? null,
     };
   }
   return {
     name,
     score,
-    maxScore:
-      pickNumber(item.maxScore, item.max, item.maxPoints, item.scale, nested.maxScore) ??
-      lookedUp?.maxScore ??
-      null,
-    comment:
-      pickString(
-        item.comment,
-        item.feedback,
-        item.reason,
-        item.explanation,
-        nested.comment,
-        nested.feedback,
-      ) || null,
+    maxScore,
+    comment,
     criterionId,
+    averageScore: averageScore ?? null,
+    percentage: percentage ?? null,
+    weight: weight ?? null,
   };
 }
 
@@ -251,6 +255,28 @@ function resolveTextList(raw: unknown, catalog: CriterionCatalog): string[] {
   return out;
 }
 
+function mapCvVsAnswerGaps(raw: unknown): PracticeCvVsAnswer['gaps'] {
+  if (!Array.isArray(raw)) return null;
+  const gaps = raw
+    .map((entry) => {
+      const item = asRecord(entry);
+      const criterionId = pickString(item.criterionId, item.id);
+      const criterionName = pickString(item.criterionName, item.name);
+      const percentage = pickNumber(item.percentage, item.pct);
+      const maxScore = pickNumber(item.maxScore, item.max);
+      if (!criterionId || !criterionName || percentage == null || maxScore == null) return null;
+      return {
+        criterionId,
+        criterionName,
+        percentage,
+        maxScore,
+        cvEvidence: pickStringArray(item.cvEvidence ?? item.evidence),
+      };
+    })
+    .filter((gap): gap is NonNullable<typeof gap> => gap != null);
+  return gaps.length > 0 ? gaps : null;
+}
+
 function mapCvVsAnswer(raw: unknown): PracticeCvVsAnswer | null {
   if (raw == null) return null;
   const item = asRecord(raw);
@@ -261,6 +287,39 @@ function mapCvVsAnswer(raw: unknown): PracticeCvVsAnswer | null {
     confirmedSkills: pickStringArray(item.confirmedSkills ?? item.skills),
     differences: pickStringArray(item.differences),
     summary: pickString(item.summary, item.comment) || null,
+    cvStrengths: pickStringArray(item.cvStrengths ?? item.strengths),
+    gaps: mapCvVsAnswerGaps(item.gaps),
+  };
+}
+
+function mapBenchmark(raw: unknown): PracticeBenchmark | null {
+  if (raw == null) return null;
+  const item = asRecord(raw);
+  const label = pickString(item.label, item.name, item.title);
+  if (!label) return null;
+  const criteriaRaw = item.criteria ?? item.items;
+  const criteria = Array.isArray(criteriaRaw)
+    ? criteriaRaw
+        .map((entry) => {
+          const criterion = asRecord(entry);
+          const criterionId = pickString(criterion.criterionId, criterion.id);
+          const name = pickString(criterion.name, criterion.criterionName);
+          const targetPercentage = pickNumber(
+            criterion.targetPercentage,
+            criterion.percentage,
+            criterion.targetPct,
+            criterion.target,
+          );
+          if (!criterionId || !name || targetPercentage == null) return null;
+          return { criterionId, name, targetPercentage };
+        })
+        .filter((c): c is PracticeBenchmarkCriterion => c != null)
+    : [];
+  return {
+    source: pickString(item.source) || 'PassThreshold',
+    label,
+    sampleSize: pickNumber(item.sampleSize, item.n, item.count) ?? 0,
+    criteria,
   };
 }
 
@@ -309,13 +368,27 @@ function mapResult(raw: unknown, catalog: CriterionCatalog): PracticeSessionResu
         item.passThresholdDescription,
         item.thresholdDescription,
       ) || null,
+    answeredCount: pickNumber(item.answeredCount) ?? null,
+    totalQuestions: pickNumber(item.totalQuestions, item.questionCount) ?? null,
     criteriaScores,
     strengths: resolveTextList(item.strengths, catalog),
     needsImprovement: resolveTextList(item.needsImprovement ?? item.improvements, catalog),
     nextSteps: resolveTextList(item.nextSteps ?? item.recommendations, catalog),
     overallComment: pickString(item.overallComment, item.comment, item.summary, item.feedback),
     cvVsAnswer: mapCvVsAnswer(item.cvVsAnswer ?? item.cvComparison),
+    benchmark: mapBenchmark(item.benchmark),
   };
+}
+
+function mapFillerBreakdown(raw: unknown): Record<string, number> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    const count = pickNumber(value);
+    if (!key.trim() || count == null) continue;
+    out[key.trim()] = count;
+  }
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
@@ -329,7 +402,12 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
       : null;
 
   const speechRate = unwrapMetric(
-    item.speechRate ?? item.syllablesPerMinute ?? item.wordsPerMinute ?? item.spm ?? item.speech_rate,
+    item.speechRateWpm ??
+      item.speechRate ??
+      item.syllablesPerMinute ??
+      item.wordsPerMinute ??
+      item.spm ??
+      item.speech_rate,
   );
   const longestPause = unwrapMetric(
     item.longestPauseSec ??
@@ -338,8 +416,8 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
       item.longest_pause_sec,
   );
   const hesitation = unwrapMetric(
-    item.hesitationCount ??
-      item.pauseCount ??
+    item.pauseCount ??
+      item.hesitationCount ??
       item.longPauseCount ??
       item.pauses ??
       item.hesitation_count,
@@ -348,7 +426,10 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
     item.silenceRatio ?? item.silencePercent ?? item.silencePercentage ?? item.silence_ratio,
   );
   const filler = unwrapMetric(
-    item.fillerWordCount ?? item.fillerWordsCount ?? item.fillerCount ?? item.filler_word_count,
+    item.fillerCount ??
+      item.fillerWordCount ??
+      item.fillerWordsCount ??
+      item.filler_word_count,
   );
 
   const metrics: PracticeSpeakingMetrics = {
@@ -358,8 +439,16 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
     silenceRatio: silence.value ?? null,
     fillerWordCount: filler.value ?? null,
     audioDurationSec:
-      pickNumber(item.audioDurationSec, item.durationSec, item.audioLengthSec) ?? null,
+      pickNumber(
+        item.audioSec,
+        item.audioDurationSec,
+        item.durationSec,
+        item.audioLengthSec,
+      ) ?? null,
+    speechSec: pickNumber(item.speechSec, item.speakingSec, item.talkSec) ?? null,
     wordCount: pickNumber(item.wordCount, item.syllableCount) ?? null,
+    fillerPer100Words: pickNumber(item.fillerPer100Words, item.fillerPerHundred) ?? null,
+    fillerBreakdown: mapFillerBreakdown(item.fillerBreakdown ?? item.fillers),
     referenceText:
       pickString(item.referenceText, item.reference, item.note, item.speechRateReference) || null,
     speechRateNote:
@@ -382,7 +471,12 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
       null,
     notes,
   };
-  return Object.values(metrics).some((value) => value != null) ? metrics : null;
+  const hasValue = Object.entries(metrics).some(([key, value]) => {
+    if (key === 'fillerBreakdown') return value != null && Object.keys(value as object).length > 0;
+    if (key === 'notes') return Array.isArray(value) && value.length > 0;
+    return value != null;
+  });
+  return hasValue ? metrics : null;
 }
 
 function isClarifyKind(kind?: string, flag?: unknown): boolean {
@@ -452,10 +546,11 @@ function mapAnswerReview(
       pickString(item.comment, item.feedback, evaluation.comment, evaluation.feedback) || null,
     criteriaScores,
     speakingMetrics: mapSpeakingMetrics(
-      evaluation.speakingMetrics ??
+      item.deliveryMetrics ??
+        evaluation.deliveryMetrics ??
+        evaluation.speakingMetrics ??
         evaluation.speechMetrics ??
         evaluation.speechAnalysis ??
-        evaluation.deliveryMetrics ??
         evaluation.speech ??
         evaluation.prosody ??
         item.speakingMetrics ??
@@ -465,18 +560,26 @@ function mapAnswerReview(
     ),
     suggestedAnswer:
       pickString(
-        item.suggestedAnswer,
         item.sampleAnswer,
+        item.suggestedAnswer,
         item.modelAnswer,
         item.idealAnswer,
         item.exampleAnswer,
         item.referenceAnswer,
-        evaluation.suggestedAnswer,
         evaluation.sampleAnswer,
+        evaluation.suggestedAnswer,
         evaluation.modelAnswer,
         evaluation.idealAnswer,
         evaluation.exampleAnswer,
       ) || null,
+    sampleAnswer:
+      pickString(
+        item.sampleAnswer,
+        item.suggestedAnswer,
+        evaluation.sampleAnswer,
+        evaluation.suggestedAnswer,
+      ) || null,
+    needsReview: Boolean(item.needsReview ?? evaluation.needsReview),
     isClarify: isClarifyKind(kind, item.isClarify ?? evaluation.isClarify),
   };
 }
@@ -564,9 +667,12 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
               question.prompt,
             kind: asRecord(source).kind ?? question.kind ?? question.type,
             suggestedAnswer:
+              asRecord(source).sampleAnswer ??
               asRecord(source).suggestedAnswer ??
-              question.suggestedAnswer ??
-              question.sampleAnswer,
+              question.sampleAnswer ??
+              question.suggestedAnswer,
+            deliveryMetrics:
+              asRecord(source).deliveryMetrics ?? question.deliveryMetrics,
           };
         })
       : [];

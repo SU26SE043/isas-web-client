@@ -31,6 +31,9 @@ export function useRoadmapWizardFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [cvId, setCvId] = useState<string | undefined>();
+  const [cvAnalysisId, setCvAnalysisId] = useState<string | undefined>();
+  const [priorRoadmapId, setPriorRoadmapId] = useState<string | undefined>();
+  const [focus, setFocus] = useState('');
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +57,8 @@ export function useRoadmapWizardFlow() {
       setAllReports(filtered);
       setSelectedIds([]);
       setCvId(cvs[0]?.id);
+      setCvAnalysisId(undefined);
+      setPriorRoadmapId(undefined);
     } finally {
       setLoadingReports(false);
     }
@@ -90,15 +95,22 @@ export function useRoadmapWizardFlow() {
   };
 
   const handleCreate = async () => {
-    if (!domainId || !targetLevel) return;
+    if (!domainId || !targetLevel || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
+      const uniqueSessionIds = Array.from(
+        new Set(selectedIds.map((id) => id.trim()).filter(Boolean)),
+      );
       await learningService.createRoadmap({
         domainId,
         targetLevel,
-        reportIds: selectedIds,
+        reportIds: uniqueSessionIds,
+        sessionIds: uniqueSessionIds,
         cvId,
+        cvAnalysisId,
+        priorRoadmapId,
+        focus,
       });
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
@@ -129,6 +141,9 @@ export function useRoadmapWizardFlow() {
     selectedIds,
     targetLevel,
     cvId,
+    cvAnalysisId,
+    priorRoadmapId,
+    focus,
     loadingDomains,
     loadingReports,
     isSubmitting,
@@ -137,6 +152,9 @@ export function useRoadmapWizardFlow() {
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setFocus,
+    setCvAnalysisId,
+    setPriorRoadmapId,
     toggleReport,
     selectAllReports,
     unselectAllReports,

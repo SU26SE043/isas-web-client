@@ -21,6 +21,7 @@ import { ResultsRankingTable } from './ResultsRankingTable';
 import { ResultsSummaryCards, ResultsSummarySkeleton } from './ResultsSummaryCards';
 import { ResultsToolbar } from './ResultsToolbar';
 import { ResultTranscriptDrawer } from './ResultTranscriptDrawer';
+import { UnscoredFlaggedSection } from './UnscoredFlaggedSection';
 
 interface CampaignResultsPanelProps {
   campaignId: string;
@@ -184,6 +185,10 @@ export function CampaignResultsPanel({
             onPageSizeChange={setPageSize}
           />
         </>
+      ) : null}
+
+      {resultsQuery.data ? (
+        <UnscoredFlaggedSection items={resultsQuery.data.unscoredFlagged ?? []} />
       ) : null}
 
       <ResultTranscriptDrawer

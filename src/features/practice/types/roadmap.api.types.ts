@@ -3,6 +3,15 @@ import type { LessonStatus } from '@/shared/enums';
 /** API lesson status from Interview Service. */
 export type ApiLessonStatus = LessonStatus | 'Theory' | 'Practicing' | 'Done' | string;
 
+export type LearningResourceType = 'Doc' | 'Course' | 'Book' | 'Video' | 'Article' | string;
+
+export type LearningResource = {
+  title: string;
+  type: LearningResourceType;
+  publisher?: string | null;
+  url?: string | null;
+};
+
 export type ApiRoadmapLesson = {
   id: string;
   orderNo?: number;
@@ -13,6 +22,7 @@ export type ApiRoadmapLesson = {
   sessionId?: string | null;
   status?: ApiLessonStatus;
   practiceReportId?: string | null;
+  resources?: LearningResource[] | null;
 };
 
 export type ApiRoadmapMilestone = {
@@ -23,6 +33,7 @@ export type ApiRoadmapMilestone = {
   titleVi?: string;
   status?: string;
   progressPercent?: number;
+  focusCriteria?: string[];
   lessons?: ApiRoadmapLesson[];
 };
 
@@ -45,6 +56,8 @@ export type ApiRoadmapListItem = {
   currentLessonTitleVi?: string;
   estimatedRemainingHours?: number;
   updatedAt?: string;
+  createdAt?: string;
+  completedAt?: string | null;
   readOnly?: boolean;
   milestones?: ApiRoadmapMilestone[];
 };
@@ -54,6 +67,7 @@ export type ApiRoadmapDetail = ApiRoadmapListItem & {
   reports?: unknown[];
 };
 
+/** Shared lesson detail contract (roadmap nested + GET lesson). */
 export type ApiRoadmapLessonDetail = {
   id: string;
   orderNo?: number;
@@ -62,4 +76,8 @@ export type ApiRoadmapLessonDetail = {
   theoryContent?: string | null;
   sessionId?: string | null;
   status: ApiLessonStatus;
+  resources?: LearningResource[] | null;
 };
+
+/** Spec alias — same shape as ApiRoadmapLessonDetail. */
+export type LessonResponse = ApiRoadmapLessonDetail;

@@ -306,7 +306,7 @@ export type InviteCampaignCandidatesResponse = {
   failed: FailedCandidateInvitation[];
 };
 
-/** GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+/** GET /api/v1/campaign/{id}/results — scored ranking + unscored flagged candidates. */
 export type CampaignResultStatus = 'Pass' | 'Fail' | null;
 
 export type CampaignResultFlag = {
@@ -315,13 +315,15 @@ export type CampaignResultFlag = {
   note?: string | null;
 };
 
-export type CampaignResultItem = {
+export type CampaignScoredResult = {
   rank: number;
   candidateId: string;
   sessionId: string;
   fullName?: string | null;
   email?: string | null;
+  /** Effective score after override. */
   totalScore: number;
+  /** Original AI score. */
   aiScore: number;
   overrideScore?: number | null;
   overrideResult?: CampaignResultStatus;
@@ -332,14 +334,25 @@ export type CampaignResultItem = {
   flags: CampaignResultFlag[];
 };
 
-/** Spec alias — same shape as CampaignResultItem. */
-export type CampaignRankingResult = CampaignResultItem;
+/** Spec alias — same shape as CampaignScoredResult. */
+export type CampaignResultItem = CampaignScoredResult;
+export type CampaignRankingResult = CampaignScoredResult;
+
+export type CampaignUnscoredFlaggedResult = {
+  candidateId: string;
+  sessionId: string;
+  fullName?: string | null;
+  email?: string | null;
+  flags: CampaignResultFlag[];
+};
 
 export type CampaignResultsResponse = {
   campaignId: string;
   passScorePct?: number | null;
   totalCandidates: number;
-  results: CampaignResultItem[];
+  results: CampaignScoredResult[];
+  /** v5: flagged candidates without scored ranking rows. */
+  unscoredFlagged: CampaignUnscoredFlaggedResult[];
 };
 
 export type CampaignResultExportFormat = 'csv' | 'pdf';

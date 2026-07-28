@@ -361,6 +361,14 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.empty.filteredTitle': 'Không có kết quả phù hợp',
     'employer.campaigns.results.empty.filteredDescription':
       'Thử đổi bộ lọc hoặc từ khóa tìm kiếm.',
+    'employer.campaigns.results.unscoredFlagged.title':
+      'Ứng viên có cảnh báo nhưng chưa được chấm',
+    'employer.campaigns.results.unscoredFlagged.description':
+      'Các ứng viên này có cờ cảnh báo nhưng chưa có kết quả xếp hạng.',
+    'employer.campaigns.results.unscoredFlagged.emptyTitle': 'Không có ứng viên chưa chấm bị gắn cờ',
+    'employer.campaigns.results.unscoredFlagged.emptyDescription':
+      'Hiện không có ứng viên nào vừa có cảnh báo vừa chưa được chấm điểm.',
+    'employer.campaigns.results.unscoredFlagged.session': 'Session',
     'employer.campaigns.results.errors.notFound':
       'Không tìm thấy chiến dịch hoặc bạn không có quyền xem kết quả này.',
     'employer.campaigns.results.errors.loadFailed':
@@ -1478,6 +1486,14 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.empty.filteredTitle': 'No matching results',
     'employer.campaigns.results.empty.filteredDescription':
       'Try changing filters or the search keyword.',
+    'employer.campaigns.results.unscoredFlagged.title':
+      'Candidates with flags but no scored result',
+    'employer.campaigns.results.unscoredFlagged.description':
+      'These candidates have warning flags but are not yet in the ranking table.',
+    'employer.campaigns.results.unscoredFlagged.emptyTitle': 'No unscored flagged candidates',
+    'employer.campaigns.results.unscoredFlagged.emptyDescription':
+      'There are currently no candidates who are both flagged and unscored.',
+    'employer.campaigns.results.unscoredFlagged.session': 'Session',
     'employer.campaigns.results.errors.notFound':
       'Campaign was not found or you do not have permission to view these results.',
     'employer.campaigns.results.errors.loadFailed':

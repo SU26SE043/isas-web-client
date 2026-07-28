@@ -10,7 +10,6 @@ import { resolvePracticeLevel, type PracticeLevel } from '@/shared/domain/practi
 import type {
   Achievement,
   CertificateRecord,
-  CreateRoadmapApiRequest,
   CreateRoadmapInput,
   LeaderboardEntry,
   LearningModule,
@@ -35,6 +34,7 @@ import {
 import { learningPathService } from './learningPath.service';
 import { learningEndpoints } from './learning.endpoints';
 import { CreateRoadmapError, mapCreateRoadmapError } from '../utils/roadmapCreateErrors';
+import { buildCreateRoadmapRequest } from '../utils/buildCreateRoadmapRequest';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 let latestCreatedRoadmap: RoadmapResponse | null = null;
@@ -134,6 +134,13 @@ export const learningService = {
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
+    const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
+    const payload = buildCreateRoadmapRequest(jobCategory, level, input);
+    if (!payload.ok) {
+      throw new CreateRoadmapError(
+        payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',
+      );
+    }
 
     if (usesMockData('practice')) {
       await mockDelay(500);
@@ -151,23 +158,15 @@ export const learningService = {
         ...input,
         targetLevel: level,
         roadmapId: created.id ?? `roadmap-mock`,
-        reportIds: input.reportIds ?? [],
+        reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });
       return created;
-    }
-
-    const body: CreateRoadmapApiRequest = {
-      jobCategory: resolveJobCategoryFromDomainId(input.domainId),
-      level,
-    };
-    if (input.cvId) {
-      body.cvId = input.cvId;
     }
 
     try {
       const response = await apiClient.post<Record<string, unknown>>(
         learningEndpoints.createRoadmap,
-        body,
+        payload.body,
         { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
       );
 
@@ -182,7 +181,7 @@ export const learningService = {
         ...input,
         targetLevel: level,
         roadmapId: created.id,
-        reportIds: input.reportIds ?? [],
+        reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });
       return created;
     } catch (error) {

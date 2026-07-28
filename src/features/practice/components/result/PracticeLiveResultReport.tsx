@@ -44,6 +44,7 @@ export function PracticeLiveResultReport({
           <CriteriaRadarChart
             criteria={view.criteria}
             passThresholdPct={view.passThresholdPct}
+            benchmark={view.benchmark}
           />
           <CriteriaThresholdNote
             passThresholdPct={view.passThresholdPct}

@@ -1,5 +1,6 @@
 import type {
   PracticeAnswerReview,
+  PracticeBenchmark,
   PracticeCriteriaScore,
   PracticeSessionResponse,
   PracticeSessionResult,
@@ -31,6 +32,7 @@ export type PracticeSessionResultViewModel = {
   questions: QuestionResultViewModel[];
   hasResult: boolean;
   cvVsAnswerSummary?: string;
+  benchmark?: PracticeBenchmark | null;
 };
 
 export type CriteriaResultViewModel = {
@@ -76,18 +78,27 @@ function isAnswered(answer?: PracticeAnswerReview | null): boolean {
 }
 
 function mapCriterion(item: PracticeCriteriaScore): CriteriaResultViewModel {
-  const score = Number.isFinite(item.score) ? item.score : 0;
+  const score =
+    item.averageScore != null && Number.isFinite(item.averageScore)
+      ? item.averageScore
+      : Number.isFinite(item.score)
+        ? item.score
+        : 0;
   const maxScore =
     item.maxScore != null && item.maxScore > 0
       ? item.maxScore
       : score > 5
         ? 100
         : 5;
+  const pct =
+    item.percentage != null && Number.isFinite(item.percentage)
+      ? Math.max(0, Math.min(100, item.percentage))
+      : Math.max(0, Math.min(100, (score / maxScore) * 100));
   return {
     name: item.name,
     score,
     maxScore,
-    pct: Math.max(0, Math.min(100, (score / maxScore) * 100)),
+    pct,
     comment: item.comment?.trim() || undefined,
   };
 }
@@ -153,7 +164,10 @@ export function mapPracticeSessionResponseToViewModel(
       comment: answer?.comment?.trim() || undefined,
       criteria,
       speakingMetrics: answer?.speakingMetrics ?? null,
-      suggestedAnswer: answer?.suggestedAnswer?.trim() || undefined,
+      suggestedAnswer:
+        answer?.sampleAnswer?.trim() ||
+        answer?.suggestedAnswer?.trim() ||
+        undefined,
       answered,
       skipped: !answered,
       isClarify:
@@ -162,8 +176,14 @@ export function mapPracticeSessionResponseToViewModel(
     };
   });
 
-  const answeredCount = questions.filter((item) => item.answered).length;
-  const totalQuestions = session.questionCount ?? questions.length;
+  const answeredCount =
+    result?.answeredCount != null && Number.isFinite(result.answeredCount)
+      ? result.answeredCount
+      : questions.filter((item) => item.answered).length;
+  const totalQuestions =
+    result?.totalQuestions != null && Number.isFinite(result.totalQuestions)
+      ? result.totalQuestions
+      : (session.questionCount ?? questions.length);
   const skippedCount = Math.max(0, totalQuestions - answeredCount);
   const durationValues = questions
     .map((item) => item.durationSec)
@@ -209,6 +229,7 @@ export function mapPracticeSessionResponseToViewModel(
     questions,
     hasResult: Boolean(result),
     cvVsAnswerSummary: result?.cvVsAnswer?.summary?.trim() || undefined,
+    benchmark: result?.benchmark ?? null,
   };
 }
 

@@ -62,22 +62,34 @@ export interface RoadmapResponse {
 
 /**
  * Wizard input for creating a roadmap.
- * Live API currently accepts jobCategory + level (+ optional cvId).
- * `reportIds` are kept for UI / future API support — not sent yet.
+ * Live API accepts jobCategory + level (+ optional context fields).
  */
 export interface CreateRoadmapInput {
   domainId: string;
   targetLevel: string;
   reportIds?: string[];
+  /** Selected scored practice sessions used as baseline (sent as sessionIds). */
+  sessionIds?: string[];
   cvId?: string;
+  cvAnalysisId?: string;
+  priorRoadmapId?: string;
+  focus?: string;
 }
+
+export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 
 /** Request body for POST /api/v1/interview/practice/roadmaps */
 export interface CreateRoadmapApiRequest {
   jobCategory: string;
-  level: string;
+  level: RoadmapLevel | string;
   cvId?: string;
+  sessionIds?: string[];
+  cvAnalysisId?: string;
+  priorRoadmapId?: string;
+  focus?: string;
 }
+
+export const ROADMAP_FOCUS_MAX_CHARS = 2000;
 
 export interface ProgressWeekPoint {
   weekLabel: string;

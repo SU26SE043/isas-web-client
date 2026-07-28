@@ -34,18 +34,25 @@ export interface PracticeQuestionResponse {
   orderNo: number;
   content: string;
   timeLimitSec: number;
-  kind: string;
+  kind: PracticeQuestionKind;
 }
 
 export type PracticeNextAction = 'follow_up' | 'clarify' | 'new_question' | 'end';
 
 export type PracticeSessionStatus =
+  | 'GeneratingQuestions'
+  | 'Ready'
   | 'Created'
   | 'InProgress'
+  | 'Completed'
   | 'Submitted'
   | 'Scoring'
   | 'Scored'
+  | 'Failed'
+  | 'SessionAbandoned'
   | string;
+
+export type PracticeQuestionKind = 'Seed' | 'FollowUp' | 'Clarify' | 'NewQuestion' | string;
 
 export interface PracticeCriteriaScore {
   name: string;
@@ -53,6 +60,10 @@ export interface PracticeCriteriaScore {
   maxScore?: number | null;
   comment?: string | null;
   criterionId?: string | null;
+  /** v5: average score across answers for this criterion. */
+  averageScore?: number | null;
+  percentage?: number | null;
+  weight?: number | null;
 }
 
 export interface PracticeRubricCriterionRef {
@@ -62,6 +73,14 @@ export interface PracticeRubricCriterionRef {
   description?: string | null;
 }
 
+export interface PracticeCvVsAnswerGap {
+  criterionId: string;
+  criterionName: string;
+  percentage: number;
+  maxScore: number;
+  cvEvidence: string[];
+}
+
 export interface PracticeCvVsAnswer {
   consistencyScore?: number | null;
   matched?: string[] | null;
@@ -69,6 +88,22 @@ export interface PracticeCvVsAnswer {
   confirmedSkills?: string[] | null;
   differences?: string[] | null;
   summary?: string | null;
+  /** v5 fields */
+  cvStrengths?: string[] | null;
+  gaps?: PracticeCvVsAnswerGap[] | null;
+}
+
+export interface PracticeBenchmarkCriterion {
+  criterionId: string;
+  name: string;
+  targetPercentage: number;
+}
+
+export interface PracticeBenchmark {
+  source: 'PeerAverage' | 'PassThreshold' | string;
+  label: string;
+  sampleSize: number;
+  criteria: PracticeBenchmarkCriterion[];
 }
 
 export interface PracticeSessionResult {
@@ -77,14 +112,33 @@ export interface PracticeSessionResult {
   passThreshold?: number | null;
   /** Backend explanation for the threshold line (optional). */
   passThresholdNote?: string | null;
+  answeredCount?: number | null;
+  totalQuestions?: number | null;
   criteriaScores: PracticeCriteriaScore[];
   strengths?: string[];
   needsImprovement: string[];
   nextSteps?: string[];
   overallComment: string;
   cvVsAnswer: PracticeCvVsAnswer | null;
+  /** v5: peer average or pass-threshold comparison series for radar. */
+  benchmark?: PracticeBenchmark | null;
 }
 
+/** v5 delivery metrics (API name). Null = not measured — never coerce to 0. */
+export interface DeliveryMetrics {
+  audioSec?: number | null;
+  speechSec?: number | null;
+  wordCount?: number | null;
+  speechRateWpm?: number | null;
+  longestPauseSec?: number | null;
+  pauseCount?: number | null;
+  silenceRatio?: number | null;
+  fillerCount?: number | null;
+  fillerPer100Words?: number | null;
+  fillerBreakdown?: Record<string, number> | null;
+}
+
+/** UI-facing speaking metrics (maps from DeliveryMetrics + legacy aliases). */
 export interface PracticeSpeakingMetrics {
   speechRate?: number | null;
   longestPauseSec?: number | null;
@@ -92,7 +146,10 @@ export interface PracticeSpeakingMetrics {
   silenceRatio?: number | null;
   fillerWordCount?: number | null;
   audioDurationSec?: number | null;
+  speechSec?: number | null;
   wordCount?: number | null;
+  fillerPer100Words?: number | null;
+  fillerBreakdown?: Record<string, number> | null;
   referenceText?: string | null;
   speechRateNote?: string | null;
   longestPauseNote?: string | null;
@@ -117,7 +174,10 @@ export interface PracticeAnswerReview {
   comment?: string | null;
   criteriaScores?: PracticeCriteriaScore[];
   speakingMetrics?: PracticeSpeakingMetrics | null;
+  /** Alias of API `sampleAnswer` — never replaces candidate transcript. */
   suggestedAnswer?: string | null;
+  sampleAnswer?: string | null;
+  needsReview?: boolean;
   isClarify?: boolean;
 }
 

@@ -69,6 +69,8 @@ export function RoadmapWizardPage() {
           targetLevel={flow.targetLevel}
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
+          focus={flow.focus}
+          onFocusChange={flow.setFocus}
           isSubmitting={flow.isSubmitting}
           onBack={() => flow.goToStep(2)}
           onConfirm={() => void flow.handleCreate()}
