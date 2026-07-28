@@ -588,7 +588,7 @@ flowchart TB
 | **Screens** | SCR-EMP-055–058, **selection step**, **email preview** |
 | **User Flows** | UF-103–106, UF-111; `product-scope.md` §4.4–4.6 |
 | **Features** | F-CAMP-E-001–008 |
-| **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
+| **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, **EndCampaignDialog** (irreversible phrase confirmation), CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
 | **State** | Multi-step wizard state; draft autosave |
 | **API** | Campaign CRUD, publish, invite, rubric, question bank; FR-095–124, FR-125–159 |
 | **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit`, `/employer/campaigns/:id/selection` |
@@ -1292,7 +1292,7 @@ flowchart TB
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
 | FS-140 | Campaign list page | P10 | M04 | F-CAMP-E-001 | HR | EMP-055 | P0 | FS-133 | M | FR-101 | Filter status |
-| FS-141 | Campaign detail page | P10 | M04 | F-CAMP-E-002 | HR | EMP-056 | P0 | FS-140 | M | — | Pipeline preview |
+| FS-141 | Campaign detail page | P10 | M04 | F-CAMP-E-002 | HR | EMP-056 | P0 | FS-140 | M | — | Pipeline preview + safeguarded Active→Closed action |
 | FS-142 | Campaign wizard step 1 JD | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-140 | L | UF-103 | JD input |
 | FS-143 | Campaign wizard rubric | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-142 | L | BRL-036 | Weights 100% |
 | FS-144 | Campaign wizard questions | P10 | M05 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-143 | L | FR-125–139 | Question bank |

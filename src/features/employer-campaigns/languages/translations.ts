@@ -10,7 +10,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.status.draft': 'Bản nháp',
     'employer.campaigns.status.active': 'Đang mở',
     'employer.campaigns.status.paused': 'Tạm dừng',
-    'employer.campaigns.status.closed': 'Đã đóng',
+    'employer.campaigns.status.closed': 'Đã kết thúc',
     'employer.campaigns.status.archived': 'Đã lưu trữ',
     'employer.campaigns.mode.remote': 'Từ xa',
     'employer.campaigns.mode.hybrid': 'Kết hợp',
@@ -49,6 +49,20 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'Chiến dịch sẽ chuyển sang trạng thái Đã đóng. Ứng viên không thể tiếp tục tham gia.',
     'employer.campaigns.closeConfirm.cancel': 'Hủy',
     'employer.campaigns.closeConfirm.confirm': 'Đóng chiến dịch',
+    'employer.campaigns.endConfirm.phrase': 'KẾT THÚC',
+    'employer.campaigns.endConfirm.title': 'Xác nhận kết thúc chiến dịch?',
+    'employer.campaigns.endConfirm.description':
+      'Sau khi kết thúc, chiến dịch sẽ ngừng nhận thêm ứng viên và bạn không thể tiếp tục gửi lời mời mới.',
+    'employer.campaigns.endConfirm.dataRetention':
+      'Các kết quả đánh giá và dữ liệu ứng viên hiện tại vẫn được lưu lại.',
+    'employer.campaigns.endConfirm.irreversible': 'Hành động này không thể hoàn tác.',
+    'employer.campaigns.endConfirm.inputLabel': 'Nhập “{phrase}” để xác nhận',
+    'employer.campaigns.endConfirm.cancel': 'Tiếp tục chiến dịch',
+    'employer.campaigns.endConfirm.confirm': 'Xác nhận kết thúc',
+    'employer.campaigns.endConfirm.submitting': 'Đang kết thúc chiến dịch...',
+    'employer.campaigns.endConfirm.errorTitle': 'Không thể kết thúc chiến dịch',
+    'employer.campaigns.endConfirm.errorDescription':
+      'Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại.',
     'employer.campaigns.archiveConfirm.title': 'Lưu trữ chiến dịch?',
     'employer.campaigns.archiveConfirm.description':
       'Chiến dịch sẽ chuyển sang trạng thái Đã lưu trữ. Bạn vẫn có thể xem dữ liệu nhưng không thể mở lại.',
@@ -647,7 +661,15 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.detail.delete': 'Xóa',
     'employer.campaigns.detail.deleteSuccess': 'Đã xóa chiến dịch.',
     'employer.campaigns.detail.deleteFailed': 'Không thể xóa chiến dịch. Vui lòng thử lại.',
-    'employer.campaigns.detail.close': 'Đóng',
+    'employer.campaigns.detail.close': 'Kết thúc chiến dịch',
+    'employer.campaigns.detail.endCampaign': 'Kết thúc chiến dịch',
+    'employer.campaigns.detail.endTooltip':
+      'Kết thúc chiến dịch và ngừng nhận thêm ứng viên',
+    'employer.campaigns.detail.endedNotice':
+      'Chiến dịch này đã ngừng nhận ứng viên.',
+    'employer.campaigns.detail.endSuccessTitle': 'Đã kết thúc chiến dịch',
+    'employer.campaigns.detail.endSuccessDescription':
+      'Chiến dịch không còn nhận thêm ứng viên.',
     'employer.campaigns.detail.archive': 'Lưu trữ',
     'employer.campaigns.detail.closeSuccess': 'Chiến dịch đã được đóng.',
     'employer.campaigns.detail.archiveSuccess': 'Chiến dịch đã được lưu trữ.',
@@ -1136,7 +1158,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.status.draft': 'Draft',
     'employer.campaigns.status.active': 'Active',
     'employer.campaigns.status.paused': 'Paused',
-    'employer.campaigns.status.closed': 'Closed',
+    'employer.campaigns.status.closed': 'Ended',
     'employer.campaigns.status.archived': 'Archived',
     'employer.campaigns.mode.remote': 'Remote',
     'employer.campaigns.mode.hybrid': 'Hybrid',
@@ -1174,6 +1196,20 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'The campaign will move to Closed. Candidates will no longer be able to participate.',
     'employer.campaigns.closeConfirm.cancel': 'Cancel',
     'employer.campaigns.closeConfirm.confirm': 'Close campaign',
+    'employer.campaigns.endConfirm.phrase': 'END',
+    'employer.campaigns.endConfirm.title': 'Confirm ending this campaign?',
+    'employer.campaigns.endConfirm.description':
+      'After ending the campaign, it will stop accepting candidates and you cannot send new invitations.',
+    'employer.campaigns.endConfirm.dataRetention':
+      'Existing assessment results and candidate data will remain available.',
+    'employer.campaigns.endConfirm.irreversible': 'This action cannot be undone.',
+    'employer.campaigns.endConfirm.inputLabel': 'Enter “{phrase}” to confirm',
+    'employer.campaigns.endConfirm.cancel': 'Continue campaign',
+    'employer.campaigns.endConfirm.confirm': 'Confirm end',
+    'employer.campaigns.endConfirm.submitting': 'Ending campaign...',
+    'employer.campaigns.endConfirm.errorTitle': 'Could not end campaign',
+    'employer.campaigns.endConfirm.errorDescription':
+      'An error occurred while processing the request. Please try again.',
     'employer.campaigns.archiveConfirm.title': 'Archive campaign?',
     'employer.campaigns.archiveConfirm.description':
       'The campaign will move to Archived. You can still view data but cannot reopen it.',
@@ -1773,7 +1809,15 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.detail.delete': 'Delete',
     'employer.campaigns.detail.deleteSuccess': 'Campaign deleted.',
     'employer.campaigns.detail.deleteFailed': 'Could not delete the campaign. Please try again.',
-    'employer.campaigns.detail.close': 'Close',
+    'employer.campaigns.detail.close': 'End campaign',
+    'employer.campaigns.detail.endCampaign': 'End campaign',
+    'employer.campaigns.detail.endTooltip':
+      'End campaign and stop accepting new candidates',
+    'employer.campaigns.detail.endedNotice':
+      'This campaign is no longer accepting candidates.',
+    'employer.campaigns.detail.endSuccessTitle': 'Campaign ended',
+    'employer.campaigns.detail.endSuccessDescription':
+      'The campaign is no longer accepting candidates.',
     'employer.campaigns.detail.archive': 'Archive',
     'employer.campaigns.detail.closeSuccess': 'Campaign closed.',
     'employer.campaigns.detail.archiveSuccess': 'Campaign archived.',

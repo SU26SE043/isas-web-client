@@ -22,7 +22,6 @@ export function CampaignDetailActions({
   onDelete,
 }: CampaignDetailActionsProps) {
   const { t } = useLanguage();
-  const isActive = campaign.status === 'active';
   const isDraft = campaign.status === 'draft';
   const isClosed = campaign.status === 'closed';
   const canDelete = isDraft || isClosed || campaign.status === 'archived';
@@ -40,13 +39,6 @@ export function CampaignDetailActions({
             <DeleteCampaignDialog campaignTitle={campaign.title} onDelete={onDelete} />
           ) : null}
         </>
-      ) : null}
-
-      {isActive ? (
-        <ChangeCampaignStatusDialog
-          targetStatus="Closed"
-          onConfirm={() => onChangeStatus('Closed')}
-        />
       ) : null}
 
       {isClosed ? (

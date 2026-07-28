@@ -50,23 +50,27 @@ export function CampaignDetailPage() {
     if (!campaign) return;
     try {
       await updateStatus(campaign.id, status);
-      toast.success(
-        t(
-          status === 'Closed'
-            ? 'employer.campaigns.detail.closeSuccess'
-            : 'employer.campaigns.detail.archiveSuccess',
-        ),
-      );
+      if (status === 'Closed') {
+        toast.success(
+          <div>
+            <p className="font-medium">{t('employer.campaigns.detail.endSuccessTitle')}</p>
+            <p className="text-sm">{t('employer.campaigns.detail.endSuccessDescription')}</p>
+          </div>,
+        );
+      } else {
+        toast.success(t('employer.campaigns.detail.archiveSuccess'));
+      }
       reload();
     } catch (error) {
+      if (status === 'Closed') {
+        throw error;
+      }
       const code = campaignManagementService.getErrorStatus(error);
       toast.error(
         t(
           code === 409
             ? 'employer.campaigns.detail.statusConflict'
-            : status === 'Closed'
-              ? 'employer.campaigns.detail.closeFailed'
-              : 'employer.campaigns.detail.archiveFailed',
+            : 'employer.campaigns.detail.archiveFailed',
         ),
       );
       throw new Error('STATUS_UPDATE_FAILED');
@@ -152,7 +156,11 @@ export function CampaignDetailPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
-        <CampaignContextHeader campaign={campaign} mode="overview" />
+        <CampaignContextHeader
+          campaign={campaign}
+          mode="overview"
+          onEndCampaign={() => handleChangeStatus('Closed')}
+        />
         <div className="motion-safe:animate-in motion-safe:fade-in">
           <div hidden={tab !== 'details'}>
             <CampaignDetailView
