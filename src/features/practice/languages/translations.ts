@@ -1,4 +1,4 @@
-import type { TranslationDictionary } from '../../../shared/languages';
+﻿import type { TranslationDictionary } from '../../../shared/languages';
 
 export const practiceTranslations: TranslationDictionary = {
   vi: {
@@ -182,6 +182,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.scoring.retry': 'Thử lại',
     'practice.result.liveTitle': 'Kết quả luyện phỏng vấn',
     'practice.result.criteriaScores': 'Điểm theo tiêu chí',
+      'practice.result.criteriaDetail': 'Chi tiết điểm theo tiêu chí',
+      'practice.result.criteriaUpdatedHint': 'Dữ liệu được cập nhật theo bài đánh giá mới nhất',
     'practice.result.needsImprovement': 'Nội dung cần cải thiện',
     'practice.result.needsImprovementEmpty': 'Chưa có nội dung cần cải thiện.',
     'practice.result.overallComment': 'Nhận xét của AI',
@@ -1207,6 +1209,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.scoring.retry': 'Retry',
     'practice.result.liveTitle': 'Practice interview results',
     'practice.result.criteriaScores': 'Criteria scores',
+      'practice.result.criteriaDetail': 'Criteria score details',
+      'practice.result.criteriaUpdatedHint': 'Data updated from the latest assessment',
     'practice.result.needsImprovement': 'Areas to improve',
     'practice.result.needsImprovementEmpty': 'No improvement items yet.',
     'practice.result.overallComment': 'AI feedback',

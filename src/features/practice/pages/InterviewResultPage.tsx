@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
@@ -6,6 +6,7 @@ import { useInterviewResult } from '../hooks/useInterviewResult';
 import { GapAnalysisList } from '../components/GapAnalysisList';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { InterviewResultOverview } from '../components/result/InterviewResultOverview';
+import { CriteriaProgressList, CriteriaThresholdNote } from '../components/result/CriteriaProgressList';
 import { QuestionFeedbackAccordion } from '../components/result/QuestionFeedbackAccordion';
 import { ReportTabs, type ReportTabId } from '../components/result/ReportTabs';
 import { ResultScoringPanel } from '../components/result/ResultScoringPanel';
@@ -71,6 +72,16 @@ export const InterviewResultPage: React.FC = () => {
     if (!result) return [];
     return language === 'vi' ? result.weaknessesVi : result.weaknesses;
   }, [language, result]);
+
+  const criteriaScores = useMemo(
+    () => (result?.radarData ?? []).map((item) => ({
+      name: language === 'vi' ? item.subjectVi : item.subject,
+      score: item.A,
+      maxScore: 100,
+      pct: item.A,
+    })),
+    [language, result],
+  );
 
   if (!resultId) {
     return (
@@ -156,6 +167,35 @@ export const InterviewResultPage: React.FC = () => {
               </section>
             ) : null}
 
+            {activeTab === 'overview' ? (
+              <section id="criteria" className="frame-satin overflow-hidden rounded-2xl border border-satin bg-surface-raised">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle px-5 py-4 sm:px-6">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-9 place-items-center rounded-lg bg-chart-cat-1/10 text-chart-cat-1">↗</span>
+                    <h2 className="text-lg font-semibold text-foreground">{t('practice.result.criteriaScores')}</h2>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-2"><span className="size-2.5 rounded-full bg-chart-cat-1" aria-hidden />{t('practice.result.radarYourScore')}</span>
+                    <span className="inline-flex items-center gap-2"><span className="size-2.5 rounded-full bg-chart-cat-3" aria-hidden />{t('practice.result.radarThreshold')}<span className="rounded bg-surface-elevated px-1.5 py-0.5 text-foreground">50%</span></span>
+                  </div>
+                </div>
+                <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:p-6">
+                  <div className="frame-satin-soft rounded-xl bg-surface-base/60 p-4 sm:p-5">
+                    <div className="mb-1 text-center text-sm font-semibold text-foreground">{t('practice.result.skillOverview')}</div>
+                    <SkillRadarChart data={result.radarData} language={language} showThreshold yourScoreLabel={t('practice.result.radarYourScore')} thresholdLabel={t('practice.result.radarThreshold')} embedded />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="mb-3 text-sm font-semibold text-foreground">{t('practice.result.criteriaDetail')}</div>
+                    <CriteriaProgressList criteria={criteriaScores} passThresholdPct={50} />
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-4 border-t border-subtle bg-surface-base/60 px-5 py-3 text-xs text-muted-foreground sm:px-6">
+                  <CriteriaThresholdNote passThresholdPct={50} />
+                  <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full bg-success" aria-hidden />{t('practice.result.criteriaUpdatedHint')}</span>
+                </div>
+              </section>
+            ) : null}
+
             {activeTab === 'breakdown' ? <GapAnalysisList items={result.gapAnalysis} language={language} /> : null}
             {activeTab === 'feedback' ? <QuestionFeedbackAccordion items={result.questionFeedback} /> : null}
             {activeTab === 'roadmap' ? (
@@ -182,3 +222,4 @@ export const InterviewResultPage: React.FC = () => {
     </main>
   );
 };
+
