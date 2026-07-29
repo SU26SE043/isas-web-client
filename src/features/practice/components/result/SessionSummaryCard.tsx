@@ -11,10 +11,7 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
       : null;
 
   return (
-    <section
-      id="overview"
-      className="frame-satin scroll-mt-24 space-y-5 rounded-2xl border border-satin bg-surface-raised p-6"
-    >
+    <section className="frame-satin space-y-5 rounded-2xl border border-satin bg-surface-raised p-6">
       <h2 className="text-lg font-semibold text-foreground">{t('practice.result.summary')}</h2>
 
       <div>

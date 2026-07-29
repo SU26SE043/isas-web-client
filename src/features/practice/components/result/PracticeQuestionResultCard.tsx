@@ -42,10 +42,7 @@ export function PracticeQuestionResultCard({
       : t(`practice.result.questionStatus.${group}`);
 
   return (
-    <article
-      id={`question-${question.orderNo}`}
-      className="frame-satin scroll-mt-24 overflow-hidden rounded-2xl border border-satin bg-surface-raised"
-    >
+    <article className="frame-satin overflow-hidden rounded-2xl border border-satin bg-surface-raised">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-satin px-5 py-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <h3 className="text-lg font-semibold text-foreground">

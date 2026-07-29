@@ -35,8 +35,8 @@ export function PracticeOverallFeedback({
   if (!hasContent) return null;
 
   return (
-    <section id="feedback" className="scroll-mt-24 space-y-5">
-      <h2 className="text-xl font-semibold text-foreground">
+    <section className="space-y-5" aria-labelledby="report-summary-heading">
+      <h2 id="report-summary-heading" className="text-xl font-semibold text-foreground">
         {t('practice.result.quickFeedback')}
       </h2>
 
