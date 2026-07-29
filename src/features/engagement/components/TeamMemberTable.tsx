@@ -1,3 +1,5 @@
+import { Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { TeamMember, TeamRole } from '../types/engagement.types';
@@ -7,6 +9,7 @@ interface TeamMemberTableProps {
   isLoading: boolean;
   isMutating: boolean;
   onRoleChange: (userId: string, orgRole: TeamRole) => Promise<void>;
+  onRemove: (member: TeamMember) => void;
 }
 
 export function TeamMemberTable({
@@ -14,6 +17,7 @@ export function TeamMemberTable({
   isLoading,
   isMutating,
   onRoleChange,
+  onRemove,
 }: TeamMemberTableProps) {
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
@@ -34,17 +38,18 @@ export function TeamMemberTable({
               <TableHead>{t('engagement.team.member')}</TableHead>
               <TableHead>{t('engagement.team.role')}</TableHead>
               <TableHead>{t('engagement.team.joinedAt')}</TableHead>
+              <TableHead className="text-right">{t('engagement.team.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} role="status">{t('engagement.team.loading')}</TableCell>
+                <TableCell colSpan={4} role="status">{t('engagement.team.loading')}</TableCell>
               </TableRow>
             ) : null}
             {!isLoading && team.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3}>{t('engagement.team.empty')}</TableCell>
+                <TableCell colSpan={4}>{t('engagement.team.empty')}</TableCell>
               </TableRow>
             ) : null}
             {team.map((member) => (
@@ -55,6 +60,7 @@ export function TeamMemberTable({
                 </TableCell>
                 <TableCell>{renderRoleSelect(member, false)}</TableCell>
                 <TableCell>{formatJoinedAt(member.joinedAt)}</TableCell>
+                <TableCell className="text-right">{renderRemoveButton(member, false)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -74,6 +80,7 @@ export function TeamMemberTable({
             <p className="text-xs text-muted-foreground">
               {t('engagement.team.joinedAt')}: {formatJoinedAt(member.joinedAt)}
             </p>
+            {renderRemoveButton(member, true)}
           </article>
         ))}
       </div>
@@ -102,6 +109,23 @@ export function TeamMemberTable({
           ))}
         </select>
       </>
+    );
+  }
+
+  function renderRemoveButton(member: TeamMember, fullWidth: boolean) {
+    const memberName = member.fullName || member.email;
+    return (
+      <Button
+        type="button"
+        variant="destructive"
+        className={fullWidth ? 'w-full' : ''}
+        disabled={isMutating}
+        aria-label={t('engagement.team.removeMemberAria').replace('{name}', memberName)}
+        onClick={() => onRemove(member)}
+      >
+        <Trash2 aria-hidden />
+        {t('engagement.team.removeMember')}
+      </Button>
     );
   }
 }

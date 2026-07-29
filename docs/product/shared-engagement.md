@@ -22,8 +22,9 @@ Employer team management uses the live Auth organization-member endpoints.
 - Help center supports scoped articles and search.
 - Support page creates tickets and lists existing support requests.
 - Employer team page lists organization members, invites new `HrMember` accounts
-  without passwords, and changes `OrgAdmin`/`HrMember` roles through the live
-  Auth API. Only `OrgAdmin` can access this tenant-scoped surface.
+  without passwords, changes `OrgAdmin`/`HrMember` roles, and removes
+  organization membership after confirmation through the live Auth API. User
+  accounts are retained. Only `OrgAdmin` can access this tenant-scoped surface.
 
 ## Deferred
 

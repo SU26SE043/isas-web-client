@@ -9,6 +9,7 @@ vi.mock('@/shared/api', () => ({
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -51,6 +52,15 @@ describe('engagementService organization members', () => {
     expect(mockedApi.patch).toHaveBeenCalledWith(
       '/api/v1/auth/org/members/user%2F1',
       { orgRole: 'OrgAdmin' },
+    );
+  });
+
+  it('removes only the organization membership with no request body', async () => {
+    mockedApi.delete.mockResolvedValueOnce({ status: 204, data: undefined });
+
+    await expect(engagementService.removeTeamMember('user/1')).resolves.toBeUndefined();
+    expect(mockedApi.delete).toHaveBeenCalledWith(
+      '/api/v1/auth/org/members/user%2F1',
     );
   });
 

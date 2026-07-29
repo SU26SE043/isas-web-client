@@ -14,6 +14,7 @@ test.describe('organization member Auth APIs', () => {
     ];
     let inviteBody: unknown;
     let patchBody: unknown;
+    let deleteBody: string | null | undefined;
 
     await page.route('**/api/v1/auth/org/members**', async (route) => {
       const request = route.request();
@@ -55,6 +56,22 @@ test.describe('organization member Auth APIs', () => {
         return;
       }
 
+      if (request.method() === 'DELETE' && url.pathname.endsWith('/org/members/member-2')) {
+        deleteBody = request.postData();
+        members.splice(members.findIndex((member) => member.userId === 'member-2'), 1);
+        await route.fulfill({ status: 204 });
+        return;
+      }
+
+      if (request.method() === 'DELETE' && url.pathname.endsWith('/org/members/member-1')) {
+        await route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Cannot remove the last OrgAdmin' }),
+        });
+        return;
+      }
+
       await route.abort();
     });
 
@@ -84,6 +101,29 @@ test.describe('organization member Auth APIs', () => {
       .selectOption('HrMember');
     await expect(page.getByRole('alert')).toContainText(
       'The last organization administrator cannot be demoted.',
+    );
+
+    await desktopTable
+      .getByRole('row')
+      .filter({ hasText: 'New HR' })
+      .getByRole('button', { name: 'Remove New HR from the organization' })
+      .click();
+    const removeDialog = page.getByRole('dialog');
+    await expect(removeDialog).toContainText(
+      'the user account will be retained',
+    );
+    await removeDialog.getByRole('button', { name: 'Remove member' }).click();
+    await expect(desktopTable.getByRole('row').filter({ hasText: 'New HR' })).toHaveCount(0);
+    expect(deleteBody).toBeNull();
+
+    await desktopTable
+      .getByRole('row')
+      .filter({ hasText: 'Organization Owner' })
+      .getByRole('button', { name: 'Remove Organization Owner from the organization' })
+      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Remove member' }).click();
+    await expect(page.getByRole('alert')).toContainText(
+      'The last organization administrator cannot be removed.',
     );
 
     await page.screenshot({

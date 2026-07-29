@@ -155,4 +155,8 @@ export const engagementService = {
     const { data } = await apiClient.patch(authEndpoints.orgMember(userId), input);
     return parseOrgMember(data);
   },
+
+  async removeTeamMember(userId: string): Promise<void> {
+    await apiClient.delete(authEndpoints.orgMember(userId));
+  },
 };

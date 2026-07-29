@@ -24,6 +24,11 @@ tenant-scoped endpoints.
   password or choose a role during creation.
 - Change membership only through `PATCH /api/v1/auth/org/members/{userId}` with
   an exact `OrgAdmin` or `HrMember` value.
+- Remove membership through `DELETE /api/v1/auth/org/members/{userId}` only
+  after explicit confirmation. A successful `204` removes the member from the
+  local list but never implies deletion of the user account.
+- Do not optimistically remove a member: self-removal (`400`) and final
+  `OrgAdmin` removal (`409`) leave the local list unchanged.
 - Treat the returned `userId`, `orgRole`, and `joinedAt` fields as the canonical
   team member model.
 
@@ -44,6 +49,7 @@ Positive:
 - Frontend authorization matches the live tenant boundary.
 - Invite and role changes use the exact backend DTOs.
 - The last-OrgAdmin conflict is surfaced without optimistic corruption.
+- Organization removal is clearly distinguished from user-account deletion.
 
 Tradeoffs:
 

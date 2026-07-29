@@ -106,9 +106,34 @@ export function useEmployerTeam() {
     }
   }, []);
 
+  const removeMember = useCallback(async (userId: string) => {
+    setIsMutating(true);
+    setErrorKey(null);
+    try {
+      await engagementService.removeTeamMember(userId);
+      setTeam((current) => current.filter((item) => item.userId !== userId));
+    } catch (error) {
+      const status = getApiStatusCode(error);
+      setErrorKey(
+        status === 400
+          ? 'engagement.team.error.selfRemove'
+          : status === 403
+            ? 'engagement.team.error.forbidden'
+            : status === 404
+              ? 'engagement.team.error.notFound'
+              : status === 409
+                ? 'engagement.team.error.lastAdminRemove'
+                : 'engagement.team.error.remove',
+      );
+      throw error;
+    } finally {
+      setIsMutating(false);
+    }
+  }, []);
+
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  return { team, isLoading, isMutating, errorKey, invite, updateRole, reload };
+  return { team, isLoading, isMutating, errorKey, invite, updateRole, removeMember, reload };
 }

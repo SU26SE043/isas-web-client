@@ -39,7 +39,10 @@ Candidates, employers, and admins can access shared notifications, notification 
 - Support form creates a ticket and updates the local ticket list.
 - Employer team page can invite members and surfaces BR-002 role restriction.
 - Employer team uses live Auth APIs to list members, invite an `HrMember` with
-  email/full name, and change `OrgAdmin`/`HrMember` roles.
+  email/full name, change `OrgAdmin`/`HrMember` roles, and remove organization
+  membership without deleting the user account.
+- Member removal requires confirmation and leaves the list unchanged when the
+  backend rejects self-removal or removal of the final `OrgAdmin`.
 - Only `OrgAdmin` can access team management; platform `Admin` is not treated as
   having implicit organization context.
 - All visible UI text is bilingual through `useLanguage().t()`.
@@ -64,7 +67,8 @@ Candidates, employers, and admins can access shared notifications, notification 
 - `npm run test:e2e` passed: 2 Chromium smoke tests.
 - `harness-cli story verify US-011` passed.
 - Manual visible UI verification screenshots: `test-results/phase14-ui/01-candidate-notifications.png`, `02-candidate-notification-live.png`, `03-candidate-settings-saved.png`, `04-candidate-support-created.png`, `05-employer-team-invite.png`, `06-employer-notifications.png`, `07-candidate-help-mobile.png`.
-- Live organization-member proof: service tests 5/5; Chromium E2E 2/2
-  (list/invite/role update, final-OrgAdmin conflict, platform Admin denial);
+- Live organization-member proof: service tests 6/6; Chromium E2E 2/2
+  (list/invite/role update/remove, `204` removal, final-OrgAdmin conflicts,
+  platform Admin denial);
   i18n, typecheck, and production build pass; responsive screenshots at
   `test-results/auth-org-members/team-{desktop,mobile}.png`.

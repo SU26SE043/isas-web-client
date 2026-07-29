@@ -95,6 +95,7 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Invite organization member | `POST /api/v1/auth/org/members` | `OrgAdmin` — body `{ email, fullName }`; creates an `HrMember`; `201`; `409` email exists. |
 | List organization members | `GET /api/v1/auth/org/members` | `OrgAdmin` — unpaginated `OrgMemberResponse[]`. |
 | Change organization role | `PATCH /api/v1/auth/org/members/{userId}` | `OrgAdmin` — body `{ orgRole: "OrgAdmin" \| "HrMember" }`; `400/403/404/409`, including protection for the final OrgAdmin. |
+| Remove organization member | `DELETE /api/v1/auth/org/members/{userId}` | `OrgAdmin` — `204`; removes only membership, not the user account; `400` self-removal, `403`, `404`, `409` final OrgAdmin. |
 
 | Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
 | Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
