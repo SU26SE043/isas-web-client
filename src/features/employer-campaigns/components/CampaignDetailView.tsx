@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
+import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
@@ -103,17 +104,17 @@ export function CampaignDetailView({
                 }
               />
               <div className="grid gap-3 md:grid-cols-3">
-                <Info
+                <CampaignDetailMetric
                   icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
                   value={`${campaign.applicants}/${campaign.capacity}`}
                 />
-                <Info
+                <CampaignDetailMetric
                   icon={Clock3}
                   label={t('employer.campaigns.form.duration')}
                   value={`${campaign.durationMinutes}`}
                 />
-                <Info
+                <CampaignDetailMetric
                   icon={MessageSquareText}
                   label={t('employer.campaigns.form.questionsUnit')}
                   value={`${campaign.questions.length}`}
@@ -234,19 +235,5 @@ function IconTitle({
       </span>
       {children}
     </CardTitle>
-  );
-}
-
-function Info({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-info/15 bg-info/[0.05] px-3 py-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-info/10 text-info-light">
-        <Icon className="size-4" aria-hidden />
-      </span>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 text-lg font-semibold text-foreground">{value}</p>
-      </div>
-    </div>
   );
 }
