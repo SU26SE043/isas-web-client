@@ -194,7 +194,7 @@ flowchart LR
 | **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
 | **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần | ✅ Done (mock) |
 | **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần | ✅ Done (mock) |
-| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (mock) |
+| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (hybrid: live Auth directory) |
 | **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần | ✅ Done (mock) |
 | **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần | ✅ Done (mock) |
 
@@ -1537,7 +1537,7 @@ P0 Foundation
 - [x] P10: selection upload, email preview, invite resolution complete
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
-- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
+- [x] P13: admin platform — live Auth organization/user directories; dashboard, RBAC, audit, AI/system config, flags, health, maintenance and remaining queues stay mock; US-010 and US-018 `implemented`
 - [x] P14: shared engagement — NotificationBell dropdown and notifications/settings/help/support mocks; employer team uses live Auth organization-member APIs; employer settings uses live Auth organization profile GET/PUT with role-aware editing; US-013 and US-017 `implemented`
 - [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 

@@ -7,22 +7,19 @@ import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { AdminDirectoryToolbar } from '../components/directory/AdminDirectoryToolbar';
-import { AdminUsersTable } from '../components/directory/AdminUsersTable';
-import { useAdminUsers } from '../hooks/useAdminDirectory';
+import { AdminOrganizationsTable } from '../components/directory/AdminOrganizationsTable';
+import { useAdminOrganizations } from '../hooks/useAdminDirectory';
 import { useDirectoryCursor } from '../hooks/useDirectoryCursor';
-import type { AdminDirectoryRoleFilter } from '../types/adminDirectory.types';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100, 500] as const;
 
-export function AdminUsersPage() {
+export function AdminOrganizationsPage() {
   const { t } = useLanguage();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState<AdminDirectoryRoleFilter>('all');
   const pagination = useDirectoryCursor();
-  const query = useAdminUsers({
+  const query = useAdminOrganizations({
     ...(search ? { search } : {}),
-    ...(role !== 'all' ? { role } : {}),
     ...(pagination.currentCursor ? { cursor: pagination.currentCursor } : {}),
     limit: pagination.pageSize,
   });
@@ -32,11 +29,6 @@ export function AdminUsersPage() {
     const next = searchInput.trim();
     if (next === search) return;
     setSearch(next);
-    pagination.reset();
-  };
-
-  const changeRole = (next: AdminDirectoryRoleFilter) => {
-    setRole(next);
     pagination.reset();
   };
 
@@ -58,17 +50,15 @@ export function AdminUsersPage() {
   return (
     <AdminPageShell
       eyebrow="SCR-ADM-070"
-      title={t('admin.users.title')}
-      description={t('admin.users.description')}
+      title={t('admin.organizations.title')}
+      description={t('admin.organizations.description')}
       actions={query.data ? <p className="text-sm text-muted-foreground">{t('admin.directory.pageCount').replace('{count}', String(query.data.items.length))}</p> : null}
     >
       <AdminDirectoryToolbar
         search={searchInput}
-        role={role}
         isFetching={query.isFetching}
         onSearchChange={setSearchInput}
         onSearchCommit={commitSearch}
-        onRoleChange={changeRole}
         onRefresh={refresh}
       />
 
@@ -84,14 +74,14 @@ export function AdminUsersPage() {
           <EmptyState variant="no-results" title={t('admin.directory.empty')} description={t('admin.directory.emptyDescription')} />
         ) : (
           <div className="space-y-4">
-            <AdminUsersTable items={query.data.items} />
+            <AdminOrganizationsTable items={query.data.items} />
             <AppPagination
               mode="cursor"
               currentPage={pagination.pageNumber}
               pageSize={pagination.pageSize}
               pageSizeOptions={PAGE_SIZE_OPTIONS}
               itemCount={query.data.items.length}
-              itemLabel={t('admin.users.itemLabel')}
+              itemLabel={t('admin.organizations.itemLabel')}
               hasPreviousPage={pagination.hasPreviousPage}
               hasNextPage={Boolean(nextCursor)}
               isLoading={query.isFetching}

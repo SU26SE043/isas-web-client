@@ -41,6 +41,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-015 | Progress analytics dashboard | E05 | normal | implemented | [US-015](./epics/E05-practice/US-015-progress-analytics.md) |
 | US-016 | Live Employer package payment | E11 | high-risk | in_progress | [US-016](./epics/E11-employer-billing/US-016-live-employer-payment/overview.md) |
 | US-017 | Live Auth organization profile | E10 | high-risk | implemented | [US-017](./epics/E10-shared-engagement/US-017-auth-organization-profile/overview.md) |
+| US-018 | Live Admin Auth directory | E09 | high-risk | implemented | [US-018](./epics/E09-admin-platform/US-018-live-auth-directory/overview.md) |
 
 ## How to pick work
 
