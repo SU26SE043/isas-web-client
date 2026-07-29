@@ -103,6 +103,7 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Admin ban user | `POST /api/v1/auth/admin/users/{userId}/ban` | Platform `Admin` only — body `{ reason? }` (maximum 500); returns updated user. Ban blocks new sessions and refresh, but issued access tokens survive their TTL. |
 | Admin unban user | `POST /api/v1/auth/admin/users/{userId}/unban` | Platform `Admin` only — returns updated user; `409` when the account is not banned. |
 | Admin reset user password | `POST /api/v1/auth/admin/users/{userId}/reset-password` | Platform `Admin` only — body `{ newPassword }`, returns `204`, and revokes all refresh tokens for the target user. |
+| Admin analytics | `GET /api/v1/auth/admin/analytics` | Platform `Admin` only — optional `{ from, to, groupBy: day|month }`; returns user/organization totals, active-user windows, role totals, and time buckets; defaults to the last 30 days grouped by day. |
 
 | Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
 | Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
