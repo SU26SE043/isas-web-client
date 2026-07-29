@@ -12,6 +12,7 @@ import {
 vi.mock('@/shared/api/apiClient', () => ({
   apiClient: {
     get: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
@@ -79,6 +80,65 @@ describe('Admin Auth directory APIs', () => {
     expect(mockedApi.get).toHaveBeenCalledWith(
       adminDirectoryEndpoints.users,
       { params: { search: 'owner', cursor: 'cursor-1', limit: 50, role: 'OrgAdmin' } },
+    );
+  });
+
+  it('bans a user with a trimmed optional reason and parses the updated user', async () => {
+    mockedApi.post.mockResolvedValueOnce({
+      data: {
+        id: 'user/1',
+        email: 'candidate@isas.dev',
+        fullName: 'Candidate',
+        role: 'Candidate',
+        createdAt: '2026-07-20T00:00:00.000Z',
+        bannedAt: '2026-07-29T00:00:00.000Z',
+        banReason: 'Policy violation',
+      },
+    });
+
+    await expect(adminDirectoryService.banAdminUser(
+      'user/1',
+      { reason: '  Policy violation  ' },
+    )).resolves.toMatchObject({
+      id: 'user/1',
+      bannedAt: '2026-07-29T00:00:00.000Z',
+    });
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/api/v1/auth/admin/users/user%2F1/ban',
+      { reason: 'Policy violation' },
+    );
+  });
+
+  it('unbans a user without inventing a request body', async () => {
+    mockedApi.post.mockResolvedValueOnce({
+      data: {
+        id: 'user-1',
+        email: 'candidate@isas.dev',
+        fullName: 'Candidate',
+        role: 'Candidate',
+        createdAt: '2026-07-20T00:00:00.000Z',
+      },
+    });
+
+    await expect(adminDirectoryService.unbanAdminUser('user-1')).resolves.toMatchObject({
+      id: 'user-1',
+      bannedAt: undefined,
+    });
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/api/v1/auth/admin/users/user-1/unban',
+    );
+  });
+
+  it('resets a user password and accepts the 204 response', async () => {
+    mockedApi.post.mockResolvedValueOnce({ data: undefined, status: 204 });
+
+    await expect(adminDirectoryService.resetAdminUserPassword(
+      'user-1',
+      { newPassword: 'StrongPass123!' },
+    )).resolves.toBeUndefined();
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/api/v1/auth/admin/users/user-1/reset-password',
+      { newPassword: 'StrongPass123!' },
     );
   });
 

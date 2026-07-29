@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { adminDirectoryService } from '../services/adminDirectory.service';
 import type { GetAdminOrganizationsParams, GetAdminUsersParams } from '../types/adminDirectory.types';
+import type { AdminBanUserInput, AdminResetUserPasswordInput } from '../types/adminDirectory.types';
 
 export const adminDirectoryKeys = {
   all: ['admin-auth-directory'] as const,
@@ -33,4 +34,27 @@ export function useAdminUsers(params: GetAdminUsersParams) {
     placeholderData: (previous) => previous,
     retry: retryDirectoryQuery,
   });
+}
+
+export function useAdminUserActions() {
+  const queryClient = useQueryClient();
+  const refreshUsers = () => queryClient.invalidateQueries({
+    queryKey: [...adminDirectoryKeys.all, 'users'],
+  });
+
+  const ban = useMutation({
+    mutationFn: ({ userId, input }: { userId: string; input: AdminBanUserInput }) =>
+      adminDirectoryService.banAdminUser(userId, input),
+    onSuccess: refreshUsers,
+  });
+  const unban = useMutation({
+    mutationFn: (userId: string) => adminDirectoryService.unbanAdminUser(userId),
+    onSuccess: refreshUsers,
+  });
+  const resetPassword = useMutation({
+    mutationFn: ({ userId, input }: { userId: string; input: AdminResetUserPasswordInput }) =>
+      adminDirectoryService.resetAdminUserPassword(userId, input),
+  });
+
+  return { ban, unban, resetPassword };
 }

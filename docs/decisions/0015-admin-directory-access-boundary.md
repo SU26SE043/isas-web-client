@@ -49,5 +49,5 @@ Tradeoffs:
 
 ## Follow-Up
 
-- Add ban/unban actions only after Auth publishes the corresponding mutation
-  endpoints and audit behavior.
+- Ban/unban and password-reset actions are now governed by
+  `docs/decisions/0016-admin-account-action-boundary.md`.

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface ConfirmDialogProps {
   icon?: ReactNode;
   destructive?: boolean;
   loading?: boolean;
+  errorMessage?: string | null;
 }
 
 export function ConfirmDialog({
@@ -35,6 +37,7 @@ export function ConfirmDialog({
   icon,
   destructive = false,
   loading = false,
+  errorMessage,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,6 +50,10 @@ export function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
+        {errorMessage ? (
+          <Alert variant="error"><AlertDescription>{errorMessage}</AlertDescription></Alert>
+        ) : null}
 
         <DialogFooter>
           <Button

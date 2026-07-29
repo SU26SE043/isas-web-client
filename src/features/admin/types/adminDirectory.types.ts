@@ -38,3 +38,11 @@ export interface GetAdminOrganizationsParams {
 export interface GetAdminUsersParams extends GetAdminOrganizationsParams {
   role?: AdminDirectoryRole;
 }
+
+export interface AdminBanUserInput {
+  reason?: string;
+}
+
+export interface AdminResetUserPasswordInput {
+  newPassword: string;
+}

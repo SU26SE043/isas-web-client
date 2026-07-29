@@ -100,6 +100,9 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Remove organization member | `DELETE /api/v1/auth/org/members/{userId}` | `OrgAdmin` — `204`; removes only membership, not the user account; `400` self-removal, `403`, `404`, `409` final OrgAdmin. |
 | Admin organizations | `GET /api/v1/auth/admin/organizations` | Platform `Admin` only — query `{ search?, cursor?, limit? }`, limit max/default 500; returns `OrganizationResponse[]` plus `X-Next-Cursor`; `401` missing token, `403` other roles. |
 | Admin users | `GET /api/v1/auth/admin/users` | Platform `Admin` only — query `{ role?, search?, cursor?, limit? }`; returns account, organization membership, and ban metadata plus `X-Next-Cursor`; `401` missing token, `403` other roles. |
+| Admin ban user | `POST /api/v1/auth/admin/users/{userId}/ban` | Platform `Admin` only — body `{ reason? }` (maximum 500); returns updated user. Ban blocks new sessions and refresh, but issued access tokens survive their TTL. |
+| Admin unban user | `POST /api/v1/auth/admin/users/{userId}/unban` | Platform `Admin` only — returns updated user; `409` when the account is not banned. |
+| Admin reset user password | `POST /api/v1/auth/admin/users/{userId}/reset-password` | Platform `Admin` only — body `{ newPassword }`, returns `204`, and revokes all refresh tokens for the target user. |
 
 | Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
 | Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
