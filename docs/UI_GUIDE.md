@@ -108,7 +108,7 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 | Table | `Table` + `TableHeader` / `TableBody` / `TableRow` / `TableHead` / `TableCell` from `@/components/ui/table` (wraps `GlassTableContainer`) |
 | **SectionPanel** | Glass section shell — **default** for wizard/setup sections |
 | **SelectionOption** | Satin selectable tile — **default** for choice grids |
-| Modal | Dialog + `border-satin` |
+| Modal | `AppModal` (open/onClose + sizes) or `Dialog` / `ConfirmDialog` + `border-satin` |
 | Input | `border-satin` + satin inset |
 | Primary button | `btn-primary` (white bg, black text) |
 | Secondary button | `btn-secondary` (satin outline) |
@@ -283,6 +283,7 @@ Không invent brand hex — chỉ token semantic success/error/info.
 | `src/shared/charts/chartColors.ts` | Categorical / radar / grid / tooltip helpers |
 | `src/index.css` | Tailwind theme + `frame-satin*` utilities |
 | `src/components/ui/glass-table-container.tsx` | Specular glass table wrapper |
+| `src/components/ui/app-modal.tsx` | Shared modal facade (`open`/`onClose`, sizes incl. `auth`) |
 | `src/components/ui/*` | shadcn primitives + shared templates |
 | `src/components/ui/section-panel.tsx` | Glass section / wizard shell |
 | `src/components/ui/selection-option.tsx` | Selectable option tile |
@@ -292,7 +293,9 @@ Không invent brand hex — chỉ token semantic success/error/info.
 | Surface | Baseline | Decision |
 |---------|----------|----------|
 | Login `/login`, Sign up `/register` | Redirect → homepage `AuthModal` (`SignInForm` / `SignUpForm`) | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
-| Marketing auth modal | Split-panel `AuthModal` + `AuthOverlay` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+| Marketing auth modal | Split-panel `AuthModal` + `AuthOverlay` trên `AppModal` size=`auth` | [`0009`](./decisions/0009-auth-login-signup-ui-freeze.md) |
+
+**Modal chrome:** dùng `AppModal` (`src/components/ui/app-modal.tsx`) cho facade `open`/`onClose` + size (`sm`–`xl`, `auth`). Confirm / structured dialogs tiếp tục dùng `Dialog` + `ConfirmDialog`. Auth entry vẫn là `AuthModal` (freeze 0009) — không redesign panel slide.
 
 Đây là **template xác thực dùng chung toàn hệ thống**. Mọi module/luồng cần đăng nhập hoặc đăng ký phải **reuse** các surface này (redirect `/login`·`/register`, hoặc mở `AuthModal`) — **cấm** thiết kế UI login/sign-up riêng trong từng feature.
 

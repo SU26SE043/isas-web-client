@@ -24,8 +24,8 @@ const session: PracticeSessionResponse = {
   createdAt: '2026-07-01T00:00:00Z',
   completedAt: '2026-07-01T00:20:00Z',
   questions: [
-    { id: 'q1', orderNo: 1, content: 'Tell me about yourself.', timeLimitSec: 120 },
-    { id: 'q2', orderNo: 2, content: 'Describe a conflict.', timeLimitSec: 120 },
+    { id: 'q1', orderNo: 1, content: 'Tell me about yourself.', timeLimitSec: 120, kind: 'Seed' },
+    { id: 'q2', orderNo: 2, content: 'Describe a conflict.', timeLimitSec: 120, kind: 'Seed' },
   ],
   answers: [
     {
@@ -33,29 +33,26 @@ const session: PracticeSessionResponse = {
       answerId: 'a1',
       status: 'Scored',
       transcript: 'I am a developer.',
-      score: 4,
-      maxScore: 5,
-      criteriaScores: [{ name: 'Communication', score: 4, maxScore: 5, pct: 80 }],
+      criteriaScores: [{ name: 'Communication', score: 4, maxScore: 5 }],
     },
     {
       questionId: 'q2',
       answerId: 'a2',
       status: 'Scored',
       transcript: 'I mediated calmly.',
-      score: 3,
-      maxScore: 5,
-      criteriaScores: [{ name: 'Communication', score: 3, maxScore: 5, pct: 60 }],
+      criteriaScores: [{ name: 'Communication', score: 3, maxScore: 5 }],
     },
   ],
   result: {
     overallScore: 70,
     maxScore: 100,
-    passThresholdPct: 50,
+    passThreshold: 50,
     overallComment: 'Solid session overall.',
     strengths: ['Clear structure'],
     needsImprovement: ['Add more metrics'],
     nextSteps: ['Practice STAR'],
-    criteriaScores: [{ name: 'Communication', score: 7, maxScore: 10, pct: 70 }],
+    criteriaScores: [{ name: 'Communication', score: 7, maxScore: 10 }],
+    cvVsAnswer: null,
   },
 };
 
