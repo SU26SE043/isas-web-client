@@ -16,6 +16,7 @@ import type {
   ApiRoadmapLessonDetail,
   ApiRoadmapListItem,
   ApiRoadmapMilestone,
+  LearningResource,
 } from '../types/roadmap.api.types';
 
 export type OpenedLearningLesson = {
@@ -29,6 +30,7 @@ export type OpenedLearningLesson = {
   theoryStatus: LessonPartStatus;
   practiceStatus: LessonPartStatus;
   pathStatus: LearningPathStatus;
+  resources: LearningResource[];
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -275,6 +277,26 @@ export function mapApiRoadmapDetail(raw: unknown): LearningRoadmapDetail {
   };
 }
 
+function mapLearningResources(raw: unknown): LearningResource[] {
+  if (!Array.isArray(raw)) return [];
+  const resources: LearningResource[] = [];
+  for (const entry of raw) {
+    const item = asRecord(entry);
+    const title = pickString(item.title, item.name);
+    if (!title) continue;
+    const type = pickString(item.type, item.resourceType) || 'Doc';
+    const publisher = pickString(item.publisher, item.source) || null;
+    const urlRaw = typeof item.url === 'string' ? item.url.trim() : '';
+    resources.push({
+      title,
+      type,
+      publisher,
+      url: urlRaw || null,
+    });
+  }
+  return resources;
+}
+
 export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
   const item = asRecord(raw) as ApiRoadmapLessonDetail;
   const apiStatus = normalizeApiLessonStatus(item.status);
@@ -292,6 +314,7 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
     theoryStatus: parts.theoryStatus,
     practiceStatus: parts.practiceStatus,
     pathStatus: parts.pathStatus,
+    resources: mapLearningResources(item.resources),
   };
 }
 

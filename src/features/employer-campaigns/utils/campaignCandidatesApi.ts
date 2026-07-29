@@ -1,9 +1,12 @@
 import type {
   CampaignCandidateDetail,
   CampaignCandidateListItem,
+  CampaignResultFlag,
   CampaignResultStatus,
   CampaignResultsResponse,
+  CampaignScoredResult,
   CampaignTranscriptResponse,
+  CampaignUnscoredFlaggedResult,
   CandidateListQuery,
   CandidateUploadResponse,
   InviteCampaignCandidatesResponse,
@@ -208,35 +211,51 @@ export function parseInviteByCandidateIdsResponse(
   return { invited, failed };
 }
 
+function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
+  if (!Array.isArray(raw)) return [];
+  const flags: CampaignResultFlag[] = [];
+  for (const flag of raw) {
+    const flagRecord = asRecord(flag);
+    if (!flagRecord) continue;
+    const type = pickString(flagRecord, 'type', 'Type');
+    const count = pickNumber(flagRecord, 'count', 'Count') ?? 0;
+    if (!type) continue;
+    flags.push({
+      type,
+      count,
+      note: pickString(flagRecord, 'note', 'Note') ?? null,
+    });
+  }
+  return flags;
+}
+
+function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const candidateId = pickString(record, 'candidateId', 'CandidateId');
+  const sessionId = pickString(record, 'sessionId', 'SessionId');
+  if (!candidateId || !sessionId) return null;
+  return {
+    candidateId,
+    sessionId,
+    fullName: pickString(record, 'fullName', 'FullName') ?? null,
+    email: pickString(record, 'email', 'Email') ?? null,
+    flags: parseCampaignResultFlags(record.flags ?? record.Flags),
+  };
+}
+
 export function parseCampaignResultsResponse(data: unknown): CampaignResultsResponse {
   const root = asRecord(data);
   const body = asRecord(root?.data) ?? root ?? {};
   const resultsRaw = unwrapArrayPayload(body.results ?? body.Results ?? body);
   const results = resultsRaw
-    .map((item) => {
+    .map((item): CampaignScoredResult | null => {
       const record = asRecord(item);
       if (!record) return null;
       const candidateId = pickString(record, 'candidateId', 'CandidateId');
       const sessionId = pickString(record, 'sessionId', 'SessionId');
       const scoredAt = pickString(record, 'scoredAt', 'ScoredAt');
       if (!candidateId || !sessionId || !scoredAt) return null;
-      const flagsRaw = record.flags ?? record.Flags;
-      const flags = Array.isArray(flagsRaw)
-        ? flagsRaw
-            .map((flag) => {
-              const flagRecord = asRecord(flag);
-              if (!flagRecord) return null;
-              const type = pickString(flagRecord, 'type', 'Type');
-              const count = pickNumber(flagRecord, 'count', 'Count') ?? 0;
-              if (!type) return null;
-              return {
-                type,
-                count,
-                note: pickString(flagRecord, 'note', 'Note') ?? null,
-              };
-            })
-            .filter((flag): flag is NonNullable<typeof flag> => flag != null)
-        : [];
       const resultRaw = pickString(record, 'result', 'Result');
       const result: CampaignResultStatus =
         resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null;
@@ -257,16 +276,24 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
         overriddenAt: pickString(record, 'overriddenAt', 'OverriddenAt') ?? null,
         result,
         scoredAt,
-        flags,
+        flags: parseCampaignResultFlags(record.flags ?? record.Flags),
       };
     })
-    .filter((item): item is NonNullable<typeof item> => item != null);
+    .filter((item): item is CampaignScoredResult => item != null);
+
+  const unscoredRaw = body.unscoredFlagged ?? body.UnscoredFlagged;
+  const unscoredFlagged = Array.isArray(unscoredRaw)
+    ? unscoredRaw
+        .map(parseUnscoredFlaggedResult)
+        .filter((item): item is CampaignUnscoredFlaggedResult => item != null)
+    : [];
 
   return {
     campaignId: pickString(body, 'campaignId', 'CampaignId') ?? '',
     passScorePct: pickNumber(body, 'passScorePct', 'PassScorePct') ?? null,
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
+    unscoredFlagged,
   };
 }
 

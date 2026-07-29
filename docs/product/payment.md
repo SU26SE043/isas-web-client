@@ -68,7 +68,13 @@ Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages(
 
 ---
 
-## B2B — Postpaid monthly by tokens
+## B2B — Live package purchase and organization account
+
+> Decision 0011 and [`employer-billing.md`](./employer-billing.md) supersede the
+> earlier mock-only postpaid/invoice description below. The active frontend
+> contract supports one-time credit and subscription packages, verified PayOS
+> orders, organization account/subscription state, and credit transactions.
+> `OrgAdmin` can purchase/cancel; `HrMember` is read-only.
 
 ### User flow (Organize)
 
@@ -106,7 +112,9 @@ Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages(
 
 ## Status
 
-Phase 7 B2C token wallet on **mock** PayOS with reserve/settle wired through practice flow. B2B monthly usage/invoices remain planned.
+Phase 7 B2C token wallet remains on its existing mock reserve/settle flow.
+US-016 migrates Employer billing to the live PaymentService package/order/account/
+subscription/transaction APIs with bounded PayOS callback verification.
 
 ## Related
 

@@ -44,19 +44,6 @@ export const useAuth = () => {
   }, [logout, navigate]);
 
   useEffect(() => {
-    // Check for tokens in URL params (e.g., from Google Login callback)
-    const searchParams = new URLSearchParams(window.location.search);
-    const urlAccessToken = searchParams.get('accessToken');
-    const urlRefreshToken = searchParams.get('refreshToken');
-
-    if (urlAccessToken && urlRefreshToken) {
-      const urlExpiresAt = searchParams.get('expiresAt');
-      authTokenStorage.setTokens(urlAccessToken, urlRefreshToken, urlExpiresAt);
-      sessionManager.markSessionStart();
-      // Clean up URL parameters without refreshing page
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
     const token = authTokenStorage.getAccessToken();
     if (token && !sessionManager.getSessionStartedAt()) {
       sessionManager.markSessionStart();

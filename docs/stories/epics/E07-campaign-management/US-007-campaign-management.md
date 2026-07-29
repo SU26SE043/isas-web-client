@@ -37,6 +37,10 @@ HR users can manage B2B assessment campaigns from draft creation through publish
 - `/employer/campaigns/:id/selection` bulk email import with file upload.
 - Publish opens invitation email preview before confirming.
 - `/employer/campaigns/:id/edit` allows editing draft campaigns.
+- Active campaign detail shows a destructive **Kết thúc chiến dịch** action beside the Active badge, never as a standalone “Đóng” action in content.
+- Ending requires an irreversible-action dialog and exact confirmation phrase before calling `PUT /api/v1/campaign/{id}/status` with `{ "status": "Closed" }`.
+- During the request all dialog actions are disabled; success refetches detail, shows **Đã kết thúc**, hides the end action, and Active-only invite/reissue/edit operations remain unavailable.
+- A failed end request keeps the dialog open, restores the confirm action, and prefers the backend error message when present.
 - All visible text is bilingual through `useLanguage().t()`.
 
 ## Design Notes

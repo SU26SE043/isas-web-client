@@ -4,7 +4,7 @@ export const layoutTranslations: TranslationDictionary = {
   vi: {
     'language.label': 'Ngôn ngữ',
     'language.vietnamese': 'Tiếng Việt',
-    'language.english': 'English',
+    'language.english': 'Tiếng Anh',
 
     'nav.home': 'Trang chủ',
     'nav.features': 'Tính năng',

@@ -7,7 +7,6 @@ import { PracticeCvOptionalStep } from '../components/wizard/PracticeCvOptionalS
 import { PracticeJdStep } from '../components/wizard/PracticeJdStep';
 import { PracticeTimeLimitStep } from '../components/wizard/PracticeTimeLimitStep';
 import { PracticeQuestionCountSetupStep } from '../components/wizard/PracticeQuestionCountSetupStep';
-import { PracticeDeviceCheckStep } from '../components/wizard/PracticeDeviceCheckStep';
 import { PracticeSetupSummaryStep } from '../components/wizard/PracticeSetupSummaryStep';
 import { usePracticeSetupFlow } from '../hooks/usePracticeSetupFlow';
 
@@ -82,15 +81,6 @@ export function PracticeWizardPage() {
       ) : null}
 
       {flow.step === 5 ? (
-        <PracticeDeviceCheckStep
-          disabled={disabled}
-          onReadyChange={flow.setDeviceReady}
-          onBack={() => flow.goToStep(4)}
-          onNext={() => flow.goToStep(6)}
-        />
-      ) : null}
-
-      {flow.step === 6 ? (
         <PracticeSetupSummaryStep
           jobCategory={flow.jobCategory}
           cvFile={flow.selectedCv}
@@ -103,7 +93,7 @@ export function PracticeWizardPage() {
           isCreating={flow.isCreatingSession}
           errorCode={flow.createErrorCode}
           errorMessage={flow.createErrorMessage}
-          onBack={() => flow.goToStep(5)}
+          onBack={() => flow.goToStep(4)}
           onStart={() => void flow.handleStart()}
           onClearError={flow.clearCreateError}
         />
@@ -116,7 +106,7 @@ export function PracticeWizardPage() {
         </div>
       ) : null}
 
-      {flow.createErrorCode === 'insufficient_credit' && flow.step !== 6 ? (
+      {flow.createErrorCode === 'insufficient_credit' && flow.step !== 5 ? (
         <div className="mt-4 rounded-xl border border-error/40 bg-surface-raised p-4 text-sm text-error">
           {t('practice.errors.insufficientCredit')}{' '}
           <Link to="/candidate/credits" className="underline">

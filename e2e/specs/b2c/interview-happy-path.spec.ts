@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { installMockMedia } from '../../fixtures/media';
 import { loginAs } from '../../fixtures/auth';
-import { completePracticeSetupWizard } from '../../fixtures/practiceWizard';
+import {
+  completeInterviewPreparation,
+  completePracticeSetupWizard,
+} from '../../fixtures/practiceWizard';
 
 test.describe('B2C interview happy path', () => {
   test.setTimeout(90_000);
@@ -10,16 +13,10 @@ test.describe('B2C interview happy path', () => {
     await installMockMedia(page);
     await loginAs(page, 'Candidate');
 
-    const sessionId = await completePracticeSetupWizard(page);
+    await completePracticeSetupWizard(page);
+    await completeInterviewPreparation(page);
 
-    await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
-    await page.getByRole('button', { name: /^Continue$/i }).click();
-
-    await expect(page).toHaveURL(/\/device-check/);
-    await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible();
-    await page.getByRole('button', { name: /^Continue$/i }).click();
-
-    await expect(page).toHaveURL(/\/waiting/);
+    await page.getByRole('button', { name: /Start interview/i }).click();
     await expect(page).toHaveURL(/\/room/, { timeout: 8_000 });
     await expect(page.getByRole('heading', { name: /Mock Interview/i })).toBeVisible();
 
@@ -34,6 +31,8 @@ test.describe('B2C interview happy path', () => {
 
     await expect(page).toHaveURL(/\/complete/, { timeout: 12_000 });
     await expect(page.getByRole('heading', { name: /Interview complete/i })).toBeVisible({ timeout: 10_000 });
+    const sessionId = page.url().match(/session-[a-f0-9]+/)?.[0];
+    if (!sessionId) throw new Error('session id missing');
     await expect(page.getByText(new RegExp(`Assessment ID: assessment-${sessionId}`, 'i'))).toBeVisible();
 
     await page.getByRole('link', { name: /View result/i }).click();

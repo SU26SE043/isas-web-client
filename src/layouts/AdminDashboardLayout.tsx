@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
+  Building2,
   Bell,
   BookOpen,
   Bot,
@@ -47,6 +48,7 @@ export const AdminDashboardLayout: React.FC = () => {
     () => [
       { to: '/admin/dashboard', label: t('admin.nav.dashboard'), end: true, icon: <Gauge className="h-4 w-4" aria-hidden /> },
       { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
       { to: '/admin/roles', label: t('admin.nav.roles'), icon: <Shield className="h-4 w-4" aria-hidden /> },
       { to: '/admin/permissions', label: t('admin.nav.permissions'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
       { to: '/admin/approvals', label: t('admin.nav.approvals'), icon: <ClipboardCheck className="h-4 w-4" aria-hidden /> },

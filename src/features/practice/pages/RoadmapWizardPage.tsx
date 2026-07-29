@@ -12,11 +12,7 @@ export function RoadmapWizardPage() {
   const flow = useRoadmapWizardFlow();
 
   return (
-    <RoadmapWizardShell
-      currentStep={flow.step}
-      introTitle={flow.step === 0 ? t('practice.roadmapWizard.createTitle') : undefined}
-      introDescription={flow.step === 0 ? t('practice.roadmapWizard.subtitle') : undefined}
-    >
+    <RoadmapWizardShell currentStep={flow.step}>
       {flow.submitError ? (
         <p className="mb-4 text-sm text-error" role="alert">
           {flow.submitError === 'invalid_input'
@@ -69,6 +65,8 @@ export function RoadmapWizardPage() {
           targetLevel={flow.targetLevel}
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
+          focus={flow.focus}
+          onFocusChange={flow.setFocus}
           isSubmitting={flow.isSubmitting}
           onBack={() => flow.goToStep(2)}
           onConfirm={() => void flow.handleCreate()}

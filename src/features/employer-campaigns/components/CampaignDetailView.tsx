@@ -40,6 +40,10 @@ export function CampaignDetailView({
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
   const isDraft = campaign.status === 'draft';
+  const hasDetailActions =
+    campaign.status === 'draft' ||
+    campaign.status === 'closed' ||
+    campaign.status === 'archived';
   const formattedDeadline = new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -53,14 +57,14 @@ export function CampaignDetailView({
 
   const content = (
     <div className="space-y-4">
-        <div className="flex justify-end">
+        {hasDetailActions ? <div className="flex justify-end">
           <CampaignDetailActions
             campaign={campaign}
             onPublish={onPublish}
             onChangeStatus={onChangeStatus}
             onDelete={onDelete}
           />
-        </div>
+        </div> : null}
 
         {isDraft ? (
           <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">

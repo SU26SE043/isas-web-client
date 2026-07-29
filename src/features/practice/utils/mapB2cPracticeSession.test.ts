@@ -184,6 +184,132 @@ describe('mapPracticeSessionResponse', () => {
     ]);
     expect(mapped.result?.passThreshold).toBe(50);
   });
+
+  it('maps v5 sampleAnswer, deliveryMetrics, and benchmark without coercing nulls to 0', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 'session-v5',
+      status: 'Scored',
+      jobCategory: 'FE',
+      questions: [
+        {
+          id: 'q1',
+          orderNo: 1,
+          content: 'Tell me about yourself',
+          timeLimitSec: 120,
+          kind: 'Seed',
+          answer: {
+            id: 'a1',
+            status: 'Scored',
+            durationSec: 45,
+            transcript: 'Candidate transcript',
+            needsReview: false,
+            sampleAnswer: 'Reference answer text',
+            deliveryMetrics: {
+              audioSec: 46,
+              speechSec: 40,
+              wordCount: 120,
+              speechRateWpm: 150,
+              longestPauseSec: null,
+              pauseCount: 3,
+              silenceRatio: null,
+              fillerCount: 2,
+              fillerPer100Words: 1.6,
+              fillerBreakdown: { um: 1, like: 1 },
+            },
+            scores: [],
+          },
+        },
+      ],
+      result: {
+        overallScore: 78,
+        answeredCount: 1,
+        totalQuestions: 1,
+        criteriaScores: [
+          {
+            criterionId: 'c1',
+            name: 'Communication',
+            averageScore: 4,
+            maxScore: 5,
+            percentage: 80,
+            weight: 1,
+          },
+          {
+            criterionId: 'c2',
+            name: 'Technical',
+            averageScore: 3.5,
+            maxScore: 5,
+            percentage: 70,
+            weight: 1,
+          },
+          {
+            criterionId: 'c3',
+            name: 'Confidence',
+            averageScore: 4.2,
+            maxScore: 5,
+            percentage: 84,
+            weight: 1,
+          },
+        ],
+        needsImprovement: ['Be more specific'],
+        overallComment: 'Solid',
+        benchmark: {
+          source: 'PeerAverage',
+          label: 'Peer average (FE Junior)',
+          sampleSize: 42,
+          criteria: [
+            { criterionId: 'c1', name: 'Communication', targetPercentage: 72 },
+            { criterionId: 'c2', name: 'Technical', targetPercentage: 68 },
+            { criterionId: 'c3', name: 'Confidence', targetPercentage: 70 },
+          ],
+        },
+      },
+    });
+
+    expect(mapped.answers?.[0]?.sampleAnswer).toBe('Reference answer text');
+    expect(mapped.answers?.[0]?.suggestedAnswer).toBe('Reference answer text');
+    expect(mapped.answers?.[0]?.speakingMetrics).toMatchObject({
+      audioDurationSec: 46,
+      speechSec: 40,
+      wordCount: 120,
+      speechRate: 150,
+      hesitationCount: 3,
+      fillerWordCount: 2,
+      fillerPer100Words: 1.6,
+      longestPauseSec: null,
+      silenceRatio: null,
+    });
+    expect(mapped.answers?.[0]?.speakingMetrics?.fillerBreakdown).toEqual({ um: 1, like: 1 });
+    expect(mapped.result?.benchmark?.label).toBe('Peer average (FE Junior)');
+    expect(mapped.result?.benchmark?.source).toBe('PeerAverage');
+    expect(mapped.result?.answeredCount).toBe(1);
+  });
+
+  it('keeps sampleAnswer and benchmark null-safe for v4 payloads', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 'session-v4',
+      status: 'Scored',
+      questions: [{ id: 'q1', orderNo: 1, content: 'Q', timeLimitSec: 60 }],
+      answers: [
+        {
+          questionId: 'q1',
+          transcript: 'Hello',
+          sampleAnswer: null,
+          deliveryMetrics: null,
+        },
+      ],
+      result: {
+        overallScore: 50,
+        criteriaScores: [{ name: 'A', score: 1, maxScore: 5 }],
+        needsImprovement: [],
+        overallComment: '',
+        cvVsAnswer: null,
+      },
+    });
+
+    expect(mapped.answers?.[0]?.suggestedAnswer).toBeNull();
+    expect(mapped.answers?.[0]?.speakingMetrics).toBeNull();
+    expect(mapped.result?.benchmark).toBeNull();
+  });
 });
 
 describe('mapSubmitPracticeAnswerResponse', () => {

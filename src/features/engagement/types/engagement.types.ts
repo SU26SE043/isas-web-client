@@ -3,7 +3,7 @@ export type NotificationCategory = 'interview' | 'campaign' | 'billing' | 'syste
 export type NotificationStatus = 'unread' | 'read';
 export type SupportPriority = 'low' | 'normal' | 'high';
 export type SupportStatus = 'open' | 'pending' | 'resolved';
-export type TeamRole = 'HrMember' | 'OrgAdmin' | 'Admin';
+export type TeamRole = 'HrMember' | 'OrgAdmin';
 
 export interface PlatformNotification {
   id: string;
@@ -42,12 +42,11 @@ export interface SupportTicket {
 }
 
 export interface TeamMember {
-  id: string;
-  name: string;
+  userId: string;
   email: string;
-  role: TeamRole;
-  status: 'active' | 'invited';
-  lastActiveAt: string;
+  fullName: string;
+  orgRole: TeamRole;
+  joinedAt: string;
 }
 
 export interface SupportTicketInput {
@@ -58,5 +57,22 @@ export interface SupportTicketInput {
 
 export interface TeamInviteInput {
   email: string;
-  role: TeamRole;
+  fullName: string;
+}
+
+export interface TeamRoleUpdateInput {
+  orgRole: TeamRole;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  taxCode?: string;
+  createdAt: string;
+  memberCount: number;
+}
+
+export interface OrganizationUpdateInput {
+  name?: string;
+  taxCode?: string;
 }

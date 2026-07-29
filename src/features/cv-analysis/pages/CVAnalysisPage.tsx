@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLanguage } from '@/shared/languages';
 import { CvAnalysisFlowShell } from '../components/flow/CvAnalysisFlowShell';
 import {
   CvAnalysisCreditDialog,
@@ -12,19 +11,11 @@ import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressSte
 import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 
 export const CVAnalysisPage: React.FC = () => {
-  const { t } = useLanguage();
   const flow = useCvAnalysisFlow();
   const hasJd = Boolean(flow.jdId) || flow.jdText.trim().length > 0;
 
   return (
-    <div className="min-h-full px-6 py-6 sm:px-8 lg:px-12 lg:py-8">
-      <div className="mx-auto mb-8 w-full max-w-[1600px] space-y-3 lg:mb-10">
-        <h1 className="heading-primary text-3xl tracking-tight sm:text-4xl">{t('cv.title')}</h1>
-        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {t('cv.description')}
-        </p>
-      </div>
-
+    <>
       <CvAnalysisFlowShell
         currentStep={flow.currentTimelineStep}
         statuses={flow.timelineStatuses}
@@ -97,6 +88,6 @@ export const CVAnalysisPage: React.FC = () => {
         open={flow.insufficientCreditOpen}
         onOpenChange={flow.setInsufficientCreditOpen}
       />
-    </div>
+    </>
   );
 };

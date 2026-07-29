@@ -58,7 +58,7 @@ export function SectionPanel({
               </span>
             ) : null}
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{title}</h2>
               {description ? (
                 <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                   {description}

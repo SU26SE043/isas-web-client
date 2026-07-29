@@ -1,7 +1,7 @@
-import React from 'react';
-import { Layers } from 'lucide-react';
-import { SelectionOption } from '@/components/ui/selection-option';
+import { CareerPositionSelector } from '@/components/patterns/flow-wizard/CareerPositionSelector';
 import { SectionPanel } from '@/components/ui/section-panel';
+import type { JobDomainId } from '@/shared/domain/jobDomains';
+import { isJobDomainId } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
@@ -14,38 +14,30 @@ interface RoadmapDomainStepProps {
   onNext: () => void;
 }
 
-export const RoadmapDomainStep: React.FC<RoadmapDomainStepProps> = ({
-  domains,
+export function RoadmapDomainStep({
   selectedId,
   isLoading,
   onSelect,
   onNext,
-}) => {
-  const { language, t } = useLanguage();
+}: RoadmapDomainStepProps) {
+  const { t } = useLanguage();
+
+  const handleSelect = (domainId: JobDomainId) => {
+    onSelect(domainId);
+  };
 
   return (
     <SectionPanel
-      icon={<Layers className="size-4" aria-hidden />}
       title={t('practice.roadmapWizard.domain.title')}
-      description={t('practice.roadmapWizard.domain.description')}
       isLoading={isLoading}
       footer={<RoadmapWizardNav nextDisabled={!selectedId} onNext={onNext} backDisabled />}
     >
-      <div className="grid gap-6 sm:grid-cols-2">
-        {domains.map((domain) => {
-          const label = language === 'vi' ? domain.nameVi : domain.name;
-          const description = language === 'vi' ? domain.descriptionVi : domain.description;
-          return (
-            <SelectionOption
-              key={domain.id}
-              title={label}
-              description={description}
-              selected={domain.id === selectedId}
-              onClick={() => onSelect(domain.id)}
-            />
-          );
-        })}
-      </div>
+      <CareerPositionSelector
+        selectedId={isJobDomainId(selectedId) ? selectedId : null}
+        onSelect={handleSelect}
+        accent="emerald"
+        ariaLabel={t('practice.roadmapWizard.domain.groupLabel')}
+      />
     </SectionPanel>
   );
-};
+}

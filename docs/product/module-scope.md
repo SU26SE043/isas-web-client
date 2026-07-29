@@ -173,7 +173,8 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | Route | Screen | Status |
 | --- | --- | --- |
 | `/admin/dashboard` | Admin dashboard | Implemented (mock) |
-| `/admin/users` | User management | Implemented (mock) |
+| `/admin/users` | User management | Implemented (live Auth directory, read-only) |
+| `/admin/organizations` | Organization management | Implemented (live Auth directory, read-only) |
 | `/admin/roles` | Role management | Implemented (mock) |
 | `/admin/permissions` | Permission matrix | Implemented (mock) |
 | `/admin/approvals` | HR approval queue | Implemented (mock) |

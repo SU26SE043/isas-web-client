@@ -4,7 +4,7 @@ import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.se
 import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
 import { useLanguage } from '@/shared/languages';
-import type { ProfileFileCardAction } from './ProfileFileCard';
+import type { ProfileFileCardAction } from './profileFileActions.types';
 import {
   filterAndSortProfileFiles,
   type ProfileFileSort,

@@ -5,6 +5,7 @@ import { AccessDeniedPage } from '@/features/auth/pages/AccessDeniedPage';
 import { AccountLockedPage } from '@/features/auth/pages/AccountLockedPage';
 import { AuthEntryRedirect } from '@/features/auth/pages/AuthEntryRedirect';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { GoogleAuthCallbackPage } from '@/features/auth/pages/GoogleAuthCallbackPage';
 import { MfaPage } from '@/features/auth/pages/MfaPage';
 import { ForgotPasswordOtpPage, ResetPasswordByTokenPage, ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
@@ -17,6 +18,7 @@ const publicAuthChildren: RouteObject[] = [
   { path: '/reset-password/:token', element: <ResetPasswordByTokenPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/mfa', element: <MfaPage /> },
+  { path: '/auth/google/callback', element: <GoogleAuthCallbackPage /> },
   { path: '/session-expired', element: <Navigate to="/" replace /> },
   { path: '/account-locked', element: <AccountLockedPage /> },
 ];

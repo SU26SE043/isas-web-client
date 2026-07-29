@@ -3,7 +3,15 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 
-export type SessionResultErrorKind = 'forbidden' | 'notFound' | 'notReady' | 'system' | 'noQuestions';
+export type SessionResultErrorKind =
+  | 'invalidSession'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'notFound'
+  | 'notReady'
+  | 'generationFailed'
+  | 'system'
+  | 'noQuestions';
 
 export function SessionResultErrorState({
   kind,
@@ -15,6 +23,14 @@ export function SessionResultErrorState({
   const { t } = useLanguage();
 
   const copy: Record<SessionResultErrorKind, { title: string; description: string }> = {
+    invalidSession: {
+      title: t('practice.result.invalidSessionTitle'),
+      description: t('practice.result.invalidSessionDescription'),
+    },
+    unauthorized: {
+      title: t('practice.result.unauthorizedTitle'),
+      description: t('practice.result.unauthorizedDescription'),
+    },
     forbidden: {
       title: t('practice.result.forbiddenTitle'),
       description: t('practice.result.forbiddenDescription'),
@@ -26,6 +42,10 @@ export function SessionResultErrorState({
     notReady: {
       title: t('practice.result.notReadyTitle'),
       description: t('practice.result.notReadyDescription'),
+    },
+    generationFailed: {
+      title: t('practice.result.generationFailedTitle'),
+      description: t('practice.result.generationFailedDescription'),
     },
     system: {
       title: t('practice.result.loadErrorTitle'),

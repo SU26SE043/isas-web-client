@@ -17,7 +17,7 @@ export const employerTranslations: TranslationDictionary = {
     'employer.status.verified': 'Đã xác minh',
     'employer.status.rejected': 'Bị từ chối',
 
-    'employer.dashboard.eyebrow': 'Phase 9 - Organization onboarding',
+    'employer.dashboard.eyebrow': 'Giai đoạn 9 - Thiết lập tổ chức',
     'employer.dashboard.title': 'Không gian nhà tuyển dụng',
     'employer.dashboard.subtitle': 'Kích hoạt tenant B2B trước khi tạo chiến dịch và mời ứng viên.',
     'employer.dashboard.completeProfile': 'Hoàn thiện hồ sơ',

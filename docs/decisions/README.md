@@ -31,6 +31,10 @@ count as the Harness decision log.
 | 0007 | Improvement proposal rules | [0007-improvement-proposal-rules.md](./0007-improvement-proposal-rules.md) |
 | 0008 | BRD + Harness foundation | [0008-brd-harness-foundation.md](./0008-brd-harness-foundation.md) |
 | 0009 | Auth login / sign-up shared templates + UI freeze | [0009-auth-login-signup-ui-freeze.md](./0009-auth-login-signup-ui-freeze.md) |
+| 0010 | Auth password recovery OTP contract | [0010-auth-password-recovery-otp-contract.md](./0010-auth-password-recovery-otp-contract.md) |
+| 0011 | Payment redirect session contract | [0011-payment-redirect-session-contract.md](./0011-payment-redirect-session-contract.md) |
+| 0012 | Google OAuth one-time code exchange | [0012-google-oauth-one-time-code.md](./0012-google-oauth-one-time-code.md) |
+| 0013 | Organization member administration boundary | [0013-org-member-admin-boundary.md](./0013-org-member-admin-boundary.md) |
 
 Add a decision when:
 

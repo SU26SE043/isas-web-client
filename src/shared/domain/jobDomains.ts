@@ -26,8 +26,8 @@ export interface JobDomainDefinition {
 export const JOB_DOMAINS: readonly JobDomainDefinition[] = [
   {
     id: 'frontend',
-    name: 'Frontend',
-    nameVi: 'Frontend',
+    name: 'Frontend Developer',
+    nameVi: 'Frontend Developer',
     description: 'UI, React/Vue, browser performance, and user experience.',
     descriptionVi: 'UI, React/Vue, hiệu năng trình duyệt và trải nghiệm người dùng.',
     jobCategoryEnum: 'FE',
@@ -35,8 +35,8 @@ export const JOB_DOMAINS: readonly JobDomainDefinition[] = [
   },
   {
     id: 'backend',
-    name: 'Backend',
-    nameVi: 'Backend',
+    name: 'Backend Developer',
+    nameVi: 'Backend Developer',
     description: 'API design, databases, distributed systems, and reliability.',
     descriptionVi: 'Thiết kế API, cơ sở dữ liệu, hệ thống phân tán và độ tin cậy.',
     jobCategoryEnum: 'BE',

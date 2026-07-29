@@ -21,6 +21,7 @@ import { practiceSetupEndpoints } from './practiceSetup.endpoints';
 import { resolveJobDomainFromCategory } from '@/shared/domain/jobDomains';
 import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
 import type { PracticeRubricCriterionRef } from '../types/b2cPracticeSession.types';
+import { isValidPracticeSessionId } from '../utils/practiceSessionId';
 
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
@@ -113,6 +114,10 @@ export async function getPracticeSession(sessionId: string): Promise<PracticeSes
       result: null,
       answers: [],
     };
+  }
+
+  if (!isValidPracticeSessionId(sessionId)) {
+    throw new Error('INVALID_PRACTICE_SESSION_ID');
   }
 
   const response = await apiClient.get<unknown>(b2cPracticeSessionEndpoints.session(sessionId));

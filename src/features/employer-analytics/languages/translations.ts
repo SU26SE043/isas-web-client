@@ -13,7 +13,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.status.auto_submitted': 'Tự nộp bài',
     'employerAnalytics.status.completed': 'Hoàn thành',
     'employerAnalytics.scoreBand.all': 'Tất cả điểm',
-    'employerAnalytics.scoreBand.top': 'Top score',
+    'employerAnalytics.scoreBand.top': 'Điểm cao nhất',
     'employerAnalytics.scoreBand.mid': 'Ổn định',
     'employerAnalytics.scoreBand.risk': 'Cần xem xét',
     'employerAnalytics.sort.rank': 'Xếp hạng',

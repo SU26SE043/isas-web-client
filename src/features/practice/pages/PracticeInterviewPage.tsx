@@ -79,7 +79,7 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
       return;
     }
     if (!deviceCheckPassed) {
-      navigate(`/interview/${sessionId}/device-check`, { replace: true });
+      navigate(`/interview/${sessionId}/prepare?step=device`, { replace: true });
     }
   }, [deviceCheckPassed, hydratedSessionId, identityVerified, navigate, sessionId]);
 

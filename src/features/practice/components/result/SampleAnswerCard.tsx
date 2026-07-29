@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Copy, Lightbulb } from 'lucide-react';
+import { Check, Copy, WandSparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 
@@ -24,7 +24,9 @@ export function SampleAnswerCard({ content }: { content: string }) {
     <section className="rounded-xl border border-info/30 bg-info-bg/40 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h4 className="flex items-center gap-2 font-semibold text-info-light">
-          <Lightbulb className="size-4" aria-hidden />
+          <span className="inline-flex size-7 items-center justify-center rounded-lg border border-info/25 bg-info/10">
+            <WandSparkles className="size-4" aria-hidden />
+          </span>
           {t('practice.result.suggestedAnswer')}
         </h4>
         <Button type="button" size="sm" variant="outline" onClick={() => void handleCopy()}>

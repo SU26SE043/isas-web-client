@@ -4,12 +4,14 @@ import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
 import { CampaignSubNavigation } from './CampaignSubNavigation';
+import { EndCampaignDialog } from './EndCampaignDialog';
 
 interface CampaignContextHeaderProps {
   campaign: EmployerCampaign;
   mode: 'overview' | 'invitations';
   title?: string;
   description?: string;
+  onEndCampaign?: () => Promise<void>;
 }
 
 export function CampaignContextHeader({
@@ -17,6 +19,7 @@ export function CampaignContextHeader({
   mode,
   title,
   description,
+  onEndCampaign,
 }: CampaignContextHeaderProps) {
   const { t, language } = useLanguage();
   const deadline = new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
@@ -53,7 +56,12 @@ export function CampaignContextHeader({
               {campaign.domain || campaign.summary}
             </p>
           </div>
-          <CampaignManagementStatusBadge status={campaign.status} />
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <CampaignManagementStatusBadge status={campaign.status} />
+            {campaign.status === 'active' && onEndCampaign ? (
+              <EndCampaignDialog onConfirm={onEndCampaign} />
+            ) : null}
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{campaign.domain}</span>
@@ -68,6 +76,11 @@ export function CampaignContextHeader({
             {remainingLabel} · {deadline}
           </span>
         </div>
+        {campaign.status === 'closed' ? (
+          <p className="mt-3 text-sm font-medium text-error-light">
+            {t('employer.campaigns.detail.endedNotice')}
+          </p>
+        ) : null}
       </header>
       <CampaignSubNavigation campaign={campaign} mode={mode} />
       {title ? (

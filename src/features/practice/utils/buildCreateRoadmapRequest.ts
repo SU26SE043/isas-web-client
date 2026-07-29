@@ -1,0 +1,55 @@
+import {
+  ROADMAP_FOCUS_MAX_CHARS,
+  type CreateRoadmapApiRequest,
+  type CreateRoadmapInput,
+} from '../types/learning.types';
+
+export type BuildCreateRoadmapPayloadResult =
+  | { ok: true; body: CreateRoadmapApiRequest }
+  | { ok: false; reason: 'invalid_input' | 'focus_too_long' };
+
+function uniqueNonEmptyIds(ids: string[] | undefined): string[] {
+  if (!ids?.length) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of ids) {
+    const trimmed = typeof id === 'string' ? id.trim() : '';
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+  }
+  return out;
+}
+
+/** Build POST /roadmaps body — only include optional fields with valid values. */
+export function buildCreateRoadmapRequest(
+  jobCategory: string,
+  level: string,
+  input: Pick<
+    CreateRoadmapInput,
+    'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus'
+  >,
+): BuildCreateRoadmapPayloadResult {
+  if (!jobCategory.trim() || !level.trim()) {
+    return { ok: false, reason: 'invalid_input' };
+  }
+
+  const focus = input.focus?.trim() ?? '';
+  if (focus.length > ROADMAP_FOCUS_MAX_CHARS) {
+    return { ok: false, reason: 'focus_too_long' };
+  }
+
+  const sessionIds = uniqueNonEmptyIds(input.sessionIds ?? input.reportIds);
+  const body: CreateRoadmapApiRequest = {
+    jobCategory: jobCategory.trim(),
+    level,
+  };
+
+  if (input.cvId?.trim()) body.cvId = input.cvId.trim();
+  if (sessionIds.length > 0) body.sessionIds = sessionIds;
+  if (input.cvAnalysisId?.trim()) body.cvAnalysisId = input.cvAnalysisId.trim();
+  if (input.priorRoadmapId?.trim()) body.priorRoadmapId = input.priorRoadmapId.trim();
+  if (focus) body.focus = focus;
+
+  return { ok: true, body };
+}
