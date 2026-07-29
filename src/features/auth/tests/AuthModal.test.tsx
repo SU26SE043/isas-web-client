@@ -132,7 +132,9 @@ describe('AuthModal integration', () => {
     await user.click(screen.getByRole('button', { name: 'auth.forgotPassword' }));
 
     expect(await screen.findByText('auth.forgotTitle')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'auth.signInTitle' })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'auth.signInTitle' })).not.toBeInTheDocument();
+    });
   });
 
   it('calls loginWithGoogle when clicking Google button', async () => {
