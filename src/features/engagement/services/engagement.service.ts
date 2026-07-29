@@ -14,6 +14,8 @@ import type {
   TeamMember,
   TeamRole,
   TeamRoleUpdateInput,
+  Organization,
+  OrganizationUpdateInput,
 } from '../types/engagement.types';
 
 let notifications = structuredClone(MOCK_NOTIFICATIONS);
@@ -42,6 +44,35 @@ export function parseOrgMember(raw: unknown): TeamMember {
     fullName: pickAuthString(member, 'fullName', 'FullName') ?? '',
     orgRole: parseTeamRole(member.orgRole ?? member.OrgRole),
     joinedAt,
+  };
+}
+
+export function parseOrganization(raw: unknown): Organization {
+  const organization = unwrapAuthPayload<Record<string, unknown>>(raw);
+  if (!organization || typeof organization !== 'object') {
+    throw new Error('Invalid organization payload');
+  }
+
+  const id = pickAuthString(organization, 'id', 'Id');
+  const name = pickAuthString(organization, 'name', 'Name');
+  const createdAt = pickAuthString(organization, 'createdAt', 'CreatedAt');
+  const rawMemberCount = organization.memberCount ?? organization.MemberCount;
+  const memberCount = typeof rawMemberCount === 'number'
+    ? rawMemberCount
+    : typeof rawMemberCount === 'string' && rawMemberCount.trim()
+      ? Number(rawMemberCount)
+      : Number.NaN;
+
+  if (!id || !name || !createdAt || !Number.isInteger(memberCount) || memberCount < 0) {
+    throw new Error('Organization response missing required fields');
+  }
+
+  return {
+    id,
+    name,
+    taxCode: pickAuthString(organization, 'taxCode', 'TaxCode') ?? undefined,
+    createdAt,
+    memberCount,
   };
 }
 
@@ -158,5 +189,15 @@ export const engagementService = {
 
   async removeTeamMember(userId: string): Promise<void> {
     await apiClient.delete(authEndpoints.orgMember(userId));
+  },
+
+  async getOrganization(): Promise<Organization> {
+    const { data } = await apiClient.get(authEndpoints.org);
+    return parseOrganization(data);
+  },
+
+  async updateOrganization(input: OrganizationUpdateInput): Promise<Organization> {
+    const { data } = await apiClient.put(authEndpoints.org, input);
+    return parseOrganization(data);
   },
 };

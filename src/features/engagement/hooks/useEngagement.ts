@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { engagementService } from '../services/engagement.service';
-import type { EngagementScope, NotificationPreferences, PlatformNotification, SupportTicket, SupportTicketInput, TeamInviteInput, TeamMember, TeamRole } from '../types/engagement.types';
+import type { EngagementScope, NotificationPreferences, Organization, OrganizationUpdateInput, PlatformNotification, SupportTicket, SupportTicketInput, TeamInviteInput, TeamMember, TeamRole } from '../types/engagement.types';
 
 export function useEngagement(scope: EngagementScope) {
   const [notifications, setNotifications] = useState<PlatformNotification[]>([]);
@@ -136,4 +136,57 @@ export function useEmployerTeam() {
   }, [reload]);
 
   return { team, isLoading, isMutating, errorKey, invite, updateRole, removeMember, reload };
+}
+
+export function useOrganization(enabled: boolean) {
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    if (!enabled) return;
+    setIsLoading(true);
+    setErrorKey(null);
+    try {
+      setOrganization(await engagementService.getOrganization());
+    } catch (error) {
+      const status = getApiStatusCode(error);
+      setErrorKey(
+        status === 403
+          ? 'engagement.organization.error.noContext'
+          : status === 404
+            ? 'engagement.organization.error.notFound'
+            : 'engagement.organization.error.load',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [enabled]);
+
+  const save = useCallback(async (input: OrganizationUpdateInput) => {
+    setIsSaving(true);
+    setErrorKey(null);
+    try {
+      setOrganization(await engagementService.updateOrganization(input));
+    } catch (error) {
+      const status = getApiStatusCode(error);
+      setErrorKey(
+        status === 403
+          ? 'engagement.organization.error.forbidden'
+          : status === 404
+            ? 'engagement.organization.error.notFound'
+            : 'engagement.organization.error.update',
+      );
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  return { organization, isLoading, isSaving, errorKey, save, reload };
 }

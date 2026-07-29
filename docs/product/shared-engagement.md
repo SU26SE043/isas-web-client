@@ -18,6 +18,8 @@ Employer team management uses the live Auth organization-member endpoints.
 - `NotificationBell` (unread badge + dropdown) lives in the **dashboard sidebar** for candidate, employer, and admin layouts — not in a main-content top bar.
 - Notification center shows unread count, empty state, mark-all-read, and a mock live trigger for NOTI-048-style delivery under 2 seconds.
 - Settings form manages email, in-app, marketing opt-out, and quiet hours.
+- Employer settings loads the live Auth organization profile for `OrgAdmin` and
+  `HrMember`; only `OrgAdmin` can update the name or tax code.
 - Marketing opt-out copy is tied to BRL-040.
 - Help center supports scoped articles and search.
 - Support page creates tickets and lists existing support requests.

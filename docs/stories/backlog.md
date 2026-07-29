@@ -40,6 +40,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-014 | B2B E2E full journey | E08 | normal | implemented | [US-014](./epics/E15-polish/US-014-b2b-e2e-full-journey.md) |
 | US-015 | Progress analytics dashboard | E05 | normal | implemented | [US-015](./epics/E05-practice/US-015-progress-analytics.md) |
 | US-016 | Live Employer package payment | E11 | high-risk | in_progress | [US-016](./epics/E11-employer-billing/US-016-live-employer-payment/overview.md) |
+| US-017 | Live Auth organization profile | E10 | high-risk | implemented | [US-017](./epics/E10-shared-engagement/US-017-auth-organization-profile/overview.md) |
 
 ## How to pick work
 

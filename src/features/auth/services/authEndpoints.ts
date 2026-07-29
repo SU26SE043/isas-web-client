@@ -12,6 +12,7 @@ export const authEndpoints = {
   refresh: `${AUTH_API_PREFIX}/refresh`,
   logout: `${AUTH_API_PREFIX}/logout`,
   me: `${AUTH_API_PREFIX}/me`,
+  org: `${AUTH_API_PREFIX}/org`,
   orgMembers: `${AUTH_API_PREFIX}/org/members`,
   orgMember: (userId: string) => `${AUTH_API_PREFIX}/org/members/${encodeURIComponent(userId)}`,
   forgotPassword: `${AUTH_API_PREFIX}/forgot-password`,

@@ -92,6 +92,8 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
 | Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
+| Current organization | `GET /api/v1/auth/org` | `OrgAdmin \| HrMember` — returns `{ id, name, taxCode?, createdAt, memberCount }`; `403` when JWT lacks `org_id`; `404` not found. Platform `Admin` has no implicit tenant context. |
+| Update organization | `PUT /api/v1/auth/org` | `OrgAdmin` — body `{ name?, taxCode? }`; returns the full organization response; `403`; `404`. |
 | Invite organization member | `POST /api/v1/auth/org/members` | `OrgAdmin` — body `{ email, fullName }`; creates an `HrMember`; `201`; `409` email exists. |
 | List organization members | `GET /api/v1/auth/org/members` | `OrgAdmin` — unpaginated `OrgMemberResponse[]`. |
 | Change organization role | `PATCH /api/v1/auth/org/members/{userId}` | `OrgAdmin` — body `{ orgRole: "OrgAdmin" \| "HrMember" }`; `400/403/404/409`, including protection for the final OrgAdmin. |

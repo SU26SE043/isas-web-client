@@ -1538,7 +1538,7 @@ P0 Foundation
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
 - [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
-- [x] P14: shared engagement — NotificationBell dropdown and notifications/settings/help/support mocks; employer team uses live Auth organization-member APIs; US-013 `implemented`
+- [x] P14: shared engagement — NotificationBell dropdown and notifications/settings/help/support mocks; employer team uses live Auth organization-member APIs; employer settings uses live Auth organization profile GET/PUT with role-aware editing; US-013 and US-017 `implemented`
 - [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 
 ### Per-Phase Gate (áp dụng mọi phase)

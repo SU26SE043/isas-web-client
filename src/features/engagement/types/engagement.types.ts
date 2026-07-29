@@ -63,3 +63,16 @@ export interface TeamInviteInput {
 export interface TeamRoleUpdateInput {
   orgRole: TeamRole;
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  taxCode?: string;
+  createdAt: string;
+  memberCount: number;
+}
+
+export interface OrganizationUpdateInput {
+  name?: string;
+  taxCode?: string;
+}
