@@ -28,14 +28,14 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notification.live.body': 'Thông báo mô phỏng đã được phát vào trung tâm thông báo trong cửa sổ thời gian thực.',
 
     'engagement.settings.title': 'Cài đặt thông báo',
-    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và từ chối marketing theo BRL-040.',
+    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và tùy chọn nhận nội dung tiếp thị theo BRL-040.',
     'engagement.settings.email': 'Email',
     'engagement.settings.inApp': 'Trong ứng dụng',
-    'engagement.settings.marketing': 'Marketing',
+    'engagement.settings.marketing': 'Tiếp thị',
     'engagement.settings.quietHours': 'Bật giờ yên lặng',
     'engagement.settings.quietStart': 'Bắt đầu yên lặng',
     'engagement.settings.quietEnd': 'Kết thúc yên lặng',
-    'engagement.settings.marketingRule': 'BRL-040: người dùng có thể từ chối marketing nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
+    'engagement.settings.marketingRule': 'BRL-040: người dùng có thể từ chối nội dung tiếp thị nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
     'engagement.settings.save': 'Lưu cài đặt',
     'engagement.settings.saved': 'Đã lưu cài đặt thông báo.',
 
@@ -68,7 +68,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.help.article.credits.title': 'Credit được trừ khi nào?',
     'engagement.help.article.credits.body': 'Credit chỉ bị trừ khi phiên được tạo thành công và có giao dịch ghi nhận.',
     'engagement.help.article.campaign.title': 'Làm sao mời ứng viên vào chiến dịch?',
-    'engagement.help.article.campaign.body': 'Mở chi tiết chiến dịch, dùng liên kết mời hoặc magic link và theo dõi trạng thái trong pipeline.',
+    'engagement.help.article.campaign.body': 'Mở chi tiết chiến dịch, dùng liên kết mời hoặc liên kết đăng nhập và theo dõi trạng thái trong quy trình tuyển dụng.',
     'engagement.help.article.support.title': 'Khi nào nên tạo ticket?',
     'engagement.help.article.support.body': 'Tạo ticket khi có lỗi gửi, sai kết quả AI, vấn đề thanh toán hoặc cần hỗ trợ tenant.',
 
@@ -125,7 +125,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.status.invited': 'Đã mời',
     'engagement.team.roleRule': 'BR-002: HrMember không được tạo hoặc nâng cấp HR khác; chỉ OrgAdmin được quản lý nhóm.',
 
-    'engagement.webhook.title': 'Webhook tenant',
+    'engagement.webhook.title': 'Webhook của tenant',
     'engagement.webhook.description': 'Cấu hình webhook được ký theo BRL-069 để nhận sự kiện chiến dịch, thanh toán và kết quả AI.',
     'engagement.webhook.rule': 'Chỉ OrgAdmin được cập nhật endpoint và secret; HrMember chỉ xem trạng thái gửi.',
   },

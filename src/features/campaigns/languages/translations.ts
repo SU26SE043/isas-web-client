@@ -2,7 +2,7 @@ import type { TranslationDictionary } from '@/shared/languages';
 
 export const campaignsTranslations: TranslationDictionary = {
   vi: {
-    'campaigns.browse.eyebrow': 'Phase 8 · Campaign Discovery',
+    'campaigns.browse.eyebrow': 'Giai đoạn 8 · Khám phá chiến dịch',
     'campaigns.browse.title': 'Khám phá chiến dịch',
     'campaigns.browse.subtitle': 'Tìm các chiến dịch phỏng vấn B2B đang mở và chọn cơ hội phù hợp với hồ sơ của bạn.',
     'campaigns.browse.available': 'Chiến dịch phù hợp',
@@ -163,7 +163,7 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.flow.completedTitle': 'Bạn đã hoàn thành bài phỏng vấn.',
     'campaigns.flow.preparingHint': 'Đang chuẩn bị bước tiếp theo của bài phỏng vấn chiến dịch.',
     'campaigns.flow.missingSession': 'Thiếu mã phiên phỏng vấn.',
-    'campaigns.flow.monitoringHint': 'Camera và microphone đang hoạt động. Phiên phỏng vấn được giám sát.',
+    'campaigns.flow.monitoringHint': 'Camera và micrô đang hoạt động. Phiên phỏng vấn được giám sát.',
     'campaigns.flow.completedBody': 'Bài làm của bạn đã được nộp. Nhà tuyển dụng sẽ xem kết quả khi sẵn sàng.',
     'campaigns.flow.backToCampaign': 'Quay lại chiến dịch',
     'campaigns.faceEnroll.title': 'Chụp ảnh khuôn mặt tham chiếu',

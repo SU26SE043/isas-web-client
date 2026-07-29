@@ -26,8 +26,8 @@ export const marketingTranslations: TranslationDictionary = {
     'pricing.enterprise.description':
       'Chiến dịch tuyển dụng B2B — thanh toán postpaid theo token tiêu thụ hàng tháng.',
     'pricing.enterprise.feature1': 'Không trừ trước khi publish',
-    'pricing.enterprise.feature2': 'Campaign và magic link',
-    'pricing.enterprise.feature3': 'Dashboard HR và hóa đơn token',
+    'pricing.enterprise.feature2': 'Chiến dịch và liên kết đăng nhập',
+    'pricing.enterprise.feature3': 'Bảng điều khiển HR và hóa đơn token',
 
     'enterprise.pageTitle': 'Doanh nghiệp | PIpraint',
     'enterprise.title': 'Tuyển dụng thông minh với AI',
