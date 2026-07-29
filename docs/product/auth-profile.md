@@ -71,9 +71,10 @@ The current login and sign-up UI is also the **frozen product default**. Do not 
 - `useAuth`, `AuthProvider`, `sessionManager` (idle + absolute timeout).
 - Tokens in `localStorage` via `authTokenStorage`: `accessToken`, `refreshToken`, `expiresAt`.
 - User session in Zustand (`auth-storage`).
-- Auto refresh: axios interceptor on `401` → `POST /api/v1/auth/refresh` `{ refreshToken }` (public, no Bearer) → store new tokens → retry once.
+- Auto refresh: axios interceptor on `401` → `POST /api/v1/auth/refresh` `{ refreshToken }` (public, no Bearer) → parse the full `{ accessToken, refreshToken, expiresAt }` AuthResponse despite the backend DTO name `RefreshTokenResponse` → store new tokens → retry once.
 - Refresh failure (401 expired/revoked): clear tokens + user → redirect `/login`.
 - Logout: `POST /api/v1/auth/logout` with Bearer + `{ refreshToken }`, then clear local session.
+- Google OAuth never puts tokens in the URL: browser `GET /login-google` → backend callback redirects to `/auth/google/callback?code=...` → frontend exchanges the one-time code and removes it through role-aware navigation.
 
 ## API (via Gateway)
 
@@ -81,11 +82,19 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 
 | Action | Path | Auth |
 | --- | --- | --- |
-| Login | `POST /api/v1/auth/login` | Public |
-| Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → `{ accessToken, refreshToken, expiresAt }` |
+| Candidate registration | `POST /api/v1/auth/register` | Public — body `{ email, password, fullName }` → `{ accessToken, refreshToken, expiresAt }`; `409` email exists; `400` validation. API minimum is 6 characters; frontend keeps the stricter SEC-012 12+ complexity policy. |
+| Employer + organization registration | `POST /api/v1/auth/register-org` | Public — body `{ email, password, fullName, orgName, taxCode? }` → `{ accessToken, refreshToken, expiresAt }`; creator becomes `OrgAdmin`; `409` email exists. Frontend keeps the stricter SEC-012 password policy. |
+| Login | `POST /api/v1/auth/login` | Public — body `{ email, password }` → `{ accessToken, refreshToken, expiresAt }`; `401` invalid/locked; `403` banned account |
+| Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → full AuthResponse `{ accessToken, refreshToken, expiresAt }`; `401` expired/revoked/banned |
+| Start Google OAuth | `GET /api/v1/auth/login-google?returnUrl=...` | Public — browser navigation; `302` Google challenge, never XHR/JSON |
+| Google backend callback | `GET /api/v1/auth/login-google-callback` | Public — backend/provider route; redirects to FE with one-time `code` or `reason=remote_error \| no_login_info \| account_suspended \| login_failed` |
+| Exchange Google code | `POST /api/v1/auth/google/exchange` | Public — body `{ code }` → `{ accessToken, refreshToken, expiresAt }`; `400` invalid/expired/used code |
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
 | Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
+| Invite organization member | `POST /api/v1/auth/org/members` | `OrgAdmin` — body `{ email, fullName }`; creates an `HrMember`; `201`; `409` email exists. |
+| List organization members | `GET /api/v1/auth/org/members` | `OrgAdmin` — unpaginated `OrgMemberResponse[]`. |
+| Change organization role | `PATCH /api/v1/auth/org/members/{userId}` | `OrgAdmin` — body `{ orgRole: "OrgAdmin" \| "HrMember" }`; `400/403/404/409`, including protection for the final OrgAdmin. |
 
 | Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
 | Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
@@ -93,7 +102,8 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 
 ## E2E
 
-- `e2e/specs/smoke/auth-login.spec.ts` — login, lockout, register → verify email.
+- `e2e/specs/smoke/auth-login.spec.ts` — login, lockout, register → authenticated role redirect.
+- `e2e/specs/smoke/auth-google.spec.ts` — browser redirect, one-time code exchange, callback reasons, URL-token rejection.
 
 ## Open gaps
 

@@ -6,6 +6,7 @@ import type { ApiError } from '@/shared/types/api-error';
 export type AuthErrorKind =
   | 'invalidCredentials'
   | 'accountLocked'
+  | 'accountBanned'
   | 'emailAlreadyExists'
   | 'mfaRequired'
   | 'generic';
@@ -62,6 +63,10 @@ export function parseAuthError(error: unknown, fallback: string): ParsedAuthErro
 
   if (status === HTTP_LOCKED || (status === HttpStatus.FORBIDDEN && isLockedMessage(message))) {
     return { kind: 'accountLocked', message };
+  }
+
+  if (status === HttpStatus.FORBIDDEN) {
+    return { kind: 'accountBanned', message };
   }
 
   if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.BAD_REQUEST) {

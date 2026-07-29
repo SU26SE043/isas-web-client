@@ -114,7 +114,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'help', element: <HelpPage scope="employer" /> },
               { path: 'support', element: <SupportPage scope="employer" /> },
               {
-                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
+                element: <RequireRole roles={[UserRole.ORG_ADMIN]} />,
                 children: [
                   { path: 'team', element: <EmployerTeamPage /> },
                 ],

@@ -7,6 +7,7 @@ import type {
   AuthTokensResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
+  GoogleExchangeRequest,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
@@ -78,7 +79,7 @@ export const authService = {
         skipAuth: true,
       });
       const tokens = parseAuthTokens(data);
-      if (!tokens.accessToken || !tokens.refreshToken) {
+      if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
         throw new Error('Refresh response missing tokens');
       }
       storeTokensIfPresent(tokens);
@@ -160,8 +161,19 @@ export const authService = {
     storeTokensIfPresent(tokens);
     return tokens;
   },
+  exchangeGoogleCode: async (payload: GoogleExchangeRequest): Promise<AuthTokensResponse> => {
+    const { data } = await apiClient.post(authEndpoints.googleExchange, payload, {
+      skipAuth: true,
+    });
+    const tokens = parseAuthTokens(data);
+    if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
+      throw new Error('Google exchange response missing tokens');
+    }
+    storeTokensIfPresent(tokens);
+    return tokens;
+  },
   loginWithGoogle: () => {
-    const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    const returnUrl = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;

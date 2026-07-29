@@ -10,7 +10,8 @@ Phase 14 implements shared engagement surfaces:
 - Employer: `/employer/notifications`, `/employer/settings`, `/employer/help`, `/employer/support`, `/employer/team`
 - Admin fallback shared routes: `/admin/notifications`, `/admin/settings`, `/admin/help`, `/admin/support`
 
-The implementation is mock-first and API-ready for future notification, settings, support, and team endpoints.
+The implementation remains mock-first for notification, settings, and support.
+Employer team management uses the live Auth organization-member endpoints.
 
 ## Key Behaviors
 
@@ -20,7 +21,9 @@ The implementation is mock-first and API-ready for future notification, settings
 - Marketing opt-out copy is tied to BRL-040.
 - Help center supports scoped articles and search.
 - Support page creates tickets and lists existing support requests.
-- Employer team page supports inviting HR/Organize members while surfacing BR-002 role restriction.
+- Employer team page lists organization members, invites new `HrMember` accounts
+  without passwords, and changes `OrgAdmin`/`HrMember` roles through the live
+  Auth API. Only `OrgAdmin` can access this tenant-scoped surface.
 
 ## Deferred
 

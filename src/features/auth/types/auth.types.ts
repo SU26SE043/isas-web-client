@@ -115,6 +115,10 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface GoogleExchangeRequest {
+  code: string;
+}
+
 export interface LogoutRequest {
   refreshToken: string;
 }

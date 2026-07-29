@@ -377,7 +377,7 @@ flowchart TB
 | **Components** | AuthModal, LoginForm, RegisterForm, MFAChallenge, PasswordStrengthMeter, SSOButton, SocialLoginButton |
 | **Shared** | `useAuth`, `AuthProvider`, `session-manager` |
 | **State** | JWT in HttpOnly cookie; user profile in React Query; idle timer |
-| **API** | Auth: register, login, logout, refresh, verify-email, forgot/reset password, MFA verify, SSO redirect |
+| **API** | Auth: register, login, logout, refresh, Google browser redirect + one-time code exchange, verify-email, forgot/reset password, MFA verify, SSO redirect |
 | **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password/:token`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
 | **Layout** | `AuthLayout` (centered card) |
 | **Validation** | VR-001–002, VR-005; SEC-012 password 12+ chars |
@@ -709,7 +709,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Trạng thái triển khai** | ✅ **Done (mock)** — notifications, settings, help, support, employer team (`/employer/team`) |
+| **Trạng thái triển khai** | ✅ **Done (hybrid)** — notifications, settings, help, support remain mock; employer team (`/employer/team`) uses live Auth APIs |
 | **Mục tiêu** | Notifications, settings, help/support, reporting widgets dùng chung |
 | **Business Value** | Engagement, self-service, operational visibility |
 | **Vai trò** | Candidate, HR, Admin |
@@ -1538,7 +1538,7 @@ P0 Foundation
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
 - [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
-- [x] P14: shared engagement — NotificationBell dropdown, notifications/settings/help/support pages, employer team (mock); US-013 `implemented`
+- [x] P14: shared engagement — NotificationBell dropdown and notifications/settings/help/support mocks; employer team uses live Auth organization-member APIs; US-013 `implemented`
 - [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 
 ### Per-Phase Gate (áp dụng mọi phase)
