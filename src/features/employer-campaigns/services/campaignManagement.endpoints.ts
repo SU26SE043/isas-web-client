@@ -22,10 +22,18 @@ export const campaignManagementEndpoints = {
   candidates: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates`,
   candidateDetail: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}`,
+  candidateCv: (id: string, candidateId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}/cv`,
   inviteCandidates: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/invite`,
   invitations: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/invitations`,
   invitationReissue: (id: string, invitationId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/invitations/${encodeURIComponent(invitationId)}/reissue`,
   results: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results`,
+  resultsExport: (id: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/export`,
+  resultTranscript: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/transcript`,
+  resultOverride: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override`,
 } as const;

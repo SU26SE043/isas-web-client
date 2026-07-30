@@ -115,6 +115,10 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface GoogleExchangeRequest {
+  code: string;
+}
+
 export interface LogoutRequest {
   refreshToken: string;
 }
@@ -127,13 +131,31 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
+export type ForgotPasswordResponse = 'OTP sent to your email';
+
 export interface VerifyOtpRequest {
   email: string;
   otp: string;
 }
 
+export type VerifyOtpResponse = 'OTP verified, you can reset your password';
+
 export interface ResetPasswordRequest {
   email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export type ResetPasswordResponse = 'Password reset successful';
+
+export interface GoogleExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
   newPassword: string;
 }
 

@@ -9,25 +9,27 @@ import {
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import { getNextPracticeQuestion } from '../utils/getNextPracticeQuestion';
+import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
 
 const TIMEOUT_ADVANCE_DELAY_MS = 1000;
 
-export function useB2cPracticeRoom(sessionId: string) {
+export function useB2cPracticeRoom(sessionId: string, options?: { completePath?: string }) {
   const navigate = useNavigate();
+  const completePath = options?.completePath;
   const store = useB2cPracticeInterviewStore();
-  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [isSubmittingSession, setIsSubmittingSession] = useState(false);
   const [isTimingOut, setIsTimingOut] = useState(false);
-  const [answerError, setAnswerError] = useState<string | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
   const [retryConfirmOpen, setRetryConfirmOpen] = useState(false);
   const [showTimerWarning, setShowTimerWarning] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
-  const media = useInterviewMedia(true, true);
+  const media = useInterviewMedia(micEnabled, cameraEnabled);
   const recorder = usePracticeAnswerRecorder(media.stream);
   const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId);
 
@@ -35,6 +37,20 @@ export function useB2cPracticeRoom(sessionId: string) {
     () => store.questions.find((q) => q.id === store.currentQuestionId) ?? null,
     [store.currentQuestionId, store.questions],
   );
+
+  const answerSubmit = useB2cPracticeAnswerSubmit({
+    sessionId,
+    recorder,
+    currentQuestionId: store.currentQuestionId,
+    currentQuestion,
+    remainingSeconds: store.remainingSeconds,
+    stage: store.stage,
+    isTimingOut,
+    answersByQuestionId: store.answersByQuestionId,
+    onStopSpeech: () => speech.stopPlayback(),
+    onStopMedia: () => media.stopMedia(),
+    completePath,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -72,10 +88,10 @@ export function useB2cPracticeRoom(sessionId: string) {
 
   useEffect(() => {
     if (store.stage !== 'interviewing' && store.stage !== 'ready_to_finish') return undefined;
-    if (isSubmittingAnswer || isSubmittingSession || isTimingOut) return undefined;
+    if (answerSubmit.isSubmittingAnswer || isSubmittingSession || isTimingOut) return undefined;
     const id = window.setInterval(() => store.tickTimer(), 1000);
     return () => window.clearInterval(id);
-  }, [isSubmittingAnswer, isSubmittingSession, isTimingOut, store]);
+  }, [answerSubmit.isSubmittingAnswer, isSubmittingSession, isTimingOut, store]);
 
   useEffect(() => {
     if (store.remainingSeconds === 10 && !warned10Ref.current) {
@@ -93,14 +109,14 @@ export function useB2cPracticeRoom(sessionId: string) {
     timeoutHandledForQuestionRef.current = null;
     setIsTimingOut(false);
     recorder.clearRecording();
-    setAnswerError(null);
+    answerSubmit.setAnswerError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.currentQuestionId]);
 
   useEffect(() => {
     if (store.remainingSeconds !== 0) return;
     if (store.stage !== 'interviewing') return;
-    if (isSubmittingAnswer || isSubmittingSession) return;
+    if (isSubmittingSession) return;
 
     const questionId = store.currentQuestionId;
     if (!questionId) return;
@@ -178,7 +194,7 @@ export function useB2cPracticeRoom(sessionId: string) {
     // Do not depend on isTimingOut — setting it would re-run and clear the advance timer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    isSubmittingAnswer,
+    answerSubmit.isSubmittingAnswer,
     isSubmittingSession,
     sessionId,
     store.answersByQuestionId,
@@ -188,71 +204,11 @@ export function useB2cPracticeRoom(sessionId: string) {
     store.stage,
   ]);
 
-  const canSubmitAnswer =
-    Boolean(recorder.audioFile) &&
-    recorder.durationSec > 0 &&
-    Boolean(currentQuestion) &&
-    !isSubmittingAnswer &&
-    !isTimingOut &&
-    store.remainingSeconds > 0 &&
-    store.stage !== 'submitting_session';
-
   const canReplay =
     store.remainingSeconds > 0 &&
-    !isSubmittingAnswer &&
+    !answerSubmit.isSubmittingAnswer &&
     !isTimingOut &&
     store.stage === 'interviewing';
-
-  const submitAnswer = useCallback(async () => {
-    if (!canSubmitAnswer || !currentQuestion || !recorder.audioFile) {
-      setAnswerError('practice.errors.audioRequired');
-      return;
-    }
-    setIsSubmittingAnswer(true);
-    setAnswerError(null);
-    store.setStage('submitting_answer');
-    recorder.setUploading();
-    try {
-      const response = await submitPracticeAnswer({
-        sessionId,
-        questionId: currentQuestion.id,
-        file: recorder.audioFile,
-        durationSec: recorder.durationSec,
-      });
-      store.setAnswer(currentQuestion.id, {
-        answerId: response.answerId,
-        questionId: response.questionId,
-        status: response.status,
-        transcript: response.transcript,
-        nextAction: response.nextAction,
-        interviewComplete: response.interviewComplete,
-      });
-      recorder.setSubmitted();
-
-      if (response.nextQuestion) {
-        store.appendQuestion(response.nextQuestion);
-        store.setCurrentQuestion(response.nextQuestion.id, response.nextQuestion.timeLimitSec);
-        store.setStage('interviewing');
-        recorder.clearRecording();
-      } else if (response.interviewComplete || response.nextAction === 'end') {
-        store.setInterviewComplete(true, response.nextAction ?? 'end');
-      } else {
-        store.setStage('interviewing');
-      }
-    } catch (error) {
-      const status = getApiStatusCode(error);
-      if (status === 400) setAnswerError('practice.errors.audioRequired');
-      else if (status === 403) setAnswerError('practice.errors.forbidden');
-      else if (status === 404) setAnswerError('practice.errors.sessionNotFound');
-      else if (status === 409) setAnswerError('practice.errors.conflict');
-      else setAnswerError('practice.errors.submitAnswerFailed');
-      store.setStage('interviewing');
-      store.setQuestionState(currentQuestion.id, 'error');
-      recorder.setIdle();
-    } finally {
-      setIsSubmittingAnswer(false);
-    }
-  }, [canSubmitAnswer, currentQuestion, recorder, sessionId, store]);
 
   const confirmFinish = useCallback(async () => {
     setIsSubmittingSession(true);
@@ -292,14 +248,14 @@ export function useB2cPracticeRoom(sessionId: string) {
         useB2cPracticeInterviewStore.getState().answersByQuestionId,
       ).length;
       if (serverAnswerCount === 0) {
-        setAnswerError('practice.errors.noAnswers');
+        answerSubmit.setAnswerError('practice.errors.noAnswers');
         store.setStage(store.interviewComplete ? 'ready_to_finish' : 'interviewing');
         return;
       }
 
       await submitPracticeSession(sessionId);
       media.stopMedia();
-      navigate(`/interview/${sessionId}/complete`, { replace: true });
+      navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
     } catch (error) {
       const status = getApiStatusCode(error);
       const message = getApiErrorMessage(error, '').toLowerCase();
@@ -310,19 +266,19 @@ export function useB2cPracticeRoom(sessionId: string) {
           message.includes('đã submit') ||
           message.includes('da submit')
         ) {
-          navigate(`/interview/${sessionId}/complete`, { replace: true });
+          navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
           return;
         }
-        setAnswerError('practice.errors.noAnswers');
-      } else if (status === 403) setAnswerError('practice.errors.forbidden');
-      else if (status === 404) setAnswerError('practice.errors.sessionNotFound');
-      else setAnswerError('practice.errors.submitSessionFailed');
+        answerSubmit.setAnswerError('practice.errors.noAnswers');
+      } else if (status === 403) answerSubmit.setAnswerError('practice.errors.forbidden');
+      else if (status === 404) answerSubmit.setAnswerError('practice.errors.sessionNotFound');
+      else answerSubmit.setAnswerError('practice.errors.submitSessionFailed');
       store.setStage(store.interviewComplete ? 'ready_to_finish' : 'interviewing');
     } finally {
       setIsSubmittingSession(false);
       setFinishOpen(false);
     }
-  }, [media, navigate, recorder, sessionId, speech, store]);
+  }, [answerSubmit, completePath, media, navigate, recorder, sessionId, speech, store]);
 
   const submittedCount = store.questions.filter(
     (question) => store.questionStates[question.id] === 'submitted',
@@ -349,16 +305,24 @@ export function useB2cPracticeRoom(sessionId: string) {
     lastNextAction: store.lastNextAction,
     speechWarning: store.speechWarning,
     media,
+    micEnabled,
+    cameraEnabled,
+    toggleMic: () => setMicEnabled((value) => !value),
+    toggleCamera: () => setCameraEnabled((value) => !value),
     speech,
     recorder,
-    isSubmittingAnswer,
+    isSubmittingAnswer: answerSubmit.isSubmittingAnswer,
     isSubmittingSession,
     isTimingOut,
-    answerError,
+    answerError: answerSubmit.answerError,
     showTimerWarning,
-    canSubmitAnswer,
+    canSubmitAnswer: answerSubmit.canSubmitAnswer,
     canReplay,
-    submitAnswer,
+    submitAnswer: answerSubmit.submitAnswer,
+    submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
+    overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
+    setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
+    confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,
     finishOpen,
     setFinishOpen,
     retryConfirmOpen,

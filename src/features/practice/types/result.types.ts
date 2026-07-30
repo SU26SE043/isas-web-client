@@ -4,6 +4,8 @@ export interface RadarData {
   A: number; // Current Level (0-100)
   B: number; // Target Level (0-100)
   fullMark: number;
+  rawScore?: number;
+  maxScore?: number;
 }
 
 export interface GapAnalysisItem {

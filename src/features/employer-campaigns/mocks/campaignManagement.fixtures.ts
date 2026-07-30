@@ -1,3 +1,4 @@
+import type { CampaignInvitation } from '../types/campaign.api.types';
 import type { CampaignCandidateRow, CampaignQuestion, CampaignProctoringConfig, EmployerCampaign } from '../types/campaignManagement.types';
 
 export const DEFAULT_PROCTORING: CampaignProctoringConfig = {
@@ -83,6 +84,73 @@ function seedCandidates(emails: string[]): CampaignCandidateRow[] {
     return { email, status: 'invite_pending' };
   });
 }
+
+/** Sample invitation history for non-GUID / mock campaign ids (UI + local demo). */
+export const MOCK_CAMPAIGN_INVITATIONS: CampaignInvitation[] = [
+  {
+    id: 'inv-queued-1',
+    email: 'pending.send@example.com',
+    status: 'Queued',
+    createdAt: '2026-07-24T05:34:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: null,
+    joinedAt: null,
+  },
+  {
+    id: 'inv-sent-1',
+    email: 'sent.candidate@example.com',
+    status: 'Sent',
+    createdAt: '2026-07-23T08:10:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: '2026-07-23T08:11:00.000Z',
+    joinedAt: null,
+  },
+  {
+    id: 'inv-joined-1',
+    email: 'joined.one@example.com',
+    status: 'Joined',
+    createdAt: '2026-07-22T04:00:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: '2026-07-22T04:01:00.000Z',
+    joinedAt: '2026-07-22T10:20:00.000Z',
+  },
+  {
+    id: 'inv-joined-2',
+    email: 'joined.two@example.com',
+    status: 'Joined',
+    createdAt: '2026-07-21T09:00:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: '2026-07-21T09:02:00.000Z',
+    joinedAt: '2026-07-21T14:45:00.000Z',
+  },
+  {
+    id: 'inv-joined-3',
+    email: 'joined.three@example.com',
+    status: 'Joined',
+    createdAt: '2026-07-20T11:00:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: '2026-07-20T11:05:00.000Z',
+    joinedAt: '2026-07-20T16:10:00.000Z',
+  },
+  {
+    id: 'inv-revoked-1',
+    email: 'revoked.one@example.com',
+    status: 'Revoked',
+    createdAt: '2026-07-19T07:30:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: '2026-07-19T07:31:00.000Z',
+    joinedAt: null,
+  },
+  {
+    id: 'inv-revoked-2',
+    email: 'revoked.two@example.com',
+    status: 'Revoked',
+    createdAt: '2026-07-18T06:00:00.000Z',
+    expiresAt: '2026-07-27T12:17:00.000Z',
+    emailSentAt: null,
+    joinedAt: null,
+  },
+];
 
 export const MOCK_EMPLOYER_CAMPAIGNS: EmployerCampaign[] = [
   {

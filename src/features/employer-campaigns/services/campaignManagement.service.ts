@@ -1,7 +1,7 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { mockDelay } from '@/shared/mock';
-import { DEFAULT_PROCTORING, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_PROCTORING, MOCK_CAMPAIGN_INVITATIONS, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
@@ -15,11 +15,15 @@ import type {
   CandidateUploadResponse,
   CampaignCandidateDetail,
   CampaignCandidateListItem,
+  CampaignResultExportFormat,
   CampaignResultsResponse,
+  CampaignTranscriptResponse,
   GenerateCampaignQuestionsParams,
+  OverrideCampaignResultPayload,
   GetCampaignInvitationsQuery,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
+  UpdateCampaignCandidatePayload,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
 import type {
@@ -47,6 +51,7 @@ import {
 import {
   buildCandidateListParams,
   parseCampaignResultsResponse,
+  parseCampaignTranscriptResponse,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -471,6 +476,11 @@ export const campaignManagementService = {
     id: string,
     query?: GetCampaignInvitationsQuery,
   ): Promise<CampaignInvitationsPage> {
+    if (!isLiveCampaignId(id)) {
+      await mockDelay(200);
+      return { items: MOCK_CAMPAIGN_INVITATIONS, nextCursor: null };
+    }
+
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
       params: {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -760,6 +770,43 @@ export const campaignManagementService = {
   },
 
   /**
+   * Live: PATCH /api/v1/campaign/{id}/candidates/{candidateId}
+   * Body may include only changed fields. 204 No Content — do not parse JSON.
+   */
+  async updateCampaignCandidate(
+    id: string,
+    candidateId: string,
+    payload: UpdateCampaignCandidatePayload,
+  ): Promise<void> {
+    const body: UpdateCampaignCandidatePayload = {};
+    if (typeof payload.email === 'string') body.email = payload.email;
+    if (typeof payload.fullName === 'string') body.fullName = payload.fullName;
+    if (Object.keys(body).length === 0) {
+      throw new CampaignRequestError(400, 'EMPTY_CANDIDATE_PATCH');
+    }
+    await apiClient.patch(campaignManagementEndpoints.candidateDetail(id, candidateId), body, {
+      validateStatus: (status) => status === 204 || status === 200,
+    });
+  },
+
+  /**
+   * Live: GET /api/v1/campaign/{id}/candidates/{candidateId}/cv — PDF blob.
+   */
+  async getCampaignCandidateCv(id: string, candidateId: string): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+      campaignManagementEndpoints.candidateCv(id, candidateId),
+      { responseType: 'blob' },
+    );
+    const blob = response.data;
+    if (!(blob instanceof Blob) || blob.size <= 0) {
+      throw new CampaignRequestError(404, 'CANDIDATE_CV_NOT_FOUND');
+    }
+    return blob.type === 'application/pdf'
+      ? blob
+      : new Blob([blob], { type: 'application/pdf' });
+  },
+
+  /**
    * Live: POST /api/v1/campaign/{id}/candidates/invite — `{ candidateIds }`.
    */
   async inviteCampaignCandidates(
@@ -791,5 +838,58 @@ export const campaignManagementService = {
   async getCampaignResults(id: string): Promise<CampaignResultsResponse> {
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.results(id));
     return parseCampaignResultsResponse(response.data);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results/export?format=csv|pdf — binary blob. */
+  async exportCampaignResults(
+    id: string,
+    format: CampaignResultExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> {
+    const response = await apiClient.get<Blob>(campaignManagementEndpoints.resultsExport(id), {
+      params: { format },
+      responseType: 'blob',
+    });
+    const blob = response.data;
+    if (!(blob instanceof Blob) || blob.size <= 0) {
+      throw new CampaignRequestError(404, 'RESULTS_EXPORT_EMPTY');
+    }
+    const disposition = response.headers?.['content-disposition'] as string | undefined;
+    return {
+      blob,
+      filename: parseContentDispositionFilename(disposition),
+    };
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results/{sessionId}/transcript */
+  async getCampaignResultTranscript(
+    id: string,
+    sessionId: string,
+  ): Promise<CampaignTranscriptResponse> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.resultTranscript(id, sessionId),
+    );
+    return parseCampaignTranscriptResponse(response.data);
+  },
+
+  /**
+   * Live: PUT /api/v1/campaign/{id}/results/{sessionId}/override
+   * 204 No Content — do not parse JSON.
+   */
+  async overrideCampaignResult(
+    id: string,
+    sessionId: string,
+    payload: OverrideCampaignResultPayload,
+  ): Promise<void> {
+    const note = payload.note.trim();
+    if (!note) throw new CampaignRequestError(400, 'OVERRIDE_NOTE_REQUIRED');
+    await apiClient.put(
+      campaignManagementEndpoints.resultOverride(id, sessionId),
+      {
+        score: payload.score,
+        result: payload.result,
+        note,
+      } satisfies OverrideCampaignResultPayload,
+      { validateStatus: (status) => status === 204 || status === 200 },
+    );
   },
 };

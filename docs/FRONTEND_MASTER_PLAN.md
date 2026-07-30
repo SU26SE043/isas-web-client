@@ -194,7 +194,7 @@ flowchart LR
 | **P10** | Campaign Management | B2B core workflow | 6 | 8 | 5 tuần | ✅ Done (mock) |
 | **P11** | Employer Analytics | Hiring decisions | 5 | 6 | 4 tuần | ✅ Done (mock) |
 | **P12** | Employer Billing | B2B postpaid token usage + invoices | 4 | 6 | 3 tuần | ✅ Done (mock) |
-| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (mock) |
+| **P13** | Admin Platform | Platform operations | 20 | 14 | 6 tuần | ✅ Done (hybrid: live Auth directory) |
 | **P14** | Shared Features | Cross-cutting UX | 5 | 7 | 3 tuần | ✅ Done (mock) |
 | **P15** | Polish & Production | Ship-ready quality | — | 8 | 4 tuần | ✅ Done (mock) |
 
@@ -377,8 +377,8 @@ flowchart TB
 | **Components** | AuthModal, LoginForm, RegisterForm, MFAChallenge, PasswordStrengthMeter, SSOButton, SocialLoginButton |
 | **Shared** | `useAuth`, `AuthProvider`, `session-manager` |
 | **State** | JWT in HttpOnly cookie; user profile in React Query; idle timer |
-| **API** | Auth: register, login, logout, refresh, verify-email, forgot/reset password, MFA verify, SSO redirect |
-| **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password/:token`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
+| **API** | Auth: register, login, logout, refresh, Google browser redirect + one-time code exchange, verify-email, forgot/verify-OTP/reset password, change password, MFA verify, SSO redirect |
+| **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/forgot-password/verify`, `/reset-password/:token`, `/reset-password`, `/auth/google/callback`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
 | **Layout** | `AuthLayout` (centered card) |
 | **Validation** | VR-001–002, VR-005; SEC-012 password 12+ chars |
 | **Error** | ERR-001–005, ERR-034; lockout UI (SEC-013) |
@@ -469,9 +469,9 @@ flowchart TB
 | **Features** | F-RESULT-001–005, F-LEARN-001–004, F-HIST-001 |
 | **Components** | ScoreDial, RadarChart, SkillBreakdownAccordion, RoadmapTimeline, LearningModuleCard, ProgressDashboard, LeaderboardTable, AchievementBadge, CertificateViewer, HistoryTable |
 | **Shared** | `ReportTabs` (Overview/Breakdown/Roadmap) |
-| **State** | Poll assessment status until `scored`; cache reports |
-| **API** | Assessment results, roadmap, learning modules, certificates, history list |
-| **Routing** | `/candidate/results/:id`, `/candidate/learning`, `/candidate/learning/:moduleId`, `/candidate/progress`, `/candidate/certificates/:id`, `/candidate/history` |
+| **State** | B2C live flow polls practice session detail every 3s while evaluation is pending and stops on `Scored`/failed; legacy report surfaces retain their existing cache behavior |
+| **API** | B2C result: `GET /api/v1/interview/practice/sessions/{sessionId}`; roadmap, learning modules, certificates, history list |
+| **Routing** | B2C post-interview `/practice/result?sessionId=<guid>`; `/candidate/results/:id`, `/candidate/learning`, `/candidate/learning/:moduleId`, `/candidate/progress`, `/candidate/certificates/:id`, `/candidate/history` |
 | **Layout** | `CandidateDashboardLayout` |
 | **Validation** | Roadmap regen limit (BRL-026); learning pass 80% (BRL-011) |
 | **Error** | Score not ready → polling UI |
@@ -588,7 +588,7 @@ flowchart TB
 | **Screens** | SCR-EMP-055–058, **selection step**, **email preview** |
 | **User Flows** | UF-103–106, UF-111; `product-scope.md` §4.4–4.6 |
 | **Features** | F-CAMP-E-001–008 |
-| **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
+| **Components** | CampaignWizard (JD → rubric → questions → settings **+ proctoring**), **CandidateSelectionUpload**, **InviteEmailResolutionTable**, **InvitationEmailPreview**, **EndCampaignDialog** (irreversible phrase confirmation), CampaignTable, CampaignStatusBadge, InviteCandidatesModal, RubricWeightEditor, QuestionBankPicker |
 | **State** | Multi-step wizard state; draft autosave |
 | **API** | Campaign CRUD, publish, invite, rubric, question bank; FR-095–124, FR-125–159 |
 | **Routing** | `/employer/campaigns`, `/employer/campaigns/new`, `/employer/campaigns/:id`, `/employer/campaigns/:id/edit`, `/employer/campaigns/:id/selection` |
@@ -637,7 +637,15 @@ flowchart TB
 
 ---
 
-### Phase 12 — Employer Billing (Postpaid Tokens)
+### Phase 12 — Employer Billing (Live Packages + PayOS)
+
+> **US-016 live-contract override (2026-07-28):** decision 0011 supersedes the
+> mock postpaid subscription/invoice implementation for the Employer surface.
+> Current target routes are `/employer/billing/*` and
+> `/employer/payment/{success,cancel}`. `OrgAdmin` can create/cancel orders;
+> `HrMember` is read-only. The frontend consumes the live package, order,
+> account, subscription, and credit-transaction APIs and verifies callback
+> outcomes with bounded polling. Candidate payment remains a separate flow.
 
 | Field | Chi tiết |
 |-------|----------|
@@ -701,7 +709,7 @@ flowchart TB
 
 | Field | Chi tiết |
 |-------|----------|
-| **Trạng thái triển khai** | ✅ **Done (mock)** — notifications, settings, help, support, employer team (`/employer/team`) |
+| **Trạng thái triển khai** | ✅ **Done (hybrid)** — notifications, settings, help, support remain mock; employer team (`/employer/team`) uses live Auth APIs |
 | **Mục tiêu** | Notifications, settings, help/support, reporting widgets dùng chung |
 | **Business Value** | Engagement, self-service, operational visibility |
 | **Vai trò** | Candidate, HR, Admin |
@@ -770,7 +778,7 @@ flowchart TB
 | SCR-AUT-003 | Đăng ký | F-AUTH-001 | M01 | Guest | `/register` | AUTH | RegisterForm | BRL-039 age≥16 | Register | POST register | — | P3 |
 | SCR-AUT-004 | Xác minh Email | F-AUTH-003 | M01 | Candidate | `/verify-email` | AUTH | VerifyBanner, ResendLink | BR-01 | Verify, Resend | POST verify | P3 | P3 |
 | SCR-AUT-005 | Quên mật khẩu | F-AUTH-004 | M01 | All | `/forgot-password` | AUTH | EmailForm | — | Submit email | POST forgot | — | P3 |
-| SCR-AUT-006 | Đặt lại mật khẩu | F-AUTH-005 | M01 | All | `/reset-password/:token` | AUTH | PasswordForm | VR-002, BRL-047 | Reset | POST reset | — | P3 |
+| SCR-AUT-006 | Đặt lại mật khẩu | F-AUTH-005 | M01 | All | `/reset-password` | AUTH | PasswordForm | VR-002, BRL-047 | Reset with verified OTP | POST reset `{ email, otp, newPassword }` | — | P3 |
 | SCR-AUT-007 | Xác minh 2 bước | F-AUTH-006 | M01 | All | `/mfa` | AUTH | MFAChallenge | BRL-019 admin | Enter OTP | POST mfa | P3 | P3 |
 | SCR-AUT-008 | Hết hạn phiên | F-AUTH-007 | M01 | All | `/session-expired` | AUTH | SessionExpired | SEC-018/019 | Re-login | — | P3 | P3 |
 | SCR-AUT-009 | Từ chối truy cập | F-AUTH-008 | M01 | All | `/access-denied` | SHR | ErrorPage 403 | SEC-016 | Go back | — | P1 | P3 |
@@ -1292,7 +1300,7 @@ flowchart TB
 | ID | Story Name | Phase | Module | Feature | Role | Screens | Priority | Dep | Size | AC Summary | DoD |
 |----|------------|-------|--------|---------|------|---------|----------|-----|------|------------|-----|
 | FS-140 | Campaign list page | P10 | M04 | F-CAMP-E-001 | HR | EMP-055 | P0 | FS-133 | M | FR-101 | Filter status |
-| FS-141 | Campaign detail page | P10 | M04 | F-CAMP-E-002 | HR | EMP-056 | P0 | FS-140 | M | — | Pipeline preview |
+| FS-141 | Campaign detail page | P10 | M04 | F-CAMP-E-002 | HR | EMP-056 | P0 | FS-140 | M | — | Pipeline preview + safeguarded Active→Closed action |
 | FS-142 | Campaign wizard step 1 JD | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-140 | L | UF-103 | JD input |
 | FS-143 | Campaign wizard rubric | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-142 | L | BRL-036 | Weights 100% |
 | FS-144 | Campaign wizard questions | P10 | M05 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-143 | L | FR-125–139 | Question bank |
@@ -1529,8 +1537,8 @@ P0 Foundation
 - [x] P10: selection upload, email preview, invite resolution complete
 - [x] P11: pipeline statuses aligned with `employer-analytics.md`
 - [x] P12: employer billing — subscription, usage by campaign/month/session, invoices (mock); US-010 `implemented`
-- [x] P13: admin platform — dashboard, users/RBAC, audit, AI/system config, flags, health, maintenance, queues (mock); US-010 `implemented`
-- [x] P14: shared engagement — NotificationBell dropdown, notifications/settings/help/support pages, employer team (mock); US-013 `implemented`
+- [x] P13: admin platform — live Auth organization/user directories, account actions, and identity analytics; RBAC, audit, AI/system config, flags, health, maintenance and remaining queues stay mock; US-010, US-018, US-019, and US-020 `implemented`
+- [x] P14: shared engagement — NotificationBell dropdown and notifications/settings/help/support mocks; employer team uses live Auth organization-member APIs; employer settings uses live Auth organization profile GET/PUT with role-aware editing; US-013 and US-017 `implemented`
 - [x] P15: Playwright full-journey (B2C + B2B), production gate smoke, Sentry hook, SEO meta, deploy runbook
 
 ### Per-Phase Gate (áp dụng mọi phase)

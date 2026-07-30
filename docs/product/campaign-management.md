@@ -12,7 +12,7 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Publish live** — From Draft detail preview: **Xuất bản** → confirm modal → `POST /api/v1/campaign/{id}/publish`.
 
-**Status after Active** — From detail: **Đóng** (Active→Closed) / **Lưu trữ** (Closed→Archived) → confirm → `PUT /api/v1/campaign/{id}/status` with `{ status }`.
+**Status after Active** — From detail: **Kết thúc chiến dịch** (Active→Closed) / **Lưu trữ** (Closed→Archived) → confirm → `PUT /api/v1/campaign/{id}/status` with `{ status }`. Ending is irreversible: the action sits beside the Active status badge, requires the user to enter `KẾT THÚC` (or the localized equivalent), and only then sends `{ "status": "Closed" }`. Closed campaigns retain results/candidate data but cannot receive new candidates, new invitations, or invitation reissues.
 
 **Soft-delete** — From Draft / Closed / Archived detail: **Xóa** → confirm → `DELETE /api/v1/campaign/{id}` (204).
 
@@ -35,9 +35,9 @@ Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
 
-Active detail: **Mời ứng viên** · **Pipeline** · **Đóng** (confirm → status Closed).
+Active detail: **Mời ứng viên** · **Pipeline** · **Kết thúc chiến dịch** beside the status badge (two-step confirmation → status Closed).
 
-Closed detail: **Pipeline** · **Lưu trữ** (confirm → status Archived) · **Xóa**.
+Closed detail: status badge **Đã kết thúc** + stopped-accepting notice · **Pipeline** · **Lưu trữ** (confirm → status Archived) · **Xóa**.
 
 Archived detail: **Pipeline** · **Xóa**.
 
@@ -76,7 +76,7 @@ Legacy `/selection` redirects to `/invite`.
 | Finish wizard on Review (create) | `POST /api/v1/campaign`, then `POST …/files` once if a JD file is pending |
 | Save on Review (edit) | `PUT /api/v1/campaign/{id}` (dirty fields only) then `PUT …/questions` |
 | Publish | `POST /api/v1/campaign/{id}/publish` |
-| Close / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
+| End / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
 | Soft-delete | `DELETE /api/v1/campaign/{id}` |
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
 | Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |

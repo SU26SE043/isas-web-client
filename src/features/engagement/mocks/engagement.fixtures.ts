@@ -1,4 +1,4 @@
-import type { HelpArticle, NotificationPreferences, PlatformNotification, SupportTicket, TeamMember } from '../types/engagement.types';
+import type { HelpArticle, NotificationPreferences, PlatformNotification, SupportTicket } from '../types/engagement.types';
 
 export const MOCK_NOTIFICATIONS: PlatformNotification[] = [
   {
@@ -46,10 +46,4 @@ export const HELP_ARTICLES: HelpArticle[] = [
 export const MOCK_TICKETS: SupportTicket[] = [
   { id: 'sup_1001', scope: 'candidate', subject: 'Interview report appeal', priority: 'normal', status: 'open', createdAt: '2026-07-10T09:00:00.000Z' },
   { id: 'sup_1002', scope: 'employer', subject: 'Webhook delivery failure', priority: 'high', status: 'pending', createdAt: '2026-07-11T15:30:00.000Z' },
-];
-
-export const MOCK_TEAM: TeamMember[] = [
-  { id: 'tm_001', name: 'Mai Tran', email: 'mai@novaworks.ai', role: 'OrgAdmin', status: 'active', lastActiveAt: '2026-07-12T03:20:00.000Z' },
-  { id: 'tm_002', name: 'Khoa Le', email: 'khoa@novaworks.ai', role: 'HrMember', status: 'active', lastActiveAt: '2026-07-11T12:00:00.000Z' },
-  { id: 'tm_003', name: 'Hiring Ops', email: 'ops@novaworks.ai', role: 'HrMember', status: 'invited', lastActiveAt: '2026-07-09T08:30:00.000Z' },
 ];

@@ -17,7 +17,15 @@ const PROFILE_BY_ROLE: Record<Exclude<UserRoleType, typeof UserRole.GUEST>, stri
 
 /** Path prefixes each role may land on after login (deep-link restore). */
 const ALLOWED_PREFIXES_BY_ROLE: Record<Exclude<UserRoleType, typeof UserRole.GUEST>, string[]> = {
-  [UserRole.CANDIDATE]: ['/candidate', '/practice', '/interview', '/cv-analysis', '/profile'],
+  [UserRole.CANDIDATE]: [
+    '/candidate',
+    '/practice',
+    '/interview',
+    '/cv-analysis',
+    '/profile',
+    '/invite',
+    '/invitations',
+  ],
   [UserRole.ORG_ADMIN]: ['/employer', '/enterprise'],
   [UserRole.HR_MEMBER]: ['/employer', '/enterprise'],
   [UserRole.ADMIN]: ['/admin', '/employer', '/enterprise'],

@@ -1,235 +1,201 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
-import {
-  useAnalyzeCandidateCvs,
-  useCampaignCandidateDetail,
-  useCampaignCandidates,
-  useInviteCampaignCandidates,
-} from '../../hooks/useCampaignCandidates';
-import type {
-  CandidateListQuery,
-  CandidateUploadResponse,
-  InviteCampaignCandidatesResponse,
-} from '../../types/campaign.api.types';
-import { CandidateDetailDrawer } from './CandidateDetailDrawer';
+import { useCampaignInvitationStore } from '../../stores/campaignInvitationStore';
 import { CandidateFilterBar } from './CandidateFilterBar';
 import { CandidateRankingTable } from './CandidateRankingTable';
 import { CandidateUploadSummary } from './CandidateUploadSummary';
+import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
-import { InviteConfirmModal } from './InviteConfirmModal';
-import { InviteResultModal } from './InviteResultModal';
-import { canSelectCandidate, type PendingCvFile } from './screeningUtils';
+import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
 
 interface CvScreeningPanelProps {
   campaignId: string;
   isActive: boolean;
 }
 
-const DEFAULT_FILTERS: CandidateListQuery = { sort: 'score' };
-
 export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps) {
   const { t } = useLanguage();
-  const [pendingFiles, setPendingFiles] = useState<PendingCvFile[]>([]);
-  const [view, setView] = useState<'upload' | 'ranking'>('upload');
-  const [uploadSummary, setUploadSummary] = useState<CandidateUploadResponse | null>(null);
-  const [selectedCandidateIds, setSelectedCandidateIds] = useState<Set<string>>(new Set());
-  const [detailCandidateId, setDetailCandidateId] = useState<string | null>(null);
-  const [inviteConfirmOpen, setInviteConfirmOpen] = useState(false);
-  const [inviteResult, setInviteResult] = useState<InviteCampaignCandidatesResponse | null>(null);
-  const [filters, setFilters] = useState<CandidateListQuery>(DEFAULT_FILTERS);
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-
-  const analyzeMutation = useAnalyzeCandidateCvs(campaignId);
-  const inviteMutation = useInviteCampaignCandidates(campaignId);
-  const candidatesQuery = useCampaignCandidates(campaignId, filters, {
-    enabled: view === 'ranking',
-  });
-  const detailQuery = useCampaignCandidateDetail(campaignId, detailCandidateId, {
-    enabled: Boolean(detailCandidateId),
-  });
-
-  const validFiles = pendingFiles.filter((item) => !item.errorKey);
-  const allValid = pendingFiles.length > 0 && validFiles.length === pendingFiles.length;
-  const canAnalyze = isActive && allValid && !analyzeMutation.isPending;
-
-  const hasActiveFilters = useMemo(
-    () =>
-      Boolean(filters.status?.trim()) ||
-      filters.minScore != null ||
-      Boolean(filters.skill?.trim()) ||
-      (filters.sort != null && filters.sort !== 'score'),
-    [filters],
+  const navigate = useNavigate();
+  const setInvitationCandidates = useCampaignInvitationStore(
+    (store) => store.setSelectedCandidates,
   );
-
-  const candidates = candidatesQuery.data ?? [];
-  const detailCandidate = candidates.find((item) => item.id === detailCandidateId);
-
-  useEffect(() => {
-    if (!candidatesQuery.data) return;
-    const alive = new Set(candidatesQuery.data.map((item) => item.id));
-    setSelectedCandidateIds((prev) => {
-      const next = new Set([...prev].filter((id) => alive.has(id)));
-      return next.size === prev.size ? prev : next;
-    });
-  }, [candidatesQuery.data]);
+  const state = useCvScreeningPanelState(campaignId, isActive);
 
   const handleAnalyze = async () => {
-    if (!canAnalyze) return;
-    setAnalyzeError(null);
+    if (!state.canAnalyze) return;
+    state.setAnalyzeError(null);
     try {
-      const result = await analyzeMutation.mutateAsync(validFiles.map((item) => item.file));
-      setPendingFiles([]);
-      setUploadSummary(result);
-      setView('ranking');
+      const result = await state.analyzeMutation.mutateAsync(
+        state.validFiles.map((item) => item.file),
+      );
+      state.setPendingFiles([]);
+      state.setUploadSummary(result);
+      await state.candidatesQuery.refetch();
     } catch {
-      setAnalyzeError(t('employer.campaigns.screening.errors.analyzeFailed'));
+      state.setAnalyzeError(t('employer.campaigns.screening.errors.analyzeFailed'));
     }
   };
-
-  const handleInviteConfirm = async () => {
-    const candidateIds = Array.from(selectedCandidateIds);
-    try {
-      const result = await inviteMutation.mutateAsync({ candidateIds });
-      setInviteConfirmOpen(false);
-      setInviteResult(result);
-      setSelectedCandidateIds((prev) => {
-        const next = new Set(prev);
-        for (const item of result.invited) {
-          next.delete(item.candidateId);
-        }
-        return next;
-      });
-    } catch {
-      setAnalyzeError(t('employer.campaigns.screening.errors.inviteFailed'));
-      setInviteConfirmOpen(false);
-    }
-  };
-
-  const toggleSelection = (id: string) => {
-    setSelectedCandidateIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAllSelection = (ids: string[]) => {
-    setSelectedCandidateIds(new Set(ids));
-  };
-
-  const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
   return (
     <div className="space-y-4">
-      {analyzeError ? (
+      {state.analyzeError ? (
         <Alert variant="error">
-          <AlertDescription>{analyzeError}</AlertDescription>
+          <AlertDescription>{state.analyzeError}</AlertDescription>
         </Alert>
       ) : null}
 
-      {candidatesQuery.isError ? (
-        <Alert variant="error">
-          <AlertDescription>{t('employer.campaigns.screening.errors.loadCandidatesFailed')}</AlertDescription>
-        </Alert>
-      ) : null}
+      <CvUploadZone
+        files={state.pendingFiles}
+        onFilesChange={state.setPendingFiles}
+        onAnalyze={() => void handleAnalyze()}
+        isAnalyzing={state.analyzeMutation.isPending}
+        canAnalyze={state.canAnalyze}
+        isActive={isActive}
+      />
+      {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
 
-      {view === 'upload' ? (
-        <>
-          <CvUploadZone
-            files={pendingFiles}
-            onFilesChange={setPendingFiles}
-            onAnalyze={() => void handleAnalyze()}
-            isAnalyzing={analyzeMutation.isPending}
-            canAnalyze={canAnalyze}
-            isActive={isActive}
-          />
-          {uploadSummary ? <CandidateUploadSummary summary={uploadSummary} /> : null}
-          {uploadSummary ? (
-            <Button type="button" variant="outline" onClick={() => setView('ranking')}>
-              {t('employer.campaigns.screening.upload.goRanking')}
-            </Button>
-          ) : null}
-        </>
-      ) : (
-        <>
-          {uploadSummary ? <CandidateUploadSummary summary={uploadSummary} /> : null}
-
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => setView('upload')}>
-              {t('employer.campaigns.screening.ranking.uploadMore')}
-            </Button>
+      <section className="space-y-4 border-t border-satin pt-5">
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-base font-semibold text-foreground">
+              {t('employer.campaigns.screening.ranking.title')}
+            </h3>
+            {!state.candidatesQuery.isLoading && !state.candidatesQuery.isError ? (
+              <span className="text-sm text-muted-foreground">
+                {t('employer.campaigns.screening.ranking.count').replace(
+                  '{count}',
+                  String(state.candidates.length),
+                )}
+              </span>
+            ) : null}
           </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('employer.campaigns.screening.ranking.description')}
+          </p>
+        </div>
 
+        {state.candidatesQuery.isLoading ? (
+          <div className="space-y-2" aria-busy="true">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+        ) : state.candidatesQuery.isError ? (
+          <Alert variant="error">
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>
+                {t('employer.campaigns.screening.errors.loadCandidatesDescription')}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void state.candidatesQuery.refetch()}
+              >
+                {t('employer.campaigns.screening.errors.retry')}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <>
           <CandidateFilterBar
-            filters={filters}
-            onChange={setFilters}
-            onClear={clearFilters}
+            filters={state.filters}
+            onChange={state.setFilters}
+            onClear={() => state.setFilters(state.DEFAULT_FILTERS)}
           />
-
           <CandidateRankingTable
-            candidates={candidates}
-            selectedIds={selectedCandidateIds}
-            onToggle={toggleSelection}
-            onToggleAll={toggleAllSelection}
-            onViewDetail={setDetailCandidateId}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={clearFilters}
+            candidates={state.candidates}
+            selectedIds={state.selectedCandidateIds}
+            onToggle={state.toggleSelection}
+            onToggleAll={(ids) => state.setSelectedCandidateIds(new Set(ids))}
+            onViewDetail={state.setDetailCandidateId}
+            hasActiveFilters={state.hasActiveFilters}
+            onClearFilters={() => state.setFilters(state.DEFAULT_FILTERS)}
+            onChooseFiles={() =>
+              document.getElementById('campaign-cv-upload')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }
           />
-
-          {selectedCandidateIds.size > 0 ? (
+          {state.selectedCandidateIds.size > 0 ? (
             <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
               <p className="text-sm text-muted-foreground">
                 {t('employer.campaigns.screening.ranking.selected').replace(
                   '{count}',
-                  String(selectedCandidateIds.size),
+                  String(state.selectedCandidateIds.size),
                 )}
               </p>
-              <Button
-                type="button"
-                disabled={!isActive || inviteMutation.isPending}
-                onClick={() => setInviteConfirmOpen(true)}
-              >
-                {t('employer.campaigns.screening.invitation.send')}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => state.setSelectedCandidateIds(new Set())}
+                >
+                  {t('employer.campaigns.screening.ranking.clearSelection')}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!isActive}
+                  onClick={() => {
+                    const candidates = state.candidates
+                      .filter((candidate) => state.selectedCandidateIds.has(candidate.id))
+                      .filter(
+                        (candidate): candidate is typeof candidate & { email: string } =>
+                          Boolean(candidate.email),
+                      )
+                      .map((candidate) => ({
+                        id: candidate.id,
+                        fullName: candidate.fullName ?? undefined,
+                        email: candidate.email,
+                        matchScore: candidate.overallMatchScore ?? undefined,
+                        source: 'cv-screening' as const,
+                      }));
+                    setInvitationCandidates(campaignId, candidates);
+                    navigate(`/employer/campaigns/${campaignId}/invitations?tab=invite`);
+                  }}
+                >
+                  {t('employer.campaigns.screening.invitation.continue')}
+                </Button>
+              </div>
             </div>
           ) : null}
-        </>
-      )}
+          </>
+        )}
+      </section>
 
-      <CandidateDetailDrawer
-        open={Boolean(detailCandidateId)}
-        onClose={() => setDetailCandidateId(null)}
-        detail={detailQuery.data}
-        isLoading={detailQuery.isLoading}
-        isError={detailQuery.isError}
-        isSelected={detailCandidateId ? selectedCandidateIds.has(detailCandidateId) : false}
-        canSelect={detailCandidate ? canSelectCandidate(detailCandidate) : false}
-        onToggleSelect={() => {
-          if (detailCandidateId) toggleSelection(detailCandidateId);
+      <CvScreeningModals
+        campaignId={campaignId}
+        detailCandidateId={state.detailCandidateId}
+        detail={state.detailQuery.data}
+        detailLoading={state.detailQuery.isLoading}
+        detailError={state.detailQuery.isError}
+        isDetailSelected={
+          state.detailCandidateId
+            ? state.selectedCandidateIds.has(state.detailCandidateId)
+            : false
+        }
+        canSelectDetail={state.canSelectDetail}
+        onCloseDetail={() => state.setDetailCandidateId(null)}
+        onToggleDetailSelect={() => {
+          if (state.detailCandidateId) state.toggleSelection(state.detailCandidateId);
         }}
-      />
-
-      <InviteConfirmModal
-        open={inviteConfirmOpen}
-        count={selectedCandidateIds.size}
-        isConfirming={inviteMutation.isPending}
-        onCancel={() => setInviteConfirmOpen(false)}
-        onConfirm={() => void handleInviteConfirm()}
-      />
-
-      <InviteResultModal
-        open={Boolean(inviteResult)}
-        result={inviteResult}
-        onClose={() => setInviteResult(null)}
-        onRetryFailed={() => {
-          if (!inviteResult) return;
-          setInviteResult(null);
-          setSelectedCandidateIds(new Set(inviteResult.failed.map((item) => item.candidateId)));
-          setInviteConfirmOpen(true);
+        onViewCvFromDetail={() => {
+          if (state.detailForActions) {
+            state.setViewingCvCandidate(toCandidateListItem(state.detailForActions));
+          }
         }}
+        onEditFromDetail={() => {
+          if (state.detailForActions) state.openEdit(toCandidateListItem(state.detailForActions));
+        }}
+        editingCandidate={state.editingCandidate}
+        onCloseEdit={() => state.setEditingCandidate(null)}
+        viewingCvCandidate={state.viewingCvCandidate}
+        onCloseCv={() => state.setViewingCvCandidate(null)}
       />
     </div>
   );

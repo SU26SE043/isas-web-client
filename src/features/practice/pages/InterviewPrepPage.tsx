@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  Camera,
-  CheckSquare,
-  ChevronRight,
-  Clock,
-  Loader2,
-  Sun,
-} from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
-import { SectionPanel } from '@/components/ui/section-panel';
 import { practiceSessionService } from '../services/practiceSession.service';
 import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
 import { useInterviewGate } from '../hooks/useInterviewGate';
@@ -17,40 +11,45 @@ import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
+import { PreparationChecklistStep } from '../components/preparation/PreparationChecklistStep';
+import { DeviceCheckStep } from '../components/preparation/DeviceCheckStep';
+import { WaitingRoomStep } from '../components/preparation/WaitingRoomStep';
 import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
+import {
+  normalizePracticeSessionId,
+  practiceSessionErrorMessageKey,
+} from '../utils/practiceSessionLoad';
+import { getApiStatusCode } from '@/shared/api/apiError';
 
-const CHECKLIST = [
-  { key: 'practice.flow.prepare.checkQuiet', icon: Sun },
-  { key: 'practice.flow.prepare.checkCamera', icon: Camera },
-  { key: 'practice.flow.prepare.checkTime', icon: Clock },
-] as const;
+export type PreparationSubStep = 'prepare' | 'device' | 'waiting';
+
+function parseSubStep(value: string | null): PreparationSubStep {
+  if (value === 'device' || value === 'waiting') return value;
+  return 'prepare';
+}
+
+function toFlowStep(subStep: PreparationSubStep): 'prepare' | 'device-check' | 'waiting' {
+  if (subStep === 'device') return 'device-check';
+  return subStep;
+}
 
 export const InterviewPrepPage: React.FC = () => {
-  const { sessionId = '' } = useParams();
+  const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
+  const sessionId = normalizePracticeSessionId(routeSessionId);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useLanguage();
-  useInterviewFlowSession(sessionId);
-  const gate = useInterviewGate(sessionId);
-  const { consentAccepted, setConsentAccepted } = useInterviewFlowStore();
-  const [sessionTitle, setSessionTitle] = useState('');
-  const [loadingSession, setLoadingSession] = useState(true);
+  useInterviewFlowSession(sessionId ?? '');
+  const gate = useInterviewGate(sessionId ?? undefined);
+  const { consentAccepted, deviceCheckPassed, setConsentAccepted, setDeviceCheckPassed } =
+    useInterviewFlowStore();
 
-  useEffect(() => {
-    let active = true;
-    void practiceSessionService.getSession(sessionId).then((session) => {
-      if (!active) return;
-      setSessionTitle(session.title);
-      setLoadingSession(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, [sessionId]);
-
-  const canContinue = gate.canStart && consentAccepted && !loadingSession;
-  const isCampaignSession = isCampaignSessionId(sessionId);
-  const isLearningSession = isLearningSessionId(sessionId);
-  const learningMeta = isLearningSession ? getLearningPracticeSession(sessionId) : undefined;
+  const subStep = parseSubStep(searchParams.get('step'));
+  const isCampaignSession = Boolean(sessionId && isCampaignSessionId(sessionId));
+  const isLearningSession = Boolean(sessionId && isLearningSessionId(sessionId));
+  const learningMeta = isLearningSession && sessionId
+    ? getLearningPracticeSession(sessionId)
+    : undefined;
   const cancelHref = learningMeta
     ? `/candidate/learning/roadmaps/${learningMeta.roadmapId}`
     : '/candidate/dashboard';
@@ -58,19 +57,133 @@ export const InterviewPrepPage: React.FC = () => {
     ? 'practice.flow.prepare.consent'
     : 'practice.flow.prepare.consentPractice';
 
+  const sessionQuery = useQuery({
+    queryKey: ['practice', 'session', sessionId],
+    queryFn: () => {
+      if (!sessionId) throw new Error('SESSION_ID_REQUIRED');
+      return practiceSessionService.getSession(sessionId);
+    },
+    enabled: Boolean(sessionId),
+    staleTime: 30_000,
+    retryOnMount: false,
+    retry: (failureCount, error) => {
+      const status = getApiStatusCode(error);
+      if (status === 401 || status === 403 || status === 404) return false;
+      return failureCount < 2;
+    },
+  });
+
+  const loadErrorKey = !sessionId
+    ? 'practice.session.missingSessionId'
+    : sessionQuery.isError
+      ? practiceSessionErrorMessageKey(sessionQuery.error)
+      : null;
+
+  const canContinuePrepare = gate.canStart && consentAccepted && Boolean(sessionQuery.data);
+
+  const pageTitle = useMemo(() => {
+    if (subStep === 'device') return t('practice.flow.device.title');
+    if (subStep === 'waiting') return t('practice.flow.waiting.title');
+    return t('practice.flow.prepare.title');
+  }, [subStep, t]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    if (!consentAccepted && subStep !== 'prepare') {
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    if (consentAccepted && !deviceCheckPassed && subStep === 'waiting' && !isCampaignSession) {
+      setSearchParams({ step: 'device' }, { replace: true });
+    }
+  }, [consentAccepted, deviceCheckPassed, isCampaignSession, sessionId, setSearchParams, subStep]);
+
+  useEffect(() => {
+    if (subStep !== 'waiting' || !deviceCheckPassed || !sessionId) return;
+    if (!navigator.permissions?.query) return;
+
+    let cancelled = false;
+
+    const verifyPermissions = async () => {
+      try {
+        const [camera, microphone] = await Promise.all([
+          navigator.permissions.query({ name: 'camera' as PermissionName }),
+          navigator.permissions.query({ name: 'microphone' as PermissionName }),
+        ]);
+        if (cancelled) return;
+        if (camera.state === 'denied' || microphone.state === 'denied') {
+          setDeviceCheckPassed(sessionId, false);
+          setSearchParams({ step: 'device' }, { replace: true });
+        }
+      } catch {
+        // Permissions API unsupported — device step handles access on next visit.
+      }
+    };
+
+    void verifyPermissions();
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceCheckPassed, sessionId, setDeviceCheckPassed, setSearchParams, subStep]);
+
+  const goToSubStep = (next: PreparationSubStep) => {
+    if (next === 'prepare') {
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    setSearchParams({ step: next }, { replace: true });
+  };
+
+  const handlePrepareContinue = () => {
+    goToSubStep('device');
+  };
+
+  const handleDeviceContinue = () => {
+    if (!sessionId) return;
+    setDeviceCheckPassed(sessionId, true);
+    if (isCampaignSession) {
+      navigate(`/interview/${sessionId}/terms`, { replace: true });
+      return;
+    }
+    goToSubStep('waiting');
+  };
+
+  const handleConsentChange = (checked: boolean) => {
+    if (sessionId) setConsentAccepted(sessionId, checked);
+  };
+
   return (
     <InterviewFlowShell
-      sessionId={sessionId}
-      currentStep="prepare"
-      title={t('practice.flow.prepare.title')}
-      description={sessionTitle || t('practice.flow.prepare.description')}
+      sessionId={sessionId ?? '--'}
+      currentStep={toFlowStep(subStep)}
+      title={pageTitle}
       isCampaignSession={isCampaignSession}
+      failedStep={loadErrorKey ? 'prepare' : undefined}
     >
-      {gate.isLoading || loadingSession ? (
+      {loadErrorKey ? (
+        <div role="alert" className="frame-satin rounded-2xl bg-surface-raised p-6">
+          <AlertCircle className="size-7 text-error" aria-hidden />
+          <h3 className="mt-4 text-lg font-semibold text-foreground">
+            {t('practice.session.loadErrorTitle')}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(loadErrorKey)}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {sessionId && sessionQuery.isError ? (
+              <Button type="button" variant="outline" onClick={() => void sessionQuery.refetch()}>
+                {t('practice.session.retry')}
+              </Button>
+            ) : null}
+            <Button render={<Link to="/practice" />} nativeButton={false} variant="ghost">
+              {t('practice.session.backToPractice')}
+            </Button>
+          </div>
+        </div>
+      ) : gate.isLoading || sessionQuery.isLoading ? (
         <div className="frame-satin flex min-h-[220px] items-center justify-center rounded-2xl">
           <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+          <span className="sr-only">{t('practice.session.loading')}</span>
         </div>
-      ) : (
+      ) : sessionQuery.data && subStep === 'prepare' ? (
         <div className="space-y-5">
           {!isLearningSession ? (
             <InterviewGatePanel
@@ -81,52 +194,29 @@ export const InterviewPrepPage: React.FC = () => {
               reserveEstimate={gate.reserveEstimate}
             />
           ) : null}
-
-          <SectionPanel
-            icon={<CheckSquare className="size-4" aria-hidden />}
-            title={t('practice.flow.prepare.checklistTitle')}
-            description={t('practice.flow.prepare.checklistHint')}
-            footer={
-              <div className="mt-8 flex flex-col gap-3 border-t border-satin pt-6 sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  className="btn-primary inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2.5"
-                  disabled={!canContinue}
-                  onClick={() => navigate(`/interview/${sessionId}/device-check`)}
-                >
-                  {t('practice.flow.continue')}
-                  <ChevronRight className="size-4" aria-hidden />
-                </button>
-                <Link to={cancelHref} className="btn-secondary inline-flex justify-center rounded-xl px-5 py-2.5">
-                  {t('practice.flow.cancel')}
-                </Link>
-              </div>
-            }
-          >
-            <ul className="divide-y divide-[color-mix(in_srgb,var(--isas-silver-200)_16%,transparent)]">
-              {CHECKLIST.map(({ key, icon: Icon }) => (
-                <li key={key} className="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
-                  <span className="frame-satin-soft mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-foreground">
-                    <Icon className="size-4" aria-hidden />
-                  </span>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{t(key)}</p>
-                </li>
-              ))}
-            </ul>
-
-            <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-satin bg-white/[0.03] px-4 py-3.5">
-              <input
-                type="checkbox"
-                className="mt-0.5 size-4 rounded border-satin bg-surface-overlay accent-white"
-                checked={consentAccepted}
-                disabled={!gate.canStart}
-                onChange={(event) => setConsentAccepted(sessionId, event.target.checked)}
-              />
-              <span className="text-sm text-foreground">{t(consentKey)}</span>
-            </label>
-          </SectionPanel>
+          <PreparationChecklistStep
+            consentAccepted={consentAccepted}
+            consentKey={consentKey}
+            canContinue={canContinuePrepare}
+            consentDisabled={!gate.canStart}
+            onCancel={() => navigate(cancelHref)}
+            onConsentChange={handleConsentChange}
+            onContinue={handlePrepareContinue}
+          />
         </div>
-      )}
+      ) : sessionQuery.data && subStep === 'device' ? (
+        <DeviceCheckStep
+          alreadyPassed={deviceCheckPassed}
+          onBack={() => goToSubStep('prepare')}
+          onContinue={handleDeviceContinue}
+        />
+      ) : sessionQuery.data && subStep === 'waiting' && sessionId ? (
+        <WaitingRoomStep
+          sessionId={sessionId}
+          session={sessionQuery.data}
+          onBack={() => goToSubStep('device')}
+        />
+      ) : null}
     </InterviewFlowShell>
   );
 };

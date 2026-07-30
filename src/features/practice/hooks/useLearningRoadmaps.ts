@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import type { LearningDashboardQuery, LearningRoadmapDetail } from '../types/learningPath.types';
 import { roadmapService } from '../services/roadmap.service';
+import { learningPathService } from '../services/learningPath.service';
 
 export const LEARNING_ROADMAPS_QUERY_KEY = ['learning', 'roadmaps'] as const;
 export const LEARNING_ROADMAP_DETAIL_QUERY_KEY = ['learning', 'roadmap'] as const;
@@ -33,7 +34,7 @@ export function useLearningRoadmaps(query: LearningDashboardQuery) {
 
   const result = useQuery({
     queryKey: learningRoadmapsQueryKey(query),
-    queryFn: () => roadmapService.listRoadmaps(query),
+    queryFn: () => learningPathService.listRoadmaps(query),
   });
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export function useLearningRoadmapDetail(roadmapId: string) {
 
   const result = useQuery({
     queryKey: learningRoadmapDetailQueryKey(roadmapId),
-    queryFn: () => roadmapService.getRoadmap(roadmapId),
+    queryFn: () => learningPathService.getRoadmap(roadmapId),
     enabled: Boolean(roadmapId),
   });
 
@@ -131,4 +132,19 @@ export function useLearningLesson(roadmapId: string, lessonId: string, enabled =
 
 export function invalidateLearningRoadmaps(queryClient: ReturnType<typeof useQueryClient>) {
   return queryClient.invalidateQueries({ queryKey: LEARNING_ROADMAPS_QUERY_KEY });
+}
+
+export function invalidateLearningRoadmapDetail(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roadmapId: string,
+) {
+  return queryClient.invalidateQueries({ queryKey: learningRoadmapDetailQueryKey(roadmapId) });
+}
+
+export function invalidateLearningLesson(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roadmapId: string,
+  lessonId: string,
+) {
+  return queryClient.invalidateQueries({ queryKey: learningLessonQueryKey(roadmapId, lessonId) });
 }

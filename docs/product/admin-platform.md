@@ -6,7 +6,9 @@ BRD: FR-255-289, SCR-ADM-069-088, UF-201-213, BRL-010, BRL-019, BRL-020, BRL-029
 
 Phase 13 implements the Admin Platform UI under `/admin/*`, including dashboard, users, roles, permissions, approvals, candidates, campaigns, content, learning, AI config, notification templates, reports, audit logs, system config, feature flags, monitoring, health, backups, maintenance, and support tickets.
 
-The current implementation is a mock-first frontend contract for the future Admin APIs.
+Most Admin surfaces remain mock-first. Organization and account directories,
+account-access actions, and dashboard identity analytics use live Admin-only
+Auth APIs.
 
 ## Roles
 
@@ -14,7 +16,11 @@ All routes are wrapped with `RequireAuth` and `RequireRole([admin])`. The UI sur
 
 ## Key Behaviors
 
-- User management supports search and suspend action.
+- User management uses live server-side search, role filters, cursor pagination,
+  tenant membership, ban metadata, ban/unban, and Admin password reset.
+- Dashboard identity analytics use live totals, active-user windows, role
+  distribution, and login/user buckets grouped by day or month.
+- Organization management lists every tenant with search and cursor pagination.
 - Role and permission screens show RBAC bundles and permission groups.
 - Audit logs are immutable/read-only and show hash evidence.
 - AI configuration shows BRL-020 bias guard and BRL-053 pending dual-sign state.
@@ -26,7 +32,8 @@ All routes are wrapped with `RequireAuth` and `RequireRole([admin])`. The UI sur
 
 ## Deferred
 
-- Live Admin API integration.
+- Live Admin API integration beyond organization/account directory,
+  account-access actions, and identity analytics.
 - Actual MFA re-auth modal for sensitive actions.
 - Real impersonation session switching.
 - Real report/export generation and backup restore workflows.

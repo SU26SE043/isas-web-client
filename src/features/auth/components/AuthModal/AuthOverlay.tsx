@@ -21,13 +21,11 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
   return (
     <motion.div
       className={`absolute top-0 left-1/2 z-20 h-full w-1/2 overflow-hidden ${
-        isSignUp ? 'bg-surface-raised text-white' : 'bg-surface-overlay text-foreground'
+        isSignUp ? 'bg-surface-raised/95 text-white backdrop-blur-md' : 'bg-surface-overlay/95 text-foreground backdrop-blur-md'
       }`}
       animate={{ x: isSignUp ? '-100%' : '0%' }}
       transition={panelTransition(reducedMotion)}
     >
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
-
       <div className="relative h-full w-full">
         <AnimatePresence mode="wait" initial={false}>
           {!isSignUp ? (

@@ -9,6 +9,7 @@ export interface PracticeSession {
   sessionId: string;
   title: string;
   description: string;
+  jobCategory?: string;
   status: 'initializing' | 'ready' | 'in_progress' | 'completed';
   questions: PracticeQuestion[];
   campaignId?: string;

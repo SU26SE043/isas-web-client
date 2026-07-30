@@ -20,7 +20,7 @@ import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 
-export const PRACTICE_SETUP_STEP_COUNT = 7;
+export const PRACTICE_SETUP_STEP_COUNT = 6;
 
 export function usePracticeSetupFlow() {
   const navigate = useNavigate();
@@ -44,7 +44,6 @@ export function usePracticeSetupFlow() {
   const [loadingJd, setLoadingJd] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [deviceReady, setDeviceReady] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [createErrorCode, setCreateErrorCode] = useState<CreatePracticeSessionErrorCode | null>(null);
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null);
@@ -63,7 +62,7 @@ export function usePracticeSetupFlow() {
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
   const canStart =
-    canStartPracticeSession(setupState) && deviceReady && !isCreatingSession && !jdTextTooLong;
+    canStartPracticeSession(setupState) && !isCreatingSession && !jdTextTooLong;
 
   const loadCvFiles = useCallback(async () => {
     setLoadingCv(true);
@@ -124,9 +123,8 @@ export function usePracticeSetupFlow() {
       const session = await createPracticeSession(payload);
       hydrateFromSession(session);
       resetInterviewFlow(session.id);
-      useInterviewFlowStore.getState().setDeviceCheckPassed(session.id, true);
-      useInterviewFlowStore.getState().setConsentAccepted(session.id, true);
-      navigate(`/interview/${session.id}/room`, { replace: true });
+      // Prep flow handles consent + device check after session creation.
+      navigate(`/interview/${session.id}/prepare`, { replace: true });
     } catch (error) {
       const mapped = mapCreatePracticeSessionError(error);
       setCreateErrorCode(mapped.code);
@@ -176,8 +174,6 @@ export function usePracticeSetupFlow() {
     uploadingCv,
     uploadError,
     handleUploadCv,
-    deviceReady,
-    setDeviceReady,
     isCreatingSession,
     createErrorCode,
     createErrorMessage,

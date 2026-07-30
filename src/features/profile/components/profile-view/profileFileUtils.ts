@@ -22,3 +22,10 @@ export function isCvFileType(fileType: string): boolean {
 export function isJdFileType(fileType: string): boolean {
   return fileType.toLowerCase() === 'jd';
 }
+
+export function getProfileFileParseStatusKey(status: string): string {
+  const normalized = status.toLowerCase();
+  if (normalized === 'completed' || normalized === 'done') return 'profile.view.parseStatus.completed';
+  if (normalized === 'failed') return 'profile.view.parseStatus.failed';
+  return 'profile.view.parseStatus.pending';
+}

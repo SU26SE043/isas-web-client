@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
+  Building2,
   Bell,
   BookOpen,
   Bot,
@@ -47,6 +48,7 @@ export const AdminDashboardLayout: React.FC = () => {
     () => [
       { to: '/admin/dashboard', label: t('admin.nav.dashboard'), end: true, icon: <Gauge className="h-4 w-4" aria-hidden /> },
       { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
       { to: '/admin/roles', label: t('admin.nav.roles'), icon: <Shield className="h-4 w-4" aria-hidden /> },
       { to: '/admin/permissions', label: t('admin.nav.permissions'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
       { to: '/admin/approvals', label: t('admin.nav.approvals'), icon: <ClipboardCheck className="h-4 w-4" aria-hidden /> },
@@ -81,7 +83,7 @@ export const AdminDashboardLayout: React.FC = () => {
             <Link to="/" className="focus-ring hidden rounded-md sm:block"><BrandLogo className="h-7" /></Link>
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:hidden">AD</span>
           </div>
-          <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
             <div className="space-y-1">
               {navItems.map((item) => (
                 <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label} title={item.label} className={({ isActive }) => navLinkClassName(isActive)}>
@@ -91,14 +93,22 @@ export const AdminDashboardLayout: React.FC = () => {
               ))}
             </div>
           </nav>
-          <div className="space-y-3 border-t border-subtle p-3">
-            <div className="flex items-center justify-center gap-2 sm:justify-start">
-              <NotificationBell scope="admin" panelPlacement="sidebar" />
-              <span className="hidden text-sm text-muted-foreground sm:inline">
+          <div className="shrink-0 space-y-1 border-t border-subtle p-3">
+            <div
+              className={navLinkClassName(false)}
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('button')) return;
+                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
+              }}
+            >
+              <NotificationBell scope="admin" panelPlacement="sidebar" variant="sidebar" />
+              <span className="hidden text-sm sm:inline">
                 {t('engagement.nav.notifications')}
               </span>
             </div>
-            <div className="hidden sm:flex sm:justify-start"><LanguageToggle compact /></div>
+            <div className="hidden items-center rounded-xl py-2.5 sm:flex sm:justify-start sm:px-3">
+              <LanguageToggle compact />
+            </div>
             <SidebarLogoutButton className={navLinkClassName(false)} aria-label={t('admin.nav.logout')}>
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">{t('admin.nav.logout')}</span>

@@ -10,7 +10,6 @@ import { resolvePracticeLevel, type PracticeLevel } from '@/shared/domain/practi
 import type {
   Achievement,
   CertificateRecord,
-  CreateRoadmapApiRequest,
   CreateRoadmapInput,
   LeaderboardEntry,
   LearningModule,
@@ -34,6 +33,8 @@ import {
 } from '../mocks/progress.fixtures';
 import { learningPathService } from './learningPath.service';
 import { learningEndpoints } from './learning.endpoints';
+import { CreateRoadmapError, mapCreateRoadmapError } from '../utils/roadmapCreateErrors';
+import { buildCreateRoadmapRequest } from '../utils/buildCreateRoadmapRequest';
 
 let roadmapRegenerateCount = MOCK_ROADMAP.regenerateCount;
 let latestCreatedRoadmap: RoadmapResponse | null = null;
@@ -124,44 +125,68 @@ export const learningService = {
 
   /**
    * Create personalized roadmap.
-   * Always calls live POST `/api/v1/interview/practice/roadmaps`.
-   * Body: `{ jobCategory, level, cvId? }` — reportIds intentionally omitted until API supports them.
+   * Live: POST `/api/v1/interview/practice/roadmaps`.
+   * Mock / Playwright: in-app fixture so E2E can finish without a gateway.
    */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
     if (!input.domainId || !input.targetLevel) {
-      throw new Error('INVALID_ROADMAP_INPUT');
+      throw new CreateRoadmapError('invalid_input');
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
-
-    const body: CreateRoadmapApiRequest = {
-      jobCategory: resolveJobCategoryFromDomainId(input.domainId),
-      level,
-    };
-    if (input.cvId) {
-      body.cvId = input.cvId;
+    const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
+    const payload = buildCreateRoadmapRequest(jobCategory, level, input);
+    if (!payload.ok) {
+      throw new CreateRoadmapError(
+        payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',
+      );
     }
 
-    const response = await apiClient.post<Record<string, unknown>>(
-      learningEndpoints.createRoadmap,
-      body,
-      { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
-    );
+    if (usesMockData('practice')) {
+      await mockDelay(500);
+      const created = normalizeCreateRoadmapResponse(
+        {
+          id: `roadmap-${crypto.randomUUID().slice(0, 8)}`,
+          regenerateCount: 0,
+          regenerateLimit: MOCK_ROADMAP.regenerateLimit,
+        },
+        { ...input, targetLevel: level },
+      );
+      latestCreatedRoadmap = created;
+      roadmapRegenerateCount = created.regenerateCount;
+      await learningPathService.registerCreatedRoadmap({
+        ...input,
+        targetLevel: level,
+        roadmapId: created.id ?? `roadmap-mock`,
+        reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
+      });
+      return created;
+    }
 
-    const created = normalizeCreateRoadmapResponse(response.data, {
-      ...input,
-      targetLevel: level,
-    });
+    try {
+      const response = await apiClient.post<Record<string, unknown>>(
+        learningEndpoints.createRoadmap,
+        payload.body,
+        { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
+      );
 
-    latestCreatedRoadmap = created;
-    roadmapRegenerateCount = created.regenerateCount;
-    await learningPathService.registerCreatedRoadmap({
-      ...input,
-      targetLevel: level,
-      roadmapId: created.id,
-      reportIds: input.reportIds ?? [],
-    });
-    return created;
+      const created = normalizeCreateRoadmapResponse(response.data, {
+        ...input,
+        targetLevel: level,
+      });
+
+      latestCreatedRoadmap = created;
+      roadmapRegenerateCount = created.regenerateCount;
+      await learningPathService.registerCreatedRoadmap({
+        ...input,
+        targetLevel: level,
+        roadmapId: created.id,
+        reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
+      });
+      return created;
+    } catch (error) {
+      throw mapCreateRoadmapError(error);
+    }
   },
 
   async regenerateRoadmap(): Promise<RoadmapResponse> {

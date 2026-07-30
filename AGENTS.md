@@ -69,7 +69,7 @@ Giao diện **luôn dark mode**, dùng **bright black** surfaces + **White / Gra
 
 | Phạm vi | Quy tắc |
 |---------|---------|
-| Background, Sidebar, Header, Card, Modal, Button, Input, Table, Tabs, Typography, Border, Shadow, Icon, Hover/Focus/Active | Monochrome + satin silver frames (`frame-satin`) |
+| Background, Sidebar, Header, Card, Modal, Button, Input, Table, Tabs, Typography, Border, Shadow, Icon, Hover/Focus/Active | Monochrome + satin silver frames (`frame-satin`); **data tables** = `Table` from `@/components/ui/table` (glass shell như Pipeline) |
 | Success / Error / Warning / Info | Giữ semantic colors (green/red/orange/blue) |
 | Toast, Alert, validation errors, progress, charts, status badges | Giữ semantic colors |
 

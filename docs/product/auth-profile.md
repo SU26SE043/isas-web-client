@@ -26,7 +26,8 @@ Deleted legacy values (`Employer`, `organize`, `hr`, `interviewer`, …) are **r
 | `/forgot-password` | SCR-AUT-005 | Implemented — OTP flow |
 | `/forgot-password/verify` | SCR-AUT-005 | Implemented — OTP step |
 | `/reset-password` | SCR-AUT-006 | Implemented — post-OTP reset |
-| `/reset-password/:token` | SCR-AUT-006 | Implemented — email link reset |
+| `/reset-password/:token` | SCR-AUT-006 | Compatibility redirect to `/forgot-password` |
+| `/auth/google/callback` | SCR-AUT-002 | Implemented — one-time code exchange |
 | `/mfa` | SCR-AUT-007 | Implemented — `MFAChallenge` |
 | `/session-expired` | SCR-AUT-008 | Implemented |
 | `/access-denied` | SCR-AUT-009 | Implemented |
@@ -71,9 +72,10 @@ The current login and sign-up UI is also the **frozen product default**. Do not 
 - `useAuth`, `AuthProvider`, `sessionManager` (idle + absolute timeout).
 - Tokens in `localStorage` via `authTokenStorage`: `accessToken`, `refreshToken`, `expiresAt`.
 - User session in Zustand (`auth-storage`).
-- Auto refresh: axios interceptor on `401` → `POST /api/v1/auth/refresh` `{ refreshToken }` (public, no Bearer) → store new tokens → retry once.
+- Auto refresh: axios interceptor on `401` → `POST /api/v1/auth/refresh` `{ refreshToken }` (public, no Bearer) → parse the full `{ accessToken, refreshToken, expiresAt }` AuthResponse despite the backend DTO name `RefreshTokenResponse` → store new tokens → retry once.
 - Refresh failure (401 expired/revoked): clear tokens + user → redirect `/login`.
 - Logout: `POST /api/v1/auth/logout` with Bearer + `{ refreshToken }`, then clear local session.
+- Google OAuth never puts tokens in the URL: browser `GET /login-google` → backend callback redirects to `/auth/google/callback?code=...` → frontend exchanges the one-time code and removes it through role-aware navigation.
 
 ## API (via Gateway)
 
@@ -81,18 +83,48 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 
 | Action | Path | Auth |
 | --- | --- | --- |
-| Login | `POST /api/v1/auth/login` | Public |
-| Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → `{ accessToken, refreshToken, expiresAt }` |
+| Candidate registration | `POST /api/v1/auth/register` | Public — body `{ email, password, fullName }` → `{ accessToken, refreshToken, expiresAt }`; `409` email exists; `400` validation. API minimum is 6 characters; frontend keeps the stricter SEC-012 12+ complexity policy. |
+| Employer + organization registration | `POST /api/v1/auth/register-org` | Public — body `{ email, password, fullName, orgName, taxCode? }` → `{ accessToken, refreshToken, expiresAt }`; creator becomes `OrgAdmin`; `409` email exists. Frontend keeps the stricter SEC-012 password policy. |
+| Login | `POST /api/v1/auth/login` | Public — body `{ email, password }` → `{ accessToken, refreshToken, expiresAt }`; `401` invalid/locked; `403` banned account |
+| Refresh | `POST /api/v1/auth/refresh` | Public — body `{ refreshToken }` → full AuthResponse `{ accessToken, refreshToken, expiresAt }`; `401` expired/revoked/banned |
+| Start Google OAuth | `GET /api/v1/auth/login-google?returnUrl=...` | Public — browser navigation; `302` Google challenge, never XHR/JSON |
+| Google backend callback | `GET /api/v1/auth/login-google-callback` | Public — backend/provider route; redirects to FE with one-time `code` or `reason=remote_error \| no_login_info \| account_suspended \| login_failed` |
+| Exchange Google code | `POST /api/v1/auth/google/exchange` | Public — body `{ code }` → `{ accessToken, refreshToken, expiresAt }`; `400` invalid/expired/used code |
 | Logout | `POST /api/v1/auth/logout` | Bearer + body `{ refreshToken }` |
 | Current user | `GET /api/v1/auth/me` | Bearer — `Candidate \| OrgAdmin \| HrMember \| Admin` |
 | Update profile | `PUT /api/v1/auth/me` | Bearer — body `{ fullName?, location?, title? }` (`null`/omit keeps current). Response body is a status string; FE must re-fetch `GET /me` and sync store. |
+| Current organization | `GET /api/v1/auth/org` | `OrgAdmin \| HrMember` — returns `{ id, name, taxCode?, createdAt, memberCount }`; `403` when JWT lacks `org_id`; `404` not found. Platform `Admin` has no implicit tenant context. |
+| Update organization | `PUT /api/v1/auth/org` | `OrgAdmin` — body `{ name?, taxCode? }`; returns the full organization response; `403`; `404`. |
+| Invite organization member | `POST /api/v1/auth/org/members` | `OrgAdmin` — body `{ email, fullName }`; creates an `HrMember`; `201`; `409` email exists. |
+| List organization members | `GET /api/v1/auth/org/members` | `OrgAdmin` — unpaginated `OrgMemberResponse[]`. |
+| Change organization role | `PATCH /api/v1/auth/org/members/{userId}` | `OrgAdmin` — body `{ orgRole: "OrgAdmin" \| "HrMember" }`; `400/403/404/409`, including protection for the final OrgAdmin. |
+| Remove organization member | `DELETE /api/v1/auth/org/members/{userId}` | `OrgAdmin` — `204`; removes only membership, not the user account; `400` self-removal, `403`, `404`, `409` final OrgAdmin. |
+| Admin organizations | `GET /api/v1/auth/admin/organizations` | Platform `Admin` only — query `{ search?, cursor?, limit? }`, limit max/default 500; returns `OrganizationResponse[]` plus `X-Next-Cursor`; `401` missing token, `403` other roles. |
+| Admin users | `GET /api/v1/auth/admin/users` | Platform `Admin` only — query `{ role?, search?, cursor?, limit? }`; returns account, organization membership, and ban metadata plus `X-Next-Cursor`; `401` missing token, `403` other roles. |
+| Admin ban user | `POST /api/v1/auth/admin/users/{userId}/ban` | Platform `Admin` only — body `{ reason? }` (maximum 500); returns updated user. Ban blocks new sessions and refresh, but issued access tokens survive their TTL. |
+| Admin unban user | `POST /api/v1/auth/admin/users/{userId}/unban` | Platform `Admin` only — returns updated user; `409` when the account is not banned. |
+| Admin reset user password | `POST /api/v1/auth/admin/users/{userId}/reset-password` | Platform `Admin` only — body `{ newPassword }`, returns `204`, and revokes all refresh tokens for the target user. |
+| Admin analytics | `GET /api/v1/auth/admin/analytics` | Platform `Admin` only — optional `{ from, to, groupBy: day|month }`; returns user/organization totals, active-user windows, role totals, and time buckets; defaults to the last 30 days grouped by day. |
+
+| Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; `200` returns `"OTP sent to your email"`; `400` returns `"User not found"`. |
+| Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; `200` returns `"OTP verified, you can reset your password"`; invalid/expired attempts return `400`. |
+| Reset password | `POST /api/v1/auth/reset-password` | Public — body `{ email, otp, newPassword }`; `200` returns `"Password reset successful"`. The verified OTP is retained after password-policy errors. |
+| Exchange Google code | `POST /api/v1/auth/google/exchange` | Public — body `{ code }`; returns `{ accessToken, refreshToken, expiresAt }`; code is one-time and invalid/expired/used codes return `400`. |
+| Change password | `POST /api/v1/auth/change-password` | Bearer — body `{ oldPassword, newPassword }`; success is `204 No Content`. |
+
+The OTP verification window is five minutes. More than five invalid guesses deletes the OTP and
+requires a new forgot-password request. Reset failures with `"OTP not verified or expired"` cover
+unverified, expired, and mismatched OTPs. See decision
+[`0010-auth-otp-google-exchange-contract`](../decisions/0010-auth-otp-google-exchange-contract.md).
 
 ## E2E
 
-- `e2e/specs/smoke/auth-login.spec.ts` — login, lockout, register → verify email.
+- `e2e/specs/smoke/auth-login.spec.ts` — login, lockout, register → authenticated role redirect.
+- `e2e/specs/smoke/auth-google.spec.ts` — browser redirect, one-time code exchange, callback reasons, URL-token rejection.
 
 ## Open gaps
 
 - HttpOnly cookie token storage (plan vs current localStorage) — pending backend contract.
 - Enterprise SSO backend (`/login-sso`) — UI gated; requires tenant IdP config (P9).
+- Backend-integrated E2E proof for OTP email delivery and Google provider redirects.
 - `UserRole` duplicate `ProtectedRoute` deprecation cleanup — low priority.

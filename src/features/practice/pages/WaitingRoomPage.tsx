@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/shared/languages';
@@ -30,6 +30,7 @@ export const WaitingRoomPage: React.FC = () => {
   const isCampaign = isCampaignSessionId(sessionId);
   const isLearning = isLearningSessionId(sessionId);
   const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
+  const redirectToPrep = !isCampaign && !isLearning;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [questionCount, setQuestionCount] = useState(0);
@@ -40,7 +41,7 @@ export const WaitingRoomPage: React.FC = () => {
 
   useEffect(() => {
     if (!deviceCheckPassed) {
-      navigate(`/interview/${sessionId}/device-check`, { replace: true });
+      navigate(`/interview/${sessionId}/prepare?step=device`, { replace: true });
       return;
     }
     if (requiresIdentityVerification(sessionId) && !identityVerified) {
@@ -49,9 +50,11 @@ export const WaitingRoomPage: React.FC = () => {
   }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
 
   useEffect(() => {
-    if (isLearning) {
-      setStatus('ready');
-      setQuestionCount(learningMeta?.questions.length ?? 0);
+    if (redirectToPrep || isLearning) {
+      if (isLearning) {
+        setStatus('ready');
+        setQuestionCount(learningMeta?.questions.length ?? 0);
+      }
       return;
     }
 
@@ -82,15 +85,15 @@ export const WaitingRoomPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isLearning, learningMeta?.questions.length, sessionId]);
+  }, [isLearning, learningMeta?.questions.length, redirectToPrep, sessionId]);
 
   useEffect(() => {
-    if (isLearning || status !== 'ready') return;
+    if (redirectToPrep || isLearning || status !== 'ready') return;
     const timer = window.setTimeout(() => {
       navigate(`/interview/${sessionId}/room`);
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [isLearning, navigate, sessionId, status]);
+  }, [isLearning, navigate, redirectToPrep, sessionId, status]);
 
   const handleLearningStart = async () => {
     if (!learningMeta || inFlightRef.current || isStarting) return;
@@ -143,12 +146,15 @@ export const WaitingRoomPage: React.FC = () => {
     }
   };
 
+  if (redirectToPrep) {
+    return <Navigate to={`/interview/${sessionId}/prepare?step=waiting`} replace />;
+  }
+
   return (
     <InterviewFlowShell
       sessionId={sessionId}
       currentStep="waiting"
       title={t('practice.flow.waiting.title')}
-      description={t('practice.flow.waiting.description')}
       isCampaignSession={isCampaign}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">

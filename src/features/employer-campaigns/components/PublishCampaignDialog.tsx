@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -46,6 +47,7 @@ export function PublishCampaignDialog({ onPublish, disabled }: PublishCampaignDi
       }}
     >
       <DialogTrigger render={<Button disabled={disabled} />}>
+        <Send aria-hidden />
         {t('employer.campaigns.detail.publish')}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" showCloseButton={!isPublishing}>

@@ -47,7 +47,7 @@ export const homeTranslations: TranslationDictionary = {
     'employer.jdTitle': 'Tạo bộ câu hỏi JD',
     'employer.jdDescription': 'Tự động sinh câu hỏi theo yêu cầu công việc.',
     'employer.reportTitle': 'Báo cáo so sánh',
-    'employer.reportDescription': 'Dashboard đối chiếu nhiều ứng viên cùng lúc.',
+    'employer.reportDescription': 'Bảng điều khiển đối chiếu nhiều ứng viên cùng lúc.',
     'employer.demo': 'Đăng ký Demo B2B',
   },
   en: {

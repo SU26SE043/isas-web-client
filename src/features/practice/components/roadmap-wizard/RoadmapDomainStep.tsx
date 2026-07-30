@@ -1,4 +1,3 @@
-import React from 'react';
 import { Layers } from 'lucide-react';
 import { SelectionOption } from '@/components/ui/selection-option';
 import { SectionPanel } from '@/components/ui/section-panel';
@@ -14,14 +13,18 @@ interface RoadmapDomainStepProps {
   onNext: () => void;
 }
 
-export const RoadmapDomainStep: React.FC<RoadmapDomainStepProps> = ({
+export function RoadmapDomainStep({
   domains,
   selectedId,
   isLoading,
   onSelect,
   onNext,
-}) => {
+}: RoadmapDomainStepProps) {
   const { language, t } = useLanguage();
+  const getDomainTitle = (domain: PracticeDomain) => {
+    const title = language === 'vi' ? domain.nameVi : domain.name;
+    return language === 'en' ? title.replace(/ Developer$/, '') : title;
+  };
 
   return (
     <SectionPanel
@@ -32,20 +35,16 @@ export const RoadmapDomainStep: React.FC<RoadmapDomainStepProps> = ({
       footer={<RoadmapWizardNav nextDisabled={!selectedId} onNext={onNext} backDisabled />}
     >
       <div className="grid gap-6 sm:grid-cols-2">
-        {domains.map((domain) => {
-          const label = language === 'vi' ? domain.nameVi : domain.name;
-          const description = language === 'vi' ? domain.descriptionVi : domain.description;
-          return (
-            <SelectionOption
-              key={domain.id}
-              title={label}
-              description={description}
-              selected={domain.id === selectedId}
-              onClick={() => onSelect(domain.id)}
-            />
-          );
-        })}
+        {domains.map((domain) => (
+          <SelectionOption
+            key={domain.id}
+            title={getDomainTitle(domain)}
+            description={language === 'vi' ? domain.descriptionVi : domain.description}
+            selected={domain.id === selectedId}
+            onClick={() => onSelect(domain.id)}
+          />
+        ))}
       </div>
     </SectionPanel>
   );
-};
+}

@@ -1,5 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { PaymentOrderDetail, PaymentOrderStatusResult } from '../types/payment.types';
@@ -37,7 +45,7 @@ export function PaymentOrdersTable({
 
   if (orders.length === 0) {
     return (
-      <p className="rounded-xl border border-subtle bg-surface-raised px-4 py-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-satin bg-surface-raised px-4 py-8 text-center text-sm text-muted-foreground">
         {t('payment.orders.empty')}
       </p>
     );
@@ -45,34 +53,36 @@ export function PaymentOrdersTable({
 
   return (
     <>
-      <div className="hidden overflow-hidden rounded-xl border border-subtle bg-surface-raised md:block">
-        <table className="min-w-full text-sm">
-          <thead className="border-b border-subtle bg-surface-base text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">{t('payment.orders.createdAt')}</th>
-              <th className="px-4 py-3">{t('payment.orders.package')}</th>
-              <th className="px-4 py-3">{t('payment.orders.amount')}</th>
-              <th className="px-4 py-3">{t('payment.orders.status')}</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('payment.orders.createdAt')}</TableHead>
+              <TableHead>{t('payment.orders.package')}</TableHead>
+              <TableHead>{t('payment.orders.amount')}</TableHead>
+              <TableHead>{t('payment.orders.status')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {orders.map((order) => {
               const status = resolveRowStatus(order, statuses);
               const hasLiveStatus = Boolean(statuses[order.orderId]);
               return (
-                <tr
+                <TableRow
                   key={order.orderId}
-                  className="cursor-pointer border-b border-subtle transition last:border-b-0 hover:bg-surface-overlay"
+                  className="cursor-pointer"
                   onClick={() => onSelectOrder(order.orderId)}
                 >
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <TableCell>
                     {order.createdAt ? formatPaymentDate(order.createdAt, language) : '-'}
-                  </td>
-                  <td className="px-4 py-3 text-foreground">{order.packageName ?? order.packageId}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {order.packageName ?? order.packageId}
+                  </TableCell>
+                  <TableCell>
                     {order.priceVnd ? `${formatVnd(order.priceVnd, locale)} VND` : '-'}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell>
                     {!hasLiveStatus && isStatusesLoading ? (
                       <Skeleton className="h-6 w-28 rounded-full" />
                     ) : (
@@ -80,12 +90,12 @@ export function PaymentOrdersTable({
                         {t(livePaymentStatusLabelKey(status))}
                       </Badge>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <div className="space-y-3 md:hidden">
@@ -97,14 +107,16 @@ export function PaymentOrdersTable({
               key={order.orderId}
               type="button"
               className={cn(
-                'w-full rounded-xl border border-subtle bg-surface-raised p-4 text-left transition hover:bg-surface-overlay',
+                'frame-satin w-full rounded-xl bg-surface-raised p-4 text-left transition hover:bg-surface-overlay',
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
               )}
               onClick={() => onSelectOrder(order.orderId)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-foreground">{order.packageName ?? order.packageId}</p>
+                  <p className="font-medium text-foreground">
+                    {order.packageName ?? order.packageId}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {order.createdAt ? formatPaymentDate(order.createdAt, language) : '-'}
                   </p>

@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils';
 import type { CampaignInvitationStatus } from '../../types/campaign.api.types';
 
 const STATUS_CLASS: Record<CampaignInvitationStatus, string> = {
-  Queued: 'border-info/30 bg-info-bg text-info',
-  Sent: 'border-success/30 bg-success-bg text-success',
-  Joined: 'border-satin bg-white/[0.06] text-foreground',
-  Expired: 'border-warning/30 bg-warning-bg text-warning',
-  Revoked: 'border-error/30 bg-error-bg text-error',
+  Queued: 'border-info/30 bg-info/10 text-info',
+  Sent: 'border-success/30 bg-success/10 text-success',
+  Joined: 'border-violet-400/30 bg-violet-500/10 text-violet-300',
+  Expired: 'border-warning/30 bg-warning/10 text-warning',
+  Revoked: 'border-error/30 bg-error/10 text-error',
 };
 
 const STATUS_KEY: Record<CampaignInvitationStatus, string> = {

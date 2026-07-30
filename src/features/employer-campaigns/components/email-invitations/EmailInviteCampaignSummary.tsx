@@ -18,27 +18,30 @@ interface EmailInviteCampaignSummaryProps {
 
 export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSummaryProps) {
   const { t, language } = useLanguage();
-  const invitedCount = campaign.invitedEmails.length;
-  const remaining =
-    campaign.capacity > 0 ? Math.max(campaign.capacity - invitedCount, 0) : null;
 
-  const rows: Array<{ label: string; value: string }> = [
-    { label: t('employer.campaigns.emailInvitations.summary.name'), value: campaign.title },
+  const leftRows = [
     {
-      label: t('employer.campaigns.emailInvitations.summary.domain'),
-      value: campaign.domain?.trim() || '—',
+      label: t('employer.campaigns.emailInvitations.summary.name'),
+      value: campaign.title,
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.status'),
       value: campaign.status,
     },
     {
-      label: t('employer.campaigns.emailInvitations.summary.startsAt'),
-      value: formatDateTime(campaign.startsAt, language),
-    },
-    {
       label: t('employer.campaigns.emailInvitations.summary.expiresAt'),
       value: formatDateTime(campaign.deadline, language),
+    },
+  ];
+
+  const rightRows = [
+    {
+      label: t('employer.campaigns.emailInvitations.summary.domain'),
+      value: campaign.domain?.trim() || '—',
+    },
+    {
+      label: t('employer.campaigns.emailInvitations.summary.startsAt'),
+      value: formatDateTime(campaign.startsAt, language),
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.maxCandidates'),
@@ -46,35 +49,35 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
     },
   ];
 
-  if (invitedCount > 0 || campaign.candidates.length > 0) {
-    rows.push({
-      label: t('employer.campaigns.emailInvitations.summary.invitedCount'),
-      value: String(invitedCount || campaign.candidates.length),
-    });
-  }
-  if (remaining != null && campaign.capacity > 0) {
-    rows.push({
-      label: t('employer.campaigns.emailInvitations.summary.remaining'),
-      value: String(remaining),
-    });
-  }
-
   return (
-    <section className="rounded-lg border border-satin bg-surface-overlay p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <h2 className="text-sm font-semibold text-foreground">
+    <section className="frame-satin relative overflow-hidden rounded-2xl bg-surface-raised p-5 sm:p-6">
+      <div className="pointer-events-none absolute -right-6 -top-8 size-40 rounded-full bg-violet-500/10 blur-3xl" />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h2 className="heading-secondary text-base text-foreground">
           {t('employer.campaigns.emailInvitations.summary.title')}
         </h2>
         <CampaignManagementStatusBadge status={campaign.status} />
       </div>
-      <dl className="grid gap-2 sm:grid-cols-2">
-        {rows.map((row) => (
-          <div key={row.label} className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{row.label}</dt>
-            <dd className="break-words text-sm text-foreground">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <dl className="space-y-3">
+          {leftRows.map((row) => (
+            <div key={row.label} className="min-w-0">
+              <dt className="text-xs text-muted-foreground">{row.label}</dt>
+              <dd className="mt-0.5 break-words text-sm font-medium text-foreground">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <dl className="space-y-3">
+          {rightRows.map((row) => (
+            <div key={row.label} className="min-w-0">
+              <dt className="text-xs text-muted-foreground">{row.label}</dt>
+              <dd className="mt-0.5 break-words text-sm font-medium text-foreground">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </section>
   );
 }

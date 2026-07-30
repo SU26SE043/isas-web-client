@@ -8,6 +8,10 @@
  * Add other domains to LIVE_API_DOMAINS when they start calling the real API.
  * Candidate rubrics (`/api/v1/interview/practice/rubrics/*`) always call the live API.
  * B2C practice sessions (`practice` domain) call live Interview Practice APIs when listed below.
+ *
+ * Under Playwright (`navigator.webdriver`), `practice` stays on in-app mocks so journey
+ * specs can run without a gateway. Other live domains (e.g. cv-analysis) keep HTTP
+ * so E2E route stubs continue to work.
  */
 export type MockDataDomain =
   | 'practice'
@@ -20,6 +24,13 @@ export type MockDataDomain =
 /** Domains wired to the real gateway today (auth is always live — not listed here). */
 export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice'];
 
+export function isPlaywrightRuntime(): boolean {
+  return typeof navigator !== 'undefined' && navigator.webdriver === true;
+}
+
 export function usesMockData(domain: MockDataDomain): boolean {
+  if (domain === 'practice' && isPlaywrightRuntime()) {
+    return true;
+  }
   return !LIVE_API_DOMAINS.includes(domain);
 }

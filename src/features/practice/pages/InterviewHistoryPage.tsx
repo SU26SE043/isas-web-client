@@ -1,171 +1,205 @@
-import React, { useMemo, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
-import { useInterviewHistory } from '../hooks/useInterviewHistory';
-import { HistoryTable } from '../components/history/HistoryTable';
 import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
-import { InterviewHistoryEmptyState } from '../components/history/InterviewHistoryEmptyState';
-import { InterviewHistoryHeader } from '../components/history/InterviewHistoryHeader';
-import { InterviewHistoryPagination } from '../components/history/InterviewHistoryPagination';
-import { InterviewHistoryStats } from '../components/history/InterviewHistoryStats';
-import { InterviewHistoryToolbar } from '../components/history/InterviewHistoryToolbar';
+import { PracticeHistoryContent } from '../components/history/PracticeHistoryContent';
+import { PracticeHistoryStatCard } from '../components/history/PracticeHistoryStatCard';
+import { PracticeHistoryToolbar } from '../components/history/PracticeHistoryToolbar';
+import { usePracticeSessionHistory } from '../hooks/usePracticeSessionHistory';
+import type {
+  PracticeHistorySort,
+  PracticeHistoryStatusFilter,
+} from '../types/history.types';
 import {
-  computeHistoryStats,
-  HISTORY_ITEMS_PER_PAGE,
-} from '../components/history/historyPageUtils';
+  computePracticeHistoryPageStats,
+  filterAndSortPracticeHistory,
+} from '../utils/practiceSessionHistoryActions';
 
-export const InterviewHistoryPage: React.FC = () => {
+export function InterviewHistoryPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date') ?? '';
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
+
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<PracticeHistoryStatusFilter>('all');
+  const [sort, setSort] = useState<PracticeHistorySort>('newest');
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [currentCursor, setCurrentCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
+  const [pageIndex, setPageIndex] = useState(1);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showHidden, setShowHidden] = useState(false);
 
-  const { interviews, isLoading, error, refresh, hideInterview, restoreHiddenInterview } =
-    useInterviewHistory({ includeDeleted: showHidden });
+  const historyQuery = usePracticeSessionHistory({
+    cursor: currentCursor ?? undefined,
+    limit: pageSize,
+  });
 
-  const stats = useMemo(() => computeHistoryStats(interviews), [interviews]);
+  const nextCursor = historyQuery.data?.nextCursor ?? null;
+  const pageItems = historyQuery.data?.items ?? [];
+  const stats = useMemo(() => computePracticeHistoryPageStats(pageItems), [pageItems]);
 
-  const filteredInterviews = useMemo(
+  const visibleItems = useMemo(
     () =>
-      interviews.filter((interview) => {
-        const matchesStatus = !statusFilter || interview.status === statusFilter;
-        const matchesDate = !dateFilter || interview.date.startsWith(dateFilter);
-        return matchesStatus && matchesDate;
+      filterAndSortPracticeHistory(pageItems, {
+        search,
+        status,
+        sort,
+        datePrefix: dateFilter || undefined,
       }),
-    [interviews, statusFilter, dateFilter],
+    [dateFilter, pageItems, search, sort, status],
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredInterviews.length / HISTORY_ITEMS_PER_PAGE));
-  const paginatedInterviews = filteredInterviews.slice(
-    (currentPage - 1) * HISTORY_ITEMS_PER_PAGE,
-    currentPage * HISTORY_ITEMS_PER_PAGE,
-  );
+  const hasClientFilters =
+    Boolean(search.trim()) || status !== 'all' || sort !== 'newest' || Boolean(dateFilter);
 
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
+  const resetPagination = () => {
+    setCurrentCursor(null);
+    setCursorHistory([]);
+    setPageIndex(1);
   };
 
-  const handleRefresh = () => {
-    setCurrentPage(1);
-    refresh();
+  const clearFilters = () => {
+    setSearch('');
+    setStatus('all');
+    setSort('newest');
+    if (dateFilter) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('date');
+      setSearchParams(next);
+    }
   };
-
-  const handleClearDateFilter = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('date');
-    setSearchParams(nextParams);
-    setCurrentPage(1);
-  };
-
-  const handleToggleCompareMode = () => {
-    setCompareMode((value) => !value);
-    setSelectedIds([]);
-  };
-
-  const handleToggleCompare = (id: string) => {
-    setSelectedIds((current) => {
-      if (current.includes(id)) {
-        return current.filter((item) => item !== id);
-      }
-      if (current.length >= 2) {
-        return [current[1], id];
-      }
-      return [...current, id];
-    });
-  };
-
-  const handleCompare = () => {
-    if (selectedIds.length !== 2) return;
-    navigate(`/candidate/practice/history/compare?left=${selectedIds[0]}&right=${selectedIds[1]}`);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-surface-raised">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-subtle" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center bg-surface-raised px-6 text-center">
-        <AlertCircle className="h-10 w-10 text-error" aria-hidden />
-        <h2 className="heading-secondary mt-4 text-xl text-foreground">{t('practice.history.errorTitle')}</h2>
-        <p className="body-text mt-2 text-sm text-muted-foreground">{t('practice.history.errorDescription')}</p>
-        <button type="button" className="btn-primary mt-6" onClick={handleRefresh}>
-          {t('practice.history.refresh')}
-        </button>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-surface-raised">
-      <InterviewHistoryHeader />
+    <div className="h-full overflow-y-auto bg-surface-base">
+      <div className="page-container page-section mx-auto max-w-6xl space-y-5">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">
+              {t('practice.history.title')}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('practice.history.subtitle')}</p>
+          </div>
+          <Button type="button" render={<Link to="/practice" />}>
+            {t('practice.history.newPractice')}
+          </Button>
+        </header>
 
-      <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-8 py-5 min-h-0">
-        <InterviewHistoryToolbar
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-          onRefresh={handleRefresh}
-          dateFilter={dateFilter}
-          onClearDateFilter={dateFilter ? handleClearDateFilter : undefined}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PracticeHistoryStatCard
+            label={t('practice.history.stats.pageCount')}
+            value={String(stats.pageCount)}
+          />
+          <PracticeHistoryStatCard
+            label={t('practice.history.stats.pageCompleted')}
+            value={String(stats.completed)}
+            tone="success"
+          />
+          <PracticeHistoryStatCard
+            label={t('practice.history.stats.pageInProgress')}
+            value={String(stats.inProgress)}
+            tone="warning"
+          />
+          <PracticeHistoryStatCard
+            label={t('practice.history.stats.pageAvgScore')}
+            value={
+              stats.avgScore == null
+                ? t('practice.history.scoreUnavailable')
+                : stats.avgScore.toFixed(1)
+            }
+            tone="info"
+          />
+        </div>
+
+        <PracticeHistoryToolbar
+          search={search}
+          status={status}
+          sort={sort}
+          isFetching={historyQuery.isFetching}
           compareMode={compareMode}
-          onToggleCompareMode={handleToggleCompareMode}
-          showHidden={showHidden}
-          onToggleShowHidden={() => {
-            setShowHidden((value) => !value);
-            setCurrentPage(1);
+          dateFilter={dateFilter || undefined}
+          onSearchChange={setSearch}
+          onStatusChange={setStatus}
+          onSortChange={setSort}
+          onRefresh={() => void historyQuery.refetch()}
+          onToggleCompareMode={() => {
+            setCompareMode((value) => !value);
+            setSelectedIds([]);
+          }}
+          onClearDateFilter={() => {
+            const next = new URLSearchParams(searchParams);
+            next.delete('date');
+            setSearchParams(next);
           }}
         />
 
         {compareMode ? (
           <InterviewHistoryCompareBar
             selectedCount={selectedIds.length}
-            onCompare={handleCompare}
-            onCancel={handleToggleCompareMode}
+            onCompare={() => {
+              if (selectedIds.length !== 2) return;
+              navigate(
+                `/candidate/practice/history/compare?left=${selectedIds[0]}&right=${selectedIds[1]}`,
+              );
+            }}
+            onCancel={() => {
+              setCompareMode(false);
+              setSelectedIds([]);
+            }}
           />
         ) : null}
 
-        <InterviewHistoryStats
-          total={stats.total}
-          completed={stats.completed}
-          avgScore={stats.avgScore}
-          inProgress={stats.inProgress}
-        />
-
-        <div className="min-h-0 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          {paginatedInterviews.length > 0 ? (
-            <HistoryTable
-              interviews={paginatedInterviews}
-              compareMode={compareMode}
-              selectedIds={selectedIds}
-              showHidden={showHidden}
-              onSelect={(id) => navigate(`/candidate/practice/history/${id}`)}
-              onToggleCompare={handleToggleCompare}
-              onHide={(id) => void hideInterview(id)}
-              onRestore={(id) => void restoreHiddenInterview(id)}
-            />
-          ) : (
-            <InterviewHistoryEmptyState />
-          )}
-        </div>
-
-        <InterviewHistoryPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          itemsPerPage={HISTORY_ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
-        />
+        {historyQuery.data || historyQuery.isLoading || historyQuery.isError ? (
+          <PracticeHistoryContent
+            isLoading={historyQuery.isLoading}
+            isError={historyQuery.isError}
+            isFetching={historyQuery.isFetching}
+            pageItems={pageItems}
+            visibleItems={visibleItems}
+            hasClientFilters={hasClientFilters}
+            compareMode={compareMode}
+            selectedIds={selectedIds}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            canGoPrevious={cursorHistory.length > 0}
+            canGoNext={Boolean(nextCursor)}
+            onRetry={() => void historyQuery.refetch()}
+            onClearFilters={clearFilters}
+            onToggleCompare={(id) => {
+              setSelectedIds((current) => {
+                if (current.includes(id)) return current.filter((item) => item !== id);
+                if (current.length >= 2) return [current[1], id];
+                return [...current, id];
+              });
+            }}
+            onViewResult={(id) => navigate(`/candidate/practice/history/${id}`)}
+            onResume={(id) => navigate(`/interview/${id}/room`)}
+            onPrevious={() => {
+              setCursorHistory((previous) => {
+                if (previous.length === 0) return previous;
+                const updated = [...previous];
+                const previousCursor = updated.pop() ?? null;
+                setCurrentCursor(previousCursor);
+                setPageIndex((page) => Math.max(1, page - 1));
+                return updated;
+              });
+            }}
+            onNext={() => {
+              if (!nextCursor) return;
+              setCursorHistory((previous) => [...previous, currentCursor]);
+              setCurrentCursor(nextCursor);
+              setPageIndex((previous) => previous + 1);
+            }}
+            onPageSizeChange={(value) => {
+              setPageSize(value);
+              resetPagination();
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );
-};
+}

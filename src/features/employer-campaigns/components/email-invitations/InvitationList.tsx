@@ -1,5 +1,13 @@
-import { RefreshCw } from 'lucide-react';
+import { Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInvitation } from '../../types/campaign.api.types';
 import { InvitationStatusBadge } from './InvitationStatusBadge';
@@ -34,49 +42,49 @@ export function InvitationList({
 
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-lg border border-satin lg:block">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-satin bg-surface-overlay text-xs text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.email')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.status')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.createdAt')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.emailSentAt')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.expiresAt')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.joinedAt')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.campaignInvitations.table.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="hidden lg:block">
+        <Table className="min-w-[960px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.email')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.status')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.createdAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.emailSentAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.expiresAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.joinedAt')}</TableHead>
+              <TableHead>{t('employer.campaigns.campaignInvitations.table.actions')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {items.map((invitation) => {
               const canReissue = isActiveCampaign && invitation.status !== 'Joined';
               const isRowReissuing = reissuingInvitationId === invitation.id;
               return (
-                <tr key={invitation.id} className="border-b border-satin/60 align-top">
-                  <td
-                    className="max-w-[16rem] px-3 py-3 break-words text-foreground"
+                <TableRow key={invitation.id} className="align-top">
+                  <TableCell
+                    className="max-w-[16rem] break-words font-medium whitespace-normal text-foreground"
                     style={{ overflowWrap: 'anywhere' }}
                   >
                     {invitation.email}
-                  </td>
-                  <td className="px-3 py-3">
+                  </TableCell>
+                  <TableCell>
                     <InvitationStatusBadge status={invitation.status} />
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {formatDateTime(invitation.createdAt, language, empty)}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {invitation.emailSentAt
                       ? formatDateTime(invitation.emailSentAt, language, empty)
                       : t('employer.campaigns.campaignInvitations.table.notSent')}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {formatDateTime(invitation.expiresAt, language, empty)}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {formatDateTime(invitation.joinedAt, language, empty)}
-                  </td>
-                  <td className="px-3 py-3">
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
@@ -84,6 +92,7 @@ export function InvitationList({
                         variant="outline"
                         onClick={() => onViewDetail(invitation)}
                       >
+                        <Eye className="size-3.5" aria-hidden />
                         {t('employer.campaigns.campaignInvitations.actions.viewDetail')}
                       </Button>
                       {canReissue ? (
@@ -92,13 +101,6 @@ export function InvitationList({
                           size="sm"
                           disabled={isRowReissuing}
                           loading={isRowReissuing}
-                          title={
-                            !isActiveCampaign
-                              ? t(
-                                  'employer.campaigns.campaignInvitations.errors.campaignNotActive',
-                                )
-                              : undefined
-                          }
                           aria-label={t(
                             'employer.campaigns.campaignInvitations.actions.reissueFor',
                           ).replace('{{email}}', invitation.email)}
@@ -111,12 +113,12 @@ export function InvitationList({
                         </Button>
                       ) : null}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <ul className="space-y-3 lg:hidden">
@@ -126,7 +128,7 @@ export function InvitationList({
           return (
             <li
               key={invitation.id}
-              className="space-y-3 rounded-lg border border-satin bg-surface-overlay p-4"
+              className="frame-satin space-y-3 rounded-xl bg-surface-raised p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <p
@@ -164,6 +166,7 @@ export function InvitationList({
                   variant="outline"
                   onClick={() => onViewDetail(invitation)}
                 >
+                  <Eye className="size-3.5" aria-hidden />
                   {t('employer.campaigns.campaignInvitations.actions.viewDetail')}
                 </Button>
                 {canReissue ? (
@@ -172,11 +175,9 @@ export function InvitationList({
                     size="sm"
                     disabled={isRowReissuing}
                     loading={isRowReissuing}
-                    aria-label={t(
-                      'employer.campaigns.campaignInvitations.actions.reissueFor',
-                    ).replace('{{email}}', invitation.email)}
                     onClick={() => onReissue(invitation)}
                   >
+                    <RefreshCw className="size-3.5" aria-hidden />
                     {isRowReissuing
                       ? t('employer.campaigns.campaignInvitations.actions.reissuing')
                       : t('employer.campaigns.campaignInvitations.actions.reissue')}

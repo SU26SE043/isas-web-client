@@ -1,5 +1,15 @@
 import { Button } from '@/components/ui/button';
+import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
+import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/patterns/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { canSelectCandidate } from './screeningUtils';
@@ -12,6 +22,7 @@ interface CandidateRankingTableProps {
   onViewDetail: (id: string) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onChooseFiles: () => void;
 }
 
 export function CandidateRankingTable({
@@ -22,12 +33,20 @@ export function CandidateRankingTable({
   onViewDetail,
   hasActiveFilters,
   onClearFilters,
+  onChooseFiles,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+  const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [candidates]);
 
   if (candidates.length === 0) {
     return (
@@ -44,7 +63,11 @@ export function CandidateRankingTable({
             <Button type="button" variant="outline" onClick={onClearFilters}>
               {t('employer.campaigns.screening.ranking.clearFilters')}
             </Button>
-          ) : undefined
+          ) : (
+            <Button type="button" variant="outline" onClick={onChooseFiles}>
+              {t('employer.campaigns.screening.upload.selectFiles')}
+            </Button>
+          )
         }
       />
     );
@@ -52,11 +75,7 @@ export function CandidateRankingTable({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-foreground">
-          {t('employer.campaigns.screening.ranking.title')}
-        </h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
           <Button
             type="button"
             variant="outline"
@@ -68,60 +87,72 @@ export function CandidateRankingTable({
               ? t('employer.campaigns.screening.ranking.clearSelection')
               : t('employer.campaigns.screening.ranking.selectAll')}
           </Button>
-        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-satin">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-satin bg-surface-overlay text-xs text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.selectAll')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.rank')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.candidate')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.matchScore')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.skills')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.status')}</th>
-              <th className="px-3 py-2">{t('employer.campaigns.screening.ranking.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {candidates.map((item, index) => {
-              const selectable = canSelectCandidate(item);
-              return (
-                <tr key={item.id} className="border-b border-satin last:border-0">
-                  <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(item.id)}
-                      disabled={!selectable}
-                      onChange={() => onToggle(item.id)}
-                      className="size-4 rounded border-satin"
-                      aria-label={item.fullName ?? item.email ?? item.id}
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-muted-foreground">{index + 1}</td>
-                  <td className="px-3 py-2">
-                    <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
-                    <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
-                  </td>
-                  <td className="px-3 py-2 text-foreground">
-                    {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-foreground">{item.status}</td>
-                  <td className="px-3 py-2">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => onViewDetail(item.id)}>
-                      {t('employer.campaigns.screening.ranking.viewDetail')}
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <Table className="min-w-[820px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('employer.campaigns.screening.ranking.selectAll')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.rank')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.candidate')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.matchScore')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.skills')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.status')}</TableHead>
+            <TableHead>{t('employer.campaigns.screening.ranking.actions')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pageItems.map((item, index) => {
+            const selectable = canSelectCandidate(item);
+            return (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(item.id)}
+                    disabled={!selectable}
+                    onChange={() => onToggle(item.id)}
+                    className="size-4 rounded border-satin"
+                    aria-label={item.fullName ?? item.email ?? item.id}
+                  />
+                </TableCell>
+                <TableCell className="font-semibold text-foreground">
+                  {(page - 1) * pageSize + index + 1}
+                </TableCell>
+                <TableCell>
+                  <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
+                  <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
+                </TableCell>
+                <TableCell className="font-semibold text-foreground">
+                  {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
+                </TableCell>
+                <TableCell>
+                  {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
+                </TableCell>
+                <TableCell className="text-foreground">{item.status}</TableCell>
+                <TableCell>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewDetail(item.id)}
+                  >
+                    {t('employer.campaigns.screening.ranking.viewDetail')}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <AppPagination
+        currentPage={page}
+        pageSize={pageSize}
+        totalItems={candidates.length}
+        itemLabel={t('employer.campaigns.screening.ranking.itemLabel')}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }

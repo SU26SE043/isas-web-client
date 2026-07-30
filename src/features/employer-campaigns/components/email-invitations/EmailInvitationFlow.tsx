@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
@@ -10,20 +12,57 @@ import { EmailInviteInputs } from './EmailInviteInputs';
 import { EmailInviteListPanel } from './EmailInviteListPanel';
 import { EmailInviteResultPanel } from './EmailInviteResultPanel';
 import { InvitationHistoryPanel } from './InvitationHistoryPanel';
+import { SelectedScreeningCandidates } from './SelectedScreeningCandidates';
 import { useEmailInvitationFlow } from './useEmailInvitationFlow';
+import type { SelectedInvitationCandidate } from '../../stores/campaignInvitationStore';
 
 type InviteTab = 'send' | 'history';
 
 interface EmailInvitationFlowProps {
   campaign: EmployerCampaign;
   initialEmails?: string[];
+  view?: 'combined' | 'send' | 'history';
+  selectedCandidates?: SelectedInvitationCandidate[];
+  onRemoveSelectedCandidate?: (email: string) => void;
+  onClearSelectedCandidates?: () => void;
 }
 
-export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvitationFlowProps) {
+export function EmailInvitationFlow({
+  campaign,
+  initialEmails = [],
+  view = 'combined',
+  selectedCandidates = [],
+  onRemoveSelectedCandidate,
+  onClearSelectedCandidates,
+}: EmailInvitationFlowProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const flow = useEmailInvitationFlow(campaign, initialEmails);
   const [tab, setTab] = useState<InviteTab>('send');
+  const activeView = view === 'combined' ? tab : view;
+
+  useEffect(() => {
+    if (view !== 'send' || flow.step !== 'result' || flow.failed.length > 0) return;
+    onClearSelectedCandidates?.();
+    toast.success(
+      t('employer.campaigns.emailInvitations.result.sendSuccess').replace(
+        '{count}',
+        String(flow.created.length),
+      ),
+    );
+    navigate(`/employer/campaigns/${campaign.id}/invitations?tab=invitation-list`, {
+      replace: true,
+    });
+  }, [
+    campaign.id,
+    flow.created.length,
+    flow.failed.length,
+    flow.step,
+    navigate,
+    onClearSelectedCandidates,
+    t,
+    view,
+  ]);
 
   const confirmModal = (
     <EmailInviteConfirmModal
@@ -40,7 +79,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
     <div
       role="tablist"
       aria-label={t('employer.campaigns.campaignInvitations.tabs.listLabel')}
-      className="flex flex-wrap gap-2 rounded-xl border border-subtle bg-surface-overlay p-1"
+      className="grid gap-2 sm:grid-cols-2"
     >
       {(
         [
@@ -60,10 +99,10 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
             aria-selected={isActive}
             onClick={() => setTab(item.id)}
             className={cn(
-              'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out',
+              'rounded-xl px-4 py-3 text-sm font-semibold transition-[background-color,color,box-shadow,border-color] duration-200 ease-out',
               isActive
-                ? 'bg-white/[0.08] text-foreground shadow-[var(--satin-inset)]'
-                : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                ? 'border border-foreground bg-foreground text-background shadow-sm'
+                : 'frame-satin bg-surface-raised text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
             )}
           >
             {item.label}
@@ -75,24 +114,42 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <Link
-          to={`/employer/campaigns/${campaign.id}/invite`}
-          className="text-sm text-muted-foreground hover:text-foreground"
+      {view === 'combined' ? <header className="space-y-3">
+        <nav
+          aria-label={t('employer.campaigns.campaignInvitations.breadcrumb.label')}
+          className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
         >
-          {t('employer.campaigns.inviteFlow.backToMethod')}
-        </Link>
-        <h1 className="heading-primary text-3xl text-foreground">
-          {t('employer.campaigns.emailInvitations.title')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('employer.campaigns.emailInvitations.description')}
-        </p>
-      </header>
+          <Link
+            to={`/employer/campaigns/${campaign.id}/invite`}
+            className="inline-flex items-center gap-1 hover:text-foreground"
+          >
+            {t('employer.campaigns.campaignInvitations.breadcrumb.back')}
+          </Link>
+          <ChevronRight className="size-3.5 shrink-0 opacity-60" aria-hidden />
+          <Link
+            to={`/employer/campaigns/${campaign.id}/invite`}
+            className="hover:text-foreground"
+          >
+            {t('employer.campaigns.campaignInvitations.breadcrumb.candidates')}
+          </Link>
+          <ChevronRight className="size-3.5 shrink-0 opacity-60" aria-hidden />
+          <span className="text-foreground">
+            {t('employer.campaigns.emailInvitations.title')}
+          </span>
+        </nav>
+        <div className="space-y-1">
+          <h1 className="heading-primary text-3xl text-foreground">
+            {t('employer.campaigns.emailInvitations.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t('employer.campaigns.emailInvitations.description')}
+          </p>
+        </div>
+      </header> : null}
 
-      {tabs}
+      {view === 'combined' ? tabs : null}
 
-      {tab === 'history' ? (
+      {activeView === 'history' ? (
         <InvitationHistoryPanel
           campaign={campaign}
           enabled
@@ -111,7 +168,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
               )
             }
             onInviteMore={flow.inviteMore}
-            onClose={() => navigate(`/employer/campaigns/${campaign.id}/invite`)}
+            onClose={() => navigate(`/employer/campaigns/${campaign.id}/invitations`)}
             onBackToCampaign={() => navigate(`/employer/campaigns/${campaign.id}`)}
           />
           {confirmModal}
@@ -133,6 +190,14 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
           ) : null}
 
           <EmailInviteCampaignSummary campaign={campaign} />
+          <SelectedScreeningCandidates
+            candidates={selectedCandidates}
+            disabled={!flow.isActive || flow.isSending}
+            onRemove={(email) => {
+              flow.removeEmail(email);
+              onRemoveSelectedCandidate?.(email);
+            }}
+          />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-lg border border-satin bg-surface-overlay p-4">
@@ -140,6 +205,7 @@ export function EmailInvitationFlow({ campaign, initialEmails = [] }: EmailInvit
                 disabled={!flow.isActive || flow.isSending}
                 onAddSingle={flow.addSingle}
                 onAddBulk={flow.addBulk}
+                onRemoveEmail={flow.removeEmail}
               />
             </section>
             <EmailInviteListPanel

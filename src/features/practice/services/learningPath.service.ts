@@ -167,11 +167,43 @@ function instantFeedback(): LearningPracticeQuestionFeedback {
 export const learningPathService = {
   /** Always live — GET /api/v1/interview/practice/roadmaps */
   async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
+    if (usesMockData('practice')) {
+      await mockDelay(200);
+      let items: LearningRoadmapCard[] = store.map(
+        ({ milestones: _milestones, reports: _reports, ...card }) => card,
+      );
+      const search = query.search?.trim().toLowerCase();
+      if (search) {
+        items = items.filter(
+          (item) =>
+            item.name.toLowerCase().includes(search) ||
+            item.nameVi.toLowerCase().includes(search) ||
+            item.domainLabel.toLowerCase().includes(search),
+        );
+      }
+      if (query.domainId && query.domainId !== 'all') {
+        items = items.filter((item) => item.domainId === query.domainId);
+      }
+      if (query.status && query.status !== 'all') {
+        items = items.filter((item) => item.status === query.status);
+      }
+      return items.sort((left, right) =>
+        query.sort === 'progress'
+          ? right.progressPercent - left.progressPercent
+          : +new Date(right.updatedAt) - +new Date(left.updatedAt),
+      );
+    }
     return roadmapService.listRoadmaps(query);
   },
 
   /** Always live — GET /api/v1/interview/practice/roadmaps/{id} */
   async getRoadmap(roadmapId: string): Promise<LearningRoadmapDetail> {
+    if (usesMockData('practice')) {
+      await mockDelay(150);
+      const roadmap = store.find((item) => item.id === roadmapId);
+      if (!roadmap) throw new Error('ROADMAP_NOT_FOUND');
+      return structuredClone(roadmap);
+    }
     return roadmapService.getRoadmap(roadmapId);
   },
 

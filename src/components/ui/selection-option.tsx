@@ -27,16 +27,20 @@ export function SelectionOption({
   className,
   disabled = false,
 }: SelectionOptionProps) {
+  const descriptionId = React.useId();
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
+      aria-label={title}
+      aria-describedby={description ? descriptionId : undefined}
       className={cn(
         'group flex items-center gap-4 rounded-2xl px-5 py-5 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 ease-out',
         selected
-          ? 'frame-satin bg-white/[0.08]'
-          : 'frame-satin-interactive bg-black/20',
+          ? 'frame-satin bg-white/[0.12] shadow-[var(--satin-inset)]'
+          : 'frame-satin-interactive bg-black/20 hover:bg-white/[0.04]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}
@@ -55,9 +59,22 @@ export function SelectionOption({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-medium leading-snug text-foreground">{title}</span>
+        <span
+          className={cn(
+            'block text-base leading-snug',
+            selected ? 'font-semibold text-foreground' : 'font-medium text-foreground',
+          )}
+          aria-hidden={Boolean(description)}
+        >
+          {title}
+        </span>
         {description ? (
-          <span className="mt-1.5 block text-sm leading-relaxed text-muted-foreground">{description}</span>
+          <span
+            id={descriptionId}
+            className="mt-1.5 block text-sm leading-relaxed text-muted-foreground"
+          >
+            {description}
+          </span>
         ) : null}
       </span>
       {showChevron ? (

@@ -24,7 +24,9 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
 | Org onboarding | T1 | Company profile, verify | `/employer/company*` | Implemented (mock) |
 | Campaign management | T1 | List, wizard, detail, publish | `/employer/campaigns*` | Implemented (mock) |
-| Candidate selection | T1 | Upload email list, screening, ranking | `/employer/campaigns/:id/selection` | Implemented (mock) |
+| Candidate selection | T1 | Upload CV, screening, ranking, select | `/employer/campaigns/:id/cv-screening` | Implemented |
+| Campaign invitations | T1 | Create invitations and track delivery/history | `/employer/campaigns/:id/invitations/new`, `/employer/campaigns/:id/invitations` | Implemented |
+| Campaign results | T1 | Completed assessment results, review, export | `/employer/campaigns/:id/results` | Implemented |
 | Employer analytics | T1 | Pipeline, candidate profile, report, export | `/employer/analytics`, candidates | Implemented (mock) |
 | Magic link (B2B entry) | T1 | Invite landing → auth → interview | `/invite/:token` | Implemented |
 | **Public campaign browse** (self-serve catalog of all open campaigns) | — | **OUT OF SCOPE** |
@@ -138,6 +140,10 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/employer/campaigns` | Campaign list | HR, Organize |
 | `/employer/campaigns/new` | Create campaign | HR, Organize |
 | `/employer/campaigns/:id` | Campaign detail | HR, Organize |
+| `/employer/campaigns/:id/cv-screening` | CV screening and candidate selection | HR, Organize |
+| `/employer/campaigns/:id/invitations/new` | Create campaign invitations | HR, Organize |
+| `/employer/campaigns/:id/invitations` | Campaign invitation history | HR, Organize |
+| `/employer/campaigns/:id/results` | Campaign assessment results | HR, Organize |
 | `/employer/campaigns/:id/edit` | Edit campaign | HR, Organize |
 | `/employer/campaigns/:id/candidates` | Candidate pipeline | HR, Organize |
 | `/employer/candidates/:id` | Candidate profile | HR, Organize |
@@ -167,7 +173,8 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | Route | Screen | Status |
 | --- | --- | --- |
 | `/admin/dashboard` | Admin dashboard | Implemented (mock) |
-| `/admin/users` | User management | Implemented (mock) |
+| `/admin/users` | User management | Implemented (live Auth directory, read-only) |
+| `/admin/organizations` | Organization management | Implemented (live Auth directory, read-only) |
 | `/admin/roles` | Role management | Implemented (mock) |
 | `/admin/permissions` | Permission matrix | Implemented (mock) |
 | `/admin/approvals` | HR approval queue | Implemented (mock) |

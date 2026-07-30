@@ -1,3 +1,4 @@
+import { Eye, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
-import { isAbsoluteHttpUrl } from '../../utils/campaignCandidatesApi';
 import type { CampaignCandidateDetail } from '../../types/campaign.api.types';
+import { canEditCandidate } from '../../utils/campaignCandidateActions';
 
 interface CandidateDetailDrawerProps {
   open: boolean;
@@ -21,6 +22,8 @@ interface CandidateDetailDrawerProps {
   isSelected: boolean;
   onToggleSelect: () => void;
   canSelect: boolean;
+  onViewCv: () => void;
+  onEdit: () => void;
 }
 
 export function CandidateDetailDrawer({
@@ -32,10 +35,11 @@ export function CandidateDetailDrawer({
   isSelected,
   onToggleSelect,
   canSelect,
+  onViewCv,
+  onEdit,
 }: CandidateDetailDrawerProps) {
   const { t } = useLanguage();
-  const cvUrl = detail?.cvFileUrl;
-  const showCvLink = isAbsoluteHttpUrl(cvUrl);
+  const canEdit = detail ? canEditCandidate(detail) : false;
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
@@ -52,14 +56,23 @@ export function CandidateDetailDrawer({
 
         {isError ? (
           <Alert variant="error">
-            <AlertDescription>{t('employer.campaigns.screening.errors.candidateNotFound')}</AlertDescription>
+            <AlertDescription>
+              {t('employer.campaigns.screening.errors.candidateNotFound')}
+            </AlertDescription>
           </Alert>
         ) : null}
 
         {detail && !isLoading ? (
           <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Info label={t('employer.campaigns.screening.ranking.candidate')} value={detail.fullName ?? '—'} />
+              <Info
+                label={t('employer.campaigns.screening.ranking.candidate')}
+                value={detail.fullName ?? '—'}
+              />
+              <Info
+                label={t('employer.campaigns.screening.edit.email')}
+                value={detail.email ?? '—'}
+              />
               <Info label={t('employer.campaigns.screening.ranking.status')} value={detail.status} />
               <Info
                 label={t('employer.campaigns.screening.ranking.matchScore')}
@@ -87,7 +100,9 @@ export function CandidateDetailDrawer({
             {detail.rejectReason ? (
               <Alert variant="warning">
                 <AlertDescription>
-                  <span className="font-medium">{t('employer.campaigns.screening.detail.rejectReason')}</span>
+                  <span className="font-medium">
+                    {t('employer.campaigns.screening.detail.rejectReason')}
+                  </span>
                   <span className="mt-1 block">{detail.rejectReason}</span>
                 </AlertDescription>
               </Alert>
@@ -117,37 +132,42 @@ export function CandidateDetailDrawer({
                 ))}
               </section>
             ) : null}
-
-            {cvUrl ? (
-              showCvLink ? (
-                <a
-                  href={cvUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary underline-offset-4 hover:underline"
-                >
-                  {t('employer.campaigns.screening.ranking.viewDetail')}
-                </a>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t('employer.campaigns.screening.detail.cvKeyOnly')}
-                </p>
-              )
-            ) : null}
           </div>
         ) : null}
 
-        <DialogFooter>
-          {canSelect ? (
-            <Button type="button" variant="outline" onClick={onToggleSelect}>
-              {isSelected
-                ? t('employer.campaigns.screening.ranking.clearSelection')
-                : t('employer.campaigns.screening.detail.selectShortlist')}
+        <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" disabled={!detail} onClick={onViewCv}>
+              <Eye className="size-4" aria-hidden />
+              {t('employer.campaigns.screening.actions.viewCv')}
             </Button>
-          ) : null}
-          <Button type="button" onClick={onClose}>
-            {t('employer.campaigns.screening.detail.close')}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!detail || !canEdit}
+              title={
+                detail && !canEdit
+                  ? t('employer.campaigns.screening.edit.invitedDisabled')
+                  : undefined
+              }
+              onClick={onEdit}
+            >
+              <Pencil className="size-4" aria-hidden />
+              {t('employer.campaigns.screening.actions.edit')}
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {canSelect ? (
+              <Button type="button" variant="outline" onClick={onToggleSelect}>
+                {isSelected
+                  ? t('employer.campaigns.screening.ranking.clearSelection')
+                  : t('employer.campaigns.screening.detail.selectShortlist')}
+              </Button>
+            ) : null}
+            <Button type="button" onClick={onClose}>
+              {t('employer.campaigns.screening.detail.close')}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

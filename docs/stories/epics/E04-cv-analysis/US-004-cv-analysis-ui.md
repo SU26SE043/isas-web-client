@@ -46,4 +46,3 @@ Authenticated candidate completes a **4-step CV analysis wizard** (domain → up
 ## Evidence
 
 - `src/features/cv-analysis/**`
-- `src/features/profile/components/CvProfileMappingPanel.tsx`

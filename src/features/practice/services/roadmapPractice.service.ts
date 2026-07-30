@@ -1,11 +1,14 @@
 import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
+import { getPracticeSession as getB2cPracticeSession } from './b2cPracticeSession.service';
 import { learningEndpoints } from './learning.endpoints';
+import { multipartFormDataConfig } from '../utils/multipartFormDataConfig';
 import type {
   PracticeAnswerDetail,
   PracticeSessionQuestionDto,
   PracticeSessionResponse,
+  RoadmapLevelEvaluationItem,
   RoadmapPracticeReport,
   RoadmapReportKind,
   StartLessonResult,
@@ -130,6 +133,23 @@ function mapRadar(raw: unknown): RadarData[] {
   });
 }
 
+function mapLevelEvaluation(raw: unknown): RoadmapLevelEvaluationItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      const row = asRecord(item);
+      const criterionName = pickString(row.criterionName, row.name, row.label);
+      if (!criterionName) return null;
+      return {
+        criterionName,
+        percentage: pickNumber(row.percentage, row.score, row.value),
+        levelThreshold: pickNumber(row.levelThreshold, row.threshold, row.target),
+        passed: Boolean(row.passed ?? row.isPassed),
+      };
+    })
+    .filter((item): item is RoadmapLevelEvaluationItem => item != null);
+}
+
 function mapRoadmapReport(raw: unknown, roadmapId: string): RoadmapPracticeReport {
   const item = asRecord(unwrapData(raw));
   const status = pickString(item.roadmapStatus, item.status).toLowerCase();
@@ -138,11 +158,17 @@ function mapRoadmapReport(raw: unknown, roadmapId: string): RoadmapPracticeRepor
   if (kindRaw === 'snapshot' || status === 'completed' || status === 'done') {
     kind = 'snapshot';
   }
+  const levelEvalRaw = item.levelEvaluation;
+  const levelEvaluation = Array.isArray(levelEvalRaw)
+    ? mapLevelEvaluation(levelEvalRaw)
+    : [];
+  const levelEvaluationText = pickString(levelEvalRaw, item.level, item.evaluation);
   return {
     roadmapId: pickString(item.roadmapId, item.id) || roadmapId,
     kind,
     roadmapStatus: pickString(item.roadmapStatus, item.status) || undefined,
-    levelEvaluation: pickString(item.levelEvaluation, item.level, item.evaluation),
+    levelEvaluation,
+    levelEvaluationText: levelEvaluationText || undefined,
     levelEvaluationVi: pickString(item.levelEvaluationVi, item.levelVi, item.evaluationVi),
     overallComment: pickString(item.overallComment, item.comment, item.summary),
     overallCommentVi: pickString(item.overallCommentVi, item.commentVi, item.summaryVi),
@@ -218,9 +244,26 @@ export const roadmapPracticeService = {
   },
 
   async getPracticeSession(sessionId: string): Promise<PracticeSessionResponse> {
-    const response = await apiClient.get(learningEndpoints.practiceSession(sessionId));
-    const mapped = mapPracticeSessionResponse(response.data);
-    return { ...mapped, sessionId: mapped.sessionId || sessionId };
+    const session = await getB2cPracticeSession(sessionId);
+    return {
+      sessionId: session.id,
+      id: session.id,
+      title: undefined,
+      status: session.status,
+      currentQuestionIndex: undefined,
+      questions: session.questions.map((item) => ({
+        id: item.id,
+        orderNo: item.orderNo,
+        content: item.content,
+        prompt: item.content,
+        timeLimitSeconds: item.timeLimitSec,
+        durationSec: item.timeLimitSec,
+      })),
+      result: session.result ?? undefined,
+      answers: session.answers ?? undefined,
+      jobCategory: session.jobCategory,
+      cvId: session.cvId,
+    };
   },
 
   async submitAnswer(
@@ -237,7 +280,7 @@ export const roadmapPracticeService = {
     form.append('file', input.file, fileName);
 
     const response = await apiClient.post(learningEndpoints.submitAnswer(sessionId), form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      ...multipartFormDataConfig,
     });
     return mapAnswerDetail(response.data);
   },
@@ -245,6 +288,51 @@ export const roadmapPracticeService = {
   async getAnswer(sessionId: string, answerId: string): Promise<PracticeAnswerDetail> {
     const response = await apiClient.get(learningEndpoints.answer(sessionId, answerId));
     return mapAnswerDetail(response.data);
+  },
+
+  async waitForSessionQuestionFeedback(
+    sessionId: string,
+    questionId: string,
+    options?: { attempts?: number; intervalMs?: number },
+  ): Promise<PracticeAnswerDetail> {
+    const attempts = options?.attempts ?? 12;
+    const intervalMs = options?.intervalMs ?? 1500;
+
+    const resolveFromSession = async (): Promise<PracticeAnswerDetail | null> => {
+      const session = await getB2cPracticeSession(sessionId);
+      const answers = session.answers ?? [];
+      const match = answers.find((item) => item.questionId === questionId);
+      if (!match) return null;
+      const status = pickString(match.status);
+      const hasScore = match.score != null;
+      const scored = hasScore || isScoredStatus(status);
+      if (!scored && !match.transcript && !match.comment) return null;
+      return {
+        answerId: pickString(match.answerId) || questionId,
+        questionId,
+        status: status || 'Pending',
+        scoringStatus: status || undefined,
+        score: match.score ?? undefined,
+        feedback: pickString(match.comment),
+        transcript: match.transcript ?? null,
+      };
+    };
+
+    let latest = await resolveFromSession();
+    if (latest && (latest.score != null || isScoredStatus(latest.status))) {
+      return latest;
+    }
+
+    for (let i = 0; i < attempts; i += 1) {
+      await sleep(intervalMs);
+      latest = await resolveFromSession();
+      if (latest && (latest.score != null || isScoredStatus(latest.status) || latest.feedback)) {
+        return latest;
+      }
+    }
+
+    if (latest) return latest;
+    throw new Error('SESSION_FEEDBACK_TIMEOUT');
   },
 
   async waitForAnswerScore(

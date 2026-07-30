@@ -39,7 +39,7 @@ export function InterviewQuestionPanel({
 
   return (
     <section
-      className="frame-satin flex flex-col gap-5 rounded-2xl bg-surface-raised p-5 shadow-[var(--satin-inset)] sm:p-6"
+      className="frame-satin flex h-full flex-col gap-5 rounded-2xl bg-surface-raised p-5 shadow-[var(--satin-inset)] sm:p-6"
       aria-label={t('practice.room.progressLabel')}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

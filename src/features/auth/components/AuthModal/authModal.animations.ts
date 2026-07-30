@@ -3,42 +3,12 @@ import type { Transition, Variants } from 'framer-motion';
 const EASE = [0.4, 0, 0.2, 1] as const;
 const SLIDE_OFFSET = 56;
 
-export function modalTransition(reducedMotion: boolean | null): Transition {
-  return { duration: reducedMotion ? 0.01 : 0.45, ease: EASE };
-}
-
 export function panelTransition(reducedMotion: boolean | null): Transition {
   return { duration: reducedMotion ? 0.01 : 0.7, ease: EASE };
 }
 
 export function formTransition(reducedMotion: boolean | null): Transition {
   return { duration: reducedMotion ? 0.01 : 0.7, ease: EASE };
-}
-
-export function backdropVariants(reducedMotion: boolean | null): Variants {
-  return {
-    hidden: {
-      opacity: 0,
-      backdropFilter: reducedMotion ? 'blur(0px)' : 'blur(0px)',
-    },
-    visible: {
-      opacity: 1,
-      backdropFilter: reducedMotion ? 'blur(0px)' : 'blur(12px)',
-    },
-  };
-}
-
-export function modalShellVariants(reducedMotion: boolean | null): Variants {
-  return {
-    hidden: {
-      opacity: 0,
-      scale: reducedMotion ? 1 : 0.95,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-    },
-  };
 }
 
 export function signInFormVariants(reducedMotion: boolean | null): Variants {

@@ -130,7 +130,7 @@ export function EmailInviteListPanel({
         </p>
         <Button
           type="button"
-          className="w-full"
+          className="w-full bg-foreground text-background hover:bg-foreground/85"
           disabled={!canSend || disabled || isSending}
           loading={isSending}
           onClick={onSend}

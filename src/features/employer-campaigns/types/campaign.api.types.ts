@@ -279,6 +279,12 @@ export type CampaignCandidateDetail = {
   criterionScores: CandidateCriterionScore[];
 };
 
+/** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */
+export type UpdateCampaignCandidatePayload = {
+  email?: string;
+  fullName?: string;
+};
+
 /** POST /api/v1/campaign/{id}/candidates/invite */
 export type InviteCampaignCandidatesRequest = {
   candidateIds: string[];
@@ -300,27 +306,43 @@ export type InviteCampaignCandidatesResponse = {
   failed: FailedCandidateInvitation[];
 };
 
-/** GET /api/v1/campaign/{id}/results — scored interview ranking only. */
+/** GET /api/v1/campaign/{id}/results — scored ranking + unscored flagged candidates. */
+export type CampaignResultStatus = 'Pass' | 'Fail' | null;
+
 export type CampaignResultFlag = {
   type: string;
   count: number;
   note?: string | null;
 };
 
-export type CampaignResultItem = {
+export type CampaignScoredResult = {
   rank: number;
   candidateId: string;
   sessionId: string;
   fullName?: string | null;
   email?: string | null;
+  /** Effective score after override. */
   totalScore: number;
+  /** Original AI score. */
   aiScore: number;
   overrideScore?: number | null;
-  overrideResult?: string | null;
+  overrideResult?: CampaignResultStatus;
   overrideNote?: string | null;
   overriddenAt?: string | null;
-  result?: 'Pass' | 'Fail' | null;
+  result: CampaignResultStatus;
   scoredAt: string;
+  flags: CampaignResultFlag[];
+};
+
+/** Spec alias — same shape as CampaignScoredResult. */
+export type CampaignResultItem = CampaignScoredResult;
+export type CampaignRankingResult = CampaignScoredResult;
+
+export type CampaignUnscoredFlaggedResult = {
+  candidateId: string;
+  sessionId: string;
+  fullName?: string | null;
+  email?: string | null;
   flags: CampaignResultFlag[];
 };
 
@@ -328,5 +350,37 @@ export type CampaignResultsResponse = {
   campaignId: string;
   passScorePct?: number | null;
   totalCandidates: number;
-  results: CampaignResultItem[];
+  results: CampaignScoredResult[];
+  /** v5: flagged candidates without scored ranking rows. */
+  unscoredFlagged: CampaignUnscoredFlaggedResult[];
+};
+
+export type CampaignResultExportFormat = 'csv' | 'pdf';
+
+export type TranscriptCriterionScore = {
+  criterionId: string;
+  criterionName?: string | null;
+  score: number;
+  maxScore?: number | null;
+  reasoning?: string | null;
+};
+
+export type TranscriptQuestion = {
+  questionId: string;
+  orderNo: number;
+  content: string;
+  transcript?: string | null;
+  needsReview: boolean;
+  scores: TranscriptCriterionScore[];
+};
+
+export type CampaignTranscriptResponse = {
+  sessionId: string;
+  questions: TranscriptQuestion[];
+};
+
+export type OverrideCampaignResultPayload = {
+  score: number | null;
+  result: 'Pass' | 'Fail' | null;
+  note: string;
 };

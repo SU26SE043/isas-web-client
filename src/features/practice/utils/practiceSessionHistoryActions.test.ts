@@ -1,0 +1,89 @@
+import { describe, expect, it } from 'vitest';
+import {
+  clampPracticeHistoryLimit,
+  filterAndSortPracticeHistory,
+  formatOverallScoreLabel,
+  getPracticeHistoryStatusGroup,
+} from './practiceSessionHistoryActions';
+import {
+  parsePracticeSessionHistoryPage,
+  readPracticeHistoryNextCursor,
+} from './practiceSessionHistoryApi';
+
+describe('practiceSessionHistoryApi', () => {
+  it('reads X-Next-Cursor from lowercase headers', () => {
+    expect(readPracticeHistoryNextCursor({ 'x-next-cursor': 'abc' })).toBe('abc');
+  });
+
+  it('parses history page items and cursor', () => {
+    const page = parsePracticeSessionHistoryPage(
+      [
+        {
+          id: 's1',
+          status: 'Completed',
+          jobCategory: 'Frontend Development',
+          createdAt: '2026-07-25T10:00:00Z',
+          completedAt: '2026-07-25T10:25:00Z',
+          overallScore: 82.5,
+        },
+      ],
+      { 'x-next-cursor': 'next-1' },
+    );
+
+    expect(page.nextCursor).toBe('next-1');
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]?.overallScore).toBe(82.5);
+  });
+});
+
+describe('practiceSessionHistoryActions', () => {
+  it('maps known statuses and falls back for unknown', () => {
+    expect(getPracticeHistoryStatusGroup('Scored')).toBe('completed');
+    expect(getPracticeHistoryStatusGroup('InProgress')).toBe('inProgress');
+    expect(getPracticeHistoryStatusGroup('Scoring')).toBe('pendingScore');
+    expect(getPracticeHistoryStatusGroup('Cancelled')).toBe('failed');
+    expect(getPracticeHistoryStatusGroup('WeirdNewState')).toBe('unknown');
+  });
+
+  it('clamps limit between 1 and 500', () => {
+    expect(clampPracticeHistoryLimit(undefined)).toBe(5);
+    expect(clampPracticeHistoryLimit(0)).toBe(1);
+    expect(clampPracticeHistoryLimit(999)).toBe(500);
+  });
+
+  it('does not render null score as zero', () => {
+    expect(formatOverallScoreLabel(null, (key) => key)).toBe(
+      'practice.history.scoreUnavailable',
+    );
+    expect(formatOverallScoreLabel(82.5)).toBe('82.5 / 100');
+  });
+
+  it('filters and sorts on the current page only', () => {
+    const items = [
+      {
+        id: '1',
+        status: 'Completed',
+        jobCategory: 'Frontend Development',
+        createdAt: '2026-07-25T10:00:00Z',
+        completedAt: '2026-07-25T10:25:00Z',
+        overallScore: 70,
+      },
+      {
+        id: '2',
+        status: 'Practicing',
+        jobCategory: 'Backend Development',
+        createdAt: '2026-07-26T10:00:00Z',
+        completedAt: null,
+        overallScore: null,
+      },
+    ];
+
+    const filtered = filterAndSortPracticeHistory(items, {
+      search: 'front',
+      status: 'completed',
+      sort: 'scoreDesc',
+    });
+
+    expect(filtered.map((item) => item.id)).toEqual(['1']);
+  });
+});

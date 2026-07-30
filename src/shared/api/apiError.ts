@@ -8,6 +8,20 @@ type ApiErrorBody = Pick<ApiError, 'message' | 'error'>;
 
 const DEFAULT_FALLBACK = 'Request failed';
 
+const getValidationMessages = (data: unknown): string | undefined => {
+  if (!Array.isArray(data)) return undefined;
+  const messages = data.flatMap((item) => {
+    if (typeof item === 'string' && item.trim()) return [item.trim()];
+    if (item && typeof item === 'object') {
+      const body = item as ApiErrorBody;
+      const message = body.message ?? body.error;
+      return typeof message === 'string' && message.trim() ? [message.trim()] : [];
+    }
+    return [];
+  });
+  return messages.length ? messages.join('. ') : undefined;
+};
+
 export const getApiErrorMessage = (error: unknown, fallback = DEFAULT_FALLBACK) => {
   if (!axios.isAxiosError<ApiErrorBody>(error)) {
     return fallback;
@@ -22,6 +36,10 @@ export const getApiErrorMessage = (error: unknown, fallback = DEFAULT_FALLBACK) 
     status != null && fallback === DEFAULT_FALLBACK ? getHttpErrorMessage(status) : fallback;
 
   const responseData: unknown = error.response?.data;
+  const validationMessage = getValidationMessages(responseData);
+  if (validationMessage) {
+    return validationMessage;
+  }
   if (typeof responseData === 'string' && responseData.trim()) {
     return responseData;
   }
@@ -55,7 +73,10 @@ export const toApiError = (error: unknown, fallback = DEFAULT_FALLBACK): ApiErro
   let message: string | undefined;
   let errorField: string | undefined;
 
-  if (typeof responseData === 'string' && responseData.trim()) {
+  const validationMessage = getValidationMessages(responseData);
+  if (validationMessage) {
+    message = validationMessage;
+  } else if (typeof responseData === 'string' && responseData.trim()) {
     message = responseData;
   } else if (responseData && typeof responseData === 'object') {
     const body = responseData as ApiErrorBody;

@@ -6,6 +6,9 @@ export const authTokenStorage = {
   getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
   getRefreshToken: () => localStorage.getItem(REFRESH_TOKEN_KEY),
   getExpiresAt: () => localStorage.getItem(EXPIRES_AT_KEY),
+  setAccessToken: (accessToken: string) => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  },
   setTokens: (accessToken: string, refreshToken: string, expiresAt?: string | null) => {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);

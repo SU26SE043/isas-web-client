@@ -23,7 +23,7 @@ export const TermsAcceptancePage: React.FC = () => {
       return;
     }
     if (!deviceCheckPassed) {
-      navigate(`/interview/${sessionId}/device-check`, { replace: true });
+      navigate(`/interview/${sessionId}/prepare?step=device`, { replace: true });
     }
   }, [deviceCheckPassed, navigate, sessionId]);
 

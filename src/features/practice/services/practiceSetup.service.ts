@@ -1,6 +1,7 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { apiClient } from '@/shared/api/apiClient';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { paymentService } from '@/features/payment/services/payment.service';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type {
   RubricCriterionResponse,
@@ -194,6 +195,7 @@ export const practiceSetupService = {
       status: 'initializing',
       questions: buildMockQuestions(sessionId, input.questionCount, title),
     });
+    await paymentService.reserveTokens(sessionId);
 
     return { sessionId, title };
   },

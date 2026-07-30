@@ -74,7 +74,7 @@
 
 html {
   color-scheme: dark;
-  background-color: var(--surface-base);
+  background-color: #000000;
   background-image: var(--app-background-image);
   background-size: cover;
   background-position: center;
@@ -355,7 +355,7 @@ select {
     overflow-x: auto;
   }
 
-  /* Minimal table chrome inside the glass shell */
+  /* Minimal table chrome inside the glass shell — match pipeline frame */
   .glass-table-container table {
     width: 100%;
     border-collapse: collapse;
@@ -366,6 +366,8 @@ select {
     background: transparent;
     color: var(--text-primary);
     font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     border-bottom: 1px solid rgb(255 255 255 / 0.1);
   }
 
@@ -394,7 +396,7 @@ select {
   }
 
   .glass-sidebar {
-    background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
+    background: color-mix(in srgb, var(--surface-sunken) 94%, transparent);
     border-color: var(--satin-border);
     backdrop-filter: blur(var(--blur-lg));
     -webkit-backdrop-filter: blur(var(--blur-lg));
@@ -503,7 +505,7 @@ select {
     background-color: var(--primary-main);
     color: var(--primary-foreground);
     border: 1px solid transparent;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1.125rem;
     font-size: var(--text-sm);
     font-weight: 600;
@@ -541,7 +543,7 @@ select {
     background-color: transparent;
     color: var(--foreground);
     border: 1px solid var(--satin-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.5625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -566,7 +568,7 @@ select {
     background-color: var(--surface-overlay);
     color: var(--isas-gray-200);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -586,7 +588,7 @@ select {
     background-color: transparent;
     color: var(--isas-gray-400);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);
     font-weight: 500;
@@ -604,7 +606,7 @@ select {
     --c2: var(--isas-white);
     background-color: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     cursor: pointer;
     overflow: hidden;
     position: relative;

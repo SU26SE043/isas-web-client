@@ -1,8 +1,9 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import { ROADMAP_MIN_REPORTS } from '../../mocks/practiceSetup.fixtures';
 import type { InterviewHistoryItem } from '../../types/history.types';
+import { RoadmapReportsTable } from './RoadmapReportsTable';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 
 interface RoadmapReportsStepProps {
@@ -26,88 +27,36 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
   onBack,
   onNext,
 }) => {
-  const { language, t } = useLanguage();
-  const eligible = reports.length >= ROADMAP_MIN_REPORTS;
-  const canContinue = eligible && selectedIds.length >= 1;
-
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-subtle bg-surface-raised">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-      </div>
-    );
-  }
+  const { t } = useLanguage();
 
   return (
-    <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-      <h2 className="heading-secondary text-lg">{t('practice.roadmapWizard.reports.title')}</h2>
-      <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.reports.description')}</p>
+    <SectionPanel
+      icon={<FileText className="size-4" aria-hidden />}
+      title={t('practice.roadmapWizard.reports.title')}
+      description={t('practice.roadmapWizard.reports.description')}
+      isLoading={isLoading}
+      footer={<RoadmapWizardNav onBack={onBack} onNext={onNext} />}
+    >
+      <p className="mb-4 text-caption text-muted-foreground">
+        {t('practice.roadmapWizard.reports.futureNote')}
+      </p>
 
-      {!eligible ? (
-        <p className="mt-6 rounded-lg border border-subtle bg-surface-overlay px-4 py-6 text-sm text-muted-foreground" role="status">
-          {t('practice.roadmapWizard.reports.empty')}
+      {reports.length === 0 ? (
+        <p
+          className="rounded-lg border border-subtle bg-surface-overlay px-4 py-6 text-sm text-muted-foreground"
+          role="status"
+        >
+          {t('practice.roadmapWizard.reports.emptyOptional')}
         </p>
       ) : (
-        <>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" className="btn-ghost text-sm" onClick={onSelectAll}>
-              {t('practice.roadmapWizard.reports.selectAll')}
-            </button>
-            <button type="button" className="btn-ghost text-sm" onClick={onUnselectAll}>
-              {t('practice.roadmapWizard.reports.unselectAll')}
-            </button>
-          </div>
-
-          <ul className="mt-4 space-y-2">
-            {reports.map((report) => {
-              const checked = selectedIds.includes(report.id);
-              return (
-                <li key={report.id}>
-                  <label
-                    className={[
-                      'flex cursor-pointer gap-3 rounded-lg border px-4 py-3 transition',
-                      checked
-                        ? 'border-default bg-surface-elevated'
-                        : 'border-subtle bg-surface-overlay hover:border-default',
-                    ].join(' ')}
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 accent-foreground"
-                      checked={checked}
-                      onChange={() => onToggle(report.id)}
-                    />
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <p className="font-medium text-foreground">{report.jobTitle}</p>
-                      <p className="text-caption text-muted-foreground">
-                        {formatDate(report.date)} · {t('practice.roadmapWizard.reports.score')}:{' '}
-                        {report.overallScore} · {t(`practice.roadmapWizard.level.${report.level}`)} ·{' '}
-                        {report.duration} {t('practice.roadmapWizard.reports.minutes')} ·{' '}
-                        {t(
-                          report.status === 'in-progress'
-                            ? 'practice.history.status.inProgress'
-                            : report.status === 'pending'
-                              ? 'practice.history.status.pending'
-                              : 'practice.history.status.completed',
-                        )}
-                      </p>
-                    </div>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
-        </>
+        <RoadmapReportsTable
+          reports={reports}
+          selectedIds={selectedIds}
+          onToggle={onToggle}
+          onSelectAll={onSelectAll}
+          onUnselectAll={onUnselectAll}
+        />
       )}
-
-      <RoadmapWizardNav onBack={onBack} onNext={onNext} nextDisabled={!canContinue} />
-    </section>
+    </SectionPanel>
   );
 };

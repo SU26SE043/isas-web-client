@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -49,6 +50,7 @@ export function DeleteCampaignDialog({
       <DialogTrigger
         render={<Button type="button" variant="outline" disabled={disabled} className="text-error" />}
       >
+        <Trash2 aria-hidden />
         {t('employer.campaigns.detail.delete')}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" showCloseButton={!isDeleting}>

@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
-import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
+import { PracticeHistoryResultPage } from '@/features/practice/pages/PracticeHistoryResultPage';
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
 import { LearningHubPage } from '@/features/practice/pages/LearningHubPage';
@@ -46,6 +46,10 @@ import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
 import { CandidateRubricsPage } from '@/features/rubrics/pages/CandidateRubricsPage';
 import { CandidateCampaignsPage } from '@/features/campaigns/pages/CandidateCampaignsPage';
 import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/CandidateCampaignBriefingPage';
+import { CandidateCampaignDetailPage } from '@/features/campaigns/pages/CandidateCampaignDetailPage';
+import { CampaignFaceEnrollPage } from '@/features/campaigns/pages/CampaignFaceEnrollPage';
+import { CampaignInterviewPage } from '@/features/campaigns/pages/CampaignInterviewPage';
+import { CampaignInterviewCompletedPage } from '@/features/campaigns/pages/CampaignInterviewCompletedPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -110,11 +114,24 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
               { path: 'campaigns', element: <CandidateCampaignsPage /> },
               { path: 'campaigns/:token/briefing', element: <CandidateCampaignBriefingPage /> },
-              { path: 'campaigns/:id', element: <Navigate to="/candidate/campaigns" replace /> },
+              { path: 'campaigns/:id', element: <CandidateCampaignDetailPage /> },
+              {
+                path: 'campaigns/:campaignId/face-enroll/:sessionId',
+                element: <CampaignFaceEnrollPage />,
+              },
+              {
+                path: 'campaigns/:campaignId/interview/:sessionId',
+                element: <CampaignInterviewPage />,
+              },
+              {
+                path: 'campaigns/:campaignId/completed/:sessionId',
+                element: <CampaignInterviewCompletedPage />,
+              },
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },
+              { path: 'interview-history', element: <Navigate to="/candidate/practice/history" replace /> },
               { path: 'practice/history/compare', element: <CompareResultsPage /> },
-              { path: 'practice/history/:id', element: <InterviewResultPage /> },
+              { path: 'practice/history/:id', element: <PracticeHistoryResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },
               { path: 'rubrics', element: <CandidateRubricsPage /> },
               { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },

@@ -1,63 +1,131 @@
-import { UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
-import type { TeamInviteInput, TeamMember, TeamRole } from '../types/engagement.types';
+import type { TeamMember, TeamRole } from '../types/engagement.types';
 
 interface TeamMemberTableProps {
   team: TeamMember[];
-  onInvite: (input: TeamInviteInput) => Promise<void>;
+  isLoading: boolean;
+  isMutating: boolean;
+  onRoleChange: (userId: string, orgRole: TeamRole) => Promise<void>;
+  onRemove: (member: TeamMember) => void;
 }
 
-export function TeamMemberTable({ team, onInvite }: TeamMemberTableProps) {
+export function TeamMemberTable({
+  team,
+  isLoading,
+  isMutating,
+  onRoleChange,
+  onRemove,
+}: TeamMemberTableProps) {
   const { t, language } = useLanguage();
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<TeamRole>('HrMember');
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
-  const invite = async () => {
-    if (!email.trim()) return;
-    await onInvite({ email, role });
-    setEmail('');
+  const formatJoinedAt = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? '—'
+      : new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
   };
 
   return (
-    <section className="space-y-5">
-      <div className="grid gap-3 rounded-xl border border-subtle bg-surface-raised p-4 md:grid-cols-[1fr_180px_auto]">
-        <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t('engagement.team.email')} />
-        <select className="h-8 rounded-lg border border-input bg-surface-overlay px-2 text-sm" value={role} onChange={(event) => setRole(event.target.value as TeamRole)}>
-          {(['HrMember', 'OrgAdmin'] as TeamRole[]).map((item) => <option key={item} value={item}>{t(`engagement.team.role.${item}`)}</option>)}
-        </select>
-        <Button type="button" onClick={invite}>
-          <UserPlus aria-hidden />
-          {t('engagement.team.invite')}
-        </Button>
-      </div>
-      <div className="overflow-hidden rounded-xl border border-subtle bg-surface-raised">
+    <section>
+      <div className="hidden md:block">
         <Table>
-          <TableHeader className="bg-surface-base text-xs uppercase tracking-wide text-muted-foreground">
+          <TableHeader>
             <TableRow>
               <TableHead>{t('engagement.team.member')}</TableHead>
               <TableHead>{t('engagement.team.role')}</TableHead>
-              <TableHead>{t('engagement.team.status')}</TableHead>
-              <TableHead>{t('engagement.team.lastActive')}</TableHead>
+              <TableHead>{t('engagement.team.joinedAt')}</TableHead>
+              <TableHead className="text-right">{t('engagement.team.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} role="status">{t('engagement.team.loading')}</TableCell>
+              </TableRow>
+            ) : null}
+            {!isLoading && team.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4}>{t('engagement.team.empty')}</TableCell>
+              </TableRow>
+            ) : null}
             {team.map((member) => (
-              <TableRow key={member.id}>
-                <TableCell><p className="font-medium text-foreground">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell>
-                <TableCell>{t(`engagement.team.role.${member.role}`)}</TableCell>
-                <TableCell>{t(`engagement.team.status.${member.status}`)}</TableCell>
-                <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(member.lastActiveAt))}</TableCell>
+              <TableRow key={member.userId}>
+                <TableCell>
+                  <p className="font-medium text-foreground">{member.fullName || member.email}</p>
+                  <p className="text-xs text-muted-foreground">{member.email}</p>
+                </TableCell>
+                <TableCell>{renderRoleSelect(member, false)}</TableCell>
+                <TableCell>{formatJoinedAt(member.joinedAt)}</TableCell>
+                <TableCell className="text-right">{renderRemoveButton(member, false)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">{t('engagement.team.roleRule')}</p>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? <p role="status">{t('engagement.team.loading')}</p> : null}
+        {!isLoading && team.length === 0 ? <p>{t('engagement.team.empty')}</p> : null}
+        {team.map((member) => (
+          <article key={member.userId} className="frame-satin space-y-3 rounded-xl bg-surface-raised p-4">
+            <div>
+              <p className="font-medium text-foreground">{member.fullName || member.email}</p>
+              <p className="break-all text-xs text-muted-foreground">{member.email}</p>
+            </div>
+            {renderRoleSelect(member, true)}
+            <p className="text-xs text-muted-foreground">
+              {t('engagement.team.joinedAt')}: {formatJoinedAt(member.joinedAt)}
+            </p>
+            {renderRemoveButton(member, true)}
+          </article>
+        ))}
+      </div>
     </section>
   );
+
+  function renderRoleSelect(member: TeamMember, fullWidth: boolean) {
+    return (
+      <>
+        <label className="sr-only" htmlFor={`member-role-${fullWidth ? 'mobile' : 'desktop'}-${member.userId}`}>
+          {t('engagement.team.changeRole')}
+        </label>
+        <select
+          id={`member-role-${fullWidth ? 'mobile' : 'desktop'}-${member.userId}`}
+          className={`h-8 rounded-lg border border-satin bg-surface-overlay px-2 text-sm text-foreground ${fullWidth ? 'w-full' : ''}`}
+          value={member.orgRole}
+          disabled={isMutating}
+          onChange={(event) => {
+            void onRoleChange(member.userId, event.target.value as TeamRole).catch(
+              () => undefined,
+            );
+          }}
+        >
+          {(['HrMember', 'OrgAdmin'] as TeamRole[]).map((role) => (
+            <option key={role} value={role}>{t(`engagement.team.role.${role}`)}</option>
+          ))}
+        </select>
+      </>
+    );
+  }
+
+  function renderRemoveButton(member: TeamMember, fullWidth: boolean) {
+    const memberName = member.fullName || member.email;
+    return (
+      <Button
+        type="button"
+        variant="destructive"
+        className={fullWidth ? 'w-full' : ''}
+        disabled={isMutating}
+        aria-label={t('engagement.team.removeMemberAria').replace('{name}', memberName)}
+        onClick={() => onRemove(member)}
+      >
+        <Trash2 aria-hidden />
+        {t('engagement.team.removeMember')}
+      </Button>
+    );
+  }
 }

@@ -8,6 +8,7 @@ import { CampaignInvitePage } from '@/features/employer-campaigns/pages/Campaign
 import { CampaignInviteCvPage } from '@/features/employer-campaigns/pages/CampaignInviteCvPage';
 import { CampaignInviteEmailPage } from '@/features/employer-campaigns/pages/CampaignInviteEmailPage';
 import { CampaignInviteResultPage } from '@/features/employer-campaigns/pages/CampaignInviteResultPage';
+import { CampaignWorkspaceRedirect } from '@/features/employer-campaigns/pages/CampaignWorkspaceRedirect';
 import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
 import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
@@ -15,9 +16,14 @@ import { CandidatePipelinePage } from '@/features/employer-analytics/pages/Candi
 import { EmployerAnalyticsPage } from '@/features/employer-analytics/pages/EmployerAnalyticsPage';
 import { EmployerCandidateProfilePage } from '@/features/employer-analytics/pages/EmployerCandidateProfilePage';
 import { EmployerCandidateReportPage } from '@/features/employer-analytics/pages/EmployerCandidateReportPage';
-import { EmployerBillingPage } from '@/features/employer-billing/pages/EmployerBillingPage';
+import { BillingShell } from '@/features/employer-billing/components/live/BillingShell';
 import { EmployerInvoicesPage } from '@/features/employer-billing/pages/EmployerInvoicesPage';
-import { EmployerSubscriptionPage } from '@/features/employer-billing/pages/EmployerSubscriptionPage';
+import { EmployerBillingOverviewPage } from '@/features/employer-billing/pages/live/EmployerBillingOverviewPage';
+import { EmployerPackagesPage } from '@/features/employer-billing/pages/live/EmployerPackagesPage';
+import { EmployerOrdersPage } from '@/features/employer-billing/pages/live/EmployerOrdersPage';
+import { EmployerOrderDetailPage } from '@/features/employer-billing/pages/live/EmployerOrderDetailPage';
+import { EmployerTransactionsPage } from '@/features/employer-billing/pages/live/EmployerTransactionsPage';
+import { EmployerPaymentCallbackPage } from '@/features/employer-billing/pages/live/EmployerPaymentCallbackPage';
 import { EmployerTeamPage } from '@/features/engagement/pages/EmployerTeamPage';
 import { HelpPage } from '@/features/engagement/pages/HelpPage';
 import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
@@ -57,6 +63,7 @@ export const enterpriseRoutes: RouteObject[] = [
                 children: [
                   { path: 'company', element: <CompanyProfilePage /> },
                   { path: 'company/verify', element: <CompanyVerificationPage /> },
+                  { path: 'invoices', element: <EmployerInvoicesPage /> },
                 ],
               },
               { path: 'campaigns', element: <CampaignListPage /> },
@@ -67,21 +74,49 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'campaigns/:id/invite/cv', element: <CampaignInviteCvPage /> },
               { path: 'campaigns/:id/invite/email', element: <CampaignInviteEmailPage /> },
               { path: 'campaigns/:id/invite/result', element: <CampaignInviteResultPage /> },
+              {
+                path: 'campaigns/:id/cv-screening',
+                element: <CampaignWorkspaceRedirect target="invitation-screening" />,
+              },
+              {
+                path: 'campaigns/:id/invitations/new',
+                element: <CampaignWorkspaceRedirect target="invitation-compose" />,
+              },
+              { path: 'campaigns/:id/invitations', element: <CampaignInviteEmailPage /> },
+              {
+                path: 'campaigns/:id/results',
+                element: <CampaignWorkspaceRedirect target="overview-results" />,
+              },
+              { path: 'campaigns/:id/overview', element: <CampaignDetailPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
-              { path: 'campaigns/:id', element: <CampaignDetailPage /> },
+              {
+                path: 'campaigns/:id',
+                element: <CampaignWorkspaceRedirect target="overview-details" />,
+              },
               { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },
               { path: 'candidates/:id/report', element: <EmployerCandidateReportPage /> },
               { path: 'analytics', element: <EmployerAnalyticsPage /> },
+              {
+                path: 'billing',
+                element: <BillingShell />,
+                children: [
+                  { index: true, element: <EmployerBillingOverviewPage /> },
+                  { path: 'packages', element: <EmployerPackagesPage /> },
+                  { path: 'orders', element: <EmployerOrdersPage /> },
+                  { path: 'orders/:orderId', element: <EmployerOrderDetailPage /> },
+                  { path: 'transactions', element: <EmployerTransactionsPage /> },
+                ],
+              },
+              { path: 'payment/success', element: <EmployerPaymentCallbackPage mode="success" /> },
+              { path: 'payment/cancel', element: <EmployerPaymentCallbackPage mode="cancel" /> },
+              { path: 'subscription', element: <Navigate to="/employer/billing/packages" replace /> },
               { path: 'notifications', element: <NotificationsPage scope="employer" /> },
               { path: 'settings', element: <SettingsPage scope="employer" /> },
               { path: 'help', element: <HelpPage scope="employer" /> },
               { path: 'support', element: <SupportPage scope="employer" /> },
               {
-                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
+                element: <RequireRole roles={[UserRole.ORG_ADMIN]} />,
                 children: [
-                  { path: 'subscription', element: <EmployerSubscriptionPage /> },
-                  { path: 'billing', element: <EmployerBillingPage /> },
-                  { path: 'invoices', element: <EmployerInvoicesPage /> },
                   { path: 'team', element: <EmployerTeamPage /> },
                 ],
               },

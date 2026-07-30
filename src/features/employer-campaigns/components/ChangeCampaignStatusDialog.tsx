@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Archive, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -54,7 +55,21 @@ export function ChangeCampaignStatusDialog({
         setOpen(next);
       }}
     >
-      <DialogTrigger render={<Button type="button" variant="outline" disabled={disabled} />}>
+      <DialogTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            className={
+              targetStatus === 'Closed'
+                ? 'border-error/35 bg-error-bg text-error hover:border-error/60 hover:bg-error/20 hover:text-error-light'
+                : undefined
+            }
+          />
+        }
+      >
+        {targetStatus === 'Closed' ? <X aria-hidden /> : <Archive aria-hidden />}
         {t(`employer.campaigns.detail.${key}`)}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" showCloseButton={!isSubmitting}>
@@ -68,6 +83,7 @@ export function ChangeCampaignStatusDialog({
           </DialogClose>
           <Button
             type="button"
+            variant={targetStatus === 'Closed' ? 'destructive' : 'default'}
             disabled={isSubmitting}
             loading={isSubmitting}
             onClick={handleConfirm}

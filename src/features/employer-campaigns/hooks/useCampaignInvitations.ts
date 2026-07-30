@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import { EMPLOYER_CAMPAIGNS_QUERY_KEY, employerCampaignDetailQueryKey } from './useEmployerCampaigns';
 
@@ -8,22 +9,23 @@ export const EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY = [
   'invitations',
 ] as const;
 
-export const DEFAULT_INVITATIONS_PAGE_SIZE = 20;
+export const DEFAULT_INVITATIONS_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
-export function campaignInvitationsQueryKey(campaignId: string) {
-  return [...EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY, campaignId] as const;
+export function campaignInvitationsQueryKey(campaignId: string, pageSize = DEFAULT_INVITATIONS_PAGE_SIZE) {
+  return [...EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY, campaignId, pageSize] as const;
 }
 
 export function useCampaignInvitations(
   campaignId: string | undefined,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; pageSize?: number },
 ) {
+  const pageSize = options?.pageSize ?? DEFAULT_INVITATIONS_PAGE_SIZE;
   return useInfiniteQuery({
-    queryKey: campaignInvitationsQueryKey(campaignId ?? ''),
+    queryKey: campaignInvitationsQueryKey(campaignId ?? '', pageSize),
     queryFn: ({ pageParam }) =>
       campaignManagementService.getCampaignInvitations(campaignId!, {
         cursor: pageParam,
-        limit: DEFAULT_INVITATIONS_PAGE_SIZE,
+        limit: pageSize,
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -42,7 +44,7 @@ export function useReissueCampaignInvitation(campaignId: string | undefined) {
     onSuccess: () => {
       if (!campaignId) return;
       void queryClient.invalidateQueries({
-        queryKey: campaignInvitationsQueryKey(campaignId),
+        queryKey: [...EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY, campaignId],
       });
       void queryClient.invalidateQueries({
         queryKey: employerCampaignDetailQueryKey(campaignId),

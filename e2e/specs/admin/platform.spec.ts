@@ -5,6 +5,19 @@ test.describe('Admin platform', () => {
   test.setTimeout(60_000);
 
   test('admin can access dashboard, users, audit logs, and AI config', async ({ page }) => {
+    await page.route('**/api/v1/auth/admin/users**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{
+          id: 'user-1',
+          email: 'admin@isas.dev',
+          fullName: 'E2E Admin',
+          role: 'Admin',
+          createdAt: '2026-07-12T00:00:00.000Z',
+        }]),
+      });
+    });
     await loginAs(page, 'Admin');
 
     await page.goto('/admin/dashboard');

@@ -5,6 +5,11 @@ import { getApiBaseUrl } from '../../../shared/config';
 import { HttpStatus } from '@/shared/constants/http-status';
 import type {
   AuthTokensResponse,
+  ChangePasswordRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GoogleExchangeRequest,
+  GoogleExchangeResponse,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
@@ -12,8 +17,12 @@ import type {
   RegisterRequest,
   RegisterOrgRequest,
   ResendVerificationRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   User,
   UpdateProfileRequest,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
   VerifyEmailRequest,
 } from '../types/auth.types';
 import { parseUser } from '../types/auth.types';
@@ -72,7 +81,7 @@ export const authService = {
         skipAuth: true,
       });
       const tokens = parseAuthTokens(data);
-      if (!tokens.accessToken || !tokens.refreshToken) {
+      if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
         throw new Error('Refresh response missing tokens');
       }
       storeTokensIfPresent(tokens);
@@ -113,17 +122,53 @@ export const authService = {
     await apiClient.put(authEndpoints.me, payload);
     return authService.me();
   },
-  forgotPassword: async (payload: { email: string }) => {
-    const { data } = await apiClient.post(authEndpoints.forgotPassword, payload);
+  forgotPassword: async (payload: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.forgotPassword, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'OTP sent to your email') {
+      throw new Error('Invalid forgot-password response from Auth API');
+    }
     return data;
   },
-  verifyOtp: async (payload: { email: string; otp: string }) => {
-    const { data } = await apiClient.post(authEndpoints.verifyOtp, payload);
+  verifyOtp: async (payload: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.verifyOtp, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'OTP verified, you can reset your password') {
+      throw new Error('Invalid verify-otp response from Auth API');
+    }
     return data;
   },
-  resetPassword: async (payload: { email: string; newPassword: string }) => {
-    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
+  resetPassword: async (payload: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.resetPassword, payload, {
+      skipAuth: true,
+    });
+    if (data !== 'Password reset successful') {
+      throw new Error('Invalid reset-password response from Auth API');
+    }
     return data;
+  },
+  exchangeGoogleCode: async (payload: GoogleExchangeRequest): Promise<GoogleExchangeResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.googleExchange, payload, {
+      skipAuth: true,
+    });
+    const tokens = parseAuthTokens(data);
+    if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
+      throw new Error('Invalid Google exchange response from Auth API');
+    }
+    storeTokensIfPresent(tokens);
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+    };
+  },
+  changePassword: async (payload: ChangePasswordRequest): Promise<void> => {
+    const response = await apiClient.post(authEndpoints.changePassword, payload);
+    if (response.status !== HttpStatus.NO_CONTENT) {
+      throw new Error('Invalid change-password response from Auth API');
+    }
   },
   verifyEmail: async (payload: VerifyEmailRequest) => {
     const { data } = await apiClient.post(authEndpoints.verifyEmail, payload);
@@ -140,7 +185,7 @@ export const authService = {
     return tokens;
   },
   loginWithGoogle: () => {
-    const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    const returnUrl = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;
@@ -150,9 +195,5 @@ export const authService = {
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginSso}?returnUrl=${returnUrl}`;
-  },
-  resetPasswordWithToken: async (payload: { token: string; newPassword: string }) => {
-    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
-    return data;
   },
 };

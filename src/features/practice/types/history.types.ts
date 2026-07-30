@@ -18,12 +18,19 @@ export interface InterviewHistoryItem {
   domainId: string;
   level: InterviewHistoryLevel;
   deletedAt?: string | null;
+  /** Live practice history fields (optional for mock/legacy rows). */
+  jobCategory?: string | null;
+  createdAt?: string | null;
+  completedAt?: string | null;
+  rawStatus?: string | null;
+  overallScoreNullable?: number | null;
 }
 
 export interface InterviewHistoryQuery {
   page?: number;
   pageSize?: number;
   includeDeleted?: boolean;
+  cursor?: string;
 }
 
 export interface InterviewHistoryResponse {
@@ -31,4 +38,35 @@ export interface InterviewHistoryResponse {
   total: number;
   page: number;
   pageSize: number;
+  nextCursor?: string | null;
 }
+
+/** Live: GET /api/v1/interview/practice/sessions/history */
+export type PracticeSessionHistoryItem = {
+  id: string;
+  status: string;
+  jobCategory: string;
+  createdAt: string;
+  completedAt?: string | null;
+  overallScore?: number | null;
+};
+
+export type PracticeSessionHistoryPage = {
+  items: PracticeSessionHistoryItem[];
+  nextCursor: string | null;
+};
+
+export type GetPracticeSessionHistoryParams = {
+  cursor?: string;
+  limit?: number;
+};
+
+export type PracticeHistoryStatusGroup =
+  | 'completed'
+  | 'inProgress'
+  | 'pendingScore'
+  | 'failed'
+  | 'unknown';
+
+export type PracticeHistoryStatusFilter = 'all' | PracticeHistoryStatusGroup;
+export type PracticeHistorySort = 'newest' | 'oldest' | 'scoreDesc' | 'scoreAsc';

@@ -25,7 +25,7 @@ test.describe('B2B magic link interview', () => {
     await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
-    await expect(page).toHaveURL(/\/device-check/);
+    await expect(page).toHaveURL(/\/prepare\?step=device/);
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
     await expect(page).toHaveURL(/\/terms/);

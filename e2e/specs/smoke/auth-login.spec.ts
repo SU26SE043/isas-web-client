@@ -101,11 +101,31 @@ test.describe('auth login smoke', () => {
     await expect(page.getByRole('heading', { level: 1, name: /account locked/i })).toBeVisible();
   });
 
+  test('banned account stays signed out and shows a stable forbidden message', async ({ page }) => {
+    await mockLoginApi(page, { status: 403, body: { error: 'Account banned' } });
+    const dialog = await openAuthDialog(page, '/login');
+
+    await dialog.getByLabel(/e-mail/i).fill('banned@isas.dev');
+    await dialog.getByLabel(/password/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign in$/i }).click();
+
+    await expect(dialog.getByText(/this account has been banned/i)).toBeVisible();
+    await expect(page).toHaveURL(/auth=login/);
+    await expect
+      .poll(() => page.evaluate(() => window.localStorage.getItem('accessToken')))
+      .toBeNull();
+  });
+
   test('register signs in candidate when API returns tokens', async ({ page }) => {
     await page.unroute('**/api/v1/auth/register').catch(() => undefined);
     await page.unroute('**/api/v1/auth/me').catch(() => undefined);
 
     await page.route('**/api/v1/auth/register', async (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        email: 'new@isas.dev',
+        fullName: 'New User',
+        password: 'Password123!Secure',
+      });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -142,5 +162,54 @@ test.describe('auth login smoke', () => {
 
     await page.waitForURL(/\/candidate\/dashboard/);
     await expect(page).toHaveURL(/\/candidate\/dashboard/);
+  });
+
+  test('register-org creates an OrgAdmin session when API returns tokens', async ({ page }) => {
+    await page.route('**/api/v1/auth/register-org', async (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        email: 'owner@acme.dev',
+        fullName: 'Acme Owner',
+        password: 'Password123!Secure',
+        orgName: 'Acme',
+        taxCode: 'TAX-001',
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          accessToken: 'e2e-access-org',
+          refreshToken: 'e2e-refresh-org',
+          expiresAt: '2026-07-12T12:00:00.000Z',
+        }),
+      });
+    });
+
+    await page.route('**/api/v1/auth/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'new-org-admin',
+          fullName: 'Acme Owner',
+          email: 'owner@acme.dev',
+          title: '',
+          role: 'OrgAdmin',
+          location: '',
+          createdAt: '2026-07-12T00:00:00.000Z',
+        }),
+      });
+    });
+
+    const dialog = await openAuthDialog(page, '/register');
+    await dialog.getByRole('button', { name: /business account/i }).click();
+    await dialog.getByLabel(/organization name/i).fill('Acme');
+    await dialog.getByLabel(/tax code/i).fill('TAX-001');
+    await dialog.getByLabel(/full name/i).fill('Acme Owner');
+    await dialog.getByLabel(/e-mail/i).fill('owner@acme.dev');
+    await dialog.getByLabel(/^password$/i).fill('Password123!Secure');
+    await dialog.getByRole('button', { name: /^Sign up for business$/i }).click();
+
+    await page.waitForURL(/\/employer\/dashboard/);
+    await expect(page).toHaveURL(/\/employer\/dashboard/);
   });
 });

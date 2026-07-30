@@ -20,7 +20,7 @@ test.describe('B2B full journey', () => {
     await page.getByRole('checkbox', { name: /I consent to recording/i }).check();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 
-    await expect(page).toHaveURL(/\/device-check/);
+    await expect(page).toHaveURL(/\/prepare\?step=device/);
     await expect(page.getByText(/Camera and microphone are ready/i)).toBeVisible();
     await page.getByRole('button', { name: /^Continue$/i }).click();
 

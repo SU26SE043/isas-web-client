@@ -12,6 +12,7 @@ import { TermsAcceptancePage } from '@/features/practice/pages/TermsAcceptancePa
 import { IdentityVerifyPage } from '@/features/practice/pages/IdentityVerifyPage';
 import { WaitingRoomPage } from '@/features/practice/pages/WaitingRoomPage';
 import { InterviewCompletePage } from '@/features/practice/pages/InterviewCompletePage';
+import { PracticeSessionResultPage } from '@/features/practice/pages/PracticeSessionResultPage';
 
 export const interviewRoutes: RouteObject[] = [
   {
@@ -21,7 +22,7 @@ export const interviewRoutes: RouteObject[] = [
         element: <DashboardLayout />,
         children: [{ path: '/practice', element: <PracticeEntryPage /> }],
       },
-      { path: '/practice/result', element: <InterviewResultPage /> },
+      { path: '/practice/result', element: <PracticeSessionResultPage /> },
       { path: '/practice/interview/:id', element: <InterviewResultPage /> },
       {
         element: <FullscreenLayout />,

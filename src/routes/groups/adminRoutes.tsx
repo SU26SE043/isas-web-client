@@ -3,11 +3,13 @@ import { Navigate } from 'react-router-dom';
 import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
 import { AdminAiConfigPage } from '@/features/admin/pages/AdminAiConfigPage';
 import { AdminAuditLogsPage } from '@/features/admin/pages/AdminAuditLogsPage';
+import { AdminCampaignsPage } from '@/features/admin/pages/AdminCampaignsPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { AdminFeatureFlagsPage } from '@/features/admin/pages/AdminFeatureFlagsPage';
 import { AdminHealthPage } from '@/features/admin/pages/AdminHealthPage';
 import { AdminMaintenancePage } from '@/features/admin/pages/AdminMaintenancePage';
 import { AdminMonitoringPage } from '@/features/admin/pages/AdminMonitoringPage';
+import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
 import { AdminPermissionsPage } from '@/features/admin/pages/AdminPermissionsPage';
 import { AdminResourcePage } from '@/features/admin/pages/AdminResourcePage';
 import { AdminRolesPage } from '@/features/admin/pages/AdminRolesPage';
@@ -35,11 +37,12 @@ export const adminRoutes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <AdminDashboardPage /> },
               { path: 'users', element: <AdminUsersPage /> },
+              { path: 'organizations', element: <AdminOrganizationsPage /> },
               { path: 'roles', element: <AdminRolesPage /> },
               { path: 'permissions', element: <AdminPermissionsPage /> },
               { path: 'approvals', element: <AdminResourcePage resourceKey="approvals" /> },
               { path: 'candidates', element: <AdminResourcePage resourceKey="candidates" /> },
-              { path: 'campaigns', element: <AdminResourcePage resourceKey="campaigns" /> },
+              { path: 'campaigns', element: <AdminCampaignsPage /> },
               { path: 'content', element: <AdminResourcePage resourceKey="content" /> },
               { path: 'learning', element: <AdminResourcePage resourceKey="learning" /> },
               { path: 'ai-config', element: <AdminAiConfigPage /> },
