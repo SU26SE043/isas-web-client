@@ -26,7 +26,8 @@ Deleted legacy values (`Employer`, `organize`, `hr`, `interviewer`, …) are **r
 | `/forgot-password` | SCR-AUT-005 | Implemented — OTP flow |
 | `/forgot-password/verify` | SCR-AUT-005 | Implemented — OTP step |
 | `/reset-password` | SCR-AUT-006 | Implemented — post-OTP reset |
-| `/reset-password/:token` | SCR-AUT-006 | Implemented — email link reset |
+| `/reset-password/:token` | SCR-AUT-006 | Compatibility redirect to `/forgot-password` |
+| `/auth/google/callback` | SCR-AUT-002 | Implemented — one-time code exchange |
 | `/mfa` | SCR-AUT-007 | Implemented — `MFAChallenge` |
 | `/session-expired` | SCR-AUT-008 | Implemented |
 | `/access-denied` | SCR-AUT-009 | Implemented |
@@ -105,9 +106,16 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 | Admin reset user password | `POST /api/v1/auth/admin/users/{userId}/reset-password` | Platform `Admin` only — body `{ newPassword }`, returns `204`, and revokes all refresh tokens for the target user. |
 | Admin analytics | `GET /api/v1/auth/admin/analytics` | Platform `Admin` only — optional `{ from, to, groupBy: day|month }`; returns user/organization totals, active-user windows, role totals, and time buckets; defaults to the last 30 days grouped by day. |
 
-| Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; success is `"OTP sent to your email"`. |
-| Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; success is `"OTP verified, you can reset your password"`. |
-| Reset password | `POST /api/v1/auth/reset-password` | Public — body `{ email, otp, newPassword }`; success is `"Password reset successful"`. |
+| Request password-reset OTP | `POST /api/v1/auth/forgot-password` | Public — body `{ email }`; `200` returns `"OTP sent to your email"`; `400` returns `"User not found"`. |
+| Verify password-reset OTP | `POST /api/v1/auth/verify-otp` | Public — body `{ email, otp }`; `200` returns `"OTP verified, you can reset your password"`; invalid/expired attempts return `400`. |
+| Reset password | `POST /api/v1/auth/reset-password` | Public — body `{ email, otp, newPassword }`; `200` returns `"Password reset successful"`. The verified OTP is retained after password-policy errors. |
+| Exchange Google code | `POST /api/v1/auth/google/exchange` | Public — body `{ code }`; returns `{ accessToken, refreshToken, expiresAt }`; code is one-time and invalid/expired/used codes return `400`. |
+| Change password | `POST /api/v1/auth/change-password` | Bearer — body `{ oldPassword, newPassword }`; success is `204 No Content`. |
+
+The OTP verification window is five minutes. More than five invalid guesses deletes the OTP and
+requires a new forgot-password request. Reset failures with `"OTP not verified or expired"` cover
+unverified, expired, and mismatched OTPs. See decision
+[`0010-auth-otp-google-exchange-contract`](../decisions/0010-auth-otp-google-exchange-contract.md).
 
 ## E2E
 
@@ -118,4 +126,5 @@ Auth service endpoints — see `src/features/auth/services/authEndpoints.ts`.
 
 - HttpOnly cookie token storage (plan vs current localStorage) — pending backend contract.
 - Enterprise SSO backend (`/login-sso`) — UI gated; requires tenant IdP config (P9).
+- Backend-integrated E2E proof for OTP email delivery and Google provider redirects.
 - `UserRole` duplicate `ProtectedRoute` deprecation cleanup — low priority.

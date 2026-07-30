@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export type AppModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'auth';
@@ -77,7 +77,6 @@ export function AppModal({
           className,
         )}
       >
-        {ariaLabel ? <DialogTitle className="sr-only">{ariaLabel}</DialogTitle> : null}
         {children}
       </DialogContent>
     </Dialog>

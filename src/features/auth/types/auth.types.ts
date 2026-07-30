@@ -148,6 +148,17 @@ export interface ResetPasswordRequest {
 
 export type ResetPasswordResponse = 'Password reset successful';
 
+export interface GoogleExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export interface MfaVerifyRequest {
   mfaToken: string;
   code: string;
