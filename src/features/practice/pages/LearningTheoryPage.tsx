@@ -124,11 +124,14 @@ export function LearningTheoryPage() {
   }
 
   const title = language === 'vi' ? opened.titleVi : opened.title;
-  const html = opened.theoryContent.trim();
+  const markdown = (language === 'vi'
+    ? opened.theoryContentVi || opened.theoryContent
+    : opened.theoryContent
+  ).trim();
 
   return (
     <div className="min-h-full overflow-y-auto bg-surface-base">
-      <div className="mx-auto max-w-[900px] px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <header className="space-y-2 border-b border-subtle pb-6">
           <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}</p>
           <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{title}</h1>
@@ -138,8 +141,8 @@ export function LearningTheoryPage() {
         </header>
 
         <article className="frame-satin mt-8 rounded-2xl border border-subtle bg-surface-raised p-6 sm:p-8 lg:p-10">
-          {html ? (
-            <LessonHtmlContent html={html} />
+          {markdown ? (
+            <LessonHtmlContent html={markdown} />
           ) : (
             <p className="text-sm text-muted-foreground">{t('practice.learningPath.theoryEmpty')}</p>
           )}
