@@ -63,7 +63,7 @@ export function FlowWizardShell({
           ) : null}
 
           <nav aria-label={stepperAriaLabel}>
-            <h2 className="sr-only">
+            <h2 className="sr-only" aria-label={srTitle}>
               {srTitle}: {steps[currentStep]}
             </h2>
             <FlowWizardSidebar

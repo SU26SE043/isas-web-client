@@ -18,6 +18,7 @@ export const authEndpoints = {
   forgotPassword: `${AUTH_API_PREFIX}/forgot-password`,
   verifyOtp: `${AUTH_API_PREFIX}/verify-otp`,
   resetPassword: `${AUTH_API_PREFIX}/reset-password`,
+  changePassword: `${AUTH_API_PREFIX}/change-password`,
   verifyEmail: `${AUTH_API_PREFIX}/verify-email`,
   resendVerification: `${AUTH_API_PREFIX}/resend-verification`,
   verifyMfa: `${AUTH_API_PREFIX}/mfa/verify`,

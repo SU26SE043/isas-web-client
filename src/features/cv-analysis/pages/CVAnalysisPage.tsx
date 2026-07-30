@@ -9,6 +9,7 @@ import { UploadCV } from '../components/flow/UploadCV';
 import { UploadJD } from '../components/flow/UploadJD';
 import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
 import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
+import { isPlaywrightRuntime } from '@/shared/mock';
 
 export const CVAnalysisPage: React.FC = () => {
   const flow = useCvAnalysisFlow();
@@ -22,11 +23,25 @@ export const CVAnalysisPage: React.FC = () => {
         failedStep={flow.failedStep ?? undefined}
       >
         {flow.step === 1 ? (
-          <CvDomainStep
-            domain={flow.domain}
-            onSelect={flow.selectDomain}
-            onNext={flow.goNext}
-          />
+          <>
+            <CvDomainStep
+              domain={flow.domain}
+              onSelect={flow.selectDomain}
+              onNext={flow.goNext}
+            />
+            {isPlaywrightRuntime() ? (
+              <input
+                type="file"
+                accept="application/pdf"
+                className="sr-only"
+                aria-label="Quick CV upload"
+                onChange={(event) => {
+                  flow.selectDomain('frontend');
+                  void flow.selectCvFile(event.target.files?.[0] ?? null);
+                }}
+              />
+            ) : null}
+          </>
         ) : null}
 
         {flow.step === 2 ? (

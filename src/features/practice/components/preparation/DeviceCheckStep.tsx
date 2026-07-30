@@ -157,6 +157,9 @@ export function DeviceCheckStep({
         {alreadyPassed ? (
           <p className="text-sm font-medium text-success">{t('practice.flow.device.alreadyPassed')}</p>
         ) : null}
+        {isReady ? (
+          <p className="text-sm font-medium text-success">{t('practice.flow.device.passed')}</p>
+        ) : null}
 
         <button type="button" className="btn-secondary" onClick={() => void runCheck()}>
           {t('practice.flow.device.retry')}

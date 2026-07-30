@@ -1,7 +1,6 @@
-import { CareerPositionSelector } from '@/components/patterns/flow-wizard/CareerPositionSelector';
+import { Layers } from 'lucide-react';
+import { SelectionOption } from '@/components/ui/selection-option';
 import { SectionPanel } from '@/components/ui/section-panel';
-import type { JobDomainId } from '@/shared/domain/jobDomains';
-import { isJobDomainId } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
@@ -15,29 +14,37 @@ interface RoadmapDomainStepProps {
 }
 
 export function RoadmapDomainStep({
+  domains,
   selectedId,
   isLoading,
   onSelect,
   onNext,
 }: RoadmapDomainStepProps) {
-  const { t } = useLanguage();
-
-  const handleSelect = (domainId: JobDomainId) => {
-    onSelect(domainId);
+  const { language, t } = useLanguage();
+  const getDomainTitle = (domain: PracticeDomain) => {
+    const title = language === 'vi' ? domain.nameVi : domain.name;
+    return language === 'en' ? title.replace(/ Developer$/, '') : title;
   };
 
   return (
     <SectionPanel
+      icon={<Layers className="size-4" aria-hidden />}
       title={t('practice.roadmapWizard.domain.title')}
+      description={t('practice.roadmapWizard.domain.description')}
       isLoading={isLoading}
       footer={<RoadmapWizardNav nextDisabled={!selectedId} onNext={onNext} backDisabled />}
     >
-      <CareerPositionSelector
-        selectedId={isJobDomainId(selectedId) ? selectedId : null}
-        onSelect={handleSelect}
-        accent="emerald"
-        ariaLabel={t('practice.roadmapWizard.domain.groupLabel')}
-      />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {domains.map((domain) => (
+          <SelectionOption
+            key={domain.id}
+            title={getDomainTitle(domain)}
+            description={language === 'vi' ? domain.descriptionVi : domain.description}
+            selected={domain.id === selectedId}
+            onClick={() => onSelect(domain.id)}
+          />
+        ))}
+      </div>
     </SectionPanel>
   );
 }

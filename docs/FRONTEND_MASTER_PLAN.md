@@ -377,8 +377,8 @@ flowchart TB
 | **Components** | AuthModal, LoginForm, RegisterForm, MFAChallenge, PasswordStrengthMeter, SSOButton, SocialLoginButton |
 | **Shared** | `useAuth`, `AuthProvider`, `session-manager` |
 | **State** | JWT in HttpOnly cookie; user profile in React Query; idle timer |
-| **API** | Auth: register, login, logout, refresh, Google browser redirect + one-time code exchange, verify-email, forgot/reset password, MFA verify, SSO redirect |
-| **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password/:token`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
+| **API** | Auth: register, login, logout, refresh, Google browser redirect + one-time code exchange, verify-email, forgot/verify-OTP/reset password, change password, MFA verify, SSO redirect |
+| **Routing** | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/forgot-password/verify`, `/reset-password/:token`, `/reset-password`, `/auth/google/callback`, `/mfa`, `/session-expired`, `/access-denied`, `/account-locked` |
 | **Layout** | `AuthLayout` (centered card) |
 | **Validation** | VR-001–002, VR-005; SEC-012 password 12+ chars |
 | **Error** | ERR-001–005, ERR-034; lockout UI (SEC-013) |
@@ -778,7 +778,7 @@ flowchart TB
 | SCR-AUT-003 | Đăng ký | F-AUTH-001 | M01 | Guest | `/register` | AUTH | RegisterForm | BRL-039 age≥16 | Register | POST register | — | P3 |
 | SCR-AUT-004 | Xác minh Email | F-AUTH-003 | M01 | Candidate | `/verify-email` | AUTH | VerifyBanner, ResendLink | BR-01 | Verify, Resend | POST verify | P3 | P3 |
 | SCR-AUT-005 | Quên mật khẩu | F-AUTH-004 | M01 | All | `/forgot-password` | AUTH | EmailForm | — | Submit email | POST forgot | — | P3 |
-| SCR-AUT-006 | Đặt lại mật khẩu | F-AUTH-005 | M01 | All | `/reset-password/:token` | AUTH | PasswordForm | VR-002, BRL-047 | Reset | POST reset | — | P3 |
+| SCR-AUT-006 | Đặt lại mật khẩu | F-AUTH-005 | M01 | All | `/reset-password` | AUTH | PasswordForm | VR-002, BRL-047 | Reset with verified OTP | POST reset `{ email, otp, newPassword }` | — | P3 |
 | SCR-AUT-007 | Xác minh 2 bước | F-AUTH-006 | M01 | All | `/mfa` | AUTH | MFAChallenge | BRL-019 admin | Enter OTP | POST mfa | P3 | P3 |
 | SCR-AUT-008 | Hết hạn phiên | F-AUTH-007 | M01 | All | `/session-expired` | AUTH | SessionExpired | SEC-018/019 | Re-login | — | P3 | P3 |
 | SCR-AUT-009 | Từ chối truy cập | F-AUTH-008 | M01 | All | `/access-denied` | SHR | ErrorPage 403 | SEC-016 | Go back | — | P1 | P3 |

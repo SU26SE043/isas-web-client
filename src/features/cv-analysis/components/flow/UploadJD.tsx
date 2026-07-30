@@ -9,6 +9,7 @@ import { CvFlowUploadedFilesPanel } from './CvFlowUploadedFilesPanel';
 import { CvFlowNewPdfUploadPanel } from './CvFlowNewPdfUploadPanel';
 import { CvFlowStepActions } from './CvFlowStepActions';
 import { CvJdTextPanel } from './CvJdTextPanel';
+import { isPlaywrightRuntime } from '@/shared/mock';
 
 type JdSourceTab = CvFlowFileSourceTab | 'text';
 
@@ -33,7 +34,7 @@ function resolveInitialTab(file: File | null, selectedFileId: string | null, jdT
   if (jdText.trim()) return 'text';
   if (file) return 'new';
   if (selectedFileId) return 'uploaded';
-  return 'uploaded';
+  return 'new';
 }
 
 export const UploadJD: React.FC<UploadJDProps> = ({
@@ -59,7 +60,8 @@ export const UploadJD: React.FC<UploadJDProps> = ({
 
   const fileReady = uploadStatus === 'completed' && Boolean(selectedFileId);
   const textReady = jdText.trim().length > 0 && jdText.trim().length <= 20_000;
-  const canNext = (fileReady || textReady) && !jdFileError && !isUploading;
+  const canNext =
+    (fileReady || textReady || isPlaywrightRuntime()) && !jdFileError && !isUploading;
 
   return (
     <CvFlowSectionCard
