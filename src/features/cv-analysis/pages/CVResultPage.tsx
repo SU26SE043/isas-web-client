@@ -86,14 +86,14 @@ export const CVResultPage: React.FC = () => {
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:py-12">
         <CvAnalysisLandingHero result={result} meta={meta} />
 
+        {result.jdMatch ? <JDMatchCard jdMatch={result.jdMatch} /> : null}
+
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <StrengthCard strengths={result.strengths} />
           <WeaknessCard weaknesses={result.weaknesses} />
         </div>
 
         <SuggestionCard suggestions={result.suggestions} />
-
-        {result.jdMatch ? <JDMatchCard jdMatch={result.jdMatch} /> : null}
       </div>
     </div>
   );

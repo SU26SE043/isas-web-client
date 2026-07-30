@@ -25,6 +25,14 @@ export function CvAnalysisReportDetail({ analysis }: CvAnalysisReportDetailProps
 
   return (
     <div className="space-y-5 border-t border-zinc-800 px-5 py-5 motion-safe:animate-in motion-safe:fade-in motion-reduce:animate-none">
+      {analysis.jdMatch ? (
+        <JDMatchCard jdMatch={analysis.jdMatch} />
+      ) : (
+        <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-sm text-zinc-400">
+          {t('cv.report.noJdMatchNote')}
+        </p>
+      )}
+
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
         <h3 className="text-sm font-medium text-zinc-100">{t('cv.report.summary')}</h3>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400 whitespace-normal [overflow-wrap:anywhere]">
@@ -54,14 +62,6 @@ export function CvAnalysisReportDetail({ analysis }: CvAnalysisReportDetailProps
       </div>
 
       <SuggestionCard suggestions={analysis.suggestions} />
-
-      {analysis.jdMatch ? (
-        <JDMatchCard jdMatch={analysis.jdMatch} />
-      ) : (
-        <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-sm text-zinc-400">
-          {t('cv.report.noJdMatchNote')}
-        </p>
-      )}
     </div>
   );
 }
