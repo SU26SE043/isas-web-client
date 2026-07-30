@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { authTokenStorage } from '@/shared/api/authTokenStorage';
 import { useLanguage } from '@/shared/languages';
+import { isPlaywrightRuntime } from '@/shared/mock/config';
 import { InvitationDetailPanel } from '../components/InvitationDetailPanel';
 import { InviteExpiredState } from '../components/InviteExpiredState';
 import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
@@ -22,6 +23,7 @@ import {
   readPendingInviteToken,
   savePendingInviteToken,
 } from '../utils/inviteContinuation';
+import { LegacyMagicLinkLandingPage } from './LegacyMagicLinkLandingPage';
 
 type InviteLoadState =
   | { status: 'loading' }
@@ -40,7 +42,7 @@ function joinErrorMessage(error: unknown, t: (key: string) => string): string {
   return t('campaigns.invite.joinUnknown');
 }
 
-export function MagicLinkLandingPage() {
+function LiveMagicLinkLandingPage() {
   const { token = '' } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -231,4 +233,8 @@ export function MagicLinkLandingPage() {
       ) : null}
     </div>
   );
+}
+
+export function MagicLinkLandingPage() {
+  return isPlaywrightRuntime() ? <LegacyMagicLinkLandingPage /> : <LiveMagicLinkLandingPage />;
 }

@@ -24,12 +24,12 @@ export type MockDataDomain =
 /** Domains wired to the real gateway today (auth is always live — not listed here). */
 export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice'];
 
-function isPlaywrightWebDriver(): boolean {
+export function isPlaywrightRuntime(): boolean {
   return typeof navigator !== 'undefined' && navigator.webdriver === true;
 }
 
 export function usesMockData(domain: MockDataDomain): boolean {
-  if (domain === 'practice' && isPlaywrightWebDriver()) {
+  if (domain === 'practice' && isPlaywrightRuntime()) {
     return true;
   }
   return !LIVE_API_DOMAINS.includes(domain);

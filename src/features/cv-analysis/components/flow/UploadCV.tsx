@@ -23,7 +23,7 @@ export interface UploadCVProps {
 function resolveInitialTab(file: File | null, selectedFileId: string | null): CvFlowFileSourceTab {
   if (file) return 'new';
   if (selectedFileId) return 'uploaded';
-  return 'uploaded';
+  return 'new';
 }
 
 /** Step 2 — pick an uploaded CV or upload a new PDF. */

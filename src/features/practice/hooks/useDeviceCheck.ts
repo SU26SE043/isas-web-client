@@ -83,24 +83,29 @@ export function useDeviceCheck() {
 
   const startAudioMeter = useCallback((stream: MediaStream) => {
     const audioTrack = stream.getAudioTracks()[0];
-    if (!audioTrack) return;
+    const AudioContextConstructor = window.AudioContext;
+    if (!audioTrack || !AudioContextConstructor) return;
 
-    const audioContext = new AudioContext();
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    const source = audioContext.createMediaStreamSource(stream);
-    source.connect(analyser);
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
+    try {
+      const audioContext = new AudioContextConstructor();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
 
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const tick = () => {
-      analyser.getByteFrequencyData(data);
-      const average = data.reduce((sum, value) => sum + value, 0) / data.length;
-      setState((prev) => ({ ...prev, audioLevel: Math.min(1, average / 128) }));
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+        setState((prev) => ({ ...prev, audioLevel: Math.min(1, average / 128) }));
+        rafRef.current = requestAnimationFrame(tick);
+      };
       rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
+    } catch {
+      // Metering is an enhancement; a valid live microphone must still pass the device check.
+    }
   }, []);
 
   const refreshDeviceLists = useCallback(async () => {
