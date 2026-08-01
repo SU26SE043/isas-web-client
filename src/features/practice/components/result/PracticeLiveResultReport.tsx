@@ -8,7 +8,6 @@ import { LiveReportTabBar } from './LiveReportTabBar';
 import { ReportCriteriaScores } from './ReportCriteriaScores';
 import { ReportOverview } from './ReportOverview';
 import { ReportQuestionDetail } from './ReportQuestionDetail';
-import { ReportSummary } from './ReportSummary';
 import { SessionResultHeader } from './SessionResultHeader';
 
 interface PracticeLiveResultReportProps {
@@ -45,15 +44,6 @@ export function PracticeLiveResultReport({
             questions={view.questions}
             activeQuestionIndex={activeQuestionIndex}
             onQuestionChange={setActiveQuestionIndex}
-          />
-        ) : null}
-        {activeTab === 'summary' ? (
-          <ReportSummary
-            overallFeedback={view.overallFeedback}
-            strengths={view.strengths}
-            improvements={view.improvements}
-            nextSteps={view.nextSteps}
-            cvVsAnswerSummary={view.cvVsAnswerSummary}
           />
         ) : null}
       </div>

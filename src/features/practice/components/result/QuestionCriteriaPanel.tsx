@@ -67,10 +67,16 @@ function formatScore(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+function scoreTone(score: number, maxScore: number): string {
+  const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  return percentage < 50 ? 'text-error' : 'text-info-light';
+}
+
 function ScoreRing({ score, maxScore }: { score: number; maxScore: number }) {
   const percentage = Math.max(0, Math.min(100, maxScore > 0 ? (score / maxScore) * 100 : 0));
   const radius = 35;
   const circumference = 2 * Math.PI * radius;
+  const isBelowThreshold = percentage < 50;
 
   return (
     <div className="relative size-24 shrink-0" role="img" aria-label={`${Math.round(percentage)}%`}>
@@ -81,7 +87,7 @@ function ScoreRing({ score, maxScore }: { score: number; maxScore: number }) {
           cy="40"
           r={radius}
           fill="none"
-          className="stroke-info transition-[stroke-dashoffset] duration-500"
+          className={`${isBelowThreshold ? 'stroke-error' : 'stroke-info'} transition-[stroke-dashoffset] duration-500`}
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -89,7 +95,7 @@ function ScoreRing({ score, maxScore }: { score: number; maxScore: number }) {
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <ChartNoAxesCombined className="size-5 text-info" aria-hidden />
+        <ChartNoAxesCombined className={`size-5 ${isBelowThreshold ? 'text-error' : 'text-info'}`} aria-hidden />
       </div>
     </div>
   );
@@ -123,7 +129,9 @@ export function QuestionCriteriaPanel({
               {t('practice.result.questionScore')}
             </p>
             <p className="mt-1 flex items-baseline gap-1 tabular-nums">
-              <span className="text-3xl font-semibold text-info-light">{formatScore(score)}</span>
+              <span className={`text-3xl font-semibold ${scoreTone(score, maxScore)}`}>
+                {formatScore(score)}
+              </span>
               <span className="text-lg text-muted-foreground">/ {formatScore(maxScore)}</span>
             </p>
           </div>
@@ -147,7 +155,7 @@ export function QuestionCriteriaPanel({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium leading-snug text-foreground">{criterion.name}</p>
-                    <span className={`shrink-0 rounded-lg border border-satin bg-surface-elevated px-2 py-1 text-sm font-semibold tabular-nums ${tone.text}`}>
+                    <span className={`shrink-0 rounded-lg border border-satin bg-surface-elevated px-2 py-1 text-sm font-semibold tabular-nums ${scoreTone(criterion.score, criterion.maxScore)}`}>
                       {formatScore(criterion.score)} / {formatScore(criterion.maxScore)}
                     </span>
                   </div>

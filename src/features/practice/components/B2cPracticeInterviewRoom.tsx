@@ -14,7 +14,6 @@ import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
 import { AudioRecorderModal } from './audio-recorder/AudioRecorderModal';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
-import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import {
   mapModalToCardStatus,
   resolveAnswerCardStatus,
@@ -163,12 +162,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
             <AnswerRecorderCard
               status={cardStatus}
               disabled={room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
-              submitDisabled={!room.currentQuestion}
-              isSubmitting={room.isSubmittingAnswer}
               onOpenRecorder={openRecorder}
-              onSubmitAnswer={() => {
-                void room.submitAnswerWithFile(createSilentUnansweredAudioFile(), 1);
-              }}
             />
           </div>
         </div>
