@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
@@ -20,7 +21,7 @@ import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 
-export const PRACTICE_SETUP_STEP_COUNT = 6;
+export const PRACTICE_SETUP_STEP_COUNT = 7;
 
 export function usePracticeSetupFlow() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export function usePracticeSetupFlow() {
   const [jdTab, setJdTab] = useState<'file' | 'text'>('file');
   const [timeLimitSec, setTimeLimitSec] = useState<PracticeTimeLimitSec>(120);
   const [questionCount, setQuestionCount] = useState(5);
+  const [rubricCriterionIds, setRubricCriterionIds] = useState<string[]>([]);
 
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [jdFiles, setJdFiles] = useState<FileRecord[]>([]);
@@ -56,13 +58,47 @@ export function usePracticeSetupFlow() {
       jdText: jdTab === 'text' ? jdText : '',
       timeLimitSec,
       questionCount,
+      rubricCriterionIds,
     }),
-    [cvId, jdId, jdTab, jdText, jobCategory, questionCount, timeLimitSec],
+    [cvId, jdId, jdTab, jdText, jobCategory, questionCount, rubricCriterionIds, timeLimitSec],
   );
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
   const canStart =
-    canStartPracticeSession(setupState) && !isCreatingSession && !jdTextTooLong;
+    canStartPracticeSession(setupState) &&
+    rubricCriterionIds.length > 0 &&
+    !isCreatingSession &&
+    !jdTextTooLong;
+
+  const rubricQuery = useQuery({
+    queryKey: ['practice', 'rubric', jobCategory],
+    queryFn: ({ signal }) => practiceSetupService.getRubric(jobCategory ?? '', signal),
+    enabled: step === 5 && Boolean(jobCategory),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const validRubricIds = useMemo(
+    () => new Set((rubricQuery.data ?? []).filter((item) => item.id && item.name.trim()).map((item) => item.id)),
+    [rubricQuery.data],
+  );
+
+  const validSelectedRubricIds = useMemo(
+    () => rubricCriterionIds.filter((id) => validRubricIds.has(id)),
+    [rubricCriterionIds, validRubricIds],
+  );
+
+  useEffect(() => {
+    setRubricCriterionIds([]);
+  }, [jobCategory]);
+
+  useEffect(() => {
+    if (!rubricQuery.data) return;
+
+    if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
+      setRubricCriterionIds(validSelectedRubricIds);
+    }
+  }, [rubricQuery.data, rubricCriterionIds.length, validSelectedRubricIds]);
 
   const loadCvFiles = useCallback(async () => {
     setLoadingCv(true);
@@ -167,6 +203,12 @@ export function usePracticeSetupFlow() {
     setTimeLimitSec,
     questionCount,
     setQuestionCount,
+    rubricCriterionIds: validSelectedRubricIds,
+    setRubricCriterionIds,
+    rubricCriteria: rubricQuery.data ?? [],
+    loadingRubric: rubricQuery.isLoading,
+    rubricError: rubricQuery.isError,
+    retryRubric: () => void rubricQuery.refetch(),
     cvFiles,
     jdFiles,
     loadingCv,

@@ -8,6 +8,7 @@ export const WIZARD_STEP_KEYS = [
   'practice.setup.steps.jd',
   'practice.setup.steps.timeLimit',
   'practice.setup.steps.questionCount',
+  'practice.setup.steps.gradingCriteria',
   'practice.setup.steps.summary',
 ] as const;
 

@@ -14,6 +14,7 @@ const baseState = (): PracticeSetupState => ({
   jdText: '',
   timeLimitSec: 120,
   questionCount: 5,
+  rubricCriterionIds: [],
 });
 
 describe('buildCreatePracticeSessionRequest', () => {

@@ -135,9 +135,11 @@ export const practiceSetupService = {
    * Wizard step 5: load rubric for the domain chosen in step 1.
    * Always hits live GET `/api/v1/interview/practice/rubrics/{jobCategory}` (FE|BE|BA).
    */
-  async getRubric(domainId: string): Promise<PracticeRubricCriterion[]> {
+  async getRubric(domainId: string, signal?: AbortSignal): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
-    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory));
+    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory), {
+      signal,
+    });
     const criteria = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
     return criteria.map(mapApiCriterionToPractice);
   },

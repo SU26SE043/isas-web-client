@@ -18,6 +18,7 @@ export interface CreatePracticeSessionRequest {
   jdText?: string;
   timeLimitSec?: PracticeTimeLimitSec;
   questionCount?: number;
+  rubricCriterionIds?: string[];
 }
 
 export interface PracticeSetupState {
@@ -27,6 +28,7 @@ export interface PracticeSetupState {
   jdText: string;
   timeLimitSec: PracticeTimeLimitSec;
   questionCount: number;
+  rubricCriterionIds: string[];
 }
 
 export interface PracticeQuestionResponse {
