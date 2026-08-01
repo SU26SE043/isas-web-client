@@ -30,11 +30,11 @@ export function LiveReportTabBar({ activeTab, onChange }: LiveReportTabBarProps)
             aria-selected={isActive}
             onClick={() => onChange(tab)}
             className={cn(
-              'shrink-0 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors duration-150',
+              'shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold tracking-wide transition-colors duration-150',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
               isActive
-                ? 'border-satin bg-surface-elevated text-foreground shadow-[0_0_12px_color-mix(in_srgb,var(--isas-silver-200)_18%,transparent)]'
-                : 'border-satin bg-transparent text-foreground/80 hover:bg-surface-overlay hover:text-foreground',
+                ? 'border-info/70 bg-gradient-to-r from-info/20 to-violet-500/20 text-foreground shadow-[0_0_18px_-8px_var(--color-info)]'
+                : 'border-satin bg-surface-overlay/30 text-foreground/90 hover:border-info/40 hover:bg-info/10 hover:text-foreground',
             )}
           >
             {t(liveReportTabLabelKey(tab))}

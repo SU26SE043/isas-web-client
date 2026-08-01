@@ -62,7 +62,7 @@ export function PracticeQuestionResultCard({
           ) : null}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn(statusClass[group])}>
+          <Badge variant="outline" className={cn('font-semibold', statusClass[group])}>
             {group === 'graded' ? <CheckCircle2 className="mr-1 size-3.5" aria-hidden /> : null}
             {statusLabel}
           </Badge>
@@ -91,7 +91,7 @@ export function PracticeQuestionResultCard({
               </span>
               {t('practice.result.question')}
             </h4>
-            <p className="mt-3 whitespace-pre-wrap leading-relaxed text-foreground">
+            <p className="mt-3 whitespace-pre-wrap font-medium leading-relaxed text-foreground">
               {question.content || t('practice.result.unknownQuestion')}
             </p>
           </section>
@@ -117,7 +117,7 @@ export function PracticeQuestionResultCard({
               ) : null}
             </div>
             {question.transcript || question.textAnswer ? (
-              <p className="mt-3 whitespace-pre-wrap leading-relaxed text-foreground">
+              <p className="mt-3 whitespace-pre-wrap font-medium leading-relaxed text-foreground">
                 {question.transcript || question.textAnswer}
               </p>
             ) : (
@@ -160,7 +160,7 @@ export function PracticeQuestionResultCard({
         </div>
       ) : (
         <div className="px-5 py-3">
-          <p className="line-clamp-2 text-sm text-muted-foreground">
+          <p className="line-clamp-2 text-sm font-medium text-foreground/80">
             {question.content || t('practice.result.unknownQuestion')}
           </p>
         </div>

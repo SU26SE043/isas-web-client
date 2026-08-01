@@ -3,7 +3,17 @@ import { getApiStatusCode } from '@/shared/api/apiError';
 import { getQuestionSpeech } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 
-export function useQuestionSpeech(sessionId: string | null, questionId: string | null) {
+interface UseQuestionSpeechOptions {
+  enabled?: boolean;
+  onPlaybackStart?: () => void;
+  onPlaybackComplete?: () => void;
+}
+
+export function useQuestionSpeech(
+  sessionId: string | null,
+  questionId: string | null,
+  options: UseQuestionSpeechOptions = {},
+) {
   const setSpeechWarning = useB2cPracticeInterviewStore((s) => s.setSpeechWarning);
   const setQuestionState = useB2cPracticeInterviewStore((s) => s.setQuestionState);
   const [isLoadingSpeech, setIsLoadingSpeech] = useState(false);
@@ -13,6 +23,7 @@ export function useQuestionSpeech(sessionId: string | null, questionId: string |
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const lastAutoQuestionRef = useRef<string | null>(null);
+  const { enabled = true, onPlaybackStart, onPlaybackComplete } = options;
 
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
@@ -34,6 +45,7 @@ export function useQuestionSpeech(sessionId: string | null, questionId: string |
       objectUrlRef.current = url;
       const audio = new Audio(url);
       audioRef.current = audio;
+      onPlaybackStart?.();
       setIsPlaying(true);
       try {
         await audio.play();
@@ -45,14 +57,16 @@ export function useQuestionSpeech(sessionId: string | null, questionId: string |
         setNeedsManualPlay(true);
       } finally {
         setIsPlaying(false);
+        onPlaybackComplete?.();
       }
     },
-    [stopPlayback],
+    [onPlaybackComplete, onPlaybackStart, stopPlayback],
   );
 
   const loadAndPlay = useCallback(
     async (opts?: { force?: boolean }) => {
       if (!sessionId || !questionId) return;
+      if (!enabled) return;
       setIsLoadingSpeech(true);
       setSpeechWarning(null);
       try {
@@ -75,19 +89,21 @@ export function useQuestionSpeech(sessionId: string | null, questionId: string |
           setSpeechWarning('practice.speech.unavailable');
         }
         if (opts?.force) setNeedsManualPlay(true);
+        onPlaybackComplete?.();
       } finally {
         setIsLoadingSpeech(false);
       }
     },
-    [playBlob, questionId, sessionId, setQuestionState, setSpeechWarning],
+    [enabled, playBlob, questionId, sessionId, setQuestionState, setSpeechWarning],
   );
 
   useEffect(() => {
     if (!sessionId || !questionId) return;
+    if (!enabled) return;
     if (lastAutoQuestionRef.current === questionId) return;
     lastAutoQuestionRef.current = questionId;
     void loadAndPlay();
-  }, [loadAndPlay, questionId, sessionId]);
+  }, [enabled, loadAndPlay, questionId, sessionId]);
 
   useEffect(() => () => stopPlayback(), [stopPlayback]);
 

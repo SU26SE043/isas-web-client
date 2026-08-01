@@ -15,6 +15,11 @@ import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
 
 const TIMEOUT_ADVANCE_DELAY_MS = 1000;
+const COUNTDOWN_STEP_MS = 1000;
+const COUNTDOWN_START_HOLD_MS = 800;
+
+export type InterviewPhase = 'loading' | 'reading' | 'countdown' | 'answering' | 'submitting';
+type CountdownValue = number | 'START' | null;
 
 export function useB2cPracticeRoom(sessionId: string, options?: { completePath?: string }) {
   const navigate = useNavigate();
@@ -25,13 +30,71 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   const [finishOpen, setFinishOpen] = useState(false);
   const [retryConfirmOpen, setRetryConfirmOpen] = useState(false);
   const [showTimerWarning, setShowTimerWarning] = useState(false);
+  const [phase, setPhase] = useState<InterviewPhase>('loading');
+  const [countdownValue, setCountdownValue] = useState<CountdownValue>(null);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
+  const countdownIntervalRef = useRef<number | null>(null);
+  const countdownTimeoutRef = useRef<number | null>(null);
+  const countdownQuestionRef = useRef<string | null>(null);
   const media = useInterviewMedia(micEnabled, cameraEnabled);
   const recorder = usePracticeAnswerRecorder(media.stream);
-  const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId);
+
+  const clearQuestionCountdown = useCallback(() => {
+    if (countdownIntervalRef.current != null) {
+      window.clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    if (countdownTimeoutRef.current != null) {
+      window.clearTimeout(countdownTimeoutRef.current);
+      countdownTimeoutRef.current = null;
+    }
+    countdownQuestionRef.current = null;
+    setCountdownValue(null);
+  }, []);
+
+  const startQuestionCountdown = useCallback((questionId: string) => {
+    if (media.state !== 'ready' || countdownIntervalRef.current != null) return;
+    if (questionId !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
+
+    clearQuestionCountdown();
+    countdownQuestionRef.current = questionId;
+    setPhase('countdown');
+    setCountdownValue(3);
+    let current = 3;
+    countdownIntervalRef.current = window.setInterval(() => {
+      current -= 1;
+      if (current > 0) {
+        setCountdownValue(current);
+        return;
+      }
+
+      if (countdownIntervalRef.current != null) {
+        window.clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      setCountdownValue('START');
+      countdownTimeoutRef.current = window.setTimeout(() => {
+        countdownTimeoutRef.current = null;
+        if (countdownQuestionRef.current !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
+        setCountdownValue(null);
+        setPhase('answering');
+        recorder.startRecording();
+        useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
+      }, COUNTDOWN_START_HOLD_MS);
+    }, COUNTDOWN_STEP_MS);
+  }, [clearQuestionCountdown, media.state, recorder]);
+
+  const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
+    enabled: media.state === 'ready',
+    onPlaybackStart: () => setPhase('reading'),
+    onPlaybackComplete: () => {
+      const questionId = useB2cPracticeInterviewStore.getState().currentQuestionId;
+      if (questionId) startQuestionCountdown(questionId);
+    },
+  });
 
   const currentQuestion = useMemo(
     () => store.questions.find((q) => q.id === store.currentQuestionId) ?? null,
@@ -88,10 +151,10 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
 
   useEffect(() => {
     if (store.stage !== 'interviewing' && store.stage !== 'ready_to_finish') return undefined;
-    if (answerSubmit.isSubmittingAnswer || isSubmittingSession || isTimingOut) return undefined;
+    if (phase !== 'answering' || answerSubmit.isSubmittingAnswer || isSubmittingSession || isTimingOut) return undefined;
     const id = window.setInterval(() => store.tickTimer(), 1000);
     return () => window.clearInterval(id);
-  }, [answerSubmit.isSubmittingAnswer, isSubmittingSession, isTimingOut, store]);
+  }, [answerSubmit.isSubmittingAnswer, isSubmittingSession, isTimingOut, phase, store]);
 
   useEffect(() => {
     if (store.remainingSeconds === 10 && !warned10Ref.current) {
@@ -105,15 +168,20 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   }, [store.remainingSeconds]);
 
   useEffect(() => {
+    clearQuestionCountdown();
+    setPhase(media.state === 'ready' ? 'reading' : 'loading');
     warned10Ref.current = false;
     timeoutHandledForQuestionRef.current = null;
     setIsTimingOut(false);
     recorder.clearRecording();
     answerSubmit.setAnswerError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.currentQuestionId]);
+  }, [clearQuestionCountdown, media.state, store.currentQuestionId]);
+
+  useEffect(() => () => clearQuestionCountdown(), [clearQuestionCountdown]);
 
   useEffect(() => {
+    if (phase !== 'answering') return undefined;
     if (store.remainingSeconds !== 0) return;
     if (store.stage !== 'interviewing') return;
     if (isSubmittingSession) return;
@@ -196,6 +264,7 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   }, [
     answerSubmit.isSubmittingAnswer,
     isSubmittingSession,
+    phase,
     sessionId,
     store.answersByQuestionId,
     store.currentQuestionId,
@@ -314,6 +383,8 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
     isSubmittingAnswer: answerSubmit.isSubmittingAnswer,
     isSubmittingSession,
     isTimingOut,
+    phase,
+    countdownValue,
     answerError: answerSubmit.answerError,
     showTimerWarning,
     canSubmitAnswer: answerSubmit.canSubmitAnswer,
