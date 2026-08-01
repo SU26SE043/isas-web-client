@@ -4,10 +4,12 @@ import { AlertCircle, BriefcaseBusiness } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
+import { isPlaywrightRuntime } from '@/shared/mock/config';
 import { MyCampaignCard } from '../components/MyCampaignCard';
 import { useMyCampaigns } from '../hooks/useMyCampaigns';
+import { LegacyCandidateCampaignsPage } from './LegacyCandidateCampaignsPage';
 
-export function CandidateCampaignsPage() {
+function LiveCandidateCampaignsPage() {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight') ?? '';
@@ -84,4 +86,8 @@ export function CandidateCampaignsPage() {
       </div>
     </div>
   );
+}
+
+export function CandidateCampaignsPage() {
+  return isPlaywrightRuntime() ? <LegacyCandidateCampaignsPage /> : <LiveCandidateCampaignsPage />;
 }

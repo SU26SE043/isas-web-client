@@ -5,9 +5,11 @@ import { getApiBaseUrl } from '../../../shared/config';
 import { HttpStatus } from '@/shared/constants/http-status';
 import type {
   AuthTokensResponse,
+  ChangePasswordRequest,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   GoogleExchangeRequest,
+  GoogleExchangeResponse,
   LoginRequest,
   LogoutRequest,
   MfaVerifyRequest,
@@ -147,6 +149,27 @@ export const authService = {
     }
     return data;
   },
+  exchangeGoogleCode: async (payload: GoogleExchangeRequest): Promise<GoogleExchangeResponse> => {
+    const { data } = await apiClient.post<unknown>(authEndpoints.googleExchange, payload, {
+      skipAuth: true,
+    });
+    const tokens = parseAuthTokens(data);
+    if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
+      throw new Error('Invalid Google exchange response from Auth API');
+    }
+    storeTokensIfPresent(tokens);
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+    };
+  },
+  changePassword: async (payload: ChangePasswordRequest): Promise<void> => {
+    const response = await apiClient.post(authEndpoints.changePassword, payload);
+    if (response.status !== HttpStatus.NO_CONTENT) {
+      throw new Error('Invalid change-password response from Auth API');
+    }
+  },
   verifyEmail: async (payload: VerifyEmailRequest) => {
     const { data } = await apiClient.post(authEndpoints.verifyEmail, payload);
     return data;
@@ -161,17 +184,6 @@ export const authService = {
     storeTokensIfPresent(tokens);
     return tokens;
   },
-  exchangeGoogleCode: async (payload: GoogleExchangeRequest): Promise<AuthTokensResponse> => {
-    const { data } = await apiClient.post(authEndpoints.googleExchange, payload, {
-      skipAuth: true,
-    });
-    const tokens = parseAuthTokens(data);
-    if (!tokens.accessToken || !tokens.refreshToken || !tokens.expiresAt) {
-      throw new Error('Google exchange response missing tokens');
-    }
-    storeTokensIfPresent(tokens);
-    return tokens;
-  },
   loginWithGoogle: () => {
     const returnUrl = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
     const baseUrl = getApiBaseUrl();
@@ -183,9 +195,5 @@ export const authService = {
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginSso}?returnUrl=${returnUrl}`;
-  },
-  resetPasswordWithToken: async (payload: { token: string; newPassword: string }) => {
-    const { data } = await apiClient.post(authEndpoints.resetPassword, payload);
-    return data;
   },
 };

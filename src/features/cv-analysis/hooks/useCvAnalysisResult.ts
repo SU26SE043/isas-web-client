@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getApiErrorMessage } from '@/shared/api/apiError';
 import { cvAnalysisService } from '../services/cvAnalysis.service';
 import type { CvAnalysisResult } from '../types/cvAnalysis.types';
+import { cvAnalysisDetailQueryKey } from './useCvAnalysisDetail';
 
 /**
  * Loads a single analysis via GET /practice/cv-analysis/{id}.
  * History list is optional (best-effort) when the catalogue endpoint exists.
  */
 export function useCvAnalysisResult(analysisId?: string) {
+  const queryClient = useQueryClient();
   const [result, setResult] = useState<CvAnalysisResult | null>(null);
   const [history, setHistory] = useState<CvAnalysisResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +41,14 @@ export function useCvAnalysisResult(analysisId?: string) {
         return;
       }
 
+      const cachedResult = queryClient.getQueryData<CvAnalysisResult>(
+        cvAnalysisDetailQueryKey(analysisId),
+      );
+      if (cachedResult) {
+        setResult(cachedResult);
+        return;
+      }
+
       const data = await cvAnalysisService.getAnalysisResult(analysisId);
       setResult(data);
       void loadHistory();
@@ -47,7 +58,7 @@ export function useCvAnalysisResult(analysisId?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [analysisId, loadHistory]);
+  }, [analysisId, loadHistory, queryClient]);
 
   useEffect(() => {
     void load();

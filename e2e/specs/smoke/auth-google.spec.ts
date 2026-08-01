@@ -21,10 +21,20 @@ test.describe('Google OAuth one-time code flow', () => {
       expect(requestUrl.searchParams.get('returnUrl')).toBe(
         `${new URL(page.url()).origin}/auth/google/callback`,
       );
+      const callbackUrl = `${new URL(page.url()).origin}/auth/google/callback?reason=login_failed`;
 
       await route.fulfill({
-        status: 302,
-        headers: { location: '/auth/google/callback?reason=login_failed' },
+        status: 200,
+        contentType: 'text/html',
+        body: `<!doctype html>
+          <html>
+            <head><meta charset="utf-8"></head>
+            <body>
+              <script>
+                window.location.replace(${JSON.stringify(callbackUrl)});
+              </script>
+            </body>
+          </html>`,
       });
     });
 
@@ -50,7 +60,7 @@ test.describe('Google OAuth one-time code flow', () => {
         body: JSON.stringify({
           accessToken: 'google-access',
           refreshToken: 'google-refresh',
-          expiresAt: '2026-07-29T00:00:00.000Z',
+          expiresAt: '2099-12-31T23:59:59.000Z',
         }),
       });
     });

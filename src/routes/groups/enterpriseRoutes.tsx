@@ -17,6 +17,7 @@ import { EmployerAnalyticsPage } from '@/features/employer-analytics/pages/Emplo
 import { EmployerCandidateProfilePage } from '@/features/employer-analytics/pages/EmployerCandidateProfilePage';
 import { EmployerCandidateReportPage } from '@/features/employer-analytics/pages/EmployerCandidateReportPage';
 import { BillingShell } from '@/features/employer-billing/components/live/BillingShell';
+import { EmployerInvoicesPage } from '@/features/employer-billing/pages/EmployerInvoicesPage';
 import { EmployerBillingOverviewPage } from '@/features/employer-billing/pages/live/EmployerBillingOverviewPage';
 import { EmployerPackagesPage } from '@/features/employer-billing/pages/live/EmployerPackagesPage';
 import { EmployerOrdersPage } from '@/features/employer-billing/pages/live/EmployerOrdersPage';
@@ -62,6 +63,7 @@ export const enterpriseRoutes: RouteObject[] = [
                 children: [
                   { path: 'company', element: <CompanyProfilePage /> },
                   { path: 'company/verify', element: <CompanyVerificationPage /> },
+                  { path: 'invoices', element: <EmployerInvoicesPage /> },
                 ],
               },
               { path: 'campaigns', element: <CampaignListPage /> },
@@ -108,7 +110,6 @@ export const enterpriseRoutes: RouteObject[] = [
               { path: 'payment/success', element: <EmployerPaymentCallbackPage mode="success" /> },
               { path: 'payment/cancel', element: <EmployerPaymentCallbackPage mode="cancel" /> },
               { path: 'subscription', element: <Navigate to="/employer/billing/packages" replace /> },
-              { path: 'invoices', element: <Navigate to="/employer/billing/orders" replace /> },
               { path: 'notifications', element: <NotificationsPage scope="employer" /> },
               { path: 'settings', element: <SettingsPage scope="employer" /> },
               { path: 'help', element: <HelpPage scope="employer" /> },

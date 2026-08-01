@@ -164,6 +164,36 @@ function buildSnapshot(): WalletSnapshot {
   };
 }
 
+function buildMockCheckoutUrl(orderId: string): string {
+  return `/payment/callback?orderId=${encodeURIComponent(orderId)}&status=PAID`;
+}
+
+function findMockPackage(packageId: string): TokenPackage | SubscriptionPlan | undefined {
+  return (
+    MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId) ??
+    MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId)
+  );
+}
+
+function buildMockOrder(packageId: string): PaymentOrder | null {
+  const item = findMockPackage(packageId);
+  if (!item) return null;
+  const isSubscription = 'tokensPerMonth' in item;
+  const orderId = crypto.randomUUID();
+
+  return {
+    orderId,
+    packageId,
+    packageName: item.name,
+    packageNameVi: item.nameVi,
+    tokens: isSubscription ? item.tokensPerMonth : item.tokens,
+    amountUsd: isSubscription ? item.priceUsdMonthly : item.priceUsd,
+    status: 'pending',
+    checkoutUrl: buildMockCheckoutUrl(orderId),
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function shouldUseMockOrderFallback(error: unknown): boolean {
   if (!usesMockData('payment')) return false;
   if (!axios.isAxiosError(error)) return true;
@@ -245,6 +275,15 @@ export const paymentService = {
   },
 
   async createOrder(packageId: string): Promise<CreateOrderResult> {
+    if (usesMockData('payment')) {
+      const order = buildMockOrder(packageId);
+      if (!order) throw new Error('PAYMENT_PACKAGE_NOT_FOUND');
+      await mockDelay(500);
+      pendingOrders.set(order.orderId, order);
+      persistState();
+      return { order };
+    }
+
     try {
       const response = await apiClient.post<unknown>(paymentEndpoints.createOrder, { packageId });
       const dto = parseOrderResponse(response.data);

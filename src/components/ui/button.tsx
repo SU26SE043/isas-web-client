@@ -70,7 +70,11 @@ function Button({
       nativeButton={resolvedNativeButton}
       {...props}
     >
-      {loading ? <Spinner className="size-4 border-current border-t-transparent" /> : null}
+      {loading ? (
+        <span aria-hidden="true" className="inline-flex">
+          <Spinner className="size-4 border-current border-t-transparent" />
+        </span>
+      ) : null}
       {children}
     </ButtonPrimitive>
   )
