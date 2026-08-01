@@ -1,7 +1,6 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { paymentService } from '@/features/payment/services/payment.service';
 import { resultService } from './result.service';
-import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
 import {
   B2B_PROCTORING_CONFIG,
   B2C_PROCTORING_CONFIG,
@@ -128,7 +127,7 @@ export const practiceSessionService = {
       proctoringCounts.set(sessionId, 0);
       return {
         sessionId,
-        tokensAvailable: paymentService.getAvailableBalance(),
+        tokensAvailable: 0,
         reservedTokens: 0,
         startedAt: new Date().toISOString(),
       };
@@ -138,22 +137,14 @@ export const practiceSessionService = {
       throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
     }
 
-    if (
-      !isCampaignSessionId(sessionId) &&
-      !isLearningSessionId(sessionId) &&
-      !paymentService.hasReservation(sessionId)
-    ) {
-      throw new Error('no_reservation');
-    }
-
     startedSessions.add(sessionId);
     chunkCounts.set(sessionId, 0);
     proctoringCounts.set(sessionId, 0);
 
     return {
       sessionId,
-      tokensAvailable: paymentService.getAvailableBalance(),
-      reservedTokens: paymentService.getReservationAmount(sessionId),
+      tokensAvailable: 0,
+      reservedTokens: 0,
       startedAt: new Date().toISOString(),
     };
   },

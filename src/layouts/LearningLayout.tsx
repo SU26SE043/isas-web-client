@@ -21,12 +21,6 @@ export function LearningLayout() {
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <LanguageToggle compact />
-            <Link
-              to="/candidate/dashboard"
-              className="btn-ghost inline-flex text-xs sm:text-sm"
-            >
-              {t('practice.learningPath.exitLearning')}
-            </Link>
           </div>
         </div>
       </header>

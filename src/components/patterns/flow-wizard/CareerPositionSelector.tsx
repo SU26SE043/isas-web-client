@@ -4,7 +4,7 @@ import { SelectionOption } from '@/components/ui/selection-option';
 import { cn } from '@/lib/utils';
 import { CAREER_POSITIONS } from '@/shared/domain/careerPositions';
 import type { JobDomainId } from '@/shared/domain/jobDomains';
-import { isJobDomainId } from '@/shared/domain/jobDomains';
+import { getJobDomain, isJobDomainId } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import type { FlowWizardAccent } from './flowWizardAccent';
 import { FLOW_WIZARD_ACCENT } from './flowWizardAccent';
@@ -43,6 +43,7 @@ export function CareerPositionSelector({
     >
       {CAREER_POSITIONS.map((position) => {
         const label = language === 'vi' ? position.labelVi : position.label;
+        const domain = isJobDomainId(position.value) ? getJobDomain(position.value) : undefined;
         const selected = position.value === selectedId;
         const icon =
           isJobDomainId(position.value) && POSITION_ICONS[position.value]
@@ -54,6 +55,7 @@ export function CareerPositionSelector({
             key={position.value}
             icon={icon}
             title={label}
+            description={domain ? (language === 'vi' ? domain.descriptionVi : domain.description) : undefined}
             selected={selected}
             onClick={() => onSelect(position.value)}
             disabled={disabled}

@@ -73,8 +73,8 @@ export function CampaignWizardShell({
       : t('employer.campaigns.wizard.createTitle');
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-surface-base">
-      <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[radial-gradient(circle_at_78%_8%,rgba(37,99,235,0.16),transparent_28%),radial-gradient(circle_at_14%_92%,rgba(124,58,237,0.12),transparent_24%)] bg-surface-base">
+      <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/90 px-4 py-3 backdrop-blur-xl sm:px-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -102,10 +102,10 @@ export function CampaignWizardShell({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 px-4 py-6 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-12 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-10 lg:py-8">
         <nav
           aria-label={t('employer.campaigns.wizard.stepperLabel')}
-          className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[280px] lg:self-start"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[220px] lg:self-start"
         >
           <ol className="flex flex-col">
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
@@ -114,7 +114,11 @@ export function CampaignWizardShell({
               return (
                 <li key={step.id} className="flex w-full items-stretch gap-3">
                   <div className="flex flex-col items-center">
-                    <FlowStepMarker status={status} stepNumber={index + 1} />
+                    <FlowStepMarker
+                      status={status}
+                      stepNumber={index + 1}
+                      className={status === 'current' ? 'border-info bg-info/10 text-info shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_24px_-8px_rgba(59,130,246,0.95)]' : undefined}
+                    />
                     {!isLast ? (
                       <FlowStepConnector
                         status={

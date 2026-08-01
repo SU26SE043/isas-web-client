@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { paymentService } from '../services/payment.service';
 import type { PaymentOrder } from '../types/payment.types';
 
 export const CheckoutPage: React.FC = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const packageId = searchParams.get('packageId') ?? '';
   const { t, language } = useLanguage();
@@ -43,7 +42,9 @@ export const CheckoutPage: React.FC = () => {
   const handlePay = () => {
     if (!order?.checkoutUrl) return;
     setIsRedirecting(true);
-    navigate(order.checkoutUrl);
+    sessionStorage.setItem('payment.return.orderId', order.orderId);
+    sessionStorage.setItem('payment.return.packageId', order.packageId);
+    window.location.assign(order.checkoutUrl);
   };
 
   if (isLoading) {
@@ -79,12 +80,12 @@ export const CheckoutPage: React.FC = () => {
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">{t('payment.checkout.tokens')}</span>
-                <span className="font-medium text-foreground">{order.tokens.toLocaleString()}</span>
+                <span className="font-medium text-foreground">{order.tokens > 0 ? order.tokens.toLocaleString() : '—'}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">{t('payment.checkout.total')}</span>
                 <span className="text-lg font-semibold text-foreground">
-                  ${order.amountUsd.toFixed(2)}
+                  {formatVnd(order.priceVnd ?? 0)}
                 </span>
               </div>
             </div>
@@ -107,3 +108,7 @@ export const CheckoutPage: React.FC = () => {
     </div>
   );
 };
+
+function formatVnd(value: number) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
+}

@@ -1,4 +1,3 @@
-import { PRACTICE_RESERVE_ESTIMATE } from '@/features/payment/constants';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useDashboardSummary } from '@/features/profile/hooks/useDashboardSummary';
 import { isLearningSessionId } from '../types/interviewFlow.types';
@@ -11,7 +10,7 @@ export function useInterviewGate(sessionId?: string) {
   const tokenAvailable = summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0;
   const tokenReserved = summary?.tokenReserved ?? 0;
   const meetsProfileGate = isLearning ? true : (completeness?.meetsGate ?? false);
-  const hasSufficientTokens = isLearning ? true : tokenAvailable >= PRACTICE_RESERVE_ESTIMATE;
+  const hasSufficientTokens = isLearning ? true : tokenAvailable > tokenReserved;
 
   return {
     isLoading: isLearning ? false : profileLoading || summaryLoading,
@@ -22,7 +21,7 @@ export function useInterviewGate(sessionId?: string) {
     tokenAvailable,
     tokenReserved,
     creditsRemaining: tokenAvailable,
-    reserveEstimate: isLearning ? 0 : PRACTICE_RESERVE_ESTIMATE,
+    reserveEstimate: isLearning ? 0 : tokenReserved,
     completenessPercent: completeness?.percent ?? summary?.profileCompleteness ?? 0,
     isLearning,
   };

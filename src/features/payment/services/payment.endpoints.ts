@@ -25,5 +25,6 @@ export const paymentEndpoints = {
     `${PAYMENT_API_PREFIX}/order/${encodeURIComponent(id)}/status`,
   cancelOrder: (id: string) => `${PAYMENT_API_PREFIX}/order/${encodeURIComponent(id)}`,
   walletAccount: `${PAYMENT_API_PREFIX}/me/account`,
+  subscription: `${PAYMENT_API_PREFIX}/me/subscription`,
   creditTransactions: `${PAYMENT_API_PREFIX}/me/credit-transactions`,
 } as const;

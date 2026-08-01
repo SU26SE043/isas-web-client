@@ -22,7 +22,6 @@ import { resolveJobDomainFromCategory } from '@/shared/domain/jobDomains';
 import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
 import type { PracticeRubricCriterionRef } from '../types/b2cPracticeSession.types';
 import { isValidPracticeSessionId } from '../utils/practiceSessionId';
-import { paymentService } from '@/features/payment/services/payment.service';
 
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
@@ -61,7 +60,6 @@ export async function createPracticeSession(
   if (usesMockData('practice')) {
     await mockDelay(400);
     const session = buildMockSession(payload);
-    await paymentService.reserveTokens(session.id);
     return session;
   }
 

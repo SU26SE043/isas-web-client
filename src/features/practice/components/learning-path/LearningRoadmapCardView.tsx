@@ -1,99 +1,25 @@
 import React from 'react';
+import { BarChart3, BookOpen, CalendarDays, Eye, Flag, GitBranch, Timer } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { LearningRoadmapCard } from '../../types/learningPath.types';
 import { continueLearningPath } from '../../utils/learningPathNavigation';
 
-interface LearningRoadmapCardViewProps {
-  roadmap: LearningRoadmapCard;
-}
-
-export const LearningRoadmapCardView: React.FC<LearningRoadmapCardViewProps> = ({ roadmap }) => {
+export const LearningRoadmapCardView: React.FC<{ roadmap: LearningRoadmapCard }> = ({ roadmap }) => {
   const { language, t } = useLanguage();
   const name = language === 'vi' ? roadmap.nameVi : roadmap.name;
   const domain = language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel;
   const milestone = language === 'vi' ? roadmap.currentMilestoneTitleVi : roadmap.currentMilestoneTitle;
   const lesson = language === 'vi' ? roadmap.currentLessonTitleVi : roadmap.currentLessonTitle;
-  const updated = new Date(roadmap.updatedAt).toLocaleDateString(
-    language === 'vi' ? 'vi-VN' : 'en-US',
-  );
+  const updated = new Date(roadmap.updatedAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US');
+  const statusClass = roadmap.status === 'completed' ? 'border-success/35 bg-success/10 text-success-light' : roadmap.status === 'in_progress' ? 'border-warning/35 bg-warning/10 text-warning-light' : 'border-subtle bg-surface-overlay text-muted-foreground';
 
-  return (
-    <article className="rounded-xl border border-subtle bg-surface-raised/80 p-5 backdrop-blur-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="heading-secondary text-lg text-foreground">{name}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {domain} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)}
-          </p>
-        </div>
-        <span
-          className={
-            roadmap.status === 'completed'
-              ? 'rounded-full border border-success/30 bg-success-bg px-3 py-1 text-xs text-success'
-              : roadmap.status === 'in_progress'
-                ? 'rounded-full border border-info/30 bg-info-bg px-3 py-1 text-xs text-info'
-                : 'rounded-full border border-subtle px-3 py-1 text-xs text-muted-foreground'
-          }
-        >
-          {t(`practice.learningPath.status.${roadmap.status}`)}
-        </span>
-      </div>
-
-      <div className="mt-4">
-        <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-          <span>{t('practice.learningPath.progress')}</span>
-          <span
-            className={
-              roadmap.status === 'completed' ? 'text-success' : 'text-muted-foreground'
-            }
-          >
-            {roadmap.progressPercent}%
-          </span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-surface-overlay">
-          <div
-            className={
-              roadmap.status === 'completed'
-                ? 'h-full rounded-full bg-success transition-[width] duration-300'
-                : 'h-full rounded-full bg-foreground/80 transition-[width] duration-300'
-            }
-            style={{ width: `${roadmap.progressPercent}%` }}
-          />
-        </div>
-      </div>
-
-      <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-caption text-muted-foreground">{t('practice.learningPath.currentMilestone')}</dt>
-          <dd className="text-foreground">{milestone || '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-caption text-muted-foreground">{t('practice.learningPath.currentLesson')}</dt>
-          <dd className="text-foreground">{lesson || '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-caption text-muted-foreground">{t('practice.learningPath.remaining')}</dt>
-          <dd className="text-foreground">
-            {t('practice.learningPath.hours').replace('{count}', String(roadmap.estimatedRemainingHours))}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-caption text-muted-foreground">{t('practice.learningPath.updated')}</dt>
-          <dd className="text-foreground">{updated}</dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        {!roadmap.readOnly ? (
-          <Link to={continueLearningPath(roadmap)} className="btn-primary inline-flex">
-            {t('practice.learningPath.continue')}
-          </Link>
-        ) : null}
-        <Link to={`/candidate/learning/roadmaps/${roadmap.id}`} className="btn-secondary inline-flex">
-          {t('practice.learningPath.viewDetails')}
-        </Link>
-      </div>
-    </article>
-  );
+  return <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised p-5 shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-info/45 hover:shadow-[0_24px_55px_-28px_rgba(59,130,246,0.28)] sm:p-7">
+    <div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-info/50 bg-info/10 text-info shadow-[0_0_24px_-10px_var(--color-info)]"><GitBranch className="size-6" aria-hidden /></div><div className="min-w-0"><h2 className="truncate text-xl font-semibold text-foreground">{name}</h2><p className="mt-1 truncate text-sm text-muted-foreground">{domain} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)}</p></div></div><span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${statusClass}`}><span className="size-1.5 rounded-full bg-current" aria-hidden />{t(`practice.learningPath.status.${roadmap.status}`)}</span></div>
+    <div className="mt-5"><div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>{t('practice.learningPath.progress')}</span><span>{roadmap.progressPercent}%</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-overlay"><div className="h-full rounded-full bg-info transition-[width] duration-300" style={{ width: `${roadmap.progressPercent}%` }} /></div></div>
+    <dl className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg border border-satin bg-surface-overlay/40"><Info icon={Flag} label={t('practice.learningPath.currentMilestone')} value={milestone || '—'} /><Info icon={BookOpen} label={t('practice.learningPath.currentLesson')} value={lesson || '—'} /><Info icon={Timer} label={t('practice.learningPath.remaining')} value={t('practice.learningPath.hours').replace('{count}', String(roadmap.estimatedRemainingHours))} /><Info icon={CalendarDays} label={t('practice.learningPath.updated')} value={updated} /></dl>
+    <div className="mt-5 grid grid-cols-2 gap-3"><Link to={continueLearningPath(roadmap)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"><BarChart3 className="size-5 text-info" aria-hidden />{t('practice.learningPath.continue')}</Link><Link to={`/candidate/learning/roadmaps/${roadmap.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-satin bg-surface-overlay px-4 py-3 text-sm font-semibold text-foreground transition hover:border-info/45 hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"><Eye className="size-4" aria-hidden />{t('practice.learningPath.viewDetails')}</Link></div>
+  </article>;
 };
+
+function Info({ icon: Icon, label, value }: { icon: typeof Flag; label: string; value: string }) { return <div className="min-w-0 p-3"><dt className="flex items-center gap-2 text-xs text-muted-foreground"><Icon className="size-4 shrink-0" aria-hidden />{label}</dt><dd className="mt-2 truncate text-sm font-medium text-foreground" title={value}>{value}</dd></div>; }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, ArrowLeft, BookOpen, BrainCircuit, Code2, Database, FileCode2, Loader2, Lock, Star } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
@@ -10,7 +10,6 @@ import {
   learningInterviewPreparePath,
   startLearningLessonPractice,
 } from '../utils/launchLearningInterviewPractice';
-
 export function LearningRoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
@@ -75,7 +74,6 @@ export function LearningRoadmapDetailPage() {
   }
 
   const title = language === 'vi' ? roadmap.nameVi : roadmap.name;
-
   const openPractice = async (lessonId: string, lessonTitle: string, sessionId?: string | null) => {
     setLaunchingLessonId(lessonId);
     try {
@@ -99,26 +97,29 @@ export function LearningRoadmapDetailPage() {
   };
 
   return (
-    <div className="page-container page-section min-h-screen">
-      <Link to="/candidate/learning" className="text-sm text-muted-foreground hover:text-foreground">
+    <div className="page-container page-section min-h-screen bg-[radial-gradient(circle_at_80%_0%,rgba(37,99,235,0.15),transparent_32%),radial-gradient(circle_at_20%_100%,rgba(124,58,237,0.12),transparent_28%)]">
+      <Link to="/candidate/learning" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground">
+        <ArrowLeft className="size-4 text-info" aria-hidden />
         {t('practice.learningPath.backToDashboard')}
       </Link>
 
-      <header className="mt-4 space-y-2">
-        <h1 className="heading-primary text-3xl text-foreground">{title}</h1>
+      <header className="relative mt-5 space-y-4 overflow-hidden rounded-2xl border border-info/45 bg-surface-raised/70 p-6 shadow-[0_20px_60px_-40px_rgba(59,130,246,0.85)] sm:p-8">
+        <div className="absolute -right-12 -top-16 size-52 rounded-full border border-info/20" aria-hidden />
+        <div className="relative flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl border border-info/45 bg-info/10 text-info"><Code2 className="size-6" aria-hidden /></span><p className="text-sm font-medium text-muted-foreground">{language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} · {t(`practice.learningPath.status.${roadmap.status}`)}</p></div>
+        <h1 className="relative heading-primary text-4xl text-foreground sm:text-5xl">{title}</h1>
         <p className="text-sm text-muted-foreground">
           {(language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel)} ·{' '}
           {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} ·{' '}
           {t(`practice.learningPath.status.${roadmap.status}`)}
           {roadmap.readOnly ? ` · ${t('practice.learningPath.readOnly')}` : ''}
         </p>
-        <div className="max-w-md">
+        <div className="relative max-w-2xl">
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
             <span>{t('practice.learningPath.progress')}</span>
             <span>{roadmap.progressPercent}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-surface-overlay">
-            <div className="h-full bg-foreground/80" style={{ width: `${roadmap.progressPercent}%` }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500" style={{ width: `${roadmap.progressPercent}%` }} />
           </div>
         </div>
       </header>
@@ -139,10 +140,11 @@ export function LearningRoadmapDetailPage() {
           return (
             <section
               key={milestone.id}
-              className="rounded-xl border border-subtle bg-surface-raised/70 p-5 backdrop-blur-sm"
+              className="rounded-2xl border border-info/55 bg-surface-raised/80 p-5 shadow-[0_18px_50px_-35px_rgba(59,130,246,0.8)] backdrop-blur-sm sm:p-6"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="heading-secondary text-lg text-foreground">
+                <h2 className="flex items-center gap-3 heading-secondary text-lg text-foreground">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full border border-violet-400/50 bg-violet-500/10 text-violet-300"><Star className="size-5" aria-hidden /></span>
                   {t('practice.learningPath.milestone').replace('{n}', String(milestone.order))} ·{' '}
                   {milestoneTitle}
                 </h2>
@@ -157,7 +159,7 @@ export function LearningRoadmapDetailPage() {
               </p>
 
               <ul className="mt-4 space-y-2">
-                {milestone.lessons.map((lessonItem) => {
+                {milestone.lessons.map((lessonItem, lessonIndex) => {
                   const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
                   const canOpenTheory =
                     !locked &&
@@ -176,11 +178,11 @@ export function LearningRoadmapDetailPage() {
                   return (
                     <li
                       key={lessonItem.id}
-                      className="rounded-lg border border-subtle bg-surface-overlay px-4 py-3"
+                      className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="font-medium text-foreground">{lessonTitle}</p>
+                          <p className="flex items-center gap-3 font-medium text-foreground"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-info/40 bg-info/10 text-info"><LessonIcon index={lessonIndex} /></span>{lessonTitle}</p>
                           <p className="text-caption text-muted-foreground">
                             {t('practice.learningPath.theory')}:{' '}
                             {t(`practice.learningPath.part.${lessonItem.theoryStatus}`)} ·{' '}
@@ -192,8 +194,9 @@ export function LearningRoadmapDetailPage() {
                           {canOpenTheory ? (
                             <Link
                               to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`}
-                              className="btn-secondary inline-flex text-xs"
+                              className="inline-flex items-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-2.5 text-xs font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20"
                             >
+                              <BookOpen className="size-4 text-info" aria-hidden />
                               {t('practice.learningPath.openTheory')}
                             </Link>
                           ) : null}
@@ -238,4 +241,9 @@ export function LearningRoadmapDetailPage() {
       </div>
     </div>
   );
+}
+
+function LessonIcon({ index }: { index: number }) {
+  const Icon = [FileCode2, Database, BrainCircuit][index % 3] ?? BookOpen;
+  return <Icon className="size-5" aria-hidden />;
 }

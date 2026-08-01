@@ -1,31 +1,20 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage } from '@/shared/api/apiError';
-import axios from 'axios';
-import { mockDelay, usesMockData } from '@/shared/mock';
-import { MOCK_SETTLE_ACTUAL_TOKENS, PRACTICE_RESERVE_ESTIMATE } from '../constants';
 import { paymentEndpoints } from './payment.endpoints';
 import type {
-  CompleteOrderResult,
   CreateOrderResult,
-  ReserveTokensResult,
-  SettleTokensResult,
   PackageResponse,
   PaymentOrder,
   PaymentOrderDetail,
   PaymentOrderStatusResult,
-  SubscriptionPlan,
-  TokenPackage,
   TokenUsageRecord,
   WalletTransaction,
   WalletSnapshot,
+  PaymentAccountResponse,
+  SubscriptionResponse,
+  CreditTransactionResponse,
+  CursorPage,
 } from '../types/payment.types';
-import {
-  INITIAL_WALLET_BALANCE,
-  MOCK_TOKEN_PACKAGES,
-  MOCK_SUBSCRIPTION_PLANS,
-  MOCK_TOKEN_USAGE,
-  MOCK_WALLET_TRANSACTIONS,
-} from '../mocks/payment.fixtures';
 import {
   getOrderPaymentStatus,
   isPaymentTerminalStatus,
@@ -68,11 +57,11 @@ function parsePackageResponse(raw: unknown): PackageResponse | null {
   return {
     id,
     name,
-    type: typeof data.type === 'string' || typeof data.type === 'number' ? data.type : 1,
-    priceVnd: toInt(data.priceVnd),
+    type: typeof data.type === 'string' || typeof data.type === 'number' ? data.type : (() => { throw new Error('INVALID_PAYMENT_RESPONSE:type'); })(),
+    priceVnd: requiredInt(data.priceVnd, 'priceVnd'),
     interviewCredits: toNullableInt(data.interviewCredits),
     durationDays: toNullableInt(data.durationDays),
-    isActive: data.isActive !== false,
+    isActive: typeof data.isActive === 'boolean' ? data.isActive : (() => { throw new Error('INVALID_PAYMENT_RESPONSE:isActive'); })(),
     createdAt: String(data.createdAt ?? ''),
   };
 }
@@ -94,13 +83,51 @@ function unwrapList(payload: unknown): unknown[] {
   return [];
 }
 
+function requiredInt(value: unknown, field: string): number {
+  const parsed = toInt(value, Number.NaN);
+  if (!Number.isFinite(parsed)) throw new Error(`INVALID_PAYMENT_RESPONSE:${field}`);
+  return parsed;
+}
+
 interface LivePaymentAccount {
   remainingCredits: number;
   reservedCredits: number;
 }
 
+function parsePaymentAccount(payload: unknown): PaymentAccountResponse {
+  const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const data = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
+  return {
+    ownerType: requiredInt(data.ownerType, 'ownerType') as 0 | 1,
+    ownerId: String(data.ownerId ?? ''),
+    paymentMode: requiredInt(data.paymentMode, 'paymentMode') as 0 | 1,
+    status: requiredInt(data.status, 'status') as 0 | 1,
+    remainingCredits: requiredInt(data.remainingCredits, 'remainingCredits'),
+    reservedCredits: requiredInt(data.reservedCredits, 'reservedCredits'),
+    creditLimit: toNullableInt(data.creditLimit),
+    periodUsage: toNullableInt(data.periodUsage),
+    updatedAt: String(data.updatedAt ?? ''),
+  };
+}
+
+function parseSubscription(payload: unknown): SubscriptionResponse {
+  const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const data = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
+  const cycle = data.billingCycle === 'Monthly' || data.billingCycle === 'Annual' ? data.billingCycle : null;
+  return {
+    ownerType: requiredInt(data.ownerType, 'ownerType') as 0 | 1,
+    ownerId: String(data.ownerId ?? ''),
+    active: typeof data.active === 'boolean' ? data.active : (() => { throw new Error('INVALID_PAYMENT_RESPONSE:active'); })(),
+    billingCycle: cycle,
+    startedAt: data.startedAt == null ? null : String(data.startedAt),
+    expiresAt: data.expiresAt == null ? null : String(data.expiresAt),
+  };
+}
+
 interface LiveCreditTransaction {
   id: string;
+  ownerType: number;
+  ownerId: string;
   delta: number;
   reason: number;
   sessionId: string | null;
@@ -112,8 +139,8 @@ function parseLiveAccount(payload: unknown): LivePaymentAccount {
   const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
   const data = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
   return {
-    remainingCredits: toInt(data.remainingCredits),
-    reservedCredits: toInt(data.reservedCredits),
+    remainingCredits: requiredInt(data.remainingCredits, 'remainingCredits'),
+    reservedCredits: requiredInt(data.reservedCredits, 'reservedCredits'),
   };
 }
 
@@ -124,10 +151,14 @@ function parseLiveTransaction(payload: unknown): LiveCreditTransaction | null {
   const id = String(data.id ?? '').trim();
   const createdAt = String(data.createdAt ?? '').trim();
   if (!id || !createdAt) return null;
+  const delta = requiredInt(data.delta, 'delta');
+  if (delta === 0) return null;
   return {
     id,
-    delta: toInt(data.delta),
-    reason: toInt(data.reason, -1),
+    ownerType: requiredInt(data.ownerType, 'ownerType'),
+    ownerId: String(data.ownerId ?? ''),
+    delta,
+    reason: requiredInt(data.reason, 'reason'),
     sessionId: data.sessionId == null ? null : String(data.sessionId),
     orderId: data.orderId == null ? null : String(data.orderId),
     createdAt,
@@ -136,8 +167,8 @@ function parseLiveTransaction(payload: unknown): LiveCreditTransaction | null {
 
 function transactionType(reason: number, delta: number): WalletTransaction['type'] {
   if (reason === 4) return 'refund';
-  if (reason === 5) return 'purchase';
-  if (reason === 2 || reason === 3) return 'consumption';
+  if (reason === 0 || reason === 5) return 'purchase';
+  if (reason === 1 || reason === 2 || reason === 3) return 'consumption';
   return delta < 0 ? 'consumption' : 'purchase';
 }
 
@@ -153,11 +184,17 @@ function toWalletTransaction(transaction: LiveCreditTransaction): WalletTransact
     createdAt: transaction.createdAt,
     status: 'completed',
     sessionId: transaction.sessionId ?? undefined,
+    orderId: transaction.orderId ?? undefined,
+    ownerType: transaction.ownerType,
+    ownerId: transaction.ownerId,
+    reason: transaction.reason,
   };
 }
 
-async function fetchLiveCreditTransactions(): Promise<LiveCreditTransaction[]> {
-  const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions);
+async function fetchLiveCreditTransactions(params?: { cursor?: string | null; limit?: number }): Promise<LiveCreditTransaction[]> {
+  const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions, {
+    params: { ...(params?.cursor ? { cursor: params.cursor } : {}), ...(params?.limit ? { limit: params.limit } : {}) },
+  });
   const payload = unwrapList(response.data);
   return payload
     .map(parseLiveTransaction)
@@ -165,122 +202,40 @@ async function fetchLiveCreditTransactions(): Promise<LiveCreditTransaction[]> {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-const STORAGE_KEY = 'isas-mock-payment-wallet';
-
-interface PersistedPaymentState {
-  walletBalance: number;
-  transactions: typeof MOCK_WALLET_TRANSACTIONS;
-  tokenUsageRecords: TokenUsageRecord[];
-  sessionReserves: Record<string, number>;
-  settledSessions: string[];
-  pendingOrders: PaymentOrder[];
-}
-
-let walletBalance = INITIAL_WALLET_BALANCE;
-const transactions = [...MOCK_WALLET_TRANSACTIONS];
-const tokenUsageRecords = [...MOCK_TOKEN_USAGE];
-const pendingOrders = new Map<string, PaymentOrder>();
-const sessionReserves = new Map<string, number>();
-const settledSessions = new Set<string>();
-
-function persistState(): void {
-  if (typeof sessionStorage === 'undefined') return;
-  const payload: PersistedPaymentState = {
-    walletBalance,
-    transactions,
-    tokenUsageRecords,
-    sessionReserves: Object.fromEntries(sessionReserves),
-    settledSessions: [...settledSessions],
-    pendingOrders: [...pendingOrders.values()],
-  };
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-}
-
-function hydrateState(): void {
-  if (typeof sessionStorage === 'undefined') return;
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw) as PersistedPaymentState;
-    walletBalance = data.walletBalance;
-    transactions.splice(0, transactions.length, ...data.transactions);
-    tokenUsageRecords.splice(0, tokenUsageRecords.length, ...data.tokenUsageRecords);
-    sessionReserves.clear();
-    for (const [sessionId, amount] of Object.entries(data.sessionReserves)) {
-      sessionReserves.set(sessionId, amount);
-    }
-    settledSessions.clear();
-    for (const sessionId of data.settledSessions) {
-      settledSessions.add(sessionId);
-    }
-    pendingOrders.clear();
-    for (const order of data.pendingOrders) {
-      pendingOrders.set(order.orderId, order);
-    }
-  } catch {
-    // Ignore corrupt mock wallet snapshots.
-  }
-}
-
-hydrateState();
-
-function sumReserved(): number {
-  let total = 0;
-  for (const amount of sessionReserves.values()) {
-    total += amount;
-  }
-  return total;
-}
-
-function buildSnapshot(): WalletSnapshot {
-  const reserved = sumReserved();
-  return {
-    balance: walletBalance,
-    reserved,
-    available: walletBalance - reserved,
-    transactions: [...transactions].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    ),
-  };
-}
-
-function buildMockCheckoutUrl(orderId: string): string {
-  return `/payment/callback?orderId=${encodeURIComponent(orderId)}&status=PAID`;
-}
-
-function findMockPackage(packageId: string): TokenPackage | SubscriptionPlan | undefined {
-  return (
-    MOCK_TOKEN_PACKAGES.find((item) => item.id === packageId) ??
-    MOCK_SUBSCRIPTION_PLANS.find((item) => item.id === packageId)
-  );
-}
-
-function buildMockOrder(packageId: string): PaymentOrder | null {
-  const item = findMockPackage(packageId);
-  if (!item) return null;
-  const isSubscription = 'tokensPerMonth' in item;
-  const orderId = crypto.randomUUID();
-
-  return {
-    orderId,
-    packageId,
-    packageName: item.name,
-    packageNameVi: item.nameVi,
-    tokens: isSubscription ? item.tokensPerMonth : item.tokens,
-    amountUsd: isSubscription ? item.priceUsdMonthly : item.priceUsd,
-    status: 'pending',
-    checkoutUrl: buildMockCheckoutUrl(orderId),
-    createdAt: new Date().toISOString(),
-  };
-}
-
-function shouldUseMockOrderFallback(error: unknown): boolean {
-  if (!usesMockData('payment')) return false;
-  if (!axios.isAxiosError(error)) return true;
-  return !error.response;
-}
-
 export const paymentService = {
+  async getPaymentAccount(): Promise<PaymentAccountResponse> {
+    const response = await apiClient.get<unknown>(paymentEndpoints.walletAccount);
+    return parsePaymentAccount(response.data);
+  },
+
+  async getSubscription(): Promise<SubscriptionResponse> {
+    const response = await apiClient.get<unknown>(paymentEndpoints.subscription);
+    return parseSubscription(response.data);
+  },
+
+  async getCreditTransactions(params?: { cursor?: string | null; limit?: number }): Promise<CursorPage<CreditTransactionResponse>> {
+    const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions, {
+      params: { ...(params?.cursor ? { cursor: params.cursor } : {}), ...(params?.limit ? { limit: params.limit } : {}) },
+    });
+    const items = unwrapList(response.data)
+      .map(parseLiveTransaction)
+      .filter((item): item is LiveCreditTransaction => item != null);
+    const nextCursor = response.headers['x-next-cursor'] ?? response.headers['X-Next-Cursor'] ?? null;
+    return {
+      items: items.map((item) => ({
+        id: item.id,
+        ownerType: item.ownerType,
+        ownerId: item.ownerId,
+        delta: item.delta,
+        reason: item.reason,
+        sessionId: item.sessionId,
+        orderId: item.orderId,
+        createdAt: item.createdAt,
+      })),
+      nextCursor: typeof nextCursor === 'string' && nextCursor ? nextCursor : null,
+    };
+  },
+
   async getWallet(): Promise<WalletSnapshot> {
     const [accountResponse, liveTransactions] = await Promise.all([
       apiClient.get<unknown>(paymentEndpoints.walletAccount),
@@ -293,26 +248,6 @@ export const paymentService = {
       available: account.remainingCredits,
       transactions: liveTransactions.map(toWalletTransaction),
     };
-  },
-
-  getBalance(): number {
-    return walletBalance;
-  },
-
-  getAvailableBalance(): number {
-    return walletBalance - sumReserved();
-  },
-
-  getReservedBalance(): number {
-    return sumReserved();
-  },
-
-  hasReservation(sessionId: string): boolean {
-    return sessionReserves.has(sessionId);
-  },
-
-  getReservationAmount(sessionId: string): number {
-    return sessionReserves.get(sessionId) ?? 0;
   },
 
   /**
@@ -328,24 +263,6 @@ export const paymentService = {
     } catch (error) {
       throw new Error(getApiErrorMessage(error, 'Failed to load packages.'));
     }
-  },
-
-  async listPackages(): Promise<TokenPackage[]> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(250);
-    return MOCK_TOKEN_PACKAGES;
-  },
-
-  async listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(250);
-    return MOCK_SUBSCRIPTION_PLANS;
   },
 
   async listTokenUsage(): Promise<TokenUsageRecord[]> {
@@ -368,17 +285,12 @@ export const paymentService = {
   },
 
   async createOrder(packageId: string): Promise<CreateOrderResult> {
-    if (usesMockData('payment')) {
-      const order = buildMockOrder(packageId);
-      if (!order) throw new Error('PAYMENT_PACKAGE_NOT_FOUND');
-      await mockDelay(500);
-      pendingOrders.set(order.orderId, order);
-      persistState();
-      return { order };
-    }
-
     try {
-      const response = await apiClient.post<unknown>(paymentEndpoints.createOrder, { packageId });
+      const response = await apiClient.post<unknown>(paymentEndpoints.createOrder, {
+        packageId,
+        returnUrl: `${window.location.origin}/payment/callback`,
+        cancelUrl: `${window.location.origin}/payment/callback?status=CANCELLED`,
+      });
       const dto = parseOrderResponse(response.data);
       if (!dto) {
         throw new Error('INVALID_ORDER_RESPONSE');
@@ -431,6 +343,18 @@ export const paymentService = {
     }
   },
 
+  async getMyOrdersPage(params?: { cursor?: string | null; limit?: number }): Promise<CursorPage<PaymentOrderDetail>> {
+    const response = await apiClient.get<unknown>(paymentEndpoints.listMyOrders, {
+      params: { ...(params?.cursor ? { cursor: params.cursor } : {}), ...(params?.limit ? { limit: params.limit } : {}) },
+    });
+    const items = unwrapOrderList(response.data)
+      .map(parseOrderResponse)
+      .filter((item): item is NonNullable<typeof item> => item != null)
+      .map(toPaymentOrderDetail);
+    const nextCursor = response.headers['x-next-cursor'] ?? null;
+    return { items, nextCursor: typeof nextCursor === 'string' && nextCursor ? nextCursor : null };
+  },
+
   async fetchOrderDetail(orderId: string): Promise<PaymentOrderDetail> {
     try {
       const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));
@@ -477,21 +401,8 @@ export const paymentService = {
   },
 
   async getOrderStatus(orderId: string): Promise<string> {
-    try {
-      const response = await apiClient.get<unknown>(paymentEndpoints.getOrderStatus(orderId));
-      return parseOrderStatus(response.data);
-    } catch (error) {
-      if (!shouldUseMockOrderFallback(error)) {
-        throw mapPaymentOrderError(error, 'Failed to load order status.');
-      }
-      await mockDelay(200);
-      const order = pendingOrders.get(orderId);
-      if (!order) return 'NotFound';
-      if (order.status === 'paid') return 'Paid';
-      if (order.status === 'cancelled') return 'Cancelled';
-      if (order.status === 'failed') return 'Failed';
-      return 'Pending';
-    }
+    const response = await apiClient.get<unknown>(paymentEndpoints.getOrderStatus(orderId));
+    return parseOrderStatus(response.data);
   },
 
   async fetchOrderStatus(orderId: string): Promise<PaymentOrderStatusResult> {
@@ -520,7 +431,7 @@ export const paymentService = {
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const status = await paymentService.getOrderStatus(orderId);
-      if (status === 'Paid' || status === 'Failed' || status === 'Cancelled' || status === 'Canceled') {
+      if (['Paid', 'Failed', 'Expired', 'Cancelled', 'Canceled', 'Refunded'].includes(status)) {
         return status;
       }
       await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
@@ -529,153 +440,4 @@ export const paymentService = {
     throw new Error('ORDER_STATUS_TIMEOUT');
   },
 
-  async completeOrder(orderId: string, status: 'PAID' | 'FAILED' | 'CANCELLED'): Promise<CompleteOrderResult> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(800);
-
-    const order = pendingOrders.get(orderId);
-    if (!order) {
-      throw new Error('ORDER_NOT_FOUND');
-    }
-
-    if (status !== 'PAID') {
-      order.status = status === 'FAILED' ? 'failed' : 'cancelled';
-      pendingOrders.set(orderId, order);
-      persistState();
-      return { order, wallet: buildSnapshot() };
-    }
-
-    order.status = 'paid';
-    walletBalance += order.tokens;
-    const isSubscription = order.packageId.startsWith('sub-');
-
-    transactions.unshift({
-      id: `tx-${crypto.randomUUID().slice(0, 8)}`,
-      type: isSubscription ? 'subscription' : 'purchase',
-      amount: order.amountUsd,
-      tokensDelta: order.tokens,
-      description: `${order.packageName} purchase`,
-      descriptionVi: `Mua ${order.packageNameVi}`,
-      createdAt: new Date().toISOString(),
-      status: 'completed',
-    });
-
-    pendingOrders.delete(orderId);
-    persistState();
-    return { order, wallet: buildSnapshot() };
-  },
-
-  async reserveTokens(
-    sessionId: string,
-    amount: number = PRACTICE_RESERVE_ESTIMATE,
-  ): Promise<ReserveTokensResult> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(200);
-
-    if (sessionReserves.has(sessionId)) {
-      return { wallet: buildSnapshot(), reservedAmount: sessionReserves.get(sessionId) ?? amount };
-    }
-
-    if (buildSnapshot().available < amount) {
-      throw new Error('INSUFFICIENT_BALANCE');
-    }
-
-    sessionReserves.set(sessionId, amount);
-
-    transactions.unshift({
-      id: `tx-${crypto.randomUUID().slice(0, 8)}`,
-      type: 'reserve',
-      amount: 0,
-      tokensDelta: 0,
-      description: `Reserved ${amount} tokens for practice session`,
-      descriptionVi: `Giữ ${amount} token cho phiên luyện tập`,
-      createdAt: new Date().toISOString(),
-      status: 'completed',
-      sessionId,
-    });
-
-    tokenUsageRecords.unshift({
-      id: `usage-${crypto.randomUUID().slice(0, 8)}`,
-      sessionId,
-      sessionTitle: 'Practice interview',
-      sessionTitleVi: 'Phien luyen phong van',
-      reservedTokens: amount,
-      actualTokens: 0,
-      settledAt: new Date().toISOString(),
-      status: 'reserved',
-    });
-
-    persistState();
-    return { wallet: buildSnapshot(), reservedAmount: amount };
-  },
-
-  async settleTokens(
-    sessionId: string,
-    actualTokens: number = MOCK_SETTLE_ACTUAL_TOKENS,
-  ): Promise<SettleTokensResult> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(300);
-
-    if (settledSessions.has(sessionId)) {
-      const existing = tokenUsageRecords.find(
-        (item) => item.sessionId === sessionId && item.status === 'settled',
-      );
-      if (existing) {
-        return { wallet: buildSnapshot(), usage: existing };
-      }
-    }
-
-    const reserved = sessionReserves.get(sessionId);
-    if (!reserved) {
-      throw new Error('NO_RESERVATION');
-    }
-
-    sessionReserves.delete(sessionId);
-    walletBalance -= actualTokens;
-    settledSessions.add(sessionId);
-
-    const usage: TokenUsageRecord = {
-      id: `usage-${crypto.randomUUID().slice(0, 8)}`,
-      sessionId,
-      sessionTitle: 'Practice interview',
-      sessionTitleVi: 'Phien luyen phong van',
-      reservedTokens: reserved,
-      actualTokens,
-      settledAt: new Date().toISOString(),
-      status: 'settled',
-    };
-
-    const reservedIndex = tokenUsageRecords.findIndex(
-      (item) => item.sessionId === sessionId && item.status === 'reserved',
-    );
-    if (reservedIndex >= 0) {
-      tokenUsageRecords[reservedIndex] = usage;
-    } else {
-      tokenUsageRecords.unshift(usage);
-    }
-
-    transactions.unshift({
-      id: `tx-${crypto.randomUUID().slice(0, 8)}`,
-      type: 'settlement',
-      amount: 0,
-      tokensDelta: -actualTokens,
-      description: `Settled ${actualTokens} tokens (reserved ${reserved})`,
-      descriptionVi: `Quyet toan ${actualTokens} token (giu ${reserved})`,
-      createdAt: new Date().toISOString(),
-      status: 'completed',
-      sessionId,
-    });
-
-    persistState();
-    return { wallet: buildSnapshot(), usage };
-  },
 };

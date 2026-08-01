@@ -1,4 +1,3 @@
-import { Layers } from 'lucide-react';
 import { SelectionOption } from '@/components/ui/selection-option';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
@@ -28,13 +27,12 @@ export function RoadmapDomainStep({
 
   return (
     <SectionPanel
-      icon={<Layers className="size-4" aria-hidden />}
       title={t('practice.roadmapWizard.domain.title')}
       description={t('practice.roadmapWizard.domain.description')}
       isLoading={isLoading}
       footer={<RoadmapWizardNav nextDisabled={!selectedId} onNext={onNext} backDisabled />}
     >
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         {domains.map((domain) => (
           <SelectionOption
             key={domain.id}

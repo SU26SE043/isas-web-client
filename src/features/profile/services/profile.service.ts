@@ -1,5 +1,4 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
-import { paymentService } from '@/features/payment/services/payment.service';
 import { MOCK_CANDIDATE_PROFILE, MOCK_DASHBOARD_SUMMARY } from '../mocks/profile.fixtures';
 import type {
   CandidateProfile,
@@ -62,24 +61,16 @@ export const profileService = {
     return {
       ...MOCK_DASHBOARD_SUMMARY,
       hasCv: hasCvUploaded,
-      tokenBalance: paymentService.getBalance(),
-      tokenReserved: paymentService.getReservedBalance(),
-      tokenAvailable: paymentService.getAvailableBalance(),
-      creditsRemaining: paymentService.getAvailableBalance(),
+      tokenBalance: MOCK_DASHBOARD_SUMMARY.tokenBalance,
+      tokenReserved: MOCK_DASHBOARD_SUMMARY.tokenReserved,
+      tokenAvailable: MOCK_DASHBOARD_SUMMARY.tokenAvailable,
+      creditsRemaining: MOCK_DASHBOARD_SUMMARY.creditsRemaining,
     };
   },
 
   async markCvUploaded(): Promise<void> {
     if (!usesMockData('profile')) return;
     hasCvUploaded = true;
-  },
-
-  async reservePracticeTokens(sessionId: string): Promise<number> {
-    if (!usesMockData('profile')) {
-      throw new Error('Profile API is not wired yet. Keep usesMockData("profile") true.');
-    }
-    const result = await paymentService.reserveTokens(sessionId);
-    return result.wallet.available;
   },
 
   async updateCareerGoal(goal: CareerGoal): Promise<CandidateProfile> {

@@ -29,6 +29,7 @@ import { CheckoutPage } from '@/features/payment/pages/CheckoutPage';
 import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPage';
 import { PaymentSuccessPage } from '@/features/payment/pages/PaymentSuccessPage';
 import { PaymentFailedPage } from '@/features/payment/pages/PaymentFailedPage';
+import { PaymentOrderDetailPage } from '@/features/payment/pages/PaymentOrderDetailPage';
 import { HelpPage } from '@/features/engagement/pages/HelpPage';
 import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
 import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
@@ -65,33 +66,44 @@ export const candidateRoutes: RouteObject[] = [
         children: [
           {
             path: '/candidate/learning',
-            element: <LearningLayout />,
+            element: <DashboardLayout />,
             children: [
-              { index: true, element: <LearningHubPage /> },
-              { path: 'roadmaps/:roadmapId', element: <LearningRoadmapDetailPage /> },
               {
-                path: 'roadmaps/:roadmapId/report',
-                element: <LearningRoadmapReportPage />,
-              },
-              {
-                path: 'roadmaps/:roadmapId/lessons/:lessonId',
-                element: <LearningReaderLayout />,
+                element: <LearningLayout />,
                 children: [
-                  { path: 'theory', element: <LearningTheoryPage /> },
                   {
-                    path: 'practice/device-check',
-                    element: <LearningPracticeDeviceCheckPage />,
+                    index: true,
+                    element: <LearningHubPage />,
                   },
-                  { path: 'practice', element: <LearningLessonPracticePage /> },
                   {
-                    path: 'practice/questions/:questionId/report',
-                    element: <LearningQuestionReportPage />,
+                    path: 'roadmaps/:roadmapId',
+                    element: <LearningRoadmapDetailPage />,
                   },
-                  { path: 'report', element: <LearningPracticeReportPage /> },
+                  {
+                    path: 'roadmaps/:roadmapId/report',
+                    element: <LearningRoadmapReportPage />,
+                  },
+                  {
+                    path: 'roadmaps/:roadmapId/lessons/:lessonId',
+                    element: <LearningReaderLayout />,
+                    children: [
+                      { path: 'theory', element: <LearningTheoryPage /> },
+                      {
+                        path: 'practice/device-check',
+                        element: <LearningPracticeDeviceCheckPage />,
+                      },
+                      { path: 'practice', element: <LearningLessonPracticePage /> },
+                      {
+                        path: 'practice/questions/:questionId/report',
+                        element: <LearningQuestionReportPage />,
+                      },
+                      { path: 'report', element: <LearningPracticeReportPage /> },
+                    ],
+                  },
+                  { path: ':moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
+                  { path: ':moduleId', element: <Navigate to="/candidate/learning" replace /> },
                 ],
               },
-              { path: ':moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
-              { path: ':moduleId', element: <Navigate to="/candidate/learning" replace /> },
             ],
           },
           {
@@ -141,6 +153,7 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'leaderboard', element: <LeaderboardPage /> },
               { path: 'achievements', element: <AchievementsPage /> },
               { path: 'credits', element: <CreditsWalletPage /> },
+              { path: 'orders/:orderId', element: <PaymentOrderDetailPage /> },
               { path: 'usage', element: <TokenUsagePage /> },
               { path: 'subscription', element: <SubscriptionPlansPage /> },
               { path: 'payment', element: <CheckoutPage /> },
