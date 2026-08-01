@@ -104,7 +104,10 @@ export function useB2cPracticeRoom(
     onPlaybackStart: () => setPhase('reading'),
     onPlaybackComplete: () => {
       const questionId = useB2cPracticeInterviewStore.getState().currentQuestionId;
-      if (questionId) startQuestionCountdown(questionId);
+      if (!questionId || store.remainingSeconds <= 0) return;
+      setPhase('answering');
+      recorder.startRecording();
+      useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
     },
   });
 

@@ -17,7 +17,7 @@ export function QuestionStartCountdown({ visible, value }: QuestionStartCountdow
 
   return (
     <div
-      className="absolute inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 backdrop-blur-md"
+      className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-xl"
       role="dialog"
       aria-modal="true"
       aria-label={t('practice.countdown.ariaLabel')}
