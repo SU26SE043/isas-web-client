@@ -1,16 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
-import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 import { FeatureCvIllustration } from './FeatureCvIllustration';
 
 export const FeaturesSection: React.FC = () => {
-  const { openAuthModal } = useMarketingAuthModal();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
-    <section id="features" className="py-24 bg-surface-raised">
+    <section id="features" className="bg-transparent py-24">
       <div className="w-full px-6 lg:px-20 xl:px-32">
         <motion.div 
           className="text-center mb-20"
@@ -49,7 +49,7 @@ export const FeaturesSection: React.FC = () => {
               </p>
               <button
                 type="button"
-                onClick={() => openAuthModal('signup')}
+                onClick={() => navigate('/candidate/cv/analysis')}
                 className="btn-slice mt-auto px-8 py-4 text-lg"
               >
                 <span className="text">
