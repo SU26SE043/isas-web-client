@@ -164,7 +164,12 @@ export const practiceSessionService = {
     }
 
     if (!usesMockData('practice')) {
-      throw new Error('Practice questions API is not wired yet. Keep usesMockData("practice") true.');
+      const detail = await getPracticeSession(sessionId);
+      return detail.questions.map((question) => ({
+        id: question.id,
+        content: question.content,
+        timeLimitSeconds: question.timeLimitSec,
+      }));
     }
 
     await mockDelay(800);
