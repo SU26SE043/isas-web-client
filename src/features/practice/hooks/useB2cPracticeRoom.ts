@@ -21,7 +21,10 @@ const COUNTDOWN_START_HOLD_MS = 800;
 export type InterviewPhase = 'loading' | 'reading' | 'countdown' | 'answering' | 'submitting';
 type CountdownValue = number | 'START' | null;
 
-export function useB2cPracticeRoom(sessionId: string, options?: { completePath?: string }) {
+export function useB2cPracticeRoom(
+  sessionId: string,
+  options?: { completePath?: string; startWithCountdown?: boolean },
+) {
   const navigate = useNavigate();
   const completePath = options?.completePath;
   const store = useB2cPracticeInterviewStore();
@@ -32,6 +35,9 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   const [showTimerWarning, setShowTimerWarning] = useState(false);
   const [phase, setPhase] = useState<InterviewPhase>('loading');
   const [countdownValue, setCountdownValue] = useState<CountdownValue>(null);
+  const [initialCountdownComplete, setInitialCountdownComplete] = useState(
+    !options?.startWithCountdown,
+  );
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const warned10Ref = useRef(false);
@@ -41,6 +47,7 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
   const countdownQuestionRef = useRef<string | null>(null);
   const media = useInterviewMedia(micEnabled, cameraEnabled);
   const recorder = usePracticeAnswerRecorder(media.stream);
+  const sessionReady = store.sessionId === sessionId && store.questions.length > 0;
 
   const clearQuestionCountdown = useCallback(() => {
     if (countdownIntervalRef.current != null) {
@@ -55,7 +62,7 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
     setCountdownValue(null);
   }, []);
 
-  const startQuestionCountdown = useCallback((questionId: string) => {
+  const startQuestionCountdown = useCallback((questionId: string, startRecording = true) => {
     if (media.state !== 'ready' || countdownIntervalRef.current != null) return;
     if (questionId !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
 
@@ -80,15 +87,20 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
         countdownTimeoutRef.current = null;
         if (countdownQuestionRef.current !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
         setCountdownValue(null);
-        setPhase('answering');
-        recorder.startRecording();
-        useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
+        if (startRecording) {
+          setPhase('answering');
+          recorder.startRecording();
+          useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
+        } else {
+          setInitialCountdownComplete(true);
+          setPhase('reading');
+        }
       }, COUNTDOWN_START_HOLD_MS);
     }, COUNTDOWN_STEP_MS);
   }, [clearQuestionCountdown, media.state, recorder]);
 
   const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
-    enabled: media.state === 'ready',
+    enabled: media.state === 'ready' && initialCountdownComplete && sessionReady,
     onPlaybackStart: () => setPhase('reading'),
     onPlaybackComplete: () => {
       const questionId = useB2cPracticeInterviewStore.getState().currentQuestionId;
@@ -177,6 +189,12 @@ export function useB2cPracticeRoom(sessionId: string, options?: { completePath?:
     answerSubmit.setAnswerError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearQuestionCountdown, media.state, store.currentQuestionId]);
+
+  useEffect(() => {
+    if (initialCountdownComplete || !options?.startWithCountdown) return;
+    if (!sessionReady || media.state !== 'ready' || !store.currentQuestionId) return;
+    startQuestionCountdown(store.currentQuestionId, false);
+  }, [initialCountdownComplete, media.state, options?.startWithCountdown, sessionReady, startQuestionCountdown, store.currentQuestionId]);
 
   useEffect(() => () => clearQuestionCountdown(), [clearQuestionCountdown]);
 

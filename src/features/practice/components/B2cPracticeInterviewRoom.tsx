@@ -13,6 +13,7 @@ import { B2cPracticeRoomModals } from './B2cPracticeRoomModals';
 import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
 import { AudioRecorderModal } from './audio-recorder/AudioRecorderModal';
 import { QuestionStartCountdown } from './QuestionStartCountdown';
+import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import {
@@ -24,12 +25,13 @@ import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 interface B2cPracticeInterviewRoomProps {
   sessionId: string;
   completePath?: string;
+  startWithCountdown?: boolean;
 }
 
-export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId, { completePath });
+  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown });
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
   const interviewCompleteToastRef = useRef(false);
@@ -100,6 +102,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} />
+      <FullscreenExitBanner />
 
       {room.media.state === 'error' ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">

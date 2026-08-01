@@ -17,6 +17,7 @@ import { getLearningPracticeSession } from '../services/learningPracticeSession.
 import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
 import { loadFlowProgress, saveFlowProgress } from '../utils/interviewFlowStorage';
+import { requestInterviewFullscreen } from '../hooks/useInterviewFullscreen';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -90,7 +91,7 @@ export const WaitingRoomPage: React.FC = () => {
   useEffect(() => {
     if (redirectToPrep || isLearning || status !== 'ready') return;
     const timer = window.setTimeout(() => {
-      navigate(`/interview/${sessionId}/room`);
+      navigate(`/interview/${sessionId}/room?start=countdown`);
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [isLearning, navigate, redirectToPrep, sessionId, status]);
@@ -101,6 +102,7 @@ export const WaitingRoomPage: React.FC = () => {
     setIsStarting(true);
     setStartError(null);
     try {
+      await requestInterviewFullscreen();
       const result = await startLearningLessonPractice({
         roadmapId: learningMeta.roadmapId,
         lessonId: learningMeta.lessonId,
@@ -137,7 +139,7 @@ export const WaitingRoomPage: React.FC = () => {
         });
         useInterviewFlowStore.getState().hydrate(nextSessionId);
       }
-      navigate(`/interview/${nextSessionId}/room`, { replace: true });
+      navigate(`/interview/${nextSessionId}/room?start=countdown`, { replace: true });
     } catch {
       setStartError('generic');
     } finally {
@@ -187,7 +189,10 @@ export const WaitingRoomPage: React.FC = () => {
             <button
               type="button"
               className="btn-primary mt-4"
-              onClick={() => navigate(`/interview/${sessionId}/room`)}
+              onClick={async () => {
+                await requestInterviewFullscreen();
+                navigate(`/interview/${sessionId}/room?start=countdown`);
+              }}
             >
               {t('practice.flow.waiting.enterAnyway')}
             </button>
