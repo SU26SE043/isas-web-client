@@ -1,6 +1,7 @@
 import {
   BadgeCheck,
   BriefcaseBusiness,
+  ChartNoAxesCombined,
   Lightbulb,
   Link2,
   ListChecks,
@@ -66,6 +67,34 @@ function formatScore(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+function ScoreRing({ score, maxScore }: { score: number; maxScore: number }) {
+  const percentage = Math.max(0, Math.min(100, maxScore > 0 ? (score / maxScore) * 100 : 0));
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <div className="relative size-24 shrink-0" role="img" aria-label={`${Math.round(percentage)}%`}>
+      <svg className="size-full -rotate-90" viewBox="0 0 80 80" aria-hidden>
+        <circle cx="40" cy="40" r={radius} fill="none" className="stroke-surface-highlight" strokeWidth="6" />
+        <circle
+          cx="40"
+          cy="40"
+          r={radius}
+          fill="none"
+          className="stroke-info transition-[stroke-dashoffset] duration-500"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - (percentage / 100) * circumference}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <ChartNoAxesCombined className="size-5 text-info" aria-hidden />
+      </div>
+    </div>
+  );
+}
+
 export function QuestionCriteriaPanel({
   criteria,
   score,
@@ -78,30 +107,47 @@ export function QuestionCriteriaPanel({
   const { t } = useLanguage();
 
   return (
-    <section className="rounded-xl border border-satin p-3 sm:p-4">
-      <h4 className="flex items-center gap-2 font-semibold text-foreground">
-        <SlidersHorizontal className="size-4 text-info-light" aria-hidden />
-        {t('practice.result.criteriaScores')}
-      </h4>
+    <section className="overflow-hidden rounded-xl border border-satin bg-surface-raised">
+      <div className="flex items-center gap-3 border-b border-satin px-4 py-3">
+        <span className="inline-flex size-8 items-center justify-center rounded-lg border border-info/25 bg-info/10 text-info-light">
+          <SlidersHorizontal className="size-4" aria-hidden />
+        </span>
+        <h4 className="font-semibold text-foreground">{t('practice.result.criteriaScores')}</h4>
+      </div>
 
-      <div className="mt-3 space-y-2">
+      {score != null && maxScore != null ? (
+        <div className="flex items-center gap-4 border-b border-satin bg-surface-base/40 px-4 py-4">
+          <ScoreRing score={score} maxScore={maxScore} />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {t('practice.result.questionScore')}
+            </p>
+            <p className="mt-1 flex items-baseline gap-1 tabular-nums">
+              <span className="text-3xl font-semibold text-info-light">{formatScore(score)}</span>
+              <span className="text-lg text-muted-foreground">/ {formatScore(maxScore)}</span>
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="space-y-2 p-3 sm:p-4">
         {criteria.map((criterion, index) => {
           const tone = criterionTones[index % criterionTones.length];
           const Icon = tone.icon;
           const pct = Math.max(0, Math.min(100, criterion.pct));
 
           return (
-            <div key={criterion.name} className="frame-satin-soft rounded-lg px-3 py-2.5">
+            <div key={criterion.name} className="frame-satin-soft rounded-xl bg-surface-overlay/75 px-3 py-3">
               <div className="flex items-start gap-3">
                 <span
-                  className={`mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg border ${tone.well} ${tone.text}`}
+                  className={`mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full border ${tone.well} ${tone.text}`}
                 >
                   <Icon className="size-4" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium leading-snug text-foreground">{criterion.name}</p>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                    <span className={`shrink-0 rounded-lg border border-satin bg-surface-elevated px-2 py-1 text-sm font-semibold tabular-nums ${tone.text}`}>
                       {formatScore(criterion.score)} / {formatScore(criterion.maxScore)}
                     </span>
                   </div>
@@ -111,7 +157,7 @@ export function QuestionCriteriaPanel({
                     </p>
                   ) : null}
                   <div
-                    className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-highlight"
+                    className="mt-3 h-2 overflow-hidden rounded-full bg-surface-highlight"
                     role="progressbar"
                     aria-label={criterion.name}
                     aria-valuemin={0}
@@ -127,16 +173,6 @@ export function QuestionCriteriaPanel({
         })}
       </div>
 
-      {score != null && maxScore != null ? (
-        <div className="mt-3 flex items-center justify-between border-t border-satin/70 pt-3">
-          <span className="text-sm font-medium text-muted-foreground">
-            {t('practice.result.questionScore')}
-          </span>
-          <span className="font-semibold tabular-nums text-info-light">
-            {formatScore(score)} / {formatScore(maxScore)}
-          </span>
-        </div>
-      ) : null}
     </section>
   );
 }
