@@ -67,11 +67,11 @@ export function AnswerRecorderCard({
       <div className="relative">
         <button
           type="button"
-          className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-violet-400/60 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-4 text-base font-semibold text-white shadow-[0_0_28px_-8px_rgba(124,58,237,0.95)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-info/70 bg-info/10 px-4 py-4 text-base font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={disabled || status === 'submitting'}
           onClick={onOpenRecorder}
         >
-          <AudioWaveform className="size-5" aria-hidden />
+          <AudioWaveform className="size-5 text-info" aria-hidden />
           {alreadySubmitted
             ? t('practice.audioRecorder.openAgain')
             : t('practice.audioRecorder.open')}
