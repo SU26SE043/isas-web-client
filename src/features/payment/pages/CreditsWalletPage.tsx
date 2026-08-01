@@ -15,12 +15,23 @@ import { PRACTICE_RESERVE_ESTIMATE } from '../constants';
 
 export const CreditsWalletPage: React.FC = () => {
   const { t } = useLanguage();
-  const { wallet, balance, reserved, available, isLoading } = useTokenWallet();
+  const { wallet, balance, reserved, available, isLoading, isError, reload } = useTokenWallet();
 
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
+      </div>
+    );
+  }
+
+  if (isError || !wallet || balance == null || reserved == null || available == null) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm text-muted-foreground">{t('payment.result.loadError')}</p>
+        <button type="button" className="btn-secondary" onClick={() => void reload()}>
+          {t('payment.result.retry')}
+        </button>
       </div>
     );
   }
@@ -84,14 +95,16 @@ export const CreditsWalletPage: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(wallet?.transactions ?? []).map((transaction) => (
+              {wallet.transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>
+                    {t(`payment.transactions.${transaction.type}`)}
+                  </TableCell>
                   <TableCell className="text-right">{transaction.tokensDelta.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
-              {(wallet?.transactions.length ?? 0) === 0 ? (
+              {wallet.transactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
                     {t('payment.transactions.empty')}

@@ -7,12 +7,23 @@ import { useTokenUsage } from '../hooks/useTokenWallet';
 
 export const TokenUsagePage: React.FC = () => {
   const { t } = useLanguage();
-  const { usage, isLoading } = useTokenUsage();
+  const { usage, isLoading, isError, reload } = useTokenUsage();
 
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm text-muted-foreground">{t('payment.result.loadError')}</p>
+        <button type="button" className="btn-secondary" onClick={() => void reload()}>
+          {t('payment.result.retry')}
+        </button>
       </div>
     );
   }

@@ -18,11 +18,12 @@ export function useTokenWallet() {
 
   return {
     wallet: query.data ?? null,
-    balance: query.data?.balance ?? 0,
-    reserved: query.data?.reserved ?? 0,
-    available: query.data?.available ?? 0,
+    balance: query.data?.balance ?? null,
+    reserved: query.data?.reserved ?? null,
+    available: query.data?.available ?? null,
     isLoading: query.isLoading,
     isError: query.isError,
+    error: query.error,
     reload: query.refetch,
   };
 }
@@ -37,6 +38,7 @@ export function useTokenUsage() {
     usage: query.data ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
+    error: query.error,
     reload: query.refetch,
   };
 }

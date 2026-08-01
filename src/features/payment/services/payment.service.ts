@@ -16,6 +16,7 @@ import type {
   SubscriptionPlan,
   TokenPackage,
   TokenUsageRecord,
+  WalletTransaction,
   WalletSnapshot,
 } from '../types/payment.types';
 import {
@@ -81,8 +82,87 @@ function unwrapList(payload: unknown): unknown[] {
   if (payload && typeof payload === 'object' && 'data' in payload) {
     const nested = (payload as { data: unknown }).data;
     if (Array.isArray(nested)) return nested;
+    if (nested && typeof nested === 'object' && 'items' in nested) {
+      const items = (nested as { items: unknown }).items;
+      if (Array.isArray(items)) return items;
+    }
+  }
+  if (payload && typeof payload === 'object' && 'items' in payload) {
+    const items = (payload as { items: unknown }).items;
+    if (Array.isArray(items)) return items;
   }
   return [];
+}
+
+interface LivePaymentAccount {
+  remainingCredits: number;
+  reservedCredits: number;
+}
+
+interface LiveCreditTransaction {
+  id: string;
+  delta: number;
+  reason: number;
+  sessionId: string | null;
+  orderId: string | null;
+  createdAt: string;
+}
+
+function parseLiveAccount(payload: unknown): LivePaymentAccount {
+  const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const data = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
+  return {
+    remainingCredits: toInt(data.remainingCredits),
+    reservedCredits: toInt(data.reservedCredits),
+  };
+}
+
+function parseLiveTransaction(payload: unknown): LiveCreditTransaction | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const raw = payload as Record<string, unknown>;
+  const data = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
+  const id = String(data.id ?? '').trim();
+  const createdAt = String(data.createdAt ?? '').trim();
+  if (!id || !createdAt) return null;
+  return {
+    id,
+    delta: toInt(data.delta),
+    reason: toInt(data.reason, -1),
+    sessionId: data.sessionId == null ? null : String(data.sessionId),
+    orderId: data.orderId == null ? null : String(data.orderId),
+    createdAt,
+  };
+}
+
+function transactionType(reason: number, delta: number): WalletTransaction['type'] {
+  if (reason === 4) return 'refund';
+  if (reason === 5) return 'purchase';
+  if (reason === 2 || reason === 3) return 'consumption';
+  return delta < 0 ? 'consumption' : 'purchase';
+}
+
+function toWalletTransaction(transaction: LiveCreditTransaction): WalletTransaction {
+  const type = transactionType(transaction.reason, transaction.delta);
+  return {
+    id: transaction.id,
+    type,
+    amount: 0,
+    tokensDelta: transaction.delta,
+    description: type,
+    descriptionVi: type,
+    createdAt: transaction.createdAt,
+    status: 'completed',
+    sessionId: transaction.sessionId ?? undefined,
+  };
+}
+
+async function fetchLiveCreditTransactions(): Promise<LiveCreditTransaction[]> {
+  const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions);
+  const payload = unwrapList(response.data);
+  return payload
+    .map(parseLiveTransaction)
+    .filter((item): item is LiveCreditTransaction => item != null)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 const STORAGE_KEY = 'isas-mock-payment-wallet';
@@ -202,12 +282,17 @@ function shouldUseMockOrderFallback(error: unknown): boolean {
 
 export const paymentService = {
   async getWallet(): Promise<WalletSnapshot> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(300);
-    return buildSnapshot();
+    const [accountResponse, liveTransactions] = await Promise.all([
+      apiClient.get<unknown>(paymentEndpoints.walletAccount),
+      fetchLiveCreditTransactions(),
+    ]);
+    const account = parseLiveAccount(accountResponse.data);
+    return {
+      balance: account.remainingCredits + account.reservedCredits,
+      reserved: account.reservedCredits,
+      available: account.remainingCredits,
+      transactions: liveTransactions.map(toWalletTransaction),
+    };
   },
 
   getBalance(): number {
@@ -264,14 +349,22 @@ export const paymentService = {
   },
 
   async listTokenUsage(): Promise<TokenUsageRecord[]> {
-    if (!usesMockData('payment')) {
-      throw new Error('Payment API is not wired yet. Keep usesMockData("payment") true.');
-    }
-
-    await mockDelay(300);
-    return [...tokenUsageRecords].sort(
-      (a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime(),
-    );
+    const transactions = await fetchLiveCreditTransactions();
+    return transactions
+      .filter((transaction) => transaction.sessionId)
+      .map((transaction) => {
+        const actualTokens = Math.max(0, -transaction.delta);
+        return {
+          id: transaction.id,
+          sessionId: transaction.sessionId as string,
+          sessionTitle: transaction.sessionId as string,
+          sessionTitleVi: transaction.sessionId as string,
+          reservedTokens: actualTokens,
+          actualTokens,
+          settledAt: transaction.createdAt,
+          status: 'settled' as const,
+        };
+      });
   },
 
   async createOrder(packageId: string): Promise<CreateOrderResult> {
