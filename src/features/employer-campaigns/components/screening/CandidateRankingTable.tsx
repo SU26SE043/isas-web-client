@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
-import { canSelectCandidate } from './screeningUtils';
+import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -43,6 +43,7 @@ export function CandidateRankingTable({
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
   const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
+  const candidateRanks = getCandidateRanks(candidates);
 
   useEffect(() => {
     setPage(1);
@@ -102,7 +103,7 @@ export function CandidateRankingTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageItems.map((item, index) => {
+          {pageItems.map((item) => {
             const selectable = canSelectCandidate(item);
             return (
               <TableRow key={item.id}>
@@ -117,7 +118,7 @@ export function CandidateRankingTable({
                   />
                 </TableCell>
                 <TableCell className="font-semibold text-foreground">
-                  {(page - 1) * pageSize + index + 1}
+                  {candidateRanks.get(item.id) ?? '—'}
                 </TableCell>
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>

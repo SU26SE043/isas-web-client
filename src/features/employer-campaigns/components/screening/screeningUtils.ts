@@ -9,6 +9,33 @@ export function canSelectCandidate(item: CampaignCandidateListItem): boolean {
   return true;
 }
 
+/**
+ * Builds competition ranks from the candidate match percentages.
+ * Candidates with the same score share a rank; unscored candidates are unranked.
+ */
+export function getCandidateRanks(
+  candidates: CampaignCandidateListItem[],
+): Map<string, number> {
+  const ranks = new Map<string, number>();
+  const scoredCandidates = candidates
+    .filter((candidate) => candidate.overallMatchScore != null)
+    .sort((left, right) => right.overallMatchScore! - left.overallMatchScore!);
+  let scoredPosition = 0;
+  let previousScore: number | null = null;
+  let previousRank = 0;
+
+  scoredCandidates.forEach((candidate) => {
+    const score = candidate.overallMatchScore ?? null;
+    scoredPosition += 1;
+    const rank = score === previousScore ? previousRank : scoredPosition;
+    ranks.set(candidate.id, rank);
+    previousScore = score;
+    previousRank = rank;
+  });
+
+  return ranks;
+}
+
 export function pdfValidationMessageKey(code: CampaignPdfErrorCode): string {
   switch (code) {
     case 'notPdf':
