@@ -16,6 +16,11 @@ const envSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value ?? ''),
+  VITE_PHOTON_API_URL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value ?? ''),
   MODE: z.enum(['development', 'production', 'test']),
   DEV: z.boolean(),
   PROD: z.boolean(),
@@ -26,6 +31,7 @@ function parseEnv() {
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_ENABLE_ENTERPRISE_SSO: import.meta.env.VITE_ENABLE_ENTERPRISE_SSO,
     VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+    VITE_PHOTON_API_URL: import.meta.env.VITE_PHOTON_API_URL,
     MODE: import.meta.env.MODE,
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
@@ -60,4 +66,9 @@ export function isDevEnvironment(): boolean {
 /** Enterprise SAML/OIDC SSO — gated per tenant; enable via VITE_ENABLE_ENTERPRISE_SSO=true */
 export function isEnterpriseSsoEnabled(): boolean {
   return env.VITE_ENABLE_ENTERPRISE_SSO;
+}
+
+export function getPhotonApiUrl(): string {
+  const configured = env.VITE_PHOTON_API_URL.trim();
+  return configured || 'https://photon.komoot.io/api/';
 }

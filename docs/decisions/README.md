@@ -35,6 +35,7 @@ count as the Harness decision log.
 | 0011 | Payment redirect session contract | [0011-payment-redirect-session-contract.md](./0011-payment-redirect-session-contract.md) |
 | 0012 | Google OAuth one-time code exchange | [0012-google-oauth-one-time-code.md](./0012-google-oauth-one-time-code.md) |
 | 0013 | Organization member administration boundary | [0013-org-member-admin-boundary.md](./0013-org-member-admin-boundary.md) |
+| 0018 | Campaign location provider boundary | [0018-campaign-location-provider-boundary.md](./0018-campaign-location-provider-boundary.md) |
 
 Add a decision when:
 

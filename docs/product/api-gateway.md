@@ -48,6 +48,7 @@ Role **values** (e.g. `Candidate`, `OrgAdmin`) stay PascalCase strings; see [`au
 | Variable | Purpose |
 | --- | --- |
 | `VITE_API_BASE_URL` | Gateway origin (document in `.env.example` when added) |
+| `VITE_PHOTON_API_URL` | Optional Photon geocoding instance/proxy for campaign location autocomplete; not an API Gateway route |
 
 ## Error handling
 

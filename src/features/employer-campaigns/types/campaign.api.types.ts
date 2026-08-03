@@ -102,6 +102,7 @@ export type GenerateCampaignQuestionsParams = {
 export type CampaignCreateRequest = {
   title: string;
   domain: string;
+  location: string;
   maxCandidates?: number | null;
   timeLimitMinutes: number;
   /** 0..100; null = HR decides */
@@ -139,6 +140,7 @@ export type CampaignStatusUpdateRequest = {
 export type CampaignUpdateRequest = {
   title?: string;
   domain?: string;
+  location?: string;
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
   antiCheatEnabled?: boolean;
