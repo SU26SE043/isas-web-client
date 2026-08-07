@@ -658,6 +658,9 @@ export const practiceTranslations: TranslationDictionary = {
 
     'practice.progress.title': 'Tiến độ',
     'practice.progress.loading': 'Đang tải tiến độ',
+    'practice.progress.errorTitle': 'Không thể tải tiến độ',
+    'practice.progress.errorDescription': 'Đã xảy ra lỗi khi tải dữ liệu tiến độ. Vui lòng thử lại.',
+    'practice.progress.retry': 'Thử lại',
     'practice.progress.status.completed': 'Hoàn thành',
     'practice.progress.status.inProgress': 'Đang học',
     'practice.progress.status.locked': 'Chưa mở khóa',
@@ -1685,6 +1688,9 @@ export const practiceTranslations: TranslationDictionary = {
 
     'practice.progress.title': 'Progress',
     'practice.progress.loading': 'Loading progress',
+    'practice.progress.errorTitle': 'Unable to load progress',
+    'practice.progress.errorDescription': 'Something went wrong while loading progress data. Please try again.',
+    'practice.progress.retry': 'Try again',
     'practice.progress.status.completed': 'Completed',
     'practice.progress.status.inProgress': 'In Progress',
     'practice.progress.status.locked': 'Locked',
