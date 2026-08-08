@@ -13,7 +13,7 @@ const user = {
   id: 'user-1',
   email: 'owner@isas.dev',
   fullName: 'Organization Owner',
-  role: 'OrgAdmin',
+  role: 'Employer',
   orgId: 'org-1',
   orgName: 'ISAS Labs',
   orgRole: 'OrgAdmin',
@@ -66,8 +66,8 @@ test.describe('Admin Auth directory APIs', () => {
     await expect(page.getByRole('table').getByText('Organization Owner')).toBeVisible();
     await expect.poll(() => userQueries.at(-1)?.get('limit')).toBe('20');
 
-    await page.getByLabel('Filter by role').selectOption('OrgAdmin');
-    await expect.poll(() => userQueries.at(-1)?.get('role')).toBe('OrgAdmin');
+    await page.getByLabel('Filter by role').selectOption('Employer');
+    await expect.poll(() => userQueries.at(-1)?.get('role')).toBe('Employer');
     await page.getByLabel('Search Admin directory').fill(' owner ');
     await page.getByRole('button', { name: 'Apply' }).click();
     await expect.poll(() => userQueries.at(-1)?.get('search')).toBe('owner');

@@ -158,18 +158,25 @@ describe('Admin Auth directory APIs', () => {
     })).toMatchObject({ id: 'user-1', role: 'Candidate' });
   });
 
-  it('rejects malformed items and clamps invalid limits', () => {
+  it('keeps API platform roles and rejects malformed items', () => {
     expect(() => parseAdminOrganization({ id: 'org-1' }))
       .toThrow('missing required fields');
     expect(() => parseAdminDirectoryUser({ id: 'user-1' }))
       .toThrow('missing required fields');
-    expect(() => parseAdminDirectoryUser({
+    expect(parseAdminDirectoryUser({
       id: 'user-1',
       email: 'legacy@isas.dev',
       fullName: 'Legacy User',
       role: 'Employer',
       createdAt: '2026-07-20T00:00:00.000Z',
-    })).toThrow('missing required fields');
+    })).toMatchObject({ role: 'Employer' });
+    expect(parseAdminDirectoryUser({
+      id: 'user-2',
+      email: 'unassigned@isas.dev',
+      fullName: 'Unassigned User',
+      role: 'No role',
+      createdAt: '2026-07-20T00:00:00.000Z',
+    })).toMatchObject({ role: 'NoRole' });
     expect(buildAdminOrganizationParams({ limit: -10 })).toEqual({ limit: 1 });
   });
 });
