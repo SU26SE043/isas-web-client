@@ -60,7 +60,6 @@ export function CampaignCriteriaStepV2({
     <SectionPanel
       icon={<ClipboardList className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.criteria')}
-      description={t('employer.campaigns.wizard.steps.criteriaDesc')}
       headerAside={
         <CampaignRubricTotalWeight
           totalWeight={totalWeight}

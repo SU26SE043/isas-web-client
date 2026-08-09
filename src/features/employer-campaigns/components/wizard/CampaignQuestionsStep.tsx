@@ -85,7 +85,6 @@ export function CampaignQuestionsStep({
     <SectionPanel
       icon={<HelpCircle className="size-4" aria-hidden />}
       title={t('employer.campaigns.campaignQuestions.title')}
-      description={t('employer.campaigns.campaignQuestions.description')}
       footer={
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button
@@ -138,9 +137,6 @@ export function CampaignQuestionsStep({
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            {t('employer.campaigns.campaignQuestions.question.sourceHint')}
-          </p>
           <Button
             type="button"
             variant="outline"

@@ -5,7 +5,6 @@ import {
   FlowStepMarker,
   flowStepLabelClass,
   resolveFlowStepStatus,
-  type FlowStepStatus,
 } from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
@@ -21,13 +20,6 @@ interface CampaignWizardShellProps {
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
   children: React.ReactNode;
-}
-
-function statusLabelKey(status: FlowStepStatus): string {
-  if (status === 'complete') return 'employer.campaigns.wizard.status.completed';
-  if (status === 'current') return 'employer.campaigns.wizard.status.active';
-  if (status === 'error') return 'employer.campaigns.wizard.status.error';
-  return 'employer.campaigns.wizard.status.pending';
 }
 
 function autosaveLabel(
@@ -73,7 +65,7 @@ export function CampaignWizardShell({
       : t('employer.campaigns.wizard.createTitle');
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[radial-gradient(circle_at_78%_8%,rgba(37,99,235,0.16),transparent_28%),radial-gradient(circle_at_14%_92%,rgba(124,58,237,0.12),transparent_24%)] bg-surface-base">
+    <div className="surface-page flex min-h-[calc(100dvh-3.5rem)] flex-col">
       <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/90 px-4 py-3 backdrop-blur-xl sm:px-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 space-y-1">
@@ -131,10 +123,6 @@ export function CampaignWizardShell({
                   <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
                     <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
                       {t(step.titleKey)}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{t(step.descKey)}</span>
-                    <span className="mt-1 block text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {t(statusLabelKey(status))}
                     </span>
                   </div>
                 </li>

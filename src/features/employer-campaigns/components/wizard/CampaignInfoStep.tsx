@@ -35,7 +35,6 @@ export function CampaignInfoStep({
     <SectionPanel
       icon={<Briefcase className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.info')}
-      description={t('employer.campaigns.wizard.steps.infoDesc')}
       footer={
         <CampaignWizardNav
           onCancel={onCancel}
@@ -48,8 +47,6 @@ export function CampaignInfoStep({
     >
       <div className="space-y-6">
         {error ? <FieldError message={error} /> : null}
-
-        <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.localStateHint')}</p>
 
         <section className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground">
@@ -65,7 +62,6 @@ export function CampaignInfoStep({
                 onChange={(e) => onChange({ title: e.target.value })}
                 aria-invalid={!!error && !info.title.trim()}
               />
-              <p className="text-xs text-muted-foreground">{t('employer.campaigns.form.titleHelp')}</p>
             </div>
 
             <div className="space-y-2">
@@ -102,9 +98,6 @@ export function CampaignInfoStep({
                   });
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.maxCandidatesHelp')}
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -150,9 +143,6 @@ export function CampaignInfoStep({
                   {t('employer.campaigns.form.passScoreHrDecideHelp')}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.passScoreHelp')}
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -166,9 +156,6 @@ export function CampaignInfoStep({
                   onChange({ timeLimitMinutes: Math.max(1, Number(e.target.value) || 1) })
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.timeLimitHelp')}
-              </p>
             </div>
           </div>
         </section>
