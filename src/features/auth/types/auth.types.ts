@@ -20,6 +20,7 @@ export const UserRole = {
   ORG_ADMIN: 'OrgAdmin',
   HR_MEMBER: 'HrMember',
   ADMIN: 'Admin',
+  NO_ROLE: 'NoRole',
 } as const;
 
 export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
@@ -45,6 +46,7 @@ const CANONICAL_ROLES: Record<string, UserRoleType> = {
   orgadmin: UserRole.ORG_ADMIN,
   hrmember: UserRole.HR_MEMBER,
   admin: UserRole.ADMIN,
+  norole: UserRole.NO_ROLE,
 };
 
 /**
@@ -180,6 +182,9 @@ export interface User {
   title: string;
   role: UserRoleType;
   createdAt: string;
+  orgId?: string | null;
+  orgName?: string | null;
+  orgRole?: string | null;
 }
 
 export function parseUser(raw: unknown): User {
@@ -195,7 +200,7 @@ export function parseUser(raw: unknown): User {
 
   const createdAtRaw = inner.createdAt ?? inner.CreatedAt;
 
-  return {
+  const user: User = {
     id: pickAuthString(inner, 'id', 'Id') ?? String(inner.id ?? ''),
     fullName: pickAuthString(inner, 'fullName', 'FullName') ?? '',
     email: pickAuthString(inner, 'email', 'Email') ?? '',
@@ -209,4 +214,12 @@ export function parseUser(raw: unknown): User {
           ? String(createdAtRaw)
           : '',
   };
+
+  // These fields are optional for candidates and older AuthService deployments,
+  // but must be preserved (including null) when the API sends them.
+  if ('orgId' in inner || 'OrgId' in inner) user.orgId = pickAuthString(inner, 'orgId', 'OrgId') ?? null;
+  if ('orgName' in inner || 'OrgName' in inner) user.orgName = pickAuthString(inner, 'orgName', 'OrgName') ?? null;
+  if ('orgRole' in inner || 'OrgRole' in inner) user.orgRole = pickAuthString(inner, 'orgRole', 'OrgRole') ?? null;
+
+  return user;
 }

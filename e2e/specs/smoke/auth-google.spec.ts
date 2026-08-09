@@ -18,10 +18,8 @@ test.describe('Google OAuth one-time code flow', () => {
       const requestUrl = new URL(request.url());
 
       expect(request.method()).toBe('GET');
-      expect(requestUrl.searchParams.get('returnUrl')).toBe(
-        `${new URL(page.url()).origin}/auth/google/callback`,
-      );
-      const callbackUrl = `${new URL(page.url()).origin}/auth/google/callback?reason=login_failed`;
+      expect(requestUrl.searchParams.get('returnUrl')).toBe('/auth/google/callback');
+      const callbackUrl = `${new URL(page.url()).origin}/auth/google/callback?error=login_failed`;
 
       await route.fulfill({
         status: 200,
@@ -43,7 +41,7 @@ test.describe('Google OAuth one-time code flow', () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: /continue with google/i }).click();
 
-    await page.waitForURL(/\/auth\/google\/callback\?reason=login_failed/);
+    await page.waitForURL(/\/auth\/google\/callback\?error=login_failed/);
     expect(initiationCount).toBe(1);
   });
 

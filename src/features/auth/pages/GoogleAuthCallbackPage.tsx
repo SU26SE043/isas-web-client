@@ -45,7 +45,8 @@ export function GoogleAuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const [state, setState] = useState<CallbackState>('loading');
   const code = searchParams.get('code')?.trim() ?? '';
-  const reasonState = resolveReason(searchParams.get('reason'));
+  // New AuthService contract uses `error`; keep `reason` as a compatibility fallback.
+  const reasonState = resolveReason(searchParams.get('error') ?? searchParams.get('reason'));
 
   useEffect(() => {
     let active = true;

@@ -47,6 +47,7 @@ describe('authService password and Google flows', () => {
 
   it('resets the password with the verified OTP through the public endpoint', async () => {
     mockedApi.post.mockResolvedValueOnce({ data: 'Password reset successful' });
+    authTokenStorage.setTokens('old-access', 'old-refresh', '2026-07-22T10:00:00Z');
     const payload = {
       email: 'user@isas.dev',
       otp: '123456',
@@ -54,6 +55,8 @@ describe('authService password and Google flows', () => {
     };
 
     await expect(authService.resetPassword(payload)).resolves.toBe('Password reset successful');
+    expect(authTokenStorage.getAccessToken()).toBeNull();
+    expect(authTokenStorage.getRefreshToken()).toBeNull();
     expect(mockedApi.post).toHaveBeenCalledWith(authEndpoints.resetPassword, payload, {
       skipAuth: true,
     });
@@ -104,9 +107,12 @@ describe('authService password and Google flows', () => {
 
   it('changes an authenticated password without marking the request public', async () => {
     mockedApi.post.mockResolvedValueOnce({ status: 204, data: undefined });
+    authTokenStorage.setTokens('old-access', 'old-refresh', '2026-07-22T10:00:00Z');
     const payload = { oldPassword: 'OldPass123!', newPassword: 'NewPass123!' };
 
     await expect(authService.changePassword(payload)).resolves.toBeUndefined();
+    expect(authTokenStorage.getAccessToken()).toBeNull();
+    expect(authTokenStorage.getRefreshToken()).toBeNull();
     expect(mockedApi.post).toHaveBeenCalledWith(authEndpoints.changePassword, payload);
   });
 
