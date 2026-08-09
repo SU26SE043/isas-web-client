@@ -17,6 +17,8 @@ export function learningRoadmapsQueryKey(query: LearningDashboardQuery) {
     query.domainId ?? 'all',
     query.status ?? 'all',
     query.sort ?? 'updated',
+    query.cursor ?? '',
+    query.limit ?? '',
   ] as const;
 }
 

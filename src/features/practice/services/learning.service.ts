@@ -17,6 +17,7 @@ import type {
   LearningPracticeSession,
   ProgressDashboardData,
   RoadmapResponse,
+  RoadmapApiMilestone,
   RoadmapStep,
 } from '../types/learning.types';
 import {
@@ -86,12 +87,29 @@ function normalizeCreateRoadmapResponse(
   data: Record<string, unknown> | null | undefined,
   input: CreateRoadmapInput,
 ): RoadmapResponse {
-  const payload = data ?? {};
+  const raw = data ?? {};
+  const payload = raw.data && typeof raw.data === 'object' ? (raw.data as Record<string, unknown>) : raw;
   const id =
     (typeof payload.id === 'string' && payload.id) ||
     (typeof payload.roadmapId === 'string' && payload.roadmapId) ||
     undefined;
   const steps = normalizeRoadmapSteps(payload.steps);
+  const milestones = Array.isArray(payload.milestones)
+    ? payload.milestones.map((milestone, milestoneIndex) => {
+        const item = (milestone ?? {}) as Record<string, unknown>;
+        return {
+          id: String(item.id ?? `milestone-${milestoneIndex + 1}`),
+          orderNo: Number(item.orderNo ?? milestoneIndex + 1),
+          title: String(item.title ?? ''),
+          focusCriteria: Array.isArray(item.focusCriteria)
+            ? item.focusCriteria.filter((value): value is string => typeof value === 'string')
+            : [],
+          status: String(item.status ?? 'Pending'),
+          improvement: Array.isArray(item.improvement) ? item.improvement as Array<{ criterionName: string; deltaPct: number }> : null,
+          lessons: Array.isArray(item.lessons) ? item.lessons as RoadmapApiMilestone['lessons'] : [],
+        };
+      })
+    : undefined;
   return {
     id,
     steps: steps.length > 0 ? steps : MOCK_ROADMAP.steps,
@@ -101,6 +119,13 @@ function normalizeCreateRoadmapResponse(
     targetLevel: input.targetLevel,
     // Reports are not sent to the API yet — keep UI selection locally only.
     sourceReportIds: input.reportIds ? [...input.reportIds] : [],
+    jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,
+    language: typeof payload.language === 'string' ? payload.language : input.language ?? 'vi',
+    level: typeof payload.level === 'string' ? payload.level : input.targetLevel,
+    status: typeof payload.status === 'string' ? payload.status : 'Active',
+    createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : undefined,
+    completedAt: typeof payload.completedAt === 'string' ? payload.completedAt : null,
+    milestones,
   };
 }
 

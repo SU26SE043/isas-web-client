@@ -58,6 +58,32 @@ export interface RoadmapResponse {
   domainId?: string;
   targetLevel?: string;
   sourceReportIds?: string[];
+  jobCategory?: 'BA' | 'BE' | 'FE' | string;
+  language?: 'vi' | 'en' | string;
+  level?: RoadmapLevel | string;
+  status?: 'Active' | 'Completed' | 'Abandoned' | string;
+  createdAt?: string;
+  completedAt?: string | null;
+  milestones?: RoadmapApiMilestone[];
+}
+
+export interface RoadmapApiMilestone {
+  id: string;
+  orderNo: number;
+  title: string;
+  focusCriteria: string[];
+  status: 'Pending' | 'InProgress' | 'Completed' | string;
+  improvement: Array<{ criterionName: string; deltaPct: number }> | null;
+  lessons: Array<{
+    id: string;
+    orderNo: number;
+    title: string;
+    theoryContent?: string | null;
+    sessionId?: string | null;
+    status: 'Theory' | 'Practicing' | 'Done' | string;
+    resources: Array<{ title: string; type: string; publisher?: string | null; url?: string | null }>;
+    citations?: Array<{ chunkId: string; sourceUrl: string; sourceTitle: string }> | null;
+  }>;
 }
 
 /**
@@ -74,6 +100,7 @@ export interface CreateRoadmapInput {
   cvAnalysisId?: string;
   priorRoadmapId?: string;
   focus?: string;
+  language?: 'vi' | 'en';
 }
 
 export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
@@ -87,6 +114,7 @@ export interface CreateRoadmapApiRequest {
   cvAnalysisId?: string;
   priorRoadmapId?: string;
   focus?: string;
+  language?: 'vi' | 'en';
 }
 
 export const ROADMAP_FOCUS_MAX_CHARS = 2000;
