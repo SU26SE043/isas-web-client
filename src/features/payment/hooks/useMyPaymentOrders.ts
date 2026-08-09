@@ -1,33 +1,26 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { paymentService } from '../services/payment.service';
-import type { PackageResponse, PaymentOrderDetail, PaymentOrderStatusResult } from '../types/payment.types';
+import type { PaymentOrderDetail, PaymentOrderStatusResult } from '../types/payment.types';
 import { isLivePendingStatus } from '../utils/livePaymentStatus';
 
-export const MY_PAYMENT_ORDERS_QUERY_KEY = ['payment', 'my-orders'] as const;
-export const PAYMENT_ORDER_STATUS_QUERY_KEY = ['payment', 'order-status'] as const;
+export const paymentKeys = {
+  all: ['payment'] as const,
+  packages: () => [...paymentKeys.all, 'packages'] as const,
+  account: () => [...paymentKeys.all, 'account'] as const,
+  subscription: () => [...paymentKeys.all, 'subscription'] as const,
+  transactions: () => [...paymentKeys.all, 'credit-transactions'] as const,
+  orders: () => [...paymentKeys.all, 'orders'] as const,
+  order: (orderId: string) => [...paymentKeys.all, 'order', orderId] as const,
+  orderStatus: (orderId: string) => [...paymentKeys.all, 'order-status', orderId] as const,
+};
+
+export const MY_PAYMENT_ORDERS_QUERY_KEY = paymentKeys.orders();
+export const PAYMENT_ORDER_STATUS_QUERY_KEY = [...paymentKeys.all, 'order-status'] as const;
 
 export interface MyPaymentOrdersBundle {
   orders: PaymentOrderDetail[];
   statuses: Record<string, PaymentOrderStatusResult>;
-}
-
-function enrichOrdersWithPackages(
-  orders: PaymentOrderDetail[],
-  packages: PackageResponse[],
-): PaymentOrderDetail[] {
-  const byId = new Map(packages.map((pkg) => [pkg.id, pkg]));
-
-  return orders.map((order) => {
-    const pkg = byId.get(order.packageId);
-    if (!pkg) return order;
-
-    return {
-      ...order,
-      packageName: order.packageName ?? pkg.name,
-      priceVnd: order.priceVnd && order.priceVnd > 0 ? order.priceVnd : pkg.priceVnd,
-      interviewCredits: order.interviewCredits ?? pkg.interviewCredits,
-    };
-  });
+  nextCursor: string | null;
 }
 
 async function fetchStatusesForOrders(
@@ -50,24 +43,28 @@ async function fetchStatusesForOrders(
   return statuses;
 }
 
-export function useMyPaymentOrders() {
-  return useQuery<MyPaymentOrdersBundle, Error>({
+export function useMyPaymentOrders(enabled = true) {
+  return useInfiniteQuery<{ orders: PaymentOrderDetail[]; statuses: Record<string, PaymentOrderStatusResult>; nextCursor: string | null }, Error, MyPaymentOrdersBundle, typeof MY_PAYMENT_ORDERS_QUERY_KEY, string | null>({
     queryKey: MY_PAYMENT_ORDERS_QUERY_KEY,
-    queryFn: async () => {
-      const [orders, packages] = await Promise.all([
-        paymentService.listMyOrders(),
-        paymentService.listCatalogPackages().catch(() => [] as PackageResponse[]),
-      ]);
-      const enriched = enrichOrdersWithPackages(orders, packages);
-      const statuses = await fetchStatusesForOrders(enriched.map((order) => order.orderId));
-      return { orders: enriched, statuses };
+    queryFn: async ({ pageParam }) => {
+      const page = await paymentService.getMyOrdersPage({ cursor: pageParam, limit: 25 });
+      const statuses = await fetchStatusesForOrders(page.items.map((order) => order.orderId));
+      return { orders: page.items, statuses, nextCursor: page.nextCursor };
     },
+    initialPageParam: null,
+    enabled,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    select: (data) => ({
+      orders: data.pages.flatMap((page) => page.orders),
+      statuses: Object.assign({}, ...data.pages.map((page) => page.statuses)),
+      nextCursor: data.pages.at(-1)?.nextCursor ?? null,
+    }),
     retry: false,
     staleTime: 15_000,
     refetchInterval: (query) => {
-      const statuses = query.state.data?.statuses;
+      const statuses = query.state.data?.pages.flatMap((page) => Object.values(page.statuses));
       if (!statuses) return false;
-      const hasPending = Object.values(statuses).some((item) => isLivePendingStatus(item.status));
+      const hasPending = statuses.some((item) => isLivePendingStatus(item.status));
       return hasPending ? 10_000 : false;
     },
   });
@@ -101,6 +98,7 @@ export function useCancelPaymentOrder() {
               paidAt: previous?.paidAt ?? null,
             },
           },
+          nextCursor: current.nextCursor,
         };
       });
 

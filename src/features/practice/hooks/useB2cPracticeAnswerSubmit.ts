@@ -87,7 +87,7 @@ export function useB2cPracticeAnswerSubmit({
         store.setCurrentQuestion(response.nextQuestion.id, response.nextQuestion.timeLimitSec);
         store.setStage('interviewing');
         recorder.clearRecording();
-      } else if (response.interviewComplete || response.nextAction === 'end') {
+      } else if (response.interviewComplete) {
         store.setInterviewComplete(true, response.nextAction ?? 'end');
         onStopSpeech();
         recorder.stopRecordingAndDiscard();

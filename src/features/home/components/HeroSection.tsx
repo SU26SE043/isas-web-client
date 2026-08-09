@@ -1,13 +1,13 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../shared/languages';
 
 import { motion } from 'framer-motion';
-import { useMarketingAuthModal } from '@/layouts/MarketingAuthModalProvider';
 
 export const HeroSection: React.FC = () => {
   const { t } = useLanguage();
-  const { openAuthModal } = useMarketingAuthModal();
+  const navigate = useNavigate();
 
   return (
     <section className="bg-transparent pt-16 pb-24 overflow-hidden">
@@ -35,7 +35,7 @@ export const HeroSection: React.FC = () => {
               {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary">
+              <button type="button" onClick={() => navigate('/practice')} className="btn-primary">
                 {t('hero.getStarted')}
               </button>
               <button type="button" className="btn-secondary">

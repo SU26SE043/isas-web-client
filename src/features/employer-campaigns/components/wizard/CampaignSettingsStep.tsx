@@ -20,14 +20,12 @@ function ToggleRow({
   id,
   checked,
   label,
-  help,
   disabled,
   onChange,
 }: {
   id: string;
   checked: boolean;
   label: string;
-  help: string;
   disabled?: boolean;
   onChange: (checked: boolean) => void;
 }) {
@@ -43,7 +41,6 @@ function ToggleRow({
       />
       <div>
         <Label htmlFor={id}>{label}</Label>
-        <p className="mt-1 text-xs text-muted-foreground">{help}</p>
       </div>
     </div>
   );
@@ -63,7 +60,6 @@ export function CampaignSettingsStep({
     <SectionPanel
       icon={<Settings className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.settings')}
-      description={t('employer.campaigns.wizard.steps.settingsDesc')}
       footer={
         <CampaignWizardNav
           onBack={onBack}
@@ -83,7 +79,6 @@ export function CampaignSettingsStep({
             checked={settings.antiCheatEnabled}
             disabled={isSaving}
             label={t('employer.campaigns.form.antiCheat')}
-            help={t('employer.campaigns.form.antiCheatHelp')}
             onChange={(antiCheatEnabled) => onChange({ antiCheatEnabled })}
           />
           <ToggleRow
@@ -91,7 +86,6 @@ export function CampaignSettingsStep({
             checked={settings.faceVerifyEnabled}
             disabled={isSaving}
             label={t('employer.campaigns.form.faceVerify')}
-            help={t('employer.campaigns.form.faceVerifyHelp')}
             onChange={(faceVerifyEnabled) => onChange({ faceVerifyEnabled })}
           />
           <ToggleRow
@@ -99,7 +93,6 @@ export function CampaignSettingsStep({
             checked={settings.adaptiveEnabled}
             disabled={isSaving}
             label={t('employer.campaigns.form.adaptive')}
-            help={t('employer.campaigns.form.adaptiveHelp')}
             onChange={(adaptiveEnabled) => onChange({ adaptiveEnabled })}
           />
         </section>
@@ -118,9 +111,6 @@ export function CampaignSettingsStep({
                   onChange({ maxFollowUps: Math.max(0, Number(e.target.value) || 0) })
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.maxFollowUpsHelp')}
-              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="settings-max-questions">{t('employer.campaigns.form.maxQuestionsSetting')}</Label>
@@ -137,9 +127,6 @@ export function CampaignSettingsStep({
                   })
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.maxQuestionsSettingHelp')}
-              </p>
             </div>
           </section>
         ) : (
@@ -158,9 +145,6 @@ export function CampaignSettingsStep({
                 })
               }
             />
-            <p className="text-xs text-muted-foreground">
-              {t('employer.campaigns.form.maxQuestionsSettingHelp')}
-            </p>
           </section>
         )}
       </div>

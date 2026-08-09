@@ -110,10 +110,7 @@ describe('AudioRecorderModal submit flow', () => {
     await waitFor(() => {
       expect(baseProps.onSubmitRecording).toHaveBeenCalledTimes(1);
     });
-    expect(baseProps.onSubmitRecording).toHaveBeenCalledWith(
-      expect.any(File),
-      expect.any(Number),
-    );
+    expect(baseProps.onSubmitRecording).toHaveBeenCalledWith(expect.any(File), expect.any(Number));
   });
 
   it('keeps preview after submit failure and allows retry submit', async () => {
@@ -131,15 +128,11 @@ describe('AudioRecorderModal submit flow', () => {
     await waitFor(() => {
       expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument();
     });
-
     await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.submit' }));
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' })).toBeInTheDocument();
     });
-
     await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' }));
-    await waitFor(() => {
-      expect(onSubmitRecording).toHaveBeenCalledTimes(2);
-    });
+    await waitFor(() => expect(onSubmitRecording).toHaveBeenCalledTimes(2));
   });
 });

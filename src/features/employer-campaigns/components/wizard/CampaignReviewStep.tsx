@@ -56,7 +56,6 @@ export function CampaignReviewStep({
     <SectionPanel
       icon={<ListChecks className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.review')}
-      description={t('employer.campaigns.wizard.steps.reviewDesc')}
       footer={
         <CampaignWizardNav
           onBack={onBack}

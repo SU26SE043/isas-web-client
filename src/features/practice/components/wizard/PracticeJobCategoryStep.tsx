@@ -34,6 +34,7 @@ export function PracticeJobCategoryStep({
   return (
     <PracticeWizardStepCard
       title={t('practice.setup.jobCategory.title')}
+      className="min-h-[calc(100dvh-3rem)]"
       footer={
         <PracticeWizardNav
           onBack={onBack}

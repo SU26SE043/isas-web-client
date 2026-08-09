@@ -14,6 +14,7 @@ import { startLearningLessonPractice } from '../../utils/launchLearningInterview
 import { learningRoadmapDetailQueryKey } from '../../hooks/useLearningRoadmaps';
 import { loadFlowProgress, saveFlowProgress } from '../../utils/interviewFlowStorage';
 import { useInterviewFlowStore } from '../../stores/interviewFlowStore';
+import { requestInterviewFullscreen } from '../../hooks/useInterviewFullscreen';
 import type { PracticeSession } from '../../mocks/session.fixtures';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
@@ -84,8 +85,9 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
     };
   }, [isLearning, learningMeta?.questions.length, sessionId]);
 
-  const handleStartInterview = () => {
-    navigate(`/interview/${sessionId}/room`);
+  const handleStartInterview = async () => {
+    await requestInterviewFullscreen();
+    navigate(`/interview/${sessionId}/room?start=countdown`);
   };
 
   const handleLearningStart = async () => {
@@ -94,6 +96,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
     setIsStarting(true);
     setStartError(null);
     try {
+      await requestInterviewFullscreen();
       const result = await startLearningLessonPractice({
         roadmapId: learningMeta.roadmapId,
         lessonId: learningMeta.lessonId,
@@ -130,7 +133,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
         });
         useInterviewFlowStore.getState().hydrate(nextSessionId);
       }
-      navigate(`/interview/${nextSessionId}/room`, { replace: true });
+      navigate(`/interview/${nextSessionId}/room?start=countdown`, { replace: true });
     } catch {
       setStartError('generic');
     } finally {

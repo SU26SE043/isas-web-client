@@ -74,7 +74,6 @@ export function CampaignJdStep({
     <SectionPanel
       icon={<FileText className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.jd')}
-      description={t('employer.campaigns.wizard.steps.jdDesc')}
       footer={
         <CampaignWizardNav
           onBack={onBack}
@@ -137,7 +136,6 @@ export function CampaignJdStep({
             onChange={(jdText) => onChange({ jdText, inputMethod: 'text' })}
             label={t('employer.campaigns.wizard.jdTextLabel')}
             placeholder={t('employer.campaigns.wizard.jdTextPlaceholder')}
-            helper={t('employer.campaigns.wizard.jdTextHelp')}
             clearLabel={t('employer.campaigns.wizard.jdTextClear')}
             charsLabel={t('employer.campaigns.wizard.jdCharCount')}
             wordsLabel={t('employer.campaigns.wizard.jdWordCount')}

@@ -73,8 +73,15 @@ export function parseOrderResponse(raw: unknown): OrderResponse | null {
 
   return {
     id,
+    ownerType: toInt(data.ownerType ?? data.OwnerType, 0) as 0 | 1,
+    ownerId: pickString(data, 'ownerId', 'OwnerId'),
+    kind: toInt(data.kind ?? data.Kind, 0) as 0 | 1 | 2 | 3,
+    invoiceId: pickString(data, 'invoiceId', 'InvoiceId') ?? null,
+    amountVnd: toInt(data.amountVnd ?? data.AmountVnd, 0),
+    payosOrderCode: toInt(data.payosOrderCode ?? data.PayOSOrderCode, 0),
+    expiredAt: pickString(data, 'expiredAt', 'ExpiredAt'),
     packageId,
-    status: pickString(data, 'status', 'Status') ?? 'Pending',
+    status: typeof (data.status ?? data.Status) === 'number' ? String(data.status ?? data.Status) : (pickString(data, 'status', 'Status') ?? 'Pending'),
     checkoutUrl,
     packageName: pickString(data, 'packageName', 'PackageName'),
     priceVnd: toInt(data.priceVnd ?? data.PriceVnd, 0) || undefined,
@@ -105,6 +112,13 @@ export function toPaymentOrderDetail(dto: OrderResponse): PaymentOrderDetail {
     transactionId: dto.transactionId,
     failureReason: dto.failureReason,
     checkoutUrl: dto.checkoutUrl,
+    ownerType: dto.ownerType,
+    ownerId: dto.ownerId,
+    kind: dto.kind,
+    invoiceId: dto.invoiceId,
+    amountVnd: dto.amountVnd,
+    payosOrderCode: dto.payosOrderCode,
+    expiredAt: dto.expiredAt,
   };
 }
 

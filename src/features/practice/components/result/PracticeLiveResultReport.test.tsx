@@ -110,15 +110,9 @@ describe('PracticeLiveResultReport tabs', () => {
     expect(screen.queryByText('Tell me about yourself.')).not.toBeInTheDocument();
   });
 
-  it('shows summary tab content alone', async () => {
-    const user = userEvent.setup();
+  it('does not show the overall feedback tab', () => {
     renderReport();
 
-    await user.click(screen.getByRole('tab', { name: 'practice.result.quickFeedback' }));
-
-    expect(screen.getByText('Solid session overall.')).toBeInTheDocument();
-    expect(screen.getByText('Clear structure')).toBeInTheDocument();
-    expect(screen.queryByText('practice.result.criteriaScores')).not.toBeInTheDocument();
-    expect(screen.queryByText('practice.result.jumpToQuestion')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'practice.result.quickFeedback' })).not.toBeInTheDocument();
   });
 });

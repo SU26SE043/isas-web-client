@@ -26,6 +26,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
   const inviteMutation = useCreateCampaignInvitations(campaign.id);
   const isActive = campaign.status === 'active';
   const isSending = inviteMutation.isPending;
+  const initialEmailsKey = initialEmails.join('|');
 
   const [step, setStep] = useState<EmailInviteStep>('form');
   const [validEmails, setValidEmails] = useState<string[]>(() =>
@@ -53,7 +54,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     setFailed([]);
     inviteMutation.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on campaign change
-  }, [campaign.id]);
+  }, [campaign.id, initialEmailsKey]);
 
   const capacityWarning = useMemo(() => {
     if (!campaign.capacity || campaign.capacity <= 0) return null;

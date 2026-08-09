@@ -58,7 +58,7 @@ import {
   parseInviteByCandidateIdsResponse,
   unwrapArrayPayload,
 } from '../utils/campaignCandidatesApi';
-import { parseCampaignInvitationsPage } from '../utils/campaignInvitationsApi';
+import { parseCampaignInvitationsPage, readNextCursorHeader } from '../utils/campaignInvitationsApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
 let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
@@ -176,8 +176,15 @@ export const campaignManagementService = {
    * Client-side search/status filters match existing list UI.
    */
   async listCampaigns(filters: CampaignFilters): Promise<EmployerCampaign[]> {
-    const response = await apiClient.get<unknown>(campaignManagementEndpoints.list);
-    const items: CampaignResponse[] = parseCampaignResponseList(response.data);
+    const items: CampaignResponse[] = [];
+    let cursor: string | undefined;
+    do {
+      const response = await apiClient.get<unknown>(campaignManagementEndpoints.list, {
+        params: { limit: 500, ...(cursor ? { cursor } : {}) },
+      });
+      items.push(...parseCampaignResponseList(response.data));
+      cursor = readNextCursorHeader(response.headers) ?? undefined;
+    } while (cursor);
     return items
       .map(mapCampaignResponseToEmployerCampaign)
       .filter((campaign) => matchesFilters(campaign, filters));
@@ -311,7 +318,6 @@ export const campaignManagementService = {
       questions: existing?.questions.length
         ? existing.questions.map((item) => ({
             questionText: item.prompt,
-            source: 'CustomHr' as const,
             isRequired: true,
           }))
         : undefined,
@@ -373,9 +379,12 @@ export const campaignManagementService = {
     params: GenerateCampaignQuestionsParams,
   ): Promise<EmployerCampaign> {
     const { campaignId, count } = params;
+    if (count != null && (!Number.isInteger(count) || count < 1 || count > 20)) {
+      throw new CampaignRequestError(400, 'INVALID_GENERATE_COUNT');
+    }
     const response = await apiClient.post<unknown>(
       campaignManagementEndpoints.questionsGenerate(campaignId),
-      null,
+      undefined,
       {
         params: count == null ? undefined : { count },
       },
@@ -400,7 +409,6 @@ export const campaignManagementService = {
         .filter((item) => item.prompt.trim())
         .map((item) => ({
           questionText: item.prompt.trim(),
-          source: 'CustomHr' as const,
           isRequired: true,
         })),
     );
@@ -486,7 +494,9 @@ export const campaignManagementService = {
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
       params: {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
-        ...(query?.limit != null ? { limit: query.limit } : {}),
+        ...(query?.limit != null ? { limit: Math.min(500, Math.max(1, query.limit)) } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+        ...(query?.search?.trim() ? { search: query.search.trim() } : {}),
       },
     });
     return parseCampaignInvitationsPage(response.data, response.headers);
@@ -642,7 +652,7 @@ export const campaignManagementService = {
   ): Promise<BlobDownloadResult> {
     const response = await apiClient.post<Blob>(
       campaignManagementEndpoints.filesDownload(id),
-      null,
+      undefined,
       {
         params: { fileType },
         responseType: 'blob',
@@ -734,7 +744,7 @@ export const campaignManagementService = {
             return data;
           },
         ],
-        validateStatus: (status) => status === 200 || status === 202,
+        validateStatus: (status) => status === 202,
       },
     );
     return parseCandidateUploadResponse(response.data);
@@ -745,7 +755,7 @@ export const campaignManagementService = {
     return this.analyzeCandidateCvs(id, files);
   },
 
-  /** Live: GET /api/v1/campaign/{id}/candidates */
+  /** Live: GET /api/v1/campaign/{id}/candidates — consume every cursor page. */
   async getCampaignCandidates(
     id: string,
     query?: CandidateListQuery,
@@ -753,9 +763,13 @@ export const campaignManagementService = {
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.candidates(id), {
       params: buildCandidateListParams(query),
     });
-    return unwrapArrayPayload(response.data)
+    const items = unwrapArrayPayload(response.data)
       .map(parseCandidateListItem)
       .filter((item): item is CampaignCandidateListItem => item != null);
+    const nextCursor = readNextCursorHeader(response.headers);
+    if (!nextCursor) return items;
+    const next = await this.getCampaignCandidates(id, { ...query, cursor: nextCursor });
+    return [...items, ...next];
   },
 
   /** Live: GET /api/v1/campaign/{id}/candidates/{candidateId} */
@@ -894,4 +908,5 @@ export const campaignManagementService = {
       { validateStatus: (status) => status === 204 || status === 200 },
     );
   },
+
 };

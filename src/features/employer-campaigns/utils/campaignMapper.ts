@@ -101,10 +101,12 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
     if (!name || weight == null) return;
     result.push({
       id: pickString(record, 'id', 'Id') ?? `criterion-${index}`,
+      orderNo: pickNumber(record, 'orderNo', 'OrderNo') ?? index + 1,
       name,
       weight,
       description: pickString(record, 'description', 'Description') ?? null,
       maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
+      source: pickString(record, 'source', 'Source') ?? null,
     });
   });
   return result;
@@ -130,6 +132,7 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
     if (!prompt) return;
     result.push({
       id: pickString(record, 'id', 'Id') ?? `question-${index}`,
+      questionText: prompt,
       prompt,
       skill: pickString(record, 'skill', 'Skill') ?? null,
       difficulty: pickString(record, 'difficulty', 'Difficulty') ?? null,
@@ -140,6 +143,7 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
           : typeof record.IsRequired === 'boolean'
             ? record.IsRequired
             : null,
+      hrEditedAt: pickString(record, 'hrEditedAt', 'HrEditedAt') ?? null,
     });
   });
   return result;
@@ -189,12 +193,17 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     id,
     title,
     domain: pickString(record, 'domain', 'Domain') ?? null,
+    orgId: pickString(record, 'orgId', 'OrgId', 'organizationId', 'OrganizationId') ?? null,
     company: pickString(record, 'company', 'Company') ?? null,
     location: pickString(record, 'location', 'Location') ?? null,
     mode: pickString(record, 'mode', 'Mode', 'workingMode', 'WorkingMode') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'draft',
+    language: pickString(record, 'language', 'Language') ?? null,
+    seniority: pickString(record, 'seniority', 'Seniority') ?? null,
     summary: pickString(record, 'summary', 'Summary', 'description', 'Description') ?? null,
     jobDescription: pickString(record, 'jobDescription', 'JobDescription', 'jdText', 'JdText') ?? null,
+    jdText: pickString(record, 'jdText', 'JdText') ?? null,
+    criteriaText: pickString(record, 'criteriaText', 'CriteriaText') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
     applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
     applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
@@ -210,15 +219,18 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     antiCheatEnabled: pickBoolean(record, 'antiCheatEnabled', 'AntiCheatEnabled') ?? null,
     faceVerifyEnabled: pickBoolean(record, 'faceVerifyEnabled', 'FaceVerifyEnabled') ?? null,
     adaptiveEnabled: pickBoolean(record, 'adaptiveEnabled', 'AdaptiveEnabled') ?? null,
+    groundingEnabled: pickBoolean(record, 'groundingEnabled', 'GroundingEnabled') ?? null,
+    maxConcurrentInterviews: pickNumber(record, 'maxConcurrentInterviews', 'MaxConcurrentInterviews') ?? null,
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
+    maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
     completionMessage: pickString(record, 'completionMessage', 'CompletionMessage') ?? null,
     createdAt: pickString(record, 'createdAt', 'CreatedAt') ?? null,
     updatedAt: pickString(record, 'updatedAt', 'UpdatedAt') ?? null,
-    rubric: parseRubric(record.rubric ?? record.Rubric ?? record.criteria ?? record.Criteria),
+    rubric: parseRubric(record.criteria ?? record.Criteria ?? record.rubric ?? record.Rubric),
     questions: parseQuestions(record.questions ?? record.Questions),
     candidates: parseCandidates(record.candidates ?? record.Candidates),
     invitedEmails: parseInvitedEmails(record.invitedEmails ?? record.InvitedEmails),
@@ -282,7 +294,7 @@ function mapQuestionSource(value: string | null | undefined): CampaignQuestion['
 function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): CampaignQuestion[] {
   return (items ?? []).map((item, index) => ({
     id: item.id?.trim() || `question-${index}`,
-    prompt: item.prompt,
+    prompt: item.questionText?.trim() || item.prompt?.trim() || '',
     skill: item.skill?.trim() || '',
     difficulty: mapDifficulty(item.difficulty),
     source: mapQuestionSource(item.source),
@@ -342,6 +354,9 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
       (mapProctoring(item.proctoring).maxViolations > 0),
     faceVerifyEnabled: item.faceVerifyEnabled ?? false,
     adaptiveEnabled: item.adaptiveEnabled ?? false,
+    groundingEnabled: item.groundingEnabled ?? false,
+    maxConcurrentInterviews: item.maxConcurrentInterviews ?? null,
+    maxDeepPerQuestion: item.maxDeepPerQuestion ?? null,
     maxFollowUps: item.maxFollowUps ?? null,
     maxQuestions: item.maxQuestions ?? null,
     locale: mapLocale(item.locale),

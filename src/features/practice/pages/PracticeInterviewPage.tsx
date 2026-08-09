@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { InterviewHeader } from '../components/InterviewHeader';
 import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
@@ -13,6 +13,7 @@ import { TabLockOverlay } from '../components/room/TabLockOverlay';
 import { NetworkLossDialog } from '../components/room/NetworkLossDialog';
 import { PauseOverlay } from '../components/room/PauseOverlay';
 import { ViolationPauseOverlay } from '../components/room/ViolationPauseOverlay';
+import { FullscreenExitBanner } from '../components/room/FullscreenExitBanner';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewSessionStore } from '../stores/interviewSessionStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
@@ -30,11 +31,12 @@ import {
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
+  const [searchParams] = useSearchParams();
   const isB2cPractice =
     Boolean(sessionId) && !isLearningSessionId(sessionId) && !isCampaignSessionId(sessionId);
 
   if (isB2cPractice) {
-    return <B2cPracticeInterviewRoom sessionId={sessionId} />;
+    return <B2cPracticeInterviewRoom sessionId={sessionId} startWithCountdown={searchParams.get('start') === 'countdown'} />;
   }
 
   return <LegacyInterviewRoom sessionId={sessionId} />;
@@ -113,6 +115,7 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
         exitHref={learning.exitHref}
         titleKey={session.isLearning ? 'practice.learningPath.practiceSession' : undefined}
       />
+      <FullscreenExitBanner />
       {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
 
       {antiCheatEnabled && session.isAutoSubmitted ? (

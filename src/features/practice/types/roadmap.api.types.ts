@@ -25,6 +25,9 @@ export type ApiRoadmapLesson = {
   title?: string;
   titleVi?: string;
   theoryContent?: string | null;
+  theoryContentVi?: string | null;
+  content?: string | null;
+  contentVi?: string | null;
   sessionId?: string | null;
   status?: ApiLessonStatus;
   practiceReportId?: string | null;
@@ -83,6 +86,9 @@ export type ApiRoadmapLessonDetail = {
   title?: string;
   titleVi?: string;
   theoryContent?: string | null;
+  theoryContentVi?: string | null;
+  content?: string | null;
+  contentVi?: string | null;
   sessionId?: string | null;
   status: ApiLessonStatus;
   resources?: LearningResource[] | null;

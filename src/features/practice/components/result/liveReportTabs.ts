@@ -1,17 +1,15 @@
-export type LiveReportTab = 'overview' | 'criteria' | 'questions' | 'summary';
+export type LiveReportTab = 'overview' | 'criteria' | 'questions';
 
 export const LIVE_REPORT_TABS: readonly LiveReportTab[] = [
   'overview',
   'criteria',
   'questions',
-  'summary',
 ] as const;
 
 const TAB_LABEL_KEYS: Record<LiveReportTab, string> = {
   overview: 'practice.result.quickOverview',
   criteria: 'practice.result.quickCriteria',
   questions: 'practice.result.quickQuestions',
-  summary: 'practice.result.quickFeedback',
 };
 
 export function liveReportTabLabelKey(tab: LiveReportTab): string {
@@ -19,7 +17,7 @@ export function liveReportTabLabelKey(tab: LiveReportTab): string {
 }
 
 export function parseLiveReportTab(value: string | null): LiveReportTab {
-  if (value === 'overview' || value === 'criteria' || value === 'questions' || value === 'summary') {
+  if (value === 'overview' || value === 'criteria' || value === 'questions') {
     return value;
   }
   return 'overview';

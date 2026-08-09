@@ -673,3 +673,54 @@ select:focus-visible {
     font-size: clamp(1.25rem, 4vw, 1.75rem);
   }
 }
+
+@keyframes countdown-ring-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes countdown-dot-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(0.55); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes countdown-number-pop {
+  0% { opacity: 0; transform: scale(1.45); filter: blur(4px); }
+  45% { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0.8; transform: scale(0.94); }
+}
+
+.countdown-ring {
+  animation: countdown-ring-rotate 2.8s linear infinite;
+}
+
+.countdown-dot-position {
+  transform: rotate(var(--countdown-angle)) translateY(-78px);
+}
+
+.countdown-dot-visual {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 8px rgb(24 168 255 / 90%), 0 0 18px rgb(24 168 255 / 65%);
+  animation: countdown-dot-pulse 1.4s ease-in-out infinite;
+}
+
+.countdown-center-text {
+  animation: countdown-number-pop 0.9s ease-out;
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgb(56 189 248 / 90%), 0 0 24px rgb(14 165 233 / 65%);
+}
+
+@media (min-width: 640px) {
+  .countdown-dot-position { transform: rotate(var(--countdown-angle)) translateY(-112px); }
+  .countdown-dot-visual { width: 10px; height: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown-ring,
+  .countdown-dot-visual,
+  .countdown-center-text {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

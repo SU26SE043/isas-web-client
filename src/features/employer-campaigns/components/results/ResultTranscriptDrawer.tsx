@@ -23,6 +23,7 @@ import {
   candidateDisplayEmail,
   candidateDisplayName,
 } from './ResultBadges';
+import { ProctoringAnalysis } from './ProctoringAnalysis';
 
 interface ResultTranscriptDrawerProps {
   open: boolean;
@@ -103,6 +104,8 @@ export function ResultTranscriptDrawer({
             ) : null}
           </div>
         ) : null}
+
+        {item ? <ProctoringAnalysis flags={item.flags} /> : null}
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {transcriptQuery.isLoading ? (

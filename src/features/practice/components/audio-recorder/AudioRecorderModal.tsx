@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CircleHelp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -109,14 +110,16 @@ export function AudioRecorderModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={recorder.state.status !== 'submitting'}
-        className="max-w-[calc(100%-1.5rem)] gap-0 sm:max-w-[840px]"
+        className="max-w-[calc(100%-1rem)] gap-2 border-info/20 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.12),transparent_42%),radial-gradient(circle_at_100%_100%,rgba(124,58,237,0.12),transparent_36%)] p-4 sm:max-w-[920px] sm:p-5"
+        closeButtonClassName="border-info/20 bg-surface-overlay text-foreground hover:bg-info/20 hover:text-foreground"
       >
-        <DialogHeader>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <DialogHeader className="mx-0 mt-0 rounded-2xl border border-info/20 bg-surface-base/70 px-5 py-5 pr-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-6 sm:py-6 sm:pr-16">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-info-light">
+            <CircleHelp className="size-4" aria-hidden />
             {t('practice.audioRecorder.questionLabel')}
           </p>
-          <DialogTitle>{questionLabel}</DialogTitle>
-          <DialogDescription className="line-clamp-4 text-left text-foreground/90">
+          <DialogTitle className="text-2xl sm:text-3xl">{questionLabel}</DialogTitle>
+          <DialogDescription className="line-clamp-5 text-left text-sm leading-relaxed text-foreground/90 sm:text-base">
             {questionContent}
           </DialogDescription>
         </DialogHeader>

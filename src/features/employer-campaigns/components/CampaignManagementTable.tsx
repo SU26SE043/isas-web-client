@@ -57,7 +57,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                 <TableCell>
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      to={`/employer/campaigns/${campaign.id}/overview?tab=details`}
+                      to={`/employer/campaigns/${campaign.id}/overview?tab=candidates`}
                       className={cn(
                         buttonVariants({ variant: 'outline', size: 'sm' }),
                         'border-foreground/30 bg-foreground/[0.06] text-foreground shadow-sm',
@@ -114,7 +114,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
             </dl>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link
-                to={`/employer/campaigns/${campaign.id}/overview?tab=details`}
+                to={`/employer/campaigns/${campaign.id}/overview?tab=candidates`}
                 className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
               >
                 <Eye className="size-4" aria-hidden />

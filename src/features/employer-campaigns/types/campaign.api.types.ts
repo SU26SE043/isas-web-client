@@ -3,21 +3,31 @@
  * (camelCase per gateway contract).
  * List payloads may omit detail-only fields; mapper fills UI defaults.
  */
+export type CampaignStatus = 'Draft' | 'Active' | 'Closed' | 'Archived';
+export type CampaignLanguage = 'vi' | 'en';
+export type CampaignSeniority = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
+export type CampaignQuestionSource = 'AiGenerated' | 'CustomHr';
+export type CampaignCriterionSource = 'AiSuggested' | 'HrEdited';
+
 export type CampaignRubricCriterionResponse = {
   id?: string | null;
+  orderNo?: number | null;
   name: string;
   weight: number;
   description?: string | null;
   maxScore?: number | null;
+  source?: CampaignCriterionSource | string | null;
 };
 
 export type CampaignQuestionResponse = {
   id?: string | null;
-  prompt: string;
+  questionText?: string | null;
+  prompt?: string | null;
   skill?: string | null;
   difficulty?: string | null;
-  source?: string | null;
+  source?: CampaignQuestionSource | string | null;
   isRequired?: boolean | null;
+  hrEditedAt?: string | null;
 };
 
 export type CampaignCandidateResponse = {
@@ -35,12 +45,15 @@ export type CampaignProctoringResponse = {
 
 export type CampaignResponse = {
   id: string;
+  orgId?: string | null;
   title: string;
   domain?: string | null;
   company?: string | null;
   location?: string | null;
   mode?: string | null;
-  status: string;
+  status: CampaignStatus | string;
+  language?: CampaignLanguage | string | null;
+  seniority?: CampaignSeniority | string | null;
   summary?: string | null;
   jobDescription?: string | null;
   capacity?: number | null;
@@ -57,6 +70,9 @@ export type CampaignResponse = {
   antiCheatEnabled?: boolean | null;
   faceVerifyEnabled?: boolean | null;
   adaptiveEnabled?: boolean | null;
+  groundingEnabled?: boolean | null;
+  maxConcurrentInterviews?: number | null;
+  maxDeepPerQuestion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   locale?: string | null;
@@ -66,6 +82,9 @@ export type CampaignResponse = {
   createdAt?: string | null;
   updatedAt?: string | null;
   rubric?: CampaignRubricCriterionResponse[] | null;
+  criteria?: CampaignRubricCriterionResponse[] | null;
+  criteriaText?: string | null;
+  jdText?: string | null;
   questions?: CampaignQuestionResponse[] | null;
   candidates?: CampaignCandidateResponse[] | null;
   invitedEmails?: string[] | null;
@@ -85,7 +104,7 @@ export type CampaignCreateQuestionRequest = {
   /** Preserve when replacing an existing server question; omit for new HR questions. */
   id?: string;
   questionText: string;
-  source: 'AiGenerated' | 'CustomHr';
+  source?: CampaignQuestionSource;
   isRequired: boolean;
 };
 
@@ -102,6 +121,8 @@ export type GenerateCampaignQuestionsParams = {
 export type CampaignCreateRequest = {
   title: string;
   domain: string;
+  language?: CampaignLanguage;
+  seniority?: CampaignSeniority;
   location: string;
   maxCandidates?: number | null;
   timeLimitMinutes: number;
@@ -110,10 +131,13 @@ export type CampaignCreateRequest = {
   antiCheatEnabled: boolean;
   faceVerifyEnabled: boolean;
   adaptiveEnabled: boolean;
+  groundingEnabled: boolean;
+  maxConcurrentInterviews?: number | null;
   /** Only meaningful when adaptiveEnabled; null when adaptive is off. */
   maxFollowUps?: number | null;
   /** Cap on total questions (0–20). Independent of adaptive interview. */
   maxQuestions?: number | null;
+  maxDeepPerQuestion?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
   criteria?: CampaignCreateCriterionRequest[] | null;
@@ -140,14 +164,19 @@ export type CampaignStatusUpdateRequest = {
 export type CampaignUpdateRequest = {
   title?: string;
   domain?: string;
+  language?: CampaignLanguage;
+  seniority?: CampaignSeniority;
   location?: string;
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
   antiCheatEnabled?: boolean;
   faceVerifyEnabled?: boolean;
   adaptiveEnabled?: boolean;
+  groundingEnabled?: boolean;
+  maxConcurrentInterviews?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  maxDeepPerQuestion?: number | null;
   passScorePct?: number | null;
   jdText?: string;
   criteriaText?: string;
@@ -193,12 +222,17 @@ export type CampaignInvitation = {
   createdAt: string;
   expiresAt: string;
   emailSentAt?: string | null;
+  sentAt?: string | null;
+  revokedAt?: string | null;
+  campaignCandidateId?: string | null;
   joinedAt?: string | null;
 };
 
 export type GetCampaignInvitationsQuery = {
   cursor?: string;
   limit?: number;
+  status?: CampaignInvitationStatus;
+  search?: string;
 };
 
 export type CampaignInvitationsPage = {
@@ -247,6 +281,9 @@ export type CandidateListQuery = {
   minScore?: number;
   skill?: string;
   sort?: 'score' | 'name';
+  search?: string;
+  cursor?: string;
+  limit?: number;
 };
 
 export type CampaignCandidateListItem = {

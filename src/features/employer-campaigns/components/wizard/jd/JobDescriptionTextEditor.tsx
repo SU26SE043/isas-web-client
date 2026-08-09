@@ -5,7 +5,6 @@ interface JobDescriptionTextEditorProps {
   onChange: (value: string) => void;
   label: string;
   placeholder: string;
-  helper: string;
   clearLabel: string;
   charsLabel: string;
   wordsLabel: string;
@@ -25,7 +24,6 @@ export function JobDescriptionTextEditor({
   onChange,
   label,
   placeholder,
-  helper,
   clearLabel,
   charsLabel,
   wordsLabel,
@@ -46,13 +44,10 @@ export function JobDescriptionTextEditor({
           disabled={disabled}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? 'campaign-jd-text-error' : 'campaign-jd-text-help'}
+          aria-describedby={error ? 'campaign-jd-text-error' : undefined}
           onChange={(e) => onChange(e.target.value)}
           className="min-h-[320px] w-full resize-y rounded-2xl border border-satin bg-surface-overlay px-4 py-3 text-sm leading-relaxed text-foreground outline-none transition focus-visible:border-[var(--border-focus)]"
         />
-        <p id="campaign-jd-text-help" className="text-xs text-muted-foreground">
-          {helper}
-        </p>
         {error ? (
           <p id="campaign-jd-text-error" className="text-sm text-error" role="alert">
             {error}

@@ -1,106 +1,96 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CreditCard, PackagePlus } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { useTokenWallet } from '../hooks/useTokenWallet';
-import { PRACTICE_RESERVE_ESTIMATE } from '../constants';
+import { PaymentQuerySection } from '../components/PaymentQuerySection';
+import { TokenTransactionsTable } from '../components/TokenTransactionsTable';
+import { TokenWalletAccountCard } from '../components/TokenWalletAccountCard';
+import { TokenSubscriptionCard } from '../components/TokenSubscriptionCard';
+import { usePaymentAccount, usePaymentSubscription, useTokenWallet } from '../hooks/useTokenWallet';
+import { useCreditTransactions } from '../hooks/useCreditTransactions';
+import { useCancelPaymentOrder, useMyPaymentOrders } from '../hooks/useMyPaymentOrders';
+import { PaymentOrdersTable } from '../components/PaymentOrdersTable';
+import { TokenPackageCatalog } from '../components/TokenPackageCatalog';
 
 export const CreditsWalletPage: React.FC = () => {
   const { t } = useLanguage();
-  const { wallet, balance, reserved, available, isLoading } = useTokenWallet();
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
-      </div>
-    );
-  }
+  const navigate = useNavigate();
+  const walletQuery = useTokenWallet();
+  const accountQuery = usePaymentAccount();
+  const subscriptionQuery = usePaymentSubscription();
+  const [activeTab, setActiveTab] = useState<'overview' | 'packages' | 'transactions' | 'orders'>('overview');
+  const [ordersPage, setOrdersPage] = useState(0);
+  const [ordersPageSize, setOrdersPageSize] = useState(5);
+  const transactionQuery = useCreditTransactions(25, activeTab === 'transactions');
+  const ordersQuery = useMyPaymentOrders(activeTab === 'orders');
+  const cancelOrder = useCancelPaymentOrder();
+  const tabs = [
+    ['overview', t('payment.wallet.overview')],
+    ['packages', t('payment.wallet.packages')],
+    ['transactions', t('payment.wallet.creditMovements')],
+    ['orders', t('payment.wallet.orders')],
+  ] as const;
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-5xl space-y-6">
-        <header className="flex flex-wrap items-start justify-between gap-4">
+      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
+            <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-surface-overlay frame-satin-soft">
+              <CreditCard className="size-5" aria-hidden />
+            </div>
             <h1 className="heading-primary text-3xl text-foreground">{t('payment.wallet.title')}</h1>
-            <p className="body-text mt-2 text-sm text-muted-foreground">{t('payment.wallet.subtitle')}</p>
+            <p className="body-text mt-2 max-w-2xl text-muted-foreground">
+              {t('payment.wallet.subtitle')}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/candidate/usage" className="btn-secondary">
-              {t('payment.wallet.viewUsage')}
-            </Link>
-            <Link to="/candidate/subscription" className="btn-primary">
-              {t('payment.wallet.buyTokens')}
-            </Link>
-          </div>
+          <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => setActiveTab('packages')}>
+            <PackagePlus className="size-4" aria-hidden />
+            {t('payment.wallet.buyTokens')}
+          </button>
         </header>
 
-        <section className="rounded-xl border border-subtle bg-surface-raised p-6">
-          <p className="text-sm text-muted-foreground">{t('payment.wallet.balanceLabel')}</p>
-          <p className="heading-primary mt-2 text-5xl text-foreground">
-            {balance.toLocaleString()}
-          </p>
-          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-subtle bg-surface-base p-4">
-              <dt className="text-sm text-muted-foreground">{t('payment.wallet.reservedLabel')}</dt>
-              <dd className="mt-1 text-xl font-semibold text-foreground">
-                {reserved.toLocaleString()}
-              </dd>
-            </div>
-            <div className="rounded-lg border border-subtle bg-surface-base p-4">
-              <dt className="text-sm text-muted-foreground">{t('payment.wallet.availableLabel')}</dt>
-              <dd className="mt-1 text-xl font-semibold text-foreground">
-                {available.toLocaleString()}
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <nav className="flex gap-1 overflow-x-auto border-b border-satin" aria-label={t('payment.wallet.title')}>
+          {tabs.map(([id, label]) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={activeTab === id ? 'shrink-0 border-b-2 border-foreground px-4 py-3 text-sm font-medium text-foreground' : 'shrink-0 border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground'}>{label}</button>)}
+        </nav>
 
-        {available < PRACTICE_RESERVE_ESTIMATE ? (
-          <p className="rounded-xl border border-subtle bg-surface-raised px-4 py-3 text-sm text-muted-foreground">
-            {t('payment.wallet.insufficientReserve').replace(
-              '{amount}',
-              PRACTICE_RESERVE_ESTIMATE.toLocaleString(),
-            )}
-          </p>
-        ) : null}
+        {activeTab === 'overview' && <div className="grid gap-6 lg:grid-cols-2">
+          <PaymentQuerySection
+            isLoading={accountQuery.isLoading || walletQuery.isLoading}
+            isError={accountQuery.isError || walletQuery.isError || !accountQuery.data || !walletQuery.wallet}
+            onRetry={() => {
+              void accountQuery.refetch();
+              void walletQuery.reload();
+            }}
+          >
+            {accountQuery.data && walletQuery.wallet ? <TokenWalletAccountCard wallet={walletQuery.wallet} account={accountQuery.data} /> : null}
+          </PaymentQuerySection>
+          <PaymentQuerySection
+            isLoading={subscriptionQuery.isLoading}
+            isError={subscriptionQuery.isError || !subscriptionQuery.data}
+            onRetry={() => void subscriptionQuery.refetch()}
+          >
+            {subscriptionQuery.data ? <TokenSubscriptionCard subscription={subscriptionQuery.data} onBrowsePackages={() => setActiveTab('packages')} /> : null}
+          </PaymentQuerySection>
+        </div>}
 
-        <section className="space-y-3">
-          <h2 className="heading-secondary text-xl text-foreground">{t('payment.transactions.title')}</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('payment.transactions.date')}</TableHead>
-                <TableHead>{t('payment.transactions.description')}</TableHead>
-                <TableHead className="text-right">{t('payment.transactions.tokens')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(wallet?.transactions ?? []).map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell className="text-right">{transaction.tokensDelta.toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-              {(wallet?.transactions.length ?? 0) === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    {t('payment.transactions.empty')}
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+        {activeTab === 'packages' && <TokenPackageCatalog />}
+
+        {activeTab === 'transactions' && <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="heading-secondary text-xl text-foreground">{t('payment.transactions.title')}</h2>
+          </div>
+          <PaymentQuerySection isLoading={transactionQuery.isLoading} isError={transactionQuery.isError || !transactionQuery.data} errorMessage={t('payment.transactions.loadError')} onRetry={() => void transactionQuery.refetch()}>
+            {transactionQuery.data ? <><TokenTransactionsTable transactions={transactionQuery.data} />{transactionQuery.hasNextPage ? <button type="button" className="btn-secondary" onClick={() => void transactionQuery.fetchNextPage()} disabled={transactionQuery.isFetchingNextPage}>{t('payment.orders.loadMore')}</button> : null}</> : null}
+          </PaymentQuerySection>
         </section>
+        }
+        {activeTab === 'orders' && <section className="space-y-4">
+          <h2 className="heading-secondary text-xl text-foreground">{t('payment.orders.title')}</h2>
+          <PaymentQuerySection isLoading={ordersQuery.isLoading} isError={ordersQuery.isError || !ordersQuery.data} errorMessage={t('payment.orders.loadError')} onRetry={() => void ordersQuery.refetch()}>
+            {ordersQuery.data ? <PaymentOrdersTable orders={ordersQuery.data.orders.slice(ordersPage * ordersPageSize, (ordersPage + 1) * ordersPageSize)} statuses={ordersQuery.data.statuses} cancellingId={cancelOrder.isPending ? cancelOrder.variables : undefined} onCancel={(id) => cancelOrder.mutate(id)} onView={(order) => navigate(`/candidate/orders/${encodeURIComponent(order.orderId)}`)} page={ordersPage} pageSize={ordersPageSize} totalLoaded={ordersQuery.data.orders.length} hasNextPage={Boolean(ordersQuery.hasNextPage)} isFetchingNextPage={ordersQuery.isFetchingNextPage} onPageSizeChange={(size) => { setOrdersPageSize(size); setOrdersPage(0); }} onPreviousPage={() => setOrdersPage((current) => Math.max(0, current - 1))} onNextPage={() => { const nextStart = (ordersPage + 1) * ordersPageSize; if (nextStart >= ordersQuery.data!.orders.length && ordersQuery.hasNextPage) { void ordersQuery.fetchNextPage().then(() => setOrdersPage((current) => current + 1)); } else { setOrdersPage((current) => current + 1); } }} /> : null}
+          </PaymentQuerySection>
+        </section>}
       </div>
     </div>
   );

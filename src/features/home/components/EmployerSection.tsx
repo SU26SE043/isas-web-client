@@ -60,7 +60,7 @@ export const EmployerSection: React.FC = () => {
   const { openAuthModal } = useMarketingAuthModal();
 
   return (
-    <section id="enterprise" className="relative pt-32 pb-24 bg-surface-raised text-white mt-10">
+    <section id="enterprise" className="relative mt-10 bg-transparent pt-32 pb-24 text-white">
       {/* Wave Divider */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none transform -translate-y-[99%]">
         <svg 

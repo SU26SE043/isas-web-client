@@ -12,9 +12,10 @@ import { B2cInterviewControls } from './B2cInterviewControls';
 import { B2cPracticeRoomModals } from './B2cPracticeRoomModals';
 import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
 import { AudioRecorderModal } from './audio-recorder/AudioRecorderModal';
+import { QuestionStartCountdown } from './QuestionStartCountdown';
+import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
-import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import {
   mapModalToCardStatus,
   resolveAnswerCardStatus,
@@ -24,12 +25,14 @@ import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 interface B2cPracticeInterviewRoomProps {
   sessionId: string;
   completePath?: string;
+  startWithCountdown?: boolean;
+  deadlineAt?: string | null;
 }
 
-export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, deadlineAt }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId, { completePath });
+  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown, deadlineAt });
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
   const interviewCompleteToastRef = useRef(false);
@@ -93,13 +96,14 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
   );
 
   const openRecorder = () => {
-    if (room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
+    if (room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
     setRecorderOpen(true);
   };
 
   return (
-    <div className="flex min-h-screen flex-col surface-base pb-32 font-sans">
+    <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} />
+      <FullscreenExitBanner />
 
       {room.media.state === 'error' ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
@@ -162,13 +166,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
           <div className="min-w-0 lg:col-span-2">
             <AnswerRecorderCard
               status={cardStatus}
-              disabled={room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
-              submitDisabled={!room.currentQuestion}
-              isSubmitting={room.isSubmittingAnswer}
+              disabled={room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
               onOpenRecorder={openRecorder}
-              onSubmitAnswer={() => {
-                void room.submitAnswerWithFile(createSilentUnansweredAudioFile(), 1);
-              }}
             />
           </div>
         </div>
@@ -199,8 +198,10 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath }: B2cPractic
         onFinish={() => room.setFinishOpen(true)}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
-        disabled={room.isSubmittingSession || room.isTimingOut}
+        disabled={room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut}
       />
+
+      <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />
 
       {room.currentQuestion ? (
         <AudioRecorderModal

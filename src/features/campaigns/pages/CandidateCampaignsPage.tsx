@@ -13,7 +13,17 @@ function LiveCandidateCampaignsPage() {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight') ?? '';
-  const { data: campaigns = [], isLoading, isError, refetch, isFetching } = useMyCampaigns();
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useMyCampaigns();
+  const campaigns = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
 
   const sortedCampaigns = useMemo(() => {
     if (!highlightId) return campaigns;
@@ -73,15 +83,29 @@ function LiveCandidateCampaignsPage() {
         ) : null}
 
         {!isLoading && !isError && sortedCampaigns.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {sortedCampaigns.map((campaign) => (
-              <MyCampaignCard
-                key={campaign.campaignId}
-                campaign={campaign}
-                highlighted={campaign.campaignId === highlightId}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              {sortedCampaigns.map((campaign) => (
+                <MyCampaignCard
+                  key={campaign.campaignId}
+                  campaign={campaign}
+                  highlighted={campaign.campaignId === highlightId}
+                />
+              ))}
+            </div>
+            {hasNextPage ? (
+              <div className="flex justify-center pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isFetchingNextPage}
+                  onClick={() => void fetchNextPage()}
+                >
+                  {isFetchingNextPage ? t('campaigns.my.loadingMore') : t('campaigns.my.loadMore')}
+                </Button>
+              </div>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

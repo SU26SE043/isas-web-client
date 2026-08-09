@@ -17,6 +17,47 @@ export interface PackageResponse {
   createdAt: string;
 }
 
+export type PaymentOwnerType = 0 | 1;
+export type PaymentMode = 0 | 1;
+export type PaymentAccountStatus = 0 | 1;
+
+export interface PaymentAccountResponse {
+  ownerType: PaymentOwnerType;
+  ownerId: string;
+  paymentMode: PaymentMode;
+  status: PaymentAccountStatus;
+  remainingCredits: number;
+  reservedCredits: number;
+  creditLimit: number | null;
+  periodUsage: number | null;
+  updatedAt: string;
+}
+
+export interface SubscriptionResponse {
+  ownerType: PaymentOwnerType;
+  ownerId: string;
+  active: boolean;
+  billingCycle: 'Monthly' | 'Annual' | null;
+  startedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface CreditTransactionResponse {
+  id: string;
+  ownerType: number;
+  ownerId: string;
+  delta: number;
+  reason: number;
+  sessionId: string | null;
+  orderId: string | null;
+  createdAt: string;
+}
+
+export interface CursorPage<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
 export interface TokenPackage {
   id: string;
   name: string;
@@ -51,6 +92,10 @@ export interface WalletTransaction {
   createdAt: string;
   status: PaymentOrderStatus | 'completed';
   sessionId?: string;
+  orderId?: string;
+  ownerType?: number;
+  ownerId?: string;
+  reason?: number;
 }
 
 export interface WalletSnapshot {
@@ -87,6 +132,13 @@ export interface PaymentOrder {
 /** PaymentService order DTO (`POST/GET /api/v1/payment/order`). */
 export interface OrderResponse {
   id: string;
+  ownerType?: PaymentOwnerType;
+  ownerId?: string;
+  kind?: 0 | 1 | 2 | 3;
+  invoiceId?: string | null;
+  amountVnd?: number;
+  payosOrderCode?: number;
+  expiredAt?: string;
   packageId: string;
   status: string;
   checkoutUrl: string | null;
@@ -118,6 +170,13 @@ export interface PaymentOrderDetail {
   transactionId?: string;
   failureReason?: string;
   checkoutUrl?: string | null;
+  ownerType?: PaymentOwnerType;
+  ownerId?: string;
+  kind?: 0 | 1 | 2 | 3;
+  invoiceId?: string | null;
+  amountVnd?: number;
+  payosOrderCode?: number;
+  expiredAt?: string;
 }
 
 export interface PaymentOrderStatusResult {

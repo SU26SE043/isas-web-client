@@ -44,7 +44,7 @@ export function SessionResultHeader({ view }: { view: PracticeSessionResultViewM
     <header className="space-y-4">
       <Link
         to="/candidate/practice/history"
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-2 text-sm font-medium text-info-light transition-colors hover:text-info"
       >
         <ArrowLeft className="size-4" aria-hidden />
         {t('practice.result.backToList')}
@@ -52,20 +52,20 @@ export function SessionResultHeader({ view }: { view: PracticeSessionResultViewM
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
-          <h1 className="heading-primary text-2xl text-foreground sm:text-3xl">
+          <h1 className="heading-primary bg-gradient-to-r from-foreground via-info-light to-violet-300 bg-clip-text text-2xl text-transparent sm:text-3xl">
             {t('practice.result.session')}
             {view.jobCategory ? ` · ${view.jobCategory}` : ''}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground/90">
             {view.level ? <span>{view.level}</span> : null}
-            <Badge variant="outline" className={cn(statusClass[group])}>
+            <Badge variant="outline" className={cn('font-semibold', statusClass[group])}>
               {statusLabel}
             </Badge>
           </div>
         </div>
       </div>
 
-      <dl className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+      <dl className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-foreground/80">
         <div>
           <dt className="sr-only">{t('practice.result.completedAt')}</dt>
           <dd>

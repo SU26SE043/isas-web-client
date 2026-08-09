@@ -5,7 +5,6 @@ import {
   FlowStepMarker,
   flowStepLabelClass,
   resolveFlowStepStatus,
-  type FlowStepStatus,
 } from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
@@ -21,13 +20,6 @@ interface CampaignWizardShellProps {
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
   children: React.ReactNode;
-}
-
-function statusLabelKey(status: FlowStepStatus): string {
-  if (status === 'complete') return 'employer.campaigns.wizard.status.completed';
-  if (status === 'current') return 'employer.campaigns.wizard.status.active';
-  if (status === 'error') return 'employer.campaigns.wizard.status.error';
-  return 'employer.campaigns.wizard.status.pending';
 }
 
 function autosaveLabel(
@@ -73,8 +65,8 @@ export function CampaignWizardShell({
       : t('employer.campaigns.wizard.createTitle');
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-surface-base">
-      <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+    <div className="surface-page flex min-h-[calc(100dvh-3.5rem)] flex-col">
+      <header className="sticky top-0 z-20 border-b border-satin bg-surface-elevated/90 px-4 py-3 backdrop-blur-xl sm:px-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -102,10 +94,10 @@ export function CampaignWizardShell({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 px-4 py-6 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-12 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-10 lg:py-8">
         <nav
           aria-label={t('employer.campaigns.wizard.stepperLabel')}
-          className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[280px] lg:self-start"
+          className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[220px] lg:self-start"
         >
           <ol className="flex flex-col">
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
@@ -114,7 +106,11 @@ export function CampaignWizardShell({
               return (
                 <li key={step.id} className="flex w-full items-stretch gap-3">
                   <div className="flex flex-col items-center">
-                    <FlowStepMarker status={status} stepNumber={index + 1} />
+                    <FlowStepMarker
+                      status={status}
+                      stepNumber={index + 1}
+                      className={status === 'current' ? 'border-info bg-info/10 text-info shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_24px_-8px_rgba(59,130,246,0.95)]' : undefined}
+                    />
                     {!isLast ? (
                       <FlowStepConnector
                         status={
@@ -127,10 +123,6 @@ export function CampaignWizardShell({
                   <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
                     <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
                       {t(step.titleKey)}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{t(step.descKey)}</span>
-                    <span className="mt-1 block text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {t(statusLabelKey(status))}
                     </span>
                   </div>
                 </li>

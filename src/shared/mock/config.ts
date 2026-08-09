@@ -22,7 +22,7 @@ export type MockDataDomain =
   | 'admin';
 
 /** Domains wired to the real gateway today (auth is always live — not listed here). */
-export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice'];
+export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice', 'payment'];
 
 export function isPlaywrightRuntime(): boolean {
   return typeof navigator !== 'undefined' && navigator.webdriver === true;

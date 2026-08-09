@@ -25,6 +25,7 @@ export type OpenedLearningLesson = {
   title: string;
   titleVi: string;
   theoryContent: string;
+  theoryContentVi: string;
   sessionId: string | null;
   apiStatus: 'Theory' | 'Practicing' | 'Done' | string;
   theoryStatus: LessonPartStatus;
@@ -314,13 +315,15 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
   const apiStatus = normalizeApiLessonStatus(item.status);
   const parts = mapLessonParts(apiStatus);
   const title = pickString(item.title, item.titleVi) || 'Lesson';
-  const theoryContent = typeof item.theoryContent === 'string' ? item.theoryContent : '';
+  const theoryContent = pickString(item.theoryContent, item.content);
+  const theoryContentVi = pickString(item.theoryContentVi, item.contentVi);
   return {
     id: pickString(item.id),
     orderNo: pickNumber(item.orderNo, 1),
     title,
     titleVi: pickString(item.titleVi, item.title) || title,
     theoryContent,
+    theoryContentVi,
     sessionId: pickString(item.sessionId) || null,
     apiStatus,
     theoryStatus: parts.theoryStatus,

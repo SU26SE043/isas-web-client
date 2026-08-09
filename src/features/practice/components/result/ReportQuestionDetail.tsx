@@ -34,7 +34,7 @@ export function ReportQuestionDetail({
 
       {questions.length > 1 ? (
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="shrink-0 text-xs text-muted-foreground">
+          <span className="shrink-0 text-xs font-semibold text-foreground/80">
             {t('practice.result.jumpToQuestion')}
           </span>
           <div
@@ -54,11 +54,13 @@ export function ReportQuestionDetail({
                   title={t(`practice.result.questionStatus.${group}`)}
                   onClick={() => onQuestionChange(index)}
                   className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-150',
+                    'shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors duration-150',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
                     isActive
-                      ? 'border-satin bg-surface-elevated text-foreground'
-                      : 'border-satin bg-transparent text-foreground/80 hover:bg-surface-overlay',
+                      ? 'border-info/70 bg-gradient-to-r from-info/20 to-violet-500/20 text-info-light shadow-[0_0_14px_-8px_var(--color-info)]'
+                      : group === 'graded' || group === 'answered'
+                        ? 'border-success/40 bg-success/10 text-success-light hover:bg-success/15'
+                        : 'border-satin bg-surface-overlay/30 text-muted-foreground hover:border-info/40 hover:bg-info/10 hover:text-info-light',
                   )}
                 >
                   {t('practice.result.question')} {item.orderNo}

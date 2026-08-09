@@ -8,7 +8,6 @@ import { LearningDashboardToolbar } from '../components/learning-path/LearningDa
 import { LearningRoadmapCardView } from '../components/learning-path/LearningRoadmapCardView';
 import { useLearningRoadmaps } from '../hooks/useLearningRoadmaps';
 import type { LearningDashboardQuery } from '../types/learningPath.types';
-import { continueLearningPath } from '../utils/learningPathNavigation';
 
 export function LearningDashboardPage() {
   const { t } = useLanguage();
@@ -20,7 +19,6 @@ export function LearningDashboardPage() {
   });
 
   const { data: items = [], isLoading, isError, refetch, isFetching } = useLearningRoadmaps(query);
-  const continueTarget = items.find((item) => item.status === 'in_progress') ?? items[0];
 
   return (
     <div className="page-container page-section min-h-screen">
@@ -29,16 +27,6 @@ export function LearningDashboardPage() {
         <p className="body-text text-sm text-muted-foreground">{t('practice.learningPath.subtitle')}</p>
         <p className="text-caption text-muted-foreground">{t('practice.learningPath.noCreateHint')}</p>
       </header>
-
-      {continueTarget && continueTarget.status !== 'completed' ? (
-        <div className="mb-6 rounded-xl border border-subtle bg-surface-elevated/70 p-5 backdrop-blur-sm">
-          <p className="text-sm text-muted-foreground">{t('practice.learningPath.resumeLabel')}</p>
-          <p className="mt-1 text-lg font-medium text-foreground">{continueTarget.name}</p>
-          <Link to={continueLearningPath(continueTarget)} className="btn-primary mt-4 inline-flex">
-            {t('practice.learningPath.continueLearning')}
-          </Link>
-        </div>
-      ) : null}
 
       <LearningDashboardToolbar query={query} onChange={setQuery} />
 
