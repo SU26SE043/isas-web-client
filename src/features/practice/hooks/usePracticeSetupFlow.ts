@@ -5,7 +5,10 @@ import { useLanguage } from '@/shared/languages';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
 import type { FileRecord, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { practiceSetupService } from '../services/practiceSetup.service';
-import { createPracticeSession } from '../services/b2cPracticeSession.service';
+import {
+  createPracticeSession,
+  getPracticeSessionOptions,
+} from '../services/b2cPracticeSession.service';
 import { mapCreatePracticeSessionError } from '../utils/b2cPracticeSessionErrors';
 import {
   buildCreatePracticeSessionRequest,
@@ -15,6 +18,8 @@ import type {
   CreatePracticeSessionErrorCode,
   PracticeJobCategory,
   PracticeSetupState,
+  PracticeSessionOptions,
+  PracticeSeniority,
   PracticeTimeLimitSec,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
@@ -39,6 +44,10 @@ export function usePracticeSetupFlow() {
   const [timeLimitSec, setTimeLimitSec] = useState<PracticeTimeLimitSec>(120);
   const [questionCount, setQuestionCount] = useState(5);
   const [rubricCriterionIds, setRubricCriterionIds] = useState<string[]>([]);
+  const [seniority, setSeniority] = useState<PracticeSeniority>('Junior');
+  const [sessionOptions, setSessionOptions] = useState<PracticeSessionOptions | null>(null);
+  const [loadingSessionOptions, setLoadingSessionOptions] = useState(false);
+  const [sessionOptionsError, setSessionOptionsError] = useState<string | null>(null);
 
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [jdFiles, setJdFiles] = useState<FileRecord[]>([]);
@@ -59,14 +68,19 @@ export function usePracticeSetupFlow() {
       timeLimitSec,
       questionCount,
       rubricCriterionIds,
+      language,
+      seniority,
     }),
-    [cvId, jdId, jdTab, jdText, jobCategory, questionCount, rubricCriterionIds, timeLimitSec],
+    [cvId, jdId, jdTab, jdText, jobCategory, language, questionCount, rubricCriterionIds, seniority, timeLimitSec],
   );
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
   const canStart =
     canStartPracticeSession(setupState) &&
     rubricCriterionIds.length > 0 &&
+    Boolean(sessionOptions) &&
+    !loadingSessionOptions &&
+    !sessionOptionsError &&
     !isCreatingSession &&
     !jdTextTooLong;
 
@@ -99,6 +113,40 @@ export function usePracticeSetupFlow() {
       setRubricCriterionIds(validSelectedRubricIds);
     }
   }, [rubricQuery.data, rubricCriterionIds.length, validSelectedRubricIds]);
+
+  useEffect(() => {
+    if (!jobCategory) {
+      setSessionOptions(null);
+      setSessionOptionsError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingSessionOptions(true);
+    setSessionOptionsError(null);
+    void getPracticeSessionOptions(jobCategory, language)
+      .then((options) => {
+        if (cancelled) return;
+        setSessionOptions(options);
+        setQuestionCount((current) => {
+          const min = options.questionCountMin;
+          const max = options.questionCountMax;
+          return current >= min && current <= max ? current : options.defaultQuestionCount;
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setSessionOptions(null);
+        setSessionOptionsError(error instanceof Error ? error.message : 'session-options-failed');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSessionOptions(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [jobCategory, language]);
 
   const loadCvFiles = useCallback(async () => {
     setLoadingCv(true);
@@ -209,6 +257,12 @@ export function usePracticeSetupFlow() {
     loadingRubric: rubricQuery.isLoading,
     rubricError: rubricQuery.isError,
     retryRubric: () => void rubricQuery.refetch(),
+    seniority,
+    setSeniority,
+    language,
+    sessionOptions,
+    loadingSessionOptions,
+    sessionOptionsError,
     cvFiles,
     jdFiles,
     loadingCv,

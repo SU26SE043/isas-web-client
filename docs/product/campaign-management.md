@@ -26,7 +26,7 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
-1. Campaign information — title, domain, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt
+1. Campaign information — title, domain, required workplace `location`, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt. The location field offers debounced Photon suggestions and an OpenStreetMap preview; manual entry remains available when lookup fails.
 2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
 3. Evaluation criteria — manual rubric only (name, description, weight %, maxScore); weights shown as % summing to 100, converted to 0–1 decimals on submit
 4. Questions — AI-generated or HR-authored, each with `prompt`, `source` (`AiGenerated`/`CustomHr`), `isRequired`; add/edit/delete/reorder, tracked against `maxQuestions` when adaptive is on
@@ -73,6 +73,7 @@ Legacy `/selection` redirects to `/invite`.
 | Case | API |
 | --- | --- |
 | Next/back through any step (create or edit) | None |
+| Type at least 3 characters in workplace location | Debounced `GET` to configured Photon endpoint (max 5; stale request aborted) |
 | Finish wizard on Review (create) | `POST /api/v1/campaign`, then `POST …/files` once if a JD file is pending |
 | Save on Review (edit) | `PUT /api/v1/campaign/{id}` (dirty fields only) then `PUT …/questions` |
 | Publish | `POST /api/v1/campaign/{id}/publish` |
@@ -87,3 +88,14 @@ Legacy `/selection` redirects to `/invite`.
 - `npm run check:ui-size`
 - `npm run check:i18n`
 - `npm run typecheck`
+
+## Location provider boundary
+
+- Campaign create/update sends the trimmed address as `location`; coordinates are
+  transient UI state and are not part of the CampaignService contract.
+- `VITE_PHOTON_API_URL` optionally points to an organization-controlled Photon
+  instance or proxy. When unset, low-volume development uses
+  `https://photon.komoot.io/api/`.
+- Provider failure is non-blocking: the employer can keep the manually entered
+  address and complete the wizard.
+- See decision `docs/decisions/0018-campaign-location-provider-boundary.md`.

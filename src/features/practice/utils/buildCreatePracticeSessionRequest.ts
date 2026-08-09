@@ -57,5 +57,7 @@ export function buildCreatePracticeSessionRequest(
     timeLimitSec: state.timeLimitSec,
     questionCount: state.questionCount,
     rubricCriterionIds: state.rubricCriterionIds,
+    language: state.language,
+    seniority: state.seniority,
   };
 }

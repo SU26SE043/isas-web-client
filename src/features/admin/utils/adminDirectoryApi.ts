@@ -1,9 +1,10 @@
-import { AUTHENTICATED_ROLES, UserRole } from '@/features/auth/types/auth.types';
+import { normalizeUserRole, UserRole } from '@/features/auth/types/auth.types';
 import { unwrapAuthPayload } from '@/shared/api/authPayload';
 import type {
   AdminDirectoryPage,
   AdminDirectoryUser,
   AdminOrganization,
+  AdminDirectoryRole,
   GetAdminOrganizationsParams,
   GetAdminUsersParams,
 } from '../types/adminDirectory.types';
@@ -22,6 +23,15 @@ function pickString(record: Record<string, unknown>, camel: string, pascal: stri
 
 function optionalString(record: Record<string, unknown>, camel: string, pascal: string) {
   return pickString(record, camel, pascal) || undefined;
+}
+
+function normalizeAdminDirectoryRole(rawRole: string): AdminDirectoryRole | null {
+  const normalized = rawRole.trim().toLowerCase().replace(/[\s_-]/g, '');
+  if (normalized === 'employer') return 'Employer';
+  if (normalized === 'norole') return 'NoRole';
+
+  const role = normalizeUserRole(rawRole);
+  return role && role !== UserRole.GUEST ? role as AdminDirectoryRole : null;
 }
 
 function unwrapList(data: unknown): unknown[] {
@@ -66,10 +76,8 @@ export function parseAdminDirectoryUser(raw: unknown): AdminDirectoryUser {
   const fullName = pickString(record, 'fullName', 'FullName');
   const createdAt = pickString(record, 'createdAt', 'CreatedAt');
   const rawRole = pickString(record, 'role', 'Role');
-  const role = AUTHENTICATED_ROLES.find(
-    (candidate) => candidate.toLowerCase() === rawRole.toLowerCase(),
-  );
-  if (!id || !email || !fullName || !createdAt || !role || role === UserRole.GUEST) {
+  const role = normalizeAdminDirectoryRole(rawRole);
+  if (!id || !email || !fullName || !createdAt || !role) {
     throw new Error('Admin user response missing required fields');
   }
   return {

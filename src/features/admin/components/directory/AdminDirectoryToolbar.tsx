@@ -49,7 +49,7 @@ export function AdminDirectoryToolbar({
           aria-label={t('admin.directory.roleFilter')}
         >
           <option value="all">{t('admin.directory.allRoles')}</option>
-          {(['Candidate', 'OrgAdmin', 'HrMember', 'Admin'] as const).map((item) => (
+          {(['Candidate', 'Employer', 'OrgAdmin', 'HrMember', 'Admin'] as const).map((item) => (
             <option key={item} value={item}>{t(`admin.userRole.${item}`)}</option>
           ))}
         </select>

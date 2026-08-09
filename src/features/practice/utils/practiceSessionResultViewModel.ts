@@ -145,7 +145,8 @@ export function mapPracticeSessionResponseToViewModel(
     return {
       questionId: question.id,
       answerId: answer?.answerId ?? undefined,
-      orderNo: question.orderNo || answer?.orderNo || index + 1,
+        // API orderNo has gaps for inserted follow-up questions; UI numbering is array-based.
+        orderNo: index + 1,
       content: answer?.content?.trim() || question.content || '',
       kind: answer?.kind || question.kind,
       timeLimitSec: question.timeLimitSec || session.timeLimitSec,

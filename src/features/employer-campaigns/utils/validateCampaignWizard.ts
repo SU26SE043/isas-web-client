@@ -37,6 +37,7 @@ export function validateCampaignWizardStep(
   if (step === 0) {
     if (!info.title.trim()) return 'employer.campaigns.wizard.titleRequired';
     if (!info.domain) return 'employer.campaigns.wizard.domainRequired';
+    if (!info.location.trim()) return 'employer.campaigns.wizard.locationRequired';
     if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
       return 'employer.campaigns.wizard.timeLimitRequired';
     }

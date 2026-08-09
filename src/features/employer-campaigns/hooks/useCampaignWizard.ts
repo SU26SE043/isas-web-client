@@ -86,6 +86,8 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
   return {
     title: campaign?.title ?? '',
     domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
+    location: campaign?.location === '—' ? '' : campaign?.location ?? '',
+    locationCoordinates: null,
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
     passScorePct: campaign?.passScorePct ?? null,

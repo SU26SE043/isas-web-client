@@ -6,7 +6,7 @@ describe('buildCreateRoadmapRequest', () => {
     const result = buildCreateRoadmapRequest('FE', 'Junior', {});
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior' },
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi' },
     });
   });
 
@@ -23,6 +23,7 @@ describe('buildCreateRoadmapRequest', () => {
       body: {
         jobCategory: 'BE',
         level: 'Senior',
+        language: 'vi',
         cvId: 'cv-1',
         sessionIds: ['s1', 's2'],
         cvAnalysisId: 'analysis-1',

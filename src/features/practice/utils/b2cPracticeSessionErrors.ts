@@ -18,6 +18,9 @@ export function mapCreatePracticeSessionError(error: unknown): {
   if (status === 502) {
     return { code: 'ai_failed', message, status };
   }
+  if (status === 429) {
+    return { code: 'platform_capacity', message, status };
+  }
   if (status === 400) {
     const lower = message.toLowerCase();
     if (lower.includes('jobcategory') || lower.includes('job category') || lower.includes('nhóm nghề')) {

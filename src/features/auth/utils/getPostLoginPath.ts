@@ -5,6 +5,7 @@ const HOME_BY_ROLE: Record<Exclude<UserRoleType, typeof UserRole.GUEST>, string>
   [UserRole.ORG_ADMIN]: '/employer/dashboard',
   [UserRole.HR_MEMBER]: '/employer/dashboard',
   [UserRole.ADMIN]: '/admin',
+  [UserRole.NO_ROLE]: '/access-denied',
 };
 
 /** Account / profile destination for shared chrome (avatar menu, marketing header). */
@@ -13,6 +14,7 @@ const PROFILE_BY_ROLE: Record<Exclude<UserRoleType, typeof UserRole.GUEST>, stri
   [UserRole.ORG_ADMIN]: '/employer/settings',
   [UserRole.HR_MEMBER]: '/employer/settings',
   [UserRole.ADMIN]: '/admin/settings',
+  [UserRole.NO_ROLE]: '/access-denied',
 };
 
 /** Path prefixes each role may land on after login (deep-link restore). */
@@ -29,13 +31,14 @@ const ALLOWED_PREFIXES_BY_ROLE: Record<Exclude<UserRoleType, typeof UserRole.GUE
   [UserRole.ORG_ADMIN]: ['/employer', '/enterprise'],
   [UserRole.HR_MEMBER]: ['/employer', '/enterprise'],
   [UserRole.ADMIN]: ['/admin', '/employer', '/enterprise'],
+  [UserRole.NO_ROLE]: [],
 };
 
 export function getPostLoginPath(role: UserRoleType): string {
   if (role === UserRole.GUEST) {
     return '/login';
   }
-  return HOME_BY_ROLE[role];
+  return HOME_BY_ROLE[role] ?? '/access-denied';
 }
 
 /** Role-aware profile/settings home — never defaults OrgAdmin/HrMember/Admin to Candidate. */
@@ -43,7 +46,7 @@ export function getProfileHomePath(role: UserRoleType): string {
   if (role === UserRole.GUEST) {
     return '/login';
   }
-  return PROFILE_BY_ROLE[role];
+  return PROFILE_BY_ROLE[role] ?? '/access-denied';
 }
 
 export function isPathAllowedForRole(role: UserRoleType, pathname: string | null | undefined): boolean {
@@ -55,7 +58,7 @@ export function isPathAllowedForRole(role: UserRoleType, pathname: string | null
     return false;
   }
 
-  return ALLOWED_PREFIXES_BY_ROLE[role].some(
+  return (ALLOWED_PREFIXES_BY_ROLE[role] ?? []).some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

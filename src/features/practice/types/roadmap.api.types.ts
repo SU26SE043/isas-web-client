@@ -12,6 +12,12 @@ export type LearningResource = {
   url?: string | null;
 };
 
+export type LearningCitation = {
+  chunkId: string;
+  sourceUrl: string;
+  sourceTitle: string;
+};
+
 export type ApiRoadmapLesson = {
   id: string;
   orderNo?: number;
@@ -26,6 +32,7 @@ export type ApiRoadmapLesson = {
   status?: ApiLessonStatus;
   practiceReportId?: string | null;
   resources?: LearningResource[] | null;
+  citations?: LearningCitation[] | null;
 };
 
 export type ApiRoadmapMilestone = {
@@ -37,6 +44,7 @@ export type ApiRoadmapMilestone = {
   status?: string;
   progressPercent?: number;
   focusCriteria?: string[];
+  improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons?: ApiRoadmapLesson[];
 };
 
@@ -46,6 +54,7 @@ export type ApiRoadmapListItem = {
   nameVi?: string;
   title?: string;
   jobCategory?: string;
+  language?: string;
   domainId?: string;
   level?: string;
   targetLevel?: string;
@@ -83,6 +92,7 @@ export type ApiRoadmapLessonDetail = {
   sessionId?: string | null;
   status: ApiLessonStatus;
   resources?: LearningResource[] | null;
+  citations?: LearningCitation[] | null;
 };
 
 /** Spec alias — same shape as ApiRoadmapLessonDetail. */

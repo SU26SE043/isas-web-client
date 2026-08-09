@@ -62,9 +62,27 @@ function filterAndSortCards(
 }
 
 export const roadmapService = {
+  async listRoadmapsPage(query: LearningDashboardQuery = {}): Promise<{
+    items: LearningRoadmapCard[];
+    nextCursor?: string;
+  }> {
+    const response = await apiClient.get<unknown>(learningEndpoints.roadmaps, {
+      params: {
+        ...(query.cursor ? { cursor: query.cursor } : {}),
+        ...(query.limit ? { limit: query.limit } : {}),
+      },
+    });
+    const headers = response.headers as Record<string, unknown>;
+    const nextCursor = String(headers['x-next-cursor'] ?? headers['X-Next-Cursor'] ?? '').trim();
+    return {
+      items: unwrapListPayload(response.data).map(mapApiRoadmapListItem).filter((item) => item.id),
+      nextCursor: nextCursor || undefined,
+    };
+  },
+
   async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
-    const response = await apiClient.get<unknown>(learningEndpoints.roadmaps);
-    const cards = unwrapListPayload(response.data).map(mapApiRoadmapListItem).filter((item) => item.id);
+    const page = await this.listRoadmapsPage(query);
+    const cards = page.items;
     return filterAndSortCards(cards, query);
   },
 

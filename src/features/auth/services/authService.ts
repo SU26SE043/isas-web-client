@@ -147,6 +147,9 @@ export const authService = {
     if (data !== 'Password reset successful') {
       throw new Error('Invalid reset-password response from Auth API');
     }
+    // AuthService revokes every refresh token after a successful reset.
+    authTokenStorage.clear();
+    sessionManager.clear();
     return data;
   },
   exchangeGoogleCode: async (payload: GoogleExchangeRequest): Promise<GoogleExchangeResponse> => {
@@ -169,6 +172,9 @@ export const authService = {
     if (response.status !== HttpStatus.NO_CONTENT) {
       throw new Error('Invalid change-password response from Auth API');
     }
+    // The API revokes every refresh token; the client must start a fresh login.
+    authTokenStorage.clear();
+    sessionManager.clear();
   },
   verifyEmail: async (payload: VerifyEmailRequest) => {
     const { data } = await apiClient.post(authEndpoints.verifyEmail, payload);
@@ -185,7 +191,8 @@ export const authService = {
     return tokens;
   },
   loginWithGoogle: () => {
-    const returnUrl = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
+    // AuthService only accepts a safe relative returnUrl (no origin/colon).
+    const returnUrl = encodeURIComponent('/auth/google/callback');
     const baseUrl = getApiBaseUrl();
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     window.location.href = `${normalizedBaseUrl}${authEndpoints.loginGoogle}?returnUrl=${returnUrl}`;

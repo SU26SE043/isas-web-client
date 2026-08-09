@@ -16,6 +16,7 @@ describe('PracticeQuestionResultCard', () => {
     render(
       <PracticeQuestionResultCard
         defaultOpen
+        sessionId="session-1"
         question={{
           questionId: 'q1',
           orderNo: 1,

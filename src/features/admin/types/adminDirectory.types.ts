@@ -1,6 +1,12 @@
-import type { UserRoleType } from '@/features/auth/types/auth.types';
-
-export type AdminDirectoryRole = Exclude<UserRoleType, 'guest'>;
+/** Platform roles returned by the Auth admin directory contract. */
+export type AdminDirectoryRole =
+  | 'Candidate'
+  | 'Employer'
+  | 'Admin'
+  | 'NoRole'
+  // Transitional values accepted while older Auth records are being migrated.
+  | 'OrgAdmin'
+  | 'HrMember';
 export type AdminDirectoryRoleFilter = 'all' | AdminDirectoryRole;
 
 export interface AdminOrganization {

@@ -57,6 +57,8 @@ function createErrorKey(code: CreatePracticeSessionErrorCode): string {
       return 'practice.errors.insufficientCredit';
     case 'ai_failed':
       return 'practice.errors.aiFailed';
+    case 'platform_capacity':
+      return 'practice.errors.platformCapacity';
     case 'create_failed':
       return 'practice.errors.createSessionFailed';
     default:

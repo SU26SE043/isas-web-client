@@ -32,6 +32,7 @@ export type OpenedLearningLesson = {
   practiceStatus: LessonPartStatus;
   pathStatus: LearningPathStatus;
   resources: LearningResource[];
+  citations: import('../types/roadmap.api.types').LearningCitation[] | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -143,6 +144,9 @@ function mapLessonFromApi(lesson: ApiRoadmapLesson, index: number): LearningLess
     // List/detail must not use theoryContent for lesson body — fetch via open-lesson API.
     content: '',
     contentVi: '',
+    theoryContent: lesson.theoryContent ?? null,
+    resources: Array.isArray(lesson.resources) ? lesson.resources : [],
+    citations: Array.isArray(lesson.citations) ? lesson.citations : null,
     status: parts.pathStatus,
     apiStatus,
     sessionId: pickString(lesson.sessionId) || null,
@@ -176,6 +180,8 @@ function mapMilestoneFromApi(
     status: gate,
     progressPercent: pickNumber(milestone.progressPercent, Math.round((completedParts / totalParts) * 100)),
     lessons,
+    focusCriteria: Array.isArray(milestone.focusCriteria) ? milestone.focusCriteria : [],
+    improvement: Array.isArray(milestone.improvement) ? milestone.improvement : null,
   };
 }
 
@@ -216,6 +222,12 @@ export function mapApiRoadmapListItem(raw: unknown): LearningRoadmapCard {
     estimatedRemainingHours: pickNumber(item.estimatedRemainingHours),
     updatedAt: pickString(item.updatedAt) || new Date().toISOString(),
     readOnly: Boolean(item.readOnly) || status === 'completed',
+    jobCategory: pickString(item.jobCategory),
+    language: pickString(item.language) || undefined,
+    level: pickString(item.level, item.targetLevel) || undefined,
+    apiStatus: pickString(item.status) || undefined,
+    createdAt: pickString(item.createdAt) || undefined,
+    completedAt: typeof item.completedAt === 'string' ? item.completedAt : null,
   };
 }
 
@@ -318,6 +330,7 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
     practiceStatus: parts.practiceStatus,
     pathStatus: parts.pathStatus,
     resources: mapLearningResources(item.resources),
+    citations: Array.isArray(item.citations) ? item.citations : null,
   };
 }
 

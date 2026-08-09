@@ -73,6 +73,7 @@ describe('normalizeUserRole', () => {
     expect(normalizeUserRole('OrgAdmin')).toBe(UserRole.ORG_ADMIN);
     expect(normalizeUserRole('HrMember')).toBe(UserRole.HR_MEMBER);
     expect(normalizeUserRole('Admin')).toBe(UserRole.ADMIN);
+    expect(normalizeUserRole('No role')).toBe(UserRole.NO_ROLE);
     expect(normalizeUserRole('candidate')).toBe(UserRole.CANDIDATE);
     expect(normalizeUserRole('ORG_ADMIN')).toBe(UserRole.ORG_ADMIN);
   });
@@ -148,6 +149,27 @@ describe('parseUser', () => {
       id: 'emp-1',
       email: 'employer@isas.dev',
       role: UserRole.ORG_ADMIN,
+    });
+  });
+
+  it('preserves organization context returned by /me', () => {
+    expect(
+      parseUser({
+        id: 'u-1',
+        fullName: 'Member',
+        email: 'member@isas.dev',
+        location: null,
+        title: null,
+        role: 'Employer',
+        orgId: 'org-1',
+        orgName: 'Isas',
+        orgRole: 'HrMember',
+      }),
+    ).toMatchObject({
+      role: UserRole.ORG_ADMIN,
+      orgId: 'org-1',
+      orgName: 'Isas',
+      orgRole: 'HrMember',
     });
   });
 

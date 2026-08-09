@@ -27,7 +27,7 @@ export function buildCreateRoadmapRequest(
   level: string,
   input: Pick<
     CreateRoadmapInput,
-    'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus'
+    'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language'
   >,
 ): BuildCreateRoadmapPayloadResult {
   if (!jobCategory.trim() || !level.trim()) {
@@ -43,6 +43,7 @@ export function buildCreateRoadmapRequest(
   const body: CreateRoadmapApiRequest = {
     jobCategory: jobCategory.trim(),
     level,
+    language: input.language ?? 'vi',
   };
 
   if (input.cvId?.trim()) body.cvId = input.cvId.trim();

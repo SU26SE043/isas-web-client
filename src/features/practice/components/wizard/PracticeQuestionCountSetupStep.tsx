@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import {
   PRACTICE_QUESTION_COUNT_MAX,
   PRACTICE_QUESTION_COUNT_MIN,
+  type PracticeSessionOptions,
 } from '../../types/b2cPracticeSession.types';
 import { isValidPracticeQuestionCount } from '../../utils/buildCreatePracticeSessionRequest';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -17,6 +18,9 @@ interface PracticeQuestionCountSetupStepProps {
   onChange: (value: number) => void;
   onBack: () => void;
   onNext: () => void;
+  options?: PracticeSessionOptions | null;
+  isLoadingOptions?: boolean;
+  optionsError?: string | null;
 }
 
 export function PracticeQuestionCountSetupStep({
@@ -25,9 +29,14 @@ export function PracticeQuestionCountSetupStep({
   onChange,
   onBack,
   onNext,
+  options,
+  isLoadingOptions = false,
+  optionsError,
 }: PracticeQuestionCountSetupStepProps) {
   const { t } = useLanguage();
-  const valid = isValidPracticeQuestionCount(value);
+  const min = options?.questionCountMin ?? PRACTICE_QUESTION_COUNT_MIN;
+  const max = options?.questionCountMax ?? PRACTICE_QUESTION_COUNT_MAX;
+  const valid = isValidPracticeQuestionCount(value) && value >= min && value <= max;
 
   return (
     <PracticeWizardStepCard
@@ -42,8 +51,20 @@ export function PracticeQuestionCountSetupStep({
         />
       }
     >
+      {isLoadingOptions ? (
+        <p className="mb-4 text-sm text-muted-foreground" aria-live="polite">
+          {t('practice.setup.questionCount.loadingOptions')}
+        </p>
+      ) : null}
+
+      {optionsError ? (
+        <p className="mb-4 text-sm text-error" role="alert">
+          {t('practice.setup.questionCount.optionsError')}
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
-        {QUICK.map((n) => (
+        {(options?.presets.length ? options.presets.map((preset) => preset.questionCount) : QUICK).map((n) => (
           <button
             key={n}
             type="button"
@@ -66,8 +87,8 @@ export function PracticeQuestionCountSetupStep({
         <input
           id="practice-question-count"
           type="number"
-          min={PRACTICE_QUESTION_COUNT_MIN}
-          max={PRACTICE_QUESTION_COUNT_MAX}
+          min={min}
+          max={max}
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value))}
@@ -75,9 +96,9 @@ export function PracticeQuestionCountSetupStep({
         />
         <input
           type="range"
-          min={PRACTICE_QUESTION_COUNT_MIN}
-          max={PRACTICE_QUESTION_COUNT_MAX}
-          value={Math.min(PRACTICE_QUESTION_COUNT_MAX, Math.max(PRACTICE_QUESTION_COUNT_MIN, value || 1))}
+          min={min}
+          max={max}
+          value={Math.min(max, Math.max(min, value || min))}
           disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full"

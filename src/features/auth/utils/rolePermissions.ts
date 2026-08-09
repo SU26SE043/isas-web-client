@@ -6,6 +6,7 @@ export const roleTranslationKeys: Record<UserRoleType, string> = {
   [UserRole.ORG_ADMIN]: 'role.orgAdmin',
   [UserRole.HR_MEMBER]: 'role.hrMember',
   [UserRole.ADMIN]: 'role.admin',
+  [UserRole.NO_ROLE]: 'profile.noRole',
 };
 
 export const getRoleTranslationKey = (role: UserRoleType): string => roleTranslationKeys[role];
@@ -17,6 +18,7 @@ export const getRoleColor = (role: UserRoleType): string => {
     [UserRole.HR_MEMBER]: 'bg-info-bg text-info',
     [UserRole.ORG_ADMIN]: 'bg-success-bg text-success',
     [UserRole.ADMIN]: 'bg-error-bg text-error',
+    [UserRole.NO_ROLE]: 'bg-surface-overlay text-muted-foreground',
   };
   return roleColors[role];
 };

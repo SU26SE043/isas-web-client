@@ -78,6 +78,9 @@ export function PracticeWizardPage() {
           onChange={flow.setQuestionCount}
           onBack={() => flow.goToStep(3)}
           onNext={() => flow.goToStep(5)}
+          options={flow.sessionOptions}
+          isLoadingOptions={flow.loadingSessionOptions}
+          optionsError={flow.sessionOptionsError}
         />
       ) : null}
 

@@ -10,6 +10,7 @@ export type SessionResultErrorKind =
   | 'notFound'
   | 'notReady'
   | 'generationFailed'
+  | 'capacity'
   | 'system'
   | 'noQuestions';
 
@@ -47,6 +48,10 @@ export function SessionResultErrorState({
       title: t('practice.result.generationFailedTitle'),
       description: t('practice.result.generationFailedDescription'),
     },
+    capacity: {
+      title: t('practice.result.loadErrorTitle'),
+      description: t('practice.errors.platformCapacity'),
+    },
     system: {
       title: t('practice.result.loadErrorTitle'),
       description: t('practice.result.loadErrorDescription'),
@@ -66,7 +71,7 @@ export function SessionResultErrorState({
         <h1 className="mt-4 text-2xl font-semibold text-foreground">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         <div className="mt-6 flex justify-center gap-3">
-          {kind === 'system' && onRetry ? (
+          {(kind === 'system' || kind === 'capacity') && onRetry ? (
             <Button type="button" onClick={onRetry}>
               {t('practice.result.retry')}
             </Button>

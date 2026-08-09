@@ -42,6 +42,7 @@ export function PracticeLiveResultReport({
         {activeTab === 'questions' ? (
           <ReportQuestionDetail
             questions={view.questions}
+            sessionId={session.id}
             activeQuestionIndex={activeQuestionIndex}
             onQuestionChange={setActiveQuestionIndex}
           />

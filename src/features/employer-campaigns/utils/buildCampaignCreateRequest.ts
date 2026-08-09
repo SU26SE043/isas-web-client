@@ -112,6 +112,7 @@ export function mergeCampaignWriteResult(
     jdText?: string | null;
     title?: string;
     domain?: string;
+    location?: string;
     maxCandidates?: number | null;
     timeLimitMinutes?: number;
     startsAt?: string;
@@ -135,6 +136,7 @@ export function mergeCampaignWriteResult(
     next.domain = input.domain.trim();
     next.company = input.domain.trim();
   }
+  if (input.location?.trim()) next.location = input.location.trim();
   if (input.maxCandidates && input.maxCandidates > 0) next.capacity = input.maxCandidates;
   if (input.timeLimitMinutes && input.timeLimitMinutes > 0) {
     next.durationMinutes = input.timeLimitMinutes;
@@ -186,6 +188,7 @@ export function buildCampaignCreateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
+    location: info.location.trim(),
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
@@ -221,6 +224,7 @@ export function buildCampaignUpdateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
+    location: info.location.trim(),
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,

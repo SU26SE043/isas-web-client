@@ -71,6 +71,9 @@ export interface LearningLesson {
   /** Practice session id when status is Practicing. */
   sessionId?: string | null;
   practiceReportId?: string;
+  theoryContent?: string | null;
+  resources?: Array<{ title: string; type: string; publisher?: string | null; url?: string | null }>;
+  citations?: Array<{ chunkId: string; sourceUrl: string; sourceTitle: string }> | null;
 }
 
 export interface LearningMilestone {
@@ -81,6 +84,8 @@ export interface LearningMilestone {
   status: MilestoneGateStatus;
   progressPercent: number;
   lessons: LearningLesson[];
+  focusCriteria?: string[];
+  improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
 }
 
 export interface LearningRoadmapCard {
@@ -102,6 +107,12 @@ export interface LearningRoadmapCard {
   estimatedRemainingHours: number;
   updatedAt: string;
   readOnly: boolean;
+  jobCategory?: string;
+  language?: 'vi' | 'en' | string;
+  level?: string;
+  apiStatus?: 'Active' | 'Completed' | 'Abandoned' | string;
+  createdAt?: string;
+  completedAt?: string | null;
 }
 
 export interface LearningRoadmapDetail extends LearningRoadmapCard {
@@ -114,4 +125,6 @@ export interface LearningDashboardQuery {
   domainId?: string;
   status?: LearningPathStatus | 'all';
   sort?: 'updated' | 'progress';
+  cursor?: string;
+  limit?: number;
 }
