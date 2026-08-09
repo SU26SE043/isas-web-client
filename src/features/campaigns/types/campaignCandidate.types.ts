@@ -40,6 +40,11 @@ export interface CandidateCampaignListItem {
   interviewStatus: CampaignInterviewStatus;
 }
 
+export interface CandidateCampaignsPage {
+  items: CandidateCampaignListItem[];
+  nextCursor: string | null;
+}
+
 export interface CandidateCampaignDetailResponse {
   campaignId: string;
   title: string;
@@ -65,6 +70,7 @@ export interface StartCampaignInterviewResponse {
   antiCheatEnabled: boolean;
   faceEnrollRequired: boolean;
   adaptiveEnabled: boolean;
+  deadlineAt?: string | null;
 }
 
 export interface FaceCheckResponse {
@@ -87,6 +93,7 @@ export interface CampaignInterviewContext {
   antiCheatEnabled: boolean;
   faceEnrollRequired: boolean;
   adaptiveEnabled: boolean;
+  deadlineAt?: string | null;
 }
 
 export type CampaignCandidateErrorCode =
@@ -96,6 +103,8 @@ export type CampaignCandidateErrorCode =
   | 'forbidden'
   | 'paymentRequired'
   | 'conflict'
+  | 'outsideSlotWindow'
+  | 'concurrentLimit'
   | 'badRequest'
   | 'identityError'
   | 'serverError'

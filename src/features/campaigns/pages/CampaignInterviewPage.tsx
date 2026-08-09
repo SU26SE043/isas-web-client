@@ -69,6 +69,7 @@ export function CampaignInterviewPage() {
 
       <B2cPracticeInterviewRoom
         sessionId={sessionId}
+        deadlineAt={stored?.deadlineAt}
         completePath={`/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/completed/${encodeURIComponent(sessionId)}`}
       />
     </div>

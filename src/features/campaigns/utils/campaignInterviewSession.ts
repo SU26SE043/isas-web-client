@@ -24,6 +24,7 @@ export function saveCampaignInterviewSession(
     antiCheatEnabled: start.antiCheatEnabled,
     faceEnrollRequired: start.faceEnrollRequired,
     adaptiveEnabled: start.adaptiveEnabled,
+    deadlineAt: start.deadlineAt ?? null,
     questions: start.questions,
     startedAt: new Date().toISOString(),
   };

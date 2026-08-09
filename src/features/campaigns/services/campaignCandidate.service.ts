@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import axios from 'axios';
 import { multipartFormDataConfig } from '@/features/practice/utils/multipartFormDataConfig';
 import type {
   CampaignCandidateErrorCode,
@@ -8,6 +9,7 @@ import type {
   CampaignInvitationResponse,
   CandidateCampaignDetailResponse,
   CandidateCampaignListItem,
+  CandidateCampaignsPage,
   CreateCampaignFlagRequest,
   FaceCheckResponse,
   JoinCampaignResponse,
@@ -18,12 +20,28 @@ import { campaignCandidateEndpoints } from './campaignCandidate.endpoints';
 export class CampaignCandidateError extends Error {
   readonly code: CampaignCandidateErrorCode;
   readonly status?: number;
+  readonly apiCode?: string;
+  readonly retryAfterSeconds?: number;
+  readonly slotStartsAt?: string;
+  readonly slotEndsAt?: string;
+  readonly serverTimeUtc?: string;
 
-  constructor(code: CampaignCandidateErrorCode, message: string, status?: number) {
+  constructor(code: CampaignCandidateErrorCode, message: string, status?: number, details?: {
+    apiCode?: string;
+    retryAfterSeconds?: number;
+    slotStartsAt?: string;
+    slotEndsAt?: string;
+    serverTimeUtc?: string;
+  }) {
     super(message);
     this.name = 'CampaignCandidateError';
     this.code = code;
     this.status = status;
+    this.apiCode = details?.apiCode;
+    this.retryAfterSeconds = details?.retryAfterSeconds;
+    this.slotStartsAt = details?.slotStartsAt;
+    this.slotEndsAt = details?.slotEndsAt;
+    this.serverTimeUtc = details?.serverTimeUtc;
   }
 }
 
@@ -56,10 +74,29 @@ function statusToCode(status?: number): CampaignCandidateErrorCode {
 function toCampaignCandidateError(error: unknown, fallback: string): CampaignCandidateError {
   if (error instanceof CampaignCandidateError) return error;
   const status = getApiStatusCode(error);
+  const body = axios.isAxiosError(error) && error.response?.data && typeof error.response.data === 'object'
+    ? error.response.data as Record<string, unknown>
+    : undefined;
+  const apiCode = typeof body?.code === 'string' ? body.code : undefined;
+  const retryHeader = axios.isAxiosError(error) ? error.response?.headers?.['retry-after'] : undefined;
+  const retryAfterSeconds = Number(body?.retryAfterSeconds ?? retryHeader);
+  const details = {
+    apiCode,
+    retryAfterSeconds: Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds : undefined,
+    slotStartsAt: asOptionalString(body?.slotStartsAt) ?? undefined,
+    slotEndsAt: asOptionalString(body?.slotEndsAt) ?? undefined,
+    serverTimeUtc: asOptionalString(body?.serverTimeUtc) ?? undefined,
+  };
+  const code = apiCode === 'outside_slot_window'
+    ? 'outsideSlotWindow'
+    : apiCode === 'concurrent_limit'
+      ? 'concurrentLimit'
+      : statusToCode(status);
   return new CampaignCandidateError(
-    statusToCode(status),
+    code,
     getApiErrorMessage(error, fallback),
     status,
+    details,
   );
 }
 
@@ -186,6 +223,15 @@ function unwrapList(payload: unknown): unknown[] {
   return [];
 }
 
+function readNextCursorHeader(headers: unknown): string | null {
+  if (!headers || typeof headers !== 'object') return null;
+  const record = headers as Record<string, unknown> & { get?: (name: string) => unknown };
+  const raw = typeof record.get === 'function'
+    ? record.get('x-next-cursor') ?? record.get('X-Next-Cursor')
+    : record['x-next-cursor'] ?? record['X-Next-Cursor'];
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+}
+
 function parseDetail(raw: unknown): CandidateCampaignDetailResponse {
   if (!raw || typeof raw !== 'object') {
     throw new CampaignCandidateError('unknown', 'Invalid campaign detail response.');
@@ -255,6 +301,7 @@ function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCamp
     antiCheatEnabled: Boolean(data.antiCheatEnabled),
     faceEnrollRequired: Boolean(data.faceEnrollRequired),
     adaptiveEnabled: Boolean(data.adaptiveEnabled),
+    deadlineAt: asOptionalString(data.deadlineAt),
   };
 }
 
@@ -285,7 +332,9 @@ export const campaignCandidateService = {
     }
 
     try {
-      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.invitation(trimmed));
+      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.invitation(trimmed), {
+        skipAuth: true,
+      });
       return parseInvitation(unwrapData(response.data));
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not load invitation.');
@@ -306,12 +355,15 @@ export const campaignCandidateService = {
     }
   },
 
-  async getMyCampaigns(): Promise<CandidateCampaignListItem[]> {
+  async getMyCampaigns(query?: { cursor?: string; limit?: number }): Promise<CandidateCampaignsPage> {
     try {
-      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.myCampaigns);
-      return unwrapList(response.data)
+      const response = await apiClient.get<unknown>(campaignCandidateEndpoints.myCampaigns, {
+        params: { cursor: query?.cursor, limit: query?.limit },
+      });
+      const items = unwrapList(response.data)
         .map(parseListItem)
         .filter((item): item is CandidateCampaignListItem => item != null);
+      return { items, nextCursor: readNextCursorHeader(response.headers) };
     } catch (error) {
       throw toCampaignCandidateError(error, 'Could not load campaigns.');
     }

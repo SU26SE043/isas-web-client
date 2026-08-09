@@ -217,7 +217,7 @@ export async function submitPracticeAnswer(
   const response = await apiClient.post<unknown>(
     b2cPracticeSessionEndpoints.answers(input.sessionId),
     formData,
-    multipartFormDataConfig,
+    { ...multipartFormDataConfig, timeout: 120_000 },
   );
   return mapSubmitPracticeAnswerResponse(response.data);
 }

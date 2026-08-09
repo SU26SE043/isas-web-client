@@ -27,6 +27,8 @@ function startErrorMessage(error: unknown, t: (key: string) => string): string {
   if (error.code === 'unauthorized') return t('campaigns.detail.startUnauthorized');
   if (error.code === 'paymentRequired') return t('campaigns.detail.startPaymentRequired');
   if (error.code === 'forbidden') return t('campaigns.detail.startForbidden');
+  if (error.code === 'outsideSlotWindow') return t('campaigns.detail.startOutsideSlotWindow');
+  if (error.code === 'concurrentLimit') return t('campaigns.detail.startConcurrentLimit');
   if (error.code === 'conflict') return error.message || t('campaigns.detail.startConflict');
   if (error.code === 'identityError' || error.code === 'serverError') {
     return t('campaigns.detail.startServerError');

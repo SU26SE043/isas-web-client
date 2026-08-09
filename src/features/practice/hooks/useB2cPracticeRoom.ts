@@ -23,7 +23,7 @@ type CountdownValue = number | 'START' | null;
 
 export function useB2cPracticeRoom(
   sessionId: string,
-  options?: { completePath?: string; startWithCountdown?: boolean },
+  options?: { completePath?: string; startWithCountdown?: boolean; deadlineAt?: string | null },
 ) {
   const navigate = useNavigate();
   const completePath = options?.completePath;
@@ -40,6 +40,7 @@ export function useB2cPracticeRoom(
   );
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [serverRemainingSeconds, setServerRemainingSeconds] = useState<number | null>(null);
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
   const countdownIntervalRef = useRef<number | null>(null);
@@ -116,12 +117,34 @@ export function useB2cPracticeRoom(
     [store.currentQuestionId, store.questions],
   );
 
+  useEffect(() => {
+    if (!options?.deadlineAt) {
+      setServerRemainingSeconds(null);
+      return;
+    }
+    const deadlineMs = new Date(options.deadlineAt).getTime();
+    if (!Number.isFinite(deadlineMs)) {
+      setServerRemainingSeconds(null);
+      return;
+    }
+    const update = () =>
+      setServerRemainingSeconds(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [options?.deadlineAt]);
+
+  const effectiveRemainingSeconds =
+    serverRemainingSeconds == null
+      ? store.remainingSeconds
+      : Math.min(store.remainingSeconds, serverRemainingSeconds);
+
   const answerSubmit = useB2cPracticeAnswerSubmit({
     sessionId,
     recorder,
     currentQuestionId: store.currentQuestionId,
     currentQuestion,
-    remainingSeconds: store.remainingSeconds,
+    remainingSeconds: effectiveRemainingSeconds,
     stage: store.stage,
     isTimingOut,
     answersByQuestionId: store.answersByQuestionId,
@@ -172,15 +195,15 @@ export function useB2cPracticeRoom(
   }, [answerSubmit.isSubmittingAnswer, isSubmittingSession, isTimingOut, phase, store]);
 
   useEffect(() => {
-    if (store.remainingSeconds === 10 && !warned10Ref.current) {
+    if (effectiveRemainingSeconds === 10 && !warned10Ref.current) {
       warned10Ref.current = true;
       setShowTimerWarning(true);
     }
-    if (store.remainingSeconds > 10) {
+    if (effectiveRemainingSeconds > 10) {
       warned10Ref.current = false;
       setShowTimerWarning(false);
     }
-  }, [store.remainingSeconds]);
+  }, [effectiveRemainingSeconds]);
 
   useEffect(() => {
     clearQuestionCountdown();
@@ -203,7 +226,7 @@ export function useB2cPracticeRoom(
 
   useEffect(() => {
     if (phase !== 'answering') return undefined;
-    if (store.remainingSeconds !== 0) return;
+    if (effectiveRemainingSeconds !== 0) return;
     if (store.stage !== 'interviewing') return;
     if (isSubmittingSession) return;
 
@@ -247,7 +270,7 @@ export function useB2cPracticeRoom(
             store.appendQuestion(response.nextQuestion);
             store.setCurrentQuestion(response.nextQuestion.id, response.nextQuestion.timeLimitSec);
             store.setStage('interviewing');
-          } else if (response.interviewComplete || response.nextAction === 'end') {
+          } else if (response.interviewComplete) {
             store.setInterviewComplete(true, response.nextAction ?? 'end');
           } else {
             const nextQuestion = getNextPracticeQuestion(store.questions, questionId);
@@ -255,7 +278,7 @@ export function useB2cPracticeRoom(
               store.setCurrentQuestion(nextQuestion.id, nextQuestion.timeLimitSec);
               store.setStage('interviewing');
             } else {
-              store.setInterviewComplete(true, 'end');
+              store.setStage('interviewing');
             }
           }
         } catch {
@@ -265,7 +288,7 @@ export function useB2cPracticeRoom(
             store.setCurrentQuestion(nextQuestion.id, nextQuestion.timeLimitSec);
             store.setStage('interviewing');
           } else {
-            store.setInterviewComplete(true, 'end');
+            store.setStage('interviewing');
           }
         } finally {
           if (!cancelled) setIsTimingOut(false);
@@ -290,12 +313,12 @@ export function useB2cPracticeRoom(
     store.answersByQuestionId,
     store.currentQuestionId,
     store.questions,
-    store.remainingSeconds,
+    effectiveRemainingSeconds,
     store.stage,
   ]);
 
   const canReplay =
-    store.remainingSeconds > 0 &&
+    effectiveRemainingSeconds > 0 &&
     !answerSubmit.isSubmittingAnswer &&
     !isTimingOut &&
     store.stage === 'interviewing';
@@ -388,7 +411,7 @@ export function useB2cPracticeRoom(
       0,
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
-    remainingSeconds: store.remainingSeconds,
+    remainingSeconds: effectiveRemainingSeconds,
     answersByQuestionId: store.answersByQuestionId,
     questionStates: store.questionStates,
     interviewComplete: store.interviewComplete,
@@ -424,7 +447,7 @@ export function useB2cPracticeRoom(
     unansweredCount,
     hasPendingRecording,
     startRecording: () => {
-      if (store.remainingSeconds <= 0 || isTimingOut) return;
+      if (effectiveRemainingSeconds <= 0 || isTimingOut) return;
       if (store.answersByQuestionId[store.currentQuestionId ?? '']) {
         setRetryConfirmOpen(true);
         return;
@@ -435,7 +458,7 @@ export function useB2cPracticeRoom(
       }
     },
     confirmRetryRecording: () => {
-      if (isTimingOut || store.remainingSeconds <= 0) return;
+      if (isTimingOut || effectiveRemainingSeconds <= 0) return;
       setRetryConfirmOpen(false);
       recorder.clearRecording();
       recorder.startRecording();

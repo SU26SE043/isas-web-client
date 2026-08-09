@@ -37,6 +37,7 @@ function joinErrorMessage(error: unknown, t: (key: string) => string): string {
     if (error.code === 'notFound') return t('campaigns.invite.joinNotFound');
     if (error.code === 'gone') return t('campaigns.invite.joinGone');
     if (error.code === 'identityError') return t('campaigns.invite.joinIdentityError');
+    if (error.code === 'forbidden') return t('campaigns.invite.joinEmailMismatch');
     return error.message || t('campaigns.invite.joinUnknown');
   }
   return t('campaigns.invite.joinUnknown');

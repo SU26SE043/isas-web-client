@@ -26,12 +26,13 @@ interface B2cPracticeInterviewRoomProps {
   sessionId: string;
   completePath?: string;
   startWithCountdown?: boolean;
+  deadlineAt?: string | null;
 }
 
-export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, deadlineAt }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown });
+  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown, deadlineAt });
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
   const interviewCompleteToastRef = useRef(false);
