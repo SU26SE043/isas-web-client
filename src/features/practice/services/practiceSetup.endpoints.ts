@@ -3,6 +3,7 @@ export const practiceSetupEndpoints = {
   levels: '/api/v1/interview/practice/levels',
   /** Saved/default rubric for the domain selected in wizard step 1 (`FE` | `BE` | `BA`). */
   rubric: (jobCategory: string) => `/api/v1/interview/practice/rubrics/${jobCategory}`,
-  uploadCv: '/api/v1/interview/practice/cv',
+  /** Gateway-proxied file upload; `/interview/practice/cv` is not a valid route. */
+  uploadCv: '/api/v1/interview/files/upload?fileType=cv',
   createSession: '/api/v1/interview/practice/sessions',
 } as const;
