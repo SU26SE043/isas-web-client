@@ -192,6 +192,11 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceCheck.noFace': 'Không phát hiện rõ khuôn mặt. Vui lòng điều chỉnh camera.',
     'campaigns.faceCheck.multipleFaces': 'Phát hiện nhiều khuôn mặt trong khung hình.',
     'campaigns.faceCheck.adjust': 'Vui lòng điều chỉnh góc camera để khuôn mặt rõ hơn.',
+    'campaigns.fullscreen.title': 'Yêu cầu toàn màn hình',
+    'campaigns.fullscreen.required': 'Bạn cần bật toàn màn hình để bắt đầu bài kiểm tra.',
+    'campaigns.fullscreen.exitWarning': 'Bạn đã thoát toàn màn hình. Hành động này đã được ghi nhận là một vi phạm.',
+    'campaigns.fullscreen.enter': 'Bật toàn màn hình',
+    'campaigns.fullscreen.unsupported': 'Trình duyệt không hỗ trợ toàn màn hình',
   },
   en: {
     'campaigns.browse.eyebrow': 'Phase 8 · Campaign Discovery',
@@ -386,5 +391,10 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceCheck.noFace': 'Face not clearly detected. Please adjust your camera.',
     'campaigns.faceCheck.multipleFaces': 'Multiple faces detected in the frame.',
     'campaigns.faceCheck.adjust': 'Please adjust the camera so your face is clearer.',
+    'campaigns.fullscreen.title': 'Fullscreen required',
+    'campaigns.fullscreen.required': 'You must enable fullscreen to start the assessment.',
+    'campaigns.fullscreen.exitWarning': 'You exited fullscreen. This action has been recorded as a violation.',
+    'campaigns.fullscreen.enter': 'Enable fullscreen',
+    'campaigns.fullscreen.unsupported': 'Fullscreen is not supported by this browser',
   },
 };
