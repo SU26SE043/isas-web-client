@@ -85,6 +85,9 @@ export function parseCampaignInvitation(raw: unknown): CampaignInvitation | null
     createdAt,
     expiresAt,
     emailSentAt: pickOptionalString(record, 'emailSentAt', 'EmailSentAt'),
+    sentAt: pickOptionalString(record, 'sentAt', 'SentAt'),
+    revokedAt: pickOptionalString(record, 'revokedAt', 'RevokedAt'),
+    campaignCandidateId: pickOptionalString(record, 'campaignCandidateId', 'CampaignCandidateId'),
     joinedAt: pickOptionalString(record, 'joinedAt', 'JoinedAt'),
   };
 }

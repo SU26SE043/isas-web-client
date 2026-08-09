@@ -55,6 +55,11 @@ export function buildCandidateListParams(
   if (query.minScore != null && Number.isFinite(query.minScore)) params.minScore = query.minScore;
   if (query.skill?.trim()) params.skill = query.skill.trim();
   if (query.sort === 'score' || query.sort === 'name') params.sort = query.sort;
+  if (query.search?.trim()) params.search = query.search.trim();
+  if (query.cursor?.trim()) params.cursor = query.cursor.trim();
+  if (query.limit != null && Number.isFinite(query.limit)) {
+    params.limit = Math.min(500, Math.max(1, Math.trunc(query.limit)));
+  }
   return Object.keys(params).length > 0 ? params : undefined;
 }
 

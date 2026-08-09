@@ -57,7 +57,7 @@ export function mapRubricToCreateCriteria(
     });
 }
 
-/** Each question carries its own source/isRequired (per-question, not wizard-wide). */
+/** The server owns question source; only preserve an id when editing an existing AI question. */
 export function mapQuestionsToApiRequest(
   questions: CampaignQuestion[],
 ): CampaignCreateQuestionRequest[] {
@@ -66,7 +66,6 @@ export function mapQuestionsToApiRequest(
     .map((item) => {
       const payload: CampaignCreateQuestionRequest = {
         questionText: item.prompt.trim(),
-        source: item.source === 'ai' ? ('AiGenerated' as const) : ('CustomHr' as const),
         isRequired: item.isRequired,
       };
       if (isServerQuestionId(item.id)) {
@@ -194,8 +193,10 @@ export function buildCampaignCreateRequest(
     antiCheatEnabled: settings.antiCheatEnabled,
     faceVerifyEnabled: settings.faceVerifyEnabled,
     adaptiveEnabled: settings.adaptiveEnabled,
-    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : null,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : null,
+    groundingEnabled: false,
+    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
+    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
+    maxDeepPerQuestion: null,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
@@ -226,8 +227,11 @@ export function buildCampaignUpdateRequest(
     antiCheatEnabled: settings.antiCheatEnabled,
     faceVerifyEnabled: settings.faceVerifyEnabled,
     adaptiveEnabled: settings.adaptiveEnabled,
-    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : null,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : null,
+    groundingEnabled: false,
+    // v10 treats null for these limits as "keep existing" on PUT; omit when UI has no limit.
+    maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
+    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
+    maxDeepPerQuestion: null,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || undefined,

@@ -56,6 +56,9 @@ export interface EmployerCampaign {
   antiCheatEnabled?: boolean;
   faceVerifyEnabled?: boolean;
   adaptiveEnabled?: boolean;
+  groundingEnabled?: boolean;
+  maxConcurrentInterviews?: number | null;
+  maxDeepPerQuestion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   locale: CampaignLocale;
