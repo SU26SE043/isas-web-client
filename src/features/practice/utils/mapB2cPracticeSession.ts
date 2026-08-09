@@ -6,6 +6,8 @@ import type {
   PracticeCvVsAnswer,
   PracticeNextAction,
   PracticeQuestionResponse,
+  PracticeQuestionCitation,
+  PracticeCriterionEvidence,
   PracticeRubricCriterionRef,
   PracticeSpeakingMetrics,
   PracticeSessionResponse,
@@ -39,6 +41,45 @@ function pickStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
 }
 
+function mapCitations(raw: unknown): PracticeQuestionCitation[] | null | undefined {
+  if (raw === null) return null;
+  if (!Array.isArray(raw)) return undefined;
+  return raw
+    .map((entry) => {
+      const item = asRecord(entry);
+      const chunkId = pickString(item.chunkId);
+      const sourceUrl = pickString(item.sourceUrl);
+      const sourceTitle = pickString(item.sourceTitle);
+      return chunkId && sourceUrl && sourceTitle ? { chunkId, sourceUrl, sourceTitle } : null;
+    })
+    .filter((item): item is PracticeQuestionCitation => item !== null);
+}
+
+function mapCriterionEvidence(raw: unknown): PracticeCriterionEvidence[] | null | undefined {
+  if (raw === null) return null;
+  if (!Array.isArray(raw)) return undefined;
+  return raw
+    .map((entry) => {
+      const item = asRecord(entry);
+      const criterionId = pickString(item.criterionId);
+      const criterionName = pickString(item.criterionName);
+      const state = pickString(item.state) as PracticeCriterionEvidence['state'];
+      if (!criterionId || !criterionName || !['UNKNOWN', 'PARTIAL', 'SATISFIED', 'FAILED'].includes(state)) {
+        return null;
+      }
+      return {
+        criterionId,
+        criterionName,
+        state,
+        evidenceFound: pickStringArray(item.evidenceFound),
+        missingEvidence: pickStringArray(item.missingEvidence),
+        deepCount: pickNumber(item.deepCount) ?? 0,
+        updatedAt: pickString(item.updatedAt),
+      };
+    })
+    .filter((item): item is PracticeCriterionEvidence => item !== null);
+}
+
 function mapQuestion(raw: unknown, index: number): PracticeQuestionResponse | null {
   const item = asRecord(raw);
   const id = pickString(item.id, item.questionId);
@@ -48,7 +89,7 @@ function mapQuestion(raw: unknown, index: number): PracticeQuestionResponse | nu
   const timeLimitSec =
     pickNumber(item.timeLimitSec, item.timeLimitSeconds, item.durationSec) ?? 120;
   const kind = pickString(item.kind, item.type, item.questionKind) || 'question';
-  return { id, orderNo, content, timeLimitSec, kind };
+  return { id, orderNo, content, timeLimitSec, kind, citations: mapCitations(item.citations) };
 }
 
 type CriterionCatalog = Map<string, { name: string; maxScore?: number | null }>;
@@ -470,6 +511,8 @@ function mapSpeakingMetrics(raw: unknown): PracticeSpeakingMetrics | null {
       pickString(item.fillerWordNote, item.fillerNote, item.fillerWordsNote) ||
       null,
     notes,
+    metricsVersion:
+      'metricsVersion' in item ? pickNumber(item.metricsVersion) ?? null : undefined,
   };
   const hasValue = Object.entries(metrics).some(([key, value]) => {
     if (key === 'fillerBreakdown') return value != null && Object.keys(value as object).length > 0;
@@ -744,6 +787,9 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     jdId: pickString(data.jdId) || null,
     createdAt: pickString(data.createdAt) || null,
     completedAt: pickString(data.completedAt, data.scoredAt) || null,
+    language: pickString(data.language) as PracticeSessionResponse['language'],
+    seniority: pickString(data.seniority) as PracticeSessionResponse['seniority'],
+    criterionEvidence: mapCriterionEvidence(data.criterionEvidence),
     rubric,
     questions,
     result,

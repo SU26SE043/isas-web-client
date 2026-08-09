@@ -6,12 +6,14 @@ import { PracticeQuestionResultCard } from './PracticeQuestionResultCard';
 
 interface ReportQuestionDetailProps {
   questions: QuestionResultViewModel[];
+  sessionId: string;
   activeQuestionIndex: number;
   onQuestionChange: (index: number) => void;
 }
 
 export function ReportQuestionDetail({
   questions,
+  sessionId,
   activeQuestionIndex,
   onQuestionChange,
 }: ReportQuestionDetailProps) {
@@ -70,6 +72,7 @@ export function ReportQuestionDetail({
       <PracticeQuestionResultCard
         key={question.answerId ?? question.questionId}
         question={question}
+        sessionId={sessionId}
         defaultOpen
       />
     </section>

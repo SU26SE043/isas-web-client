@@ -25,6 +25,24 @@ export interface PracticeSessionOptionPreview {
   seedCount: number;
 }
 
+export interface PracticeQuestionCitation {
+  chunkId: string;
+  sourceUrl: string;
+  sourceTitle: string;
+}
+
+export type PracticeCriterionEvidenceState = 'UNKNOWN' | 'PARTIAL' | 'SATISFIED' | 'FAILED';
+
+export interface PracticeCriterionEvidence {
+  criterionId: string;
+  criterionName: string;
+  state: PracticeCriterionEvidenceState;
+  evidenceFound: string[];
+  missingEvidence: string[];
+  deepCount: number;
+  updatedAt: string;
+}
+
 export interface PracticeSessionOptions {
   adaptiveEnabled: boolean;
   maxDeepPerQuestion: number;
@@ -64,6 +82,7 @@ export interface PracticeQuestionResponse {
   content: string;
   timeLimitSec: number;
   kind: PracticeQuestionKind;
+  citations?: PracticeQuestionCitation[] | null;
 }
 
 export type PracticeNextAction = 'follow_up' | 'clarify' | 'new_question' | 'end';
@@ -165,6 +184,7 @@ export interface DeliveryMetrics {
   fillerCount?: number | null;
   fillerPer100Words?: number | null;
   fillerBreakdown?: Record<string, number> | null;
+  metricsVersion?: number | null;
 }
 
 /** UI-facing speaking metrics (maps from DeliveryMetrics + legacy aliases). */
@@ -186,6 +206,7 @@ export interface PracticeSpeakingMetrics {
   silenceRatioNote?: string | null;
   fillerWordNote?: string | null;
   notes?: string[] | null;
+  metricsVersion?: number | null;
 }
 
 export interface PracticeAnswerReview {
@@ -214,6 +235,9 @@ export interface PracticeSessionResponse {
   id: string;
   status: PracticeSessionStatus;
   jobCategory?: PracticeJobCategory | string;
+  language?: PracticeLanguage;
+  seniority?: PracticeSeniority;
+  criterionEvidence?: PracticeCriterionEvidence[] | null;
   timeLimitSec?: number;
   questionCount?: number;
   level?: string | null;

@@ -29,6 +29,52 @@ describe('mapPracticeSessionResponse', () => {
     expect(mapped.result?.cvVsAnswer?.summary).toBe('Aligned');
   });
 
+  it('preserves v8 evidence, RAG citations, language, seniority, and metrics version', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 'session-v8',
+      status: 'Scored',
+      language: 'en',
+      seniority: 'Senior',
+      criterionEvidence: [
+        {
+          criterionId: 'c1',
+          criterionName: 'Architecture',
+          state: 'PARTIAL',
+          evidenceFound: ['Designed a service boundary'],
+          missingEvidence: ['Trade-off analysis'],
+          deepCount: 1,
+          updatedAt: '2026-08-10T00:00:00Z',
+        },
+      ],
+      questions: [
+        {
+          id: 'q1',
+          orderNo: 5,
+          content: 'Explain the design.',
+          timeLimitSec: 120,
+          kind: 'Seed',
+          citations: [{ chunkId: 'chunk-1', sourceUrl: 'https://example.com', sourceTitle: 'Docs' }],
+        },
+      ],
+      answers: [
+        {
+          answerId: 'a1',
+          questionId: 'q1',
+          status: 'Scored',
+          transcript: 'Answer',
+          deliveryMetrics: { metricsVersion: 2, wordCount: 10 },
+        },
+      ],
+      result: { overallScore: 80, criteriaScores: [], needsImprovement: [] },
+    });
+
+    expect(mapped.language).toBe('en');
+    expect(mapped.seniority).toBe('Senior');
+    expect(mapped.criterionEvidence?.[0]?.state).toBe('PARTIAL');
+    expect(mapped.questions[0]?.citations?.[0]?.sourceUrl).toBe('https://example.com');
+    expect(mapped.answers?.[0]?.speakingMetrics?.metricsVersion).toBe(2);
+  });
+
   it('preserves full AI evaluation details for each answer', () => {
     const mapped = mapPracticeSessionResponse({
       id: 'session-1',

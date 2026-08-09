@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@/shared/api/apiClient';
-import { getPracticeSession, getPracticeSessionOptions } from './b2cPracticeSession.service';
+import {
+  getPracticeAnswerAudio,
+  getPracticeSession,
+  getPracticeSessionOptions,
+} from './b2cPracticeSession.service';
 
 vi.mock('@/shared/mock', () => ({
   mockDelay: vi.fn(),
@@ -81,6 +85,17 @@ describe('getPracticeSession live API', () => {
     expect(apiClient.get).toHaveBeenCalledWith(
       '/api/v1/interview/practice/session-options',
       { params: { jobCategory: 'BE', language: 'en' } },
+    );
+  });
+
+  it('downloads answer audio through the authenticated blob endpoint', async () => {
+    const audio = new Blob(['audio'], { type: 'audio/webm' });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: audio });
+
+    await expect(getPracticeAnswerAudio('session-1', 'answer-1')).resolves.toBe(audio);
+    expect(apiClient.get).toHaveBeenCalledWith(
+      '/api/v1/interview/practice/sessions/session-1/answers/answer-1/audio',
+      { responseType: 'blob' },
     );
   });
 });

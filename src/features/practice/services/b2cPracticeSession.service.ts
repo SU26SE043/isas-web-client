@@ -204,6 +204,20 @@ export async function getQuestionSpeech(sessionId: string, questionId: string): 
   return response.data;
 }
 
+/** Authenticated audio replay; callers must create an object URL from the returned Blob. */
+export async function getPracticeAnswerAudio(sessionId: string, answerId: string): Promise<Blob> {
+  if (usesMockData('practice')) {
+    await mockDelay(100);
+    return new Blob([], { type: 'audio/webm' });
+  }
+
+  const response = await apiClient.get<Blob>(
+    b2cPracticeSessionEndpoints.answerAudio(sessionId, answerId),
+    { responseType: 'blob' },
+  );
+  return response.data;
+}
+
 export async function submitPracticeAnswer(
   input: SubmitPracticeAnswerInput,
 ): Promise<SubmitPracticeAnswerResponse> {

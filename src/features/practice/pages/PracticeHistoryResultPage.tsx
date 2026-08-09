@@ -20,6 +20,9 @@ function LivePracticeHistoryResult({ sessionId }: { sessionId: string }) {
   if (query.isError) {
     if (status === 403) return <SessionResultErrorState kind="forbidden" />;
     if (status === 404) return <SessionResultErrorState kind="notFound" />;
+    if (status === 429) {
+      return <SessionResultErrorState kind="capacity" onRetry={() => void query.refetch()} />;
+    }
     return (
       <SessionResultErrorState kind="system" onRetry={() => void query.refetch()} />
     );

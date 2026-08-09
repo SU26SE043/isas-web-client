@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
@@ -16,6 +16,7 @@ import { getQuestionStatusGroup } from '../../utils/practiceSessionResultFormat'
 import { QuestionCriteriaPanel } from './QuestionCriteriaPanel';
 import { SampleAnswerCard } from './SampleAnswerCard';
 import { SpeechMetricsPanel } from './SpeechMetricsPanel';
+import { getPracticeAnswerAudio } from '../../services/b2cPracticeSession.service';
 
 const statusClass = {
   graded: 'border-success/30 bg-success/10 text-success-light',
@@ -28,13 +29,38 @@ const statusClass = {
 
 export function PracticeQuestionResultCard({
   question,
+  sessionId,
   defaultOpen = true,
 }: {
   question: QuestionResultViewModel;
+  sessionId: string;
   defaultOpen?: boolean;
 }) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(defaultOpen);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+    if (!question.audioUrl || !question.answerId || !sessionId) {
+      setAudioSrc(null);
+      return () => undefined;
+    }
+    void getPracticeAnswerAudio(sessionId, question.answerId)
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setAudioSrc(objectUrl);
+      })
+      .catch(() => {
+        if (active) setAudioSrc(null);
+      });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [question.answerId, question.audioUrl, sessionId]);
   const group = getQuestionStatusGroup(question.status, question.answered);
   const statusLabel =
     group === 'unknown'
@@ -128,8 +154,8 @@ export function PracticeQuestionResultCard({
                 </p>
               </div>
             )}
-            {question.audioUrl ? (
-              <audio className="mt-4 w-full" controls preload="metadata" src={question.audioUrl}>
+            {audioSrc ? (
+              <audio className="mt-4 w-full" controls preload="metadata" src={audioSrc}>
                 {t('practice.result.audioUnsupported')}
               </audio>
             ) : null}
