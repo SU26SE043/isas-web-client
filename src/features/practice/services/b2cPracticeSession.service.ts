@@ -6,6 +6,9 @@ import type {
   PracticeSessionResponse,
   SubmitPracticeAnswerInput,
   SubmitPracticeAnswerResponse,
+  PracticeJobCategory,
+  PracticeLanguage,
+  PracticeSessionOptions,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.types';
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
@@ -74,6 +77,38 @@ export async function createPracticeSession(
     throw new Error('Create practice session response missing session id');
   }
   return { ...mapped, id };
+}
+
+export async function getPracticeSessionOptions(
+  jobCategory: PracticeJobCategory,
+  language: PracticeLanguage = 'vi',
+): Promise<PracticeSessionOptions> {
+  if (usesMockData('practice')) {
+    await mockDelay(100);
+    return {
+      adaptiveEnabled: true,
+      maxDeepPerQuestion: 3,
+      contentCriteriaCount: 6,
+      questionCountMin: 1,
+      questionCountMax: 20,
+      defaultQuestionCount: 5,
+      presets: [
+        { key: 'short', questionCount: 5, seedCount: 2, coversAllCriteria: false },
+        { key: 'medium', questionCount: 10, seedCount: 4, coversAllCriteria: true },
+        { key: 'long', questionCount: 15, seedCount: 6, coversAllCriteria: true },
+      ],
+      preview: Array.from({ length: 20 }, (_, index) => ({
+        questionCount: index + 1,
+        seedCount: Math.max(1, Math.ceil((index + 1) / 3)),
+      })),
+    };
+  }
+
+  const response = await apiClient.get<PracticeSessionOptions>(
+    b2cPracticeSessionEndpoints.sessionOptions,
+    { params: { jobCategory, language } },
+  );
+  return response.data;
 }
 
 /** Alias for session detail / report screens. Same endpoint as `getPracticeSession`. */

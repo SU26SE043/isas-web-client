@@ -1,5 +1,6 @@
 export const b2cPracticeSessionEndpoints = {
   sessions: '/api/v1/interview/practice/sessions',
+  sessionOptions: '/api/v1/interview/practice/session-options',
   session: (sessionId: string) =>
     `/api/v1/interview/practice/sessions/${encodeURIComponent(sessionId)}`,
   speech: (sessionId: string, questionId: string) =>

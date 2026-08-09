@@ -56,5 +56,7 @@ export function buildCreatePracticeSessionRequest(
     jdId: normalizedJdText.length > 0 ? undefined : state.jdId || undefined,
     timeLimitSec: state.timeLimitSec,
     questionCount: state.questionCount,
+    language: state.language,
+    seniority: state.seniority,
   };
 }

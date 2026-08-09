@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { FlowWizardNav } from '@/components/patterns/flow-wizard/FlowWizardNav';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import { practiceSessionService } from '../../services/practiceSession.service';
+import { getApiStatusCode } from '@/shared/api/apiError';
+import { getPracticeSession } from '../../services/b2cPracticeSession.service';
 import { isLearningSessionId } from '../../types/interviewFlow.types';
 import { LearningWaitingStartPanel } from '../flow/LearningWaitingStartPanel';
 import { getLearningPracticeSession } from '../../services/learningPracticeSession.registry';
@@ -31,6 +32,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
+  const [pollError, setPollError] = useState<'capacity' | 'generic' | null>(null);
   const [questionCount, setQuestionCount] = useState(session.questions?.length ?? 0);
   const [isStarting, setIsStarting] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
@@ -46,24 +48,33 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
 
     let cancelled = false;
     let attempts = 0;
+    setPollError(null);
 
     const poll = async () => {
       attempts += 1;
       try {
-        const questions = await practiceSessionService.pollQuestions(sessionId);
+        const detail = await getPracticeSession(sessionId);
+        const questions = detail.questions ?? [];
         if (cancelled) return;
         if (questions.length > 0) {
           setQuestionCount(questions.length);
           setStatus('ready');
           return;
         }
-        if (attempts >= 8) {
+        if (detail.status === 'Failed' || attempts >= 8) {
           setStatus('error');
           return;
         }
         window.setTimeout(() => void poll(), 1200);
-      } catch {
-        if (!cancelled) setStatus('error');
+      } catch (error) {
+        if (cancelled) return;
+        if (getApiStatusCode(error) === 429) {
+          setPollError('capacity');
+          setStatus('error');
+          return;
+        }
+        setPollError('generic');
+        setStatus('error');
       }
     };
 
@@ -182,7 +193,22 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
           </p>
         ) : null}
         {!isLearning && status === 'error' ? (
-          <p className="text-sm text-error">{t('practice.flow.waiting.error')}</p>
+          <div>
+            <p className="text-sm text-error">
+              {pollError === 'capacity'
+                ? t('practice.flow.waiting.capacityError')
+                : t('practice.flow.waiting.error')}
+            </p>
+            {pollError !== 'capacity' ? (
+              <button
+                type="button"
+                className="btn-primary mt-4"
+                onClick={() => navigate(`/interview/${sessionId}/room`)}
+              >
+                {t('practice.flow.waiting.enterAnyway')}
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </SectionPanel>

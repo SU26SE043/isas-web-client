@@ -14,6 +14,8 @@ const baseState = (): PracticeSetupState => ({
   jdText: '',
   timeLimitSec: 120,
   questionCount: 5,
+  language: 'vi',
+  seniority: 'Junior',
 });
 
 describe('buildCreatePracticeSessionRequest', () => {
@@ -34,6 +36,8 @@ describe('buildCreatePracticeSessionRequest', () => {
     expect(request.jobCategory).toBe('FE');
     expect(request.timeLimitSec).toBe(120);
     expect(request.questionCount).toBe(5);
+    expect(request.language).toBe('vi');
+    expect(request.seniority).toBe('Junior');
   });
 
   it('lets jdText win over jdId', () => {

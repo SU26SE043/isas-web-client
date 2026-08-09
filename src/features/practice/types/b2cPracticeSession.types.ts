@@ -1,6 +1,8 @@
 /** B2C practice session API contract (POST/GET sessions, answers, speech, submit). */
 
 export type PracticeJobCategory = 'BA' | 'BE' | 'FE';
+export type PracticeLanguage = 'vi' | 'en';
+export type PracticeSeniority = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 
 export type PracticeTimeLimitSec = 60 | 120 | 240;
 
@@ -11,6 +13,29 @@ export const PRACTICE_QUESTION_COUNT_MAX = 20;
 export const PRACTICE_JD_TEXT_MAX_CHARS = 20_000;
 export const PRACTICE_ANSWER_AUDIO_MAX_BYTES = 50 * 1024 * 1024;
 
+export interface PracticeSessionOptionPreset {
+  key: 'short' | 'medium' | 'long' | string;
+  questionCount: number;
+  seedCount: number;
+  coversAllCriteria: boolean;
+}
+
+export interface PracticeSessionOptionPreview {
+  questionCount: number;
+  seedCount: number;
+}
+
+export interface PracticeSessionOptions {
+  adaptiveEnabled: boolean;
+  maxDeepPerQuestion: number;
+  contentCriteriaCount: number;
+  questionCountMin: number;
+  questionCountMax: number;
+  defaultQuestionCount: number;
+  presets: PracticeSessionOptionPreset[];
+  preview: PracticeSessionOptionPreview[];
+}
+
 export interface CreatePracticeSessionRequest {
   cvId?: string;
   jdId?: string;
@@ -18,6 +43,8 @@ export interface CreatePracticeSessionRequest {
   jdText?: string;
   timeLimitSec?: PracticeTimeLimitSec;
   questionCount?: number;
+  language?: PracticeLanguage;
+  seniority?: PracticeSeniority;
 }
 
 export interface PracticeSetupState {
@@ -27,6 +54,8 @@ export interface PracticeSetupState {
   jdText: string;
   timeLimitSec: PracticeTimeLimitSec;
   questionCount: number;
+  language: PracticeLanguage;
+  seniority: PracticeSeniority;
 }
 
 export interface PracticeQuestionResponse {
@@ -257,5 +286,6 @@ export type CreatePracticeSessionErrorCode =
   | 'insufficient_credit'
   | 'create_failed'
   | 'ai_failed'
+  | 'platform_capacity'
   | 'unauthorized'
   | 'generic';
