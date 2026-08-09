@@ -26,6 +26,12 @@ export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationP
             enabled: true,
           },
           {
+            id: 'candidates',
+            label: t('employer.campaigns.workspace.invitations'),
+            to: `${base}/overview?tab=candidates`,
+            enabled: canViewHistory,
+          },
+          {
             id: 'results',
             label: t('employer.campaigns.workspace.results'),
             to: `${base}/overview?tab=results`,

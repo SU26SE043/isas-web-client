@@ -9,6 +9,7 @@ import { useLanguage } from '@/shared/languages';
 import { CampaignDetailView } from '../components/CampaignDetailView';
 import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
+import { InvitationHistoryPanel } from '../components/email-invitations/InvitationHistoryPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
@@ -24,7 +25,7 @@ export function CampaignDetailPage() {
   const [published, setPublished] = useState(false);
   const tab = searchParams.get('tab') ?? 'details';
 
-  if (tab !== 'details' && tab !== 'results') {
+  if (tab !== 'details' && tab !== 'candidates' && tab !== 'results') {
     return <Navigate to={`/employer/campaigns/${id}/overview?tab=details`} replace />;
   }
 
@@ -178,6 +179,13 @@ export function CampaignDetailPage() {
               campaignId={campaign.id}
               passScorePct={campaign.passScorePct}
               enabled
+            />
+          </div>
+          <div hidden={tab !== 'candidates'}>
+            <InvitationHistoryPanel
+              campaign={campaign}
+              enabled={campaign.status !== 'draft'}
+              onGoToSend={() => navigate(`/employer/campaigns/${campaign.id}/invitations?tab=invite`)}
             />
           </div>
         </div>
