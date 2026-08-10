@@ -10,6 +10,8 @@ import type {
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { CampaignReviewSection } from './review/CampaignReviewSection';
+import { useCampaignSlots } from '../../hooks/useCampaignSlots';
+import { campaignSlotCapacity } from '../../utils/campaignSlots';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState;
@@ -17,6 +19,7 @@ interface CampaignReviewStepProps {
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
   settings: CampaignSettingsState;
+  campaignId?: string;
   domainLabel: string;
   error?: string | null;
   onGoToStep: (step: number) => void;
@@ -39,6 +42,7 @@ export function CampaignReviewStep({
   rubric,
   questions,
   settings,
+  campaignId,
   domainLabel,
   error,
   onGoToStep,
@@ -51,6 +55,9 @@ export function CampaignReviewStep({
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
+  const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
+  const slots = slotsQuery.data ?? [];
+  const slotCapacity = campaignSlotCapacity(slots);
 
   return (
     <SectionPanel
@@ -140,6 +147,20 @@ export function CampaignReviewStep({
               : null}
             {` · ${t('employer.campaigns.form.maxQuestionsSetting')}: ${settings.maxQuestions}`}
           </p>
+        </CampaignReviewSection>
+
+        <CampaignReviewSection title={t('employer.campaigns.slots.title')} onEdit={() => onGoToStep(5)}>
+          <p>
+            {t('employer.campaigns.slots.reviewSummary')
+              .replace('{count}', String(slots.length))
+              .replace('{capacity}', String(slotCapacity.total))}
+          </p>
+          {slots.slice(0, 4).map((slot) => (
+            <p key={slot.id}>
+              {formatDateTime(slot.startsAt)} → {formatDateTime(slot.endsAt)} ·{' '}
+              {slot.assignedCount}/{slot.capacity}
+            </p>
+          ))}
         </CampaignReviewSection>
       </div>
     </SectionPanel>

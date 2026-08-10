@@ -1,7 +1,7 @@
 import type { FlowStepStatus } from '@/components/ui/flow-stepper';
 
 /**
- * Flow 1 — Create & publish campaign (6 wizard steps).
+ * Flow 1 — Create Draft, configure slots, review, then publish from detail.
  * Candidate invitation is Flow 2, after campaign is Active.
  */
 export const CAMPAIGN_WIZARD_STEPS = [
@@ -31,6 +31,11 @@ export const CAMPAIGN_WIZARD_STEPS = [
     descKey: 'employer.campaigns.wizard.steps.settingsDesc',
   },
   {
+    id: 'slots',
+    titleKey: 'employer.campaigns.wizard.steps.slots',
+    descKey: 'employer.campaigns.wizard.steps.slotsDesc',
+  },
+  {
     id: 'review',
     titleKey: 'employer.campaigns.wizard.steps.review',
     descKey: 'employer.campaigns.wizard.steps.reviewDesc',
@@ -39,7 +44,7 @@ export const CAMPAIGN_WIZARD_STEPS = [
 
 export type CampaignWizardStepId = (typeof CAMPAIGN_WIZARD_STEPS)[number]['id'];
 export const CAMPAIGN_WIZARD_STEP_COUNT = CAMPAIGN_WIZARD_STEPS.length;
-export type CampaignWizardStepIndex = 0 | 1 | 2 | 3 | 4 | 5;
+export type CampaignWizardStepIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export const CAMPAIGN_WIZARD_STEP_KEYS = CAMPAIGN_WIZARD_STEPS.map((step) => step.titleKey);
 

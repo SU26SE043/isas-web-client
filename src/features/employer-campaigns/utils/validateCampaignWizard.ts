@@ -2,7 +2,7 @@ import type { CampaignWizardPersistedState } from '../types/campaignWizard.types
 import { validateCampaignPdf } from './campaignFiles';
 
 const MIN_JD_TEXT_LENGTH = 50;
-const LAST_STEP_INDEX = 5;
+const LAST_STEP_INDEX = 6;
 const MAX_QUESTIONS_LIMIT = 20;
 
 export type WizardValidationError = {
@@ -128,7 +128,7 @@ export function validateCampaignWizardStep(
     return null;
   }
 
-  // Step 5 (Review) has no own fields — it only surfaces errors from earlier steps.
+  // Steps 5 (Slots) and 6 (Review) have no persisted wizard fields.
   return null;
 }
 

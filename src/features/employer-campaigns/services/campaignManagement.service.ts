@@ -11,6 +11,8 @@ import type {
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
+  CampaignSlotRequest,
+  CampaignSlotResponse,
   CandidateListQuery,
   CandidateUploadResponse,
   CampaignCandidateDetail,
@@ -26,6 +28,7 @@ import type {
   UpdateCampaignCandidatePayload,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
+import { parseCampaignSlot, parseCampaignSlots } from '../utils/campaignSlots';
 import type {
   CampaignCandidateRow,
   CampaignDraftInput,
@@ -268,6 +271,39 @@ export const campaignManagementService = {
     });
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
+  },
+
+  async getCampaignSlots(id: string): Promise<CampaignSlotResponse[]> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.slots(id));
+    return parseCampaignSlots(response.data);
+  },
+
+  async createCampaignSlot(
+    id: string,
+    payload: CampaignSlotRequest,
+  ): Promise<CampaignSlotResponse> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.slots(id), payload);
+    const slot = parseCampaignSlot(response.data);
+    if (!slot) throw new Error('Invalid create campaign slot response');
+    return slot;
+  },
+
+  async updateCampaignSlot(
+    id: string,
+    slotId: string,
+    payload: CampaignSlotRequest,
+  ): Promise<CampaignSlotResponse> {
+    const response = await apiClient.put<unknown>(
+      campaignManagementEndpoints.slot(id, slotId),
+      payload,
+    );
+    const slot = parseCampaignSlot(response.data);
+    if (!slot) throw new Error('Invalid update campaign slot response');
+    return slot;
+  },
+
+  async deleteCampaignSlot(id: string, slotId: string): Promise<void> {
+    await apiClient.delete(campaignManagementEndpoints.slot(id, slotId));
   },
 
   /**

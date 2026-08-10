@@ -19,6 +19,9 @@ export const campaignManagementEndpoints = {
   files: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files`,
   filesDownload: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files/download`,
+  slots: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/slots`,
+  slot: (id: string, slotId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/slots/${encodeURIComponent(slotId)}`,
   candidates: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates`,
   candidateDetail: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}`,

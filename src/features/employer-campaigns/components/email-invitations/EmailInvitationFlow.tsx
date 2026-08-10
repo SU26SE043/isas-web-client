@@ -70,6 +70,7 @@ export function EmailInvitationFlow({
       campaignTitle={campaign.title}
       emails={flow.retryEmails}
       isConfirming={flow.isSending}
+      capacityWarning={flow.capacityWarning}
       onCancel={flow.closeConfirm}
       onConfirm={() => void flow.sendInvitations()}
     />

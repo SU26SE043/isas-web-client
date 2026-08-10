@@ -22,6 +22,8 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **Attachments on Employer Campaign Detail** — The detail view shows files successfully uploaded through this frontend, including document type, original filename, size, and a download action backed by `POST /api/v1/campaign/{id}/files/download?fileType=jd|criteria`. API v10 `CampaignResponse` does not expose attachment metadata or a file-list endpoint, so the frontend retains filename/size metadata in browser storage after a successful upload. Files uploaded from another browser/device cannot be listed authoritatively until the backend adds attachment metadata; the UI does not probe by downloading PDFs on page load.
 
+**Interview slots live** — Campaign availability (`campaign.startsAt` → `campaign.expiresAt`) is separate from interview slots. After the Draft has a real id, Employer manages slots with `GET/POST /api/v1/campaign/{id}/slots` and `PUT/DELETE /api/v1/campaign/{id}/slots/{slotId}`. Each slot has `startsAt`, `endsAt`, `capacity`, `assignedCount`, and `startedCount`. The frontend validates basic time/capacity rules but does not reimplement overlap or candidate assignment; Backend remains authoritative. Invitation capacity is informationally checked with `sum(capacity - assignedCount)`.
+
 **CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
 ## Flow 1 — Create & publish

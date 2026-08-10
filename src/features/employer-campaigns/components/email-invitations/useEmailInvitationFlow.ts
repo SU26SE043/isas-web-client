@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/shared/languages';
 import { useCreateCampaignInvitations } from '../../hooks/useCreateCampaignInvitations';
+import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import type {
   CreatedCampaignInvitation,
   FailedCampaignInvitation,
@@ -18,12 +19,14 @@ import {
   uniqueNormalizedEmails,
   type InvalidEmailItem,
 } from '../../utils/emailInvitationUtils';
+import { campaignSlotCapacity } from '../../utils/campaignSlots';
 
 export type EmailInviteStep = 'form' | 'result';
 
 export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails: string[] = []) {
   const { t } = useLanguage();
   const inviteMutation = useCreateCampaignInvitations(campaign.id);
+  const slotsQuery = useCampaignSlots(campaign.id);
   const isActive = campaign.status === 'active';
   const isSending = inviteMutation.isPending;
   const initialEmailsKey = initialEmails.join('|');
@@ -57,19 +60,15 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
   }, [campaign.id, initialEmailsKey]);
 
   const capacityWarning = useMemo(() => {
-    if (!campaign.capacity || campaign.capacity <= 0) return null;
-    const already = campaign.invitedEmails.length || campaign.candidates.length;
-    if (already + validEmails.length > campaign.capacity) {
-      return t('employer.campaigns.emailInvitations.errors.maxCandidates');
+    if (!slotsQuery.data || validEmails.length === 0) return null;
+    const { available } = campaignSlotCapacity(slotsQuery.data);
+    if (validEmails.length > available) {
+      return t('employer.campaigns.slots.invitationWarning')
+        .replace('{inviting}', String(validEmails.length))
+        .replace('{available}', String(available));
     }
     return null;
-  }, [
-    campaign.capacity,
-    campaign.candidates.length,
-    campaign.invitedEmails.length,
-    t,
-    validEmails.length,
-  ]);
+  }, [slotsQuery.data, t, validEmails.length]);
 
   const canSend =
     isActive && validEmails.length > 0 && invalidEmails.length === 0 && !isSending;
@@ -204,6 +203,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     created,
     failed,
     capacityWarning,
+    availableSlotCapacity: campaignSlotCapacity(slotsQuery.data ?? []).available,
     canSend,
     addSingle,
     addBulk,

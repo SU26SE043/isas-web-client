@@ -185,6 +185,22 @@ export type CampaignUpdateRequest = {
   expiresAt?: string;
 };
 
+/** POST/PUT /api/v1/campaign/{campaignId}/slots[/slotId] — complete request body. */
+export type CampaignSlotRequest = {
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+};
+
+export type CampaignSlotResponse = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  assignedCount: number;
+  startedCount: number;
+};
+
 /** POST /api/v1/campaign/{id}/invitations — invite by email list (Active only). */
 export type CreateCampaignInvitationsRequest = {
   emails: string[];

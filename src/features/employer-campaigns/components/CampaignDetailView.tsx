@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
 import { CampaignAttachmentsCard } from './CampaignAttachmentsCard';
+import { CampaignSlotsPanel } from './slots/CampaignSlotsPanel';
 import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
@@ -171,6 +172,8 @@ export function CampaignDetailView({
             </CardContent>
           </Card>
         </div>
+
+        <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} />
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 

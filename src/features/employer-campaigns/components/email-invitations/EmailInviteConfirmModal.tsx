@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PREVIEW_LIMIT = 5;
 
@@ -16,6 +17,7 @@ interface EmailInviteConfirmModalProps {
   campaignTitle: string;
   emails: string[];
   isConfirming: boolean;
+  capacityWarning?: string | null;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -25,6 +27,7 @@ export function EmailInviteConfirmModal({
   campaignTitle,
   emails,
   isConfirming,
+  capacityWarning,
   onCancel,
   onConfirm,
 }: EmailInviteConfirmModalProps) {
@@ -43,6 +46,11 @@ export function EmailInviteConfirmModal({
         </DialogHeader>
 
         <div className="space-y-3 text-sm">
+          {capacityWarning ? (
+            <Alert variant="warning">
+              <AlertDescription>{capacityWarning}</AlertDescription>
+            </Alert>
+          ) : null}
           <p className="text-foreground">
             <span className="text-muted-foreground">
               {t('employer.campaigns.emailInvitations.confirmation.campaign')}:{' '}
