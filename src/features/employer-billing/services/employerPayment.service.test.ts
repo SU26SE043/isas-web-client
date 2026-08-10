@@ -10,12 +10,11 @@ vi.mock('@/shared/api/apiClient', () => ({
 
 const transaction = {
   id: 'transaction-id',
-  ownerType: 0,
-  ownerId: 'owner-id',
   delta: 10,
   reason: 1,
   sessionId: null,
   orderId: 'order-id',
+  reversesTransactionId: null,
   createdAt: '2026-07-28T05:00:00Z',
 };
 

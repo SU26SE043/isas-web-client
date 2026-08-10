@@ -44,10 +44,10 @@ Positive:
 Tradeoffs:
 
 - Old mock invoice/payment-method UI is retired.
-- Invoice settlement and payment resumption remain unavailable until supported by APIs.
+- Invoice settlement is now available through the v10 invoice endpoints; refund and auto-renew controls remain deferred.
 
 ## Follow-Up
 
 - Add browser E2E against a deterministic PaymentService/PayOS sandbox fixture.
-- Reconcile BRD postpaid invoice language when backend invoice APIs are available.
+- Add browser E2E against a deterministic PaymentService/PayOS invoice fixture.
 

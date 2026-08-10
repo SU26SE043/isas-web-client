@@ -11,6 +11,7 @@ US-016 replaces the Phase 12 mock with the live organization PaymentService flow
 - `/employer/billing/packages` lists active one-time credit and subscription packages.
 - `/employer/billing/orders` and `/employer/billing/orders/:orderId` show live order history/detail.
 - `/employer/billing/transactions` shows cursor-paginated credit movements.
+- `/employer/billing/invoices` lists live postpaid invoices and lets `OrgAdmin` pay issued/overdue invoices through PayOS.
 - `/employer/payment/success` and `/employer/payment/cancel` verify PayOS return state.
 
 Candidate wallet/payment screens stay governed by `docs/product/payment.md`.
@@ -18,7 +19,7 @@ Candidate wallet/payment screens stay governed by `docs/product/payment.md`.
 ## Roles
 
 `OrgAdmin` and platform `Admin` can view and mutate billing. `HrMember` can view account,
-subscription, packages, orders, and transactions but cannot create or cancel orders.
+subscription, packages, orders, transactions, and invoices but cannot create or cancel payment actions.
 The UI explains the restriction and still treats backend `403` as authoritative.
 
 ## Live Contract
@@ -40,11 +41,14 @@ Endpoints:
 - `GET /api/v1/payment/me/account`
 - `GET /api/v1/payment/me/credit-transactions`
 - `GET /api/v1/payment/me/subscription`
+- `POST /api/v1/payment/me/subscription/cancel`
+- `GET /api/v1/payment/me/invoices`
+- `GET /api/v1/payment/me/invoices/{id}`
+- `POST /api/v1/payment/invoices/{id}/pay`
 
 ## Deferred
 
-- Invoice settlement/detail UI until an invoice API/route exists.
-- Refund controls, subscription cancellation, and auto-renew controls.
+- Refund controls and auto-renew controls.
 - Provider tokenization and card collection; checkout is hosted by PayOS.
 - Multi-seat workflows.
 

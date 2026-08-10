@@ -37,6 +37,34 @@ export function useCancelEmployerOrder() {
   });
 }
 
+export function useCancelEmployerSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: employerPaymentService.cancelSubscription,
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: employerPaymentKeys.subscription() }),
+        queryClient.invalidateQueries({ queryKey: employerPaymentKeys.orders() }),
+      ]);
+    },
+  });
+}
+
+export function usePayEmployerInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: employerPaymentService.payInvoice,
+    onSuccess: (order) => {
+      if (order.checkoutUrl) {
+        window.location.assign(order.checkoutUrl);
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: employerPaymentKeys.invoices() });
+    },
+  });
+}
+
 export async function invalidateEmployerPayment(
   queryClient: ReturnType<typeof useQueryClient>,
   orderId: string,

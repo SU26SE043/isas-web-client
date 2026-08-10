@@ -13,6 +13,8 @@ export interface PackageResponse {
   priceVnd: number;
   interviewCredits: number | null;
   durationDays: number | null;
+  planId?: string | null;
+  audience?: 0 | 1 | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -28,6 +30,7 @@ export interface PaymentAccountResponse {
   status: PaymentAccountStatus;
   remainingCredits: number;
   reservedCredits: number;
+  freeCreditsGranted?: number;
   creditLimit: number | null;
   periodUsage: number | null;
   updatedAt: string;
@@ -44,12 +47,11 @@ export interface SubscriptionResponse {
 
 export interface CreditTransactionResponse {
   id: string;
-  ownerType: number;
-  ownerId: string;
   delta: number;
   reason: number;
   sessionId: string | null;
   orderId: string | null;
+  reversesTransactionId?: string | null;
   createdAt: string;
 }
 

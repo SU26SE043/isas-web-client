@@ -93,12 +93,12 @@ Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages(
 | BR-B2B-04 | Organize sees usage by campaign / month / session |
 | BR-PAY-01 | Only Organize accesses billing and invoices |
 
-### Routes (planned)
+### Routes
 
 | Path | Component | Status |
 | --- | --- | --- |
-| `/employer/billing` | *TBD* | Missing — Tier 1 |
-| `/employer/billing/invoices` | *TBD* | Missing — Tier 1 |
+| `/employer/billing` | `EmployerBillingOverviewPage` | Live |
+| `/employer/billing/invoices` | `EmployerInvoicesPage` | Live |
 
 ---
 

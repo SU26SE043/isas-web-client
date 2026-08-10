@@ -66,3 +66,10 @@ export function useEmployerTransactions(cursor: string | null, limit = 20) {
     },
   });
 }
+
+export function useEmployerInvoices() {
+  return useQuery({
+    queryKey: employerPaymentKeys.invoices(),
+    queryFn: employerPaymentService.getInvoices,
+  });
+}

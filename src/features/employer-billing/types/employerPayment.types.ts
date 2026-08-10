@@ -71,6 +71,7 @@ export interface PaymentAccountResponse {
   status: PaymentAccountStatus;
   remainingCredits: number;
   reservedCredits: number;
+  freeCreditsGranted?: number;
   creditLimit: number | null;
   periodUsage: number | null;
   updatedAt: string;
@@ -78,18 +79,38 @@ export interface PaymentAccountResponse {
 
 export interface CreditTransaction {
   id: string;
-  ownerType: PaymentOwnerType;
-  ownerId: string;
+  /** @deprecated v10 derives ownership from JWT and omits these fields. */
+  ownerType?: PaymentOwnerType;
+  /** @deprecated v10 derives ownership from JWT and omits these fields. */
+  ownerId?: string;
   delta: number;
   reason: number;
   sessionId: string | null;
   orderId: string | null;
+  reversesTransactionId?: string | null;
   createdAt: string;
 }
 
 export interface CreditTransactionPage {
   items: CreditTransaction[];
   nextCursor: string | null;
+}
+
+export const InvoiceStatus = { Issued: 0, Paid: 1, Overdue: 2, Void: 3 } as const;
+export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
+
+export interface InvoiceResponse {
+  id: string;
+  ownerType: 0;
+  ownerId: string;
+  accountId: string | null;
+  periodStart: string;
+  periodEnd: string;
+  interviewCount: number;
+  unitPrice: number;
+  amount: number;
+  status: InvoiceStatus;
+  createdAt: string;
 }
 
 export interface SubscriptionResponse {
@@ -108,6 +129,8 @@ export interface PackageResponse {
   priceVnd: number;
   interviewCredits: number | null;
   durationDays: number | null;
+  planId?: string | null;
+  audience?: 0 | 1 | null;
   isActive: boolean;
   createdAt: string;
 }

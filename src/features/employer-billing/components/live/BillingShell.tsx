@@ -11,6 +11,7 @@ const tabs = [
   ['packages', 'employerBilling.live.packages'],
   ['orders', 'employerBilling.live.orders'],
   ['transactions', 'employerBilling.live.transactions'],
+  ['invoices', 'employerBilling.live.invoices'],
 ] as const;
 
 export function BillingShell() {
