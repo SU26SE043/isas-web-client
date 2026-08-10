@@ -47,6 +47,11 @@ export interface AnalyzeCvRequest {
 /** API list/detail response shape. */
 export type CvAnalysisResponse = CvAnalysisResult;
 
+export interface CvAnalysisPage {
+  items: CvAnalysisResult[];
+  nextCursor: string | null;
+}
+
 /** Local UI attachment metadata (not computed scores). */
 export interface AnalysisFileMeta {
   cvFileName?: string;

@@ -4,6 +4,7 @@ import { downloadBlobAsFile } from '@/shared/utils/downloadBlob';
 import type {
   AnalyzeCvRequest,
   CvAnalysisResult,
+  CvAnalysisPage,
   FileRecord,
   JdMatch,
   UploadedCvFile,
@@ -142,6 +143,16 @@ function unwrapList(payload: unknown): unknown[] {
   return [];
 }
 
+function readNextCursor(headers: unknown): string | null {
+  if (!headers || typeof headers !== 'object') return null;
+  const record = headers as Record<string, unknown> & { get?: (name: string) => unknown };
+  const value = typeof record.get === 'function'
+    ? record.get('x-next-cursor') ?? record.get('X-Next-Cursor')
+    : record['x-next-cursor'] ?? record['X-Next-Cursor'];
+  const cursor = Array.isArray(value) ? value[0] : value;
+  return typeof cursor === 'string' && cursor.trim() ? cursor.trim() : null;
+}
+
 function toUploadedCvFile(record: FileRecord): UploadedCvFile {
   return {
     id: record.id,
@@ -207,13 +218,27 @@ export const cvAnalysisService = {
     return this.analyze(input);
   },
 
-  async listAnalyses(): Promise<CvAnalysisResult[]> {
+  async listAnalysesPage(params?: { cursor?: string; limit?: number }): Promise<CvAnalysisPage> {
     try {
-      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listAnalyses);
-      return unwrapList(response.data).map(parseAnalysis);
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listAnalyses, {
+        params: {
+          ...(params?.cursor ? { cursor: params.cursor } : {}),
+          ...(params?.limit ? { limit: params.limit } : {}),
+        },
+      });
+      return {
+        items: unwrapList(response.data).map(parseAnalysis),
+        nextCursor: readNextCursor(response.headers),
+      };
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not load analysis history.');
     }
+  },
+
+  /** Backward-compatible first-page helper for existing report/history screens. */
+  async listAnalyses(): Promise<CvAnalysisResult[]> {
+    const page = await this.listAnalysesPage();
+    return page.items;
   },
 
   async getAnalysisResult(analysisId?: string): Promise<CvAnalysisResult> {

@@ -55,7 +55,22 @@ Next is disabled. Candidate cannot skip steps.
 - Success → `/candidate/learning`.
 - Learning Hub remains a separate catalog (T3); it does not host creation.
 
-## Implementation (mock)
+## Live API contract
+
+The Candidate roadmap flow is backed by the Interview API:
+
+| Action | Path | Notes |
+| --- | --- | --- |
+| Create | `POST /api/v1/interview/practice/roadmaps` | `jobCategory`, `level`; optional `cvId`, `sessionIds`, `cvAnalysisId`, `priorRoadmapId`, `focus` (max 2000), `language` (`vi`/`en`); no credit charge |
+| List | `GET /api/v1/interview/practice/roadmaps` | keyset query `cursor`, `limit`; summary items only; next page in `X-Next-Cursor` |
+| Detail | `GET /api/v1/interview/practice/roadmaps/{id}` | milestones and lessons |
+| Open lesson | `GET /api/v1/interview/practice/roadmaps/{id}/lessons/{lessonId}` | generates theory on first open, free |
+| Start practice | `POST /api/v1/interview/practice/roadmaps/{id}/lessons/{lessonId}/start` | empty body; 201 session; 1 credit; 409 returns `sessionId` for resume |
+| Report | `GET /api/v1/interview/practice/roadmaps/{id}/report` | interim while Active, snapshot when Completed |
+
+`LessonResponse` includes optional `resources` and nullable RAG `citations`; `RoadmapResponse` includes `language`, `level`, `status`, timestamps, milestones, and lesson progress.
+
+## Implementation
 
 | Piece | Location |
 | --- | --- |

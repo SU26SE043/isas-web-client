@@ -72,8 +72,11 @@ export const roadmapService = {
         ...(query.limit ? { limit: query.limit } : {}),
       },
     });
-    const headers = response.headers as Record<string, unknown>;
-    const nextCursor = String(headers['x-next-cursor'] ?? headers['X-Next-Cursor'] ?? '').trim();
+    const headers = response.headers as Record<string, unknown> & { get?: (name: string) => unknown };
+    const rawCursor = typeof headers.get === 'function'
+      ? headers.get('x-next-cursor') ?? headers.get('X-Next-Cursor')
+      : headers['x-next-cursor'] ?? headers['X-Next-Cursor'];
+    const nextCursor = String(Array.isArray(rawCursor) ? rawCursor[0] ?? '' : rawCursor ?? '').trim();
     return {
       items: unwrapListPayload(response.data).map(mapApiRoadmapListItem).filter((item) => item.id),
       nextCursor: nextCursor || undefined,
