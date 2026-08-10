@@ -1,5 +1,7 @@
 # Candidate Campaigns & Magic Link Entry
 
+> **Shared preparation boundary (2026-08-10):** After a campaign session is created or resumed, the candidate uses the existing B2C `InterviewPrepPage` and `DeviceCheckStep` at `/interview/:sessionId/prepare`. Do not create a B2B preparation or device-check UI copy.
+
 > **Product decision (2026-07-13, supersedes 2026-07-12 browse deprecation):** B2B candidates see **only campaigns they were invited to** at `/candidate/campaigns`. **Public browse/enroll** (`list all open campaigns`) remains **out of scope**. Magic link (`/invite/:token`) is an **email entry gate** that lands on the campaigns hub — not a briefing or interview screen.
 
 **See also:** [`product-scope.md`](./product-scope.md) §4.5–4.7 · [`module-scope.md`](./module-scope.md) · [`campaign-assessment.md`](./campaign-assessment.md)

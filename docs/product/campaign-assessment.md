@@ -1,5 +1,7 @@
 # B2B Campaign Assessment (Magic Link Interview)
 
+> **Shared preparation boundary (2026-08-10):** Campaign candidates reuse the B2C `InterviewPrepPage` and `DeviceCheckStep` directly. Campaign-only routing is a non-visual adapter. The campaign room remains on its campaign URL but is mounted through `FullscreenLayout`, so only the room has no candidate sidebar.
+
 **Parent:** [`product-scope.md`](./product-scope.md) §4.7  
 **Entry:** [`campaign-discovery.md`](./campaign-discovery.md)  
 **Shared engine:** [`practice-interview.md`](./practice-interview.md) (interview room routes)

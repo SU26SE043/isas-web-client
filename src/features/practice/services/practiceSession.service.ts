@@ -27,6 +27,7 @@ import {
 } from './learningPracticeSession.registry';
 import { roadmapPracticeService } from './roadmapPractice.service';
 import { getPracticeSession } from './b2cPracticeSession.service';
+import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
 let asyncQuestionPollCount = 0;
 const startedSessions = new Set<string>();
@@ -65,6 +66,9 @@ export const practiceSessionService = {
   },
 
   async acceptTerms(sessionId: string): Promise<void> {
+    // The live campaign gateway currently has no terms endpoint. The terms gate
+    // remains client-side until that contract is added; B2C behavior is unchanged.
+    if (isCampaignSessionId(sessionId)) return;
     if (!usesMockData('practice')) {
       throw new Error('Practice session API is not wired yet. Keep usesMockData("practice") true.');
     }
@@ -74,6 +78,20 @@ export const practiceSessionService = {
 
   async getSession(sessionId: string): Promise<PracticeSession> {
     const normalizedSessionId = requireSessionId(sessionId);
+    const campaignSession = readCampaignInterviewSession(normalizedSessionId);
+    if (campaignSession) {
+      return {
+        sessionId: normalizedSessionId,
+        title: '',
+        description: '',
+        status: campaignSession.questions.length > 0 ? 'ready' : 'initializing',
+        questions: campaignSession.questions.map((question) => ({
+          id: question.id,
+          content: question.content,
+          timeLimitSeconds: question.timeLimitSec,
+        })),
+      };
+    }
     const learning = getLearningPracticeSession(normalizedSessionId);
     if (learning) {
       if (learning.questions.length === 0) {

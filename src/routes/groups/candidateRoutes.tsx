@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { FullscreenLayout } from '@/layouts/FullscreenLayout';
 import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
@@ -134,10 +135,6 @@ export const candidateRoutes: RouteObject[] = [
                 element: <CampaignFaceEnrollPage />,
               },
               {
-                path: 'campaigns/:campaignId/interview/:sessionId',
-                element: <CampaignInterviewPage />,
-              },
-              {
                 path: 'campaigns/:campaignId/completed/:sessionId',
                 element: <CampaignInterviewCompletedPage />,
               },
@@ -164,6 +161,15 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'settings', element: <SettingsPage scope="candidate" /> },
               { path: 'help', element: <HelpPage scope="candidate" /> },
               { path: 'support', element: <SupportPage scope="candidate" /> },
+            ],
+          },
+          {
+            element: <FullscreenLayout />,
+            children: [
+              {
+                path: '/candidate/campaigns/:campaignId/interview/:sessionId',
+                element: <CampaignInterviewPage />,
+              },
             ],
           },
           { path: '/payment/callback', element: <PaymentCallbackPage /> },
