@@ -109,14 +109,21 @@ Do **not** restore filters, search, or self-enroll without an invite.
 
 ---
 
-## API contract (mock → live)
+## API contract (live)
 
 | Method | Purpose |
 | --- | --- |
-| `validateMagicLink(token)` | Invite gate |
-| `resolveInviteAuth(token)` | Sign in vs register |
-| `listMyInvitedCampaigns(candidateEmail)` | Sidebar campaigns page |
-| `getCampaignBriefing(token)` | Briefing step before interview |
+| `GET /api/v1/campaign/invitations/{token}` | Public invitation metadata; returns 404/410 without side effects |
+| `POST /api/v1/campaign/invitations/{token}/join` | Candidate-only join; JWT is required and invitation email must match |
+| `GET /api/v1/campaign/my-campaigns` | Keyset-paged campaigns joined by the authenticated Candidate |
+| `GET /api/v1/campaign/my-campaigns/{id}` | Joined campaign detail and current interview state |
+| `POST /api/v1/campaign/{id}/start` | Idempotently create/resume the campaign interview session |
+
+The magic link is anonymous only for reading invitation metadata. The frontend saves
+the token, sends unauthenticated users through Candidate sign-in/registration, and
+calls `join` only after a Candidate JWT is available. `429` responses expose the
+concurrent-interview limit and `Retry-After`/`retryAfterSeconds`; a `409` with
+`code=outside_slot_window` includes server UTC timing fields for the UI.
 
 ---
 
