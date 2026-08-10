@@ -10,7 +10,8 @@ describe('usesMockData', () => {
     vi.stubGlobal('navigator', { webdriver: false });
     expect(usesMockData('practice')).toBe(false);
     expect(usesMockData('cv-analysis')).toBe(false);
-    expect(usesMockData('payment')).toBe(true);
+    expect(usesMockData('payment')).toBe(false);
+    expect(usesMockData('enterprise')).toBe(true);
   });
 
   it('forces practice mocks under Playwright webdriver without changing other live domains', () => {
