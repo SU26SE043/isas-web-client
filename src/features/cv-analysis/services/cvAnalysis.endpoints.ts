@@ -10,6 +10,7 @@
  * - PUT  /api/v1/interview/files/{id}
  * - DELETE /api/v1/interview/files/{id}
  * - GET  /api/v1/interview/files/{id}/download
+ * - GET  /api/v1/interview/files/{id}/parsed-text
  * - POST /api/v1/interview/practice/cv-analysis
  * - GET  /api/v1/interview/practice/cv-analysis/{id}
  */
@@ -28,4 +29,6 @@ export const cvAnalysisEndpoints = {
   deleteFile: (id: string) => `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}`,
   downloadFile: (id: string) =>
     `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}/download`,
+  parsedText: (id: string) =>
+    `${INTERVIEW_API_PREFIX}/files/${encodeURIComponent(id)}/parsed-text`,
 } as const;

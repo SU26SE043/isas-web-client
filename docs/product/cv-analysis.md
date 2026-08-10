@@ -17,7 +17,12 @@ BRD: FR-004–006, SCR-CAN-021–022.
 | Action | Path |
 | --- | --- |
 | Upload | `/api/v1/interview/files/upload?fileType=cv\|jd` |
-| List files | `/api/v1/interview/files/files` |
+| List files | `/api/v1/interview/files/files?fileType=cv\|jd&cursor=&limit=` | Summary records only; next page in `X-Next-Cursor` |
+| File metadata | `/api/v1/interview/files/{id}` |
+| Parsed text | `/api/v1/interview/files/{id}/parsed-text` | Call separately; may return `422` while parsing |
+| Download | `/api/v1/interview/files/{id}/download` |
+| Replace | `PUT /api/v1/interview/files/{id}` | multipart `newFile`; returns `message` and `parsedCv` |
+| Delete | `DELETE /api/v1/interview/files/{id}` |
 | Analyze | `/api/v1/interview/practice/cv-analysis` |
 | Detail | `/api/v1/interview/practice/cv-analysis/{id}` |
 | List analyses | `/api/v1/interview/practice/cv-analysis` with optional `cursor`, `limit`; next page in `X-Next-Cursor` |
