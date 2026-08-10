@@ -61,6 +61,8 @@ function statusToCode(status?: number): CampaignCandidateErrorCode {
       return 'conflict';
     case 410:
       return 'gone';
+    case 429:
+      return 'concurrentLimit';
     case 502:
       return 'identityError';
     case 500:

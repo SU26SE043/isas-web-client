@@ -4,8 +4,12 @@ import { downloadBlobAsFile } from '@/shared/utils/downloadBlob';
 import type {
   AnalyzeCvRequest,
   CvAnalysisResult,
+  CvAnalysisPage,
+  FileListParams,
   FileRecord,
+  FileRecordPage,
   JdMatch,
+  ReplaceFileResponse,
   UploadedCvFile,
 } from '../types/cvAnalysis.types';
 import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
@@ -119,6 +123,11 @@ function parseFileRecord(raw: unknown): FileRecord {
     fileSize: typeof data.fileSize === 'number' ? data.fileSize : Number(data.fileSize ?? 0),
     parsedStatus: String(data.parsedStatus ?? data.parseStatus ?? 'pending'),
     createdAt: String(data.createdAt ?? new Date().toISOString()),
+    updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+    userId: typeof data.userId === 'string' ? data.userId : undefined,
+    storagePath: typeof data.storagePath === 'string' ? data.storagePath : undefined,
+    storageBucket: typeof data.storageBucket === 'string' ? data.storageBucket : undefined,
+    parsedText: typeof data.parsedText === 'string' ? data.parsedText : null,
   };
 }
 
@@ -140,6 +149,16 @@ function unwrapList(payload: unknown): unknown[] {
     if (Array.isArray(obj.results)) return obj.results;
   }
   return [];
+}
+
+function readNextCursor(headers: unknown): string | null {
+  if (!headers || typeof headers !== 'object') return null;
+  const record = headers as Record<string, unknown> & { get?: (name: string) => unknown };
+  const value = typeof record.get === 'function'
+    ? record.get('x-next-cursor') ?? record.get('X-Next-Cursor')
+    : record['x-next-cursor'] ?? record['X-Next-Cursor'];
+  const cursor = Array.isArray(value) ? value[0] : value;
+  return typeof cursor === 'string' && cursor.trim() ? cursor.trim() : null;
 }
 
 function toUploadedCvFile(record: FileRecord): UploadedCvFile {
@@ -167,10 +186,18 @@ async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord>
   }
 }
 
-function fetchFileRecords(): Promise<FileRecord[]> {
-  return apiClient
-    .get<unknown>(cvAnalysisEndpoints.listFiles)
-    .then((response) => unwrapList(response.data).map(parseFileRecord));
+async function fetchFileRecordsPage(params?: FileListParams): Promise<FileRecordPage> {
+  const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listFiles, {
+    params: {
+      ...(params?.fileType ? { fileType: params.fileType } : {}),
+      ...(params?.cursor ? { cursor: params.cursor } : {}),
+      ...(params?.limit ? { limit: params.limit } : {}),
+    },
+  });
+  return {
+    items: unwrapList(response.data).map(parseFileRecord),
+    nextCursor: readNextCursor(response.headers),
+  };
 }
 
 /**
@@ -207,13 +234,27 @@ export const cvAnalysisService = {
     return this.analyze(input);
   },
 
-  async listAnalyses(): Promise<CvAnalysisResult[]> {
+  async listAnalysesPage(params?: { cursor?: string; limit?: number }): Promise<CvAnalysisPage> {
     try {
-      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listAnalyses);
-      return unwrapList(response.data).map(parseAnalysis);
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.listAnalyses, {
+        params: {
+          ...(params?.cursor ? { cursor: params.cursor } : {}),
+          ...(params?.limit ? { limit: params.limit } : {}),
+        },
+      });
+      return {
+        items: unwrapList(response.data).map(parseAnalysis),
+        nextCursor: readNextCursor(response.headers),
+      };
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not load analysis history.');
     }
+  },
+
+  /** Backward-compatible first-page helper for existing report/history screens. */
+  async listAnalyses(): Promise<CvAnalysisResult[]> {
+    const page = await this.listAnalysesPage();
+    return page.items;
   },
 
   async getAnalysisResult(analysisId?: string): Promise<CvAnalysisResult> {
@@ -229,17 +270,23 @@ export const cvAnalysisService = {
     }
   },
 
-  async listFiles(): Promise<FileRecord[]> {
+  async listFilesPage(params?: FileListParams): Promise<FileRecordPage> {
     try {
-      return await fetchFileRecords();
+      return await fetchFileRecordsPage(params);
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not load uploaded files.');
     }
   },
 
+  /** Backward-compatible list helper; callers needing pagination should use listFilesPage. */
+  async listFiles(params?: FileListParams): Promise<FileRecord[]> {
+    const page = await this.listFilesPage(params);
+    return page.items;
+  },
+
   async listUploadedCvs(): Promise<UploadedCvFile[]> {
     try {
-      const files = await fetchFileRecords();
+      const files = await this.listFiles({ fileType: 'cv' });
       return files
         .filter((file) => String(file.fileType).toLowerCase() === 'cv')
         .map(toUploadedCvFile);
@@ -259,14 +306,38 @@ export const cvAnalysisService = {
     }
   },
 
-  async replaceFile(id: string, newFile: File): Promise<void> {
+  async getParsedText(id: string): Promise<string> {
+    try {
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.parsedText(id));
+      const data = unwrapData(response.data);
+      const parsedText = data && typeof data === 'object'
+        ? (data as Record<string, unknown>).parsedText
+        : undefined;
+      if (typeof parsedText !== 'string') {
+        throw new CvAnalysisError('unknown', 'Parsed text missing from response.');
+      }
+      return parsedText;
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not load parsed text.');
+    }
+  },
+
+  async replaceFile(id: string, newFile: File): Promise<ReplaceFileResponse> {
     const formData = new FormData();
     formData.append('newFile', newFile);
 
     try {
-      await apiClient.put(cvAnalysisEndpoints.replaceFile(id), formData, {
+      const response = await apiClient.put<unknown>(cvAnalysisEndpoints.replaceFile(id), formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const data = unwrapData(response.data);
+      const record = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+      return {
+        message: typeof record.message === 'string' ? record.message : 'Updated successfully',
+        parsedCv: record.parsedCv && typeof record.parsedCv === 'object'
+          ? record.parsedCv as Record<string, unknown>
+          : null,
+      };
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not replace file.');
     }

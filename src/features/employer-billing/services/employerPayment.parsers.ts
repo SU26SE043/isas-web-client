@@ -12,6 +12,8 @@ import {
   type PackageResponse,
   type PaymentAccountResponse,
   type SubscriptionResponse,
+  type InvoiceResponse,
+  InvoiceStatus,
 } from '../types/employerPayment.types';
 
 function record(value: unknown): Record<string, unknown> {
@@ -56,6 +58,8 @@ export function parsePackage(value: unknown): PackageResponse {
     priceVnd: number(raw.priceVnd),
     interviewCredits: nullableNumber(raw.interviewCredits),
     durationDays: nullableNumber(raw.durationDays),
+    planId: nullableText(raw.planId),
+    audience: raw.audience == null ? null : number(raw.audience) as 0 | 1,
     isActive: raw.isActive !== false,
     createdAt: text(raw.createdAt),
   };
@@ -109,6 +113,7 @@ export function parseAccount(value: unknown): PaymentAccountResponse {
     status: number(raw.status) as PaymentAccountStatus,
     remainingCredits: number(raw.remainingCredits),
     reservedCredits: number(raw.reservedCredits),
+    freeCreditsGranted: number(raw.freeCreditsGranted ?? 0),
     creditLimit: nullableNumber(raw.creditLimit),
     periodUsage: nullableNumber(raw.periodUsage),
     updatedAt: text(raw.updatedAt),
@@ -119,12 +124,11 @@ export function parseTransaction(value: unknown): CreditTransaction {
   const raw = record(value);
   return {
     id: text(raw.id),
-    ownerType: number(raw.ownerType) as PaymentOwnerType,
-    ownerId: text(raw.ownerId),
     delta: number(raw.delta),
     reason: number(raw.reason),
     sessionId: nullableText(raw.sessionId),
     orderId: nullableText(raw.orderId),
+    reversesTransactionId: nullableText(raw.reversesTransactionId),
     createdAt: text(raw.createdAt),
   };
 }
@@ -142,6 +146,27 @@ export function parseSubscription(value: unknown): SubscriptionResponse {
     billingCycle: cycle,
     startedAt: nullableText(raw.startedAt),
     expiresAt: nullableText(raw.expiresAt),
+  };
+}
+
+export function parseInvoice(value: unknown): InvoiceResponse {
+  const raw = record(value);
+  const status = number(raw.status);
+  if (![InvoiceStatus.Issued, InvoiceStatus.Paid, InvoiceStatus.Overdue, InvoiceStatus.Void].includes(status as InvoiceStatus)) {
+    throw new Error('INVALID_PAYMENT_RESPONSE');
+  }
+  return {
+    id: text(raw.id),
+    ownerType: 0,
+    ownerId: text(raw.ownerId),
+    accountId: nullableText(raw.accountId),
+    periodStart: text(raw.periodStart),
+    periodEnd: text(raw.periodEnd),
+    interviewCount: number(raw.interviewCount),
+    unitPrice: number(raw.unitPrice),
+    amount: number(raw.amount),
+    status: status as InvoiceResponse['status'],
+    createdAt: text(raw.createdAt),
   };
 }
 

@@ -63,6 +63,8 @@ function parsePackageResponse(raw: unknown): PackageResponse | null {
     priceVnd: requiredInt(data.priceVnd, 'priceVnd'),
     interviewCredits: toNullableInt(data.interviewCredits),
     durationDays: toNullableInt(data.durationDays),
+    planId: data.planId == null ? null : String(data.planId),
+    audience: data.audience == null ? null : requiredInt(data.audience, 'audience') as 0 | 1,
     isActive: typeof data.isActive === 'boolean' ? data.isActive : (() => { throw new Error('INVALID_PAYMENT_RESPONSE:isActive'); })(),
     createdAt: String(data.createdAt ?? ''),
   };
@@ -149,6 +151,7 @@ function parsePaymentAccount(payload: unknown): PaymentAccountResponse {
     status: requiredInt(data.status, 'status') as 0 | 1,
     remainingCredits: requiredInt(data.remainingCredits, 'remainingCredits'),
     reservedCredits: requiredInt(data.reservedCredits, 'reservedCredits'),
+    freeCreditsGranted: toInt(data.freeCreditsGranted),
     creditLimit: toNullableInt(data.creditLimit),
     periodUsage: toNullableInt(data.periodUsage),
     updatedAt: String(data.updatedAt ?? ''),
@@ -171,12 +174,11 @@ function parseSubscription(payload: unknown): SubscriptionResponse {
 
 interface LiveCreditTransaction {
   id: string;
-  ownerType: number;
-  ownerId: string;
   delta: number;
   reason: number;
   sessionId: string | null;
   orderId: string | null;
+  reversesTransactionId: string | null;
   createdAt: string;
 }
 
@@ -200,12 +202,11 @@ function parseLiveTransaction(payload: unknown): LiveCreditTransaction | null {
   if (delta === 0) return null;
   return {
     id,
-    ownerType: requiredInt(data.ownerType, 'ownerType'),
-    ownerId: String(data.ownerId ?? ''),
     delta,
     reason: requiredInt(data.reason, 'reason'),
     sessionId: data.sessionId == null ? null : String(data.sessionId),
     orderId: data.orderId == null ? null : String(data.orderId),
+    reversesTransactionId: data.reversesTransactionId == null ? null : String(data.reversesTransactionId),
     createdAt,
   };
 }
@@ -230,8 +231,6 @@ function toWalletTransaction(transaction: LiveCreditTransaction): WalletTransact
     status: 'completed',
     sessionId: transaction.sessionId ?? undefined,
     orderId: transaction.orderId ?? undefined,
-    ownerType: transaction.ownerType,
-    ownerId: transaction.ownerId,
     reason: transaction.reason,
   };
 }
@@ -263,6 +262,17 @@ export const paymentService = {
     return parseSubscription(response.data);
   },
 
+  async cancelSubscription(): Promise<{ subscriptionId: string | null; cancelled: boolean }> {
+    const response = await apiClient.post<unknown>(paymentEndpoints.cancelSubscription, {});
+    const data = response.data && typeof response.data === 'object'
+      ? response.data as Record<string, unknown>
+      : {};
+    return {
+      subscriptionId: data.subscriptionId == null ? null : String(data.subscriptionId),
+      cancelled: data.cancelled === true,
+    };
+  },
+
   async getCreditTransactions(params?: { cursor?: string | null; limit?: number }): Promise<CursorPage<CreditTransactionResponse>> {
     if (usesMockData('payment')) {
       return { items: mockTransactions.map((item) => ({ id: item.id, ownerType: 1, ownerId: 'e2e-candidate', delta: item.tokensDelta, reason: item.type === 'purchase' ? 0 : 2, sessionId: item.sessionId ?? null, orderId: item.orderId ?? null, createdAt: item.createdAt })), nextCursor: null };
@@ -277,12 +287,11 @@ export const paymentService = {
     return {
       items: items.map((item) => ({
         id: item.id,
-        ownerType: item.ownerType,
-        ownerId: item.ownerId,
         delta: item.delta,
         reason: item.reason,
         sessionId: item.sessionId,
         orderId: item.orderId,
+        reversesTransactionId: item.reversesTransactionId,
         createdAt: item.createdAt,
       })),
       nextCursor: typeof nextCursor === 'string' && nextCursor ? nextCursor : null,

@@ -99,3 +99,12 @@ Legacy `/selection` redirects to `/invite`.
 - Provider failure is non-blocking: the employer can keep the manually entered
   address and complete the wizard.
 - See decision `docs/decisions/0018-campaign-location-provider-boundary.md`.
+
+## ATS API key integration
+
+The frontend uses the v10 split credential model:
+
+- `POST/GET /api/v1/campaign/api-keys` and `DELETE /api/v1/campaign/api-keys/{id}` use the authenticated Employer JWT; only `OrgAdmin` may manage keys.
+- `GET /api/v1/campaign/public/campaigns` and `GET /api/v1/campaign/public/campaigns/{id}/results` use `X-Api-Key` and deliberately omit the Bearer token.
+- Key creation sends `expiresInDays` (1–730) and deny-by-default `includePii=false`; the raw key is returned only once.
+- Public campaign lists use `X-Next-Cursor`; public results expose `piiIncluded` so consumers know whether identity fields are present.

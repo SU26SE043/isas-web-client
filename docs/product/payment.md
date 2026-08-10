@@ -56,7 +56,7 @@ Both B2C and B2B bill by **AI tokens consumed**. Users **see token usage** on th
 
 E2E: `e2e/specs/b2c/payment-credits.spec.ts`
 
-Live PaymentService + PayOS integration TBD.
+The B2C PaymentService + PayOS flow is wired through the live package/order/account/subscription endpoints. The existing local reserve/settle mock remains only where the practice feature switch selects mock data.
 
 ### Public package catalog (wired)
 
@@ -93,12 +93,12 @@ Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages(
 | BR-B2B-04 | Organize sees usage by campaign / month / session |
 | BR-PAY-01 | Only Organize accesses billing and invoices |
 
-### Routes (planned)
+### Routes
 
 | Path | Component | Status |
 | --- | --- | --- |
-| `/employer/billing` | *TBD* | Missing — Tier 1 |
-| `/employer/billing/invoices` | *TBD* | Missing — Tier 1 |
+| `/employer/billing` | `EmployerBillingOverviewPage` | Live |
+| `/employer/billing/invoices` | `EmployerInvoicesPage` | Live |
 
 ---
 
@@ -109,6 +109,10 @@ Marketing `/pricing` loads this catalog via `paymentService.listCatalogPackages(
 - Abandon session: partial settle vs release reserve
 
 ---
+
+## Live B2C payment API order
+
+The Candidate payment flow uses `GET /api/v1/payment/package`, `POST /api/v1/payment/order`, redirects to `checkoutUrl`, then polls `GET /api/v1/payment/order/{id}/status` until the string status is `Paid`. The wallet reads both `GET /api/v1/payment/me/account` and `GET /api/v1/payment/me/subscription`; cancellation uses `POST /api/v1/payment/me/subscription/cancel` and is idempotent.
 
 ## Status
 

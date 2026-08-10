@@ -1,62 +1,77 @@
-import { useState } from 'react';
-import { FileText } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/shared/languages';
-import { BillingMetricCard } from '../components/BillingMetricCard';
-import { InvoiceTable } from '../components/InvoiceTable';
-import { useEmployerBilling } from '../hooks/useEmployerBilling';
+import { QuerySection } from '../components/live/QuerySection';
+import { useEmployerInvoices } from '../hooks/useEmployerPaymentQueries';
+import { usePayEmployerInvoice } from '../hooks/useEmployerPaymentMutations';
+import { InvoiceStatus } from '../types/employerPayment.types';
+import { canManageEmployerPayment, formatDateTime, formatVnd } from '../utils/employerPayment';
+
+const statusKeys = {
+  [InvoiceStatus.Issued]: 'employerBilling.invoices.issued',
+  [InvoiceStatus.Paid]: 'employerBilling.invoices.paid',
+  [InvoiceStatus.Overdue]: 'employerBilling.invoices.overdue',
+  [InvoiceStatus.Void]: 'employerBilling.invoices.void',
+} as const;
 
 export function EmployerInvoicesPage() {
   const { t, language } = useLanguage();
-  const { invoices, isLoading, generateInvoicePdf } = useEmployerBilling();
-  const [generatingId, setGeneratingId] = useState<string | null>(null);
-  const [messageKey, setMessageKey] = useState<string | null>(null);
+  const { user } = useAuth();
+  const invoices = useEmployerInvoices();
+  const payInvoice = usePayEmployerInvoice();
+  const canManage = canManageEmployerPayment(user?.role);
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
-  const paidTotal = invoices.filter((invoice) => invoice.status === 'paid').reduce((sum, invoice) => sum + invoice.amount, 0);
-
-  const handleGenerate = async (invoiceId: string) => {
-    setGeneratingId(invoiceId);
-    setMessageKey(null);
-    try {
-      const result = await generateInvoicePdf(invoiceId);
-      setMessageKey(result.messageKey);
-    } finally {
-      setGeneratingId(null);
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-surface-base px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header>
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{t('employerBilling.invoices.eyebrow')}</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">{t('employerBilling.invoices.title')}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('employerBilling.invoices.subtitle')}</p>
-        </header>
+    <div className="space-y-5">
+      <header>
+        <p className="text-label">{t('employerBilling.invoices.eyebrow')}</p>
+        <h2 className="mt-2 text-2xl font-semibold text-foreground">{t('employerBilling.invoices.title')}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t('employerBilling.invoices.subtitle')}</p>
+      </header>
 
-        {messageKey ? (
-          <Alert variant="success">
-            <AlertDescription>{t(messageKey)}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <section className="grid gap-4 md:grid-cols-3">
-          <BillingMetricCard label={t('employerBilling.invoices.totalInvoices')} value={invoices.length} hint={t('employerBilling.invoices.totalInvoicesHint')} icon={<FileText className="h-5 w-5" aria-hidden />} />
-          <BillingMetricCard label={t('employerBilling.invoices.paidTotal')} value={new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(paidTotal)} hint={t('employerBilling.invoices.paidTotalHint')} icon={<FileText className="h-5 w-5" aria-hidden />} />
-          <BillingMetricCard label={t('employerBilling.invoices.sla')} value={t('employerBilling.invoices.slaValue')} hint={t('employerBilling.invoices.slaHint')} icon={<FileText className="h-5 w-5" aria-hidden />} />
-        </section>
-
-        <Card className="border border-subtle bg-surface-raised">
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="h-80 animate-pulse bg-surface-overlay" />
-            ) : (
-              <InvoiceTable invoices={invoices} generatingId={generatingId} onGenerate={handleGenerate} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <QuerySection isLoading={invoices.isLoading} isError={invoices.isError} onRetry={() => void invoices.refetch()}>
+        {invoices.data?.length ? (
+          <div className="overflow-x-auto rounded-2xl bg-surface-raised frame-satin">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-satin text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-4">{t('employerBilling.invoices.period')}</th>
+                  <th className="px-5 py-4">{t('employerBilling.invoices.usage')}</th>
+                  <th className="px-5 py-4">{t('employerBilling.invoices.amount')}</th>
+                  <th className="px-5 py-4">{t('employerBilling.invoices.status')}</th>
+                  <th className="px-5 py-4 text-right">{t('employerBilling.invoices.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.data.map((invoice) => (
+                  <tr key={invoice.id} className="border-b border-satin last:border-0">
+                    <td className="px-5 py-4 text-foreground">
+                      {formatDateTime(invoice.periodStart, locale)} – {formatDateTime(invoice.periodEnd, locale)}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">{invoice.interviewCount}</td>
+                    <td className="px-5 py-4 font-medium text-foreground">{formatVnd(invoice.amount, locale)}</td>
+                    <td className="px-5 py-4">
+                      <span className="rounded-full border border-satin px-2.5 py-1 text-xs text-foreground">{t(statusKeys[invoice.status])}</span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {canManage && invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Void ? (
+                        <Button size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(invoice.id)}>
+                          {t('employerBilling.invoices.pay')}
+                        </Button>
+                      ) : <span className="text-xs text-muted-foreground">{t('employerBilling.invoices.noAction')}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-surface-raised p-8 text-center text-sm text-muted-foreground frame-satin">
+            {t('employerBilling.invoices.empty')}
+          </p>
+        )}
+      </QuerySection>
     </div>
   );
 }

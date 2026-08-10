@@ -37,4 +37,5 @@ export interface PracticeSessionCreateResult {
 export interface GenerateRubricInput {
   /** Practice domain id from wizard step 1 (`frontend` | `backend` | `business-analyst`). */
   domainId: string;
+  language?: 'vi' | 'en';
 }

@@ -11,6 +11,7 @@ import { notifyUnauthorized } from './unauthorizedHandler';
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
+  _rateLimitRetry?: boolean;
   /** Skip attaching Bearer (public endpoints such as refresh). */
   skipAuth?: boolean;
 };
@@ -42,6 +43,26 @@ const handleSessionExpired = () => {
   sessionManager.clear();
   notifyUnauthorized();
 };
+
+function retryAfterMs(error: AxiosError): number {
+  const headers = error.response?.headers as
+    | (Record<string, unknown> & { get?: (name: string) => unknown })
+    | undefined;
+  const raw = typeof headers?.get === 'function'
+    ? headers.get('retry-after') ?? headers.get('Retry-After')
+    : headers?.['retry-after'] ?? headers?.['Retry-After'];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.min(60_000, Math.max(0, value * 1000));
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const seconds = Number(value);
+    if (Number.isFinite(seconds)) return Math.min(60_000, Math.max(0, seconds * 1000));
+    const dateMs = Date.parse(value) - Date.now();
+    if (Number.isFinite(dateMs)) return Math.min(60_000, Math.max(0, dateMs));
+  }
+  return 1_000;
+}
 
 /** Auth routes that must not trigger the 401→refresh loop (and usually skip Bearer). */
 const isPublicAuthUrl = (url?: string) =>
@@ -88,6 +109,16 @@ export const createApiClient = () => {
 
       if (!originalRequest) {
         return Promise.reject(error);
+      }
+
+      // Gateway/Interview capacity responses carry Retry-After. Retry once in
+      // the shared client so callers do not mistake platform capacity for a
+      // session error or duplicate endpoint-specific retry logic.
+      if (status === 429 && !originalRequest._rateLimitRetry) {
+        originalRequest._rateLimitRetry = true;
+        return new Promise((resolve) => {
+          window.setTimeout(() => resolve(client(originalRequest)), retryAfterMs(error));
+        });
       }
 
       // Already retried once — do not refresh again (avoids infinite loops).

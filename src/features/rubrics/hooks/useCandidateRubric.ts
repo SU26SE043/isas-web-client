@@ -9,7 +9,7 @@ import {
   resetRubric,
   updateRubric,
 } from '../services/candidateRubrics.service';
-import type { EditableRubricCriterion, JobCategory } from '../types/rubric.types';
+import type { EditableRubricCriterion, JobCategory, RubricLanguage } from '../types/rubric.types';
 import {
   createEmptyCriterion,
   getInitialJobCategory,
@@ -29,7 +29,7 @@ import {
 export const CANDIDATE_RUBRIC_QUERY_KEY = ['candidate', 'rubric'] as const;
 
 export function useCandidateRubric() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const queryClient = useQueryClient();
 
   const [jobCategory, setJobCategory] = useState<JobCategory>(() => getInitialJobCategory());
@@ -44,9 +44,10 @@ export function useCandidateRubric() {
   const savedSnapshotRef = useRef('');
   const focusClientIdRef = useRef<string | null>(null);
 
+  const rubricLanguage: RubricLanguage = language;
   const rubricQuery = useQuery({
-    queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory],
-    queryFn: () => getRubric(jobCategory),
+    queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage],
+    queryFn: () => getRubric(jobCategory, rubricLanguage),
   });
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export function useCandidateRubric() {
   }, [criteria, markDirty]);
 
   const saveMutation = useMutation({
-    mutationFn: () => updateRubric(jobCategory, mapEditableToUpdateRequest(criteria)),
+    mutationFn: () => updateRubric(jobCategory, mapEditableToUpdateRequest(criteria), rubricLanguage),
     onSuccess: (response) => {
       const editable = mapResponseToEditable(response);
       setCriteria(editable);
@@ -101,7 +102,10 @@ export function useCandidateRubric() {
       savedSnapshotRef.current = serializeCriteria(editable);
       setIsDirty(false);
       setSaveError(null);
-      void queryClient.setQueryData([...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory], response);
+      void queryClient.setQueryData(
+        [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage],
+        response,
+      );
       toast.success(t('rubrics.toast.saved').replace('{domain}', t(`rubrics.domain.${jobCategory}`)));
     },
     onError: (error) => {
@@ -113,12 +117,12 @@ export function useCandidateRubric() {
   });
 
   const resetMutation = useMutation({
-    mutationFn: () => resetRubric(jobCategory),
+    mutationFn: () => resetRubric(jobCategory, rubricLanguage),
     onSuccess: async () => {
       setResetDialogOpen(false);
       const response = await queryClient.fetchQuery({
-        queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory],
-        queryFn: () => getRubric(jobCategory),
+        queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage],
+        queryFn: () => getRubric(jobCategory, rubricLanguage),
       });
       const editable = mapResponseToEditable(response);
       setCriteria(editable);

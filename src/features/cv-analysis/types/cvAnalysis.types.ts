@@ -3,6 +3,11 @@ import { domainToJobCategoryEnum } from '@/shared/domain/jobDomains';
 
 export type FileParseStatus = 'pending' | 'completed' | 'failed' | 'done';
 export type InterviewFileType = 'cv' | 'jd';
+export type FileListParams = {
+  fileType?: InterviewFileType;
+  cursor?: string;
+  limit?: number;
+};
 
 /** Upload response from POST /api/v1/interview/files/upload */
 export interface FileRecord {
@@ -14,6 +19,21 @@ export interface FileRecord {
   /** Backend field: `parsedStatus` (completed|failed); legacy alias `parseStatus`. */
   parsedStatus: FileParseStatus | string;
   createdAt: string;
+  updatedAt?: string;
+  userId?: string;
+  storagePath?: string;
+  storageBucket?: string;
+  parsedText?: string | null;
+}
+
+export interface FileRecordPage {
+  items: FileRecord[];
+  nextCursor: string | null;
+}
+
+export interface ReplaceFileResponse {
+  message: string;
+  parsedCv: Record<string, unknown> | null;
 }
 
 export interface JdMatch {
@@ -46,6 +66,11 @@ export interface AnalyzeCvRequest {
 
 /** API list/detail response shape. */
 export type CvAnalysisResponse = CvAnalysisResult;
+
+export interface CvAnalysisPage {
+  items: CvAnalysisResult[];
+  nextCursor: string | null;
+}
 
 /** Local UI attachment metadata (not computed scores). */
 export interface AnalysisFileMeta {

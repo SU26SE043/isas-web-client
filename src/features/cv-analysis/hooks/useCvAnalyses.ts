@@ -1,13 +1,25 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cvAnalysisService } from '../services/cvAnalysis.service';
 import type { CvAnalysisResult } from '../types/cvAnalysis.types';
+import type { CvAnalysisPage } from '../types/cvAnalysis.types';
 
 export const CV_ANALYSES_QUERY_KEY = ['cv-analysis', 'list'] as const;
+
+export function cvAnalysesPageQueryKey(cursor?: string, limit?: number) {
+  return [...CV_ANALYSES_QUERY_KEY, { cursor: cursor ?? null, limit: limit ?? null }] as const;
+}
 
 export function useCvAnalyses() {
   return useQuery({
     queryKey: CV_ANALYSES_QUERY_KEY,
     queryFn: () => cvAnalysisService.listAnalyses(),
+  });
+}
+
+export function useCvAnalysesPage(params?: { cursor?: string; limit?: number }) {
+  return useQuery<CvAnalysisPage>({
+    queryKey: cvAnalysesPageQueryKey(params?.cursor, params?.limit),
+    queryFn: () => cvAnalysisService.listAnalysesPage(params),
   });
 }
 

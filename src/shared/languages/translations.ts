@@ -15,6 +15,7 @@ import { employerBillingTranslations } from '../../features/employer-billing/lan
 import { liveEmployerPaymentTranslations } from '../../features/employer-billing/languages/livePaymentTranslations';
 import { engagementTranslations } from '../../features/engagement/languages/translations';
 import { rubricsTranslations } from '../../features/rubrics/languages/translations';
+import { repoAnalysisTranslations } from '../../features/repo-analysis/languages/translations';
 import { designSystemTranslations } from './designSystemTranslations';
 import { mergeTranslations } from './mergeTranslations';
 
@@ -36,5 +37,6 @@ export const translations = mergeTranslations(
   liveEmployerPaymentTranslations,
   engagementTranslations,
   rubricsTranslations,
+  repoAnalysisTranslations,
   designSystemTranslations,
 );

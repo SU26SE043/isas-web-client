@@ -174,7 +174,7 @@ async function enrichSessionWithRubricCatalog(
   if (!jobCategory) return session;
   try {
     const response = await apiClient.get<RubricResponse>(
-      practiceSetupEndpoints.rubric(jobCategory),
+      practiceSetupEndpoints.rubric(jobCategory, session.language ?? 'vi'),
     );
     const rubric: PracticeRubricCriterionRef[] = (response.data?.criteria ?? []).map((item) => ({
       id: item.id,

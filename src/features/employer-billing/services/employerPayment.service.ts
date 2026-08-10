@@ -9,6 +9,7 @@ import type {
   PackageResponse,
   PaymentAccountResponse,
   SubscriptionResponse,
+  InvoiceResponse,
 } from '../types/employerPayment.types';
 import {
   parseAccount,
@@ -17,6 +18,7 @@ import {
   parsePackage,
   parseSubscription,
   parseTransaction,
+  parseInvoice,
   readNextCursor,
   unwrapList,
 } from './employerPayment.parsers';
@@ -33,6 +35,10 @@ const endpoint = {
   account: `${prefix}/me/account`,
   subscription: `${prefix}/me/subscription`,
   transactions: `${prefix}/me/credit-transactions`,
+  invoices: `${prefix}/me/invoices`,
+  invoice: (id: string) => `${prefix}/me/invoices/${encodeURIComponent(id)}`,
+  payInvoice: (id: string) => `${prefix}/invoices/${encodeURIComponent(id)}/pay`,
+  cancelSubscription: `${prefix}/me/subscription/cancel`,
 };
 
 function pageParams(cursor?: string | null, limit = 20) {
@@ -103,5 +109,29 @@ export const employerPaymentService = {
   async getMySubscription(): Promise<SubscriptionResponse> {
     const response = await apiClient.get<unknown>(endpoint.subscription);
     return parseSubscription(response.data);
+  },
+
+  async cancelSubscription(): Promise<{ subscriptionId: string | null; cancelled: boolean }> {
+    const response = await apiClient.post<unknown>(endpoint.cancelSubscription, {});
+    const raw = response.data && typeof response.data === 'object' ? response.data as Record<string, unknown> : {};
+    return {
+      subscriptionId: raw.subscriptionId == null ? null : String(raw.subscriptionId),
+      cancelled: raw.cancelled === true,
+    };
+  },
+
+  async getInvoices(): Promise<InvoiceResponse[]> {
+    const response = await apiClient.get<unknown>(endpoint.invoices);
+    return unwrapList(response.data).map(parseInvoice);
+  },
+
+  async getInvoiceById(id: string): Promise<InvoiceResponse> {
+    const response = await apiClient.get<unknown>(endpoint.invoice(id));
+    return parseInvoice(response.data);
+  },
+
+  async payInvoice(id: string): Promise<OrderResponse> {
+    const response = await apiClient.post<unknown>(endpoint.payInvoice(id), {});
+    return parseOrder(response.data);
   },
 };

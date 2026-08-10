@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import type { JobCategory, RubricResponse, UpdateRubricRequest } from '../types/rubric.types';
+import type { JobCategory, RubricLanguage, RubricResponse, UpdateRubricRequest } from '../types/rubric.types';
 import { candidateRubricsEndpoints } from './candidateRubrics.endpoints';
 
 function normalizeRubricResponse(data: RubricResponse): RubricResponse {
@@ -11,24 +11,33 @@ function normalizeRubricResponse(data: RubricResponse): RubricResponse {
   };
 }
 
-export async function getRubric(jobCategory: JobCategory): Promise<RubricResponse> {
-  const response = await apiClient.get<RubricResponse>(candidateRubricsEndpoints.rubric(jobCategory));
+export async function getRubric(
+  jobCategory: JobCategory,
+  language: RubricLanguage = 'vi',
+): Promise<RubricResponse> {
+  const response = await apiClient.get<RubricResponse>(
+    candidateRubricsEndpoints.rubric(jobCategory, language),
+  );
   return normalizeRubricResponse(response.data);
 }
 
 export async function updateRubric(
   jobCategory: JobCategory,
   payload: UpdateRubricRequest,
+  language: RubricLanguage = 'vi',
 ): Promise<RubricResponse> {
   const response = await apiClient.put<RubricResponse>(
-    candidateRubricsEndpoints.rubric(jobCategory),
+    candidateRubricsEndpoints.rubric(jobCategory, language),
     payload,
   );
   return normalizeRubricResponse(response.data);
 }
 
-export async function resetRubric(jobCategory: JobCategory): Promise<void> {
-  await apiClient.delete(candidateRubricsEndpoints.rubric(jobCategory), {
+export async function resetRubric(
+  jobCategory: JobCategory,
+  language: RubricLanguage = 'vi',
+): Promise<void> {
+  await apiClient.delete(candidateRubricsEndpoints.rubric(jobCategory, language), {
     validateStatus: (status) => status === 204 || (status >= 200 && status < 300),
   });
 }

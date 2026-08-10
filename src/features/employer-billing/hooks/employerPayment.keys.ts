@@ -10,6 +10,7 @@ export const employerPaymentKeys = {
   order: (id: string) => [...employerPaymentKeys.orders(), 'detail', id] as const,
   orderStatus: (id: string) => [...employerPaymentKeys.orders(), 'status', id] as const,
   transactions: () => [...employerPaymentKeys.all, 'transactions'] as const,
+  invoices: () => [...employerPaymentKeys.all, 'invoices'] as const,
   transactionList: (cursor: string | null, limit: number) =>
     [...employerPaymentKeys.transactions(), 'list', cursor, limit] as const,
 };

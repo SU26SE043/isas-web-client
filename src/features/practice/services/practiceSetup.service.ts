@@ -135,16 +135,13 @@ export const practiceSetupService = {
    * Wizard step 5: load rubric for the domain chosen in step 1.
    * Always hits live GET `/api/v1/interview/practice/rubrics/{jobCategory}` (FE|BE|BA).
    */
-  async getRubric(domainId: string, signal?: AbortSignal): Promise<PracticeRubricCriterion[]> {
+  async getRubric(
+    domainId: string,
+    signal?: AbortSignal,
+    language: 'vi' | 'en' = 'vi',
+  ): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
-    if (usesMockData('practice')) {
-      await mockDelay(50);
-      return [
-        { id: `${jobCategory}-communication`, name: 'Communication', description: 'Clarity and structure of the answer.', weight: 50, maxScore: 10 },
-        { id: `${jobCategory}-technical`, name: 'Technical depth', description: 'Accuracy and depth of the solution.', weight: 50, maxScore: 10 },
-      ];
-    }
-    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory), {
+    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory, language), {
       signal,
     });
     const criteria = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
@@ -153,17 +150,21 @@ export const practiceSetupService = {
 
   /** @deprecated Prefer getRubric — kept for callers still using generateRubric name. */
   async generateRubric(input: GenerateRubricInput): Promise<PracticeRubricCriterion[]> {
-    return this.getRubric(input.domainId);
+    return this.getRubric(input.domainId, undefined, input.language ?? 'vi');
   },
 
   /**
    * Persist edited rubric for the domain (PUT).
    * Always live API — no mock.
    */
-  async updateRubric(domainId: string, criteria: PracticeRubricCriterion[]): Promise<PracticeRubricCriterion[]> {
+  async updateRubric(
+    domainId: string,
+    criteria: PracticeRubricCriterion[],
+    language: 'vi' | 'en' = 'vi',
+  ): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
     const response = await apiClient.put<RubricResponse>(
-      practiceSetupEndpoints.rubric(jobCategory),
+      practiceSetupEndpoints.rubric(jobCategory, language),
       mapPracticeCriteriaToUpdatePayload(criteria),
     );
     const next = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
@@ -174,12 +175,12 @@ export const practiceSetupService = {
    * Reset rubric to system default (DELETE), then reload via GET.
    * Always live API — no mock.
    */
-  async resetRubric(domainId: string): Promise<PracticeRubricCriterion[]> {
+  async resetRubric(domainId: string, language: 'vi' | 'en' = 'vi'): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
-    await apiClient.delete(practiceSetupEndpoints.rubric(jobCategory), {
+    await apiClient.delete(practiceSetupEndpoints.rubric(jobCategory, language), {
       validateStatus: (status) => status === 204 || (status >= 200 && status < 300),
     });
-    return this.getRubric(domainId);
+    return this.getRubric(domainId, undefined, language);
   },
 
   async createSession(input: PracticeSessionCreateInput): Promise<PracticeSessionCreateResult> {

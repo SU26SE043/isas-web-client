@@ -1,6 +1,7 @@
 import type { JobCategoryEnum } from '@/shared/domain/jobDomains';
 
 export type JobCategory = JobCategoryEnum;
+export type RubricLanguage = 'vi' | 'en';
 
 export type RubricCriterionResponse = {
   id: string;
