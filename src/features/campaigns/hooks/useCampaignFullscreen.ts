@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { campaignCandidateService } from '../services/campaignCandidate.service';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseCampaignFullscreenOptions {
-  campaignId: string;
-  sessionId: string;
   enabled: boolean;
+  onExit?: () => void;
 }
 
-export function useCampaignFullscreen({ campaignId, sessionId, enabled }: UseCampaignFullscreenOptions) {
-  const [isFullscreen, setIsFullscreen] = useState(
-    () => typeof document !== 'undefined' && Boolean(document.fullscreenElement),
-  );
+export function useCampaignFullscreen({ enabled, onExit }: UseCampaignFullscreenOptions) {
+  const initiallyFullscreen =
+    typeof document !== 'undefined' && Boolean(document.fullscreenElement);
+  const [isFullscreen, setIsFullscreen] = useState(initiallyFullscreen);
   const [hasExited, setHasExited] = useState(false);
+  const hasEntered = useRef(initiallyFullscreen);
 
   const enterFullscreen = useCallback(async () => {
     if (!document.documentElement.requestFullscreen) return false;
@@ -28,18 +27,17 @@ export function useCampaignFullscreen({ campaignId, sessionId, enabled }: UseCam
     const onFullscreenChange = () => {
       const active = Boolean(document.fullscreenElement);
       setIsFullscreen(active);
-      if (active) return;
+      if (active) {
+        hasEntered.current = true;
+        return;
+      }
+      if (!hasEntered.current) return;
       setHasExited(true);
-      void campaignCandidateService
-        .createCampaignFlag(campaignId, sessionId, {
-          signalType: 'focus_lost',
-          note: 'fullscreen_exit',
-        })
-        .catch(() => undefined);
+      onExit?.();
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, [campaignId, enabled, sessionId]);
+  }, [enabled, onExit]);
 
   return {
     isFullscreen,

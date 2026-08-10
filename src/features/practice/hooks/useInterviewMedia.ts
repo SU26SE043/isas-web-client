@@ -123,6 +123,14 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
     void attachStreamToVideo();
   }, [attachStreamToVideo, stream]);
 
+  useEffect(() => {
+    if (!stream) return undefined;
+    const onVideoEnded = () => setState('error');
+    const tracks = stream.getVideoTracks();
+    tracks.forEach((track) => track.addEventListener('ended', onVideoEnded));
+    return () => tracks.forEach((track) => track.removeEventListener('ended', onVideoEnded));
+  }, [stream]);
+
   useEffect(() => () => stopMedia(), [stopMedia]);
 
   return {

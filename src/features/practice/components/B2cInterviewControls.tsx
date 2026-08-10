@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 interface B2cInterviewControlsProps {
   micEnabled: boolean;
   cameraEnabled: boolean;
+  cameraAlwaysOn?: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onFinish: () => void;
@@ -17,6 +18,7 @@ interface B2cInterviewControlsProps {
 export function B2cInterviewControls({
   micEnabled,
   cameraEnabled,
+  cameraAlwaysOn = false,
   onToggleMic,
   onToggleCamera,
   onFinish,
@@ -46,7 +48,7 @@ export function B2cInterviewControls({
             className="btn-secondary rounded-full px-3 py-2"
             aria-pressed={cameraEnabled}
             aria-label={t('practice.flow.controls.camera')}
-            disabled={disabled}
+            disabled={disabled || cameraAlwaysOn}
             onClick={onToggleCamera}
           >
             {cameraEnabled ? <Video className="size-4" /> : <VideoOff className="size-4" />}

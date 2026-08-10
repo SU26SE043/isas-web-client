@@ -23,9 +23,11 @@ export function useQuestionSpeech(
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const lastAutoQuestionRef = useRef<string | null>(null);
+  const pausedByViolationRef = useRef(false);
   const { enabled = true, onPlaybackStart, onPlaybackComplete } = options;
 
   const stopPlayback = useCallback(() => {
+    pausedByViolationRef.current = false;
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
@@ -112,6 +114,26 @@ export function useQuestionSpeech(
     await loadAndPlay({ force: true });
   }, [loadAndPlay, questionId]);
 
+  const pausePlayback = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || audio.paused) return;
+    pausedByViolationRef.current = true;
+    audio.pause();
+    setIsPlaying(false);
+  }, []);
+
+  const resumePlayback = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio || !pausedByViolationRef.current) return;
+    pausedByViolationRef.current = false;
+    try {
+      await audio.play();
+      setIsPlaying(true);
+    } catch {
+      setNeedsManualPlay(true);
+    }
+  }, []);
+
   return {
     isLoadingSpeech,
     isPlaying,
@@ -119,5 +141,7 @@ export function useQuestionSpeech(
     replay,
     playManual: () => void loadAndPlay({ force: true }),
     stopPlayback,
+    pausePlayback,
+    resumePlayback,
   };
 }

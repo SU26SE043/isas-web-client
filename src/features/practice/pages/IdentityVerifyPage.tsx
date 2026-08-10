@@ -6,6 +6,7 @@ import { useMediaDevices } from '../hooks/useMediaDevices';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
+import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
 export const IdentityVerifyPage: React.FC = () => {
   const { sessionId = '' } = useParams();
@@ -46,6 +47,13 @@ export const IdentityVerifyPage: React.FC = () => {
 
   const handleContinue = () => {
     if (!preview) return;
+    const campaignSession = readCampaignInterviewSession(sessionId);
+    if (campaignSession) {
+      navigate(
+        `/candidate/campaigns/${encodeURIComponent(campaignSession.campaignId)}/interview/${encodeURIComponent(sessionId)}`,
+      );
+      return;
+    }
     navigate(`/interview/${sessionId}/waiting`);
   };
 

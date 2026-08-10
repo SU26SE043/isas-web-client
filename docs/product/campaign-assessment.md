@@ -1,144 +1,82 @@
 # B2B Campaign Assessment (Magic Link Interview)
 
-> **Shared preparation boundary (2026-08-10):** Campaign candidates reuse the B2C `InterviewPrepPage` and `DeviceCheckStep` directly. Campaign-only routing is a non-visual adapter. The campaign room remains on its campaign URL but is mounted through `FullscreenLayout`, so only the room has no candidate sidebar.
+> **API v10 boundary (2026-08-10):** Campaign candidates reuse the B2C preparation and room UI, while campaign-only hooks own monitoring. Frontend flags are restricted to `tab_switch`, `paste`, `focus_lost`, and `camera_blocked`; face signals come only from `face-check` and are never posted to `/flags`.
 
 **Parent:** [`product-scope.md`](./product-scope.md) §4.7  
 **Entry:** [`campaign-discovery.md`](./campaign-discovery.md)  
-**Shared engine:** [`practice-interview.md`](./practice-interview.md) (interview room routes)
+**Shared engine:** [`practice-interview.md`](./practice-interview.md)
 
-Frontend contract for the **candidate assessment session** after opening a campaign magic link. Includes identity verification, proctoring, and violation handling.
-
-**Scope:** B2B campaigns (`campaign_id` set). B2C practice / learning have **no anti-cheat** and may toggle camera; B2B exam keeps **camera on** for the full interview room session.
-
----
+This is the frontend contract for the candidate assessment session after a campaign invitation. It applies only to B2B campaign rooms. B2C practice has no anti-cheat monitoring and may toggle its camera; the B2B room keeps the camera on.
 
 ## End-to-end flow
 
-1. Candidate opens **magic link** (`/invite/:token`).
-2. **Validate magic link** (token valid, not expired, campaign active).
-3. **Authenticate** — sign in if Candidate exists; register if not ([`product-scope.md`](./product-scope.md) BR-B2B-08–10).
-4. **Redirect** to **`/candidate/campaigns`** (optional `?highlight={token}` from email).
-5. **Campaign card** → **briefing** (`/candidate/campaigns/:token/briefing`) — role, company, duration, instructions, proctoring notice.
-6. **Device check** — camera, microphone, internet connectivity.
-7. **Accept terms & privacy** — required before continuing.
-8. **Identity verification** — capture **baseline face photo**.
-9. **Start interview** — enter interview room; **camera stays on** for the entire session.
-10. **Answer questions sequentially** (one question at a time).
-11. **Periodic face capture** — system captures face on a **configured interval**.
-12. **AI face match** — compare periodic capture to baseline; if similarity **below configured threshold** → **pause** session.
-13. **Focus / tab monitoring** — if **tab switch** or **window focus loss** detected → **pause** session.
-14. **Violation warning screen** — show:
-    - Violation reason
-    - Current violation count
-    - Maximum allowed violations
-    - **Continue** button
-15. Candidate taps **Continue** → resume interview (if under max violations).
-16. If violation count reaches **configured maximum** → system **auto-submits** assessment.
-17. **AI evaluation** → assessment **complete** → employer pipeline/report updated.
+1. Candidate opens and validates the magic link, then authenticates with the invited account.
+2. Candidate reviews the campaign and starts/resumes it through the idempotent `POST /api/v1/campaign/{campaignId}/start`.
+3. The shared B2C preparation/device-check UI obtains camera and microphone access.
+4. If `faceEnrollRequired` is true, capture a valid, exposed reference frame and upload it before room entry.
+5. Enter the shared full-screen interview room; keep the camera active and answer sequential questions.
+6. While the room is active, monitor allowed browser signals and run `face-check` every 30 seconds.
+7. A violation opens one serialized, non-dismissible warning and pauses room interaction, timer, TTS, and recording.
+8. Candidate explicitly selects **Tiếp tục làm bài**. Fullscreen/camera/face recovery must succeed when applicable before resuming.
+9. On submit or route exit, remove all monitoring listeners, polling, queue state, and media resources through the existing lifecycle.
 
----
-
-## Screen flow (candidate)
+## Screen flow
 
 | Step | Route / surface | Notes |
 | --- | --- | --- |
-| Magic link gate | `/invite/:token` | Validate; auth; redirect to campaigns |
-| My campaigns | `/candidate/campaigns` | Invite-only list; empty state |
-| Campaign briefing | `/candidate/campaigns/:token/briefing` | Info + instructions + Start assessment |
-| Device check | `/interview/:sessionId/device-check` | Camera, mic, network |
-| Terms acceptance | Prepare step or dedicated gate | Before identity capture |
-| Identity verification | `/interview/:sessionId/identity` | Baseline face photo |
-| Waiting / start | `/interview/:sessionId/waiting` | Optional buffer before room |
-| Interview room | `/interview/:sessionId/room` | Camera on; sequential Q&A |
-| Violation pause | **Overlay / modal** on room (or `/interview/:sessionId/pause`) | Warning UI + Continue |
-| Completion | `/interview/:sessionId/complete` | Post-submit confirmation |
-| Result (candidate view) | **Chưa được đặc tả route** | Employer report separate |
+| Magic link | `/invite/:token` | Invitation validation and shared auth UI |
+| Campaign hub/detail | `/candidate/campaigns` and campaign detail | No anti-cheat monitoring |
+| Shared preparation | `/interview/:sessionId/prepare` | Existing B2C consent/device-check UI |
+| Face enrollment | `/candidate/campaigns/:campaignId/face-enroll/:sessionId` | API v10 reference image when required |
+| Interview room | `/candidate/campaigns/:campaignId/interview/:sessionId` | Shared B2C room UI; camera locked on |
+| Violation pause | Shared modal over the room | One recovery/continue action; no overlapping dialogs |
+| Completion | Campaign completion route | No monitoring after submit |
 
----
-
-## Business rules — proctoring & integrity
+## Business rules
 
 | Rule | Description |
 | --- | --- |
-| BR-B2B-12 | Camera **must remain on** for entire B2B campaign interview |
-| BR-B2B-13 | Candidate answers **one question at a time** (sequential) |
-| BR-B2B-14 | **Baseline face photo** captured at identity verification before room |
-| BR-B2B-15 | **Periodic face capture** on interval **configured per campaign** |
-| BR-B2B-16 | AI face similarity **below threshold** (campaign config) → **pause** session + violation |
-| BR-B2B-17 | **Tab switch** or **loss of window focus** → **pause** session + violation |
-| BR-B2B-18 | Violation UI shows: **reason**, **current count**, **max count**, **Continue** CTA |
-| BR-B2B-19 | Candidate may **continue** after violation if count **below max** |
-| BR-B2B-20 | Violation count **≥ max** (campaign config) → **auto-submit**; no further answers |
-| BR-B2B-21 | **Terms & privacy** acceptance required before identity verification |
-| BR-B2B-22 | **Device check** (camera, microphone, internet) must pass before start |
-| BR-B2B-23 | Magic link must be **valid** before showing campaign briefing |
+| BR-B2B-12 | Camera remains on for the active B2B room |
+| BR-B2B-13 | Candidate answers one question at a time |
+| BR-B2B-14 | Upload a valid baseline image when `faceEnrollRequired` is true |
+| BR-B2B-15 | Face check runs every 30 seconds while the room is active |
+| BR-B2B-16 | Face-check signals pause the room but are not echoed to `/flags` |
+| BR-B2B-17 | Tab return, independent focus loss, paste, fullscreen exit, or camera loss pauses the room |
+| BR-B2B-18 | Warning UI shows the specific reason and one explicit Continue action |
+| BR-B2B-19 | Resume only after explicit Continue and any required recovery succeeds |
+| BR-B2B-20 | Related browser events are deduplicated; distinct events are serialized in one queue |
+| BR-B2B-21 | Monitoring exists only in the active room and respects `antiCheatEnabled` |
 
-### Campaign-configurable parameters
+## API v10 session policy
 
-Set in campaign settings (employer wizard) — **defaults Chưa được đặc tả trong tài liệu:**
+`POST /api/v1/campaign/{campaignId}/start` is create-or-get and returns `antiCheatEnabled`, `faceEnrollRequired`, and `deadlineAt`. `deadlineAt` remains the server authority for session expiry. A `204` face-check response means face verification is disabled and is treated as safe.
 
-| Parameter | Purpose |
+## API v10 anti-cheat mapping
+
+| Event | `/flags` payload or owner |
 | --- | --- |
-| `face_capture_interval_sec` | Periodic snapshot interval during interview |
-| `face_similarity_threshold` | Minimum match score vs baseline |
-| `max_violations` | Auto-submit when reached |
-| Magic link expiry | Referenced in `FRONTEND_MASTER_PLAN.md` as BRL-022 (14d) — confirm in campaign contract |
+| Visible → hidden → visible | `tab_switch`; note `Candidate switched away from the interview tab.` |
+| Fullscreen exits after successful entry | `tab_switch`; note `Candidate exited fullscreen mode.` |
+| Independent blur → focus | `focus_lost`; note `Interview window lost focus.` |
+| Paste | `paste`; note `Candidate attempted to paste content during the interview.` |
+| Live camera track becomes unavailable | `camera_blocked`; note `Candidate camera became unavailable during the interview.` |
+| `no_face`, `multiple_faces`, `face_mismatch`, `identity_unverified` | Backend/AI owns these through `face-check`; never POST to `/flags` |
 
----
+`identity_unverified` is a technical enrollment/reference-image issue, not confirmed cheating. It routes to face re-enrollment.
 
-## Assessment session states
+## API endpoints
 
-| State | Description |
-| --- | --- |
-| `validating_link` | Token check in progress |
-| `auth_required` | Sign in or register |
-| `briefing` | Campaign info + instructions |
-| `device_check` | Camera / mic / network test |
-| `terms_pending` | Awaiting terms acceptance |
-| `identity_capture` | Baseline face photo |
-| `in_progress` | Active interview; camera on |
-| `paused_violation` | Paused; violation warning visible |
-| `auto_submitted` | Max violations reached; forced submit |
-| `submitted` | Answers submitted; awaiting AI evaluation |
-| `evaluating` | AI scoring in progress |
-| `completed` | Assessment finished |
-
-Employer pipeline should reflect transition from `invited` → `in_progress` → `completed` (or `auto_submitted`) — see [`employer-analytics.md`](./employer-analytics.md).
-
----
-
-## Violation types (product)
-
-| Type | Trigger |
-| --- | --- |
-| `face_mismatch` | Similarity below threshold |
-| `tab_switch` | Candidate left interview tab |
-| `focus_loss` | Window lost focus |
-
-**Chưa được đặc tả:** whether multiple violation types share one counter or separate counters.
-
----
-
-## Data / API (inferred contract)
-
-Frontend will need (via Gateway — **endpoints Chưa được đặc tả trong tài liệu**):
-
-- `POST validateMagicLink(token)`
-- `GET campaignBriefing(campaignId)` for invite context
-- `POST acceptTerms(sessionId)`
-- `POST identityBaseline(sessionId, image)`
-- `POST reportViolation(sessionId, type, metadata)`
-- `POST continueSession(sessionId)` after pause
-- `POST submitAssessment(sessionId)` — manual or auto
-- WebSocket or poll for evaluation status
-
----
+- `POST /api/v1/campaign/{campaignId}/start`
+- `POST /api/v1/campaign/{campaignId}/sessions/{sessionId}/flags`
+- `POST /api/v1/campaign/{campaignId}/sessions/{sessionId}/face-enroll` (`multipart/form-data`, field `image`)
+- `POST /api/v1/campaign/{campaignId}/sessions/{sessionId}/face-check` (`multipart/form-data`, field `image`)
 
 ## Status
 
-**Implemented (mock)** — magic link gate, invite-only campaigns hub, briefing, B2B terms/identity/proctoring flow in shared interview engine. Proctoring params come from campaign wizard (Phase 10).
+**Implemented against API v10** — active-room browser monitoring, face enrollment/check, serialized blocking warnings, recovery gates, and pause/resume integration reuse the shared interview engine.
 
 ## Related
 
-- [`campaign-management.md`](./campaign-management.md) — campaign settings for proctoring config
-- [`module-scope.md`](./module-scope.md) — route inventory
+- [`campaign-management.md`](./campaign-management.md)
+- [`module-scope.md`](./module-scope.md)
+- [`../decisions/0020-campaign-anti-cheat-boundary.md`](../decisions/0020-campaign-anti-cheat-boundary.md)

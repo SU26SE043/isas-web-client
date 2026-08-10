@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useMediaDevices } from '@/features/practice/hooks/useMediaDevices';
 import { useLanguage } from '@/shared/languages';
@@ -14,6 +14,8 @@ export function CampaignFaceEnrollPage() {
   const { campaignId = '', sessionId = '' } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isRetry = searchParams.get('retry') === '1';
   const stored = readCampaignInterviewSession(sessionId);
   const resolvedCampaignId = campaignId || stored?.campaignId || '';
   const { videoRef, state, startPreview, stopStream, captureSnapshot } = useMediaDevices();
@@ -22,13 +24,13 @@ export function CampaignFaceEnrollPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (stored && !stored.faceEnrollRequired) {
+    if (stored && !stored.faceEnrollRequired && !isRetry) {
       navigate(
         `/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/interview/${encodeURIComponent(sessionId)}`,
         { replace: true },
       );
     }
-  }, [navigate, resolvedCampaignId, sessionId, stored]);
+  }, [isRetry, navigate, resolvedCampaignId, sessionId, stored]);
 
   useEffect(() => {
     void startPreview();

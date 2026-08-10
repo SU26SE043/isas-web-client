@@ -22,6 +22,7 @@ interface AudioRecorderModalProps {
   maxDurationSeconds: number;
   sharedStream?: MediaStream | null;
   disabled?: boolean;
+  paused?: boolean;
   onSubmitRecording: (file: File, durationSec: number) => Promise<void>;
   mapSubmitErrorKey?: (error: unknown) => string;
   onStatusChange?: (status: AudioRecorderStatus) => void;
@@ -37,6 +38,7 @@ export function AudioRecorderModal({
   maxDurationSeconds,
   sharedStream = null,
   disabled,
+  paused = false,
   onSubmitRecording,
   mapSubmitErrorKey,
   onStatusChange,
@@ -47,6 +49,7 @@ export function AudioRecorderModal({
     questionId,
     maxDurationSeconds,
     sharedStream,
+    paused,
   });
   const [confirmClose, setConfirmClose] = useState(false);
   const submittingLockRef = useRef(false);

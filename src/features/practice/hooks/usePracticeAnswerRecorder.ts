@@ -26,6 +26,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
   const startedAtRef = useRef<number>(0);
   const mimeRef = useRef(pickMimeType());
   const discardOnStopRef = useRef(false);
+  const pausedAtRef = useRef(0);
+  const totalPausedMsRef = useRef(0);
 
   const clearRecording = useCallback(() => {
     discardOnStopRef.current = false;
@@ -33,6 +35,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     setDurationSec(0);
     setErrorKey(null);
     chunksRef.current = [];
+    pausedAtRef.current = 0;
+    totalPausedMsRef.current = 0;
     setRecordingStatus('idle');
   }, [setRecordingStatus]);
 
@@ -72,6 +76,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     const recorder = new MediaRecorder(stream, { mimeType });
     recorderRef.current = recorder;
     startedAtRef.current = Date.now();
+    pausedAtRef.current = 0;
+    totalPausedMsRef.current = 0;
     recorder.ondataavailable = (event) => {
       if (discardOnStopRef.current) return;
       if (event.data.size > 0) chunksRef.current.push(event.data);
@@ -86,7 +92,11 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
         return;
       }
       const blob = new Blob(chunksRef.current, { type: mimeRef.current });
-      const elapsed = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
+      const activePauseMs = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
+      const elapsed = Math.max(
+        1,
+        Math.round((Date.now() - startedAtRef.current - totalPausedMsRef.current - activePauseMs) / 1000),
+      );
       const file = new File([blob], `answer-${Date.now()}.webm`, {
         type: blob.type || 'audio/webm',
       });
@@ -107,6 +117,21 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
 
   useEffect(() => () => stopRecorder(), [stopRecorder]);
 
+  const pauseRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'recording') return;
+    recorder.pause();
+    pausedAtRef.current = Date.now();
+  }, []);
+
+  const resumeRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'paused') return;
+    if (pausedAtRef.current) totalPausedMsRef.current += Date.now() - pausedAtRef.current;
+    pausedAtRef.current = 0;
+    recorder.resume();
+  }, []);
+
   return {
     recordingStatus: recordingStatus as RecordingStatus,
     audioFile,
@@ -115,6 +140,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     startRecording,
     stopRecording: stopRecorder,
     stopRecordingAndDiscard,
+    pauseRecording,
+    resumeRecording,
     clearRecording,
     setUploading: () => setRecordingStatus('uploading'),
     setSubmitted: () => setRecordingStatus('submitted'),
