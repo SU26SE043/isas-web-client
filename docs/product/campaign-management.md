@@ -20,6 +20,8 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **JD PDF live** — Create mode keeps the JD file local (browser-only) until the final `POST /api/v1/campaign` succeeds, then a single `POST /api/v1/campaign/{id}/files`. Edit mode uploads immediately via `POST` (first upload) or `PUT …/files` (replace). Field `jdFile` (PDF ≤10MB). Criteria no longer supports file upload — replaced by a manual rubric (step 3) plus a freeform `criteriaText` note (step 2).
 
+**Attachments on Employer Campaign Detail** — The detail view shows files successfully uploaded through this frontend, including document type, original filename, size, and a download action backed by `POST /api/v1/campaign/{id}/files/download?fileType=jd|criteria`. API v10 `CampaignResponse` does not expose attachment metadata or a file-list endpoint, so the frontend retains filename/size metadata in browser storage after a successful upload. Files uploaded from another browser/device cannot be listed authoritatively until the backend adds attachment metadata; the UI does not probe by downloading PDFs on page load.
+
 **CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
 ## Flow 1 — Create & publish

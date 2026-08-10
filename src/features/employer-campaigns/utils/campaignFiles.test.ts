@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseContentDispositionFilename,
+  readCampaignAttachments,
+  rememberCampaignAttachments,
   validateCampaignPdf,
 } from './campaignFiles';
 
@@ -31,5 +33,23 @@ describe('campaignFiles', () => {
     expect(
       parseContentDispositionFilename("attachment; filename*=UTF-8''my%20jd.pdf"),
     ).toBe('my jd.pdf');
+  });
+
+  it('retains successful upload metadata per campaign and replaces by type', () => {
+    localStorage.clear();
+    const firstJd = new File(['first'], 'first-jd.pdf', { type: 'application/pdf' });
+    const criteria = new File(['criteria'], 'criteria.pdf', { type: 'application/pdf' });
+    rememberCampaignAttachments('campaign-a', { jdFile: firstJd, criteriaFile: criteria });
+
+    const replacementJd = new File(['replacement'], 'latest-jd.pdf', {
+      type: 'application/pdf',
+    });
+    rememberCampaignAttachments('campaign-a', { jdFile: replacementJd });
+
+    expect(readCampaignAttachments('campaign-a')).toEqual([
+      { type: 'jd', name: 'latest-jd.pdf', size: replacementJd.size },
+      { type: 'criteria', name: 'criteria.pdf', size: criteria.size },
+    ]);
+    expect(readCampaignAttachments('campaign-b')).toEqual([]);
   });
 });

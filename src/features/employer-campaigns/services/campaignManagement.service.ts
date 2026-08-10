@@ -41,6 +41,7 @@ import {
   parseCampaignResponseList,
   unwrapCampaignDetailPayload,
 } from '../utils/campaignMapper';
+import { rememberCampaignAttachments } from '../utils/campaignFiles';
 import { mergeCampaignWriteResult } from '../utils/buildCampaignCreateRequest';
 import {
   parseContentDispositionFilename,
@@ -712,6 +713,7 @@ export const campaignManagementService = {
       throw new Error('Invalid upload campaign files response: missing id');
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    rememberCampaignAttachments(mapped.id, { jdFile, criteriaFile });
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
   },
