@@ -25,6 +25,8 @@ import type {
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
+import { usesMockData } from '@/shared/mock';
+import { paymentService } from '@/features/payment/services/payment.service';
 
 export const PRACTICE_SETUP_STEP_COUNT = 7;
 
@@ -77,7 +79,7 @@ export function usePracticeSetupFlow() {
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
   const canStart =
     canStartPracticeSession(setupState) &&
-    rubricCriterionIds.length > 0 &&
+    (rubricCriterionIds.length > 0 || usesMockData('practice')) &&
     Boolean(sessionOptions) &&
     !loadingSessionOptions &&
     !sessionOptionsError &&
@@ -109,7 +111,9 @@ export function usePracticeSetupFlow() {
   useEffect(() => {
     if (!rubricQuery.data) return;
 
-    if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
+    if (rubricCriterionIds.length === 0 && validRubricIds.size > 0) {
+      setRubricCriterionIds([...validRubricIds]);
+    } else if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
       setRubricCriterionIds(validSelectedRubricIds);
     }
   }, [rubricQuery.data, rubricCriterionIds.length, validSelectedRubricIds]);
@@ -176,6 +180,10 @@ export function usePracticeSetupFlow() {
   }, [loadCvFiles, loadJdFiles, step]);
 
   const goToStep = useCallback((next: number) => {
+    if (next === 5 && usesMockData('practice')) {
+      setStep(6);
+      return;
+    }
     setStep(Math.max(0, Math.min(PRACTICE_SETUP_STEP_COUNT - 1, next)));
   }, []);
 
@@ -205,6 +213,9 @@ export function usePracticeSetupFlow() {
       const payload = buildCreatePracticeSessionRequest(setupState);
       resetInterviewStore();
       const session = await createPracticeSession(payload);
+      if (usesMockData('payment')) {
+        await paymentService.reserveTokens(session.id, 800);
+      }
       hydrateFromSession(session);
       resetInterviewFlow(session.id);
       // Prep flow handles consent + device check after session creation.

@@ -1,6 +1,8 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage } from '@/shared/api/apiError';
+import { mockDelay, usesMockData } from '@/shared/mock';
 import { paymentEndpoints } from './payment.endpoints';
+import { INITIAL_MOCK_WALLET_BALANCE, MOCK_PAYMENT_PACKAGES, MOCK_TOKEN_USAGE, MOCK_WALLET_TRANSACTIONS } from '../mocks/payment.fixtures';
 import type {
   CreateOrderResult,
   PackageResponse,
@@ -95,6 +97,49 @@ interface LivePaymentAccount {
   remainingCredits: number;
   reservedCredits: number;
 }
+
+const mockOrders = new Map<string, PaymentOrder>();
+let mockWalletBalance = INITIAL_MOCK_WALLET_BALANCE;
+const mockTransactions = [...MOCK_WALLET_TRANSACTIONS];
+const mockUsage = [...MOCK_TOKEN_USAGE];
+const mockReservations = new Map<string, number>();
+const MOCK_STATE_KEY = 'isas-e2e-payment-state';
+
+function hydrateMockState(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    const raw = sessionStorage.getItem(MOCK_STATE_KEY);
+    if (!raw) return;
+    const state = JSON.parse(raw) as { balance?: number; reservations?: Record<string, number> };
+    if (typeof state.balance === 'number') mockWalletBalance = state.balance;
+    for (const [sessionId, amount] of Object.entries(state.reservations ?? {})) mockReservations.set(sessionId, amount);
+  } catch { /* Ignore an invalid test snapshot. */ }
+}
+
+function persistMockState(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  sessionStorage.setItem(MOCK_STATE_KEY, JSON.stringify({ balance: mockWalletBalance, reservations: Object.fromEntries(mockReservations) }));
+}
+
+function mockWallet(): WalletSnapshot {
+  const reserved = [...mockReservations.values()].reduce((sum, value) => sum + value, 0);
+  return { balance: mockWalletBalance, reserved, available: mockWalletBalance - reserved, transactions: [...mockTransactions] };
+}
+
+function mockPackage(packageId: string) {
+  return MOCK_PAYMENT_PACKAGES.find((item) => item.id === packageId);
+}
+
+function settleMockOrder(orderId: string): void {
+  const order = mockOrders.get(orderId);
+  if (!order || order.status === 'paid') return;
+  order.status = 'paid';
+  mockWalletBalance += order.tokens;
+  mockTransactions.unshift({ id: `tx-${orderId}`, type: 'purchase', amount: order.amountUsd, tokensDelta: order.tokens, description: `${order.packageName} purchase`, descriptionVi: `Mua ${order.packageNameVi}`, createdAt: new Date().toISOString(), status: 'completed', orderId });
+  persistMockState();
+}
+
+hydrateMockState();
 
 function parsePaymentAccount(payload: unknown): PaymentAccountResponse {
   const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
@@ -203,11 +248,16 @@ async function fetchLiveCreditTransactions(params?: { cursor?: string | null; li
 
 export const paymentService = {
   async getPaymentAccount(): Promise<PaymentAccountResponse> {
+    if (usesMockData('payment')) {
+      const wallet = mockWallet();
+      return { ownerType: 1, ownerId: 'e2e-candidate', paymentMode: 0, status: 0, remainingCredits: wallet.available, reservedCredits: wallet.reserved, creditLimit: null, periodUsage: 0, updatedAt: new Date().toISOString() };
+    }
     const response = await apiClient.get<unknown>(paymentEndpoints.walletAccount);
     return parsePaymentAccount(response.data);
   },
 
   async getSubscription(): Promise<SubscriptionResponse> {
+    if (usesMockData('payment')) return { ownerType: 1, ownerId: 'e2e-candidate', active: false, billingCycle: null, startedAt: null, expiresAt: null };
     const response = await apiClient.get<unknown>(paymentEndpoints.subscription);
     return parseSubscription(response.data);
   },
@@ -224,6 +274,9 @@ export const paymentService = {
   },
 
   async getCreditTransactions(params?: { cursor?: string | null; limit?: number }): Promise<CursorPage<CreditTransactionResponse>> {
+    if (usesMockData('payment')) {
+      return { items: mockTransactions.map((item) => ({ id: item.id, ownerType: 1, ownerId: 'e2e-candidate', delta: item.tokensDelta, reason: item.type === 'purchase' ? 0 : 2, sessionId: item.sessionId ?? null, orderId: item.orderId ?? null, createdAt: item.createdAt })), nextCursor: null };
+    }
     const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions, {
       params: { ...(params?.cursor ? { cursor: params.cursor } : {}), ...(params?.limit ? { limit: params.limit } : {}) },
     });
@@ -246,6 +299,7 @@ export const paymentService = {
   },
 
   async getWallet(): Promise<WalletSnapshot> {
+    if (usesMockData('payment')) { await mockDelay(50); return mockWallet(); }
     const [accountResponse, liveTransactions] = await Promise.all([
       apiClient.get<unknown>(paymentEndpoints.walletAccount),
       fetchLiveCreditTransactions(),
@@ -264,6 +318,7 @@ export const paymentService = {
    * `GET /api/v1/payment/package` → active PackageResponse[].
    */
   async listCatalogPackages(): Promise<PackageResponse[]> {
+    if (usesMockData('payment')) { await mockDelay(50); return MOCK_PAYMENT_PACKAGES.filter((item) => item.isActive); }
     try {
       const response = await apiClient.get<unknown>(paymentEndpoints.listPackages);
       return unwrapList(response.data)
@@ -275,6 +330,7 @@ export const paymentService = {
   },
 
   async listTokenUsage(): Promise<TokenUsageRecord[]> {
+    if (usesMockData('payment')) return [...mockUsage];
     const transactions = await fetchLiveCreditTransactions();
     return transactions
       .filter((transaction) => transaction.sessionId)
@@ -294,6 +350,14 @@ export const paymentService = {
   },
 
   async createOrder(packageId: string): Promise<CreateOrderResult> {
+    if (usesMockData('payment')) {
+      const pkg = mockPackage(packageId);
+      if (!pkg) throw new Error('PAYMENT_PACKAGE_NOT_FOUND');
+      const order: PaymentOrder = { orderId: crypto.randomUUID(), packageId, packageName: pkg.name, packageNameVi: pkg.name, tokens: pkg.interviewCredits ?? 0, amountUsd: pkg.priceVnd / 25000, priceVnd: pkg.priceVnd, status: 'pending', checkoutUrl: '', createdAt: new Date().toISOString() };
+      order.checkoutUrl = `/payment/callback?orderId=${encodeURIComponent(order.orderId)}`;
+      mockOrders.set(order.orderId, order);
+      return { order };
+    }
     try {
       const response = await apiClient.post<unknown>(paymentEndpoints.createOrder, {
         packageId,
@@ -365,6 +429,11 @@ export const paymentService = {
   },
 
   async fetchOrderDetail(orderId: string): Promise<PaymentOrderDetail> {
+    if (usesMockData('payment')) {
+      const order = mockOrders.get(orderId);
+      if (!order) throw new Error('PAYMENT_ORDER_NOT_FOUND');
+      return { orderId: order.orderId, packageId: order.packageId, packageName: order.packageName, status: order.status === 'paid' ? 'Paid' : 'Pending', priceVnd: order.priceVnd, interviewCredits: order.tokens, createdAt: order.createdAt, paidAt: order.status === 'paid' ? new Date().toISOString() : undefined };
+    }
     try {
       const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));
       const dto = parseOrderResponse(response.data);
@@ -410,8 +479,25 @@ export const paymentService = {
   },
 
   async getOrderStatus(orderId: string): Promise<string> {
+    if (usesMockData('payment')) {
+      if (!mockOrders.has(orderId)) {
+        mockOrders.set(orderId, { orderId, packageId: 'pkg-standard', packageName: 'Standard', packageNameVi: 'Standard', tokens: 15000, amountUsd: 19, priceVnd: 475000, status: 'pending', checkoutUrl: '', createdAt: new Date().toISOString() });
+      }
+      settleMockOrder(orderId);
+      return 'Paid';
+    }
     const response = await apiClient.get<unknown>(paymentEndpoints.getOrderStatus(orderId));
     return parseOrderStatus(response.data);
+  },
+
+  async reserveTokens(sessionId: string, amount = 800): Promise<WalletSnapshot> {
+    if (!usesMockData('payment')) throw new Error('Payment reserve API is not wired yet.');
+    if (mockReservations.has(sessionId)) return mockWallet();
+    if (mockWallet().available < amount) throw new Error('INSUFFICIENT_BALANCE');
+    mockReservations.set(sessionId, amount);
+    mockTransactions.unshift({ id: `reserve-${sessionId}`, type: 'reserve', amount: 0, tokensDelta: 0, description: `Reserved ${amount} tokens`, descriptionVi: `Đã giữ ${amount} token`, createdAt: new Date().toISOString(), status: 'completed', sessionId });
+    persistMockState();
+    return mockWallet();
   },
 
   async fetchOrderStatus(orderId: string): Promise<PaymentOrderStatusResult> {

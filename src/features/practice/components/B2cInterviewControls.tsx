@@ -8,6 +8,7 @@ interface B2cInterviewControlsProps {
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onFinish: () => void;
+  onSubmitAnswer?: () => void;
   finishLabel: string;
   finishPrimary?: boolean;
   disabled?: boolean;
@@ -19,6 +20,7 @@ export function B2cInterviewControls({
   onToggleMic,
   onToggleCamera,
   onFinish,
+  onSubmitAnswer,
   finishLabel,
   finishPrimary,
   disabled,
@@ -51,6 +53,14 @@ export function B2cInterviewControls({
           </button>
         </div>
 
+        {!finishPrimary && onSubmitAnswer ? <button
+          type="button"
+          className="btn-primary rounded-full px-4 py-2.5 text-sm font-medium"
+          disabled={disabled}
+          onClick={onSubmitAnswer}
+        >
+          {t('practice.room.submitAnswer')}
+        </button> : null}
         <button
           type="button"
           className={cn(

@@ -62,7 +62,7 @@ export function PaymentSuccessPage() {
           <PaymentOrderDetailCard order={order} variant="success" />
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link to="/candidate/credits" className="btn-primary flex-1 text-center">
-              {t('payment.result.viewOrder')}
+              {t('payment.callback.viewWallet')}
             </Link>
             <Link to={dashboardPath} className="btn-secondary flex-1 text-center">
               {t('payment.result.backToDashboard')}
