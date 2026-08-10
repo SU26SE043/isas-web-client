@@ -180,10 +180,6 @@ export function usePracticeSetupFlow() {
   }, [loadCvFiles, loadJdFiles, step]);
 
   const goToStep = useCallback((next: number) => {
-    if (next === 5 && usesMockData('practice')) {
-      setStep(6);
-      return;
-    }
     setStep(Math.max(0, Math.min(PRACTICE_SETUP_STEP_COUNT - 1, next)));
   }, []);
 

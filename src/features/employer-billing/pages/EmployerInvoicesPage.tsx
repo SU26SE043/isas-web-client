@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/shared/languages';
@@ -19,6 +20,7 @@ export function EmployerInvoicesPage() {
   const { user } = useAuth();
   const invoices = useEmployerInvoices();
   const payInvoice = usePayEmployerInvoice();
+  const [pdfReadyInvoiceId, setPdfReadyInvoiceId] = useState<string | null>(null);
   const canManage = canManageEmployerPayment(user?.role);
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
@@ -31,6 +33,11 @@ export function EmployerInvoicesPage() {
       </header>
 
       <QuerySection isLoading={invoices.isLoading} isError={invoices.isError} onRetry={() => void invoices.refetch()}>
+        {pdfReadyInvoiceId ? (
+          <p role="status" className="mb-4 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+            {t('employerBilling.invoices.generated')}
+          </p>
+        ) : null}
         {invoices.data?.length ? (
           <div className="overflow-x-auto rounded-2xl bg-surface-raised frame-satin">
             <table className="w-full min-w-[720px] text-left text-sm">
@@ -55,11 +62,16 @@ export function EmployerInvoicesPage() {
                       <span className="rounded-full border border-satin px-2.5 py-1 text-xs text-foreground">{t(statusKeys[invoice.status])}</span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {canManage && invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Void ? (
-                        <Button size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(invoice.id)}>
-                          {t('employerBilling.invoices.pay')}
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setPdfReadyInvoiceId(invoice.id)}>
+                          {t('employerBilling.invoices.download')}
                         </Button>
-                      ) : <span className="text-xs text-muted-foreground">{t('employerBilling.invoices.noAction')}</span>}
+                        {canManage && invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Void ? (
+                          <Button size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(invoice.id)}>
+                            {t('employerBilling.invoices.pay')}
+                          </Button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

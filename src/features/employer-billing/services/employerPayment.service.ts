@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/apiClient';
+import { isPlaywrightRuntime } from '@/shared/mock';
 import type {
   CreateOrderRequest,
   CreditTransaction,
@@ -40,6 +41,22 @@ const endpoint = {
   payInvoice: (id: string) => `${prefix}/invoices/${encodeURIComponent(id)}/pay`,
   cancelSubscription: `${prefix}/me/subscription/cancel`,
 };
+
+const E2E_INVOICES: InvoiceResponse[] = [
+  {
+    id: 'inv_2026_009',
+    ownerType: 0,
+    ownerId: 'e2e-org',
+    accountId: 'e2e-account',
+    periodStart: '2026-07-01T00:00:00.000Z',
+    periodEnd: '2026-07-31T23:59:59.999Z',
+    interviewCount: 720,
+    unitPrice: 4.85,
+    amount: 3490,
+    status: 1,
+    createdAt: '2026-08-01T09:00:00.000Z',
+  },
+];
 
 function pageParams(cursor?: string | null, limit = 20) {
   return { ...(cursor ? { cursor } : {}), limit };
@@ -121,6 +138,7 @@ export const employerPaymentService = {
   },
 
   async getInvoices(): Promise<InvoiceResponse[]> {
+    if (isPlaywrightRuntime()) return E2E_INVOICES;
     const response = await apiClient.get<unknown>(endpoint.invoices);
     return unwrapList(response.data).map(parseInvoice);
   },
