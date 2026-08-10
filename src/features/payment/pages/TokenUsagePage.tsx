@@ -36,7 +36,7 @@ export const TokenUsagePage: React.FC = () => {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="heading-secondary text-xl text-foreground">{t('payment.usage.title')}</h2>
+            <p className="heading-secondary text-xl text-foreground">{t('payment.usage.title')}</p>
             <Link to="/candidate/credits" className="btn-ghost text-sm">
               {t('payment.usage.backToWallet')}
             </Link>

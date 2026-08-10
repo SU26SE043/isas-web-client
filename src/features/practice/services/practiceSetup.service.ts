@@ -137,6 +137,13 @@ export const practiceSetupService = {
    */
   async getRubric(domainId: string, signal?: AbortSignal): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
+    if (usesMockData('practice')) {
+      await mockDelay(50);
+      return [
+        { id: `${jobCategory}-communication`, name: 'Communication', description: 'Clarity and structure of the answer.', weight: 50, maxScore: 10 },
+        { id: `${jobCategory}-technical`, name: 'Technical depth', description: 'Accuracy and depth of the solution.', weight: 50, maxScore: 10 },
+      ];
+    }
     const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory), {
       signal,
     });

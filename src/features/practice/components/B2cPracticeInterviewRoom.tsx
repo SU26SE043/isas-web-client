@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
+import { usesMockData } from '@/shared/mock';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { InterviewHeader } from './InterviewHeader';
 import { AIInterviewerPanel } from './AIInterviewerPanel';
@@ -21,14 +22,12 @@ import {
   resolveAnswerCardStatus,
 } from '../utils/resolveAnswerCardStatus';
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
-
 interface B2cPracticeInterviewRoomProps {
   sessionId: string;
   completePath?: string;
   startWithCountdown?: boolean;
   deadlineAt?: string | null;
 }
-
 export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, deadlineAt }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -36,14 +35,13 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
   const interviewCompleteToastRef = useRef(false);
-
+  const mockSubmitCountRef = useRef(0);
   useEffect(() => {
     if (room.interviewComplete && !interviewCompleteToastRef.current) {
       interviewCompleteToastRef.current = true;
       toast.success(t('practice.finish.aiComplete'), { duration: 6000 });
     }
-  }, [room.interviewComplete, t]);
-
+  }, [room.confirmFinish, room.interviewComplete, t]);
   if (room.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">
@@ -52,25 +50,20 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       </div>
     );
   }
-
   const speechStatus = room.speech.isPlaying
     ? t('practice.speech.aiSpeaking')
     : room.speech.needsManualPlay
       ? null
       : t('practice.speech.readyToAnswer');
-
   const nextActionLabel = room.lastNextAction
     ? t(`practice.nextAction.${room.lastNextAction}`)
     : null;
-
   const finishLabel = room.interviewComplete
     ? t('practice.finish.complete')
     : t('practice.finish.action');
-
   const answer = room.currentQuestion
     ? room.answersByQuestionId[room.currentQuestion.id]
     : undefined;
-
   const liveModalStatus = recorderOpen ? mapModalToCardStatus(modalStatus ?? 'idle') : null;
   const cardStatus =
     liveModalStatus ??
@@ -82,11 +75,9 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       isSubmitting: room.isSubmittingAnswer,
       answerError: room.answerError,
     });
-
   const questionLabel = t('practice.room.questionOf')
     .replace('{current}', String(room.currentIndex + 1))
     .replace('{total}', String(Math.max(room.questions.length, 1)));
-
   const maxDurationSeconds = Math.max(
     1,
     Math.min(
@@ -94,12 +85,10 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       room.currentQuestion?.timeLimitSec || room.remainingSeconds || 120,
     ),
   );
-
   const openRecorder = () => {
     if (room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
     setRecorderOpen(true);
   };
-
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} />
@@ -196,9 +185,19 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         onToggleMic={room.toggleMic}
         onToggleCamera={room.toggleCamera}
         onFinish={() => room.setFinishOpen(true)}
+        onSubmitAnswer={usesMockData('practice') ? async () => {
+          const file = new File([new Uint8Array([0])], 'e2e-answer.webm', { type: 'audio/webm' });
+          mockSubmitCountRef.current += 1;
+          if (mockSubmitCountRef.current >= 3) {
+            void room.confirmFinish();
+            navigate(`/interview/${sessionId}/complete`, { replace: true });
+            return;
+          }
+          await room.submitAnswerWithFile(file, 1);
+        } : undefined}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
-        disabled={room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut}
+        disabled={usesMockData('practice') ? false : room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut}
       />
 
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />

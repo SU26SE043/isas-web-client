@@ -7,14 +7,6 @@ export function TokenUsageHistoryTable({ records }: { records: TokenUsageRecord[
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
-  if (!records.length) {
-    return (
-      <div className="frame-satin rounded-2xl bg-surface-raised p-8 text-center">
-        <p className="font-medium text-foreground">{t('payment.usage.empty')}</p>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="hidden md:block">
@@ -29,7 +21,7 @@ export function TokenUsageHistoryTable({ records }: { records: TokenUsageRecord[
             </TableRow>
           </TableHeader>
           <TableBody>
-            {records.map((record) => (
+            {records.length ? records.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{formatDate(record.settledAt, locale)}</TableCell>
                 <TableCell className="font-medium text-foreground">
@@ -39,7 +31,7 @@ export function TokenUsageHistoryTable({ records }: { records: TokenUsageRecord[
                 <TableCell>{record.status === 'settled' ? record.actualTokens.toLocaleString(locale) : '—'}</TableCell>
                 <TableCell><UsageStatus status={record.status} /></TableCell>
               </TableRow>
-            ))}
+            )) : <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">{t('payment.usage.empty')}</TableCell></TableRow>}
           </TableBody>
         </Table>
       </div>

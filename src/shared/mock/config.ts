@@ -29,7 +29,7 @@ export function isPlaywrightRuntime(): boolean {
 }
 
 export function usesMockData(domain: MockDataDomain): boolean {
-  if (domain === 'practice' && isPlaywrightRuntime()) {
+  if ((domain === 'practice' || domain === 'payment') && isPlaywrightRuntime()) {
     return true;
   }
   return !LIVE_API_DOMAINS.includes(domain);

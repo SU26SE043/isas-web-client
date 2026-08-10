@@ -11,7 +11,7 @@ export function TokenWalletAccountCard({ wallet, account }: { wallet: WalletSnap
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-label">{t('payment.wallet.balanceLabel')}</p>
-          <p className="mt-2 text-5xl font-semibold tracking-tight text-foreground">
+          <p className="heading-primary mt-2 text-5xl font-semibold tracking-tight text-foreground">
             {wallet.balance.toLocaleString(locale)}
           </p>
         </div>
