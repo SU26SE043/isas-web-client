@@ -130,7 +130,8 @@ concurrent-interview limit and `Retry-After`/`retryAfterSeconds`; a `409` with
 If `POST /api/v1/campaign/invitations/{token}/join` rejects a signed-in Candidate
 because their account email differs from the invited email, the gateway must return
 an explicit error marker (currently `code=INVITATION_EMAIL_MISMATCH`, or the
-equivalent specific message). The client renders a stable mismatch state only for
+equivalent specific message such as `Email đăng nhập không khớp với email được mời.`).
+The client renders a stable mismatch state only for
 that marker, shows the current authenticated email when available, preserves the
 token in session storage, signs the user out through the shared auth flow, and
 returns them to the original invite after sign-in. Other `403` responses remain

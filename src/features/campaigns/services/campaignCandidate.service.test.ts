@@ -28,6 +28,17 @@ describe('campaignCandidateService.joinCampaignByToken', () => {
     } satisfies Partial<CampaignCandidateError>);
   });
 
+  it('classifies the current Vietnamese backend error message as an email mismatch', async () => {
+    mockedApiClient.post.mockRejectedValue(
+      forbiddenResponse({ error: 'Email đăng nhập không khớp với email được mời.' }),
+    );
+
+    await expect(campaignCandidateService.joinCampaignByToken('invite-token')).rejects.toMatchObject({
+      code: 'emailMismatch',
+      status: 403,
+    } satisfies Partial<CampaignCandidateError>);
+  });
+
   it('keeps other forbidden responses as forbidden', async () => {
     mockedApiClient.post.mockRejectedValue(forbiddenResponse({ code: 'CAMPAIGN_CLOSED', message: 'Campaign closed' }));
 

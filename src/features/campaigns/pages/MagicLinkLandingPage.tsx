@@ -63,6 +63,7 @@ function LiveMagicLinkLandingPage() {
   const [hasEmailMismatch, setHasEmailMismatch] = useState(false);
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const joinStartedRef = useRef(false);
+  const autoJoinAttemptedRef = useRef(false);
 
   const invitePath = invitationPath(token);
   const canJoin = isAuthenticated && user?.role === UserRole.CANDIDATE;
@@ -77,6 +78,7 @@ function LiveMagicLinkLandingPage() {
     setJoinError(null);
     setHasEmailMismatch(false);
     joinStartedRef.current = false;
+    autoJoinAttemptedRef.current = false;
 
     void campaignCandidateService
       .getInvitationByToken(token)
@@ -160,8 +162,10 @@ function LiveMagicLinkLandingPage() {
 
   useEffect(() => {
     if (loadState.status !== 'ready' || !canJoin || isJoining || hasEmailMismatch) return;
+    if (autoJoinAttemptedRef.current) return;
     const pending = readPendingInviteToken();
     if (!pending || pending !== token.trim()) return;
+    autoJoinAttemptedRef.current = true;
     void performJoin();
   }, [canJoin, hasEmailMismatch, isJoining, loadState.status, performJoin, token]);
 
@@ -207,18 +211,6 @@ function LiveMagicLinkLandingPage() {
     return <InvitationLoadErrorState message={loadState.message} />;
   }
 
-  if (hasEmailMismatch) {
-    return (
-      <div className="page-container page-section min-h-[70vh] py-8">
-        <InvitationEmailMismatchState
-          currentEmail={user?.email}
-          isSwitchingAccount={isSwitchingAccount}
-          onSwitchAccount={() => void handleSwitchAccount()}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="page-container page-section min-h-[70vh] space-y-6 py-8">
       <InvitationDetailPanel
@@ -234,6 +226,13 @@ function LiveMagicLinkLandingPage() {
           invitePath={invitePath}
           token={token}
           onSavePendingToken={savePendingInviteToken}
+        />
+      ) : null}
+      {hasEmailMismatch ? (
+        <InvitationEmailMismatchState
+          currentEmail={user?.email}
+          isSwitchingAccount={isSwitchingAccount}
+          onSwitchAccount={() => void handleSwitchAccount()}
         />
       ) : null}
     </div>

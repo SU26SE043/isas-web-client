@@ -33,4 +33,8 @@ npm run build
 - Focused service and continuation tests: 4/4 passed.
 - `npm run check:i18n` and `npm run check:ui-size`: passed.
 - Browser QA: verified the rendered mismatch state at desktop and 375px, then clicked the switch-account CTA and confirmed the original token remained in session storage through the `/login` handoff.
+- Browser regression: an unrelated `403` response performs exactly one automatic join request, then stays on the generic forbidden state without looping.
+- UI update: verified the mismatch state in a shared modal overlay, with the invitation page dimmed but retained behind the popup.
+- Live contract: `403` with `error: "Email đăng nhập không khớp với email được mời."` is classified as `emailMismatch`.
+- Browser QA: the exact Vietnamese backend payload opens the mismatch modal.
 - `npm run typecheck` and `npx vite build` exceeded the local 60-second command limit without diagnostics; follow up in CI or a less-contended environment.

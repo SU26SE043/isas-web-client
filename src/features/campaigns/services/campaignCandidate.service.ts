@@ -84,9 +84,14 @@ function isInvitationEmailMismatch(
   if (normalizedApiCode === 'invitationemailmismatch') return true;
 
   const normalizedMessage = message?.trim().toLowerCase() ?? '';
-  return normalizedMessage.includes('invitation email')
+  const isEnglishMismatch = normalizedMessage.includes('invitation email')
     && (normalizedMessage.includes('does not match') || normalizedMessage.includes('mismatch'))
     && normalizedMessage.includes('current user');
+  const isVietnameseMismatch = normalizedMessage.includes('email')
+    && normalizedMessage.includes('không khớp')
+    && normalizedMessage.includes('được mời');
+
+  return isEnglishMismatch || isVietnameseMismatch;
 }
 
 function toCampaignCandidateError(error: unknown, fallback: string): CampaignCandidateError {
