@@ -19,19 +19,22 @@ import {
   type CvTimelineStatuses,
 } from '../utils/cvTimelineStatus';
 import { isPlaywrightRuntime } from '@/shared/mock';
+import { repoAnalysisService, RepoAnalysisError } from '@/features/repo-analysis/services/repoAnalysis.service';
+import type { RepoAnalysisResponse } from '@/features/repo-analysis/types/repoAnalysis.types';
 
 export const CV_ANALYSIS_ID_KEY = 'cv-analysis:lastId';
 export const CV_ANALYSIS_DOMAIN_KEY = 'cv-analysis:domain';
 export const CV_ANALYSIS_META_KEY = 'cv-analysis:lastMeta';
 
-export type CvFlowStep = 1 | 2 | 3 | 4;
+export type CvFlowStep = 1 | 2 | 3 | 4 | 5;
 export type FileUploadStatus = 'idle' | 'uploading' | 'completed' | 'error';
 
 const FLOW_STEP_TO_TIMELINE: Record<CvFlowStep, CvAnalysisStep> = {
   1: 'domain',
   2: 'upload',
-  3: 'job-description',
-  4: 'analysis',
+  3: 'github',
+  4: 'job-description',
+  5: 'analysis',
 };
 
 function fileIdentityKey(file: File): string {
@@ -91,6 +94,10 @@ export function useCvAnalysisFlow() {
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
   const [jdText, setJdText] = useState('');
   const [jdSkipped, setJdSkipped] = useState(false);
+  const [repoUrl, setRepoUrl] = useState('');
+  const [repoAnalysis, setRepoAnalysis] = useState<RepoAnalysisResponse | null>(null);
+  const [repoError, setRepoError] = useState<string | null>(null);
+  const [isAnalyzingRepo, setIsAnalyzingRepo] = useState(false);
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [insufficientCreditOpen, setInsufficientCreditOpen] = useState(false);
 
@@ -359,8 +366,45 @@ export function useCvAnalysisFlow() {
   const goNextFromUpload = useCallback(() => {
     if (isUploading || cvUploadStatus !== 'completed' || !cvId) return;
     clearFailure();
-    setStep(3);
+    setStep(isPlaywrightRuntime() ? 4 : 3);
   }, [clearFailure, cvId, cvUploadStatus, isUploading]);
+
+  const skipGithub = useCallback(() => {
+    setRepoUrl('');
+    setRepoAnalysis(null);
+    setRepoError(null);
+    clearFailure();
+    setStep(4);
+  }, [clearFailure]);
+
+  const goNextFromGithub = useCallback(async () => {
+    if (isAnalyzingRepo) return;
+    if (!repoUrl.trim() || repoAnalysis?.repoUrl === repoUrl.trim()) {
+      skipGithub();
+      return;
+    }
+    if (!domain) return;
+
+    setIsAnalyzingRepo(true);
+    setRepoError(null);
+    clearFailure();
+    try {
+      const result = await repoAnalysisService.create({
+        repoUrl: repoUrl.trim(),
+        jobCategory: domainToJobCategoryLabel(domain),
+      });
+      setRepoAnalysis(result);
+      setRepoUrl(result.repoUrl);
+      setStep(4);
+      toast.success(t('cv.github.success'));
+    } catch (error) {
+      const message = error instanceof RepoAnalysisError ? error.message : t('repo.error.unknown');
+      setRepoError(message);
+      failStep('github', message);
+    } finally {
+      setIsAnalyzingRepo(false);
+    }
+  }, [clearFailure, domain, failStep, isAnalyzingRepo, repoAnalysis?.repoUrl, repoUrl, skipGithub, t]);
 
   /** Advance only — never calls upload API. */
   const goNextFromJd = useCallback(() => {
@@ -369,7 +413,7 @@ export function useCvAnalysisFlow() {
     const hasTextJd = jdText.trim().length > 0;
     if (!hasFileJd && !hasTextJd && !jdSkipped) return;
     clearFailure();
-    setStep(4);
+    setStep(5);
   }, [clearFailure, isUploading, jdId, jdSkipped, jdText, jdUploadStatus]);
 
   const skipJd = useCallback(() => {
@@ -381,7 +425,7 @@ export function useCvAnalysisFlow() {
     setJdUploadStatus('idle');
     setJdFileError(null);
     clearFailure();
-    setStep(4);
+    setStep(5);
   }, [clearFailure]);
 
   const retryFromUpload = useCallback(() => {
@@ -532,14 +576,16 @@ export function useCvAnalysisFlow() {
 
   const timelineStatuses = useMemo<CvTimelineStatuses>(() => {
     const isProcessing =
-      (step === 2 && isUploading) || (step === 3 && isUploading) || (step === 4 && isAnalyzing);
+      (step === 3 && isAnalyzingRepo) ||
+      (step === 4 && isUploading) ||
+      (step === 5 && isAnalyzing);
 
     return buildCvTimelineStatuses({
       activeIndex: step - 1,
       failedStep,
       isProcessing,
     });
-  }, [failedStep, isAnalyzing, isUploading, step]);
+  }, [failedStep, isAnalyzing, isAnalyzingRepo, isUploading, step]);
 
   const currentTimelineStep = FLOW_STEP_TO_TIMELINE[step];
 
@@ -557,6 +603,10 @@ export function useCvAnalysisFlow() {
     fileError,
     jdFileError,
     jdText,
+    repoUrl,
+    repoAnalysis,
+    repoError,
+    isAnalyzingRepo,
     setJdText,
     isUploading,
     isAnalyzing,
@@ -576,15 +626,18 @@ export function useCvAnalysisFlow() {
     selectExistingJd,
     goBack,
     goNextFromUpload,
+    setRepoUrl,
+    goNextFromGithub,
+    skipGithub,
     goNextFromJd: advanceFromJd,
     skipJd,
     goNext: () => {
       if (failedStep) return;
       if (isPlaywrightRuntime() && step === 1 && cvFile) {
-        setStep(3);
+        setStep(4);
         return;
       }
-      setStep((current) => (current < 4 ? ((current + 1) as CvFlowStep) : current));
+      setStep((current) => (current < 5 ? ((current + 1) as CvFlowStep) : current));
     },
     retryFromUpload,
     runAnalysis: () => {
