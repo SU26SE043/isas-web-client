@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import {
-  defaultCampaignDownloadName,
   readCampaignAttachments,
   triggerBlobDownload,
   type CampaignFileType,
@@ -21,11 +20,11 @@ export function CampaignAttachmentsCard({ campaignId }: CampaignAttachmentsCardP
   const [downloading, setDownloading] = useState<CampaignFileType | null>(null);
   const [attachments] = useState(() => readCampaignAttachments(campaignId));
 
-  const handleDownload = async (fileType: CampaignFileType) => {
+  const handleDownload = async (fileType: CampaignFileType, fallbackName: string) => {
     setDownloading(fileType);
     try {
       const result = await campaignManagementService.downloadCampaignFile(campaignId, fileType);
-      triggerBlobDownload(result, defaultCampaignDownloadName(fileType));
+      triggerBlobDownload(result, fallbackName);
     } catch {
       toast.error(t('employer.campaigns.detail.attachments.downloadFailed'));
     } finally {
@@ -79,7 +78,7 @@ export function CampaignAttachmentsCard({ campaignId }: CampaignAttachmentsCardP
                     variant="outline"
                     size="sm"
                     disabled={downloading !== null}
-                    onClick={() => void handleDownload(attachment.type)}
+                    onClick={() => void handleDownload(attachment.type, attachment.name)}
                     aria-label={`${t('employer.campaigns.detail.attachments.download')} ${attachment.name}`}
                   >
                     {isDownloading ? (

@@ -50,11 +50,18 @@ test.describe('Employer campaign detail attachments', () => {
         body: '%PDF-1.4 attachment',
       });
     });
+    await page.route(`**/api/v1/campaign/${campaignId}/results*`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: [], total: 0 }),
+      });
+    });
 
     await loginAs(page, 'OrgAdmin');
     await page.goto(detailUrl);
 
-    const attachments = page.getByText('Attachments', { exact: true });
+    const attachments = page.getByText(/^Attachments/).first();
     await expect(attachments).toBeVisible();
     await expect(page.getByText('senior-product-designer-jd.pdf')).toBeVisible();
     await expect(page.getByText('evaluation-criteria.pdf')).toBeVisible();
