@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
+import { RepoAnalysisPage } from '@/features/repo-analysis/pages/RepoAnalysisPage';
 import { PracticeHistoryResultPage } from '@/features/practice/pages/PracticeHistoryResultPage';
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
@@ -123,6 +124,7 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'profile/social', element: <SocialLinksPage /> },
               { path: 'cv/analysis', element: <CVAnalysisPage /> },
               { path: 'cv/analysis/report', element: <CVResultPage /> },
+              { path: 'repo-analysis', element: <RepoAnalysisPage /> },
               { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
               { path: 'campaigns', element: <CandidateCampaignsPage /> },
               { path: 'campaigns/:token/briefing', element: <CandidateCampaignBriefingPage /> },

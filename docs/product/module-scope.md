@@ -17,6 +17,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | Candidate profile | T1 | Profile basics + uploaded CV list; legacy wizard/sections | `candidateRoutes` `/candidate/profile*` | Implemented (mock) |
 | Candidate dashboard | T1 | Dashboard, heatmap, metrics | `/candidate/dashboard` | Implemented (mock) |
 | CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
+| GitHub repository analysis | T1 | Public repo analysis report (BC18) | `/candidate/repo-analysis` | Implemented (API connected) |
 | Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | Implemented (mock) |
 | Learning roadmap | T1 | Creation wizard → AI path → Learning | `/candidate/roadmap` | Implemented (mock wizard) |
 | Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, `/candidate/usage`, payment | Implemented (mock) |
@@ -97,6 +98,7 @@ Source: `src/routes/groups/*.tsx` (as of discovery).
 | `/candidate/profile` (+ subpages) | Profile | T1 | Keep |
 | `/candidate/cv/analysis` | CV wizard | T1 | Keep |
 | `/candidate/cv/analysis/report` | CV report | T1 | Keep |
+| `/candidate/repo-analysis` | GitHub repository analysis | T1 | Keep — BC18 API |
 | `/candidate/practice/history` | Interview history | T1 | Keep |
 | `/candidate/practice/history/:id` | Result detail | T1 | Keep |
 | `/candidate/practice/history/compare` | Compare results | T1 | Keep |
