@@ -212,6 +212,17 @@ export const paymentService = {
     return parseSubscription(response.data);
   },
 
+  async cancelSubscription(): Promise<{ subscriptionId: string | null; cancelled: boolean }> {
+    const response = await apiClient.post<unknown>(paymentEndpoints.cancelSubscription, {});
+    const data = response.data && typeof response.data === 'object'
+      ? response.data as Record<string, unknown>
+      : {};
+    return {
+      subscriptionId: data.subscriptionId == null ? null : String(data.subscriptionId),
+      cancelled: data.cancelled === true,
+    };
+  },
+
   async getCreditTransactions(params?: { cursor?: string | null; limit?: number }): Promise<CursorPage<CreditTransactionResponse>> {
     const response = await apiClient.get<unknown>(paymentEndpoints.creditTransactions, {
       params: { ...(params?.cursor ? { cursor: params.cursor } : {}), ...(params?.limit ? { limit: params.limit } : {}) },

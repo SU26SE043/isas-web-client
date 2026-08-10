@@ -21,7 +21,7 @@ History: `/candidate/practice/history`.
 5. Room: TTS `GET .../questions/{id}/speech` (blob), MediaRecorder answer, `POST .../answers` multipart (`questionId`, `file`, `durationSec`), timer with 10s warning. If the answer timer hits `0` without a submitted answer: stop/discard recording, mark the question `unanswered`, register a silent answer so scoring can assign 0, auto-advance (TTS + new timer). Finish confirm → `POST .../submit` (204, empty body).
 6. Scoring: `/interview/:sessionId/complete` polls `GET .../sessions/{sessionId}` every 3s until `status === Scored`, then redirects to `/practice/result?sessionId={sessionId}`. The result page calls the same authenticated session-detail endpoint, polls only while evaluation is pending, and renders `result` (`overallScore`, `criteriaScores`, `needsImprovement`, `overallComment`, `cvVsAnswer`). The frontend never creates an `assessment-*` ID.
 
-Rubric editing lives at `/candidate/rubrics` (not part of create payload).
+Rubric editing lives at `/candidate/rubrics` (not part of create payload). Practice setup also loads the active rubric with `?language=vi|en` before sending selected `rubricCriterionIds`.
 
 ## Candidate rubric API
 
@@ -50,6 +50,16 @@ Vietnamese and English rubrics are separate records. The frontend sends the acti
 ## Engine reuse
 
 Interview room UI stays campaign-agnostic for B2B. B2C practice uses dedicated hooks/services under `b2cPractice*`.
+
+## Integration order
+
+1. Optional `GET /api/v1/interview/practice/session-options?jobCategory=...&language=...` to load question-count presets without charging credit.
+2. Upload CV/JD when needed, then optionally create CV analysis.
+3. `POST /api/v1/interview/practice/sessions` charges 1 credit; include `language` and optional `seniority` (`Fresher|Junior|Middle|Senior`).
+4. Loop multipart answers until `interviewComplete`, then `POST .../submit` and poll session detail until `Scored`.
+5. Handle `402` by routing to the credit flow. Shared API handling retries one `429` using `Retry-After`.
+
+Roadmap practice reuses the same answer/submit flow; creating a roadmap is free, opening theory is free, and starting a lesson charges 1 credit.
 
 ## Status
 
