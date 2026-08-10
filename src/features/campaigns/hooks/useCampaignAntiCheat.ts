@@ -3,13 +3,22 @@ import { campaignCandidateService } from '../services/campaignCandidate.service'
 import type { AllowedFrontendSignalType } from '../types/campaignCandidate.types';
 import type { CampaignViolationKind } from '../types/campaignViolation.types';
 
-const FOCUS_DEDUP_MS = 1_500;
+const LEAVE_CORRELATION_MS = 250;
+const LEAVE_DEDUP_MS = 1_500;
+
+interface PendingLeaveViolation {
+  kind: Extract<CampaignViolationKind, 'tab_switch' | 'fullscreen_exit'>;
+  note: string;
+  source: 'tab_switch' | 'window_blur' | 'fullscreen_exit';
+  reported: boolean;
+}
 
 interface UseCampaignAntiCheatOptions {
   campaignId: string;
   sessionId: string;
   enabled: boolean;
   videoEl?: HTMLVideoElement | null;
+  onPause?: () => void;
   onViolation: (kind: CampaignViolationKind) => void;
 }
 
@@ -18,74 +27,137 @@ export function useCampaignAntiCheat({
   sessionId,
   enabled,
   videoEl,
+  onPause,
   onViolation,
 }: UseCampaignAntiCheatOptions) {
   const aborted = useRef(false);
-  const hiddenTransition = useRef(false);
-  const blurPending = useRef(false);
+  const pendingLeave = useRef<PendingLeaveViolation | null>(null);
+  const windowBlurred = useRef(false);
+  const documentHidden = useRef(false);
   const cameraBlocked = useRef(false);
-  const lastPrimaryEventAt = useRef(0);
+  const lastLeaveAt = useRef(0);
   const inFlight = useRef(new Set<string>());
-  const fullscreenTimer = useRef<number | null>(null);
+  const leaveTimer = useRef<number | null>(null);
 
-  const report = useCallback((
-    kind: CampaignViolationKind,
+  const sendFlag = useCallback((
     signalType: AllowedFrontendSignalType,
     note: string,
   ) => {
     if (!enabled || aborted.current || !campaignId || !sessionId) return;
-    const key = `${kind}:${note}`;
+    const key = `${signalType}:${note}`;
     if (inFlight.current.has(key)) return;
     inFlight.current.add(key);
-    onViolation(kind);
     void campaignCandidateService
       .createCampaignFlag(campaignId, sessionId, { signalType, note })
       .catch(() => undefined)
       .finally(() => inFlight.current.delete(key));
-  }, [campaignId, enabled, onViolation, sessionId]);
+  }, [campaignId, enabled, sessionId]);
+
+  const flushPendingLeave = useCallback(() => {
+    const pending = pendingLeave.current;
+    if (!pending || pending.reported) return;
+    pending.reported = true;
+    sendFlag('tab_switch', pending.note);
+  }, [sendFlag]);
+
+  const revealPendingLeave = useCallback(() => {
+    const pending = pendingLeave.current;
+    if (!pending) return;
+    flushPendingLeave();
+    pendingLeave.current = null;
+    lastLeaveAt.current = Date.now();
+    if (leaveTimer.current != null) {
+      window.clearTimeout(leaveTimer.current);
+      leaveTimer.current = null;
+    }
+    onViolation(pending.kind);
+  }, [flushPendingLeave, onViolation]);
+
+  const beginPendingLeave = useCallback((next: PendingLeaveViolation) => {
+    if (!enabled || aborted.current) return;
+    const current = pendingLeave.current;
+    if (current) {
+      if (current.source === 'fullscreen_exit' && !current.reported) {
+        pendingLeave.current = next;
+      }
+      return;
+    }
+    if (Date.now() - lastLeaveAt.current < LEAVE_DEDUP_MS) return;
+
+    pendingLeave.current = next;
+    onPause?.();
+    if (next.source === 'tab_switch') {
+      flushPendingLeave();
+      return;
+    }
+
+    if (leaveTimer.current != null) window.clearTimeout(leaveTimer.current);
+    leaveTimer.current = window.setTimeout(() => {
+      leaveTimer.current = null;
+      flushPendingLeave();
+      if (!windowBlurred.current && !documentHidden.current) revealPendingLeave();
+    }, LEAVE_CORRELATION_MS);
+  }, [enabled, flushPendingLeave, onPause, revealPendingLeave]);
+
+  const reportImmediate = useCallback((
+    kind: CampaignViolationKind,
+    signalType: AllowedFrontendSignalType,
+    note: string,
+  ) => {
+    if (!enabled || aborted.current) return;
+    onPause?.();
+    onViolation(kind);
+    sendFlag(signalType, note);
+  }, [enabled, onPause, onViolation, sendFlag]);
 
   const reportFullscreenExit = useCallback(() => {
-    if (!enabled) return;
-    if (fullscreenTimer.current != null) return;
-    fullscreenTimer.current = window.setTimeout(() => {
-      fullscreenTimer.current = null;
-      if (document.visibilityState === 'hidden' || hiddenTransition.current) return;
-      lastPrimaryEventAt.current = Date.now();
-      report(
-        'fullscreen_exit',
-        'tab_switch',
-        'Candidate exited fullscreen mode.',
-      );
-    }, 250);
-  }, [enabled, report]);
+    beginPendingLeave({
+      kind: 'fullscreen_exit',
+      source: 'fullscreen_exit',
+      note: 'Candidate exited fullscreen mode.',
+      reported: false,
+    });
+  }, [beginPendingLeave]);
+
+  const beginPendingLeaveRef = useRef(beginPendingLeave);
+  const reportImmediateRef = useRef(reportImmediate);
+  const revealPendingLeaveRef = useRef(revealPendingLeave);
+  beginPendingLeaveRef.current = beginPendingLeave;
+  reportImmediateRef.current = reportImmediate;
+  revealPendingLeaveRef.current = revealPendingLeave;
 
   useEffect(() => {
     aborted.current = false;
-    if (!enabled) return undefined;
 
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        hiddenTransition.current = true;
-        blurPending.current = false;
+        documentHidden.current = true;
+        beginPendingLeaveRef.current({
+          kind: 'tab_switch',
+          source: 'tab_switch',
+          note: 'Candidate switched away from the interview tab.',
+          reported: false,
+        });
         return;
       }
-      if (!hiddenTransition.current) return;
-      hiddenTransition.current = false;
-      lastPrimaryEventAt.current = Date.now();
-      report('tab_switch', 'tab_switch', 'Candidate switched away from the interview tab.');
+      documentHidden.current = false;
+      revealPendingLeaveRef.current();
     };
     const onBlur = () => {
-      blurPending.current = true;
+      windowBlurred.current = true;
+      beginPendingLeaveRef.current({
+        kind: 'tab_switch',
+        source: 'window_blur',
+        note: 'Candidate left the interview window using Alt+Tab or window switching.',
+        reported: false,
+      });
     };
     const onFocus = () => {
-      if (!blurPending.current) return;
-      blurPending.current = false;
-      if (document.visibilityState === 'hidden') return;
-      if (Date.now() - lastPrimaryEventAt.current < FOCUS_DEDUP_MS) return;
-      report('focus_lost', 'focus_lost', 'Interview window lost focus.');
+      windowBlurred.current = false;
+      if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
     };
     const onPaste = () => {
-      report('paste', 'paste', 'Candidate attempted to paste content during the interview.');
+      reportImmediateRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
     };
 
     document.addEventListener('visibilitychange', onVisibility);
@@ -98,22 +170,25 @@ export function useCampaignAntiCheat({
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('paste', onPaste);
-      if (fullscreenTimer.current != null) {
-        window.clearTimeout(fullscreenTimer.current);
-        fullscreenTimer.current = null;
+      pendingLeave.current = null;
+      if (leaveTimer.current != null) {
+        window.clearTimeout(leaveTimer.current);
+        leaveTimer.current = null;
       }
     };
-  }, [enabled, report]);
+  }, []);
 
   useEffect(() => {
     cameraBlocked.current = false;
     if (!enabled || !videoEl?.srcObject) return undefined;
     const stream = videoEl.srcObject;
-    if (!(stream instanceof MediaStream)) return undefined;
+    if (!('getVideoTracks' in stream) || typeof stream.getVideoTracks !== 'function') {
+      return undefined;
+    }
     const onTrackEnded = () => {
       if (cameraBlocked.current) return;
       cameraBlocked.current = true;
-      report(
+      reportImmediate(
         'camera_blocked',
         'camera_blocked',
         'Candidate camera became unavailable during the interview.',
@@ -122,7 +197,7 @@ export function useCampaignAntiCheat({
     const tracks = stream.getVideoTracks();
     tracks.forEach((track) => track.addEventListener('ended', onTrackEnded));
     return () => tracks.forEach((track) => track.removeEventListener('ended', onTrackEnded));
-  }, [enabled, report, videoEl]);
+  }, [enabled, reportImmediate, videoEl]);
 
   return { reportFullscreenExit };
 }

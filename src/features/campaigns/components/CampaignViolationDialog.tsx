@@ -45,7 +45,7 @@ export function CampaignViolationDialog({
         ? 'campaigns.violation.identityTitle'
         : 'campaigns.violation.title')}
       contentClassName="border-warning/40 bg-surface-elevated"
-      overlayClassName="z-[80] bg-black/85"
+      overlayClassName="z-[80] bg-black/80 backdrop-blur-md"
       className="z-[90]"
     >
       {violation ? (
@@ -82,7 +82,7 @@ export function CampaignViolationDialog({
             onClick={onContinue}
           >
             {recovering ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-            {t(isIdentityIssue
+            {t((isIdentityIssue || recoveryError)
               ? 'campaigns.violation.retry'
               : 'campaigns.violation.continue')}
           </button>

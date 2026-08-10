@@ -2,11 +2,11 @@
 
 ## Current Behavior
 
-The campaign room had direct browser listeners and soft face warnings, but did not block interaction, used incomplete API notes, could double count related events, and did not pause timer/TTS/recording.
+The existing blocking warning works for already-enqueued violations, but Alt+Tab/window switching is mapped to `focus_lost`, pause begins only when the warning is enqueued on return, and Continue restores fullscreen only for a `fullscreen_exit` warning. The modal overlay is dimmed but does not blur the room.
 
 ## Target Behavior
 
-Use API v10 mappings exactly. Serialize violations through one non-dismissible shared modal, pause the existing room state/media, verify recovery, and resume only after the candidate explicitly continues. Keep face signals owned by `face-check` and scope all monitoring to the active B2B room.
+Treat tab switching, Alt+Tab/window switching, and fullscreen exit as one `tab_switch` API family. Pause immediately on leave, correlate related browser events into one flag, reveal one non-dismissible blurred-backdrop modal on return, and resume only after a candidate gesture restores fullscreen. Keep face signals owned by `face-check` and scope all monitoring to the active B2B room.
 
 ## Non-Goals
 

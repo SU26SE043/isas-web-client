@@ -27,11 +27,13 @@ export function CampaignInterviewPage() {
   const antiCheatEnabled = stored?.antiCheatEnabled === true;
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [media, setMedia] = useState<B2cRoomMediaContext | null>(null);
+  const [violationPaused, setViolationPaused] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
 
+  const handleViolationPause = useCallback(() => setViolationPaused(true), []);
   const handleFullscreenExit = useCallback(() => fullscreenExitRef.current(), []);
   const fullscreen = useCampaignFullscreen({
     enabled: Boolean(sessionId),
@@ -46,6 +48,7 @@ export function CampaignInterviewPage() {
     sessionId,
     enabled: monitoringActive,
     videoEl,
+    onPause: handleViolationPause,
     onViolation: violations.enqueue,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;
@@ -84,7 +87,7 @@ export function CampaignInterviewPage() {
         );
         return;
       }
-      if (violation.kind === 'fullscreen_exit' && !fullscreen.isFullscreen) {
+      if (!fullscreen.isFullscreen) {
         const restored = await fullscreen.enterFullscreen();
         if (!restored) {
           setRecoveryError('campaigns.violation.fullscreenRecovery');
@@ -114,6 +117,7 @@ export function CampaignInterviewPage() {
         }
       }
       violations.resolveCurrent();
+      setViolationPaused(false);
     } finally {
       setRecovering(false);
     }
@@ -172,7 +176,7 @@ export function CampaignInterviewPage() {
         sessionId={sessionId}
         deadlineAt={stored?.deadlineAt}
         completePath={`/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/completed/${encodeURIComponent(sessionId)}`}
-        violationPaused={Boolean(violations.currentViolation)}
+        violationPaused={violationPaused || Boolean(violations.currentViolation)}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
       />

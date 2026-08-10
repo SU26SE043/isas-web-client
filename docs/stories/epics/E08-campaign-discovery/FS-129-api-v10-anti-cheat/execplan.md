@@ -7,6 +7,7 @@
 3. Bridge violation pause into existing timer, TTS, recorder, and room controls.
 4. Enforce fullscreen/camera/face recovery and face re-enrollment.
 5. Validate focused behavior, platform gates, build, and visible browser flow.
+6. Prove Alt+Tab, tab switching, fullscreen exit, deduplication, cleanup, and fullscreen failure recovery.
 
 ## Risk
 

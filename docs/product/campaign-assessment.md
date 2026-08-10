@@ -57,7 +57,7 @@ This is the frontend contract for the candidate assessment session after a campa
 | --- | --- |
 | Visible → hidden → visible | `tab_switch`; note `Candidate switched away from the interview tab.` |
 | Fullscreen exits after successful entry | `tab_switch`; note `Candidate exited fullscreen mode.` |
-| Independent blur → focus | `focus_lost`; note `Interview window lost focus.` |
+| Window blur → focus / Alt+Tab | `tab_switch`; note `Candidate left the interview window using Alt+Tab or window switching.` |
 | Paste | `paste`; note `Candidate attempted to paste content during the interview.` |
 | Live camera track becomes unavailable | `camera_blocked`; note `Candidate camera became unavailable during the interview.` |
 | `no_face`, `multiple_faces`, `face_mismatch`, `identity_unverified` | Backend/AI owns these through `face-check`; never POST to `/flags` |
@@ -80,3 +80,4 @@ This is the frontend contract for the candidate assessment session after a campa
 - [`campaign-management.md`](./campaign-management.md)
 - [`module-scope.md`](./module-scope.md)
 - [`../decisions/0020-campaign-anti-cheat-boundary.md`](../decisions/0020-campaign-anti-cheat-boundary.md)
+- [`../decisions/0021-campaign-window-leave-signal.md`](../decisions/0021-campaign-window-leave-signal.md)

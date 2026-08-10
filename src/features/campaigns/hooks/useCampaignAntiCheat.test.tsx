@@ -29,12 +29,15 @@ describe('useCampaignAntiCheat', () => {
 
   it('reports a tab switch only after the candidate returns to the tab', async () => {
     const onViolation = vi.fn();
+    const onPause = vi.fn();
     renderHook(() => useCampaignAntiCheat({
-      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation,
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation,
     }));
 
     act(() => setVisibility('hidden'));
-    expect(createFlag).not.toHaveBeenCalled();
+    expect(onPause).toHaveBeenCalledOnce();
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(createFlag).toHaveBeenCalledOnce();
 
     act(() => setVisibility('visible'));
     expect(onViolation).toHaveBeenCalledOnce();
@@ -42,6 +45,29 @@ describe('useCampaignAntiCheat', () => {
       signalType: 'tab_switch',
       note: 'Candidate switched away from the interview tab.',
     });
+  });
+
+  it('pauses on window blur and reveals one tab_switch violation on focus', () => {
+    const onPause = vi.fn();
+    const onViolation = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation,
+    }));
+
+    act(() => window.dispatchEvent(new Event('blur')));
+    expect(onPause).toHaveBeenCalledOnce();
+    expect(onViolation).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(250));
+    expect(createFlag).toHaveBeenCalledWith('campaign-1', 'session-1', {
+      signalType: 'tab_switch',
+      note: 'Candidate left the interview window using Alt+Tab or window switching.',
+    });
+
+    act(() => window.dispatchEvent(new Event('focus')));
+    expect(onViolation).toHaveBeenCalledOnce();
+    expect(onViolation).toHaveBeenCalledWith('tab_switch');
+    expect(createFlag).toHaveBeenCalledOnce();
   });
 
   it('maps fullscreen exit to tab_switch with the API v10 note', () => {
@@ -79,6 +105,48 @@ describe('useCampaignAntiCheat', () => {
       signalType: 'tab_switch',
       note: 'Candidate switched away from the interview tab.',
     });
+  });
+
+  it('deduplicates blur, visibility, and fullscreen events from one Alt+Tab', () => {
+    const onViolation = vi.fn();
+    const { result } = renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation,
+    }));
+
+    act(() => {
+      window.dispatchEvent(new Event('blur'));
+      setVisibility('hidden');
+      result.current.reportFullscreenExit();
+      vi.advanceTimersByTime(250);
+    });
+    expect(createFlag).toHaveBeenCalledOnce();
+    expect(onViolation).not.toHaveBeenCalled();
+
+    act(() => {
+      setVisibility('visible');
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(createFlag).toHaveBeenCalledOnce();
+    expect(onViolation).toHaveBeenCalledOnce();
+  });
+
+  it('does not report a fullscreen violation on initial render', () => {
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation: vi.fn(),
+    }));
+
+    expect(createFlag).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pending blur report during cleanup', () => {
+    const { unmount } = renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation: vi.fn(),
+    }));
+
+    act(() => window.dispatchEvent(new Event('blur')));
+    unmount();
+    act(() => vi.advanceTimersByTime(250));
+    expect(createFlag).not.toHaveBeenCalled();
   });
 
   it('does not report events after cleanup', () => {
