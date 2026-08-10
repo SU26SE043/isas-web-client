@@ -23,6 +23,18 @@ History: `/candidate/practice/history`.
 
 Rubric editing lives at `/candidate/rubrics` (not part of create payload).
 
+## Candidate rubric API
+
+The rubric editor uses the Candidate-owned CRUD contract:
+
+| Action | Path | Notes |
+| --- | --- | --- |
+| Read | `GET /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Returns the custom rubric or the 7-criterion seed; response does not echo `language` |
+| Replace | `PUT /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Replaces all criteria; total weight must be within `0.99..1.01` |
+| Reset | `DELETE /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Idempotently returns that language to the seed rubric |
+
+Vietnamese and English rubrics are separate records. The frontend sends the active UI language on every verb and keeps it in the query cache key.
+
 ## Routes
 
 | Path | Component |
