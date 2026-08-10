@@ -97,6 +97,7 @@ export interface CampaignInterviewContext {
 }
 
 export type CampaignCandidateErrorCode =
+  | 'emailMismatch'
   | 'notFound'
   | 'gone'
   | 'unauthorized'

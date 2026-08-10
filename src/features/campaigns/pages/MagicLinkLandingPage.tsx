@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,9 @@ import { useLanguage } from '@/shared/languages';
 import { isPlaywrightRuntime } from '@/shared/mock/config';
 import { InvitationDetailPanel } from '../components/InvitationDetailPanel';
 import { InviteExpiredState } from '../components/InviteExpiredState';
+import { InvitationAuthHint } from '../components/InvitationAuthHint';
+import { InvitationEmailMismatchState } from '../components/InvitationEmailMismatchState';
+import { InvitationLoadErrorState } from '../components/InvitationLoadErrorState';
 import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
 import {
   CampaignCandidateError,
@@ -37,7 +40,7 @@ function joinErrorMessage(error: unknown, t: (key: string) => string): string {
     if (error.code === 'notFound') return t('campaigns.invite.joinNotFound');
     if (error.code === 'gone') return t('campaigns.invite.joinGone');
     if (error.code === 'identityError') return t('campaigns.invite.joinIdentityError');
-    if (error.code === 'forbidden') return t('campaigns.invite.joinEmailMismatch');
+    if (error.code === 'forbidden') return t('campaigns.invite.joinForbidden');
     return error.message || t('campaigns.invite.joinUnknown');
   }
   return t('campaigns.invite.joinUnknown');
@@ -51,11 +54,14 @@ function LiveMagicLinkLandingPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const logout = useAuthStore((state) => state.logout);
   const authLoading = useAuthStore((state) => state.isLoading);
   const [authHydrated, setAuthHydrated] = useState(() => useAuthStore.persist.hasHydrated());
   const [loadState, setLoadState] = useState<InviteLoadState>({ status: 'loading' });
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [hasEmailMismatch, setHasEmailMismatch] = useState(false);
+  const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const joinStartedRef = useRef(false);
 
   const invitePath = invitationPath(token);
@@ -69,6 +75,7 @@ function LiveMagicLinkLandingPage() {
     let active = true;
     setLoadState({ status: 'loading' });
     setJoinError(null);
+    setHasEmailMismatch(false);
     joinStartedRef.current = false;
 
     void campaignCandidateService
@@ -103,6 +110,7 @@ function LiveMagicLinkLandingPage() {
     joinStartedRef.current = true;
     setIsJoining(true);
     setJoinError(null);
+    setHasEmailMismatch(false);
     savePendingInviteToken(token);
 
     try {
@@ -122,6 +130,10 @@ function LiveMagicLinkLandingPage() {
       navigate(`/candidate/campaigns/${encodeURIComponent(result.campaignId)}`, { replace: true });
     } catch (error) {
       joinStartedRef.current = false;
+      if (error instanceof CampaignCandidateError && error.code === 'emailMismatch') {
+        setHasEmailMismatch(true);
+        return;
+      }
       setJoinError(joinErrorMessage(error, t));
       if (error instanceof CampaignCandidateError && error.code === 'gone') {
         setLoadState({ status: 'gone' });
@@ -147,11 +159,22 @@ function LiveMagicLinkLandingPage() {
   }, [canJoin, invitePath, navigate, performJoin, token]);
 
   useEffect(() => {
-    if (loadState.status !== 'ready' || !canJoin || isJoining) return;
+    if (loadState.status !== 'ready' || !canJoin || isJoining || hasEmailMismatch) return;
     const pending = readPendingInviteToken();
     if (!pending || pending !== token.trim()) return;
     void performJoin();
-  }, [canJoin, isJoining, loadState.status, performJoin, token]);
+  }, [canJoin, hasEmailMismatch, isJoining, loadState.status, performJoin, token]);
+
+  const handleSwitchAccount = useCallback(async () => {
+    if (!token.trim() || isSwitchingAccount) return;
+    setIsSwitchingAccount(true);
+    savePendingInviteToken(token);
+
+    const refreshToken = authTokenStorage.getRefreshToken();
+    logout();
+    await authService.logout(refreshToken).catch(() => undefined);
+    navigate('/login', { state: { from: { pathname: invitePath } } });
+  }, [invitePath, isSwitchingAccount, logout, navigate, token]);
 
   const isBootstrapping = !authHydrated || authLoading;
 
@@ -181,21 +204,17 @@ function LiveMagicLinkLandingPage() {
   }
 
   if (loadState.status === 'error') {
+    return <InvitationLoadErrorState message={loadState.message} />;
+  }
+
+  if (hasEmailMismatch) {
     return (
-      <div className="page-container page-section flex min-h-[70vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-sm text-rose-400" role="alert">
-          {loadState.message}
-        </p>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => window.location.reload()}
-        >
-          {t('campaigns.invite.retryLoad')}
-        </button>
-        <Link to="/" className="text-sm text-zinc-400 underline-offset-4 hover:underline">
-          {t('campaigns.invite.home')}
-        </Link>
+      <div className="page-container page-section min-h-[70vh] py-8">
+        <InvitationEmailMismatchState
+          currentEmail={user?.email}
+          isSwitchingAccount={isSwitchingAccount}
+          onSwitchAccount={() => void handleSwitchAccount()}
+        />
       </div>
     );
   }
@@ -211,26 +230,11 @@ function LiveMagicLinkLandingPage() {
       />
 
       {!canJoin ? (
-        <p className="mx-auto max-w-3xl text-center text-sm text-zinc-500">
-          {t('campaigns.invite.authRequiredHint')}{' '}
-          <Link
-            to="/login"
-            state={{ from: { pathname: invitePath } }}
-            className="font-medium text-zinc-100 underline-offset-4 hover:underline"
-            onClick={() => savePendingInviteToken(token)}
-          >
-            {t('campaigns.invite.signIn')}
-          </Link>
-          {' · '}
-          <Link
-            to="/register"
-            state={{ from: { pathname: invitePath } }}
-            className="font-medium text-zinc-100 underline-offset-4 hover:underline"
-            onClick={() => savePendingInviteToken(token)}
-          >
-            {t('campaigns.invite.register')}
-          </Link>
-        </p>
+        <InvitationAuthHint
+          invitePath={invitePath}
+          token={token}
+          onSavePendingToken={savePendingInviteToken}
+        />
       ) : null}
     </div>
   );

@@ -125,6 +125,17 @@ calls `join` only after a Candidate JWT is available. `429` responses expose the
 concurrent-interview limit and `Retry-After`/`retryAfterSeconds`; a `409` with
 `code=outside_slot_window` includes server UTC timing fields for the UI.
 
+### Invitation email mismatch
+
+If `POST /api/v1/campaign/invitations/{token}/join` rejects a signed-in Candidate
+because their account email differs from the invited email, the gateway must return
+an explicit error marker (currently `code=INVITATION_EMAIL_MISMATCH`, or the
+equivalent specific message). The client renders a stable mismatch state only for
+that marker, shows the current authenticated email when available, preserves the
+token in session storage, signs the user out through the shared auth flow, and
+returns them to the original invite after sign-in. Other `403` responses remain
+generic forbidden errors.
+
 ---
 
 ## Related
