@@ -16,6 +16,7 @@ import { loadFlowProgress, saveFlowProgress } from '../../utils/interviewFlowSto
 import { useInterviewFlowStore } from '../../stores/interviewFlowStore';
 import { requestInterviewFullscreen } from '../../hooks/useInterviewFullscreen';
 import type { PracticeSession } from '../../mocks/session.fixtures';
+import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -30,6 +31,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isLearning = isLearningSessionId(sessionId);
+  const campaignSession = readCampaignInterviewSession(sessionId);
   const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
@@ -86,6 +88,10 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   }, [isLearning, learningMeta?.questions.length, sessionId]);
 
   const handleStartInterview = async () => {
+    if (campaignSession) {
+      navigate(`/candidate/campaigns/${encodeURIComponent(campaignSession.campaignId)}/interview/${encodeURIComponent(sessionId)}`);
+      return;
+    }
     await requestInterviewFullscreen();
     navigate(`/interview/${sessionId}/room?start=countdown`);
   };
@@ -206,7 +212,13 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
               <button
                 type="button"
                 className="btn-primary mt-4"
-                onClick={() => navigate(`/interview/${sessionId}/room`)}
+                onClick={() => {
+                  if (campaignSession) {
+                    navigate(`/candidate/campaigns/${encodeURIComponent(campaignSession.campaignId)}/interview/${encodeURIComponent(sessionId)}`);
+                    return;
+                  }
+                  navigate(`/interview/${sessionId}/room`);
+                }}
               >
                 {t('practice.flow.waiting.enterAnyway')}
               </button>
