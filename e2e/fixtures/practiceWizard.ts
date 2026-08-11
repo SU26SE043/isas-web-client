@@ -1,10 +1,52 @@
 import { expect, type Page } from '@playwright/test';
 
 /**
- * Drive the 6-step B2C practice setup wizard through to /prepare.
+ * Candidate rubrics always hit the live API (see shared/mock config), so the wizard
+ * grading-criteria step needs a stub to reach the summary step under Playwright.
+ */
+export async function installPracticeRubricStub(page: Page): Promise<void> {
+  await page.unroute('**/api/v1/interview/practice/rubrics/**').catch(() => undefined);
+  await page.route('**/api/v1/interview/practice/rubrics/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        jobCategory: 'FE',
+        isCustom: false,
+        criteria: [
+          {
+            id: 'criterion-technical',
+            name: 'Technical depth',
+            description: 'Accuracy and depth of the technical answer.',
+            weight: 0.5,
+            maxScore: 10,
+          },
+          {
+            id: 'criterion-communication',
+            name: 'Communication',
+            description: 'Clarity and structure of the explanation.',
+            weight: 0.3,
+            maxScore: 10,
+          },
+          {
+            id: 'criterion-problem-solving',
+            name: 'Problem solving',
+            description: 'Approach to breaking down the problem.',
+            weight: 0.2,
+            maxScore: 10,
+          },
+        ],
+      }),
+    });
+  });
+}
+
+/**
+ * Drive the 7-step B2C practice setup wizard through to /prepare.
  * CV/JD are optional; question count is set to 3 to match happy-path submit loops.
  */
 export async function completePracticeSetupWizard(page: Page): Promise<string> {
+  await installPracticeRubricStub(page);
   await page.goto('/practice');
   await expect(page.getByRole('heading', { name: /Choose a job category/i })).toBeVisible({
     timeout: 15_000,
@@ -25,6 +67,13 @@ export async function completePracticeSetupWizard(page: Page): Promise<string> {
 
   // Question count → 3 (matches interview-happy-path submit loop)
   await page.getByRole('spinbutton', { name: /Question count/i }).fill('3');
+  await page.getByRole('button', { name: /^Next$/i }).click();
+
+  // Grading criteria: all stubbed criteria are preselected once the rubric loads.
+  await expect(page.getByRole('heading', { name: /Choose grading criteria/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/\d+ criteria selected/i)).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: /^Next$/i }).click();
 
   await page.getByRole('button', { name: /Start interview/i }).click();
