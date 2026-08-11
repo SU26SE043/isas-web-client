@@ -68,13 +68,30 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
       setRecordingStatus('error');
       return;
     }
+    const activeAudioTracks = stream.getAudioTracks().filter((track) => track.readyState === 'live');
+    if (activeAudioTracks.length === 0 || !stream.active) {
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
+    const currentRecorder = recorderRef.current;
+    if (currentRecorder && currentRecorder.state !== 'inactive') return;
+
     discardOnStopRef.current = false;
     setErrorKey(null);
     chunksRef.current = [];
     const mimeType = pickMimeType();
     mimeRef.current = mimeType;
-    const recorder = new MediaRecorder(stream, { mimeType });
-    recorderRef.current = recorder;
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, { mimeType });
+      recorderRef.current = recorder;
+    } catch {
+      recorderRef.current = null;
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
     startedAtRef.current = Date.now();
     pausedAtRef.current = 0;
     totalPausedMsRef.current = 0;
@@ -111,7 +128,15 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
       setDurationSec(elapsed);
       setRecordingStatus('stopped');
     };
-    recorder.start(250);
+    try {
+      recorder.start(250);
+    } catch {
+      recorderRef.current = null;
+      chunksRef.current = [];
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
     setRecordingStatus('recording');
   }, [setRecordingStatus, stream]);
 

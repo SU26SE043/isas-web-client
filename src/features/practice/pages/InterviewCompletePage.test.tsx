@@ -86,4 +86,34 @@ describe('InterviewCompletePage', () => {
       await screen.findByText(`/practice/result?sessionId=${sessionId}`),
     ).toBeInTheDocument();
   });
+
+  it('redirects as soon as a report is present during a transitional status', async () => {
+    const sessionId = '685d10e7-af3c-4971-a207-54abfb6d7dee';
+    mockGetPracticeSession.mockResolvedValue({
+      id: sessionId,
+      status: 'Completed',
+      questions: [],
+      answers: [],
+      result: { overallScore: 85 },
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/interview/${sessionId}/complete`]}>
+          <Routes>
+            <Route path="/interview/:sessionId/complete" element={<InterviewCompletePage />} />
+            <Route path="/practice/result" element={<LocationProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByText(`/practice/result?sessionId=${sessionId}`),
+    ).toBeInTheDocument();
+    expect(mockGetPracticeSession).toHaveBeenCalledTimes(1);
+  });
 });
