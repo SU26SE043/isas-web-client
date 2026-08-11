@@ -28,6 +28,7 @@ export function CampaignInterviewPage() {
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [media, setMedia] = useState<B2cRoomMediaContext | null>(null);
   const [violationPaused, setViolationPaused] = useState(false);
+  const [interviewActive, setInterviewActive] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const fullscreenExitRef = useRef<() => void>(() => undefined);
@@ -40,8 +41,8 @@ export function CampaignInterviewPage() {
     onExit: antiCheatEnabled ? handleFullscreenExit : undefined,
   });
   const monitoringActive = antiCheatEnabled
-    && (fullscreen.isFullscreen || fullscreen.hasExited)
-    && media?.state === 'ready'
+    && interviewActive
+    && fullscreen.isFullscreen
     && !violations.currentViolation;
   const antiCheat = useCampaignAntiCheat({
     campaignId: resolvedCampaignId,
@@ -174,11 +175,14 @@ export function CampaignInterviewPage() {
       </div>
       <B2cPracticeInterviewRoom
         sessionId={sessionId}
+        startWithCountdown
+        countdownReady={fullscreen.isFullscreen}
         deadlineAt={stored?.deadlineAt}
         completePath={`/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/completed/${encodeURIComponent(sessionId)}`}
-        violationPaused={violationPaused || Boolean(violations.currentViolation)}
+        violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
+        onPhaseChange={(phase) => setInterviewActive(phase === 'answering')}
       />
     </div>
   );

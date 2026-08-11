@@ -27,6 +27,7 @@ export function useB2cPracticeRoom(
   options?: {
     completePath?: string;
     startWithCountdown?: boolean;
+    countdownReady?: boolean;
     deadlineAt?: string | null;
     violationPaused?: boolean;
   },
@@ -248,20 +249,20 @@ export function useB2cPracticeRoom(
 
   useEffect(() => {
     clearQuestionCountdown();
-    setPhase(media.state === 'ready' ? 'reading' : 'loading');
+    setPhase(media.state === 'ready' && (!options?.startWithCountdown || options.countdownReady !== false) ? 'reading' : 'loading');
     warned10Ref.current = false;
     timeoutHandledForQuestionRef.current = null;
     setIsTimingOut(false);
     recorder.clearRecording();
     answerSubmit.setAnswerError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearQuestionCountdown, media.state, store.currentQuestionId]);
+  }, [clearQuestionCountdown, media.state, options?.countdownReady, options?.startWithCountdown, store.currentQuestionId]);
 
   useEffect(() => {
     if (initialCountdownComplete || !options?.startWithCountdown) return;
-    if (!sessionReady || media.state !== 'ready' || !store.currentQuestionId) return;
+    if (!sessionReady || media.state !== 'ready' || !store.currentQuestionId || options.countdownReady === false) return;
     startQuestionCountdown(store.currentQuestionId, false);
-  }, [initialCountdownComplete, media.state, options?.startWithCountdown, sessionReady, startQuestionCountdown, store.currentQuestionId]);
+  }, [initialCountdownComplete, media.state, options?.countdownReady, options?.startWithCountdown, sessionReady, startQuestionCountdown, store.currentQuestionId]);
 
   useEffect(() => () => clearQuestionCountdown(), [clearQuestionCountdown]);
 

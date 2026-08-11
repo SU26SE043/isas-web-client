@@ -21,10 +21,10 @@ import { mapModalToCardStatus, resolveAnswerCardStatus } from '../utils/resolveA
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
 export type { B2cRoomMediaContext } from '../types/b2cPracticeRoom.types';
-export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, deadlineAt, violationPaused = false, cameraAlwaysOn = false, onMediaContextChange }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused = false, cameraAlwaysOn = false, onMediaContextChange, onPhaseChange }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown, deadlineAt, violationPaused });
+  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused });
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
   const interviewCompleteToastRef = useRef(false);
@@ -42,6 +42,9 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       restart: room.media.startMedia,
     });
   }, [onMediaContextChange, room.media.startMedia, room.media.state, room.media.stream]);
+  useEffect(() => {
+    onPhaseChange?.(room.phase);
+  }, [onPhaseChange, room.phase]);
   if (room.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">
@@ -178,7 +181,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
           </button>
         ) : null}
       </main>
-
       <B2cInterviewControls
         micEnabled={room.micEnabled}
         cameraEnabled={room.cameraEnabled}
@@ -202,7 +204,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       />
 
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />
-
       {room.currentQuestion ? (
         <AudioRecorderModal
           open={recorderOpen}
