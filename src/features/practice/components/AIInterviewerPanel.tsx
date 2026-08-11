@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../../shared/languages';
 import type { AiInterviewerState } from '../types/interviewSession.types';
+import { InterviewerAvatar } from './avatar/InterviewerAvatar';
 
 interface AIInterviewerPanelProps {
   aiState: AiInterviewerState;
@@ -25,12 +26,12 @@ export const AIInterviewerPanel: React.FC<AIInterviewerPanelProps> = ({ aiState 
   return (
     <div className="relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised shadow-[var(--satin-inset)]">
       <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-surface-base">
-        <img
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1200&h=800"
-          alt={t('practice.aiPanelTitle')}
-          className="h-full w-full object-cover transition-opacity duration-700"
+        <div
+          className="size-full transition-opacity duration-700"
           style={{ opacity: aiState === 'thinking' ? 0.8 : 1 }}
-        />
+        >
+          <InterviewerAvatar speaking={aiState === 'speaking'} />
+        </div>
 
         <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-satin bg-black/55 px-3 py-1.5 backdrop-blur-md">
           <div className={`size-2 rounded-full ${config.color} ${config.animation}`} />
