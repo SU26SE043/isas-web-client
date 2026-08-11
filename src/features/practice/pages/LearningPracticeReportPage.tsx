@@ -11,6 +11,7 @@ import {
   useLearningRoadmapDetail,
 } from '../hooks/useLearningRoadmaps';
 import { findNextLesson, theoryPath } from '../utils/learningPathNavigation';
+import { isPracticeReportFailed, isPracticeReportReady } from '../utils/practiceReportStatus';
 
 export function LearningPracticeReportPage() {
   const { roadmapId = '', lessonId = '' } = useParams();
@@ -25,14 +26,19 @@ export function LearningPracticeReportPage() {
     queryFn: () => getPracticeSession(sessionId),
     enabled: Boolean(sessionId),
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      if (status === 'Scored') return false;
+      const session = query.state.data;
+      // The report payload (`result`) is the source of truth — the status enum can lag
+      // behind a completed scoring job, which used to poll forever even after the report
+      // was already available. Mirrors the fix in practiceReportStatus for InterviewCompletePage.
+      if (session && (isPracticeReportReady(session) || isPracticeReportFailed(session.status))) {
+        return false;
+      }
       return 3000;
     },
   });
 
   const session = sessionQuery.data;
-  const isScored = session?.status === 'Scored' && Boolean(session.result);
+  const isScored = session ? isPracticeReportReady(session) : false;
   const roadmap = roadmapQuery.data;
   const nextLesson = roadmap ? findNextLesson(roadmap, lessonId) : null;
 

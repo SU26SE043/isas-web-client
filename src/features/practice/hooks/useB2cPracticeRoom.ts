@@ -100,7 +100,11 @@ export function useB2cPracticeRoom(
         setCountdownValue(null);
         if (startRecording) {
           setPhase('answering');
-          recorder.startRecording();
+          // Actual answer capture happens in the AudioRecorderModal (useAudioRecorder),
+          // which opens its own MediaRecorder on demand. Do not also start `recorder`
+          // (usePracticeAnswerRecorder) here — its output is never submitted, and running
+          // two MediaRecorder instances on the same shared mic track at once is what was
+          // causing intermittent `NotSupportedError: ... error starting the MediaRecorder`.
           useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
         } else {
           setInitialCountdownComplete(true);
@@ -108,7 +112,7 @@ export function useB2cPracticeRoom(
         }
       }, COUNTDOWN_START_HOLD_MS);
     }, COUNTDOWN_STEP_MS);
-  }, [clearQuestionCountdown, media.state, recorder]);
+  }, [clearQuestionCountdown, media.state]);
 
   const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
     enabled: media.state === 'ready' && initialCountdownComplete && sessionReady,
@@ -117,7 +121,7 @@ export function useB2cPracticeRoom(
       const questionId = useB2cPracticeInterviewStore.getState().currentQuestionId;
       if (!questionId || store.remainingSeconds <= 0) return;
       setPhase('answering');
-      recorder.startRecording();
+      // See note above: do not auto-start the unused `recorder` here either.
       useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
     },
   });

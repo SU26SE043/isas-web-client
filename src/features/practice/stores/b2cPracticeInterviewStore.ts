@@ -106,10 +106,22 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
   },
 
   appendQuestion: (question) => {
-    const { questions } = get();
+    const { questions, currentQuestionId } = get();
     if (questions.some((q) => q.id === question.id)) return;
+    // Seed (original) questions are all pre-loaded at session start, so a
+    // follow-up/clarify question must be inserted right after the question
+    // it follows — not pushed to the end of the array — otherwise the
+    // array position (which drives the "question X of Y" progress display)
+    // jumps straight from the current question to the last pre-loaded seed
+    // slot the moment the AI asks a follow-up.
+    const insertAt =
+      currentQuestionId != null
+        ? questions.findIndex((q) => q.id === currentQuestionId) + 1
+        : questions.length;
+    const nextQuestions = [...questions];
+    nextQuestions.splice(insertAt < 0 ? questions.length : insertAt, 0, question);
     set({
-      questions: [...questions, question],
+      questions: nextQuestions,
       questionStates: {
         ...get().questionStates,
         [question.id]: get().questionStates[question.id] ?? 'not_started',
