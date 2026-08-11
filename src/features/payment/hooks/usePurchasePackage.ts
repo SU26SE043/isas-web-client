@@ -37,6 +37,11 @@ export function usePurchasePackage() {
         if (!order.checkoutUrl) {
           throw new Error('CHECKOUT_URL_MISSING');
         }
+        // PayOS returns to the shared callback URL without our internal order id.
+        // Keep the id created by PaymentService so the callback can verify the
+        // final payment state with the backend instead of treating it as invalid.
+        sessionStorage.setItem('payment.return.orderId', order.orderId);
+        sessionStorage.setItem('payment.return.packageId', order.packageId);
         window.location.assign(order.checkoutUrl);
       } catch (purchaseError) {
         setError(resolvePurchaseErrorMessage(purchaseError, t));
