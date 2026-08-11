@@ -2,13 +2,23 @@ import type { PaymentOrderDetail } from '../types/payment.types';
 
 /** Backend payment status tokens observed from PaymentService (`GET /order/{id}` + `/status`). */
 export const PAYMENT_SUCCESS_STATUSES = ['PAID', 'SUCCESS', 'COMPLETED', 'SUCCEEDED'] as const;
-export const PAYMENT_FAILED_STATUSES = ['FAILED', 'CANCELLED', 'CANCELED', 'EXPIRED'] as const;
+export const PAYMENT_FAILED_STATUSES = ['FAILED', 'CANCELLED', 'CANCELED', 'EXPIRED', 'REFUNDED'] as const;
 export const PAYMENT_INCOMPLETE_STATUSES = ['PENDING', 'UNPAID', 'CREATED', 'PROCESSING'] as const;
 
 export type PaymentOutcome = 'success' | 'failed' | 'incomplete' | 'unknown';
 
 export function normalizePaymentStatusToken(status: string): string {
-  return status.trim().toUpperCase();
+  const token = status.trim().toUpperCase();
+  // PaymentService serializes its PaymentOrderStatus enum as numbers.
+  // 1 = Pending, 2 = Paid, 3 = Failed, 4 = Expired, 5 = Cancelled, 6 = Refunded.
+  return ({
+    '1': 'PENDING',
+    '2': 'PAID',
+    '3': 'FAILED',
+    '4': 'EXPIRED',
+    '5': 'CANCELLED',
+    '6': 'REFUNDED',
+  } as Record<string, string>)[token] ?? token;
 }
 
 /** Prefer `paymentStatus` from OrderResponse; fall back to `status` when absent. */

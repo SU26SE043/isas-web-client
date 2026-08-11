@@ -31,6 +31,15 @@ function pickString(record: Record<string, unknown>, ...keys: string[]): string 
   return undefined;
 }
 
+function pickStatus(record: Record<string, unknown>, ...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+    if (typeof value === 'string' && value.length > 0) return value;
+  }
+  return undefined;
+}
+
 function unwrapPayload(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object') return null;
   const record = raw as Record<string, unknown>;
@@ -81,7 +90,7 @@ export function parseOrderResponse(raw: unknown): OrderResponse | null {
     payosOrderCode: toInt(data.payosOrderCode ?? data.PayOSOrderCode, 0),
     expiredAt: pickString(data, 'expiredAt', 'ExpiredAt'),
     packageId,
-    status: typeof (data.status ?? data.Status) === 'number' ? String(data.status ?? data.Status) : (pickString(data, 'status', 'Status') ?? 'Pending'),
+    status: pickStatus(data, 'status', 'Status') ?? 'Pending',
     checkoutUrl,
     packageName: pickString(data, 'packageName', 'PackageName'),
     priceVnd: toInt(data.priceVnd ?? data.PriceVnd, 0) || undefined,
@@ -142,7 +151,7 @@ export function parseOrderStatus(raw: unknown): string {
   if (raw && typeof raw === 'object') {
     const record = raw as Record<string, unknown>;
     const inner = unwrapPayload(raw);
-    const status = pickString(inner ?? record, 'status', 'Status');
+    const status = pickStatus(inner ?? record, 'status', 'Status');
     if (status) return status;
   }
   return '';
@@ -156,7 +165,7 @@ export function parseOrderStatusResult(raw: unknown): PaymentOrderStatusResult {
 
   return {
     orderCode: toInt(data.orderCode ?? data.OrderCode),
-    status: pickString(data, 'status', 'Status') ?? '',
+    status: pickStatus(data, 'status', 'Status') ?? '',
     paidAt: pickString(data, 'paidAt', 'PaidAt') ?? null,
   };
 }

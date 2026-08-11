@@ -526,7 +526,7 @@ export const paymentService = {
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const status = await paymentService.getOrderStatus(orderId);
-      if (['Paid', 'Failed', 'Expired', 'Cancelled', 'Canceled', 'Refunded'].includes(status)) {
+      if (isPaymentTerminalStatus(status)) {
         return status;
       }
       await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
