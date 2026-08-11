@@ -4,29 +4,20 @@ export async function dataUrlToJpegFile(dataUrl: string, fileName: string): Prom
   return new File([blob], fileName, { type: 'image/jpeg' });
 }
 
-export function captureVideoFrameAsJpegFile(
-  video: HTMLVideoElement,
-  fileName: string,
-  quality = 0.85,
-): Promise<File | null> {
-  if (video.videoWidth === 0 || video.videoHeight === 0) {
-    return Promise.resolve(null);
-  }
+/**
+ * Guards against enrolling/checking an unexposed frame. Video dimensions can be
+ * ready before the camera has produced a usable image, especially right after
+ * play(), which yields an all-black JPEG the backend cannot match a face in.
+ */
+export function isUsableCameraFrame(video: HTMLVideoElement): boolean {
+  if (video.videoWidth === 0 || video.videoHeight === 0) return false;
+  if (video.readyState < 2 /* HAVE_CURRENT_DATA */) return false;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const context = canvas.getContext('2d');
-  if (!context) return Promise.resolve(null);
-  context.drawImage(video, 0, 0);
-
-  // Reject an unexposed/black frame. video dimensions can be ready before the
-  // camera has produced a usable image, especially immediately after play().
   const sampleCanvas = document.createElement('canvas');
   sampleCanvas.width = 32;
   sampleCanvas.height = 32;
   const sampleContext = sampleCanvas.getContext('2d');
-  if (!sampleContext) return Promise.resolve(null);
+  if (!sampleContext) return false;
   sampleContext.drawImage(video, 0, 0, sampleCanvas.width, sampleCanvas.height);
   const sample = sampleContext
     .getImageData(0, 0, sampleCanvas.width, sampleCanvas.height)
@@ -41,9 +32,22 @@ export function captureVideoFrameAsJpegFile(
     luminanceTotal += luminance;
     if (luminance < 8) nearBlackPixels += 1;
   }
-  if (luminanceTotal / pixelCount < 12 || nearBlackPixels / pixelCount > 0.98) {
-    return Promise.resolve(null);
-  }
+  return luminanceTotal / pixelCount >= 12 && nearBlackPixels / pixelCount <= 0.98;
+}
+
+export function captureVideoFrameAsJpegFile(
+  video: HTMLVideoElement,
+  fileName: string,
+  quality = 0.85,
+): Promise<File | null> {
+  if (!isUsableCameraFrame(video)) return Promise.resolve(null);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+  if (!context) return Promise.resolve(null);
+  context.drawImage(video, 0, 0);
 
   return new Promise((resolve) => {
     canvas.toBlob(

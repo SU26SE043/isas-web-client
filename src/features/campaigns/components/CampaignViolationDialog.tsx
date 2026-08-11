@@ -45,8 +45,8 @@ export function CampaignViolationDialog({
         ? 'campaigns.violation.identityTitle'
         : 'campaigns.violation.title')}
       contentClassName="border-warning/40 bg-surface-elevated"
-      overlayClassName="z-[80] bg-black/80 backdrop-blur-md"
-      className="z-[90]"
+      overlayClassName="z-[120] bg-black/80 backdrop-blur-md"
+      className="z-[130]"
     >
       {violation ? (
         <div className="p-1">

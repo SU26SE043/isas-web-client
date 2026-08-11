@@ -5,6 +5,7 @@ import type { CampaignViolationKind } from '../types/campaignViolation.types';
 
 const LEAVE_CORRELATION_MS = 250;
 const LEAVE_DEDUP_MS = 1_500;
+const CAMERA_POLL_MS = 2_000;
 
 interface PendingLeaveViolation {
   kind: Extract<CampaignViolationKind, 'tab_switch' | 'fullscreen_exit'>;
@@ -17,16 +18,30 @@ interface UseCampaignAntiCheatOptions {
   campaignId: string;
   sessionId: string;
   enabled: boolean;
-  videoEl?: HTMLVideoElement | null;
+  /** Live camera stream from the interview room. Watched for camera loss. */
+  stream?: MediaStream | null;
   onPause?: () => void;
   onViolation: (kind: CampaignViolationKind) => void;
+}
+
+/**
+ * A camera counts as unavailable when every video track has stopped, been
+ * disabled, or gone silent — covering revoked permission, an unplugged device,
+ * and a stream that ended without firing `ended`.
+ */
+function isCameraUnavailable(stream: MediaStream) {
+  const tracks = stream.getVideoTracks();
+  if (tracks.length === 0) return true;
+  return tracks.every(
+    (track) => track.readyState === 'ended' || !track.enabled || track.muted,
+  );
 }
 
 export function useCampaignAntiCheat({
   campaignId,
   sessionId,
   enabled,
-  videoEl,
+  stream,
   onPause,
   onViolation,
 }: UseCampaignAntiCheatOptions) {
@@ -35,6 +50,7 @@ export function useCampaignAntiCheat({
   const windowBlurred = useRef(false);
   const documentHidden = useRef(false);
   const cameraBlocked = useRef(false);
+  const cameraWasLive = useRef(false);
   const lastLeaveAt = useRef(0);
   const inFlight = useRef(new Set<string>());
   const leaveTimer = useRef<number | null>(null);
@@ -180,24 +196,42 @@ export function useCampaignAntiCheat({
 
   useEffect(() => {
     cameraBlocked.current = false;
-    if (!enabled || !videoEl?.srcObject) return undefined;
-    const stream = videoEl.srcObject;
-    if (!('getVideoTracks' in stream) || typeof stream.getVideoTracks !== 'function') {
-      return undefined;
-    }
-    const onTrackEnded = () => {
-      if (cameraBlocked.current) return;
+    cameraWasLive.current = false;
+    if (!enabled || !stream) return undefined;
+
+    const evaluate = () => {
+      const unavailable = isCameraUnavailable(stream);
+      if (!cameraWasLive.current) {
+        // Only an active -> unavailable transition is a violation, so wait until
+        // the camera has been seen working before arming the check.
+        if (!unavailable) cameraWasLive.current = true;
+        return;
+      }
+      if (!unavailable || cameraBlocked.current) return;
       cameraBlocked.current = true;
-      reportImmediate(
+      reportImmediateRef.current(
         'camera_blocked',
         'camera_blocked',
         'Candidate camera became unavailable during the interview.',
       );
     };
+
     const tracks = stream.getVideoTracks();
-    tracks.forEach((track) => track.addEventListener('ended', onTrackEnded));
-    return () => tracks.forEach((track) => track.removeEventListener('ended', onTrackEnded));
-  }, [enabled, reportImmediate, videoEl]);
+    tracks.forEach((track) => {
+      track.addEventListener('ended', evaluate);
+      track.addEventListener('mute', evaluate);
+    });
+    evaluate();
+    const poll = window.setInterval(evaluate, CAMERA_POLL_MS);
+
+    return () => {
+      window.clearInterval(poll);
+      tracks.forEach((track) => {
+        track.removeEventListener('ended', evaluate);
+        track.removeEventListener('mute', evaluate);
+      });
+    };
+  }, [enabled, stream]);
 
   return { reportFullscreenExit };
 }

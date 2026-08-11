@@ -189,6 +189,8 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceEnroll.badImage':
       'Không thể sử dụng ảnh này. Vui lòng chụp lại ảnh khuôn mặt rõ hơn.',
     'campaigns.faceEnroll.uploadError': 'Không thể gửi ảnh khuôn mặt. Vui lòng thử lại.',
+    'campaigns.faceEnroll.badFrame':
+      'Camera chưa cho hình ảnh hợp lệ. Vui lòng đợi camera sẵn sàng, đảm bảo đủ ánh sáng rồi chụp lại.',
     'campaigns.faceCheck.noFace': 'Không phát hiện rõ khuôn mặt. Vui lòng điều chỉnh camera.',
     'campaigns.faceCheck.multipleFaces': 'Phát hiện nhiều khuôn mặt trong khung hình.',
     'campaigns.faceCheck.adjust': 'Vui lòng điều chỉnh góc camera để khuôn mặt rõ hơn.',
@@ -411,6 +413,8 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceEnroll.badImage':
       'This photo cannot be used. Please retake a clearer face photo.',
     'campaigns.faceEnroll.uploadError': 'Could not upload the face photo. Please try again.',
+    'campaigns.faceEnroll.badFrame':
+      'The camera has not produced a usable image yet. Wait for it to be ready, make sure the lighting is good, and take the photo again.',
     'campaigns.faceCheck.noFace': 'Face not clearly detected. Please adjust your camera.',
     'campaigns.faceCheck.multipleFaces': 'Multiple faces detected in the frame.',
     'campaigns.faceCheck.adjust': 'Please adjust the camera so your face is clearer.',

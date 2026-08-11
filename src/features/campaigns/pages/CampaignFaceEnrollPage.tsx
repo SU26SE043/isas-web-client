@@ -7,7 +7,7 @@ import {
   CampaignCandidateError,
   campaignCandidateService,
 } from '../services/campaignCandidate.service';
-import { dataUrlToJpegFile } from '../utils/captureJpegFile';
+import { dataUrlToJpegFile, isUsableCameraFrame } from '../utils/captureJpegFile';
 import { readCampaignInterviewSession } from '../utils/campaignInterviewSession';
 
 export function CampaignFaceEnrollPage() {
@@ -38,8 +38,19 @@ export function CampaignFaceEnrollPage() {
   }, [startPreview, stopStream]);
 
   const handleCapture = () => {
+    // Never enroll a black frame: the camera can report valid dimensions before
+    // it has actually exposed an image.
+    const video = videoRef.current;
+    if (!video || !isUsableCameraFrame(video)) {
+      setPreview('');
+      setError(t('campaigns.faceEnroll.badFrame'));
+      return;
+    }
     const snapshot = captureSnapshot();
-    if (!snapshot) return;
+    if (!snapshot) {
+      setError(t('campaigns.faceEnroll.badFrame'));
+      return;
+    }
     setPreview(snapshot);
     setError(null);
   };

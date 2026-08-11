@@ -53,6 +53,8 @@ test.describe('B2B campaign anti-cheat API v10', () => {
 
     await page.getByRole('button', { name: /Enable fullscreen/i }).click();
     await expect(page.getByText('Describe a difficult product decision you made.')).toBeVisible({ timeout: 15_000 });
+    // Violations are only counted once the start countdown has finished.
+    await expect(page.locator('.countdown-ring')).toBeHidden({ timeout: 20_000 });
     const timer = page.locator('.tabular-nums').first();
     await expect(timer).toBeVisible();
 
@@ -137,6 +139,8 @@ test.describe('B2B campaign anti-cheat API v10', () => {
     await page.goto('/candidate/campaigns/campaign-v10/interview/session-v10');
     await page.getByRole('button', { name: /Enable fullscreen/i }).click();
     await expect(page.getByText('Describe a difficult product decision you made.')).toBeVisible({ timeout: 15_000 });
+    // Violations are only counted once the start countdown has finished.
+    await expect(page.locator('.countdown-ring')).toBeHidden({ timeout: 20_000 });
     expect(flags).toHaveLength(0);
 
     const timer = page.locator('.tabular-nums').first();

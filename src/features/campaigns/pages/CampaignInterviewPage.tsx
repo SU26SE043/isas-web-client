@@ -32,7 +32,18 @@ export function CampaignInterviewPage() {
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const fullscreenExitRef = useRef<() => void>(() => undefined);
+  const countdownStartedRef = useRef(false);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
+
+  // Interview is ACTIVE from the moment the start countdown finishes. That
+  // includes the "reading" phase (TTS) and every later question hand-off, so
+  // monitoring must not drop out between questions.
+  const handlePhaseChange = useCallback((phase: string) => {
+    if (phase === 'countdown') countdownStartedRef.current = true;
+    setInterviewActive(
+      countdownStartedRef.current && (phase === 'reading' || phase === 'answering'),
+    );
+  }, []);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
   const handleFullscreenExit = useCallback(() => fullscreenExitRef.current(), []);
@@ -48,7 +59,7 @@ export function CampaignInterviewPage() {
     campaignId: resolvedCampaignId,
     sessionId,
     enabled: monitoringActive,
-    videoEl,
+    stream: media?.stream,
     onPause: handleViolationPause,
     onViolation: violations.enqueue,
   });
@@ -59,7 +70,6 @@ export function CampaignInterviewPage() {
     sessionId,
     enabled: monitoringActive,
     videoEl,
-    completed: false,
     onSignal: violations.enqueue,
   });
 
@@ -146,8 +156,11 @@ export function CampaignInterviewPage() {
 
   return (
     <div className="relative" data-campaign-interview>
+      {/* Blocking overlays sit above the room's start countdown (z-100): the
+          countdown freezes while the interview is paused, so a lower overlay
+          would be covered by it and left unreachable. */}
       {!fullscreen.isFullscreen && !violations.currentViolation ? (
-        <div className="fixed inset-0 z-[70] grid place-items-center bg-black/90 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[110] grid place-items-center bg-black/90 px-4 backdrop-blur-sm">
           <section className="frame-satin w-full max-w-md rounded-2xl bg-surface-raised p-6 text-center shadow-2xl" role="alertdialog" aria-modal="true" aria-labelledby="fullscreen-required-title">
             <h1 id="fullscreen-required-title" className="text-xl font-semibold text-foreground">
               {t('campaigns.fullscreen.title')}
@@ -182,7 +195,7 @@ export function CampaignInterviewPage() {
         violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
-        onPhaseChange={(phase) => setInterviewActive(phase === 'answering')}
+        onPhaseChange={handlePhaseChange}
       />
     </div>
   );

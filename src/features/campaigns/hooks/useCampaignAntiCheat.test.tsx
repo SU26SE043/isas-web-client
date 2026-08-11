@@ -15,6 +15,27 @@ function setVisibility(value: DocumentVisibilityState) {
   document.dispatchEvent(new Event('visibilitychange'));
 }
 
+function createFakeVideoTrack(live = true) {
+  const bus = new EventTarget();
+  const track = {
+    kind: 'video',
+    readyState: live ? 'live' : 'ended',
+    enabled: live,
+    muted: false,
+    addEventListener: bus.addEventListener.bind(bus),
+    removeEventListener: bus.removeEventListener.bind(bus),
+    end() {
+      track.readyState = 'ended';
+      bus.dispatchEvent(new Event('ended'));
+    },
+  };
+  return track;
+}
+
+function createFakeStream(tracks: ReturnType<typeof createFakeVideoTrack>[]) {
+  return { getVideoTracks: () => tracks } as unknown as MediaStream;
+}
+
 describe('useCampaignAntiCheat', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -146,6 +167,88 @@ describe('useCampaignAntiCheat', () => {
     act(() => window.dispatchEvent(new Event('blur')));
     unmount();
     act(() => vi.advanceTimersByTime(250));
+    expect(createFlag).not.toHaveBeenCalled();
+  });
+
+  it('reports camera loss once when the video track ends', () => {
+    const track = createFakeVideoTrack();
+    const onPause = vi.fn();
+    const onViolation = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      stream: createFakeStream([track]),
+      onPause,
+      onViolation,
+    }));
+
+    act(() => track.end());
+
+    expect(onPause).toHaveBeenCalledOnce();
+    expect(onViolation).toHaveBeenCalledExactlyOnceWith('camera_blocked');
+    expect(createFlag).toHaveBeenCalledExactlyOnceWith('campaign-1', 'session-1', {
+      signalType: 'camera_blocked',
+      note: 'Candidate camera became unavailable during the interview.',
+    });
+
+    // Polling must not re-send the same transition.
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(createFlag).toHaveBeenCalledOnce();
+    expect(onViolation).toHaveBeenCalledOnce();
+  });
+
+  it('detects a camera that stops without firing ended', () => {
+    const track = createFakeVideoTrack();
+    const onViolation = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      stream: createFakeStream([track]),
+      onViolation,
+    }));
+
+    act(() => {
+      track.readyState = 'ended';
+      vi.advanceTimersByTime(2_000);
+    });
+
+    expect(onViolation).toHaveBeenCalledExactlyOnceWith('camera_blocked');
+  });
+
+  it('does not report a camera that was never live', () => {
+    const onViolation = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      stream: createFakeStream([createFakeVideoTrack(false)]),
+      onViolation,
+    }));
+
+    act(() => vi.advanceTimersByTime(10_000));
+
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(createFlag).not.toHaveBeenCalled();
+  });
+
+  it('stops watching the camera after cleanup', () => {
+    const track = createFakeVideoTrack();
+    const { unmount } = renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      stream: createFakeStream([track]),
+      onViolation: vi.fn(),
+    }));
+
+    unmount();
+    act(() => {
+      track.end();
+      vi.advanceTimersByTime(10_000);
+    });
+
     expect(createFlag).not.toHaveBeenCalled();
   });
 
