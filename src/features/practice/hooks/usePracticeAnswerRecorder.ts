@@ -62,6 +62,14 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     }
   }, [setRecordingStatus]);
 
+  const pauseRecording = useCallback(() => {
+    if (recorderRef.current?.state === 'recording') recorderRef.current.pause();
+  }, []);
+
+  const resumeRecording = useCallback(() => {
+    if (recorderRef.current?.state === 'paused') recorderRef.current.resume();
+  }, []);
+
   const startRecording = useCallback(() => {
     if (!stream) {
       setErrorKey('practice.flow.device.denied');
