@@ -7,6 +7,7 @@ import { PracticeCvOptionalStep } from '../components/wizard/PracticeCvOptionalS
 import { PracticeJdStep } from '../components/wizard/PracticeJdStep';
 import { PracticeTimeLimitStep } from '../components/wizard/PracticeTimeLimitStep';
 import { PracticeQuestionCountSetupStep } from '../components/wizard/PracticeQuestionCountSetupStep';
+import { PracticeSeniorityStep } from '../components/wizard/PracticeSeniorityStep';
 import { PracticeGradingCriteriaStep } from '../components/wizard/PracticeGradingCriteriaStep';
 import { PracticeSetupSummaryStep } from '../components/wizard/PracticeSetupSummaryStep';
 import { usePracticeSetupFlow } from '../hooks/usePracticeSetupFlow';
@@ -85,6 +86,16 @@ export function PracticeWizardPage() {
       ) : null}
 
       {flow.step === 5 ? (
+        <PracticeSeniorityStep
+          value={flow.seniority}
+          disabled={disabled}
+          onSelect={flow.setSeniority}
+          onBack={() => flow.goToStep(4)}
+          onNext={() => flow.goToStep(6)}
+        />
+      ) : null}
+
+      {flow.step === 6 ? (
         <PracticeGradingCriteriaStep
           criteria={flow.rubricCriteria}
           selectedIds={flow.rubricCriterionIds}
@@ -93,12 +104,12 @@ export function PracticeWizardPage() {
           disabled={disabled}
           onSelect={flow.setRubricCriterionIds}
           onRetry={flow.retryRubric}
-          onBack={() => flow.goToStep(4)}
-          onNext={() => flow.goToStep(6)}
+          onBack={() => flow.goToStep(5)}
+          onNext={() => flow.goToStep(7)}
         />
       ) : null}
 
-      {flow.step === 6 ? (
+      {flow.step === 7 ? (
         <PracticeSetupSummaryStep
           jobCategory={flow.jobCategory}
           cvFile={flow.selectedCv}
@@ -106,14 +117,15 @@ export function PracticeWizardPage() {
           jdText={flow.jdText}
           jdTab={flow.jdTab}
           timeLimitSec={flow.timeLimitSec}
+          seniority={flow.seniority}
           questionCount={flow.questionCount}
           criteria={flow.rubricCriteria.filter((criterion) => flow.rubricCriterionIds.includes(criterion.id))}
           canStart={flow.canStart}
           isCreating={flow.isCreatingSession}
           errorCode={flow.createErrorCode}
           errorMessage={flow.createErrorMessage}
-          onBack={() => flow.goToStep(5)}
-          onEditCriteria={() => flow.goToStep(5)}
+          onBack={() => flow.goToStep(6)}
+          onEditCriteria={() => flow.goToStep(6)}
           onStart={() => void flow.handleStart()}
           onClearError={flow.clearCreateError}
         />
@@ -126,7 +138,7 @@ export function PracticeWizardPage() {
         </div>
       ) : null}
 
-      {flow.createErrorCode === 'insufficient_credit' && flow.step !== 6 ? (
+      {flow.createErrorCode === 'insufficient_credit' && flow.step !== 7 ? (
         <div className="mt-4 rounded-xl border border-error/40 bg-surface-raised p-4 text-sm text-error">
           {t('practice.errors.insufficientCredit')}{' '}
           <Link to="/candidate/credits" className="underline">

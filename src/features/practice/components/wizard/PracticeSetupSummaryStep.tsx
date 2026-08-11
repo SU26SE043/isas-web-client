@@ -7,6 +7,7 @@ import type {
   CreatePracticeSessionErrorCode,
   PracticeJobCategory,
   PracticeTimeLimitSec,
+  PracticeSeniority,
 } from '../../types/b2cPracticeSession.types';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -24,6 +25,13 @@ const TIME_LABEL: Record<PracticeTimeLimitSec, string> = {
   240: 'practice.setup.timeLimit.240',
 };
 
+const SENIORITY_LABEL: Record<PracticeSeniority, string> = {
+  Fresher: 'practice.wizard.level.fresher',
+  Junior: 'practice.wizard.level.junior',
+  Middle: 'practice.wizard.level.middle',
+  Senior: 'practice.wizard.level.senior',
+};
+
 interface PracticeSetupSummaryStepProps {
   jobCategory: PracticeJobCategory | null;
   cvFile: UploadedCvFile | null;
@@ -31,6 +39,7 @@ interface PracticeSetupSummaryStepProps {
   jdText: string;
   jdTab: 'file' | 'text';
   timeLimitSec: PracticeTimeLimitSec;
+  seniority: PracticeSeniority;
   questionCount: number;
   criteria: PracticeRubricCriterion[];
   canStart: boolean;
@@ -73,6 +82,7 @@ export function PracticeSetupSummaryStep({
   jdText,
   jdTab,
   timeLimitSec,
+  seniority,
   questionCount,
   criteria,
   canStart,
@@ -110,6 +120,10 @@ export function PracticeSetupSummaryStep({
     {
       label: t('practice.setup.summary.timeLimit'),
       value: t(TIME_LABEL[timeLimitSec]),
+    },
+    {
+      label: t('practice.wizard.steps.level'),
+      value: t(SENIORITY_LABEL[seniority]),
     },
     {
       label: t('practice.setup.summary.credit'),

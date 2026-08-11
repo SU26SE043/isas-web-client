@@ -28,7 +28,7 @@ import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { usesMockData } from '@/shared/mock';
 import { paymentService } from '@/features/payment/services/payment.service';
 
-export const PRACTICE_SETUP_STEP_COUNT = 7;
+export const PRACTICE_SETUP_STEP_COUNT = 8;
 
 export function usePracticeSetupFlow() {
   const navigate = useNavigate();
