@@ -166,7 +166,7 @@ describe('parseUser', () => {
         orgRole: 'HrMember',
       }),
     ).toMatchObject({
-      role: UserRole.ORG_ADMIN,
+      role: UserRole.HR_MEMBER,
       orgId: 'org-1',
       orgName: 'Isas',
       orgRole: 'HrMember',
