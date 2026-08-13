@@ -22,7 +22,22 @@ export const adminPaymentService = {
   getAiUsage: async (params: { from?: string; to?: string; groupBy?: 'day' | 'month' } = {}) => (await apiClient.get<AdminAiUsageAnalytics>(adminApiEndpoints.aiUsage, { params: reportParams(params) })).data,
   getTraffic: async (params: { from?: string; to?: string; groupBy?: 'hour' | 'day' } = {}) => (await apiClient.get<AdminTrafficAnalytics>(adminApiEndpoints.traffic, { params: reportParams(params) })).data,
   grantCredits: async (input: CreditGrantInput) => (await apiClient.post(adminApiEndpoints.grantCredits, input)).data,
-  setPaymentMode: async (input: PaymentModeInput) => (await apiClient.post(adminApiEndpoints.paymentMode, input)).data,
+  setPaymentMode: async (input: PaymentModeInput) => {
+    const ownerId = input.ownerId.trim();
+    const note = input.note.trim();
+    if (input.ownerType !== 0) throw new Error('PAYMENT_MODE_ORG_ONLY');
+    if (!ownerId) throw new Error('OWNER_ID_REQUIRED');
+    if (!note) throw new Error('PAYMENT_MODE_NOTE_REQUIRED');
+    if (input.paymentMode === 1 && (!Number.isFinite(input.creditLimit) || (input.creditLimit ?? 0) <= 0)) {
+      throw new Error('CREDIT_LIMIT_REQUIRED');
+    }
+    return (await apiClient.post(adminApiEndpoints.paymentMode, {
+      ...input,
+      ownerId,
+      note,
+      ...(input.paymentMode === 1 ? { creditLimit: input.creditLimit } : {}),
+    })).data;
+  },
   getCreditAccount: async (ownerType: number, ownerId: string) => (await apiClient.get<CreditAccount>(adminApiEndpoints.creditAccount(ownerType, ownerId))).data,
   getCreditTransactions: async (ownerType: number, ownerId: string, params: { reason?: number; cursor?: string; limit?: number } = {}) => { const response = await apiClient.get(adminApiEndpoints.creditTransactions(ownerType, ownerId), { params }); return page<CreditTransaction>(response.data, response.headers); },
   grantSubscription: async (input: SubscriptionGrantInput) => (await apiClient.post(adminApiEndpoints.grantSubscription, input)).data,
