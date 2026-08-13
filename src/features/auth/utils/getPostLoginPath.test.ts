@@ -72,6 +72,11 @@ describe('resolvePostLoginPath', () => {
     );
   });
 
+  it('always routes Admin to the Admin console', () => {
+    expect(resolvePostLoginPath(UserRole.ADMIN, '/employer/dashboard')).toBe('/admin');
+    expect(resolvePostLoginPath(UserRole.ADMIN, '/employer/campaigns')).toBe('/admin');
+  });
+
   it('falls back to role home when requested path is missing', () => {
     expect(resolvePostLoginPath(UserRole.CANDIDATE, null)).toBe('/candidate/dashboard');
     expect(resolvePostLoginPath(UserRole.GUEST, '/employer/dashboard')).toBe('/login');
