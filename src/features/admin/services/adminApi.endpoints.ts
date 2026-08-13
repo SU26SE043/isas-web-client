@@ -1,0 +1,36 @@
+const auth = '/api/v1/auth/admin';
+const campaign = '/api/v1/campaign/admin';
+const interview = '/api/v1/interview/admin';
+const payment = '/api/v1/payment';
+
+export const adminApiEndpoints = {
+  campaignAnalytics: `${campaign}/analytics`,
+  interviewAnalytics: `${interview}/analytics`,
+  prompts: `${interview}/prompts`,
+  promptHistory: (key: string) => `${interview}/prompts/${encodeURIComponent(key)}/history`,
+  prompt: (key: string) => `${interview}/prompts/${encodeURIComponent(key)}`,
+  knowledge: `${interview}/knowledge`,
+  knowledgeItem: (id: string) => `${interview}/knowledge/${encodeURIComponent(id)}`,
+  knowledgeReindex: (id: string) => `${interview}/knowledge/${encodeURIComponent(id)}/reindex`,
+  context7Search: `${interview}/knowledge/context7/search`,
+  context7Ingest: `${interview}/knowledge/context7/ingest`,
+  orders: `${payment}/admin/orders`,
+  packages: `${payment}/package`,
+  package: (id: string) => `${payment}/package/${encodeURIComponent(id)}`,
+  invoicesClose: `${payment}/admin/invoices/close`,
+  revenue: `${payment}/admin/revenue`,
+  aiUsage: `${payment}/admin/ai-usage`,
+  traffic: `${payment}/admin/traffic`,
+  refund: (id: string) => `${payment}/admin/orders/${encodeURIComponent(id)}/refund`,
+  refundSettle: (id: string) => `${payment}/admin/orders/${encodeURIComponent(id)}/refund/settle`,
+  refundPayout: (id: string) => `${payment}/admin/orders/${encodeURIComponent(id)}/refund/payout`,
+  grantCredits: `${payment}/admin/credits/grant`,
+  paymentMode: `${payment}/admin/credits/payment-mode`,
+  creditAccount: (ownerType: number, ownerId: string) => `${payment}/admin/credits/${ownerType}/${encodeURIComponent(ownerId)}`,
+  creditTransactions: (ownerType: number, ownerId: string) => `${payment}/admin/credits/${ownerType}/${encodeURIComponent(ownerId)}/transactions`,
+  grantSubscription: `${payment}/admin/subscriptions/grant`,
+  plans: `${payment}/admin/plans`,
+  plan: (id: string) => `${payment}/admin/plans/${encodeURIComponent(id)}`,
+  organizations: `${auth}/organizations`,
+  users: `${auth}/users`,
+} as const;
