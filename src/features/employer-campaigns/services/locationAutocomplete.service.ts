@@ -71,7 +71,9 @@ export async function searchLocationSuggestions(
   const url = new URL(getPhotonApiUrl());
   url.searchParams.set('q', query.trim());
   url.searchParams.set('limit', String(RESULT_LIMIT));
-  url.searchParams.set('lang', language);
+  // The public Photon instance currently rejects `lang=vi` with HTTP 400.
+  // Keep the UI bilingual while using a provider-supported locale for lookup.
+  url.searchParams.set('lang', language === 'vi' ? 'en' : language);
   url.searchParams.set('lat', '10.7769');
   url.searchParams.set('lon', '106.7009');
   url.searchParams.set('zoom', '5');

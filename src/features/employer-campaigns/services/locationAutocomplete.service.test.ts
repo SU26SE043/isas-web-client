@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildOpenStreetMapEmbedUrl,
   parsePhotonSuggestions,
+  searchLocationSuggestions,
 } from './locationAutocomplete.service';
 
 describe('location autocomplete service', () => {
@@ -39,6 +40,22 @@ describe('location autocomplete service', () => {
   it('returns no suggestions for invalid envelopes', () => {
     expect(parsePhotonSuggestions(null)).toEqual([]);
     expect(parsePhotonSuggestions({ features: 'invalid' })).toEqual([]);
+  });
+
+  it('uses a Photon-supported locale for Vietnamese UI lookups', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ features: [] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await searchLocationSuggestions('FPT', 'vi');
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(requestUrl.searchParams.get('q')).toBe('FPT');
+    expect(requestUrl.searchParams.get('lang')).toBe('en');
+
+    vi.unstubAllGlobals();
   });
 
   it('builds an encoded OSM embed with a marker', () => {
