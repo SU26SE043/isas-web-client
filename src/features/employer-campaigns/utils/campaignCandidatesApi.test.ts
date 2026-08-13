@@ -107,4 +107,28 @@ describe('campaignCandidatesApi', () => {
     });
     expect(parsed.unscoredFlagged).toEqual([]);
   });
+
+  it('derives pass/fail from passScorePct when the API omits result', () => {
+    const parsed = parseCampaignResultsResponse({
+      passScorePct: 70,
+      results: [
+        {
+          candidateId: 'pass',
+          sessionId: 's-pass',
+          totalScore: 70,
+          aiScore: 70,
+          scoredAt: '2026-07-25T09:30:00Z',
+        },
+        {
+          candidateId: 'fail',
+          sessionId: 's-fail',
+          totalScore: 69.9,
+          aiScore: 69.9,
+          scoredAt: '2026-07-25T09:30:00Z',
+        },
+      ],
+    });
+
+    expect(parsed.results.map((item) => item.result)).toEqual(['Pass', 'Fail']);
+  });
 });

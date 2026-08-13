@@ -16,7 +16,9 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
   const cards = [
     {
       label: t('employer.campaigns.results.summary.scored'),
-      value: String(data.totalCandidates),
+      // The main results table contains scored sessions only. Flagged but
+      // unscored sessions are intentionally shown in their own section.
+      value: String(data.results.length),
     },
     {
       label: t('employer.campaigns.results.summary.pass'),

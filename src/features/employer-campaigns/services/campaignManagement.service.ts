@@ -897,7 +897,7 @@ export const campaignManagementService = {
   /** Live: GET /api/v1/campaign/{id}/results/export?format=csv|pdf — binary blob. */
   async exportCampaignResults(
     id: string,
-    format: CampaignResultExportFormat,
+    format: CampaignResultExportFormat = 'csv',
   ): Promise<{ blob: Blob; filename?: string }> {
     const response = await apiClient.get<Blob>(campaignManagementEndpoints.resultsExport(id), {
       params: { format },
@@ -943,7 +943,7 @@ export const campaignManagementService = {
         result: payload.result,
         note,
       } satisfies OverrideCampaignResultPayload,
-      { validateStatus: (status) => status === 204 || status === 200 },
+      { validateStatus: (status) => status === 204 },
     );
   },
 

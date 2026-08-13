@@ -252,6 +252,7 @@ function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult
 export function parseCampaignResultsResponse(data: unknown): CampaignResultsResponse {
   const root = asRecord(data);
   const body = asRecord(root?.data) ?? root ?? {};
+  const passScorePct = pickNumber(body, 'passScorePct', 'PassScorePct') ?? null;
   const resultsRaw = unwrapArrayPayload(body.results ?? body.Results ?? body);
   const results = resultsRaw
     .map((item): CampaignScoredResult | null => {
@@ -262,18 +263,22 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
       const scoredAt = pickString(record, 'scoredAt', 'ScoredAt');
       if (!candidateId || !sessionId || !scoredAt) return null;
       const resultRaw = pickString(record, 'result', 'Result');
-      const result: CampaignResultStatus =
+      let result: CampaignResultStatus =
         resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null;
       const overrideResultRaw = pickString(record, 'overrideResult', 'OverrideResult');
       const overrideResult: CampaignResultStatus =
         overrideResultRaw === 'Pass' || overrideResultRaw === 'Fail' ? overrideResultRaw : null;
+      const totalScore = pickNumber(record, 'totalScore', 'TotalScore') ?? 0;
+      if (result == null && passScorePct != null) {
+        result = totalScore >= passScorePct ? 'Pass' : 'Fail';
+      }
       return {
         rank: pickNumber(record, 'rank', 'Rank') ?? 0,
         candidateId,
         sessionId,
         fullName: pickString(record, 'fullName', 'FullName') ?? null,
         email: pickString(record, 'email', 'Email') ?? null,
-        totalScore: pickNumber(record, 'totalScore', 'TotalScore') ?? 0,
+        totalScore,
         aiScore: pickNumber(record, 'aiScore', 'AiScore') ?? 0,
         overrideScore: pickNumber(record, 'overrideScore', 'OverrideScore') ?? null,
         overrideResult,
@@ -295,7 +300,7 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
 
   return {
     campaignId: pickString(body, 'campaignId', 'CampaignId') ?? '',
-    passScorePct: pickNumber(body, 'passScorePct', 'PassScorePct') ?? null,
+    passScorePct,
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
     unscoredFlagged,
