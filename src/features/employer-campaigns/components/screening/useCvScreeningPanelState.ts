@@ -3,6 +3,7 @@ import {
   useAnalyzeCandidateCvs,
   useCampaignCandidateDetail,
   useCampaignCandidates,
+  useRescreenCampaignCandidate,
 } from '../../hooks/useCampaignCandidates';
 import type {
   CampaignCandidateListItem,
@@ -44,6 +45,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const analyzeMutation = useAnalyzeCandidateCvs(campaignId);
+  const rescreenMutation = useRescreenCampaignCandidate(campaignId);
   const candidatesQuery = useCampaignCandidates(campaignId, filters);
   const detailQuery = useCampaignCandidateDetail(campaignId, detailCandidateId, {
     enabled: Boolean(detailCandidateId),
@@ -121,6 +123,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
     analyzeError,
     setAnalyzeError,
     analyzeMutation,
+    rescreenMutation,
     candidatesQuery,
     detailQuery,
     validFiles,

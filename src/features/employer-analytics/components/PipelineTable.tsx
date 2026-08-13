@@ -69,14 +69,14 @@ export function PipelineTable({ candidates, blindHiringEnabled = true }: Pipelin
                     <Button
                       size="sm"
                       variant="outline"
-                      render={<Link to={`/employer/candidates/${candidate.id}`} />}
+                      render={<Link to={`/employer/candidates/${candidate.id}?campaignId=${candidate.campaignId}`} />}
                     >
                       <UserRound className="size-4" aria-hidden />{' '}
                       {t('employerAnalytics.pipeline.viewProfile')}
                     </Button>
                     <Button
                       size="sm"
-                      render={<Link to={`/employer/candidates/${candidate.id}/report`} />}
+                      render={<Link to={`/employer/candidates/${candidate.id}/report?campaignId=${candidate.campaignId}`} />}
                     >
                       {t('employerAnalytics.pipeline.viewReport')}{' '}
                       <ArrowRight className="size-4" aria-hidden />
@@ -116,12 +116,12 @@ export function PipelineTable({ candidates, blindHiringEnabled = true }: Pipelin
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
-                  render={<Link to={`/employer/candidates/${candidate.id}`} />}
+                  render={<Link to={`/employer/candidates/${candidate.id}?campaignId=${candidate.campaignId}`} />}
                 >
                   <FileText className="size-4" aria-hidden />{' '}
                   {t('employerAnalytics.pipeline.viewProfile')}
                 </Button>
-                <Button render={<Link to={`/employer/candidates/${candidate.id}/report`} />}>
+                <Button render={<Link to={`/employer/candidates/${candidate.id}/report?campaignId=${candidate.campaignId}`} />}>
                   {t('employerAnalytics.pipeline.viewReport')}
                 </Button>
               </div>

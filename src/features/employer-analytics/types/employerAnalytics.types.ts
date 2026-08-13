@@ -35,6 +35,7 @@ export interface PipelineCandidate {
   blindHiring: boolean;
   shortlisted: boolean;
   internalNotes: string[];
+  sessionId?: string;
 }
 
 export interface CandidateReport {

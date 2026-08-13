@@ -1,4 +1,4 @@
-import { Eye, Pencil } from 'lucide-react';
+import { Eye, Pencil, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,8 @@ interface CandidateDetailDrawerProps {
   canSelect: boolean;
   onViewCv: () => void;
   onEdit: () => void;
+  onRescreen: () => void;
+  isRescreening: boolean;
 }
 
 export function CandidateDetailDrawer({
@@ -37,6 +39,8 @@ export function CandidateDetailDrawer({
   canSelect,
   onViewCv,
   onEdit,
+  onRescreen,
+  isRescreening,
 }: CandidateDetailDrawerProps) {
   const { t } = useLanguage();
   const canEdit = detail ? canEditCandidate(detail) : false;
@@ -154,6 +158,15 @@ export function CandidateDetailDrawer({
             >
               <Pencil className="size-4" aria-hidden />
               {t('employer.campaigns.screening.actions.edit')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!detail || isRescreening}
+              onClick={onRescreen}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              {t('employer.campaigns.screening.actions.rescreen')}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">

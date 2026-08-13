@@ -843,6 +843,13 @@ export const campaignManagementService = {
     });
   },
 
+  /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */
+  async rescreenCampaignCandidate(id: string, candidateId: string): Promise<void> {
+    await apiClient.post(campaignManagementEndpoints.candidateRescreen(id, candidateId), undefined, {
+      validateStatus: (status) => status === 202,
+    });
+  },
+
   /**
    * Live: GET /api/v1/campaign/{id}/candidates/{candidateId}/cv — PDF blob.
    */

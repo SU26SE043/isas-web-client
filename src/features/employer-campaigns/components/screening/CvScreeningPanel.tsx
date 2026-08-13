@@ -192,6 +192,12 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
         onEditFromDetail={() => {
           if (state.detailForActions) state.openEdit(toCandidateListItem(state.detailForActions));
         }}
+        onRescreenFromDetail={() => {
+          if (state.detailCandidateId) {
+            void state.rescreenMutation.mutateAsync(state.detailCandidateId);
+          }
+        }}
+        isRescreening={state.rescreenMutation.isPending}
         editingCandidate={state.editingCandidate}
         onCloseEdit={() => state.setEditingCandidate(null)}
         viewingCvCandidate={state.viewingCvCandidate}

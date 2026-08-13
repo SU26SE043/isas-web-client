@@ -15,6 +15,8 @@ interface CvScreeningModalsProps {
   onToggleDetailSelect: () => void;
   onViewCvFromDetail: () => void;
   onEditFromDetail: () => void;
+  onRescreenFromDetail: () => void;
+  isRescreening: boolean;
   editingCandidate: CampaignCandidateListItem | null;
   onCloseEdit: () => void;
   viewingCvCandidate: CampaignCandidateListItem | null;
@@ -33,6 +35,8 @@ export function CvScreeningModals({
   onToggleDetailSelect,
   onViewCvFromDetail,
   onEditFromDetail,
+  onRescreenFromDetail,
+  isRescreening,
   editingCandidate,
   onCloseEdit,
   viewingCvCandidate,
@@ -51,6 +55,8 @@ export function CvScreeningModals({
         onToggleSelect={onToggleDetailSelect}
         onViewCv={onViewCvFromDetail}
         onEdit={onEditFromDetail}
+        onRescreen={onRescreenFromDetail}
+        isRescreening={isRescreening}
       />
 
       <EditCandidateModal

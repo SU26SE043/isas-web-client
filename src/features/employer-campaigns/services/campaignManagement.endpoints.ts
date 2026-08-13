@@ -25,6 +25,8 @@ export const campaignManagementEndpoints = {
   candidates: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates`,
   candidateDetail: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}`,
+  candidateRescreen: (id: string, candidateId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}/rescreen`,
   candidateCv: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}/cv`,
   inviteCandidates: (id: string) =>

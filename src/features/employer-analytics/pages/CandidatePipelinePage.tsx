@@ -29,7 +29,7 @@ export function CandidatePipelinePage() {
   const { candidates, isLoading } = usePipelineCandidates(id ?? PHASE11_CAMPAIGN_ID, stableFilters);
 
   const exportCsv = async () => {
-    const result = await employerAnalyticsService.exportAnalytics('csv', candidates.length);
+    const result = await employerAnalyticsService.exportAnalytics(id ?? PHASE11_CAMPAIGN_ID, 'csv', candidates.length);
     setMessage(t(result.messageKey));
   };
 

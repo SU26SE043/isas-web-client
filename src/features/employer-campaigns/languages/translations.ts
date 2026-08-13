@@ -524,6 +524,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.reasoning': 'Phân tích',
     'employer.campaigns.screening.actions.viewCv': 'Xem CV',
     'employer.campaigns.screening.actions.edit': 'Chỉnh sửa thông tin',
+    'employer.campaigns.screening.actions.rescreen': 'Chấm điểm lại',
     'employer.campaigns.screening.actions.menuFor': 'Mở thao tác của {{name}}',
     'employer.campaigns.screening.edit.title': 'Chỉnh sửa thông tin ứng viên',
     'employer.campaigns.screening.edit.description':
@@ -1740,6 +1741,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.reasoning': 'Reasoning',
     'employer.campaigns.screening.actions.viewCv': 'View CV',
     'employer.campaigns.screening.actions.edit': 'Edit information',
+    'employer.campaigns.screening.actions.rescreen': 'Rescreen candidate',
     'employer.campaigns.screening.actions.menuFor': 'Open actions for {{name}}',
     'employer.campaigns.screening.edit.title': 'Edit candidate information',
     'employer.campaigns.screening.edit.description':

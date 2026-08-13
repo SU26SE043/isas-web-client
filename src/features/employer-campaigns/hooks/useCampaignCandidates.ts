@@ -115,3 +115,20 @@ export function useUpdateCampaignCandidate(campaignId: string | undefined) {
     },
   });
 }
+
+export function useRescreenCampaignCandidate(campaignId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidateId: string) => {
+      if (!campaignId) throw new Error('CAMPAIGN_ID_REQUIRED');
+      return campaignManagementService.rescreenCampaignCandidate(campaignId, candidateId);
+    },
+    onSuccess: (_data, candidateId) => {
+      if (!campaignId) return;
+      invalidateCampaignCandidates(queryClient, campaignId);
+      void queryClient.invalidateQueries({
+        queryKey: campaignCandidateDetailQueryKey(campaignId, candidateId),
+      });
+    },
+  });
+}
