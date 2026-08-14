@@ -26,6 +26,7 @@ import type {
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
   UpdateCampaignCandidatePayload,
+  UpdateCampaignJobNeedsRequest,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
 import { parseCampaignSlot, parseCampaignSlots } from '../utils/campaignSlots';
@@ -622,6 +623,7 @@ export const campaignManagementService = {
         locale: 'vi' as const,
         rubric: [],
         questions: [],
+        jobNeeds: [],
         invitedEmails: [],
         candidates: [],
         proctoring: DEFAULT_PROCTORING,
@@ -841,6 +843,24 @@ export const campaignManagementService = {
     await apiClient.patch(campaignManagementEndpoints.candidateDetail(id, candidateId), body, {
       validateStatus: (status) => status === 204 || status === 200,
     });
+  },
+
+  /** Live: PUT /api/v1/campaign/{id}/job-needs — replace-all array body. */
+  async updateCampaignJobNeeds(
+    id: string,
+    jobNeeds: UpdateCampaignJobNeedsRequest[],
+  ): Promise<EmployerCampaign> {
+    const body = jobNeeds
+      .map((item) => ({
+        ...(item.needId?.trim() ? { needId: item.needId.trim() } : {}),
+        category: item.category,
+        text: item.text.trim(),
+      }))
+      .filter((item) => item.text.length > 0);
+    const response = await apiClient.put<unknown>(campaignManagementEndpoints.jobNeeds(id), body);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed) throw new Error('Invalid job needs response');
+    return mapCampaignResponseToEmployerCampaign(parsed);
   },
 
   /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */

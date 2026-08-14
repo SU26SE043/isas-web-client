@@ -64,6 +64,7 @@ export interface EmployerCampaign {
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  jobNeeds: import('./campaign.api.types').CampaignJobNeed[];
   invitedEmails: string[];
   candidates: CampaignCandidateRow[];
   proctoring: CampaignProctoringConfig;

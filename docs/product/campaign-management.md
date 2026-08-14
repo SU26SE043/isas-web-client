@@ -86,6 +86,10 @@ Legacy `/selection` redirects to `/invite`.
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
 | Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |
 | Replace JD PDF (edit mode) | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
+| Save job needs (Draft only) | `PUT /api/v1/campaign/{id}/job-needs` (replace-all array; echo existing `needId`) |
+| CV screening ranking | `GET /api/v1/campaign/{id}/candidates` — `overallMatchScore` remains the sort score; `verificationRisk` and `screeningVersion` are separate flags |
+| CV screening detail | `GET /api/v1/campaign/{id}/candidates/{candidateId}` — `strengths`/`gaps` include CV evidence; legacy `criterionScores` is not rendered |
+| Interview results ranking | `GET /api/v1/campaign/{id}/results` — independent from CV screening ranking |
 
 ## Validation
 

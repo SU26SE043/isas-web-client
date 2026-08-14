@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateDetail } from '../../types/campaign.api.types';
 import { canEditCandidate } from '../../utils/campaignCandidateActions';
+import { CandidateEvidenceSection } from './CandidateEvidenceSection';
 
 interface CandidateDetailDrawerProps {
   open: boolean;
@@ -90,6 +91,14 @@ export function CandidateDetailDrawer({
                   detail.yearsExperience != null ? String(detail.yearsExperience) : '—'
                 }
               />
+              <Info
+                label={t('employer.campaigns.screening.detail.screeningVersion')}
+                value={detail.screeningVersion != null ? String(detail.screeningVersion) : 'â€”'}
+              />
+              <Info
+                label={t('employer.campaigns.screening.detail.verificationRisk')}
+                value={detail.verificationRisk ?? 'â€”'}
+              />
             </div>
 
             <section>
@@ -112,30 +121,7 @@ export function CandidateDetailDrawer({
               </Alert>
             ) : null}
 
-            {detail.criterionScores.length > 0 ? (
-              <section className="space-y-2">
-                <h4 className="text-sm font-medium text-foreground">
-                  {t('employer.campaigns.screening.detail.criterionScores')}
-                </h4>
-                {detail.criterionScores.map((score) => (
-                  <div
-                    key={score.criterionId}
-                    className="rounded-lg border border-satin bg-surface-overlay px-3 py-2"
-                  >
-                    <p className="text-sm font-medium text-foreground">{score.criterionName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('employer.campaigns.screening.detail.match')}: {score.matchScore} /{' '}
-                      {t('employer.campaigns.screening.detail.max')}: {score.maxScore}
-                    </p>
-                    {score.reasoning ? (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t('employer.campaigns.screening.detail.reasoning')}: {score.reasoning}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </section>
-            ) : null}
+            <CandidateEvidenceSection detail={detail} />
           </div>
         ) : null}
 
