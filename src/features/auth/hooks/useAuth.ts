@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { authService } from '../services/authService';
@@ -24,7 +25,13 @@ export const useAuth = () => {
       return userData;
     } catch (error: unknown) {
       console.error('Failed to fetch user:', error);
-      // Any /me or profile-parse failure means the UI cannot establish a session.
+      // Only a server response can prove the token is no longer good. When the
+      // request never reached one (offline, DNS, refused connection), keep the
+      // rehydrated session instead of signing the user out on a network blip.
+      if (axios.isAxiosError(error) && !error.response) {
+        return useAuthStore.getState().user;
+      }
+      // A rejected or unparseable profile means the UI cannot establish a session.
       logout();
       authTokenStorage.clear();
       sessionManager.clear();
