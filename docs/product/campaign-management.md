@@ -20,6 +20,10 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **JD PDF live** — Create mode keeps the JD file local (browser-only) until the final `POST /api/v1/campaign` succeeds, then a single `POST /api/v1/campaign/{id}/files`. Edit mode uploads immediately via `POST` (first upload) or `PUT …/files` (replace). Field `jdFile` (PDF ≤10MB). Criteria no longer supports file upload — replaced by a manual rubric (step 3) plus a freeform `criteriaText` note (step 2).
 
+**Attachments on Employer Campaign Detail** — The detail view shows files successfully uploaded through this frontend, including document type, original filename, size, and a download action backed by `POST /api/v1/campaign/{id}/files/download?fileType=jd|criteria`. API v10 `CampaignResponse` does not expose attachment metadata or a file-list endpoint, so the frontend retains filename/size metadata in browser storage after a successful upload. Files uploaded from another browser/device cannot be listed authoritatively until the backend adds attachment metadata; the UI does not probe by downloading PDFs on page load.
+
+**Interview slots live** — Campaign availability (`campaign.startsAt` → `campaign.expiresAt`) is separate from interview slots. After the Draft has a real id, Employer manages slots with `GET/POST /api/v1/campaign/{id}/slots` and `PUT/DELETE /api/v1/campaign/{id}/slots/{slotId}`. Each slot has `startsAt`, `endsAt`, `capacity`, `assignedCount`, and `startedCount`. The frontend validates basic time/capacity rules but does not reimplement overlap or candidate assignment; Backend remains authoritative. Invitation capacity is informationally checked with `sum(capacity - assignedCount)`.
+
 **CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
 ## Flow 1 — Create & publish
@@ -82,6 +86,10 @@ Legacy `/selection` redirects to `/invite`.
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |
 | Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |
 | Replace JD PDF (edit mode) | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
+| Save job needs (Draft only) | `PUT /api/v1/campaign/{id}/job-needs` (replace-all array; echo existing `needId`) |
+| CV screening ranking | `GET /api/v1/campaign/{id}/candidates` — `overallMatchScore` remains the sort score; `verificationRisk` and `screeningVersion` are separate flags |
+| CV screening detail | `GET /api/v1/campaign/{id}/candidates/{candidateId}` — `strengths`/`gaps` include CV evidence; legacy `criterionScores` is not rendered |
+| Interview results ranking | `GET /api/v1/campaign/{id}/results` — independent from CV screening ranking |
 
 ## Validation
 

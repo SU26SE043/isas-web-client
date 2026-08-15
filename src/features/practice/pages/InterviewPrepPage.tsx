@@ -33,7 +33,11 @@ function toFlowStep(subStep: PreparationSubStep): 'prepare' | 'device-check' | '
   return subStep;
 }
 
-export const InterviewPrepPage: React.FC = () => {
+interface InterviewPrepPageProps {
+  onCampaignDeviceReady?: (sessionId: string) => void;
+}
+
+export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaignDeviceReady }) => {
   const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
   const sessionId = normalizePracticeSessionId(routeSessionId);
   const navigate = useNavigate();
@@ -142,6 +146,10 @@ export const InterviewPrepPage: React.FC = () => {
     if (!sessionId) return;
     setDeviceCheckPassed(sessionId, true);
     if (isCampaignSession) {
+      if (onCampaignDeviceReady) {
+        onCampaignDeviceReady(sessionId);
+        return;
+      }
       navigate(`/interview/${sessionId}/terms`, { replace: true });
       return;
     }

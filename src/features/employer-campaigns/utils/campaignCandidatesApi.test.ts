@@ -3,6 +3,8 @@ import {
   buildCandidateListParams,
   isAbsoluteHttpUrl,
   parseCampaignResultsResponse,
+  parseCandidateDetail,
+  parseCandidateListItem,
   parseCandidateUploadResponse,
   parseInviteByCandidateIdsResponse,
 } from './campaignCandidatesApi';
@@ -106,5 +108,56 @@ describe('campaignCandidatesApi', () => {
       ],
     });
     expect(parsed.unscoredFlagged).toEqual([]);
+  });
+
+  it('parses the latest CV screening ranking fields', () => {
+    const item = parseCandidateListItem({
+      id: 'c1',
+      fullName: 'Nguyen A',
+      overallMatchScore: 75,
+      verificationRisk: 'High',
+      screeningVersion: 2,
+    });
+    expect(item).toMatchObject({ verificationRisk: 'High', screeningVersion: 2 });
+
+    const detail = parseCandidateDetail({
+      id: 'c1',
+      screeningVersion: 2,
+      fitSummary: 'Strong backend fit',
+      strengths: [{ needId: 'n1', area: 'Backend .NET', level: 'Strong', evidence: '3 years of .NET APIs' }],
+      gaps: [{ needId: 'n2', area: 'Kafka', level: 'Weak', evidence: 'No evidence found' }],
+      bonusSignals: ['CI/CD'],
+      verificationRisk: 'Low',
+      verifyQuestions: ['What was your role?'],
+      criterionScores: [{ criterionId: 'old', matchScore: 1 }],
+    });
+    expect(detail?.strengths[0]?.evidence).toBe('3 years of .NET APIs');
+    expect(detail?.gaps).toHaveLength(1);
+    expect(detail?.verifyQuestions).toEqual(['What was your role?']);
+    expect(detail && 'criterionScores' in detail).toBe(false);
+  });
+
+  it('derives pass/fail from passScorePct when the API omits result', () => {
+    const parsed = parseCampaignResultsResponse({
+      passScorePct: 70,
+      results: [
+        {
+          candidateId: 'pass',
+          sessionId: 's-pass',
+          totalScore: 70,
+          aiScore: 70,
+          scoredAt: '2026-07-25T09:30:00Z',
+        },
+        {
+          candidateId: 'fail',
+          sessionId: 's-fail',
+          totalScore: 69.9,
+          aiScore: 69.9,
+          scoredAt: '2026-07-25T09:30:00Z',
+        },
+      ],
+    });
+
+    expect(parsed.results.map((item) => item.result)).toEqual(['Pass', 'Fail']);
   });
 });

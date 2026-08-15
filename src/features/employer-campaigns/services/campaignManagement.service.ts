@@ -11,6 +11,8 @@ import type {
   CampaignResponse,
   CampaignStatusUpdateRequest,
   CampaignUpdateRequest,
+  CampaignSlotRequest,
+  CampaignSlotResponse,
   CandidateListQuery,
   CandidateUploadResponse,
   CampaignCandidateDetail,
@@ -24,8 +26,10 @@ import type {
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
   UpdateCampaignCandidatePayload,
+  UpdateCampaignJobNeedsRequest,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
+import { parseCampaignSlot, parseCampaignSlots } from '../utils/campaignSlots';
 import type {
   CampaignCandidateRow,
   CampaignDraftInput,
@@ -41,6 +45,7 @@ import {
   parseCampaignResponseList,
   unwrapCampaignDetailPayload,
 } from '../utils/campaignMapper';
+import { rememberCampaignAttachments } from '../utils/campaignFiles';
 import { mergeCampaignWriteResult } from '../utils/buildCampaignCreateRequest';
 import {
   parseContentDispositionFilename,
@@ -267,6 +272,39 @@ export const campaignManagementService = {
     });
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
+  },
+
+  async getCampaignSlots(id: string): Promise<CampaignSlotResponse[]> {
+    const response = await apiClient.get<unknown>(campaignManagementEndpoints.slots(id));
+    return parseCampaignSlots(response.data);
+  },
+
+  async createCampaignSlot(
+    id: string,
+    payload: CampaignSlotRequest,
+  ): Promise<CampaignSlotResponse> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.slots(id), payload);
+    const slot = parseCampaignSlot(response.data);
+    if (!slot) throw new Error('Invalid create campaign slot response');
+    return slot;
+  },
+
+  async updateCampaignSlot(
+    id: string,
+    slotId: string,
+    payload: CampaignSlotRequest,
+  ): Promise<CampaignSlotResponse> {
+    const response = await apiClient.put<unknown>(
+      campaignManagementEndpoints.slot(id, slotId),
+      payload,
+    );
+    const slot = parseCampaignSlot(response.data);
+    if (!slot) throw new Error('Invalid update campaign slot response');
+    return slot;
+  },
+
+  async deleteCampaignSlot(id: string, slotId: string): Promise<void> {
+    await apiClient.delete(campaignManagementEndpoints.slot(id, slotId));
   },
 
   /**
@@ -585,6 +623,7 @@ export const campaignManagementService = {
         locale: 'vi' as const,
         rubric: [],
         questions: [],
+        jobNeeds: [],
         invitedEmails: [],
         candidates: [],
         proctoring: DEFAULT_PROCTORING,
@@ -712,6 +751,7 @@ export const campaignManagementService = {
       throw new Error('Invalid upload campaign files response: missing id');
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    rememberCampaignAttachments(mapped.id, { jdFile, criteriaFile });
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
   },
@@ -805,6 +845,31 @@ export const campaignManagementService = {
     });
   },
 
+  /** Live: PUT /api/v1/campaign/{id}/job-needs — replace-all array body. */
+  async updateCampaignJobNeeds(
+    id: string,
+    jobNeeds: UpdateCampaignJobNeedsRequest[],
+  ): Promise<EmployerCampaign> {
+    const body = jobNeeds
+      .map((item) => ({
+        ...(item.needId?.trim() ? { needId: item.needId.trim() } : {}),
+        category: item.category,
+        text: item.text.trim(),
+      }))
+      .filter((item) => item.text.length > 0);
+    const response = await apiClient.put<unknown>(campaignManagementEndpoints.jobNeeds(id), body);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed) throw new Error('Invalid job needs response');
+    return mapCampaignResponseToEmployerCampaign(parsed);
+  },
+
+  /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */
+  async rescreenCampaignCandidate(id: string, candidateId: string): Promise<void> {
+    await apiClient.post(campaignManagementEndpoints.candidateRescreen(id, candidateId), undefined, {
+      validateStatus: (status) => status === 202,
+    });
+  },
+
   /**
    * Live: GET /api/v1/campaign/{id}/candidates/{candidateId}/cv — PDF blob.
    */
@@ -859,7 +924,7 @@ export const campaignManagementService = {
   /** Live: GET /api/v1/campaign/{id}/results/export?format=csv|pdf — binary blob. */
   async exportCampaignResults(
     id: string,
-    format: CampaignResultExportFormat,
+    format: CampaignResultExportFormat = 'csv',
   ): Promise<{ blob: Blob; filename?: string }> {
     const response = await apiClient.get<Blob>(campaignManagementEndpoints.resultsExport(id), {
       params: { format },
@@ -905,7 +970,7 @@ export const campaignManagementService = {
         result: payload.result,
         note,
       } satisfies OverrideCampaignResultPayload,
-      { validateStatus: (status) => status === 204 || status === 200 },
+      { validateStatus: (status) => status === 204 },
     );
   },
 

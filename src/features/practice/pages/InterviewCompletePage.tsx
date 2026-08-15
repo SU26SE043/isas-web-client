@@ -10,6 +10,7 @@ import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow
 import { isValidPracticeSessionId } from '../utils/practiceSessionId';
 import { SessionResultErrorState } from '../components/result/SessionResultErrorState';
 import { isPlaywrightRuntime } from '@/shared/mock';
+import { isPracticeReportFailed, isPracticeReportReady } from '../utils/practiceReportStatus';
 
 export function InterviewCompletePage() {
   const { sessionId = '' } = useParams();
@@ -27,14 +28,16 @@ export function InterviewCompletePage() {
     queryFn: () => getPracticeSession(sessionId),
     enabled: isValidSessionId && !isLegacy,
     refetchInterval: (q) => {
-      const status = q.state.data?.status;
-      if (status === 'Scored') return false;
+      const session = q.state.data;
+      if (session && (isPracticeReportReady(session) || isPracticeReportFailed(session.status))) {
+        return false;
+      }
       return 3000;
     },
   });
 
   const session = query.data;
-  const isScored = session?.status === 'Scored';
+  const isScored = session ? isPracticeReportReady(session) : false;
 
   useEffect(() => {
     if (session) updateSession(session);
@@ -103,6 +106,10 @@ export function InterviewCompletePage() {
         </div>
       </div>
     );
+  }
+
+  if (session && isPracticeReportFailed(session.status)) {
+    return <SessionResultErrorState kind="generationFailed" />;
   }
 
   if (!isScored) {

@@ -6,7 +6,7 @@ import { RequireRole } from '@/routes/RequireRole';
 import { PracticeEntryPage } from '@/features/practice/pages/PracticeEntryPage';
 import { PracticeInterviewPage } from '@/features/practice/pages/PracticeInterviewPage';
 import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
-import { InterviewPrepPage } from '@/features/practice/pages/InterviewPrepPage';
+import { CampaignInterviewPreparationPage } from '@/features/campaigns/pages/CampaignInterviewPreparationPage';
 import { DeviceCheckPage } from '@/features/practice/pages/DeviceCheckPage';
 import { TermsAcceptancePage } from '@/features/practice/pages/TermsAcceptancePage';
 import { IdentityVerifyPage } from '@/features/practice/pages/IdentityVerifyPage';
@@ -27,7 +27,7 @@ export const interviewRoutes: RouteObject[] = [
       {
         element: <FullscreenLayout />,
         children: [
-          { path: '/interview/:sessionId/prepare', element: <InterviewPrepPage /> },
+          { path: '/interview/:sessionId/prepare', element: <CampaignInterviewPreparationPage /> },
           { path: '/interview/:sessionId/device-check', element: <DeviceCheckPage /> },
           { path: '/interview/:sessionId/terms', element: <TermsAcceptancePage /> },
           { path: '/interview/:sessionId/identity', element: <IdentityVerifyPage /> },

@@ -48,8 +48,9 @@ export const useAuth = () => {
     if (token && !sessionManager.getSessionStartedAt()) {
       sessionManager.markSessionStart();
     }
-    // Only fetch user if we have a token and no user data yet
-    if (token && !user && !isLoading) {
+    // Refresh the persisted profile on mount so role changes from /me replace
+    // stale local state (for example Employer -> HrMember).
+    if (token && !isLoading) {
       fetchUser();
     } else if (!token) {
       // If no token, make sure we're in logged out state

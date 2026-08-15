@@ -26,6 +26,7 @@ describe('paymentOrder parsers', () => {
   it('parses order status string body', () => {
     expect(parseOrderStatus('Paid')).toBe('Paid');
     expect(parseOrderStatus({ status: 'Pending' })).toBe('Pending');
+    expect(parseOrderStatus({ status: 2 })).toBe('2');
   });
 
   it('parses extended order detail fields', () => {

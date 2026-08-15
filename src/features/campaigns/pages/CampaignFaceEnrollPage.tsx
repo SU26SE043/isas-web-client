@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useMediaDevices } from '@/features/practice/hooks/useMediaDevices';
 import { useLanguage } from '@/shared/languages';
@@ -7,13 +7,15 @@ import {
   CampaignCandidateError,
   campaignCandidateService,
 } from '../services/campaignCandidate.service';
-import { dataUrlToJpegFile } from '../utils/captureJpegFile';
+import { dataUrlToJpegFile, isUsableCameraFrame } from '../utils/captureJpegFile';
 import { readCampaignInterviewSession } from '../utils/campaignInterviewSession';
 
 export function CampaignFaceEnrollPage() {
   const { campaignId = '', sessionId = '' } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isRetry = searchParams.get('retry') === '1';
   const stored = readCampaignInterviewSession(sessionId);
   const resolvedCampaignId = campaignId || stored?.campaignId || '';
   const { videoRef, state, startPreview, stopStream, captureSnapshot } = useMediaDevices();
@@ -22,13 +24,13 @@ export function CampaignFaceEnrollPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (stored && !stored.faceEnrollRequired) {
+    if (stored && !stored.faceEnrollRequired && !isRetry) {
       navigate(
         `/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/interview/${encodeURIComponent(sessionId)}`,
         { replace: true },
       );
     }
-  }, [navigate, resolvedCampaignId, sessionId, stored]);
+  }, [isRetry, navigate, resolvedCampaignId, sessionId, stored]);
 
   useEffect(() => {
     void startPreview();
@@ -36,8 +38,19 @@ export function CampaignFaceEnrollPage() {
   }, [startPreview, stopStream]);
 
   const handleCapture = () => {
+    // Never enroll a black frame: the camera can report valid dimensions before
+    // it has actually exposed an image.
+    const video = videoRef.current;
+    if (!video || !isUsableCameraFrame(video)) {
+      setPreview('');
+      setError(t('campaigns.faceEnroll.badFrame'));
+      return;
+    }
     const snapshot = captureSnapshot();
-    if (!snapshot) return;
+    if (!snapshot) {
+      setError(t('campaigns.faceEnroll.badFrame'));
+      return;
+    }
     setPreview(snapshot);
     setError(null);
   };

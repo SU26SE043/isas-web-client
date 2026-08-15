@@ -150,6 +150,8 @@ export const employerPaymentService = {
 
   async payInvoice(id: string): Promise<OrderResponse> {
     const response = await apiClient.post<unknown>(endpoint.payInvoice(id), {});
-    return parseOrder(response.data);
+    const order = parseOrder(response.data);
+    if (!order.checkoutUrl) throw new Error('CHECKOUT_URL_MISSING');
+    return order;
   },
 };

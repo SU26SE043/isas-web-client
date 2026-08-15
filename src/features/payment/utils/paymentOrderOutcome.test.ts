@@ -15,6 +15,7 @@ describe('paymentOrderOutcome', () => {
 
   it('resolves success statuses', () => {
     expect(resolvePaymentOutcome('Paid')).toBe('success');
+    expect(resolvePaymentOutcome('2')).toBe('success');
     expect(resolvePaymentOutcome('COMPLETED')).toBe('success');
     expect(isPaymentSuccessStatus('SUCCESS')).toBe(true);
   });

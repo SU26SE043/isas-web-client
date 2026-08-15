@@ -3,6 +3,7 @@ import {
   useAnalyzeCandidateCvs,
   useCampaignCandidateDetail,
   useCampaignCandidates,
+  useRescreenCampaignCandidate,
 } from '../../hooks/useCampaignCandidates';
 import type {
   CampaignCandidateListItem,
@@ -32,7 +33,7 @@ export function toCandidateListItem(item: {
   };
 }
 
-export function useCvScreeningPanelState(campaignId: string, isActive: boolean) {
+export function useCvScreeningPanelState(campaignId: string, isActive: boolean, hasJobNeeds: boolean) {
   const [pendingFiles, setPendingFiles] = useState<PendingCvFile[]>([]);
   const [uploadSummary, setUploadSummary] = useState<CandidateUploadResponse | null>(null);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Set<string>>(new Set());
@@ -44,6 +45,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const analyzeMutation = useAnalyzeCandidateCvs(campaignId);
+  const rescreenMutation = useRescreenCampaignCandidate(campaignId);
   const candidatesQuery = useCampaignCandidates(campaignId, filters);
   const detailQuery = useCampaignCandidateDetail(campaignId, detailCandidateId, {
     enabled: Boolean(detailCandidateId),
@@ -52,6 +54,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
   const validFiles = pendingFiles.filter((item) => !item.errorKey);
   const canAnalyze =
     isActive &&
+    hasJobNeeds &&
     pendingFiles.length > 0 &&
     validFiles.length === pendingFiles.length &&
     !analyzeMutation.isPending;
@@ -121,6 +124,7 @@ export function useCvScreeningPanelState(campaignId: string, isActive: boolean) 
     analyzeError,
     setAnalyzeError,
     analyzeMutation,
+    rescreenMutation,
     candidatesQuery,
     detailQuery,
     validFiles,

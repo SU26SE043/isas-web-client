@@ -14,14 +14,20 @@ export const campaignManagementEndpoints = {
   update: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   delete: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   questions: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions`,
+  jobNeeds: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs`,
   questionsGenerate: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/generate`,
   files: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files`,
   filesDownload: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files/download`,
+  slots: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/slots`,
+  slot: (id: string, slotId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/slots/${encodeURIComponent(slotId)}`,
   candidates: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates`,
   candidateDetail: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}`,
+  candidateRescreen: (id: string, candidateId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}/rescreen`,
   candidateCv: (id: string, candidateId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/candidates/${encodeURIComponent(candidateId)}/cv`,
   inviteCandidates: (id: string) =>

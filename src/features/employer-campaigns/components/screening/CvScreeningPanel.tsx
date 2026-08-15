@@ -14,15 +14,16 @@ import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningP
 interface CvScreeningPanelProps {
   campaignId: string;
   isActive: boolean;
+  hasJobNeeds: boolean;
 }
 
-export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps) {
+export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds }: CvScreeningPanelProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const setInvitationCandidates = useCampaignInvitationStore(
     (store) => store.setSelectedCandidates,
   );
-  const state = useCvScreeningPanelState(campaignId, isActive);
+  const state = useCvScreeningPanelState(campaignId, isActive, hasJobNeeds);
 
   const handleAnalyze = async () => {
     if (!state.canAnalyze) return;
@@ -44,6 +45,11 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
       {state.analyzeError ? (
         <Alert variant="error">
           <AlertDescription>{state.analyzeError}</AlertDescription>
+        </Alert>
+      ) : null}
+      {!hasJobNeeds ? (
+        <Alert variant="warning">
+          <AlertDescription>{t('employer.campaigns.screening.errors.jobNeedsRequired')}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -192,6 +198,12 @@ export function CvScreeningPanel({ campaignId, isActive }: CvScreeningPanelProps
         onEditFromDetail={() => {
           if (state.detailForActions) state.openEdit(toCandidateListItem(state.detailForActions));
         }}
+        onRescreenFromDetail={() => {
+          if (state.detailCandidateId) {
+            void state.rescreenMutation.mutateAsync(state.detailCandidateId);
+          }
+        }}
+        isRescreening={state.rescreenMutation.isPending}
         editingCandidate={state.editingCandidate}
         onCloseEdit={() => state.setEditingCandidate(null)}
         viewingCvCandidate={state.viewingCvCandidate}

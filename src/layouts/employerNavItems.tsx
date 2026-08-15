@@ -63,6 +63,7 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       to: '/employer/billing',
       label: t('employer.nav.billing'),
       icon: <ReceiptText className="h-4 w-4 shrink-0" aria-hidden />,
+      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
     },
     {
       to: '/employer/notifications',

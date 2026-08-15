@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { Download } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,9 +24,10 @@ const statuses: Array<PipelineStatus | 'all'> = [
 export function EmployerAnalyticsPage() {
   const { t } = useLanguage();
   const [message, setMessage] = useState('');
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<AnalyticsFilters>({ dateRange: '30d', status: 'all' });
   const stableFilters = useMemo(() => filters, [filters]);
-  const { analytics, isLoading, exportAnalytics } = useEmployerAnalytics(stableFilters);
+  const { analytics, isLoading, exportAnalytics } = useEmployerAnalytics(searchParams.get('campaignId') ?? undefined, stableFilters);
 
   const runExport = async (format: ExportFormat, rows?: number) => {
     const result = await exportAnalytics(format, rows ?? analytics?.exportableRows ?? 0);

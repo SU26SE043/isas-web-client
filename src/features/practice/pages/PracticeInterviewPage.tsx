@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { InterviewHeader } from '../components/InterviewHeader';
 import { AIInterviewerPanel } from '../components/AIInterviewerPanel';
@@ -28,12 +28,26 @@ import {
   isLearningSessionId,
   requiresIdentityVerification,
 } from '../types/interviewFlow.types';
+import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const [searchParams] = useSearchParams();
   const isB2cPractice =
     Boolean(sessionId) && !isLearningSessionId(sessionId) && !isCampaignSessionId(sessionId);
+
+  const campaignSession = isCampaignSessionId(sessionId)
+    ? readCampaignInterviewSession(sessionId)
+    : null;
+
+  if (campaignSession) {
+    return (
+      <Navigate
+        replace
+        to={`/candidate/campaigns/${encodeURIComponent(campaignSession.campaignId)}/interview/${encodeURIComponent(sessionId)}`}
+      />
+    );
+  }
 
   if (isB2cPractice) {
     return <B2cPracticeInterviewRoom sessionId={sessionId} startWithCountdown={searchParams.get('start') === 'countdown'} />;

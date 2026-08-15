@@ -43,6 +43,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-017 | Live Auth organization profile | E10 | high-risk | implemented | [US-017](./epics/E10-shared-engagement/US-017-auth-organization-profile/overview.md) |
 | US-018 | Live Admin Auth directory | E09 | high-risk | implemented | [US-018](./epics/E09-admin-platform/US-018-live-auth-directory/overview.md) |
 | US-021 | Campaign location autocomplete + map | E07 | high-risk | implemented | [US-021](./epics/E07-campaign-management/US-021-campaign-location-autocomplete/overview.md) |
+| FS-129 | API v10 B2B interview anti-cheat | E08 | high-risk | implemented | [FS-129](./epics/E08-campaign-discovery/FS-129-api-v10-anti-cheat/overview.md) |
 
 ## How to pick work
 

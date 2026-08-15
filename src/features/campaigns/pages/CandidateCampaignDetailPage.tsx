@@ -113,12 +113,9 @@ export function CandidateCampaignDetailPage() {
       ]);
       setConfirmOpen(false);
 
-      const base = `/candidate/campaigns/${encodeURIComponent(started.campaignId)}`;
-      if (started.faceEnrollRequired) {
-        navigate(`${base}/face-enroll/${encodeURIComponent(started.sessionId)}`);
-      } else {
-        navigate(`${base}/interview/${encodeURIComponent(started.sessionId)}`);
-      }
+      // The session is created here so its campaign policy and questions can be retained,
+      // but the candidate always completes the shared preparation before entering the room.
+      navigate(`/interview/${encodeURIComponent(started.sessionId)}/prepare`);
     } catch (startErr) {
       setStartError(startErrorMessage(startErr, t));
     } finally {
@@ -157,7 +154,7 @@ export function CandidateCampaignDetailPage() {
               <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li></ul>
               <div className="mt-5">
                 {isCompleted ? <Link to={`/candidate/campaigns/${encodeURIComponent(data.campaignId)}/completed/${encodeURIComponent(data.sessionId ?? 'done')}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"><Sparkles className="size-4 text-info" aria-hidden />{t('campaigns.my.cta.viewResult')}</Link> : null}
-                {!isCompleted && canContinue ? <Link to={`/candidate/campaigns/${encodeURIComponent(data.campaignId)}/interview/${encodeURIComponent(data.sessionId!)}`} className="btn-primary inline-flex w-full justify-center gap-2"><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</Link> : null}
+                {!isCompleted && canContinue ? <Link to={`/interview/${encodeURIComponent(data.sessionId!)}/prepare`} className="btn-primary inline-flex w-full justify-center gap-2"><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</Link> : null}
                 {!isCompleted && !canContinue ? <button type="button" className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
               </div>
             </section>

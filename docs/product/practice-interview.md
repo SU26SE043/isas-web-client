@@ -51,6 +51,8 @@ Vietnamese and English rubrics are separate records. The frontend sends the acti
 
 Interview room UI stays campaign-agnostic for B2B. B2C practice uses dedicated hooks/services under `b2cPractice*`.
 
+The B2B campaign adapter supplies a `violationPaused` input to the shared room. While true, the existing question timer, TTS, MediaRecorder, submit/next/finish actions, and recorder controls pause or become disabled. Resume uses the same state and media instances; no second interview state machine is created. B2C never enables this campaign monitoring path.
+
 ## Integration order
 
 1. Optional `GET /api/v1/interview/practice/session-options?jobCategory=...&language=...` to load question-count presets without charging credit.

@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { ArrowRight, MapPin, NotebookText, Timer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +13,10 @@ import { useEmployerCandidate } from '../hooks/useEmployerAnalytics';
 
 export function EmployerCandidateProfilePage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { blindHiringEnabled } = useBlindHiringMode();
-  const { candidate, isLoading } = useEmployerCandidate(id);
+  const { candidate, isLoading } = useEmployerCandidate(id, searchParams.get('campaignId') ?? undefined);
 
   if (isLoading || !candidate) {
     return (
@@ -40,7 +41,7 @@ export function EmployerCandidateProfilePage() {
             </div>
             <p className="body-text max-w-3xl text-sm text-muted-foreground">{getCandidateContact(candidate, blindHiringEnabled)}</p>
           </div>
-          <Button render={<Link to={`/employer/candidates/${candidate.id}/report`} />}>
+          <Button render={<Link to={`/employer/candidates/${candidate.id}/report?campaignId=${candidate.campaignId}`} />}>
             {t('employerAnalytics.profile.report')} <ArrowRight className="size-4" aria-hidden />
           </Button>
         </header>

@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { campaignCandidateService } from '../services/campaignCandidate.service';
+import type { FaceCheckResponse } from '../types/campaignCandidate.types';
+import type { CampaignFaceSignal } from '../types/campaignViolation.types';
 import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
 
-const FACE_CHECK_INTERVAL_MS = 30_000;
+export const FACE_CHECK_INTERVAL_MS = 30_000;
 
 interface UseCampaignFaceCheckOptions {
   campaignId: string;
@@ -10,6 +12,21 @@ interface UseCampaignFaceCheckOptions {
   enabled: boolean;
   videoEl: HTMLVideoElement | null;
   completed?: boolean;
+  onSignal: (signal: CampaignFaceSignal) => void;
+}
+
+function resolveSignals(result: FaceCheckResponse): CampaignFaceSignal[] {
+  const supported = result.signals.filter((signal): signal is CampaignFaceSignal =>
+    signal === 'no_face'
+      || signal === 'multiple_faces'
+      || signal === 'face_mismatch'
+      || signal === 'identity_unverified',
+  );
+  if (supported.length > 0) return supported;
+  if (result.faceCount === 0) return ['no_face'];
+  if (result.faceCount > 1) return ['multiple_faces'];
+  if (!result.match) return ['face_mismatch'];
+  return [];
 }
 
 export function useCampaignFaceCheck({
@@ -18,59 +35,64 @@ export function useCampaignFaceCheck({
   enabled,
   videoEl,
   completed = false,
+  onSignal,
 }: UseCampaignFaceCheckOptions) {
   const inFlight = useRef(false);
   const aborted = useRef(false);
-  const [softWarning, setSoftWarning] = useState<string | null>(null);
+  const activeSignals = useRef(new Set<CampaignFaceSignal>());
 
   useEffect(() => {
     aborted.current = false;
-    if (!enabled || completed || !campaignId || !sessionId) return;
-
-    const runCheck = async () => {
-      if (aborted.current || inFlight.current || document.visibilityState === 'hidden') return;
-      if (!videoEl) return;
-      inFlight.current = true;
-      try {
-        const file = await captureVideoFrameAsJpegFile(
-          videoEl,
-          `face-check-${sessionId}-${Date.now()}.jpg`,
-        );
-        if (!file || aborted.current) return;
-        const result = await campaignCandidateService.checkCampaignFace(
-          campaignId,
-          sessionId,
-          file,
-        );
-        if (!result) {
-          setSoftWarning(null);
-          return;
-        }
-        if (result.faceCount === 0) {
-          setSoftWarning('no_face');
-        } else if (result.faceCount > 1) {
-          setSoftWarning('multiple_faces');
-        } else if (!result.match) {
-          setSoftWarning('adjust');
-        } else {
-          setSoftWarning(null);
-        }
-      } catch {
-        /* face-check failures stay non-blocking */
-      } finally {
-        inFlight.current = false;
-      }
-    };
-
-    const timer = window.setInterval(() => {
-      void runCheck();
-    }, FACE_CHECK_INTERVAL_MS);
-
     return () => {
       aborted.current = true;
+    };
+  }, []);
+
+  const checkNow = useCallback(async () => {
+    if (
+      aborted.current
+      || inFlight.current
+      || completed
+      || document.visibilityState === 'hidden'
+      || !videoEl
+    ) return null;
+    inFlight.current = true;
+    try {
+      const file = await captureVideoFrameAsJpegFile(
+        videoEl,
+        `face-check-${sessionId}-${Date.now()}.jpg`,
+      );
+      if (!file || aborted.current) return null;
+      const result = await campaignCandidateService.checkCampaignFace(
+        campaignId,
+        sessionId,
+        file,
+      );
+      if (!result) {
+        activeSignals.current.clear();
+        return { safe: true, signals: [] as CampaignFaceSignal[] };
+      }
+      const signals = resolveSignals(result);
+      for (const signal of signals) {
+        if (!activeSignals.current.has(signal)) onSignal(signal);
+      }
+      activeSignals.current = new Set(signals);
+      return { safe: signals.length === 0, signals };
+    } catch {
+      return null;
+    } finally {
+      inFlight.current = false;
+    }
+  }, [campaignId, completed, enabled, onSignal, sessionId, videoEl]);
+
+  useEffect(() => {
+    if (!enabled || completed || !campaignId || !sessionId) return undefined;
+    const timer = window.setInterval(() => void checkNow(), FACE_CHECK_INTERVAL_MS);
+    return () => {
+      activeSignals.current.clear();
       window.clearInterval(timer);
     };
-  }, [campaignId, completed, enabled, sessionId, videoEl]);
+  }, [campaignId, checkNow, completed, enabled, sessionId]);
 
-  return { softWarning };
+  return { checkNow };
 }

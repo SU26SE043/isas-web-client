@@ -71,6 +71,13 @@ export function resolvePostLoginPath(
   role: UserRoleType,
   requestedPath?: string | null,
 ): string {
+  // Platform Admin always enters the Admin console after authentication.
+  // Do not restore an employer deep-link that may have been the page where
+  // the shared login modal was opened.
+  if (role === UserRole.ADMIN) {
+    return getPostLoginPath(role);
+  }
+
   if (requestedPath && isPathAllowedForRole(role, requestedPath)) {
     return requestedPath;
   }

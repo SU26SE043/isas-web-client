@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
 import { AdminAiConfigPage } from '@/features/admin/pages/AdminAiConfigPage';
+import { AdminBillingPage } from '@/features/admin/pages/AdminBillingPage';
 import { AdminAuditLogsPage } from '@/features/admin/pages/AdminAuditLogsPage';
 import { AdminCampaignsPage } from '@/features/admin/pages/AdminCampaignsPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
@@ -36,6 +37,7 @@ export const adminRoutes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <AdminDashboardPage /> },
+              { path: 'billing', element: <AdminBillingPage /> },
               { path: 'users', element: <AdminUsersPage /> },
               { path: 'organizations', element: <AdminOrganizationsPage /> },
               { path: 'roles', element: <AdminRolesPage /> },

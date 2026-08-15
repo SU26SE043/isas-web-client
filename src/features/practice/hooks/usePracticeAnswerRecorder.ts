@@ -26,6 +26,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
   const startedAtRef = useRef<number>(0);
   const mimeRef = useRef(pickMimeType());
   const discardOnStopRef = useRef(false);
+  const pausedAtRef = useRef(0);
+  const totalPausedMsRef = useRef(0);
 
   const clearRecording = useCallback(() => {
     discardOnStopRef.current = false;
@@ -33,6 +35,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     setDurationSec(0);
     setErrorKey(null);
     chunksRef.current = [];
+    pausedAtRef.current = 0;
+    totalPausedMsRef.current = 0;
     setRecordingStatus('idle');
   }, [setRecordingStatus]);
 
@@ -64,14 +68,33 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
       setRecordingStatus('error');
       return;
     }
+    const activeAudioTracks = stream.getAudioTracks().filter((track) => track.readyState === 'live');
+    if (activeAudioTracks.length === 0 || !stream.active) {
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
+    const currentRecorder = recorderRef.current;
+    if (currentRecorder && currentRecorder.state !== 'inactive') return;
+
     discardOnStopRef.current = false;
     setErrorKey(null);
     chunksRef.current = [];
     const mimeType = pickMimeType();
     mimeRef.current = mimeType;
-    const recorder = new MediaRecorder(stream, { mimeType });
-    recorderRef.current = recorder;
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, { mimeType });
+      recorderRef.current = recorder;
+    } catch {
+      recorderRef.current = null;
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
     startedAtRef.current = Date.now();
+    pausedAtRef.current = 0;
+    totalPausedMsRef.current = 0;
     recorder.ondataavailable = (event) => {
       if (discardOnStopRef.current) return;
       if (event.data.size > 0) chunksRef.current.push(event.data);
@@ -86,7 +109,11 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
         return;
       }
       const blob = new Blob(chunksRef.current, { type: mimeRef.current });
-      const elapsed = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
+      const activePauseMs = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
+      const elapsed = Math.max(
+        1,
+        Math.round((Date.now() - startedAtRef.current - totalPausedMsRef.current - activePauseMs) / 1000),
+      );
       const file = new File([blob], `answer-${Date.now()}.webm`, {
         type: blob.type || 'audio/webm',
       });
@@ -101,11 +128,34 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
       setDurationSec(elapsed);
       setRecordingStatus('stopped');
     };
-    recorder.start(250);
+    try {
+      recorder.start(250);
+    } catch {
+      recorderRef.current = null;
+      chunksRef.current = [];
+      setErrorKey('practice.room.recordingError');
+      setRecordingStatus('error');
+      return;
+    }
     setRecordingStatus('recording');
   }, [setRecordingStatus, stream]);
 
   useEffect(() => () => stopRecorder(), [stopRecorder]);
+
+  const pauseRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'recording') return;
+    recorder.pause();
+    pausedAtRef.current = Date.now();
+  }, []);
+
+  const resumeRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'paused') return;
+    if (pausedAtRef.current) totalPausedMsRef.current += Date.now() - pausedAtRef.current;
+    pausedAtRef.current = 0;
+    recorder.resume();
+  }, []);
 
   return {
     recordingStatus: recordingStatus as RecordingStatus,
@@ -115,6 +165,8 @@ export function usePracticeAnswerRecorder(stream: MediaStream | null) {
     startRecording,
     stopRecording: stopRecorder,
     stopRecordingAndDiscard,
+    pauseRecording,
+    resumeRecording,
     clearRecording,
     setUploading: () => setRecordingStatus('uploading'),
     setSubmitted: () => setRecordingStatus('submitted'),

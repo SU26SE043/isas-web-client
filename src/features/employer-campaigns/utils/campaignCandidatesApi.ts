@@ -1,6 +1,7 @@
 import type {
   CampaignCandidateDetail,
   CampaignCandidateListItem,
+  CandidateEvidence,
   CampaignResultFlag,
   CampaignResultStatus,
   CampaignResultsResponse,
@@ -43,6 +44,23 @@ function pickNumber(record: Record<string, unknown>, ...keys: string[]): number 
     if (value != null) return value;
   }
   return undefined;
+}
+
+function parseEvidence(raw: unknown): CandidateEvidence[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const needId = pickString(record, 'needId', 'NeedId') ?? '';
+    const area = pickString(record, 'area', 'Area') ?? '';
+    const evidence = pickString(record, 'evidence', 'Evidence') ?? '';
+    if (!needId || !area || !evidence) return [];
+    return [{ needId, area, level: pickString(record, 'level', 'Level') ?? 'Weak', evidence }];
+  });
+}
+
+function parseStringArray(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : [];
 }
 
 /** Drop empty query values before GET /candidates. */
@@ -96,6 +114,8 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     status: pickString(record, 'status', 'Status') ?? 'Unknown',
     overallMatchScore: pickNumber(record, 'overallMatchScore', 'OverallMatchScore') ?? null,
     skills,
+    verificationRisk: (pickString(record, 'verificationRisk', 'VerificationRisk') as CampaignCandidateListItem['verificationRisk']) ?? null,
+    screeningVersion: pickNumber(record, 'screeningVersion', 'ScreeningVersion') ?? null,
   };
 }
 
@@ -133,27 +153,6 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
   const id = pickString(body, 'id', 'Id');
   if (!id) return null;
 
-  const scoresRaw = body.criterionScores ?? body.CriterionScores;
-  const criterionScores = Array.isArray(scoresRaw)
-    ? scoresRaw
-        .map((item) => {
-          const record = asRecord(item);
-          if (!record) return null;
-          const criterionId = pickString(record, 'criterionId', 'CriterionId') ?? '';
-          const criterionName = pickString(record, 'criterionName', 'CriterionName') ?? '';
-          const matchScore = pickNumber(record, 'matchScore', 'MatchScore') ?? 0;
-          const maxScore = pickNumber(record, 'maxScore', 'MaxScore') ?? 0;
-          return {
-            criterionId,
-            criterionName,
-            matchScore,
-            maxScore,
-            reasoning: pickString(record, 'reasoning', 'Reasoning') ?? null,
-          };
-        })
-        .filter((item): item is NonNullable<typeof item> => item != null)
-    : [];
-
   const skillsRaw = body.skills ?? body.Skills;
   const skills = Array.isArray(skillsRaw)
     ? skillsRaw.filter((item): item is string => typeof item === 'string')
@@ -170,7 +169,13 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
     summary: pickString(body, 'summary', 'Summary') ?? null,
     rejectReason: pickString(body, 'rejectReason', 'RejectReason') ?? null,
     cvFileUrl: pickString(body, 'cvFileUrl', 'CvFileUrl') ?? null,
-    criterionScores,
+    screeningVersion: pickNumber(body, 'screeningVersion', 'ScreeningVersion') ?? null,
+    fitSummary: pickString(body, 'fitSummary', 'FitSummary') ?? null,
+    strengths: parseEvidence(body.strengths ?? body.Strengths),
+    gaps: parseEvidence(body.gaps ?? body.Gaps),
+    bonusSignals: parseStringArray(body.bonusSignals ?? body.BonusSignals),
+    verificationRisk: (pickString(body, 'verificationRisk', 'VerificationRisk') as CampaignCandidateDetail['verificationRisk']) ?? null,
+    verifyQuestions: parseStringArray(body.verifyQuestions ?? body.VerifyQuestions),
   };
 }
 
@@ -252,6 +257,7 @@ function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult
 export function parseCampaignResultsResponse(data: unknown): CampaignResultsResponse {
   const root = asRecord(data);
   const body = asRecord(root?.data) ?? root ?? {};
+  const passScorePct = pickNumber(body, 'passScorePct', 'PassScorePct') ?? null;
   const resultsRaw = unwrapArrayPayload(body.results ?? body.Results ?? body);
   const results = resultsRaw
     .map((item): CampaignScoredResult | null => {
@@ -262,18 +268,22 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
       const scoredAt = pickString(record, 'scoredAt', 'ScoredAt');
       if (!candidateId || !sessionId || !scoredAt) return null;
       const resultRaw = pickString(record, 'result', 'Result');
-      const result: CampaignResultStatus =
+      let result: CampaignResultStatus =
         resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null;
       const overrideResultRaw = pickString(record, 'overrideResult', 'OverrideResult');
       const overrideResult: CampaignResultStatus =
         overrideResultRaw === 'Pass' || overrideResultRaw === 'Fail' ? overrideResultRaw : null;
+      const totalScore = pickNumber(record, 'totalScore', 'TotalScore') ?? 0;
+      if (result == null && passScorePct != null) {
+        result = totalScore >= passScorePct ? 'Pass' : 'Fail';
+      }
       return {
         rank: pickNumber(record, 'rank', 'Rank') ?? 0,
         candidateId,
         sessionId,
         fullName: pickString(record, 'fullName', 'FullName') ?? null,
         email: pickString(record, 'email', 'Email') ?? null,
-        totalScore: pickNumber(record, 'totalScore', 'TotalScore') ?? 0,
+        totalScore,
         aiScore: pickNumber(record, 'aiScore', 'AiScore') ?? 0,
         overrideScore: pickNumber(record, 'overrideScore', 'OverrideScore') ?? null,
         overrideResult,
@@ -295,7 +305,7 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
 
   return {
     campaignId: pickString(body, 'campaignId', 'CampaignId') ?? '',
-    passScorePct: pickNumber(body, 'passScorePct', 'PassScorePct') ?? null,
+    passScorePct,
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
     unscoredFlagged,

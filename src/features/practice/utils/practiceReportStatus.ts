@@ -7,7 +7,12 @@ export function isPracticeReportFailed(status: string): boolean {
 }
 
 export function isPracticeReportReady(session: PracticeSessionResponse): boolean {
-  return session.status.trim().toLowerCase() === 'scored' && session.result != null;
+  // The report payload is the source of truth for the UI. The API contract
+  // normally pairs it with `Scored`, but a completed job can be returned with
+  // a transitional status while the status projection catches up. Waiting on
+  // the enum alone makes the complete screen poll forever even though the
+  // report is already available.
+  return session.result != null;
 }
 
 export function isPracticeReportPending(session: PracticeSessionResponse): boolean {
@@ -15,6 +20,5 @@ export function isPracticeReportPending(session: PracticeSessionResponse): boole
 }
 
 export function shouldPollPracticeReport(session: PracticeSessionResponse): boolean {
-  const status = session.status.trim().toLowerCase();
-  return status !== 'scored' && !isPracticeReportFailed(status);
+  return !isPracticeReportReady(session) && !isPracticeReportFailed(session.status);
 }

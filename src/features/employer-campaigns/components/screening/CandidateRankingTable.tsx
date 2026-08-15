@@ -130,7 +130,14 @@ export function CandidateRankingTable({
                 <TableCell>
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
                 </TableCell>
-                <TableCell className="text-foreground">{item.status}</TableCell>
+                <TableCell className="text-foreground">
+                  <div>{item.status}</div>
+                  {item.verificationRisk ? (
+                    <div className="text-xs text-warning-foreground">
+                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {item.verificationRisk}
+                    </div>
+                  ) : null}
+                </TableCell>
                 <TableCell>
                   <Button
                     type="button"

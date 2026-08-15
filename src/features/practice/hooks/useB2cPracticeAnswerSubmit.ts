@@ -7,6 +7,7 @@ import {
 } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
+import { getNextPracticeQuestion } from '../utils/getNextPracticeQuestion';
 import type { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 
 type Recorder = ReturnType<typeof usePracticeAnswerRecorder>;
@@ -99,6 +100,12 @@ export function useB2cPracticeAnswerSubmit({
           store.setStage('ready_to_finish');
         }
       } else {
+        // AI may degrade and return no nextQuestion. Continue with the next
+        // original question instead of leaving the submitted question active.
+        const nextQuestion = getNextPracticeQuestion(store.questions, currentQuestion.id);
+        if (nextQuestion) {
+          store.setCurrentQuestion(nextQuestion.id, nextQuestion.timeLimitSec);
+        }
         store.setStage('interviewing');
       }
     } catch (error) {

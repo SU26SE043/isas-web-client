@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,9 +11,10 @@ import { useEmployerCandidate } from '../hooks/useEmployerAnalytics';
 
 export function EmployerCandidateReportPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { blindHiringEnabled } = useBlindHiringMode();
-  const { candidate, report, isLoading, overrideScore } = useEmployerCandidate(id);
+  const { candidate, report, isLoading, overrideScore } = useEmployerCandidate(id, searchParams.get('campaignId') ?? undefined);
 
   if (isLoading || !candidate || !report) {
     return (
@@ -28,7 +29,7 @@ export function EmployerCandidateReportPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-6xl space-y-6">
-        <Link to={`/employer/candidates/${candidate.id}`} className="text-sm text-muted-foreground hover:text-foreground">
+        <Link to={`/employer/candidates/${candidate.id}?campaignId=${candidate.campaignId}`} className="text-sm text-muted-foreground hover:text-foreground">
           {t('employerAnalytics.report.back')}
         </Link>
         <header className="space-y-2">

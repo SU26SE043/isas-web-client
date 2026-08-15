@@ -33,6 +33,7 @@ interface UseAudioRecorderOptions {
   maxDurationSeconds: number;
   /** Prefer the live interview stream so answer recording does not steal cam/mic. */
   sharedStream?: MediaStream | null;
+  paused?: boolean;
 }
 
 function stopTracks(stream: MediaStream | null) {
@@ -44,6 +45,7 @@ export function useAudioRecorder({
   questionId,
   maxDurationSeconds,
   sharedStream = null,
+  paused = false,
 }: UseAudioRecorderOptions) {
   const [state, setState] = useState<AudioRecorderState>({
     ...INITIAL_STATE,
@@ -61,6 +63,8 @@ export function useAudioRecorder({
   const maxDurationRef = useRef(Math.max(1, maxDurationSeconds));
   const autoStoppedRef = useRef(false);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const pausedAtRef = useRef(0);
+  const totalPausedMsRef = useRef(0);
 
   const pausePreviewPlayback = useCallback(() => {
     const audio = audioElementRef.current;
@@ -121,6 +125,8 @@ export function useAudioRecorder({
     revokePreview();
     chunksRef.current = [];
     autoStoppedRef.current = false;
+    pausedAtRef.current = 0;
+    totalPausedMsRef.current = 0;
     cleanupStream();
     setState({
       ...INITIAL_STATE,
@@ -259,6 +265,8 @@ export function useAudioRecorder({
       const recorder = new MediaRecorder(stream, { mimeType });
       recorderRef.current = recorder;
       startedAtRef.current = Date.now();
+      pausedAtRef.current = 0;
+      totalPausedMsRef.current = 0;
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
@@ -271,9 +279,12 @@ export function useAudioRecorder({
       };
 
       recorder.onstop = () => {
+        const activePauseMs = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
         const elapsed = Math.max(
           0,
-          Math.round((Date.now() - startedAtRef.current) / 1000),
+          Math.round(
+            (Date.now() - startedAtRef.current - totalPausedMsRef.current - activePauseMs) / 1000,
+          ),
         );
         const blob = new Blob(chunksRef.current, { type: mimeRef.current });
         finalizeRecording(blob, elapsed, autoStoppedRef.current);
@@ -297,7 +308,10 @@ export function useAudioRecorder({
       setStatus('recording');
       clearTimer();
       timerRef.current = window.setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+        const activePauseMs = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
+        const elapsed = Math.floor(
+          (Date.now() - startedAtRef.current - totalPausedMsRef.current - activePauseMs) / 1000,
+        );
         setState((prev) => ({ ...prev, elapsedSeconds: elapsed }));
         if (elapsed >= maxDurationRef.current) {
           autoStoppedRef.current = true;
@@ -328,6 +342,22 @@ export function useAudioRecorder({
     sharedStream,
     state.status,
   ]);
+
+  useEffect(() => {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    if (paused && recorder.state === 'recording') {
+      recorder.pause();
+      pausedAtRef.current = Date.now();
+      pausePreviewPlayback();
+      return;
+    }
+    if (!paused && recorder.state === 'paused') {
+      if (pausedAtRef.current) totalPausedMsRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = 0;
+      recorder.resume();
+    }
+  }, [pausePreviewPlayback, paused]);
 
   const markSubmitting = useCallback(() => {
     setState((prev) => ({

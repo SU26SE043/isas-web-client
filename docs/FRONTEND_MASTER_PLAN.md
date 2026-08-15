@@ -1305,6 +1305,7 @@ flowchart TB
 | FS-143 | Campaign wizard rubric | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-142 | L | BRL-036 | Weights 100% |
 | FS-144 | Campaign wizard questions | P10 | M05 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-143 | L | FR-125–139 | Question bank |
 | FS-145 | Campaign wizard settings + proctoring | P10 | M05 | F-CAMP-E-008 | HR | EMP-057 | P0 | FS-144 | M | BR-B2B-12–23 | Proctoring params |
+| FS-145S | Campaign interview slot management | P10 | M04 | F-CAMP-E-003 | HR | EMP-056–057 | P0 | FS-145 | M | Campaign Slot API | Live slot CRUD + capacity warning |
 | FS-146 | Edit campaign draft | P10 | M04 | F-CAMP-E-004 | HR | EMP-058 | P0 | FS-145 | M | UF-104 | Autosave |
 | FS-147 | Publish campaign | P10 | M04 | F-CAMP-E-005 | HR | EMP-056 | P0 | FS-146 | M | UF-105, BRL-012, org verified | Live status |
 | FS-148 | Invite candidates + email lookup | P10 | M05 | F-CAMP-E-006 | HR | EMP-056 | P0 | FS-147 | M | BR-B2B-06–11 | Immediate list row |

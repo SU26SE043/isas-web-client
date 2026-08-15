@@ -135,7 +135,7 @@ function buildInitialState(
     questionCount: 5,
     settings: defaultSettings(campaign),
     currentStep: 0,
-    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5] : [],
+    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6] : [],
     errorSteps: [],
     draftId: campaign?.id,
     autosaveStatus: 'idle',
@@ -279,6 +279,7 @@ export function useCampaignWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [isSavingQuestions, setIsSavingQuestions] = useState(false);
+  const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
@@ -624,8 +625,8 @@ export function useCampaignWizard({
     setStepError(null);
   }, []);
 
-  const goNext = useCallback(() => {
-    if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions) return;
+  const goNext = useCallback(async () => {
+    if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions || isEnsuringDraft) return;
     const step = state.currentStep;
     const errorKey = validateCampaignWizardStep(state, step, { mode });
     if (errorKey) {
@@ -637,6 +638,27 @@ export function useCampaignWizard({
       return;
     }
 
+    if (step === 4 && !campaignId) {
+      setIsEnsuringDraft(true);
+      setActionError(null);
+      try {
+        await fileActions.ensureDraftId();
+      } catch (error) {
+        const mapped = mapSubmitError(error, t, 'create');
+        setActionError(mapped.message);
+        if (mapped.step != null) {
+          setState((prev) => ({
+            ...prev,
+            currentStep: mapped.step!,
+            errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+          }));
+        }
+        return;
+      } finally {
+        setIsEnsuringDraft(false);
+      }
+    }
+
     setStepError(null);
     setActionError(null);
     setState((prev) => ({
@@ -646,7 +668,7 @@ export function useCampaignWizard({
       currentStep: Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1),
       autosaveStatus: 'dirty',
     }));
-  }, [isGeneratingQuestions, isSavingQuestions, isSubmitting, mode, state, t]);
+  }, [campaignId, fileActions, isEnsuringDraft, isGeneratingQuestions, isSavingQuestions, isSubmitting, mode, state, t]);
 
   const goBack = useCallback(() => {
     if (
@@ -702,7 +724,7 @@ export function useCampaignWizard({
         draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 5),
+        completedSteps: markCompleted(prev.completedSteps, 6),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
       onAfterSubmit(created);
@@ -791,7 +813,7 @@ export function useCampaignWizard({
         ...prev,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 5),
+        completedSteps: markCompleted(prev.completedSteps, 6),
       }));
       toast.success(
         mode === 'create'
@@ -890,9 +912,11 @@ export function useCampaignWizard({
       fileActions.isJdBusy ||
       fileActions.isCriteriaBusy ||
       isGeneratingQuestions ||
-      isSavingQuestions,
+      isSavingQuestions ||
+      isEnsuringDraft,
     isGeneratingQuestions,
     isSavingQuestions,
+    isEnsuringDraft,
     isSubmitting,
     metadataSaved,
     questionsSaved,

@@ -1,101 +1,237 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { campaignCandidateService } from '../services/campaignCandidate.service';
 import type { AllowedFrontendSignalType } from '../types/campaignCandidate.types';
+import type { CampaignViolationKind } from '../types/campaignViolation.types';
 
-const COOLDOWN_MS: Record<AllowedFrontendSignalType, number> = {
-  tab_switch: 0,
-  paste: 0,
-  focus_lost: 4000,
-  camera_blocked: 10_000,
-};
+const LEAVE_CORRELATION_MS = 250;
+const LEAVE_DEDUP_MS = 1_500;
+const CAMERA_POLL_MS = 2_000;
+
+interface PendingLeaveViolation {
+  kind: Extract<CampaignViolationKind, 'tab_switch' | 'fullscreen_exit'>;
+  note: string;
+  source: 'tab_switch' | 'window_blur' | 'fullscreen_exit';
+  reported: boolean;
+}
 
 interface UseCampaignAntiCheatOptions {
   campaignId: string;
   sessionId: string;
   enabled: boolean;
-  videoEl?: HTMLVideoElement | null;
+  /** Live camera stream from the interview room. Watched for camera loss. */
+  stream?: MediaStream | null;
+  onPause?: () => void;
+  onViolation: (kind: CampaignViolationKind) => void;
+}
+
+/**
+ * A camera counts as unavailable when every video track has stopped, been
+ * disabled, or gone silent — covering revoked permission, an unplugged device,
+ * and a stream that ended without firing `ended`.
+ */
+function isCameraUnavailable(stream: MediaStream) {
+  const tracks = stream.getVideoTracks();
+  if (tracks.length === 0) return true;
+  return tracks.every(
+    (track) => track.readyState === 'ended' || !track.enabled || track.muted,
+  );
 }
 
 export function useCampaignAntiCheat({
   campaignId,
   sessionId,
   enabled,
-  videoEl,
+  stream,
+  onPause,
+  onViolation,
 }: UseCampaignAntiCheatOptions) {
-  const lastSentAt = useRef<Partial<Record<AllowedFrontendSignalType, number>>>({});
-  const tabHiddenSent = useRef(false);
-  const cameraBlocked = useRef(false);
   const aborted = useRef(false);
+  const pendingLeave = useRef<PendingLeaveViolation | null>(null);
+  const windowBlurred = useRef(false);
+  const documentHidden = useRef(false);
+  const cameraBlocked = useRef(false);
+  const cameraWasLive = useRef(false);
+  const lastLeaveAt = useRef(0);
+  const inFlight = useRef(new Set<string>());
+  const leaveTimer = useRef<number | null>(null);
 
-  const sendFlag = useCallback(
-    async (signalType: AllowedFrontendSignalType, note?: string) => {
-      if (!enabled || aborted.current || !campaignId || !sessionId) return;
-      const now = Date.now();
-      const last = lastSentAt.current[signalType] ?? 0;
-      if (now - last < COOLDOWN_MS[signalType]) return;
-      lastSentAt.current[signalType] = now;
-      try {
-        await campaignCandidateService.createCampaignFlag(campaignId, sessionId, {
-          signalType,
-          note,
-        });
-      } catch {
-        /* flags must not crash the interview room */
+  const sendFlag = useCallback((
+    signalType: AllowedFrontendSignalType,
+    note: string,
+  ) => {
+    if (!enabled || aborted.current || !campaignId || !sessionId) return;
+    const key = `${signalType}:${note}`;
+    if (inFlight.current.has(key)) return;
+    inFlight.current.add(key);
+    void campaignCandidateService
+      .createCampaignFlag(campaignId, sessionId, { signalType, note })
+      .catch(() => undefined)
+      .finally(() => inFlight.current.delete(key));
+  }, [campaignId, enabled, sessionId]);
+
+  const flushPendingLeave = useCallback(() => {
+    const pending = pendingLeave.current;
+    if (!pending || pending.reported) return;
+    pending.reported = true;
+    sendFlag('tab_switch', pending.note);
+  }, [sendFlag]);
+
+  const revealPendingLeave = useCallback(() => {
+    const pending = pendingLeave.current;
+    if (!pending) return;
+    flushPendingLeave();
+    pendingLeave.current = null;
+    lastLeaveAt.current = Date.now();
+    if (leaveTimer.current != null) {
+      window.clearTimeout(leaveTimer.current);
+      leaveTimer.current = null;
+    }
+    onViolation(pending.kind);
+  }, [flushPendingLeave, onViolation]);
+
+  const beginPendingLeave = useCallback((next: PendingLeaveViolation) => {
+    if (!enabled || aborted.current) return;
+    const current = pendingLeave.current;
+    if (current) {
+      if (current.source === 'fullscreen_exit' && !current.reported) {
+        pendingLeave.current = next;
       }
-    },
-    [campaignId, enabled, sessionId],
-  );
+      return;
+    }
+    if (Date.now() - lastLeaveAt.current < LEAVE_DEDUP_MS) return;
+
+    pendingLeave.current = next;
+    onPause?.();
+    if (next.source === 'tab_switch') {
+      flushPendingLeave();
+      return;
+    }
+
+    if (leaveTimer.current != null) window.clearTimeout(leaveTimer.current);
+    leaveTimer.current = window.setTimeout(() => {
+      leaveTimer.current = null;
+      flushPendingLeave();
+      if (!windowBlurred.current && !documentHidden.current) revealPendingLeave();
+    }, LEAVE_CORRELATION_MS);
+  }, [enabled, flushPendingLeave, onPause, revealPendingLeave]);
+
+  const reportImmediate = useCallback((
+    kind: CampaignViolationKind,
+    signalType: AllowedFrontendSignalType,
+    note: string,
+  ) => {
+    if (!enabled || aborted.current) return;
+    onPause?.();
+    onViolation(kind);
+    sendFlag(signalType, note);
+  }, [enabled, onPause, onViolation, sendFlag]);
+
+  const reportFullscreenExit = useCallback(() => {
+    beginPendingLeave({
+      kind: 'fullscreen_exit',
+      source: 'fullscreen_exit',
+      note: 'Candidate exited fullscreen mode.',
+      reported: false,
+    });
+  }, [beginPendingLeave]);
+
+  const beginPendingLeaveRef = useRef(beginPendingLeave);
+  const reportImmediateRef = useRef(reportImmediate);
+  const revealPendingLeaveRef = useRef(revealPendingLeave);
+  beginPendingLeaveRef.current = beginPendingLeave;
+  reportImmediateRef.current = reportImmediate;
+  revealPendingLeaveRef.current = revealPendingLeave;
 
   useEffect(() => {
     aborted.current = false;
-    if (!enabled) return;
 
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        if (!tabHiddenSent.current) {
-          tabHiddenSent.current = true;
-          void sendFlag('tab_switch');
-        }
+        documentHidden.current = true;
+        beginPendingLeaveRef.current({
+          kind: 'tab_switch',
+          source: 'tab_switch',
+          note: 'Candidate switched away from the interview tab.',
+          reported: false,
+        });
         return;
       }
-      tabHiddenSent.current = false;
+      documentHidden.current = false;
+      revealPendingLeaveRef.current();
     };
-
     const onBlur = () => {
-      void sendFlag('focus_lost');
+      windowBlurred.current = true;
+      beginPendingLeaveRef.current({
+        kind: 'tab_switch',
+        source: 'window_blur',
+        note: 'Candidate left the interview window using Alt+Tab or window switching.',
+        reported: false,
+      });
     };
-
+    const onFocus = () => {
+      windowBlurred.current = false;
+      if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
+    };
     const onPaste = () => {
-      void sendFlag('paste');
+      reportImmediateRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
     };
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
     document.addEventListener('paste', onPaste);
-
     return () => {
       aborted.current = true;
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focus', onFocus);
       document.removeEventListener('paste', onPaste);
+      pendingLeave.current = null;
+      if (leaveTimer.current != null) {
+        window.clearTimeout(leaveTimer.current);
+        leaveTimer.current = null;
+      }
     };
-  }, [enabled, sendFlag]);
+  }, []);
 
   useEffect(() => {
-    if (!enabled || !videoEl?.srcObject) return;
-    const stream = videoEl.srcObject;
-    if (!(stream instanceof MediaStream)) return;
+    cameraBlocked.current = false;
+    cameraWasLive.current = false;
+    if (!enabled || !stream) return undefined;
 
-    const onTrackEnded = () => {
-      if (cameraBlocked.current) return;
+    const evaluate = () => {
+      const unavailable = isCameraUnavailable(stream);
+      if (!cameraWasLive.current) {
+        // Only an active -> unavailable transition is a violation, so wait until
+        // the camera has been seen working before arming the check.
+        if (!unavailable) cameraWasLive.current = true;
+        return;
+      }
+      if (!unavailable || cameraBlocked.current) return;
       cameraBlocked.current = true;
-      void sendFlag('camera_blocked', 'Camera track ended');
+      reportImmediateRef.current(
+        'camera_blocked',
+        'camera_blocked',
+        'Candidate camera became unavailable during the interview.',
+      );
     };
 
     const tracks = stream.getVideoTracks();
-    tracks.forEach((track) => track.addEventListener('ended', onTrackEnded));
+    tracks.forEach((track) => {
+      track.addEventListener('ended', evaluate);
+      track.addEventListener('mute', evaluate);
+    });
+    evaluate();
+    const poll = window.setInterval(evaluate, CAMERA_POLL_MS);
+
     return () => {
-      tracks.forEach((track) => track.removeEventListener('ended', onTrackEnded));
+      window.clearInterval(poll);
+      tracks.forEach((track) => {
+        track.removeEventListener('ended', evaluate);
+        track.removeEventListener('mute', evaluate);
+      });
     };
-  }, [enabled, sendFlag, videoEl]);
+  }, [enabled, stream]);
+
+  return { reportFullscreenExit };
 }

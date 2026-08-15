@@ -13,6 +13,7 @@ US-016 replaces the Phase 12 mock with the live organization PaymentService flow
 - `/employer/billing/transactions` shows cursor-paginated credit movements.
 - `/employer/billing/invoices` lists live postpaid invoices and lets `OrgAdmin` pay issued/overdue invoices through PayOS.
 - `/employer/payment/success` and `/employer/payment/cancel` verify PayOS return state.
+- `/admin/billing` lets platform Admins approve organization Postpaid mode and close billing periods.
 
 Candidate wallet/payment screens stay governed by `docs/product/payment.md`.
 
@@ -21,6 +22,9 @@ Candidate wallet/payment screens stay governed by `docs/product/payment.md`.
 `OrgAdmin` and platform `Admin` can view and mutate billing. `HrMember` can view account,
 subscription, packages, orders, transactions, and invoices but cannot create or cancel payment actions.
 The UI explains the restriction and still treats backend `403` as authoritative.
+
+Postpaid organization wallets show `creditLimit` and `periodUsage` instead of treating
+`remainingCredits` as available balance. Paying an invoice settles debt and does not increase credits.
 
 ## Live Contract
 
@@ -45,6 +49,8 @@ Endpoints:
 - `GET /api/v1/payment/me/invoices`
 - `GET /api/v1/payment/me/invoices/{id}`
 - `POST /api/v1/payment/invoices/{id}/pay`
+- `POST /api/v1/payment/admin/credits/payment-mode` (platform Admin, organization owner only)
+- `POST /api/v1/payment/admin/invoices/close` (platform Admin)
 
 ## Deferred
 

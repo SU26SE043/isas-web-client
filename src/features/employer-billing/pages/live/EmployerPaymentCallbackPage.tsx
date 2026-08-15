@@ -12,12 +12,15 @@ import {
   resolveCallbackOrderId,
 } from '../../utils/employerPayment';
 
-function outcomeCopy(status: OrderStatusText, subscription: boolean, isCancelRoute: boolean) {
+function outcomeCopy(status: OrderStatusText, subscription: boolean, invoiceSettlement: boolean, isCancelRoute: boolean) {
   if (status === 'Pending' && isCancelRoute) {
     return ['employerBilling.callback.leftCheckout', 'employerBilling.callback.leftCheckoutHint'] as const;
   }
   if (status === 'Paid' && subscription) {
     return ['employerBilling.callback.successSubscription', 'employerBilling.callback.successSubscriptionHint'] as const;
+  }
+  if (status === 'Paid' && invoiceSettlement) {
+    return ['employerBilling.callback.successInvoice', 'employerBilling.callback.successInvoiceHint'] as const;
   }
   if (status === 'Paid') return ['employerBilling.callback.successCredit', 'employerBilling.callback.successCreditHint'] as const;
   if (status === 'Expired') return ['employerBilling.callback.expired', 'employerBilling.callback.expiredHint'] as const;
@@ -38,6 +41,7 @@ export function EmployerPaymentCallbackPage({ mode }: { mode: 'success' | 'cance
     storedType === String(PaymentPackageType.Subscription) ||
     state.order?.kind === PaymentOrderKind.SubscriptionPurchase ||
     state.order?.kind === PaymentOrderKind.SubscriptionRenewal;
+  const isInvoiceSettlement = state.order?.kind === PaymentOrderKind.InvoiceSettlement;
 
   if (!orderId) {
     return <CallbackShell icon={AlertTriangle} title={t('employerBilling.callback.missing')} />;
@@ -65,7 +69,7 @@ export function EmployerPaymentCallbackPage({ mode }: { mode: 'success' | 'cance
     );
   }
 
-  const [titleKey, descriptionKey] = outcomeCopy(status, isSubscription, mode === 'cancel');
+  const [titleKey, descriptionKey] = outcomeCopy(status, isSubscription, isInvoiceSettlement, mode === 'cancel');
   return (
     <CallbackShell
       icon={status === 'Paid' ? CheckCircle2 : status === 'Pending' ? RotateCcw : AlertTriangle}

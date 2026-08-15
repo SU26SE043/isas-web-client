@@ -55,9 +55,7 @@ export function usePayEmployerInvoice() {
   return useMutation({
     mutationFn: employerPaymentService.payInvoice,
     onSuccess: (order) => {
-      if (order.checkoutUrl) {
-        window.location.assign(order.checkoutUrl);
-      }
+      window.location.assign(order.checkoutUrl!);
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: employerPaymentKeys.invoices() });

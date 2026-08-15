@@ -73,13 +73,36 @@ function statusToCode(status?: number): CampaignCandidateErrorCode {
   }
 }
 
+function isInvitationEmailMismatch(
+  status: number | undefined,
+  apiCode: string | undefined,
+  message: string | null,
+): boolean {
+  if (status !== 403) return false;
+
+  const normalizedApiCode = apiCode?.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  if (normalizedApiCode === 'invitationemailmismatch') return true;
+
+  const normalizedMessage = message?.trim().toLowerCase() ?? '';
+  const isEnglishMismatch = normalizedMessage.includes('invitation email')
+    && (normalizedMessage.includes('does not match') || normalizedMessage.includes('mismatch'))
+    && normalizedMessage.includes('current user');
+  const isVietnameseMismatch = normalizedMessage.includes('email')
+    && normalizedMessage.includes('không khớp')
+    && normalizedMessage.includes('được mời');
+
+  return isEnglishMismatch || isVietnameseMismatch;
+}
+
 function toCampaignCandidateError(error: unknown, fallback: string): CampaignCandidateError {
   if (error instanceof CampaignCandidateError) return error;
   const status = getApiStatusCode(error);
-  const body = axios.isAxiosError(error) && error.response?.data && typeof error.response.data === 'object'
-    ? error.response.data as Record<string, unknown>
+  const responseData = axios.isAxiosError(error) ? unwrapData(error.response?.data) : undefined;
+  const body = responseData && typeof responseData === 'object'
+    ? responseData as Record<string, unknown>
     : undefined;
   const apiCode = typeof body?.code === 'string' ? body.code : undefined;
+  const apiMessage = asOptionalString(body?.message) ?? asOptionalString(body?.detail) ?? asOptionalString(body?.error);
   const retryHeader = axios.isAxiosError(error) ? error.response?.headers?.['retry-after'] : undefined;
   const retryAfterSeconds = Number(body?.retryAfterSeconds ?? retryHeader);
   const details = {
@@ -89,7 +112,9 @@ function toCampaignCandidateError(error: unknown, fallback: string): CampaignCan
     slotEndsAt: asOptionalString(body?.slotEndsAt) ?? undefined,
     serverTimeUtc: asOptionalString(body?.serverTimeUtc) ?? undefined,
   };
-  const code = apiCode === 'outside_slot_window'
+  const code = isInvitationEmailMismatch(status, apiCode, apiMessage)
+    ? 'emailMismatch'
+    : apiCode === 'outside_slot_window'
     ? 'outsideSlotWindow'
     : apiCode === 'concurrent_limit'
       ? 'concurrentLimit'

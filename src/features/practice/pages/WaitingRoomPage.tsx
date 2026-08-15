@@ -18,6 +18,7 @@ import { startLearningLessonPractice } from '../utils/launchLearningInterviewPra
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
 import { loadFlowProgress, saveFlowProgress } from '../utils/interviewFlowStorage';
 import { requestInterviewFullscreen } from '../hooks/useInterviewFullscreen';
+import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -32,6 +33,12 @@ export const WaitingRoomPage: React.FC = () => {
   const isLearning = isLearningSessionId(sessionId);
   const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
   const redirectToPrep = !isCampaign && !isLearning;
+  const campaignRoomPath = () => {
+    const campaign = readCampaignInterviewSession(sessionId);
+    return campaign
+      ? `/candidate/campaigns/${encodeURIComponent(campaign.campaignId)}/interview/${encodeURIComponent(sessionId)}`
+      : `/interview/${sessionId}/room?start=countdown`;
+  };
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [questionCount, setQuestionCount] = useState(0);
@@ -91,7 +98,7 @@ export const WaitingRoomPage: React.FC = () => {
   useEffect(() => {
     if (redirectToPrep || isLearning || status !== 'ready') return;
     const timer = window.setTimeout(() => {
-      navigate(`/interview/${sessionId}/room?start=countdown`);
+      navigate(campaignRoomPath());
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [isLearning, navigate, redirectToPrep, sessionId, status]);
@@ -191,7 +198,7 @@ export const WaitingRoomPage: React.FC = () => {
               className="btn-primary mt-4"
               onClick={async () => {
                 await requestInterviewFullscreen();
-                navigate(`/interview/${sessionId}/room?start=countdown`);
+                navigate(campaignRoomPath());
               }}
             >
               {t('practice.flow.waiting.enterAnyway')}

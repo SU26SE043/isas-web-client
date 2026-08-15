@@ -1,5 +1,7 @@
 # Candidate Campaigns & Magic Link Entry
 
+> **Shared preparation boundary (2026-08-10):** After a campaign session is created or resumed, the candidate uses the existing B2C `InterviewPrepPage` and `DeviceCheckStep` at `/interview/:sessionId/prepare`. Do not create a B2B preparation or device-check UI copy.
+
 > **Product decision (2026-07-13, supersedes 2026-07-12 browse deprecation):** B2B candidates see **only campaigns they were invited to** at `/candidate/campaigns`. **Public browse/enroll** (`list all open campaigns`) remains **out of scope**. Magic link (`/invite/:token`) is an **email entry gate** that lands on the campaigns hub — not a briefing or interview screen.
 
 **See also:** [`product-scope.md`](./product-scope.md) §4.5–4.7 · [`module-scope.md`](./module-scope.md) · [`campaign-assessment.md`](./campaign-assessment.md)
@@ -124,6 +126,18 @@ the token, sends unauthenticated users through Candidate sign-in/registration, a
 calls `join` only after a Candidate JWT is available. `429` responses expose the
 concurrent-interview limit and `Retry-After`/`retryAfterSeconds`; a `409` with
 `code=outside_slot_window` includes server UTC timing fields for the UI.
+
+### Invitation email mismatch
+
+If `POST /api/v1/campaign/invitations/{token}/join` rejects a signed-in Candidate
+because their account email differs from the invited email, the gateway must return
+an explicit error marker (currently `code=INVITATION_EMAIL_MISMATCH`, or the
+equivalent specific message such as `Email đăng nhập không khớp với email được mời.`).
+The client renders a stable mismatch state only for
+that marker, shows the current authenticated email when available, preserves the
+token in session storage, signs the user out through the shared auth flow, and
+returns them to the original invite after sign-in. Other `403` responses remain
+generic forbidden errors.
 
 ---
 

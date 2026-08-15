@@ -36,6 +36,8 @@ count as the Harness decision log.
 | 0012 | Google OAuth one-time code exchange | [0012-google-oauth-one-time-code.md](./0012-google-oauth-one-time-code.md) |
 | 0013 | Organization member administration boundary | [0013-org-member-admin-boundary.md](./0013-org-member-admin-boundary.md) |
 | 0018 | Campaign location provider boundary | [0018-campaign-location-provider-boundary.md](./0018-campaign-location-provider-boundary.md) |
+| 0019 | Campaign shared preparation boundary | [0019-campaign-shared-preparation-boundary.md](./0019-campaign-shared-preparation-boundary.md) |
+| 0020 | Campaign anti-cheat boundary | [0020-campaign-anti-cheat-boundary.md](./0020-campaign-anti-cheat-boundary.md) |
 
 Add a decision when:
 

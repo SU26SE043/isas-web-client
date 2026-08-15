@@ -8,6 +8,16 @@ export type CampaignLanguage = 'vi' | 'en';
 export type CampaignSeniority = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 export type CampaignQuestionSource = 'AiGenerated' | 'CustomHr';
 export type CampaignCriterionSource = 'AiSuggested' | 'HrEdited';
+export type JobNeedCategory = 'Technical' | 'WorkStyle' | 'Communication' | 'Growth';
+export type NeedLevel = 'Strong' | 'Partial' | 'Weak';
+export type VerificationRisk = 'Low' | 'Medium' | 'High';
+
+export type CampaignJobNeed = {
+  needId: string;
+  category: JobNeedCategory | string;
+  text: string;
+  source?: 'AiSuggested' | 'HrEdited' | string | null;
+};
 
 export type CampaignRubricCriterionResponse = {
   id?: string | null;
@@ -83,6 +93,7 @@ export type CampaignResponse = {
   updatedAt?: string | null;
   rubric?: CampaignRubricCriterionResponse[] | null;
   criteria?: CampaignRubricCriterionResponse[] | null;
+  jobNeeds?: CampaignJobNeed[] | null;
   criteriaText?: string | null;
   jdText?: string | null;
   questions?: CampaignQuestionResponse[] | null;
@@ -183,6 +194,22 @@ export type CampaignUpdateRequest = {
   criteria?: CampaignCreateCriterionRequest[];
   startsAt?: string;
   expiresAt?: string;
+};
+
+/** POST/PUT /api/v1/campaign/{campaignId}/slots[/slotId] — complete request body. */
+export type CampaignSlotRequest = {
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+};
+
+export type CampaignSlotResponse = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  assignedCount: number;
+  startedCount: number;
 };
 
 /** POST /api/v1/campaign/{id}/invitations — invite by email list (Active only). */
@@ -293,14 +320,22 @@ export type CampaignCandidateListItem = {
   status: string;
   overallMatchScore?: number | null;
   skills?: string[] | null;
+  verificationRisk?: VerificationRisk | null;
+  screeningVersion?: number | null;
 };
 
-export type CandidateCriterionScore = {
-  criterionId: string;
-  criterionName: string;
-  matchScore: number;
-  maxScore: number;
-  reasoning?: string | null;
+/** PUT /api/v1/campaign/{id}/job-needs — replace-all, Draft only. */
+export type UpdateCampaignJobNeedsRequest = {
+  needId?: string;
+  category: JobNeedCategory;
+  text: string;
+};
+
+export type CandidateEvidence = {
+  needId: string;
+  area: string;
+  level: NeedLevel | string;
+  evidence: string;
 };
 
 export type CampaignCandidateDetail = {
@@ -315,7 +350,13 @@ export type CampaignCandidateDetail = {
   rejectReason?: string | null;
   /** S3 key — not a public URL unless backend returns an absolute http(s) URL. */
   cvFileUrl?: string | null;
-  criterionScores: CandidateCriterionScore[];
+  screeningVersion?: number | null;
+  fitSummary?: string | null;
+  strengths: CandidateEvidence[];
+  gaps: CandidateEvidence[];
+  bonusSignals: string[];
+  verificationRisk?: VerificationRisk | null;
+  verifyQuestions: string[];
 };
 
 /** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */

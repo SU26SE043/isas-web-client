@@ -193,7 +193,19 @@ export function parseUser(raw: unknown): User {
     throw new Error('Invalid user payload from API');
   }
 
-  const role = normalizeUserRole(pickAuthString(inner, 'role', 'Role') ?? String(inner.role ?? ''));
+  const normalizedRole = normalizeUserRole(
+    pickAuthString(inner, 'role', 'Role') ?? String(inner.role ?? ''),
+  );
+  const normalizedOrgRole = normalizeUserRole(pickAuthString(inner, 'orgRole', 'OrgRole'));
+  // Some AuthService responses use the broad legacy `Employer` role and put
+  // the effective organization role in `orgRole`. Prefer that org role for
+  // org-scoped users so an HR member is not treated as an OrgAdmin.
+  const role =
+    normalizedOrgRole &&
+    (normalizedOrgRole === UserRole.ORG_ADMIN || normalizedOrgRole === UserRole.HR_MEMBER) &&
+    (normalizedRole === UserRole.ORG_ADMIN || normalizedRole === UserRole.HR_MEMBER)
+      ? normalizedOrgRole
+      : normalizedRole;
   if (!role || role === UserRole.GUEST) {
     throw new Error(`Invalid user role from API: ${String(inner.role ?? inner.Role)}`);
   }

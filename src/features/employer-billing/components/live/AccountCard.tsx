@@ -11,13 +11,17 @@ import { formatDateTime } from '../../utils/employerPayment';
 export function AccountCard({ account }: { account: PaymentAccountResponse }) {
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+  const isPostpaid = account.paymentMode === PaymentMode.Postpaid;
+  const headlineValue = isPostpaid ? (account.periodUsage ?? 0) : account.remainingCredits;
   return (
     <section className="frame-satin rounded-2xl bg-surface-raised p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-label">{t('employerBilling.live.creditAvailable')}</p>
+          <p className="text-label">
+            {t(isPostpaid ? 'employerBilling.live.periodUsage' : 'employerBilling.live.creditAvailable')}
+          </p>
           <p className="mt-2 text-5xl font-semibold tracking-tight text-foreground">
-            {account.remainingCredits.toLocaleString(locale)}
+            {headlineValue.toLocaleString(locale)}
           </p>
         </div>
         <div className="flex size-11 items-center justify-center rounded-xl bg-surface-overlay frame-satin-soft">

@@ -11,6 +11,7 @@ import { TermsPage } from '@/features/marketing/pages/TermsPage';
 import { ForbiddenPage, MaintenancePage, NotFoundPage, ServerErrorPage } from '@/pages/errors/ErrorPages';
 import { ComponentHarnessPage } from '@/pages/dev/ComponentHarnessPage';
 import { OrderDetailUiPreviewPage } from '@/features/payment/pages/OrderDetailUiPreviewPage';
+import { InterviewerAvatarPreviewPage } from '@/features/practice/pages/InterviewerAvatarPreviewPage';
 
 const devRoutes: RouteObject[] = import.meta.env.DEV
   ? [
@@ -20,6 +21,7 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
         children: [
           { path: 'components', element: <ComponentHarnessPage /> },
           { path: 'order-detail', element: <OrderDetailUiPreviewPage /> },
+          { path: 'interviewer-avatar', element: <InterviewerAvatarPreviewPage /> },
         ],
       },
     ]

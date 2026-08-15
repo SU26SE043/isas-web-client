@@ -16,6 +16,7 @@ import { CampaignJdStep } from './CampaignJdStep';
 import { CampaignQuestionsStep } from './CampaignQuestionsStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 import { CampaignSettingsStep } from './CampaignSettingsStep';
+import { CampaignSlotsStep } from './CampaignSlotsStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
 import { hasWizardJd } from '../../utils/campaignQuestionLimits';
 
@@ -202,13 +203,22 @@ export function CampaignWizardForm({
         />
       ) : null}
 
-      {step === 5 ? (
+      {step === 5 && state.draftId ? (
+        <CampaignSlotsStep
+          campaignId={state.draftId}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+        />
+      ) : null}
+
+      {step === 6 ? (
         <CampaignReviewStep
           info={state.info}
           jd={state.jd}
           rubric={state.rubric}
           questions={state.questions}
           settings={state.settings}
+          campaignId={state.draftId}
           domainLabel={wizard.domainLabel}
           error={wizard.stepError}
           onGoToStep={wizard.goToStep}

@@ -4,6 +4,7 @@ import type {
   CampaignQuestionResponse,
   CampaignResponse,
   CampaignRubricCriterionResponse,
+  CampaignJobNeed,
 } from '../types/campaign.api.types';
 import type {
   CampaignCandidateRow,
@@ -182,6 +183,23 @@ function parseProctoring(raw: unknown): CampaignProctoringResponse | null {
   };
 }
 
+function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const needId = pickString(record, 'needId', 'NeedId');
+    const text = pickString(record, 'text', 'Text');
+    if (!needId || !text) return [];
+    return [{
+      needId,
+      category: pickString(record, 'category', 'Category') ?? 'Technical',
+      text,
+      source: pickString(record, 'source', 'Source') ?? null,
+    }];
+  });
+}
+
 export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -231,6 +249,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     createdAt: pickString(record, 'createdAt', 'CreatedAt') ?? null,
     updatedAt: pickString(record, 'updatedAt', 'UpdatedAt') ?? null,
     rubric: parseRubric(record.criteria ?? record.Criteria ?? record.rubric ?? record.Rubric),
+    jobNeeds: parseJobNeeds(record.jobNeeds ?? record.JobNeeds),
     questions: parseQuestions(record.questions ?? record.Questions),
     candidates: parseCandidates(record.candidates ?? record.Candidates),
     invitedEmails: parseInvitedEmails(record.invitedEmails ?? record.InvitedEmails),
@@ -362,6 +381,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     locale: mapLocale(item.locale),
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
+    jobNeeds: item.jobNeeds ?? [],
     invitedEmails,
     candidates,
     proctoring: mapProctoring(item.proctoring),
