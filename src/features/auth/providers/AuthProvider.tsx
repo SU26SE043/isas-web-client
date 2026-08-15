@@ -12,7 +12,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth({ bootstrap: true });
 
   const handleExpire = useCallback(() => {
     logout();

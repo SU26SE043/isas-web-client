@@ -7,7 +7,14 @@ import { authTokenStorage } from '../../../shared/api';
 import { sessionManager } from '../utils/sessionManager';
 import { isPlaywrightRuntime } from '@/shared/mock';
 
-export const useAuth = () => {
+interface UseAuthOptions {
+  /** Only the app-level AuthProvider should rehydrate /me automatically. */
+  bootstrap?: boolean;
+}
+
+let bootstrapPromise: Promise<unknown> | null = null;
+
+export const useAuth = ({ bootstrap = false }: UseAuthOptions = {}) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading, setUser, setLoading, logout } = useAuthStore();
 
@@ -24,14 +31,17 @@ export const useAuth = () => {
       setUser(userData);
       return userData;
     } catch (error: unknown) {
-      console.error('Failed to fetch user:', error);
       // Only a server response can prove the token is no longer good. When the
       // request never reached one (offline, DNS, refused connection), keep the
       // rehydrated session instead of signing the user out on a network blip.
+      // console.warn (not .error) so this expected, retryable case does not
+      // trip strict "no console errors" assertions in the UI.
       if (axios.isAxiosError(error) && !error.response) {
+        console.warn('Failed to fetch user (network error, keeping session):', error);
         return useAuthStore.getState().user;
       }
       // A rejected or unparseable profile means the UI cannot establish a session.
+      console.error('Failed to fetch user:', error);
       logout();
       authTokenStorage.clear();
       sessionManager.clear();
@@ -40,6 +50,15 @@ export const useAuth = () => {
       setLoading(false);
     }
   }, [setUser, setLoading, logout]);
+
+  const bootstrapAuth = useCallback(() => {
+    if (!bootstrapPromise) {
+      bootstrapPromise = fetchUser().finally(() => {
+        bootstrapPromise = null;
+      });
+    }
+    return bootstrapPromise;
+  }, [fetchUser]);
 
   const handleLogout = useCallback(() => {
     const refreshToken = authTokenStorage.getRefreshToken();
@@ -52,6 +71,8 @@ export const useAuth = () => {
   }, [logout, navigate]);
 
   useEffect(() => {
+    if (!bootstrap) return;
+
     const token = authTokenStorage.getAccessToken();
     if (token && !sessionManager.getSessionStartedAt()) {
       sessionManager.markSessionStart();
@@ -59,7 +80,7 @@ export const useAuth = () => {
     // Refresh the persisted profile on mount so role changes from /me replace
     // stale local state (for example Employer -> HrMember).
     if (token) {
-      fetchUser();
+      void bootstrapAuth();
     } else if (!token) {
       // WebKit can clear token storage during a same-origin E2E reload while
       // the persisted mock profile remains valid for the test session.
@@ -68,7 +89,7 @@ export const useAuth = () => {
       }
       setLoading(false);
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, [bootstrap, bootstrapAuth, logout, setLoading]);
 
   return {
     user,
