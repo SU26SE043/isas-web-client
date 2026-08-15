@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
+import { authTokenStorage } from '@/shared/api/authTokenStorage';
 import { useLanguage } from '@/shared/languages';
 import { InviteExpiredState } from '../components/InviteExpiredState';
 import { campaignService } from '../services/campaign.service';
@@ -13,6 +14,7 @@ export function LegacyMagicLinkLandingPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
   const authLoading = useAuthStore((state) => state.isLoading);
   const [invite, setInvite] = useState<(CampaignInvite & { campaign: unknown }) | null>(null);
@@ -31,7 +33,9 @@ export function LegacyMagicLinkLandingPage() {
     };
   }, [token]);
 
-  if (isLoading || authLoading) {
+  const hasPersistedToken = Boolean(authTokenStorage.getAccessToken());
+
+  if (!hasHydrated || isLoading || authLoading || (hasPersistedToken && !user)) {
     return (
       <div className="page-container page-section flex min-h-[70vh] items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />

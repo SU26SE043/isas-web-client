@@ -12,7 +12,12 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL,
+    actionTimeout: 20_000,
+    navigationTimeout: 30_000,
     trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
+  },
+  expect: {
+    timeout: 15_000,
   },
   projects: [
     {

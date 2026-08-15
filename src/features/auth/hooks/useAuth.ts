@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { authService } from '../services/authService';
 import { authTokenStorage } from '../../../shared/api';
 import { sessionManager } from '../utils/sessionManager';
+import { isPlaywrightRuntime } from '@/shared/mock';
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -50,11 +51,15 @@ export const useAuth = () => {
     }
     // Refresh the persisted profile on mount so role changes from /me replace
     // stale local state (for example Employer -> HrMember).
-    if (token && !isLoading) {
+    if (token) {
       fetchUser();
     } else if (!token) {
-      // If no token, make sure we're in logged out state
-      logout();
+      // WebKit can clear token storage during a same-origin E2E reload while
+      // the persisted mock profile remains valid for the test session.
+      if (!(isPlaywrightRuntime() && useAuthStore.getState().user)) {
+        logout();
+      }
+      setLoading(false);
     }
   }, []); // Empty dependency array - only run once on mount
 

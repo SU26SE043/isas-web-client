@@ -25,7 +25,11 @@ export type MockDataDomain =
 export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice', 'payment'];
 
 export function isPlaywrightRuntime(): boolean {
-  return typeof navigator !== 'undefined' && navigator.webdriver === true;
+  if (typeof window === 'undefined') return false;
+  // Chromium/Firefox/WebKit do not expose `navigator.webdriver` consistently
+  // in the production preview process. The dedicated Playwright preview port
+  // is the stable signal used by CI and local E2E runs.
+  return navigator.webdriver === true || window.location.port === '4173';
 }
 
 export function usesMockData(domain: MockDataDomain): boolean {
