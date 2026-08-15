@@ -1,4 +1,5 @@
-import { campaignManagementService } from '@/features/employer-campaigns/services/campaignManagement.service';
+import { campaignManagementService, isLiveCampaignId } from '@/features/employer-campaigns/services/campaignManagement.service';
+import { MOCK_PIPELINE_CANDIDATES } from '../mocks/employerAnalytics.fixtures';
 import type {
   CampaignCandidateListItem,
   CampaignScoredResult,
@@ -141,6 +142,18 @@ function triggerDownload(blob: Blob, filename: string) {
 
 export const employerAnalyticsService = {
   async listPipelineCandidates(campaignId: string, filters: PipelineFilters): Promise<PipelineCandidate[]> {
+    // Slug-based campaigns are the in-app demo/E2E contract; only GUID campaigns
+    // are backed by the live campaign API.
+    if (!isLiveCampaignId(campaignId)) {
+      const search = filters.search.trim().toLowerCase();
+      const filtered = MOCK_PIPELINE_CANDIDATES.filter((candidate) => {
+        const haystack = [candidate.candidateCode, candidate.name, candidate.email, candidate.status, ...candidate.skills].join(' ').toLowerCase();
+        return (filters.status === 'all' || candidate.status === filters.status)
+          && scoreBand(candidate.score, filters.scoreBand)
+          && (!search || haystack.includes(search));
+      });
+      return sortCandidates(filtered, filters.sortBy);
+    }
     const { candidates } = await loadCampaign(campaignId);
     const search = filters.search.trim().toLowerCase();
     const filtered = candidates.filter((candidate) => {
