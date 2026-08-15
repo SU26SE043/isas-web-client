@@ -8,6 +8,7 @@ import {
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { getNextPracticeQuestion } from '../utils/getNextPracticeQuestion';
+import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import type { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 
 type Recorder = ReturnType<typeof usePracticeAnswerRecorder>;
@@ -24,6 +25,10 @@ interface UseB2cPracticeAnswerSubmitOptions {
   onStopSpeech: () => void;
   onStopMedia: () => void;
   completePath?: string;
+}
+
+interface SubmitAnswerOptions {
+  allowDuringTimeout?: boolean;
 }
 
 export function useB2cPracticeAnswerSubmit({
@@ -150,12 +155,16 @@ export function useB2cPracticeAnswerSubmit({
   }, [answersByQuestionId, canSubmitAnswer, currentQuestion, performSubmit]);
 
   const submitAnswerWithFile = useCallback(
-    async (file: File, durationSec: number) => {
+    async (file: File, durationSec: number, options?: SubmitAnswerOptions) => {
       if (!currentQuestion) {
         setAnswerError('practice.errors.audioRequired');
         throw new Error('missing-question');
       }
-      if (isSubmittingAnswer || isTimingOut || remainingSeconds <= 0) {
+      if (
+        isSubmittingAnswer ||
+        (!options?.allowDuringTimeout && isTimingOut) ||
+        remainingSeconds <= 0
+      ) {
         throw new Error('submit-blocked');
       }
       // Modal retake + submit is an intentional overwrite of any prior answer.
@@ -163,6 +172,15 @@ export function useB2cPracticeAnswerSubmit({
     },
     [currentQuestion, isSubmittingAnswer, isTimingOut, performSubmit, remainingSeconds],
   );
+
+  const submitEmptyAnswer = useCallback(async () => {
+    if (!currentQuestion || isSubmittingAnswer) return;
+    await performSubmit({
+      file: createSilentUnansweredAudioFile(),
+      durationSec: 0,
+    });
+    store.setQuestionState(currentQuestion.id, 'unanswered');
+  }, [currentQuestion, isSubmittingAnswer, performSubmit, store]);
 
   const confirmOverwriteSubmit = useCallback(() => {
     const pending = pendingOverrideRef.current;
@@ -177,6 +195,7 @@ export function useB2cPracticeAnswerSubmit({
     canSubmitAnswer,
     submitAnswer,
     submitAnswerWithFile,
+    submitEmptyAnswer,
     overwriteConfirmOpen,
     setOverwriteConfirmOpen,
     confirmOverwriteSubmit,

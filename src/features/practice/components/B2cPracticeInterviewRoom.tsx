@@ -1,22 +1,19 @@
 import { Loader2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { usesMockData } from '@/shared/mock';
-import { getApiStatusCode } from '@/shared/api/apiError';
 import { InterviewHeader } from './InterviewHeader';
 import { AIInterviewerPanel } from './AIInterviewerPanel';
 import { CandidateCameraPanel } from './CandidateCameraPanel';
 import { InterviewQuestionPanel } from './InterviewQuestionPanel';
 import { B2cInterviewControls } from './B2cInterviewControls';
-import { B2cPracticeRoomModals } from './B2cPracticeRoomModals';
+import { B2cPracticeRoomDialogs } from './B2cPracticeRoomDialogs';
 import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
-import { AudioRecorderModal } from './audio-recorder/AudioRecorderModal';
 import { QuestionStartCountdown } from './QuestionStartCountdown';
 import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
-import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { mapModalToCardStatus, resolveAnswerCardStatus } from '../utils/resolveAnswerCardStatus';
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
@@ -24,9 +21,22 @@ export type { B2cRoomMediaContext } from '../types/b2cPracticeRoom.types';
 export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused = false, cameraAlwaysOn = false, onMediaContextChange, onPhaseChange }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const room = useB2cPracticeRoom(sessionId, { completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused });
+  const [autoSubmitRequestId, setAutoSubmitRequestId] = useState(0);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
+  const requestAutoSubmit = useCallback(
+    () => setAutoSubmitRequestId((value) => value + 1),
+    [],
+  );
+  const room = useB2cPracticeRoom(sessionId, {
+    completePath,
+    startWithCountdown,
+    countdownReady,
+    deadlineAt,
+    violationPaused,
+    answerRecorderOpen: recorderOpen,
+    onAutoSubmitRequest: requestAutoSubmit,
+  });
   const interviewCompleteToastRef = useRef(false);
   const mockSubmitCountRef = useRef(0);
   useEffect(() => {
@@ -78,16 +88,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       isSubmitting: room.isSubmittingAnswer,
       answerError: room.answerError,
     });
-  const questionLabel = t('practice.room.questionOf')
-    .replace('{current}', String(room.currentIndex + 1))
-    .replace('{total}', String(Math.max(room.questions.length, 1)));
-  const maxDurationSeconds = Math.max(
-    1,
-    Math.min(
-      room.remainingSeconds || room.currentQuestion?.timeLimitSec || 120,
-      room.currentQuestion?.timeLimitSec || room.remainingSeconds || 120,
-    ),
-  );
   const openRecorder = () => {
     if (violationPaused || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
     setRecorderOpen(true);
@@ -192,7 +192,10 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
           const file = new File([new Uint8Array([0])], 'e2e-answer.webm', { type: 'audio/webm' });
           mockSubmitCountRef.current += 1;
           if (mockSubmitCountRef.current >= 3) {
-            void room.confirmFinish();
+            // Wait for the mock session to settle before changing routes. A
+            // fire-and-forget submit raced WebKit's route render and could
+            // leave the room mounted at /complete.
+            await room.confirmFinish();
             navigate(`/interview/${sessionId}/complete`, { replace: true });
             return;
           }
@@ -204,43 +207,16 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       />
 
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />
-      {room.currentQuestion ? (
-        <AudioRecorderModal
-          open={recorderOpen}
-          onOpenChange={(open) => {
-            setRecorderOpen(open);
-            if (!open) setModalStatus(null);
-          }}
-          sessionId={sessionId}
-          questionId={room.currentQuestion.id}
-          questionContent={room.currentQuestion.content}
-          questionLabel={questionLabel}
-          maxDurationSeconds={maxDurationSeconds}
-          sharedStream={room.media.stream}
-          disabled={violationPaused || room.isTimingOut || room.remainingSeconds <= 0}
-          paused={violationPaused}
-          onStatusChange={setModalStatus}
-          onSubmitRecording={async (file, durationSec) => {
-            await room.submitAnswerWithFile(file, durationSec);
-          }}
-          mapSubmitErrorKey={(error) => mapSubmitPracticeAnswerErrorKey(getApiStatusCode(error))}
-        />
-      ) : null}
-
-      <B2cPracticeRoomModals
-        finishOpen={room.finishOpen}
-        isSubmittingSession={room.isSubmittingSession}
-        submittedCount={room.submittedCount}
-        unansweredCount={room.unansweredCount}
-        hasPendingRecording={room.hasPendingRecording}
-        onCloseFinish={() => room.setFinishOpen(false)}
-        onConfirmFinish={() => void room.confirmFinish()}
-        overwriteConfirmOpen={room.overwriteConfirmOpen}
-        onCloseOverwrite={() => room.setOverwriteConfirmOpen(false)}
-        onConfirmOverwrite={room.confirmOverwriteSubmit}
-        retryConfirmOpen={room.retryConfirmOpen}
-        onCloseRetry={() => room.setRetryConfirmOpen(false)}
-        onConfirmRetry={room.confirmRetryRecording}
+      <B2cPracticeRoomDialogs
+        room={room}
+        sessionId={sessionId}
+        recorderOpen={recorderOpen}
+        onRecorderOpenChange={(open) => {
+          setRecorderOpen(open);
+          if (!open) setModalStatus(null);
+        }}
+        onRecorderStatusChange={setModalStatus}
+        autoSubmitRequestId={autoSubmitRequestId}
       />
 
       <span className="sr-only">{navigate.length}</span>

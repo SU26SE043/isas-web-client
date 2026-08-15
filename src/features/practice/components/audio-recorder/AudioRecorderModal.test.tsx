@@ -135,4 +135,46 @@ describe('AudioRecorderModal submit flow', () => {
     await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' }));
     await waitFor(() => expect(onSubmitRecording).toHaveBeenCalledTimes(2));
   });
+
+  it('auto-submits the recorded answer when the timer requests submission', async () => {
+    const onAutoSubmitRecording = vi.fn().mockResolvedValue(undefined);
+    const view = render(
+      <AudioRecorderModal
+        {...baseProps}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        autoSubmitRequestId={0}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'practice.audioRecorder.stop' })).toBeInTheDocument();
+    });
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+    });
+
+    view.rerender(
+      <AudioRecorderModal
+        {...baseProps}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        autoSubmitRequestId={1}
+      />,
+    );
+
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+    expect(baseProps.onSubmitRecording).not.toHaveBeenCalled();
+  });
+
+  it('auto-submits an empty answer when no recording exists', async () => {
+    const onAutoSubmitEmpty = vi.fn().mockResolvedValue(undefined);
+    render(
+      <AudioRecorderModal
+        {...baseProps}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+        autoSubmitRequestId={1}
+      />,
+    );
+
+    await waitFor(() => expect(onAutoSubmitEmpty).toHaveBeenCalledTimes(1));
+  });
 });

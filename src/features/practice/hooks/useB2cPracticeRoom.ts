@@ -8,7 +8,6 @@ import {
 } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
-import { getNextPracticeQuestion } from '../utils/getNextPracticeQuestion';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
@@ -30,6 +29,8 @@ export function useB2cPracticeRoom(
     countdownReady?: boolean;
     deadlineAt?: string | null;
     violationPaused?: boolean;
+    answerRecorderOpen?: boolean;
+    onAutoSubmitRequest?: () => void;
   },
 ) {
   const navigate = useNavigate();
@@ -286,7 +287,6 @@ export function useB2cPracticeRoom(
     setIsTimingOut(true);
     setShowTimerWarning(false);
     speech.stopPlayback();
-    recorder.stopRecordingAndDiscard();
     store.setQuestionState(questionId, 'unanswered');
 
     const advanceTimer = window.setTimeout(() => {
@@ -294,48 +294,13 @@ export function useB2cPracticeRoom(
 
       void (async () => {
         try {
-          // Register an empty answer so session submit is allowed; UI stays unanswered (0 score).
-          const response = await submitPracticeAnswer({
-            sessionId,
-            questionId,
-            file: createSilentUnansweredAudioFile(),
-            durationSec: 0,
-          });
-          if (cancelled) return;
-          store.setAnswer(questionId, {
-            answerId: response.answerId,
-            questionId: response.questionId,
-            status: response.status,
-            transcript: response.transcript,
-            nextAction: response.nextAction,
-            interviewComplete: response.interviewComplete,
-          });
-          store.setQuestionState(questionId, 'unanswered');
-
-          if (response.nextQuestion) {
-            store.appendQuestion(response.nextQuestion);
-            store.setCurrentQuestion(response.nextQuestion.id, response.nextQuestion.timeLimitSec);
-            store.setStage('interviewing');
-          } else if (response.interviewComplete) {
-            store.setInterviewComplete(true, response.nextAction ?? 'end');
+          if (options?.answerRecorderOpen && options.onAutoSubmitRequest) {
+            options.onAutoSubmitRequest();
           } else {
-            const nextQuestion = getNextPracticeQuestion(store.questions, questionId);
-            if (nextQuestion) {
-              store.setCurrentQuestion(nextQuestion.id, nextQuestion.timeLimitSec);
-              store.setStage('interviewing');
-            } else {
-              store.setStage('interviewing');
-            }
+            await answerSubmit.submitEmptyAnswer();
           }
         } catch {
           if (cancelled) return;
-          const nextQuestion = getNextPracticeQuestion(store.questions, questionId);
-          if (nextQuestion) {
-            store.setCurrentQuestion(nextQuestion.id, nextQuestion.timeLimitSec);
-            store.setStage('interviewing');
-          } else {
-            store.setStage('interviewing');
-          }
         } finally {
           if (!cancelled) setIsTimingOut(false);
         }
@@ -345,21 +310,20 @@ export function useB2cPracticeRoom(
     return () => {
       cancelled = true;
       window.clearTimeout(advanceTimer);
-      if (timeoutHandledForQuestionRef.current === questionId) {
-        timeoutHandledForQuestionRef.current = null;
-      }
     };
     // Do not depend on isTimingOut — setting it would re-run and clear the advance timer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     answerSubmit.isSubmittingAnswer,
+    answerSubmit.submitEmptyAnswer,
+    options?.answerRecorderOpen,
+    options?.onAutoSubmitRequest,
     isSubmittingSession,
     options?.violationPaused,
     phase,
     sessionId,
     store.answersByQuestionId,
     store.currentQuestionId,
-    store.questions,
     effectiveRemainingSeconds,
     store.stage,
   ]);
@@ -484,6 +448,7 @@ export function useB2cPracticeRoom(
     canReplay,
     submitAnswer: answerSubmit.submitAnswer,
     submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
+    submitEmptyAnswer: answerSubmit.submitEmptyAnswer,
     overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
     setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
     confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,

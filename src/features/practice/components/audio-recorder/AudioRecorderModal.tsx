@@ -24,6 +24,9 @@ interface AudioRecorderModalProps {
   disabled?: boolean;
   paused?: boolean;
   onSubmitRecording: (file: File, durationSec: number) => Promise<void>;
+  onAutoSubmitRecording?: (file: File, durationSec: number) => Promise<void>;
+  autoSubmitRequestId?: number;
+  onAutoSubmitEmpty?: () => Promise<void>;
   mapSubmitErrorKey?: (error: unknown) => string;
   onStatusChange?: (status: AudioRecorderStatus) => void;
 }
@@ -40,6 +43,9 @@ export function AudioRecorderModal({
   disabled,
   paused = false,
   onSubmitRecording,
+  onAutoSubmitRecording,
+  autoSubmitRequestId = 0,
+  onAutoSubmitEmpty,
   mapSubmitErrorKey,
   onStatusChange,
 }: AudioRecorderModalProps) {
@@ -53,6 +59,7 @@ export function AudioRecorderModal({
   });
   const [confirmClose, setConfirmClose] = useState(false);
   const submittingLockRef = useRef(false);
+  const autoSubmitRequestRef = useRef(0);
   const openRecorderRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -90,7 +97,7 @@ export function AudioRecorderModal({
     onOpenChange(true);
   };
 
-  const submitOnce = useCallback(async () => {
+  const submitOnce = useCallback(async (automatic = false) => {
     if (submittingLockRef.current) return;
     const file = recorder.state.audioFile;
     const durationSec = recorder.state.elapsedSeconds;
@@ -98,8 +105,11 @@ export function AudioRecorderModal({
     submittingLockRef.current = true;
     recorder.markSubmitting();
     try {
-      await onSubmitRecording(file, durationSec);
+      await (automatic && onAutoSubmitRecording
+        ? onAutoSubmitRecording(file, durationSec)
+        : onSubmitRecording(file, durationSec));
       recorder.markSuccess();
+      if (automatic) forceClose();
     } catch (error) {
       const key =
         mapSubmitErrorKey?.(error) ?? 'practice.audioRecorder.submitFailedHint';
@@ -107,7 +117,36 @@ export function AudioRecorderModal({
     } finally {
       submittingLockRef.current = false;
     }
-  }, [mapSubmitErrorKey, onSubmitRecording, recorder]);
+  }, [forceClose, mapSubmitErrorKey, onAutoSubmitRecording, onSubmitRecording, recorder]);
+
+  useEffect(() => {
+    if (!open || autoSubmitRequestId <= 0 || autoSubmitRequestRef.current === autoSubmitRequestId) {
+      return;
+    }
+
+    const status = recorder.state.status;
+    if (status === 'recording') {
+      recorder.stopRecording();
+      return;
+    }
+
+    autoSubmitRequestRef.current = autoSubmitRequestId;
+    if (status === 'recorded') {
+      void submitOnce(true);
+      return;
+    }
+
+    if (status === 'requesting-permission') {
+      recorder.resetRecording();
+    }
+    void onAutoSubmitEmpty?.();
+  }, [
+    autoSubmitRequestId,
+    onAutoSubmitEmpty,
+    open,
+    recorder,
+    submitOnce,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
