@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/shared/languages';
+import { isPlaywrightRuntime } from '@/shared/mock';
 import { readSpeechAmplitude } from '../../utils/interviewerSpeechBus';
 import type { InterviewerSceneHandle } from './interviewerScene';
 
@@ -46,7 +47,10 @@ export function InterviewerAvatar({ speaking }: InterviewerAvatarProps) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (!supportsWebGL()) {
+    // The browser test harness verifies the interview state and controls, not
+    // the GPU renderer. Avoid loading the 6.5 MB model and an active RAF loop
+    // there so screenshots remain deterministic on CI WebKit/Chromium.
+    if (isPlaywrightRuntime() || !supportsWebGL()) {
       setStatus('error');
       return;
     }

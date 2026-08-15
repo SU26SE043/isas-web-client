@@ -9,7 +9,7 @@ interface B2cInterviewControlsProps {
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onFinish: () => void;
-  onSubmitAnswer?: () => void;
+  onSubmitAnswer?: () => void | Promise<void>;
   finishLabel: string;
   finishPrimary?: boolean;
   disabled?: boolean;

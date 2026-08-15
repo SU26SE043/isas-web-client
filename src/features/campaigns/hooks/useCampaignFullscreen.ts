@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isPlaywrightRuntime } from '@/shared/mock';
 
 interface UseCampaignFullscreenOptions {
   enabled: boolean;
@@ -6,27 +7,43 @@ interface UseCampaignFullscreenOptions {
 }
 
 export function useCampaignFullscreen({ enabled, onExit }: UseCampaignFullscreenOptions) {
+  const nativeSupported =
+    typeof document !== 'undefined' && Boolean(document.documentElement.requestFullscreen);
+  const testFallbackEnabled = isPlaywrightRuntime() && !nativeSupported;
   const initiallyFullscreen =
     typeof document !== 'undefined' && Boolean(document.fullscreenElement);
-  const [isFullscreen, setIsFullscreen] = useState(initiallyFullscreen);
+  const [nativeFullscreen, setNativeFullscreen] = useState(initiallyFullscreen);
+  const [testFallbackFullscreen, setTestFallbackFullscreen] = useState(false);
   const [hasExited, setHasExited] = useState(false);
   const hasEntered = useRef(initiallyFullscreen);
 
   const enterFullscreen = useCallback(async () => {
-    if (!document.documentElement.requestFullscreen) return false;
+    if (!document.documentElement.requestFullscreen) {
+      if (testFallbackEnabled) {
+        setTestFallbackFullscreen(true);
+        hasEntered.current = true;
+        return true;
+      }
+      return false;
+    }
     try {
       await document.documentElement.requestFullscreen();
       return true;
     } catch {
+      if (testFallbackEnabled) {
+        setTestFallbackFullscreen(true);
+        hasEntered.current = true;
+        return true;
+      }
       return false;
     }
-  }, []);
+  }, [testFallbackEnabled]);
 
   useEffect(() => {
     if (!enabled) return undefined;
     const onFullscreenChange = () => {
       const active = Boolean(document.fullscreenElement);
-      setIsFullscreen(active);
+      setNativeFullscreen(active);
       if (active) {
         hasEntered.current = true;
         return;
@@ -40,10 +57,9 @@ export function useCampaignFullscreen({ enabled, onExit }: UseCampaignFullscreen
   }, [enabled, onExit]);
 
   return {
-    isFullscreen,
+    isFullscreen: nativeFullscreen || testFallbackFullscreen,
     hasExited,
     enterFullscreen,
-    fullscreenSupported:
-      typeof document !== 'undefined' && Boolean(document.documentElement.requestFullscreen),
+    fullscreenSupported: nativeSupported || testFallbackEnabled,
   };
 }
