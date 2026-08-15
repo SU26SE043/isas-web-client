@@ -17,6 +17,7 @@ describe('campaignQuestionLimits', () => {
   it('defaults generate count to min(max, 10)', () => {
     expect(defaultGenerateCount(null)).toBe(10);
     expect(defaultGenerateCount(8)).toBe(8);
+    expect(defaultGenerateCount(5)).toBe(5);
   });
 
   it('validates generate count rules', () => {

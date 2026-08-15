@@ -47,6 +47,7 @@ import {
   getGenerateQuestionsErrorMessage,
 } from '../utils/generateQuestionsError';
 import {
+  defaultGenerateCount,
   effectiveMaxQuestions,
   hasWizardJd,
   validateGenerateCount,
@@ -426,6 +427,13 @@ export function useCampaignWizard({
           return;
         }
         count = validated.count;
+      } else {
+        // Keep the system-default path inside the campaign limit as well.
+        // The API's omitted-count default can otherwise return more questions
+        // than the wizard allows, which leaves both Save and Continue disabled.
+        count = defaultGenerateCount(
+          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
+        );
       }
 
       generateLockRef.current = true;
@@ -435,7 +443,7 @@ export function useCampaignWizard({
         const id = await fileActions.ensureDraftId();
         const updated = await onGenerateQuestions({
           campaignId: id,
-          ...(count == null ? {} : { count }),
+          count,
         });
         setState((prev) => ({
           ...prev,
@@ -454,14 +462,7 @@ export function useCampaignWizard({
         }));
         setQuestionsSaved(true);
         const received = updated.questions.length;
-        if (count == null) {
-          toast.success(
-            t('employer.campaigns.campaignQuestions.success.generated').replace(
-              '{{count}}',
-              String(received),
-            ),
-          );
-        } else if (received < count) {
+        if (received < count) {
           toast(
             t('employer.campaigns.campaignQuestions.success.generatedLimited')
               .replace('{{requested}}', String(count))

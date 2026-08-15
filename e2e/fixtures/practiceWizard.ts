@@ -69,6 +69,9 @@ export async function completePracticeSetupWizard(page: Page): Promise<string> {
   await page.getByRole('spinbutton', { name: /Question count/i }).fill('3');
   await page.getByRole('button', { name: /^Next$/i }).click();
 
+  // Level (seniority): default preselection is fine
+  await page.getByRole('button', { name: /^Next$/i }).click();
+
   // Grading criteria: all stubbed criteria are preselected once the rubric loads.
   await expect(page.getByRole('heading', { name: /Choose grading criteria/i })).toBeVisible({
     timeout: 15_000,
