@@ -10,7 +10,7 @@ import {
   getLearningPracticeSession,
   isLastLearningQuestion,
 } from '../services/learningPracticeSession.registry';
-import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { submitPracticeSession } from '../services/b2cPracticeSession.service';
 import {
   invalidateLearningRoadmapDetail,
   invalidateLearningRoadmaps,
@@ -56,7 +56,7 @@ export function LearningQuestionReportPage() {
     setIsContinuing(true);
     setCompleteError(false);
     try {
-      await roadmapPracticeService.completePracticeSession(sessionId);
+      await submitPracticeSession(sessionId);
       await Promise.all([
         invalidateLearningRoadmapDetail(queryClient, roadmapId),
         invalidateLearningRoadmaps(queryClient),

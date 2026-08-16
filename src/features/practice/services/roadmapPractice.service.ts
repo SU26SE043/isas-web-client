@@ -361,10 +361,6 @@ export const roadmapPracticeService = {
     return latest;
   },
 
-  async completePracticeSession(sessionId: string): Promise<void> {
-    await apiClient.post(learningEndpoints.completePracticeSession(sessionId), {});
-  },
-
   async getRoadmapReport(roadmapId: string): Promise<RoadmapPracticeReport> {
     const response = await apiClient.get(learningEndpoints.roadmapReport(roadmapId));
     return mapRoadmapReport(response.data, roadmapId);

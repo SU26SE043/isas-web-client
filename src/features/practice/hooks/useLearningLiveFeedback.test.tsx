@@ -5,7 +5,7 @@ import { useLearningLiveFeedback } from './useLearningLiveFeedback';
 
 const mockNavigate = vi.fn();
 const mockSubmitAnswer = vi.fn();
-const mockCompletePracticeSession = vi.fn();
+const mockSubmitPracticeSession = vi.fn();
 const mockWaitForFeedback = vi.fn();
 const mockAppendAnswer = vi.fn();
 const mockAdvanceLearningQuestion = vi.fn();
@@ -17,9 +17,11 @@ vi.mock('../services/roadmapPractice.service', () => ({
   roadmapPracticeService: {
     maxAnswerBytes: 50 * 1024 * 1024,
     submitAnswer: (...args: unknown[]) => mockSubmitAnswer(...args),
-    completePracticeSession: (...args: unknown[]) => mockCompletePracticeSession(...args),
     waitForSessionQuestionFeedback: (...args: unknown[]) => mockWaitForFeedback(...args),
   },
+}));
+vi.mock('../services/b2cPracticeSession.service', () => ({
+  submitPracticeSession: (...args: unknown[]) => mockSubmitPracticeSession(...args),
 }));
 vi.mock('../services/learningPracticeSession.registry', () => ({
   appendLearningAnswer: (...args: unknown[]) => mockAppendAnswer(...args),
@@ -32,7 +34,7 @@ const secondQuestion = { id: 'q-2', content: 'Second question', timeLimitSeconds
 
 beforeEach(() => {
   mockSubmitAnswer.mockResolvedValue({ questionId: 'q-1', status: 'Pending' });
-  mockCompletePracticeSession.mockResolvedValue(undefined);
+  mockSubmitPracticeSession.mockResolvedValue(undefined);
   mockGetLearningPracticeSession.mockReturnValue({
     roadmapId: 'roadmap-1',
     lessonId: 'lesson-1',
@@ -75,7 +77,7 @@ describe('useLearningLiveFeedback', () => {
       }));
     });
 
-    expect(mockCompletePracticeSession).toHaveBeenCalledWith('learning-1');
+    expect(mockSubmitPracticeSession).toHaveBeenCalledWith('learning-1');
     expect(mockNavigate).toHaveBeenCalledWith(
       '/candidate/learning/roadmaps/roadmap-1/lessons/lesson-1/report?sessionId=learning-1',
       { replace: true },

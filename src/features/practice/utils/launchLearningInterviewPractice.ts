@@ -10,14 +10,61 @@ import type { StartLessonResult } from '../types/roadmapPractice.api.types';
 
 const inFlightStarts = new Map<string, Promise<StartLessonResult>>();
 
+/**
+ * Identifies a roadmap lesson across the preparation, room, and report routes.
+ * The API returns a regular UUID for a practice session, so this context must
+ * travel with the client route rather than being inferred from that UUID.
+ */
+export interface LearningSessionRouteContext {
+  roadmapId: string;
+  lessonId: string;
+}
+
+export function getLearningSessionRouteContext(
+  params: URLSearchParams,
+): LearningSessionRouteContext | null {
+  const roadmapId = params.get('roadmapId')?.trim();
+  const lessonId = params.get('lessonId')?.trim();
+  return roadmapId && lessonId ? { roadmapId, lessonId } : null;
+}
+
+function withLearningSessionRouteContext(
+  path: string,
+  context?: LearningSessionRouteContext,
+  extra?: Record<string, string>,
+) {
+  if (!context) return path;
+  const params = new URLSearchParams({
+    roadmapId: context.roadmapId,
+    lessonId: context.lessonId,
+    ...extra,
+  });
+  return `${path}?${params.toString()}`;
+}
+
 /** Entry into the existing shared interview UI (not a separate Learning room). */
-export function learningInterviewPreparePath(sessionId: string) {
-  return `/interview/${sessionId}/prepare`;
+export function learningInterviewPreparePath(
+  sessionId: string,
+  context?: LearningSessionRouteContext,
+) {
+  return withLearningSessionRouteContext(`/interview/${sessionId}/prepare`, context);
 }
 
 /** Direct path to the shared practice room (same PracticeInterviewPage as B2C). */
-export function learningInterviewRoomPath(sessionId: string) {
-  return `/interview/${sessionId}/room`;
+export function learningInterviewRoomPath(
+  sessionId: string,
+  context?: LearningSessionRouteContext,
+  startWithCountdown = false,
+) {
+  return withLearningSessionRouteContext(`/interview/${sessionId}/room`, context,
+    startWithCountdown ? { start: 'countdown' } : undefined);
+}
+
+export function learningPracticeReportPath(
+  sessionId: string,
+  context: LearningSessionRouteContext,
+) {
+  return `/candidate/learning/roadmaps/${encodeURIComponent(context.roadmapId)}/lessons/${encodeURIComponent(context.lessonId)}/report?sessionId=${encodeURIComponent(sessionId)}`;
 }
 
 export function learningRoadmapReportPath(roadmapId: string) {
@@ -26,7 +73,8 @@ export function learningRoadmapReportPath(roadmapId: string) {
 
 /**
  * Start (or resume) lesson practice via POST .../lessons/{lessonId}/start.
- * Registers the session locally so shared interview room treats it as learning.
+ * Session data is cached locally for backwards-compatible views only. Routing
+ * uses roadmapId/lessonId in the URL, which survives a tab refresh.
  * Concurrent/Strict Mode duplicate calls share one in-flight request.
  */
 export async function startLearningLessonPractice(input: {

@@ -1,35 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
 import {
   isCampaignSessionId,
-  isLearningSessionId,
   requiresIdentityVerification,
 } from '../types/interviewFlow.types';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingStartPanel';
-import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
 import { requestInterviewFullscreen } from '../hooks/useInterviewFullscreen';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import {
+  getLearningSessionRouteContext,
+  learningInterviewRoomPath,
+} from '../utils/launchLearningInterviewPractice';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
 export const WaitingRoomPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   useInterviewFlowSession(sessionId);
   const { deviceCheckPassed, identityVerified } = useInterviewFlowStore();
   const isCampaign = isCampaignSessionId(sessionId);
-  const isLearning = isLearningSessionId(sessionId);
-  const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
+  const learningContext = getLearningSessionRouteContext(searchParams);
+  const isLearning = Boolean(learningContext);
   const redirectToPrep = !isCampaign && !isLearning;
   const campaignRoomPath = () => {
     const campaign = readCampaignInterviewSession(sessionId);
@@ -90,16 +93,16 @@ export const WaitingRoomPage: React.FC = () => {
   }, [isLearning, navigate, redirectToPrep, sessionId, status]);
 
   const handleLearningStart = async () => {
-    if (!learningMeta || status !== 'ready' || inFlightRef.current || isStarting) return;
+    if (!learningContext || status !== 'ready' || inFlightRef.current || isStarting) return;
     inFlightRef.current = true;
     setIsStarting(true);
     setStartError(null);
     try {
       await requestInterviewFullscreen();
       void queryClient.invalidateQueries({
-        queryKey: learningRoadmapDetailQueryKey(learningMeta.roadmapId),
+        queryKey: learningRoadmapDetailQueryKey(learningContext.roadmapId),
       });
-      navigate(`/interview/${sessionId}/room?start=countdown`, { replace: true });
+      navigate(learningInterviewRoomPath(sessionId, learningContext, true), { replace: true });
     } catch {
       setStartError('generic');
     } finally {
@@ -128,7 +131,7 @@ export const WaitingRoomPage: React.FC = () => {
             creditOpen={creditOpen}
             onCreditOpenChange={setCreditOpen}
             onStart={() => void handleLearningStart()}
-            canStart={Boolean(learningMeta)}
+            canStart={Boolean(learningContext)}
             isReady={status === 'ready'}
           />
         ) : null}

@@ -7,11 +7,13 @@ import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { practiceSessionService } from '../../services/practiceSession.service';
-import { isLearningSessionId } from '../../types/interviewFlow.types';
 import { LearningWaitingStartPanel } from '../flow/LearningWaitingStartPanel';
-import { getLearningPracticeSession } from '../../services/learningPracticeSession.registry';
 import { learningRoadmapDetailQueryKey } from '../../hooks/useLearningRoadmaps';
 import { requestInterviewFullscreen } from '../../hooks/useInterviewFullscreen';
+import {
+  learningInterviewRoomPath,
+  type LearningSessionRouteContext,
+} from '../../utils/launchLearningInterviewPractice';
 import type { PracticeSession } from '../../mocks/session.fixtures';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
@@ -21,15 +23,15 @@ interface WaitingRoomStepProps {
   sessionId: string;
   session: PracticeSession;
   onBack: () => void;
+  learningContext?: LearningSessionRouteContext | null;
 }
 
-export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepProps) {
+export function WaitingRoomStep({ sessionId, session, onBack, learningContext }: WaitingRoomStepProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isLearning = isLearningSessionId(sessionId);
+  const isLearning = Boolean(learningContext);
   const campaignSession = readCampaignInterviewSession(sessionId);
-  const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [pollError, setPollError] = useState<'capacity' | 'generic' | null>(null);
@@ -91,16 +93,16 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   };
 
   const handleLearningStart = async () => {
-    if (!learningMeta || status !== 'ready' || inFlightRef.current || isStarting) return;
+    if (!learningContext || status !== 'ready' || inFlightRef.current || isStarting) return;
     inFlightRef.current = true;
     setIsStarting(true);
     setStartError(null);
     try {
       await requestInterviewFullscreen();
       void queryClient.invalidateQueries({
-        queryKey: learningRoadmapDetailQueryKey(learningMeta.roadmapId),
+        queryKey: learningRoadmapDetailQueryKey(learningContext.roadmapId),
       });
-      navigate(`/interview/${sessionId}/room?start=countdown`, { replace: true });
+      navigate(learningInterviewRoomPath(sessionId, learningContext, true), { replace: true });
     } catch {
       setStartError('generic');
     } finally {
@@ -147,7 +149,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
             creditOpen={creditOpen}
             onCreditOpenChange={setCreditOpen}
             onStart={() => void handleLearningStart()}
-            canStart={Boolean(learningMeta)}
+            canStart={Boolean(learningContext)}
             isReady={status === 'ready'}
           />
         ) : null}

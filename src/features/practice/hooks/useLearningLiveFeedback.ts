@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { submitPracticeSession } from '../services/b2cPracticeSession.service';
 import {
   advanceLearningQuestion,
   appendLearningAnswer,
@@ -100,7 +101,7 @@ export function useLearningLiveFeedback(
       }
 
       setIsCompleting(true);
-      await roadmapPracticeService.completePracticeSession(sessionId);
+      await submitPracticeSession(sessionId);
       navigate(sessionReportPath(learningMeta.roadmapId, learningMeta.lessonId, sessionId), {
         replace: true,
       });

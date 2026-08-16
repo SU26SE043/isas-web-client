@@ -31,12 +31,12 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
 - B2C: **no** proctoring banner, tab listeners, periodic snapshots, or violation pause.
 - B2B campaign sessions: terms gate → identity → camera always on → periodic face capture (mock) → violation pause → auto-submit at max violations.
-- Flow progress persisted per session in `sessionStorage`.
+- Ephemeral device/consent progress may be persisted per session in `sessionStorage`; durable roadmap ownership is carried by the `roadmapId` and `lessonId` route context, not inferred from a session ID or browser storage.
 - Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap preview via `learningService`, error/loading states.
 - Post-interview result uses `/practice/result?sessionId=<guid>` and `GET /api/v1/interview/practice/sessions/{sessionId}`. Invalid or prefixed IDs never call the API; pending evaluation polls every 3s and stops on `Scored` or failed status; `401`, `403`, `404`, generation failure, and generic failures have distinct localized states.
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
 - Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
-- Learning practice advances to the next question immediately after a successful recording upload; AI scoring runs in the background and the aggregate lesson report polls until the complete feedback is ready.
+- Learning practice uses the shared answer/submit endpoints: it advances to the next question immediately after a successful recording upload; the UI may submit the session only when the API returns `interviewComplete`. AI scoring runs in the background and the aggregate lesson report offers retry/recovery if scoring exceeds the polling window.
 - Learning waiting rooms poll the already-created session and keep **Start** disabled until questions are available, preventing a duplicate lesson-start request.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
 - Learning hub, module viewer (`passThreshold`), guided practice, progress dashboard.

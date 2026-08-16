@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
@@ -22,6 +22,7 @@ export function InterviewCompletePage() {
   const isPlaywrightSession =
     isPlaywrightRuntime() && /^session-[0-9a-f]+$/i.test(sessionId);
   const isValidSessionId = isValidPracticeSessionId(sessionId);
+  const [scoringTimedOut, setScoringTimedOut] = useState(false);
 
   const query = useQuery({
     queryKey: ['practice-session', sessionId],
@@ -32,7 +33,7 @@ export function InterviewCompletePage() {
       if (session && (isPracticeReportReady(session) || isPracticeReportFailed(session.status))) {
         return false;
       }
-      return 3000;
+      return scoringTimedOut ? false : 3000;
     },
   });
 
@@ -52,6 +53,17 @@ export function InterviewCompletePage() {
       replace: true,
     });
   }, [isLegacy, isScored, navigate, resetFlow, session, sessionId]);
+
+  useEffect(() => {
+    if (isLegacy || isScored || query.isError || scoringTimedOut) return;
+    const timer = window.setTimeout(() => setScoringTimedOut(true), 120_000);
+    return () => window.clearTimeout(timer);
+  }, [isLegacy, isScored, query.isError, scoringTimedOut]);
+
+  const retryScoring = () => {
+    setScoringTimedOut(false);
+    void query.refetch();
+  };
 
   if (isLegacy || isPlaywrightSession) {
     return (
@@ -100,7 +112,7 @@ export function InterviewCompletePage() {
       <div className="page-container page-section flex min-h-screen items-center justify-center">
         <div className="w-full max-w-lg rounded-xl border border-subtle bg-surface-raised p-8 text-center">
           <h1 className="heading-primary text-2xl">{t('practice.errors.scoringFailed')}</h1>
-          <button type="button" className="btn-primary mt-6" onClick={() => void query.refetch()}>
+          <button type="button" className="btn-primary mt-6" onClick={retryScoring}>
             {t('practice.scoring.retry')}
           </button>
         </div>
@@ -129,6 +141,19 @@ export function InterviewCompletePage() {
             <li>{t('practice.scoring.criteria')}</li>
             <li>{t('practice.scoring.report')}</li>
           </ol>
+          {scoringTimedOut ? (
+            <div className="space-y-3 border-t border-subtle pt-4">
+              <p className="text-sm text-warning">{t('practice.scoring.takingLonger')}</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <button type="button" className="btn-primary" onClick={retryScoring}>
+                  {t('practice.scoring.retry')}
+                </button>
+                <Link to="/candidate/dashboard" className="btn-secondary inline-flex">
+                  {t('practice.flow.backToDashboard')}
+                </Link>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     );

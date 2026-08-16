@@ -41,7 +41,7 @@ export function LearningPracticeDeviceCheckPage() {
           setError(true);
           return;
         }
-        navigate(learningInterviewPreparePath(result.session.sessionId), { replace: true });
+        navigate(learningInterviewPreparePath(result.session.sessionId, { roadmapId, lessonId }), { replace: true });
       } catch {
         if (active) setError(true);
       }

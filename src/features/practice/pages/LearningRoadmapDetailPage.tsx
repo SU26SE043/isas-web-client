@@ -78,7 +78,7 @@ export function LearningRoadmapDetailPage() {
     setLaunchingLessonId(lessonId);
     try {
       if (sessionId) {
-        navigate(learningInterviewPreparePath(sessionId));
+        navigate(learningInterviewPreparePath(sessionId, { roadmapId, lessonId }));
         return;
       }
       const result = await startLearningLessonPractice({
@@ -90,7 +90,7 @@ export function LearningRoadmapDetailPage() {
         setLaunchingLessonId(null);
         return;
       }
-      navigate(learningInterviewPreparePath(result.session.sessionId));
+      navigate(learningInterviewPreparePath(result.session.sessionId, { roadmapId, lessonId }));
     } catch {
       setLaunchingLessonId(null);
     }
