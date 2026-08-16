@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
@@ -20,7 +20,6 @@ import { ResultsExportMenu } from './ResultsExportMenu';
 import { ResultsRankingTable } from './ResultsRankingTable';
 import { ResultsSummaryCards, ResultsSummarySkeleton } from './ResultsSummaryCards';
 import { ResultsToolbar } from './ResultsToolbar';
-import { ResultTranscriptDrawer } from './ResultTranscriptDrawer';
 import { UnscoredFlaggedSection } from './UnscoredFlaggedSection';
 
 interface CampaignResultsPanelProps {
@@ -37,13 +36,13 @@ export function CampaignResultsPanel({
   showPageHeader = true,
 }: CampaignResultsPanelProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const resultsQuery = useCampaignResults(campaignId, { enabled });
   const [search, setSearch] = useState('');
   const [outcome, setOutcome] = useState<ResultsOutcomeFilter>('all');
   const [review, setReview] = useState<ResultsReviewFilter>('all');
   const [sort, setSort] = useState<ResultsSort>('rankAsc');
   const [selected, setSelected] = useState<CampaignResultItem | null>(null);
-  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -72,8 +71,7 @@ export function CampaignResultsPanel({
   }, [outcome, review, search, sort]);
 
   const openTranscript = (item: CampaignResultItem) => {
-    setSelected(item);
-    setTranscriptOpen(true);
+    navigate(`/employer/campaigns/${campaignId}/results/${encodeURIComponent(item.sessionId)}`);
   };
   const openOverride = (item: CampaignResultItem) => {
     setSelected(item);
@@ -191,16 +189,6 @@ export function CampaignResultsPanel({
         <UnscoredFlaggedSection items={resultsQuery.data.unscoredFlagged ?? []} />
       ) : null}
 
-      <ResultTranscriptDrawer
-        open={transcriptOpen}
-        campaignId={campaignId}
-        item={selected}
-        onClose={() => setTranscriptOpen(false)}
-        onOverride={() => {
-          setTranscriptOpen(false);
-          setOverrideOpen(true);
-        }}
-      />
       <OverrideResultModal
         open={overrideOpen}
         campaignId={campaignId}

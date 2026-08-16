@@ -12,6 +12,8 @@ const WINDOW_FLAG_TYPES = new Set([
   'focuslost',
   'windowviolation',
   'windowfocusloss',
+  'fullscreenexit',
+  'exitfullscreen',
 ]);
 
 const TIME_FLAG_TYPES = new Set([

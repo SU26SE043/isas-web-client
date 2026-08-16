@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { EmployerDashboardLayout } from '@/layouts/EmployerDashboardLayout';
 import { CampaignDetailPage } from '@/features/employer-campaigns/pages/CampaignDetailPage';
+import { CampaignResultDetailPage } from '@/features/employer-campaigns/pages/CampaignResultDetailPage';
 import { CampaignListPage } from '@/features/employer-campaigns/pages/CampaignListPage';
 import { CampaignWizardPage } from '@/features/employer-campaigns/pages/CampaignWizardPage';
 import { CampaignInvitePage } from '@/features/employer-campaigns/pages/CampaignInvitePage';
@@ -86,6 +87,7 @@ export const enterpriseRoutes: RouteObject[] = [
                 path: 'campaigns/:id/results',
                 element: <CampaignWorkspaceRedirect target="overview-results" />,
               },
+              { path: 'campaigns/:id/results/:sessionId', element: <CampaignResultDetailPage /> },
               { path: 'campaigns/:id/overview', element: <CampaignDetailPage /> },
               { path: 'campaigns/:id/edit', element: <CampaignWizardPage /> },
               {
