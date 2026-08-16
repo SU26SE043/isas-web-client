@@ -303,6 +303,12 @@ export function useB2cPracticeRoom(
           }
         } catch {
           if (cancelled) return;
+          // Auto-submit failed outright (as opposed to being superseded by a
+          // question change) — let the next tick retry instead of leaving
+          // this question permanently stuck behind the guard.
+          if (timeoutHandledForQuestionRef.current === questionId) {
+            timeoutHandledForQuestionRef.current = null;
+          }
         } finally {
           if (!cancelled) setIsTimingOut(false);
         }

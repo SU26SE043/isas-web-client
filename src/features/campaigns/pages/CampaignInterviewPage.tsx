@@ -191,7 +191,7 @@ export function CampaignInterviewPage() {
         startWithCountdown
         countdownReady={fullscreen.isFullscreen}
         deadlineAt={stored?.deadlineAt}
-        completePath={`/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/completed/${encodeURIComponent(sessionId)}`}
+        completePath="/candidate/campaigns"
         violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}

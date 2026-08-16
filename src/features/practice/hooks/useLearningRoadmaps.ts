@@ -37,6 +37,18 @@ export function useLearningRoadmaps(query: LearningDashboardQuery) {
   const result = useQuery({
     queryKey: learningRoadmapsQueryKey(query),
     queryFn: () => learningPathService.listRoadmaps(query),
+    refetchInterval: (activeQuery) => {
+      const items = activeQuery.state.data;
+      if (!items) return false;
+      const isSyncing = items.some(
+        (item) =>
+          item.status !== 'completed' &&
+          item.progressPercent === 0 &&
+          !item.currentMilestoneTitle &&
+          !item.currentLessonTitle,
+      );
+      return isSyncing ? 4000 : false;
+    },
   });
 
   useEffect(() => {

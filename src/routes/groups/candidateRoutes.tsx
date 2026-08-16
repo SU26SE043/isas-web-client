@@ -52,7 +52,6 @@ import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/Candid
 import { CandidateCampaignDetailPage } from '@/features/campaigns/pages/CandidateCampaignDetailPage';
 import { CampaignFaceEnrollPage } from '@/features/campaigns/pages/CampaignFaceEnrollPage';
 import { CampaignInterviewPage } from '@/features/campaigns/pages/CampaignInterviewPage';
-import { CampaignInterviewCompletedPage } from '@/features/campaigns/pages/CampaignInterviewCompletedPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -135,8 +134,11 @@ export const candidateRoutes: RouteObject[] = [
                 element: <CampaignFaceEnrollPage />,
               },
               {
+                // Candidates no longer see a results/completion page after
+                // finishing a campaign interview — send old links back to
+                // the campaign list, where the card now just shows Completed.
                 path: 'campaigns/:campaignId/completed/:sessionId',
-                element: <CampaignInterviewCompletedPage />,
+                element: <Navigate to="/candidate/campaigns" replace />,
               },
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },
