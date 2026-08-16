@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, CheckCircle2, Coins, Loader2, Play, Target, TrendingUp, XCircle } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import { useDashboardSummary } from '../hooks/useDashboardSummary';
+import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { useInterviewHistory } from '@/features/practice/hooks/useInterviewHistory';
 import { computeInterviewActivityStats } from '../utils/interviewHeatmapUtils';
 
@@ -39,10 +39,10 @@ function MetricCard({
 
 export const CandidateDashboardPage: React.FC = () => {
   const { t } = useLanguage();
-  const { summary, isLoading: summaryLoading } = useDashboardSummary();
+  const { available: tokenAvailable, isLoading: walletLoading } = useTokenWallet();
   const { interviews, isLoading: historyLoading } = useInterviewHistory({ pageSize: 500 });
 
-  if (summaryLoading || historyLoading) {
+  if (walletLoading || historyLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
@@ -52,7 +52,6 @@ export const CandidateDashboardPage: React.FC = () => {
   }
 
   const stats = computeInterviewActivityStats(interviews);
-  const tokenAvailable = summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0;
 
   return (
     <div className="dashboard-content">
@@ -101,7 +100,7 @@ export const CandidateDashboardPage: React.FC = () => {
         />
         <MetricCard
           label={t('profile.dashboard.tokens')}
-          value={tokenAvailable.toLocaleString()}
+          value={(tokenAvailable ?? 0).toLocaleString()}
           hint={t('profile.dashboard.tokensHint')}
           icon={Coins}
           to="/candidate/credits"
