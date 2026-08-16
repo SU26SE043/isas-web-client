@@ -21,6 +21,7 @@ interface LearningWaitingStartPanelProps {
   onCreditOpenChange: (open: boolean) => void;
   onStart: () => void;
   canStart: boolean;
+  isReady: boolean;
 }
 
 export function LearningWaitingStartPanel({
@@ -31,6 +32,7 @@ export function LearningWaitingStartPanel({
   onCreditOpenChange,
   onStart,
   canStart,
+  isReady,
 }: LearningWaitingStartPanelProps) {
   const { t } = useLanguage();
 
@@ -38,7 +40,13 @@ export function LearningWaitingStartPanel({
     <>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">{t('practice.flow.waiting.learningHint')}</p>
-        {questionCount > 0 ? (
+        {!isReady ? (
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" role="status">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            {t('practice.flow.waiting.polling')}
+          </div>
+        ) : null}
+        {isReady && questionCount > 0 ? (
           <p className="text-sm text-foreground">
             {t('practice.flow.waiting.readyPreview').replace('{count}', String(questionCount))}
           </p>
@@ -46,7 +54,7 @@ export function LearningWaitingStartPanel({
         <button
           type="button"
           className="btn-primary inline-flex items-center justify-center gap-2"
-          disabled={isStarting || !canStart}
+          disabled={isStarting || !canStart || !isReady}
           onClick={onStart}
         >
           {isStarting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}

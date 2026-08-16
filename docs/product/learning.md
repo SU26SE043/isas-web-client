@@ -87,8 +87,9 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 
 1. Theory / Open Practice registers a learning session and opens **`/interview/:sessionId/prepare`** (shared prepare → device-check → waiting → room).
 2. Legacy Learning paths `.../practice/device-check` and `.../practice` only redirect into that shared flow.
-3. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** uploads the recording, starts evaluation in the background, and immediately displays the next question.
-4. On the **last** question, **Submit answer** uploads the recording, completes the session, then opens the **lesson Practice Report** (aggregate of all question feedback) as soon as scoring is ready.
+3. In the waiting screen after device check, the system polls the existing session until it has one or more questions. The **Start** button remains disabled while question generation is pending; it never creates the lesson session a second time.
+4. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** uploads the recording, starts evaluation in the background, and immediately displays the next question.
+5. On the **last** question, **Submit answer** uploads the recording, completes the session, then opens the **lesson Practice Report** (aggregate of all question feedback) as soon as scoring is ready.
 
 | Mode | Feedback timing | End button |
 | --- | --- | --- |

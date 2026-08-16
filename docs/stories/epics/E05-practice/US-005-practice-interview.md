@@ -37,6 +37,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
 - Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
 - Learning practice advances to the next question immediately after a successful recording upload; AI scoring runs in the background and the aggregate lesson report polls until the complete feedback is ready.
+- Learning waiting rooms poll the already-created session and keep **Start** disabled until questions are available, preventing a duplicate lesson-start request.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
 - Learning hub, module viewer (`passThreshold`), guided practice, progress dashboard.
 - Certificate viewer with PDF download; route aliases `/candidate/results/:id`, `/candidate/history`.
