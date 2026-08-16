@@ -23,7 +23,6 @@ import {
   Users,
   Wrench,
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
@@ -118,13 +117,6 @@ export const AdminDashboardLayout: React.FC = () => {
           </div>
         </aside>
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
-          <div className="glass-topbar border-b px-4 py-3 sm:px-6">
-            <Alert variant="info">
-              <AlertDescription>
-                {t('admin.layout.mfaRequired')} {t('admin.layout.singleSession')}
-              </AlertDescription>
-            </Alert>
-          </div>
           <Outlet />
         </main>
       </div>

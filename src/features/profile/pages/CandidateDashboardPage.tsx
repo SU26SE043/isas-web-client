@@ -1,34 +1,48 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Coins, Loader2, Play, Target, TrendingUp, XCircle } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { useDashboardSummary } from '../hooks/useDashboardSummary';
-import { useProfile } from '../hooks/useProfile';
-import { InterviewActivitySection } from '../components/dashboard/InterviewActivitySection';
-import { ProfileCompletenessBar } from '../components/ProfileCompletenessBar';
+import { useInterviewHistory } from '@/features/practice/hooks/useInterviewHistory';
+import { computeInterviewActivityStats } from '../utils/interviewHeatmapUtils';
 
-function MetricCard({ label, value, hint, to }: { label: string; value: string; hint?: string; to?: string }) {
-  const content = (
-    <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-      <p className="text-label text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-      {hint ? <p className="mt-1 text-caption text-muted-foreground">{hint}</p> : null}
-    </div>
+function MetricCard({
+  label,
+  value,
+  hint,
+  to,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  to: string;
+  icon: React.ElementType;
+}) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border border-subtle bg-surface-raised p-5 transition-colors hover:border-foreground/30 focus-ring"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-surface-overlay text-muted-foreground">
+          <Icon className="size-5" aria-hidden />
+        </span>
+        <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+      </div>
+      <p className="mt-5 text-label text-muted-foreground">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+      <p className="mt-1 text-caption text-muted-foreground">{hint}</p>
+    </Link>
   );
-
-  if (to) {
-    return <Link to={to} className="block transition hover:opacity-90 focus-ring rounded-xl">{content}</Link>;
-  }
-
-  return content;
 }
 
 export const CandidateDashboardPage: React.FC = () => {
   const { t } = useLanguage();
   const { summary, isLoading: summaryLoading } = useDashboardSummary();
-  const { completeness, isLoading: profileLoading } = useProfile();
+  const { interviews, isLoading: historyLoading } = useInterviewHistory({ pageSize: 500 });
 
-  if (summaryLoading || profileLoading) {
+  if (summaryLoading || historyLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
@@ -37,7 +51,8 @@ export const CandidateDashboardPage: React.FC = () => {
     );
   }
 
-  const completenessPercent = completeness?.percent ?? summary?.profileCompleteness ?? 0;
+  const stats = computeInterviewActivityStats(interviews);
+  const tokenAvailable = summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0;
 
   return (
     <div className="dashboard-content">
@@ -46,46 +61,59 @@ export const CandidateDashboardPage: React.FC = () => {
         <p className="body-text mt-2 max-w-2xl">{t('profile.dashboard.subtitle')}</p>
       </div>
 
-      <div className="mb-8 rounded-xl border border-subtle bg-surface-raised p-5">
-        <ProfileCompletenessBar percent={completenessPercent} showGateHint />
-        {!completeness?.meetsGate ? (
-          <Link to="/candidate/profile/complete" className="btn-primary mt-4 inline-flex">
-            {t('profile.completeness.cta')}
-          </Link>
-        ) : null}
-      </div>
+      <Link
+        to="/practice"
+        className="group mb-6 flex items-center justify-between gap-4 rounded-2xl border border-foreground/20 bg-surface-elevated p-5 transition-colors hover:border-foreground/50 focus-ring sm:p-6"
+      >
+        <div className="flex items-center gap-4">
+          <span className="flex size-12 items-center justify-center rounded-full bg-foreground text-background">
+            <Play className="ml-0.5 size-5 fill-current" aria-hidden />
+          </span>
+          <div>
+            <p className="text-lg font-semibold text-foreground">{t('profile.dashboard.practiceAction')}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t('profile.dashboard.practiceHint')}</p>
+          </div>
+        </div>
+        <ArrowUpRight className="size-5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+      </Link>
 
-      <div className="mb-8">
-        <InterviewActivitySection />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label={t('profile.dashboard.heatmapTotal')}
+          value={String(stats.total)}
+          hint={t('profile.dashboard.statInterviewsHint')}
+          icon={Target}
+          to="/candidate/practice/history"
+        />
+        <MetricCard
+          label={t('profile.dashboard.heatmapAverageScore')}
+          value={`${stats.averageScore}%`}
+          hint={t('profile.dashboard.statScoreHint')}
+          icon={TrendingUp}
+          to="/candidate/practice/history"
+        />
+        <MetricCard
+          label={t('profile.dashboard.heatmapPassed')}
+          value={String(stats.passed)}
+          hint={t('profile.dashboard.statPassedHint')}
+          icon={CheckCircle2}
+          to="/candidate/practice/history?status=passed"
+        />
         <MetricCard
           label={t('profile.dashboard.tokens')}
-          value={(summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0).toLocaleString()}
-          hint={
-            (summary?.tokenReserved ?? 0) > 0
-              ? t('profile.dashboard.tokensReservedHint').replace(
-                  '{reserved}',
-                  (summary?.tokenReserved ?? 0).toLocaleString(),
-                )
-              : t('profile.dashboard.tokensHint')
-          }
+          value={tokenAvailable.toLocaleString()}
+          hint={t('profile.dashboard.tokensHint')}
+          icon={Coins}
           to="/candidate/credits"
         />
-        <MetricCard
-          label={t('profile.dashboard.practice')}
-          value={t('profile.dashboard.practiceAction')}
-          hint={t('profile.dashboard.practiceHint')}
-          to="/practice"
-        />
-        <MetricCard
-          label={t('profile.dashboard.cvStatus')}
-          value={summary?.hasCv ? t('profile.dashboard.cvUploaded') : t('profile.dashboard.cvMissing')}
-          hint={t('profile.dashboard.cvHint')}
-          to="/candidate/cv/analysis"
-        />
       </div>
+
+      {stats.failed > 0 ? (
+        <Link to="/candidate/practice/history?status=failed" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground focus-ring">
+          <XCircle className="size-4" aria-hidden />
+          {t('profile.dashboard.statFailedLink').replace('{count}', String(stats.failed))}
+        </Link>
+      ) : null}
     </div>
   );
 };

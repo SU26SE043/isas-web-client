@@ -51,8 +51,6 @@ export const adminTranslations: TranslationDictionary = {
     'admin.billing.actionFailed': 'Thao tác thanh toán thất bại. Vui lòng kiểm tra phản hồi từ backend.',
     'admin.billing.periodStart': 'Bắt đầu kỳ (tuỳ chọn)',
     'admin.billing.periodEnd': 'Kết thúc kỳ (tuỳ chọn)',
-    'admin.layout.mfaRequired': 'Cổng quản trị yêu cầu MFA cho mỗi lần đăng nhập theo BRL-019.',
-    'admin.layout.singleSession': 'Chỉ một phiên quản trị được hoạt động tại một thời điểm theo BRL-033.',
 
     'admin.status.active': 'Đang hoạt động',
     'admin.status.pending': 'Chờ xử lý',
@@ -401,8 +399,6 @@ export const adminTranslations: TranslationDictionary = {
     'admin.billing.actionFailed': 'Billing action failed. Check the backend response.',
     'admin.billing.periodStart': 'Period start (optional)',
     'admin.billing.periodEnd': 'Period end (optional)',
-    'admin.layout.mfaRequired': 'Admin portal requires MFA on every login under BRL-019.',
-    'admin.layout.singleSession': 'Only one active admin session is allowed at a time under BRL-033.',
 
     'admin.status.active': 'Active',
     'admin.status.pending': 'Pending',
