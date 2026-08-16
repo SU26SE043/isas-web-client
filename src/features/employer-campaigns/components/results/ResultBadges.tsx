@@ -4,6 +4,7 @@ import type { CampaignResultItem, CampaignResultStatus } from '../../types/campa
 import {
   formatResultDateTime,
   formatResultScore,
+  getResultFlagCount,
   hasResultOverride,
 } from '../../utils/campaignResultsActions';
 
@@ -54,7 +55,8 @@ export function ResultOverrideBadge({ item }: { item: CampaignResultItem }) {
 
 export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
   const { t } = useLanguage();
-  if (!item.flags.length) {
+  const flagCount = getResultFlagCount(item.flags);
+  if (flagCount === 0) {
     return <span className="text-xs text-muted-foreground">{t('employer.campaigns.results.flags.none')}</span>;
   }
   const summary = item.flags.map((flag) => `${flag.type}: ${flag.count}`).join('\n');
@@ -69,7 +71,7 @@ export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
     >
       {t('employer.campaigns.results.flags.count').replace(
         '{{count}}',
-        String(item.flags.length),
+        String(flagCount),
       )}
     </span>
   );

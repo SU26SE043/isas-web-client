@@ -1,6 +1,7 @@
 import { AppWindow, Clock3, TriangleAlert } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
+import { getResultFlagCount } from '../../utils/campaignResultsActions';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
@@ -10,8 +11,15 @@ const WINDOW_FLAG_TYPES = new Set([
   'tabswitch',
   'windowblur',
   'focuslost',
+  'focusloss',
   'windowviolation',
   'windowfocusloss',
+  'windowleave',
+  'windowexit',
+  'visibilitychange',
+  'visibilityhidden',
+  'documenthidden',
+  'pagehidden',
   'fullscreenexit',
   'exitfullscreen',
 ]);
@@ -39,7 +47,8 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
   const timeViolations = sumFlags(flags, TIME_FLAG_TYPES);
   const knownFlags = new Set([...WINDOW_FLAG_TYPES, ...TIME_FLAG_TYPES]);
   const otherFlags = flags.filter((flag) => !knownFlags.has(normalizedFlagType(flag.type)));
-  const hasViolations = windowViolations > 0 || timeViolations > 0 || otherFlags.length > 0;
+  const otherViolations = getResultFlagCount(otherFlags);
+  const hasViolations = windowViolations > 0 || timeViolations > 0 || otherViolations > 0;
 
   return (
     <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
@@ -75,11 +84,11 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
         />
       </div>
 
-      {otherFlags.length > 0 ? (
+      {otherViolations > 0 ? (
         <p className="mt-3 text-xs text-warning">
           {t('employer.campaigns.results.flags.count').replace(
             '{{count}}',
-            String(otherFlags.length),
+            String(otherViolations),
           )}
         </p>
       ) : null}
