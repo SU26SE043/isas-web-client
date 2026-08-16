@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -12,12 +11,10 @@ import {
 } from '../utils/campaignResultsActions';
 import { candidateDisplayEmail, candidateDisplayName, ResultStatusBadge } from '../components/results/ResultBadges';
 import { ProctoringAnalysis } from '../components/results/ProctoringAnalysis';
-import { OverrideResultModal } from '../components/results/OverrideResultModal';
 
 export function CampaignResultDetailPage() {
   const { id: campaignId = '', sessionId = '' } = useParams();
   const { t } = useLanguage();
-  const [overrideOpen, setOverrideOpen] = useState(false);
   const resultsQuery = useCampaignResults(campaignId);
   const item = resultsQuery.data?.results.find((result) => result.sessionId === sessionId) ?? null;
   const transcriptQuery = useCampaignResultTranscript(campaignId, item?.sessionId ?? null, {
@@ -70,18 +67,7 @@ export function CampaignResultDetailPage() {
             </article>
           ))}
         </section>
-        <div className="flex justify-end border-t border-subtle pt-4">
-          <Button type="button" onClick={() => setOverrideOpen(true)}>
-            {t('employer.campaigns.results.actions.override')}
-          </Button>
-        </div>
       </main>
-      <OverrideResultModal
-        open={overrideOpen}
-        campaignId={campaignId}
-        item={item}
-        onClose={() => setOverrideOpen(false)}
-      />
     </div>
   );
 }
