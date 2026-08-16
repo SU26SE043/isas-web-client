@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { AdminAnalyticsChart } from '../components/analytics/AdminAnalyticsChart';
+import { AdminRevenueMetrics } from '../components/analytics/AdminRevenueMetrics';
 import { AdminRoleDistribution } from '../components/analytics/AdminRoleDistribution';
 import { AdminMetricCard } from '../components/AdminMetricCard';
 import { AdminPageShell } from '../components/AdminPageShell';
@@ -26,6 +27,7 @@ import type { AdminAnalyticsGranularity } from '../types/adminAnalytics.types';
 export function AdminDashboardPage() {
   const { t, language } = useLanguage();
   const [groupBy, setGroupBy] = useState<AdminAnalyticsGranularity>('day');
+  const [revenueGroupBy, setRevenueGroupBy] = useState<AdminAnalyticsGranularity>('day');
   const analytics = useAdminAnalytics({ groupBy });
   const { snapshot, isLoading: isSnapshotLoading } = useAdminPlatform();
   const status = getApiStatusCode(analytics.error);
@@ -72,6 +74,11 @@ export function AdminDashboardPage() {
             <RefreshCw aria-hidden />
             {t('admin.analytics.refresh')}
           </Button>
+          <label className="sr-only" htmlFor="admin-revenue-granularity">{t('admin.finance.groupBy')}</label>
+          <select id="admin-revenue-granularity" value={revenueGroupBy} className="h-8 rounded-lg border border-satin bg-surface-overlay px-3 text-sm" onChange={(event) => setRevenueGroupBy(event.target.value as AdminAnalyticsGranularity)}>
+            <option value="day">{t('admin.finance.day')}</option>
+            <option value="month">{t('admin.finance.month')}</option>
+          </select>
         </div>
       )}
     >
@@ -82,6 +89,8 @@ export function AdminDashboardPage() {
             .replace('{to}', formatDate(analytics.data.to))}
         </p>
       ) : null}
+
+      <AdminRevenueMetrics groupBy={revenueGroupBy} />
 
       {analytics.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

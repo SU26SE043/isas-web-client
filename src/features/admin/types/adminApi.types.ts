@@ -34,6 +34,21 @@ export type PaymentModeInput = { ownerType: number; ownerId: string; paymentMode
 export type SubscriptionGrantInput = { ownerType: number; ownerId: string; planId: string; durationDays: number; activatedAt?: string; idempotencyKey: string };
 export type CreditAccount = Record<string, unknown>;
 export type CreditTransaction = Record<string, unknown>;
-export type AdminRevenueAnalytics = Record<string, unknown>;
+export type AdminRevenueBucket = { periodStart: string; amountVnd: number; orderCount: number };
+export type AdminRevenueFunnel = {
+  createdCount: number; paidCount: number; failedCount: number; expiredCount: number;
+  cancelledCount: number; pendingCount: number; conversionRatePct: number;
+};
+export type AdminRevenueAnalytics = {
+  from: string; to: string; granularity: string; grossRevenueVnd: number; paidOrderCount: number;
+  refundedVnd: number; refundedOrderCount: number; netRevenueVnd: number;
+  aiCostUsd: number; aiCostVnd: number; grossMarginVnd: number; refundRatePct: number;
+  payingOwnerCount: number; arpuVnd: number; buckets: AdminRevenueBucket[]; funnel: AdminRevenueFunnel;
+};
+export type AdminFinanceSnapshot = {
+  asOf: string;
+  outstandingReceivables: { issuedVnd: number; issuedCount: number; overdueVnd: number; overdueCount: number; totalVnd: number };
+  mrrVnd: number; activeSubscriptionCount: number;
+};
 export type AdminAiUsageAnalytics = Record<string, unknown>;
 export type AdminTrafficAnalytics = Record<string, unknown>;
