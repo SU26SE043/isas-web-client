@@ -61,6 +61,52 @@ function filterAndSortCards(
   return next.slice().sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
 }
 
+/**
+ * The list endpoint's DTO doesn't carry `milestones`, so its flat
+ * currentMilestoneTitle/currentLessonTitle/progressPercent fields are taken
+ * as-is (see mapApiRoadmapListItem) — the backend does not always populate
+ * them there even though the same roadmap's detail endpoint derives correct
+ * values from its milestones array. Backfill any card missing these from
+ * the detail endpoint so the dashboard doesn't show stale "—"/0% cards for
+ * roadmaps that actually have progress.
+ */
+async function enrichCardsMissingCurrentPointers(
+  cards: LearningRoadmapCard[],
+): Promise<LearningRoadmapCard[]> {
+  const incomplete = cards.filter(
+    (card) => !card.currentMilestoneTitle || !card.currentLessonTitle,
+  );
+  if (incomplete.length === 0) return cards;
+
+  const detailsById = new Map<string, LearningRoadmapDetail>();
+  await Promise.all(
+    incomplete.map(async (card) => {
+      try {
+        detailsById.set(card.id, await roadmapService.getRoadmap(card.id));
+      } catch {
+        // Leave this card as the list endpoint returned it; one roadmap's
+        // detail failing shouldn't break the rest of the dashboard.
+      }
+    }),
+  );
+  if (detailsById.size === 0) return cards;
+
+  return cards.map((card) => {
+    const detail = detailsById.get(card.id);
+    if (!detail) return card;
+    return {
+      ...card,
+      progressPercent: card.progressPercent > 0 ? card.progressPercent : detail.progressPercent,
+      currentMilestoneId: card.currentMilestoneId || detail.currentMilestoneId,
+      currentMilestoneTitle: card.currentMilestoneTitle || detail.currentMilestoneTitle,
+      currentMilestoneTitleVi: card.currentMilestoneTitleVi || detail.currentMilestoneTitleVi,
+      currentLessonId: card.currentLessonId || detail.currentLessonId,
+      currentLessonTitle: card.currentLessonTitle || detail.currentLessonTitle,
+      currentLessonTitleVi: card.currentLessonTitleVi || detail.currentLessonTitleVi,
+    };
+  });
+}
+
 export const roadmapService = {
   async listRoadmapsPage(query: LearningDashboardQuery = {}): Promise<{
     items: LearningRoadmapCard[];
@@ -85,7 +131,7 @@ export const roadmapService = {
 
   async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
     const page = await this.listRoadmapsPage(query);
-    const cards = page.items;
+    const cards = await enrichCardsMissingCurrentPointers(page.items);
     return filterAndSortCards(cards, query);
   },
 
