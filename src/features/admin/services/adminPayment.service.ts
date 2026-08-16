@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { readNextCursorHeader } from '../utils/adminCampaignsApi';
-import type { AdminApiPage, AdminAiUsageAnalytics, AdminOrder, AdminOrderParams, AdminRevenueAnalytics, AdminTrafficAnalytics, CreditAccount, CreditGrantInput, CreditTransaction, Package, PackageInput, PaymentModeInput, Plan, PlanInput, RefundInput, RefundSettleInput, SubscriptionGrantInput } from '../types/adminApi.types';
+import type { AdminApiPage, AdminAiUsageAnalytics, AdminFinanceSnapshot, AdminOrder, AdminOrderParams, AdminRevenueAnalytics, AdminTrafficAnalytics, CreditAccount, CreditGrantInput, CreditTransaction, Package, PackageInput, PaymentModeInput, Plan, PlanInput, RefundInput, RefundSettleInput, SubscriptionGrantInput } from '../types/adminApi.types';
 import { adminApiEndpoints } from './adminApi.endpoints';
 
 const list = <T>(data: unknown): T[] => Array.isArray(data) ? data as T[] : ((data as { data?: T[]; items?: T[] } | null)?.data ?? (data as { items?: T[] } | null)?.items ?? []);
@@ -19,6 +19,7 @@ export const adminPaymentService = {
   settleRefund: async (id: string, input: RefundSettleInput = {}) => (await apiClient.post(adminApiEndpoints.refundSettle(id), input)).data,
   payoutRefund: async (id: string) => (await apiClient.post(adminApiEndpoints.refundPayout(id))).data,
   getRevenue: async (params: { from?: string; to?: string; groupBy?: 'day' | 'month' } = {}) => (await apiClient.get<AdminRevenueAnalytics>(adminApiEndpoints.revenue, { params: reportParams(params) })).data,
+  getFinanceSnapshot: async () => (await apiClient.get<AdminFinanceSnapshot>(adminApiEndpoints.financeSnapshot)).data,
   getAiUsage: async (params: { from?: string; to?: string; groupBy?: 'day' | 'month' } = {}) => (await apiClient.get<AdminAiUsageAnalytics>(adminApiEndpoints.aiUsage, { params: reportParams(params) })).data,
   getTraffic: async (params: { from?: string; to?: string; groupBy?: 'hour' | 'day' } = {}) => (await apiClient.get<AdminTrafficAnalytics>(adminApiEndpoints.traffic, { params: reportParams(params) })).data,
   grantCredits: async (input: CreditGrantInput) => (await apiClient.post(adminApiEndpoints.grantCredits, input)).data,
