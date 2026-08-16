@@ -25,6 +25,13 @@ export function useQuestionSpeech(
   const objectUrlRef = useRef<string | null>(null);
   const lastAutoQuestionRef = useRef<string | null>(null);
   const pausedByViolationRef = useRef(false);
+  // Bumped whenever the "question we care about" changes (new loadAndPlay
+  // call, or the question-change effect's cleanup). A loadAndPlay call
+  // captures the counter value at start; if it no longer matches by the time
+  // an await resolves, that call's result is stale and must not touch
+  // playback/state — this is what stops a late TTS response for a question
+  // that's no longer current from hijacking the audio element.
+  const generationRef = useRef(0);
   const { enabled = true, onPlaybackStart, onPlaybackComplete } = options;
 
   const stopPlayback = useCallback(() => {
@@ -42,8 +49,9 @@ export function useQuestionSpeech(
     setIsPlaying(false);
   }, []);
 
+  /** Resolves true once playback finished normally, false if it failed (autoplay block or a real onerror). */
   const playBlob = useCallback(
-    async (blob: Blob) => {
+    async (blob: Blob): Promise<boolean> => {
       stopPlayback();
       const url = URL.createObjectURL(blob);
       objectUrlRef.current = url;
@@ -56,12 +64,14 @@ export function useQuestionSpeech(
         // Gắn analyser sau khi play() thành công: lúc đó chắc chắn đã có user
         // activation nên AudioContext resume được, không có nguy cơ mất tiếng.
         void attachSpeechAudio(audio);
-        await new Promise<void>((resolve) => {
+        await new Promise<void>((resolve, reject) => {
           audio.onended = () => resolve();
-          audio.onerror = () => resolve();
+          audio.onerror = () => reject(new Error('audio-playback-error'));
         });
+        return true;
       } catch {
         setNeedsManualPlay(true);
+        return false;
       } finally {
         detachSpeechAudio();
         setIsPlaying(false);
@@ -75,6 +85,8 @@ export function useQuestionSpeech(
     async (opts?: { force?: boolean }) => {
       if (!sessionId || !questionId) return;
       if (!enabled) return;
+      const myGeneration = ++generationRef.current;
+      const isStale = () => generationRef.current !== myGeneration;
       setIsLoadingSpeech(true);
       setSpeechWarning(null);
       try {
@@ -83,11 +95,21 @@ export function useQuestionSpeech(
           blob = await getQuestionSpeech(sessionId, questionId);
           cacheRef.current.set(questionId, blob);
         }
+        // The question we were fetching for is no longer current (a newer
+        // loadAndPlay call — or the question-change effect's cleanup — has
+        // already bumped the generation). Don't touch playback/state at all;
+        // whoever superseded us owns the audio element now.
+        if (isStale()) return;
         setQuestionState(questionId, 'reading_question');
-        await playBlob(blob);
-        setNeedsManualPlay(false);
+        const played = await playBlob(blob);
+        if (isStale()) return;
+        if (played) {
+          setNeedsManualPlay(false);
+        }
+        // else: playBlob already set needsManualPlay(true) — don't clobber it.
         setQuestionState(questionId, 'not_started');
       } catch (error) {
+        if (isStale()) return;
         const status = getApiStatusCode(error);
         if (status === 403) {
           setSpeechWarning('practice.errors.speechForbidden');
@@ -99,7 +121,7 @@ export function useQuestionSpeech(
         if (opts?.force) setNeedsManualPlay(true);
         onPlaybackComplete?.();
       } finally {
-        setIsLoadingSpeech(false);
+        if (!isStale()) setIsLoadingSpeech(false);
       }
     },
     [enabled, playBlob, questionId, sessionId, setQuestionState, setSpeechWarning],
@@ -111,6 +133,12 @@ export function useQuestionSpeech(
     if (lastAutoQuestionRef.current === questionId) return;
     lastAutoQuestionRef.current = questionId;
     void loadAndPlay();
+    return () => {
+      // Invalidate this call if the question changes again (or the hook
+      // unmounts) before it finishes — prevents a late-arriving response
+      // from playing over whatever the new current question started.
+      generationRef.current += 1;
+    };
   }, [enabled, loadAndPlay, questionId, sessionId]);
 
   useEffect(() => () => stopPlayback(), [stopPlayback]);

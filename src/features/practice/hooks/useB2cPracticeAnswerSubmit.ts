@@ -49,6 +49,20 @@ export function useB2cPracticeAnswerSubmit({
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [overwriteConfirmOpen, setOverwriteConfirmOpen] = useState(false);
   const pendingOverrideRef = useRef<{ file: File; durationSec: number } | null>(null);
+  // `store` and `recorder` are fresh object references every render (Zustand
+  // returns a new object on any store write anywhere; the recorder hook
+  // returns new inline callbacks each render). Reading them via refs instead
+  // of putting them in useCallback deps keeps submit* function identities
+  // stable across unrelated store/recorder churn — callers (e.g. the
+  // question-timeout effect in useB2cPracticeRoom) depend on that stability.
+  const storeRef = useRef(store);
+  storeRef.current = store;
+  const recorderRef = useRef(recorder);
+  recorderRef.current = recorder;
+  const onStopSpeechRef = useRef(onStopSpeech);
+  onStopSpeechRef.current = onStopSpeech;
+  const onStopMediaRef = useRef(onStopMedia);
+  onStopMediaRef.current = onStopMedia;
 
   const canSubmitAnswer =
     Boolean(recorder.audioFile) &&
@@ -61,6 +75,8 @@ export function useB2cPracticeAnswerSubmit({
     recorder.recordingStatus !== 'uploading';
 
   const performSubmit = useCallback(async (override?: { file: File; durationSec: number }) => {
+    const store = storeRef.current;
+    const recorder = recorderRef.current;
     const file = override?.file ?? recorder.audioFile;
     const durationSec = override?.durationSec ?? recorder.durationSec;
     if (!currentQuestion || !file) {
@@ -87,6 +103,11 @@ export function useB2cPracticeAnswerSubmit({
         interviewComplete: response.interviewComplete,
       });
       recorder.setSubmitted();
+      // Stop the previous question's narration the instant we know we're
+      // moving on, regardless of which branch below runs — previously this
+      // only happened on the interviewComplete branch, leaving old audio
+      // playing (and racing new-question TTS) on the normal advance path.
+      onStopSpeechRef.current();
 
       if (response.nextQuestion) {
         store.appendQuestion(response.nextQuestion);
@@ -95,11 +116,10 @@ export function useB2cPracticeAnswerSubmit({
         recorder.clearRecording();
       } else if (response.interviewComplete) {
         store.setInterviewComplete(true, response.nextAction ?? 'end');
-        onStopSpeech();
         recorder.stopRecordingAndDiscard();
         try {
           await submitPracticeSession(sessionId);
-          onStopMedia();
+          onStopMediaRef.current();
           navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
         } catch {
           store.setStage('ready_to_finish');
@@ -124,16 +144,7 @@ export function useB2cPracticeAnswerSubmit({
       setIsSubmittingAnswer(false);
       setOverwriteConfirmOpen(false);
     }
-  }, [
-    completePath,
-    currentQuestion,
-    navigate,
-    onStopMedia,
-    onStopSpeech,
-    recorder,
-    sessionId,
-    store,
-  ]);
+  }, [completePath, currentQuestion, navigate, sessionId]);
 
   const submitAnswer = useCallback(async () => {
     if (!canSubmitAnswer) {
@@ -179,8 +190,8 @@ export function useB2cPracticeAnswerSubmit({
       file: createSilentUnansweredAudioFile(),
       durationSec: 0,
     });
-    store.setQuestionState(currentQuestion.id, 'unanswered');
-  }, [currentQuestion, isSubmittingAnswer, performSubmit, store]);
+    storeRef.current.setQuestionState(currentQuestion.id, 'unanswered');
+  }, [currentQuestion, isSubmittingAnswer, performSubmit]);
 
   const confirmOverwriteSubmit = useCallback(() => {
     const pending = pendingOverrideRef.current;

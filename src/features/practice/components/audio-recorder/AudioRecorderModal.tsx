@@ -109,7 +109,10 @@ export function AudioRecorderModal({
         ? onAutoSubmitRecording(file, durationSec)
         : onSubmitRecording(file, durationSec));
       recorder.markSuccess();
-      if (automatic) forceClose();
+      // The next question is already active in the store by the time this
+      // resolves — close immediately instead of waiting on an extra manual
+      // "Continue" click (previously only the automatic/timeout path did this).
+      forceClose();
     } catch (error) {
       const key =
         mapSubmitErrorKey?.(error) ?? 'practice.audioRecorder.submitFailedHint';
