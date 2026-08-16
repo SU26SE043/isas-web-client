@@ -101,7 +101,11 @@ export function candidateDisplayName(
   item: Pick<CampaignResultItem, 'fullName' | 'email'>,
   t: (key: string) => string,
 ) {
-  return item.fullName?.trim() || t('employer.campaigns.results.noName');
+  return (
+    item.fullName?.trim() ||
+    item.email?.trim() ||
+    t('employer.campaigns.results.noName')
+  );
 }
 
 export function candidateDisplayEmail(
