@@ -14,7 +14,10 @@ import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
-const TIMEOUT_ADVANCE_DELAY_MS = 1000;
+// Brief enough to let the "time's up" state paint before the auto-submit
+// request fires, but short enough not to add a needless extra second on top
+// of the real submit latency.
+const TIMEOUT_ADVANCE_DELAY_MS = 150;
 const COUNTDOWN_STEP_MS = 1000;
 const COUNTDOWN_START_HOLD_MS = 800;
 
@@ -73,7 +76,7 @@ export function useB2cPracticeRoom(
     setCountdownValue(null);
   }, []);
 
-  const startQuestionCountdown = useCallback((questionId: string, startRecording = true) => {
+  const startQuestionCountdown = useCallback((questionId: string) => {
     if (media.state !== 'ready' || countdownIntervalRef.current != null) return;
     if (questionId !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
 
@@ -99,32 +102,23 @@ export function useB2cPracticeRoom(
         countdownTimeoutRef.current = null;
         if (countdownQuestionRef.current !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
         setCountdownValue(null);
-        if (startRecording) {
-          setPhase('answering');
-          // Actual answer capture happens in the AudioRecorderModal (useAudioRecorder),
-          // which opens its own MediaRecorder on demand. Do not also start `recorder`
-          // (usePracticeAnswerRecorder) here — its output is never submitted, and running
-          // two MediaRecorder instances on the same shared mic track at once is what was
-          // causing intermittent `NotSupportedError: ... error starting the MediaRecorder`.
-          useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
-        } else {
-          setInitialCountdownComplete(true);
-          setPhase('reading');
-        }
+        // Answerable as soon as the countdown ends: no longer wait for the AI
+        // narration to finish playing. Actual answer capture happens in the
+        // AudioRecorderModal (useAudioRecorder), which opens its own
+        // MediaRecorder on demand — do not also start `recorder`
+        // (usePracticeAnswerRecorder) here.
+        setInitialCountdownComplete(true);
+        setPhase('answering');
+        useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
       }, COUNTDOWN_START_HOLD_MS);
     }, COUNTDOWN_STEP_MS);
   }, [clearQuestionCountdown, media.state]);
 
+  // Narration is now purely supplementary: it plays in the background and no
+  // longer gates `phase`, so candidates can answer as soon as the question
+  // text is on screen instead of waiting for the AI voice to load and finish.
   const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
     enabled: media.state === 'ready' && initialCountdownComplete && sessionReady,
-    onPlaybackStart: () => setPhase('reading'),
-    onPlaybackComplete: () => {
-      const questionId = useB2cPracticeInterviewStore.getState().currentQuestionId;
-      if (!questionId || store.remainingSeconds <= 0) return;
-      setPhase('answering');
-      // See note above: do not auto-start the unused `recorder` here either.
-      useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
-    },
   });
 
   const currentQuestion = useMemo(
@@ -254,7 +248,15 @@ export function useB2cPracticeRoom(
 
   useEffect(() => {
     clearQuestionCountdown();
-    setPhase(media.state === 'ready' && (!options?.startWithCountdown || options.countdownReady !== false) ? 'reading' : 'loading');
+    const ready = media.state === 'ready' && (!options?.startWithCountdown || options.countdownReady !== false);
+    // The very first question still goes through the 3-2-1 countdown (started by
+    // the effect below); everything after that is answerable the moment the
+    // question text is set, without waiting for the AI narration to play.
+    const pendingInitialCountdown = Boolean(options?.startWithCountdown) && !initialCountdownComplete;
+    setPhase(ready ? (pendingInitialCountdown ? 'loading' : 'answering') : 'loading');
+    if (ready && !pendingInitialCountdown && store.currentQuestionId) {
+      store.setQuestionState(store.currentQuestionId, 'recording');
+    }
     warned10Ref.current = false;
     timeoutHandledForQuestionRef.current = null;
     setIsTimingOut(false);
@@ -266,7 +268,7 @@ export function useB2cPracticeRoom(
   useEffect(() => {
     if (initialCountdownComplete || !options?.startWithCountdown) return;
     if (!sessionReady || media.state !== 'ready' || !store.currentQuestionId || options.countdownReady === false) return;
-    startQuestionCountdown(store.currentQuestionId, false);
+    startQuestionCountdown(store.currentQuestionId);
   }, [initialCountdownComplete, media.state, options?.countdownReady, options?.startWithCountdown, sessionReady, startQuestionCountdown, store.currentQuestionId]);
 
   useEffect(() => () => clearQuestionCountdown(), [clearQuestionCountdown]);
