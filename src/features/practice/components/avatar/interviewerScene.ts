@@ -52,6 +52,27 @@ function findHeadBone(root: Object3D): Bone | null {
   return head;
 }
 
+/** Khoảng cách camera tới điểm ngắm. Cùng với FOV 26° cho khung cao ~0,33 m ở mặt phẳng đầu. */
+const PORTRAIT_DISTANCE = 0.72;
+
+/**
+ * Điểm ngắm nằm CAO hơn xương `Head` bao nhiêu mét. Nâng số này ⇒ khung nhìn trườn lên trên ⇒
+ * avatar tụt XUỐNG trong khung (và ngược lại). Đây là núm duy nhất để chỉnh chiều cao avatar.
+ *
+ * Số học: xương `Head` đo từ chính file model ở Y≈1,677 m; nửa chiều cao khung =
+ * `PORTRAIT_DISTANCE`·tan(FOV/2) = 0,72·tan(13°) ≈ 0,166 m ⇒ mép trên khung = 1,677 + offset + 0,166.
+ *
+ * Giá trị cũ −0,06 đặt mép trên ở **1,783 m**, THẤP hơn đỉnh tóc nên khung luôn cắt ngang đầu.
+ *
+ * ⚠ Đỉnh tóc KHÔNG suy từ tỉ lệ người mà **hiệu chuẩn bằng ảnh render thật**: ở offset +0,02
+ * (mép trên 1,863) đỉnh tóc chạm đúng mép khung ⇒ đỉnh tóc ≈ 1,863 m — cao hơn ước lượng theo
+ * tỉ lệ giải phẫu (~1,83) vì kiểu tóc của model dày. Ước lượng suông ở đây cho ra khung vẫn cụt.
+ *
+ * +0,045 ⇒ mép trên 1,888: chừa ~2,5 cm trống trên đỉnh tóc, mép dưới 1,556 (ngang ngực trên),
+ * tầm mắt rơi khoảng 38% chiều cao khung — bố cục chân dung thông thường.
+ */
+const PORTRAIT_AIM_OFFSET_Y = 0.045;
+
 /** Khung hình chân dung: lấy vị trí đầu và hướng mặt của model làm gốc. */
 function framePortrait(camera: PerspectiveCamera, model: Object3D, head: Bone | null) {
   const focus = new Vector3();
@@ -65,8 +86,8 @@ function framePortrait(camera: PerspectiveCamera, model: Object3D, head: Bone | 
   if (forward.lengthSq() < 1e-6) forward.set(0, 0, 1);
   forward.normalize();
 
-  const target = focus.clone().add(new Vector3(0, -0.06, 0));
-  camera.position.copy(target).addScaledVector(forward, 0.72).add(new Vector3(0, 0.02, 0));
+  const target = focus.clone().add(new Vector3(0, PORTRAIT_AIM_OFFSET_Y, 0));
+  camera.position.copy(target).addScaledVector(forward, PORTRAIT_DISTANCE).add(new Vector3(0, 0.02, 0));
   camera.lookAt(target);
 }
 
