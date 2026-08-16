@@ -63,17 +63,19 @@ export function B2cInterviewControls({
         >
           {t('practice.room.submitAnswer')}
         </button> : null}
-        <button
-          type="button"
-          className={cn(
-            'inline-flex items-center gap-2 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10',
-            finishPrimary && 'btn-primary border-transparent text-black',
-          )}
-          disabled={disabled}
-          onClick={onFinish}
-        >
-          {finishLabel}
-        </button>
+        {finishPrimary ? (
+          <button
+            type="button"
+            className={cn(
+              'inline-flex items-center gap-2 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10',
+              'btn-primary border-transparent text-black',
+            )}
+            disabled={disabled}
+            onClick={onFinish}
+          >
+            {finishLabel}
+          </button>
+        ) : null}
       </div>
     </div>
   );

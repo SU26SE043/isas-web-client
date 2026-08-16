@@ -52,7 +52,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
     setStartError(false);
 
     if (opened.sessionId) {
-      navigate(learningInterviewPreparePath(opened.sessionId));
+      navigate(learningInterviewPreparePath(opened.sessionId, { roadmapId: roadmap.id, lessonId: opened.id }));
       setIsOpening(false);
       return;
     }
@@ -83,7 +83,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
       if (result.resumed) {
         toast.success(t('practice.learningPath.sessionResumed'));
       }
-      navigate(learningInterviewPreparePath(result.session.sessionId));
+      navigate(learningInterviewPreparePath(result.session.sessionId, { roadmapId: roadmap.id, lessonId: opened.id }));
     } catch {
       setStartError(true);
       toast.error(t('practice.learningPath.startError'));

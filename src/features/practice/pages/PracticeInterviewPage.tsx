@@ -25,16 +25,19 @@ import { useLearningLiveFeedback } from '../hooks/useLearningLiveFeedback';
 import { useLearningAnswerCapture } from '../hooks/useLearningAnswerCapture';
 import {
   isCampaignSessionId,
-  isLearningSessionId,
   requiresIdentityVerification,
 } from '../types/interviewFlow.types';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import {
+  getLearningSessionRouteContext,
+  learningPracticeReportPath,
+} from '../utils/launchLearningInterviewPractice';
 
 export const PracticeInterviewPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const [searchParams] = useSearchParams();
-  const isB2cPractice =
-    Boolean(sessionId) && !isLearningSessionId(sessionId) && !isCampaignSessionId(sessionId);
+  const learningContext = getLearningSessionRouteContext(searchParams);
+  const isB2cPractice = Boolean(sessionId) && !isCampaignSessionId(sessionId);
 
   const campaignSession = isCampaignSessionId(sessionId)
     ? readCampaignInterviewSession(sessionId)
@@ -50,7 +53,15 @@ export const PracticeInterviewPage: React.FC = () => {
   }
 
   if (isB2cPractice) {
-    return <B2cPracticeInterviewRoom sessionId={sessionId} startWithCountdown={searchParams.get('start') === 'countdown'} />;
+    return (
+      <B2cPracticeInterviewRoom
+        sessionId={sessionId}
+        completePath={
+          learningContext ? learningPracticeReportPath(sessionId, learningContext) : undefined
+        }
+        startWithCountdown={searchParams.get('start') === 'countdown'}
+      />
+    );
   }
 
   return <LegacyInterviewRoom sessionId={sessionId} />;
@@ -66,7 +77,11 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
   const session = useInterviewSession(sessionId);
   const setAiState = useInterviewSessionStore((state) => state.setAiState);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
-  const learning = useLearningLiveFeedback(sessionId, session.isLearning);
+  const learning = useLearningLiveFeedback(
+    sessionId,
+    session.isLearning,
+    session.advanceToNextQuestion,
+  );
   const answerCapture = useLearningAnswerCapture(
     media.stream,
     session.isLearning && session.isRoomActive && !session.isLoading,

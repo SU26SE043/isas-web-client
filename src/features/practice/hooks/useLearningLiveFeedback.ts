@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { submitPracticeSession } from '../services/b2cPracticeSession.service';
 import {
+  advanceLearningQuestion,
   appendLearningAnswer,
   getLearningPracticeSession,
 } from '../services/learningPracticeSession.registry';
@@ -11,13 +13,12 @@ import type { PracticeQuestion } from '../mocks/session.fixtures';
 import type { LearningPracticeQuestionFeedback } from '../types/learningPath.types';
 import type { PracticeAnswerDetail } from '../types/roadmapPractice.api.types';
 
-function questionReportPath(
+function sessionReportPath(
   roadmapId: string,
   lessonId: string,
-  questionId: string,
   sessionId: string,
 ) {
-  return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/practice/questions/${questionId}/report?sessionId=${encodeURIComponent(sessionId)}`;
+  return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/report?sessionId=${encodeURIComponent(sessionId)}`;
 }
 
 function toFeedback(detail: PracticeAnswerDetail): LearningPracticeQuestionFeedback {
@@ -39,10 +40,14 @@ function toFeedback(detail: PracticeAnswerDetail): LearningPracticeQuestionFeedb
 }
 
 /**
- * Learning practice: Submit answer → wait for score → question report page.
- * Last-question completion happens on the report page (not here).
+ * Learning practice: upload each answer, then advance immediately while AI scoring runs in
+ * the background. Completing the final upload triggers the aggregate report.
  */
-export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) {
+export function useLearningLiveFeedback(
+  sessionId: string,
+  isLearning: boolean,
+  advanceToNextQuestion: () => boolean,
+) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -79,28 +84,27 @@ export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) 
         fileName: 'answer.webm',
       });
 
-      const scored = await roadmapPracticeService.waitForSessionQuestionFeedback(
-        sessionId,
-        question.id,
-      );
-
       appendLearningAnswer(sessionId, {
         questionId: question.id,
         prompt: question.content,
         promptVi: question.content,
-        feedback: toFeedback({ ...submitted, ...scored }),
-        transcript: scored.transcript ?? submitted.transcript,
-        scoringStatus: scored.scoringStatus ?? scored.status,
+        feedback: toFeedback(submitted),
+        transcript: submitted.transcript,
+        scoringStatus: submitted.scoringStatus ?? submitted.status,
       });
 
-      navigate(
-        questionReportPath(
-          learningMeta.roadmapId,
-          learningMeta.lessonId,
-          question.id,
-          sessionId,
-        ),
-      );
+      const isLastQuestion = learningMeta.questions.at(-1)?.id === question.id;
+      if (!isLastQuestion) {
+        advanceLearningQuestion(sessionId);
+        advanceToNextQuestion();
+        return;
+      }
+
+      setIsCompleting(true);
+      await submitPracticeSession(sessionId);
+      navigate(sessionReportPath(learningMeta.roadmapId, learningMeta.lessonId, sessionId), {
+        replace: true,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : '';
       if (message === 'ANSWER_FILE_TOO_LARGE') {
@@ -111,6 +115,7 @@ export function useLearningLiveFeedback(sessionId: string, isLearning: boolean) 
     } finally {
       inFlightRef.current = false;
       setIsEvaluating(false);
+      setIsCompleting(false);
     }
   };
 

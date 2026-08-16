@@ -5,7 +5,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
-import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
+import { isCampaignSessionId } from '../types/interviewFlow.types';
 import { useInterviewGate } from '../hooks/useInterviewGate';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
@@ -14,7 +14,7 @@ import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
 import { PreparationChecklistStep } from '../components/preparation/PreparationChecklistStep';
 import { DeviceCheckStep } from '../components/preparation/DeviceCheckStep';
 import { WaitingRoomStep } from '../components/preparation/WaitingRoomStep';
-import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
+import { getLearningSessionRouteContext } from '../utils/launchLearningInterviewPractice';
 import {
   normalizePracticeSessionId,
   practiceSessionErrorMessageKey,
@@ -50,12 +50,10 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
 
   const subStep = parseSubStep(searchParams.get('step'));
   const isCampaignSession = Boolean(sessionId && isCampaignSessionId(sessionId));
-  const isLearningSession = Boolean(sessionId && isLearningSessionId(sessionId));
-  const learningMeta = isLearningSession && sessionId
-    ? getLearningPracticeSession(sessionId)
-    : undefined;
-  const cancelHref = learningMeta
-    ? `/candidate/learning/roadmaps/${learningMeta.roadmapId}`
+  const learningContext = getLearningSessionRouteContext(searchParams);
+  const isLearningSession = Boolean(learningContext);
+  const cancelHref = learningContext
+    ? `/candidate/learning/roadmaps/${learningContext.roadmapId}`
     : '/candidate/dashboard';
   const consentKey = isCampaignSession
     ? 'practice.flow.prepare.consent'
@@ -91,16 +89,26 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
     return t('practice.flow.prepare.title');
   }, [subStep, t]);
 
+  const setSubStep = (next: PreparationSubStep) => {
+    const nextParams = new URLSearchParams();
+    if (learningContext) {
+      nextParams.set('roadmapId', learningContext.roadmapId);
+      nextParams.set('lessonId', learningContext.lessonId);
+    }
+    if (next !== 'prepare') nextParams.set('step', next);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   useEffect(() => {
     if (!sessionId) return;
     if (!consentAccepted && subStep !== 'prepare') {
-      setSearchParams({}, { replace: true });
+      setSubStep('prepare');
       return;
     }
     if (consentAccepted && !deviceCheckPassed && subStep === 'waiting' && !isCampaignSession) {
-      setSearchParams({ step: 'device' }, { replace: true });
+      setSubStep('device');
     }
-  }, [consentAccepted, deviceCheckPassed, isCampaignSession, sessionId, setSearchParams, subStep]);
+  }, [consentAccepted, deviceCheckPassed, isCampaignSession, sessionId, subStep]);
 
   useEffect(() => {
     if (subStep !== 'waiting' || !deviceCheckPassed || !sessionId) return;
@@ -117,7 +125,7 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
         if (cancelled) return;
         if (camera.state === 'denied' || microphone.state === 'denied') {
           setDeviceCheckPassed(sessionId, false);
-          setSearchParams({ step: 'device' }, { replace: true });
+          setSubStep('device');
         }
       } catch {
         // Permissions API unsupported — device step handles access on next visit.
@@ -128,14 +136,10 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
     return () => {
       cancelled = true;
     };
-  }, [deviceCheckPassed, sessionId, setDeviceCheckPassed, setSearchParams, subStep]);
+  }, [deviceCheckPassed, sessionId, setDeviceCheckPassed, subStep]);
 
   const goToSubStep = (next: PreparationSubStep) => {
-    if (next === 'prepare') {
-      setSearchParams({}, { replace: true });
-      return;
-    }
-    setSearchParams({ step: next }, { replace: true });
+    setSubStep(next);
   };
 
   const handlePrepareContinue = () => {
@@ -223,6 +227,7 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
           sessionId={sessionId}
           session={sessionQuery.data}
           onBack={() => goToSubStep('device')}
+          learningContext={learningContext}
         />
       ) : null}
     </InterviewFlowShell>

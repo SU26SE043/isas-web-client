@@ -19,9 +19,6 @@ export const learningEndpoints = {
   /** GET — answer / progressive scoring result. */
   answer: (sessionId: string, answerId: string) =>
     `/api/v1/interview/practice/sessions/${sessionId}/answers/${answerId}`,
-  /** POST — complete practice session after last question report. */
-  completePracticeSession: (sessionId: string) =>
-    `/api/v1/interview/practice/sessions/${sessionId}/complete`,
   /** GET — roadmap interim / snapshot report. */
   roadmapReport: (roadmapId: string) => `/api/v1/interview/practice/roadmaps/${roadmapId}/report`,
 } as const;

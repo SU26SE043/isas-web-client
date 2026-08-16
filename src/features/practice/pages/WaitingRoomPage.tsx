@@ -1,37 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/shared/languages';
 import { practiceSessionService } from '../services/practiceSession.service';
 import {
   isCampaignSessionId,
-  isLearningSessionId,
   requiresIdentityVerification,
 } from '../types/interviewFlow.types';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingStartPanel';
-import { getLearningPracticeSession } from '../services/learningPracticeSession.registry';
-import { startLearningLessonPractice } from '../utils/launchLearningInterviewPractice';
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
-import { loadFlowProgress, saveFlowProgress } from '../utils/interviewFlowStorage';
 import { requestInterviewFullscreen } from '../hooks/useInterviewFullscreen';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import {
+  getLearningSessionRouteContext,
+  learningInterviewRoomPath,
+} from '../utils/launchLearningInterviewPractice';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
 export const WaitingRoomPage: React.FC = () => {
   const { sessionId = '' } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   useInterviewFlowSession(sessionId);
   const { deviceCheckPassed, identityVerified } = useInterviewFlowStore();
   const isCampaign = isCampaignSessionId(sessionId);
-  const isLearning = isLearningSessionId(sessionId);
-  const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
+  const learningContext = getLearningSessionRouteContext(searchParams);
+  const isLearning = Boolean(learningContext);
   const redirectToPrep = !isCampaign && !isLearning;
   const campaignRoomPath = () => {
     const campaign = readCampaignInterviewSession(sessionId);
@@ -58,19 +59,11 @@ export const WaitingRoomPage: React.FC = () => {
   }, [deviceCheckPassed, identityVerified, navigate, sessionId]);
 
   useEffect(() => {
-    if (redirectToPrep || isLearning) {
-      if (isLearning) {
-        setStatus('ready');
-        setQuestionCount(learningMeta?.questions.length ?? 0);
-      }
-      return;
-    }
+    if (redirectToPrep) return;
 
     let cancelled = false;
-    let attempts = 0;
 
     const poll = async () => {
-      attempts += 1;
       try {
         const questions = await practiceSessionService.pollQuestions(sessionId);
         if (cancelled) return;
@@ -79,13 +72,9 @@ export const WaitingRoomPage: React.FC = () => {
           setStatus('ready');
           return;
         }
-        if (attempts >= 8) {
-          setStatus('error');
-          return;
-        }
         window.setTimeout(() => void poll(), 1200);
       } catch {
-        if (!cancelled) setStatus('error');
+        if (!cancelled) window.setTimeout(() => void poll(), 1500);
       }
     };
 
@@ -93,7 +82,7 @@ export const WaitingRoomPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isLearning, learningMeta?.questions.length, redirectToPrep, sessionId]);
+  }, [redirectToPrep, sessionId]);
 
   useEffect(() => {
     if (redirectToPrep || isLearning || status !== 'ready') return;
@@ -104,49 +93,16 @@ export const WaitingRoomPage: React.FC = () => {
   }, [isLearning, navigate, redirectToPrep, sessionId, status]);
 
   const handleLearningStart = async () => {
-    if (!learningMeta || inFlightRef.current || isStarting) return;
+    if (!learningContext || status !== 'ready' || inFlightRef.current || isStarting) return;
     inFlightRef.current = true;
     setIsStarting(true);
     setStartError(null);
     try {
       await requestInterviewFullscreen();
-      const result = await startLearningLessonPractice({
-        roadmapId: learningMeta.roadmapId,
-        lessonId: learningMeta.lessonId,
-        title: learningMeta.title,
-      });
-      if (!result.ok) {
-        if (result.code === 'insufficient_credits') {
-          setCreditOpen(true);
-          return;
-        }
-        if (result.code === 'forbidden') setStartError('forbidden');
-        else if (result.code === 'not_found') setStartError('not_found');
-        else if (result.code === 'ai_failed') setStartError('ai_failed');
-        else setStartError('generic');
-        return;
-      }
       void queryClient.invalidateQueries({
-        queryKey: learningRoadmapDetailQueryKey(learningMeta.roadmapId),
+        queryKey: learningRoadmapDetailQueryKey(learningContext.roadmapId),
       });
-      const nextSessionId = result.session.sessionId;
-      if (nextSessionId !== sessionId) {
-        const progress = loadFlowProgress(sessionId) ?? {
-          consentAccepted: true,
-          deviceCheckPassed: true,
-          termsAccepted: false,
-          identityVerified: false,
-        };
-        saveFlowProgress(nextSessionId, {
-          consentAccepted: true,
-          deviceCheckPassed: true,
-          termsAccepted: Boolean(progress.termsAccepted),
-          identityVerified: Boolean(progress.identityVerified),
-          identitySnapshot: progress.identitySnapshot,
-        });
-        useInterviewFlowStore.getState().hydrate(nextSessionId);
-      }
-      navigate(`/interview/${nextSessionId}/room?start=countdown`, { replace: true });
+      navigate(learningInterviewRoomPath(sessionId, learningContext, true), { replace: true });
     } catch {
       setStartError('generic');
     } finally {
@@ -175,7 +131,8 @@ export const WaitingRoomPage: React.FC = () => {
             creditOpen={creditOpen}
             onCreditOpenChange={setCreditOpen}
             onStart={() => void handleLearningStart()}
-            canStart={Boolean(learningMeta)}
+            canStart={Boolean(learningContext)}
+            isReady={status === 'ready'}
           />
         ) : null}
 

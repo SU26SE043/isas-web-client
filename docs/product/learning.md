@@ -46,8 +46,8 @@ Shared UX includes: Device Check, Waiting Screen, Interview Layout, Camera Previ
 
 Learning only changes **business logic**. Allowed differences vs interview practice:
 
-1. **Per-question report pages** — after each answer (except the last), navigate to a **question report** page; candidate taps **Continue** to return to the shared room for the next question. Interview practice evaluates only at end-of-session report.
-2. **End CTA** — on the last question in the room, primary button is **Hoàn tất / Complete** (not Submit Answer). That evaluates the last answer and opens the **aggregate lesson report**.
+1. **Background per-question evaluation** — after each successful answer upload, the shared room immediately displays the next question while AI scores the submitted answer in the background. Per-question feedback remains available within the aggregate lesson report.
+2. **End CTA** — submitting the last answer completes the session and opens the **aggregate lesson report**; it does not make the candidate wait for a per-question score first.
 3. **Purpose** — post-theory drill with per-question feedback reports, not a full interview simulation.
 
 After practice, the aggregate Learning Report (Learning workspace + Learning Sidebar) lists overall scores plus every per-question report, with **Next Lesson** when available.
@@ -74,8 +74,8 @@ Only the **current** milestone is open; later milestones stay locked until the c
 
 Each milestone has many lessons. Each lesson has exactly two parts, in order:
 
-1. **Theory** — in-app HTML article reader (`title` + `content` from backend); footer **Mark as Completed** unlocks Practice. Does **not** auto-navigate: after complete, show **Completed** + **Continue to Practice →** (or **Next Lesson** if practice already done / unavailable).
-2. **Practice** — shared interview flow after Theory (`sessionId` prefix `learning-`).
+1. **Theory** — in-app HTML article reader (`title` + `content` from backend); footer **Mark as Completed** is a local reading acknowledgement that unlocks the next action. The backend records durable lesson progression when the user starts practice; the API has no separate mark-theory endpoint. Does **not** auto-navigate: after complete, show **Completed** + **Continue to Practice →** (or **Next Lesson** if practice already done / unavailable).
+2. **Practice** — shared B2C interview flow after Theory. The backend session ID is a UUID; the route carries `roadmapId` and `lessonId` so roadmap context survives a refresh or a new tab.
 
 Cannot skip Theory, Practice, lessons, or milestones.
 
@@ -85,15 +85,16 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 
 ## Practice flow
 
-1. Theory / Open Practice registers a learning session and opens **`/interview/:sessionId/prepare`** (shared prepare → device-check → waiting → room).
+1. Theory / Open Practice starts or resumes the lesson session and opens **`/interview/:sessionId/prepare?roadmapId=...&lessonId=...`** (shared prepare → device-check → waiting → room).
 2. Legacy Learning paths `.../practice/device-check` and `.../practice` only redirect into that shared flow.
-3. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** → evaluate → navigate to **question report** (`.../practice/questions/:questionId/report`) → **Continue** → next question in the room.
-4. On the **last** question, primary CTA is **Hoàn tất / Complete** → evaluate + complete session → **lesson Practice Report** (aggregate of all question reports) → lesson practice completed.
+3. In the waiting screen after device check, the system polls the existing session until it has one or more questions. The **Start** button remains disabled while question generation is pending; it never creates the lesson session a second time.
+4. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** uploads the recording, starts evaluation in the background, and immediately displays the next question.
+5. The shared answer response controls progression. The UI only exposes **Finish** when `interviewComplete === true`; it then calls `POST .../sessions/{id}/submit` and opens the **lesson Practice Report** (aggregate of all question feedback) as soon as scoring is ready.
 
 | Mode | Feedback timing | End button |
 | --- | --- | --- |
 | Interview practice (B2C/B2B) | End-of-session report only | Submit / Finish interview |
-| Learning practice | After each answer → question report page; aggregate at end | Hoàn tất / Complete (last question) |
+| Learning practice | Score each answer in the background; aggregate at end | Submit answer (last answer completes) |
 
 ## Completion rules
 
@@ -114,7 +115,7 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 | `.../lessons/:lessonId/practice` | Redirect → device-check launcher | Learning Sidebar until redirect |
 | `.../lessons/:lessonId/practice/questions/:questionId/report` | Per-question Practice Report | Learning Sidebar |
 | `.../lessons/:lessonId/report` | Aggregate Practice Report | Learning Sidebar |
-| `/interview/learning-.../prepare` → `device-check` → `waiting` → room | Shared Practice Session UI | `FullscreenLayout` |
+| `/interview/:sessionId/prepare?roadmapId=...&lessonId=...` → `device-check` → `waiting` → room | Shared Practice Session UI | `FullscreenLayout` |
 
 ## Related
 

@@ -39,6 +39,7 @@ interface InterviewSessionState {
   setStatus: (status: InterviewRoomStatus) => void;
   setAiState: (state: AiInterviewerState) => void;
   addMessage: (role: ConversationMessage['role'], content: string) => void;
+  advanceToNextQuestion: () => boolean;
   submitCurrentAnswer: () => Promise<boolean>;
   togglePause: () => void;
   continueAfterViolation: () => void;
@@ -123,6 +124,23 @@ export const useInterviewSessionStore = create<InterviewSessionState>((set, get)
   setAiState: (aiState) => set({ aiState }),
   addMessage: (role, content) =>
     set((state) => ({ messages: [...state.messages, createMessage(role, content)] })),
+  advanceToNextQuestion: () => {
+    const state = get();
+    const nextQuestion = state.questions[state.currentIndex + 1];
+    if (!nextQuestion) {
+      set({ status: 'completed', aiState: 'listening', isRecording: false });
+      return true;
+    }
+
+    set((current) => ({
+      currentIndex: current.currentIndex + 1,
+      status: 'active',
+      aiState: 'speaking',
+      remainingSeconds: getQuestionTimeLimit(nextQuestion),
+      messages: [...current.messages, createMessage('ai', nextQuestion.content)],
+    }));
+    return false;
+  },
   submitCurrentAnswer: async () => {
     const state = get();
     if (state.status === 'submitting' || state.status === 'completed') return false;

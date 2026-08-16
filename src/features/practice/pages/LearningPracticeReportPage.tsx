@@ -1,4 +1,5 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
@@ -20,6 +21,7 @@ export function LearningPracticeReportPage() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const roadmapQuery = useLearningRoadmapDetail(roadmapId);
+  const [scoringTimedOut, setScoringTimedOut] = useState(false);
 
   const sessionQuery = useQuery({
     queryKey: ['learning', 'practice-session-report', sessionId],
@@ -33,7 +35,7 @@ export function LearningPracticeReportPage() {
       if (session && (isPracticeReportReady(session) || isPracticeReportFailed(session.status))) {
         return false;
       }
-      return 3000;
+      return scoringTimedOut ? false : 3000;
     },
   });
 
@@ -41,6 +43,17 @@ export function LearningPracticeReportPage() {
   const isScored = session ? isPracticeReportReady(session) : false;
   const roadmap = roadmapQuery.data;
   const nextLesson = roadmap ? findNextLesson(roadmap, lessonId) : null;
+
+  useEffect(() => {
+    if (isScored || sessionQuery.isError || scoringTimedOut) return;
+    const timer = window.setTimeout(() => setScoringTimedOut(true), 120_000);
+    return () => window.clearTimeout(timer);
+  }, [isScored, scoringTimedOut, sessionQuery.isError]);
+
+  const retryScoring = () => {
+    setScoringTimedOut(false);
+    void sessionQuery.refetch();
+  };
 
   if (!sessionId) {
     return (
@@ -81,6 +94,17 @@ export function LearningPracticeReportPage() {
       <div className="page-container page-section flex min-h-[40vh] flex-col items-center justify-center gap-3">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
         <p className="text-sm text-muted-foreground">{t('practice.scoring.description')}</p>
+        {scoringTimedOut ? (
+          <div className="space-y-3 text-center">
+            <p className="text-sm text-warning">{t('practice.scoring.takingLonger')}</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button type="button" onClick={retryScoring}>{t('practice.scoring.retry')}</Button>
+              <Button render={<Link to={`/candidate/learning/roadmaps/${roadmapId}`} />} nativeButton={false} variant="outline">
+                {t('practice.learningPath.backToRoadmap')}
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

@@ -6,15 +6,14 @@ import { FlowWizardNav } from '@/components/patterns/flow-wizard/FlowWizardNav';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import { getPracticeSession } from '../../services/b2cPracticeSession.service';
-import { isLearningSessionId } from '../../types/interviewFlow.types';
+import { practiceSessionService } from '../../services/practiceSession.service';
 import { LearningWaitingStartPanel } from '../flow/LearningWaitingStartPanel';
-import { getLearningPracticeSession } from '../../services/learningPracticeSession.registry';
-import { startLearningLessonPractice } from '../../utils/launchLearningInterviewPractice';
 import { learningRoadmapDetailQueryKey } from '../../hooks/useLearningRoadmaps';
-import { loadFlowProgress, saveFlowProgress } from '../../utils/interviewFlowStorage';
-import { useInterviewFlowStore } from '../../stores/interviewFlowStore';
 import { requestInterviewFullscreen } from '../../hooks/useInterviewFullscreen';
+import {
+  learningInterviewRoomPath,
+  type LearningSessionRouteContext,
+} from '../../utils/launchLearningInterviewPractice';
 import type { PracticeSession } from '../../mocks/session.fixtures';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
 
@@ -24,15 +23,15 @@ interface WaitingRoomStepProps {
   sessionId: string;
   session: PracticeSession;
   onBack: () => void;
+  learningContext?: LearningSessionRouteContext | null;
 }
 
-export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepProps) {
+export function WaitingRoomStep({ sessionId, session, onBack, learningContext }: WaitingRoomStepProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isLearning = isLearningSessionId(sessionId);
+  const isLearning = Boolean(learningContext);
   const campaignSession = readCampaignInterviewSession(sessionId);
-  const learningMeta = isLearning ? getLearningPracticeSession(sessionId) : undefined;
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
   const [pollError, setPollError] = useState<'capacity' | 'generic' | null>(null);
@@ -43,12 +42,6 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   const inFlightRef = useRef(false);
 
   useEffect(() => {
-    if (isLearning) {
-      setStatus('ready');
-      setQuestionCount(learningMeta?.questions.length ?? 0);
-      return;
-    }
-
     let cancelled = false;
     let attempts = 0;
     setPollError(null);
@@ -56,21 +49,24 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
     const poll = async () => {
       attempts += 1;
       try {
-        const detail = await getPracticeSession(sessionId);
-        const questions = detail.questions ?? [];
+        const questions = await practiceSessionService.pollQuestions(sessionId);
         if (cancelled) return;
         if (questions.length > 0) {
           setQuestionCount(questions.length);
           setStatus('ready');
           return;
         }
-        if (detail.status === 'Failed' || attempts >= 8) {
+        if (!isLearning && attempts >= 8) {
           setStatus('error');
           return;
         }
         window.setTimeout(() => void poll(), 1200);
       } catch (error) {
         if (cancelled) return;
+        if (isLearning) {
+          window.setTimeout(() => void poll(), 1500);
+          return;
+        }
         if (getApiStatusCode(error) === 429) {
           setPollError('capacity');
           setStatus('error');
@@ -85,7 +81,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
     return () => {
       cancelled = true;
     };
-  }, [isLearning, learningMeta?.questions.length, sessionId]);
+  }, [isLearning, sessionId]);
 
   const handleStartInterview = async () => {
     if (campaignSession) {
@@ -97,49 +93,16 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
   };
 
   const handleLearningStart = async () => {
-    if (!learningMeta || inFlightRef.current || isStarting) return;
+    if (!learningContext || status !== 'ready' || inFlightRef.current || isStarting) return;
     inFlightRef.current = true;
     setIsStarting(true);
     setStartError(null);
     try {
       await requestInterviewFullscreen();
-      const result = await startLearningLessonPractice({
-        roadmapId: learningMeta.roadmapId,
-        lessonId: learningMeta.lessonId,
-        title: learningMeta.title,
-      });
-      if (!result.ok) {
-        if (result.code === 'insufficient_credits') {
-          setCreditOpen(true);
-          return;
-        }
-        if (result.code === 'forbidden') setStartError('forbidden');
-        else if (result.code === 'not_found') setStartError('not_found');
-        else if (result.code === 'ai_failed') setStartError('ai_failed');
-        else setStartError('generic');
-        return;
-      }
       void queryClient.invalidateQueries({
-        queryKey: learningRoadmapDetailQueryKey(learningMeta.roadmapId),
+        queryKey: learningRoadmapDetailQueryKey(learningContext.roadmapId),
       });
-      const nextSessionId = result.session.sessionId;
-      if (nextSessionId !== sessionId) {
-        const progress = loadFlowProgress(sessionId) ?? {
-          consentAccepted: true,
-          deviceCheckPassed: true,
-          termsAccepted: false,
-          identityVerified: false,
-        };
-        saveFlowProgress(nextSessionId, {
-          consentAccepted: true,
-          deviceCheckPassed: true,
-          termsAccepted: Boolean(progress.termsAccepted),
-          identityVerified: Boolean(progress.identityVerified),
-          identitySnapshot: progress.identitySnapshot,
-        });
-        useInterviewFlowStore.getState().hydrate(nextSessionId);
-      }
-      navigate(`/interview/${nextSessionId}/room?start=countdown`, { replace: true });
+      navigate(learningInterviewRoomPath(sessionId, learningContext, true), { replace: true });
     } catch {
       setStartError('generic');
     } finally {
@@ -148,7 +111,7 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
     }
   };
 
-  const canStart = isLearning ? Boolean(learningMeta) : status === 'ready';
+  const canStart = status === 'ready';
 
   return (
     <SectionPanel
@@ -186,7 +149,8 @@ export function WaitingRoomStep({ sessionId, session, onBack }: WaitingRoomStepP
             creditOpen={creditOpen}
             onCreditOpenChange={setCreditOpen}
             onStart={() => void handleLearningStart()}
-            canStart={Boolean(learningMeta)}
+            canStart={Boolean(learningContext)}
+            isReady={status === 'ready'}
           />
         ) : null}
 

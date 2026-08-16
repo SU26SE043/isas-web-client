@@ -95,11 +95,8 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
 
   const primaryLabel = (() => {
     if (isEvaluating || isSubmitting) {
-      return learningMode
-        ? t('practice.learningPath.evaluating')
-        : t('practice.room.submitting');
+      return t('practice.room.submitting');
     }
-    // Learning: always submit answer; finish CTA lives on the question report page.
     return t('practice.room.submitAnswer');
   })();
 
