@@ -46,8 +46,8 @@ Shared UX includes: Device Check, Waiting Screen, Interview Layout, Camera Previ
 
 Learning only changes **business logic**. Allowed differences vs interview practice:
 
-1. **Per-question report pages** — after each answer (except the last), navigate to a **question report** page; candidate taps **Continue** to return to the shared room for the next question. Interview practice evaluates only at end-of-session report.
-2. **End CTA** — on the last question in the room, primary button is **Hoàn tất / Complete** (not Submit Answer). That evaluates the last answer and opens the **aggregate lesson report**.
+1. **Background per-question evaluation** — after each successful answer upload, the shared room immediately displays the next question while AI scores the submitted answer in the background. Per-question feedback remains available within the aggregate lesson report.
+2. **End CTA** — submitting the last answer completes the session and opens the **aggregate lesson report**; it does not make the candidate wait for a per-question score first.
 3. **Purpose** — post-theory drill with per-question feedback reports, not a full interview simulation.
 
 After practice, the aggregate Learning Report (Learning workspace + Learning Sidebar) lists overall scores plus every per-question report, with **Next Lesson** when available.
@@ -87,13 +87,13 @@ Learning Dashboard → Roadmap Detail (optional) → Theory → Mark Completed �
 
 1. Theory / Open Practice registers a learning session and opens **`/interview/:sessionId/prepare`** (shared prepare → device-check → waiting → room).
 2. Legacy Learning paths `.../practice/device-check` and `.../practice` only redirect into that shared flow.
-3. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** → evaluate → navigate to **question report** (`.../practice/questions/:questionId/report`) → **Continue** → next question in the room.
-4. On the **last** question, primary CTA is **Hoàn tất / Complete** → evaluate + complete session → **lesson Practice Report** (aggregate of all question reports) → lesson practice completed.
+3. In the shared room: AI asks questions. For questions **1 .. n−1**, **Submit answer** uploads the recording, starts evaluation in the background, and immediately displays the next question.
+4. On the **last** question, **Submit answer** uploads the recording, completes the session, then opens the **lesson Practice Report** (aggregate of all question feedback) as soon as scoring is ready.
 
 | Mode | Feedback timing | End button |
 | --- | --- | --- |
 | Interview practice (B2C/B2B) | End-of-session report only | Submit / Finish interview |
-| Learning practice | After each answer → question report page; aggregate at end | Hoàn tất / Complete (last question) |
+| Learning practice | Score each answer in the background; aggregate at end | Submit answer (last answer completes) |
 
 ## Completion rules
 

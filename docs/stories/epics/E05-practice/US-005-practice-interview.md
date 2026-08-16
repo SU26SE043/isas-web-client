@@ -36,6 +36,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - Post-interview result uses `/practice/result?sessionId=<guid>` and `GET /api/v1/interview/practice/sessions/{sessionId}`. Invalid or prefixed IDs never call the API; pending evaluation polls every 3s and stops on `Scored` or failed status; `401`, `403`, `404`, generation failure, and generic failures have distinct localized states.
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
 - Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
+- Learning practice advances to the next question immediately after a successful recording upload; AI scoring runs in the background and the aggregate lesson report polls until the complete feedback is ready.
 - `/candidate/practice/history` paginated table, soft-delete (hide/restore), compare mode.
 - Learning hub, module viewer (`passThreshold`), guided practice, progress dashboard.
 - Certificate viewer with PDF download; route aliases `/candidate/results/:id`, `/candidate/history`.

@@ -28,3 +28,30 @@ describe('interview camera toggle policy', () => {
     expect(useInterviewSessionStore.getState().cameraEnabled).toBe(true);
   });
 });
+
+describe('learning question progression', () => {
+  beforeEach(() => {
+    useInterviewSessionStore.getState().reset();
+  });
+
+  it('shows the next question immediately without the legacy generation delay', () => {
+    useInterviewSessionStore.getState().initSession(
+      'Learning practice',
+      [
+        { id: 'question-1', content: 'Question one', timeLimitSeconds: 120 },
+        { id: 'question-2', content: 'Question two', timeLimitSeconds: 90 },
+      ],
+      B2C_PROCTORING_CONFIG,
+    );
+
+    const isComplete = useInterviewSessionStore.getState().advanceToNextQuestion();
+    const state = useInterviewSessionStore.getState();
+
+    expect(isComplete).toBe(false);
+    expect(state.currentIndex).toBe(1);
+    expect(state.status).toBe('active');
+    expect(state.aiState).toBe('speaking');
+    expect(state.remainingSeconds).toBe(90);
+    expect(state.messages.at(-1)?.content).toBe('Question two');
+  });
+});

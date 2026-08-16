@@ -66,7 +66,11 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
   const session = useInterviewSession(sessionId);
   const setAiState = useInterviewSessionStore((state) => state.setAiState);
   const media = useInterviewMedia(session.micEnabled, session.cameraEnabled);
-  const learning = useLearningLiveFeedback(sessionId, session.isLearning);
+  const learning = useLearningLiveFeedback(
+    sessionId,
+    session.isLearning,
+    session.advanceToNextQuestion,
+  );
   const answerCapture = useLearningAnswerCapture(
     media.stream,
     session.isLearning && session.isRoomActive && !session.isLoading,

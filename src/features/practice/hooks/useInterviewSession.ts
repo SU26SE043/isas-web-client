@@ -15,6 +15,7 @@ export function useInterviewSession(sessionId: string) {
   const initSession = useInterviewSessionStore((state) => state.initSession);
   const tickTimer = useInterviewSessionStore((state) => state.tickTimer);
   const submitCurrentAnswer = useInterviewSessionStore((state) => state.submitCurrentAnswer);
+  const advanceToNextQuestion = useInterviewSessionStore((state) => state.advanceToNextQuestion);
   const reset = useInterviewSessionStore((state) => state.reset);
 
   const init = useCallback(async () => {
@@ -122,6 +123,7 @@ export function useInterviewSession(sessionId: string) {
     toggleRecording,
     submitAnswer,
     submitCurrentAnswer,
+    advanceToNextQuestion,
     isLearning,
     isLoading: status === 'loading',
     isRoomActive,
