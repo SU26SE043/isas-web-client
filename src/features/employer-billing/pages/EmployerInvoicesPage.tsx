@@ -1,12 +1,19 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { QuerySection } from '../components/live/QuerySection';
 import { useEmployerInvoices } from '../hooks/useEmployerPaymentQueries';
 import { usePayEmployerInvoice } from '../hooks/useEmployerPaymentMutations';
 import { InvoiceStatus } from '../types/employerPayment.types';
-import { canManageEmployerPayment, formatDateTime, formatVnd } from '../utils/employerPayment';
+import {
+  canManageEmployerPayment,
+  formatDateTime,
+  formatVnd,
+  getPayInvoiceErrorKey,
+} from '../utils/employerPayment';
 
 const statusKeys = {
   [InvoiceStatus.Issued]: 'employerBilling.invoices.issued',
@@ -67,7 +74,16 @@ export function EmployerInvoicesPage() {
                           {t('employerBilling.invoices.download')}
                         </Button>
                         {canManage && invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Void ? (
-                          <Button size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(invoice.id)}>
+                          <Button
+                            size="sm"
+                            disabled={payInvoice.isPending}
+                            onClick={() =>
+                              payInvoice.mutate(invoice.id, {
+                                onError: (error) =>
+                                  toast.error(t(getPayInvoiceErrorKey(getApiStatusCode(error)))),
+                              })
+                            }
+                          >
                             {t('employerBilling.invoices.pay')}
                           </Button>
                         ) : null}

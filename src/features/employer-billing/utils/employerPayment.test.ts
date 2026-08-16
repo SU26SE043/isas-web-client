@@ -8,6 +8,7 @@ import {
   clearPendingPayment,
   formatCreditDelta,
   formatDateTime,
+  getPayInvoiceErrorKey,
   isTerminalStatus,
   persistPendingPayment,
   resolveCallbackOrderId,
@@ -71,5 +72,20 @@ describe('employer payment utilities', () => {
     expect(canManageEmployerPayment(UserRole.ORG_ADMIN)).toBe(true);
     expect(canManageEmployerPayment(UserRole.ADMIN)).toBe(true);
     expect(canManageEmployerPayment(UserRole.HR_MEMBER)).toBe(false);
+  });
+});
+
+describe('getPayInvoiceErrorKey — nút Thanh toán phải NÓI khi server từ chối', () => {
+  it('409 (đã có giao dịch chờ / hoá đơn không còn thanh toán được) → câu giải thích riêng', () => {
+    expect(getPayInvoiceErrorKey(409)).toBe('employerBilling.invoices.errors.conflict');
+  });
+
+  it('502 PayOS lỗi → dùng lại câu gateway sẵn có', () => {
+    expect(getPayInvoiceErrorKey(502)).toBe('employerBilling.errors.gateway');
+  });
+
+  it('lỗi khác / mất mạng (không có status) → câu chung, KHÔNG im lặng', () => {
+    expect(getPayInvoiceErrorKey(500)).toBe('employerBilling.invoices.errors.payFailed');
+    expect(getPayInvoiceErrorKey(undefined)).toBe('employerBilling.invoices.errors.payFailed');
   });
 });

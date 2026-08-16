@@ -90,3 +90,23 @@ export function truncateId(value: string): string {
 export function canManageEmployerPayment(role: UserRoleType | null | undefined): boolean {
   return role === UserRole.ORG_ADMIN || role === UserRole.ADMIN;
 }
+
+/**
+ * Khoá i18n cho lỗi khi bấm "Thanh toán" một hoá đơn.
+ *
+ * `POST /invoices/{id}/pay` nay trả **409** ở hai tình huống: hoá đơn không còn thanh toán được
+ * (đã Paid/Void) và — mới từ PP6 — đã có một đơn PayOS còn sống cho chính hoá đơn này. Trước PP6
+ * lần bấm thứ hai đẻ ra link PayOS **thứ hai cho cùng khoản tiền**; server chặn là đúng, nhưng
+ * mutation phía này không có `onError` nên nút trở thành **bấm-không-có-gì-xảy-ra**.
+ *
+ * Gộp chung một câu cho cả hai nhánh 409 là CỐ Ý: phân biệt chúng chỉ làm được bằng cách khớp
+ * chuỗi tiếng Anh trong body hoặc dò sự có mặt của `order` — cả hai đều vỡ âm thầm khi server đổi
+ * câu chữ, mà hành động người dùng cần làm thì giống nhau: tải lại để xem trạng thái thật.
+ * Server KHÔNG trả lại link cũ (`checkoutUrl = null` — PayOS không cấp lại), nên không có gì để
+ * redirect tới.
+ */
+export function getPayInvoiceErrorKey(status: number | undefined): string {
+  if (status === 409) return 'employerBilling.invoices.errors.conflict';
+  if (status === 502) return 'employerBilling.errors.gateway';
+  return 'employerBilling.invoices.errors.payFailed';
+}
