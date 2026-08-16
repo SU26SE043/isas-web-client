@@ -26,7 +26,6 @@ function interviewStatusLabelKey(status: CampaignInterviewStatus) {
 
 function ctaLabelKey(status: CampaignInterviewStatus) {
   if (status === 'InProgress') return 'campaigns.my.cta.continue';
-  if (status === 'Completed') return 'campaigns.my.cta.viewResult';
   return 'campaigns.my.cta.viewDetail';
 }
 

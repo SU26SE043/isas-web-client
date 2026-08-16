@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, BadgeCheck, BriefcaseBusiness, CalendarClock, CheckCircle2, Code2, FileText, Info, Loader2, MessageCircle, Play, Sparkles, Star, Video } from 'lucide-react';
+import { AlertCircle, ArrowLeft, BadgeCheck, BriefcaseBusiness, CalendarClock, CheckCircle2, Code2, FileText, Info, Loader2, MessageCircle, Play, Star, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
@@ -153,7 +153,7 @@ export function CandidateCampaignDetailPage() {
               <SectionHeading icon={Info} title={t('campaigns.detail.examInfo')} iconClassName="text-info" />
               <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li></ul>
               <div className="mt-5">
-                {isCompleted ? <Link to={`/candidate/campaigns/${encodeURIComponent(data.campaignId)}/completed/${encodeURIComponent(data.sessionId ?? 'done')}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"><Sparkles className="size-4 text-info" aria-hidden />{t('campaigns.my.cta.viewResult')}</Link> : null}
+                {isCompleted ? <p className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-success/35 bg-success/10 px-4 py-3 text-sm font-semibold text-success-light"><BadgeCheck className="size-4" aria-hidden />{t('campaigns.my.interview.completed')}</p> : null}
                 {!isCompleted && canContinue ? <Link to={`/interview/${encodeURIComponent(data.sessionId!)}/prepare`} className="btn-primary inline-flex w-full justify-center gap-2"><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</Link> : null}
                 {!isCompleted && !canContinue ? <button type="button" className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
               </div>
