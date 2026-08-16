@@ -90,7 +90,7 @@ export function useLearningLiveFeedback(
         promptVi: question.content,
         feedback: toFeedback(submitted),
         transcript: submitted.transcript,
-        scoringStatus: submitted.scoringStatus ?? submitted.status,
+        scoringStatus: submitted.status,
       });
 
       const isLastQuestion = learningMeta.questions.at(-1)?.id === question.id;

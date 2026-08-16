@@ -24,6 +24,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   const [autoSubmitRequestId, setAutoSubmitRequestId] = useState(0);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
+  const [fullscreenBlocked, setFullscreenBlocked] = useState(false);
   const requestAutoSubmit = useCallback(
     () => setAutoSubmitRequestId((value) => value + 1),
     [],
@@ -33,7 +34,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     startWithCountdown,
     countdownReady,
     deadlineAt,
-    violationPaused,
+    violationPaused: violationPaused || fullscreenBlocked,
     answerRecorderOpen: recorderOpen,
     onAutoSubmitRequest: requestAutoSubmit,
   });
@@ -89,13 +90,13 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       answerError: room.answerError,
     });
   const openRecorder = () => {
-    if (violationPaused || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
+    if (violationPaused || fullscreenBlocked || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
     setRecorderOpen(true);
   };
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} />
-      <FullscreenExitBanner />
+      <FullscreenExitBanner onBlockingChange={setFullscreenBlocked} />
 
       {room.media.state === 'error' ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
@@ -158,7 +159,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
           <div className="min-w-0 lg:col-span-2">
             <AnswerRecorderCard
               status={cardStatus}
-              disabled={violationPaused || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
+              disabled={violationPaused || fullscreenBlocked || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
               onOpenRecorder={openRecorder}
             />
           </div>
@@ -176,7 +177,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         ) : null}
 
         {room.speech.needsManualPlay ? (
-          <button type="button" className="btn-secondary self-start" disabled={violationPaused} onClick={room.speech.playManual}>
+          <button type="button" className="btn-secondary self-start" disabled={violationPaused || fullscreenBlocked} onClick={room.speech.playManual}>
             {t('practice.speech.play')}
           </button>
         ) : null}
@@ -203,7 +204,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         } : undefined}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
-        disabled={violationPaused || (usesMockData('practice') ? false : room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut)}
+        disabled={violationPaused || fullscreenBlocked || (usesMockData('practice') ? false : room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut)}
       />
 
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />
