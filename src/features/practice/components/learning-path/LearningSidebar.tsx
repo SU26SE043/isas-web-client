@@ -93,7 +93,15 @@ function MilestoneBlock({
               <>
                 <LessonStatusIcon lesson={lesson} locked={lessonLocked} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-foreground">{lessonTitle}</span>
+                  {/* Tên bài do AI sinh, tiếng Việt thường dài hơn ô rộng 288px của sidebar.
+                      `truncate` cắt còn MỘT dòng và không để lại đường nào đọc phần bị mất —
+                      2 dòng + tooltip giữ được gần hết chữ, phần còn lại vẫn tra được. */}
+                  <span
+                    className="block line-clamp-2 break-words text-sm text-foreground"
+                    title={lessonTitle}
+                  >
+                    {lessonTitle}
+                  </span>
                   <span
                     className={
                       lesson.status === 'completed'

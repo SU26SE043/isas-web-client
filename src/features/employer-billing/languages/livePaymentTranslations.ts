@@ -151,6 +151,9 @@ export const liveEmployerPaymentTranslations: TranslationDictionary = {
     'employerBilling.errors.gateway': 'Không thể kết nối PayOS lúc này. Vui lòng thử lại sau.',
     'employerBilling.errors.checkoutMissing': 'Không thể tạo liên kết thanh toán. Vui lòng thử lại.',
     'employerBilling.errors.generic': 'Không thể tải dữ liệu thanh toán. Vui lòng thử lại.',
+    'employerBilling.invoices.errors.conflict':
+      'Không tạo được thanh toán mới cho hoá đơn này — hoặc đã có một giao dịch đang chờ xử lý, hoặc hoá đơn đã tất toán/huỷ. Tải lại trang để xem trạng thái mới nhất.',
+    'employerBilling.invoices.errors.payFailed': 'Không thể tạo thanh toán cho hoá đơn. Vui lòng thử lại.',
     'employerBilling.pagination.orders': 'đơn hàng',
     'employerBilling.pagination.transactions': 'giao dịch',
   },
@@ -304,6 +307,9 @@ export const liveEmployerPaymentTranslations: TranslationDictionary = {
     'employerBilling.errors.gateway': 'PayOS is unavailable right now. Please try again later.',
     'employerBilling.errors.checkoutMissing': 'Unable to create a payment link. Please try again.',
     'employerBilling.errors.generic': 'Unable to load payment data. Please try again.',
+    'employerBilling.invoices.errors.conflict':
+      'Could not start a new payment for this invoice — either one is already in progress, or the invoice is already paid/void. Reload the page to see its current state.',
+    'employerBilling.invoices.errors.payFailed': 'Unable to start payment for this invoice. Please try again.',
     'employerBilling.pagination.orders': 'orders',
     'employerBilling.pagination.transactions': 'transactions',
   },

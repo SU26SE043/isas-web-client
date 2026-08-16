@@ -16,14 +16,16 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { applyRestPose } from './interviewerPose';
 import { createInterviewerRig } from './interviewerRig';
 
 /**
  * Cảnh 3D cho avatar người phỏng vấn: dựng renderer, nạp model, khung hình
  * chân dung quanh đầu, rồi chạy vòng render nhép miệng.
  *
- * Model là avatar toàn thân ở tư thế T-pose và **không kèm animation clip**,
- * nên camera phải cắt sát vai — nếu lùi ra sẽ thấy hai tay dang ngang.
+ * Model là avatar toàn thân và **không kèm animation clip** (`animations: []`), nên nó render đúng
+ * bind pose = T-pose. `applyRestPose` hạ hai tay xuống một lần lúc nạp; camera vẫn đóng khung chân
+ * dung quanh đầu, nhưng nay việc tay có lọt vào khung hay không không còn là thứ giữ cho ảnh đúng.
  */
 
 const TARGET_FPS = 36;
@@ -109,6 +111,9 @@ export async function createInterviewerScene(
   const gltf = await new GLTFLoader().loadAsync(modelUrl);
   const model = gltf.scene;
   model.updateWorldMatrix(true, true);
+  // Hạ tay TRƯỚC khi lấy khung hình: nhánh dự phòng của framePortrait (không thấy xương `Head`)
+  // đóng khung theo bounding box, mà T-pose làm box rộng gấp đôi người thật.
+  applyRestPose(model);
   scene.add(model);
 
   const head = findHeadBone(model);
