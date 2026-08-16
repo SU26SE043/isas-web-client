@@ -1,5 +1,6 @@
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultsResponse } from '../../types/campaign.api.types';
+import { getResultFlagCount } from '../../utils/campaignResultsActions';
 
 interface ResultsSummaryCardsProps {
   data: CampaignResultsResponse;
@@ -10,7 +11,7 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
   const { t } = useLanguage();
   const passCount = data.results.filter((item) => item.result === 'Pass').length;
   const failCount = data.results.filter((item) => item.result === 'Fail').length;
-  const needsReviewCount = data.results.filter((item) => item.flags.length > 0).length;
+  const needsReviewCount = data.results.filter((item) => getResultFlagCount(item.flags) > 0).length;
   const passScore = data.passScorePct ?? fallbackPassScorePct ?? null;
 
   const cards = [

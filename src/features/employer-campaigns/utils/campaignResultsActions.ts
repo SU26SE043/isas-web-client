@@ -1,6 +1,7 @@
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import type {
   CampaignResultExportFormat,
+  CampaignResultFlag,
   CampaignResultItem,
   CampaignResultStatus,
 } from '../types/campaign.api.types';
@@ -26,6 +27,18 @@ export function hasResultOverride(item: CampaignResultItem): boolean {
     item.overrideResult != null ||
     Boolean(item.overrideNote?.trim()) ||
     Boolean(item.overriddenAt)
+  );
+}
+
+/**
+ * A result flag is an aggregated backend event.  Always use this total when
+ * presenting a warning count, rather than the number of flag categories.
+ */
+export function getResultFlagCount(flags: CampaignResultFlag[]): number {
+  return flags.reduce(
+    (total, flag) =>
+      total + (Number.isFinite(flag.count) ? Math.max(0, flag.count) : 0),
+    0,
   );
 }
 
@@ -82,7 +95,7 @@ export function filterAndSortResults(
     if (options.outcome === 'fail' && item.result !== 'Fail') return false;
     if (options.outcome === 'undetermined' && item.result != null) return false;
     const overridden = hasResultOverride(item);
-    const flagged = item.flags.length > 0;
+    const flagged = getResultFlagCount(item.flags) > 0;
     if (options.review === 'overridden' && !overridden) return false;
     if (options.review === 'notOverridden' && overridden) return false;
     if (options.review === 'flagged' && !flagged) return false;

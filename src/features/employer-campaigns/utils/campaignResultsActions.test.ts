@@ -3,6 +3,7 @@ import type { CampaignResultItem } from '../types/campaign.api.types';
 import {
   defaultExportFileName,
   filterAndSortResults,
+  getResultFlagCount,
   hasResultOverride,
   parseOverrideScoreInput,
 } from './campaignResultsActions';
@@ -30,6 +31,16 @@ describe('campaignResultsActions', () => {
   it('detects override presence', () => {
     expect(hasResultOverride(sample())).toBe(false);
     expect(hasResultOverride(sample({ overrideScore: 90 }))).toBe(true);
+  });
+
+  it('counts warning events rather than flag categories', () => {
+    expect(
+      getResultFlagCount([
+        { type: 'TabSwitch', count: 1 },
+        { type: 'FocusLoss', count: 1 },
+      ]),
+    ).toBe(2);
+    expect(getResultFlagCount([{ type: 'TabSwitch', count: -1 }])).toBe(0);
   });
 
   it('filters and sorts results', () => {
