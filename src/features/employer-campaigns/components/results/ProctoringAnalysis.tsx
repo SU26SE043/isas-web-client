@@ -7,23 +7,6 @@ interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
 }
 
-const WINDOW_FLAG_TYPES = new Set([
-  'tabswitch',
-  'windowblur',
-  'focuslost',
-  'focusloss',
-  'windowviolation',
-  'windowfocusloss',
-  'windowleave',
-  'windowexit',
-  'visibilitychange',
-  'visibilityhidden',
-  'documenthidden',
-  'pagehidden',
-  'fullscreenexit',
-  'exitfullscreen',
-]);
-
 const TIME_FLAG_TYPES = new Set([
   'timeviolation',
   'timeexceeded',
@@ -35,20 +18,17 @@ function normalizedFlagType(type: string) {
   return type.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function sumFlags(flags: CampaignResultFlag[], types: Set<string>) {
-  return flags
-    .filter((flag) => types.has(normalizedFlagType(flag.type)))
-    .reduce((total, flag) => total + Math.max(0, flag.count), 0);
-}
-
 export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
   const { t } = useLanguage();
-  const windowViolations = sumFlags(flags, WINDOW_FLAG_TYPES);
-  const timeViolations = sumFlags(flags, TIME_FLAG_TYPES);
-  const knownFlags = new Set([...WINDOW_FLAG_TYPES, ...TIME_FLAG_TYPES]);
-  const otherFlags = flags.filter((flag) => !knownFlags.has(normalizedFlagType(flag.type)));
-  const otherViolations = getResultFlagCount(otherFlags);
-  const hasViolations = windowViolations > 0 || timeViolations > 0 || otherViolations > 0;
+  const totalViolations = getResultFlagCount(flags);
+  const timeViolations = getResultFlagCount(
+    flags.filter((flag) => TIME_FLAG_TYPES.has(normalizedFlagType(flag.type))),
+  );
+  // Ranking is the source of truth for the total. Any non-time event belongs
+  // to the existing window/focus metric, even when the backend adds a new
+  // event name that the frontend has not seen yet.
+  const windowViolations = Math.max(0, totalViolations - timeViolations);
+  const hasViolations = totalViolations > 0;
 
   return (
     <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
@@ -84,14 +64,6 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
         />
       </div>
 
-      {otherViolations > 0 ? (
-        <p className="mt-3 text-xs text-warning">
-          {t('employer.campaigns.results.flags.count').replace(
-            '{{count}}',
-            String(otherViolations),
-          )}
-        </p>
-      ) : null}
       {!hasViolations ? (
         <p className="mt-3 text-sm text-success">
           {t('employer.campaigns.results.proctoring.none')}
