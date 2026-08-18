@@ -13,20 +13,21 @@ test.describe('B2C interview happy path', () => {
     await installMockMedia(page);
     await loginAs(page, 'Candidate');
 
-    await completePracticeSetupWizard(page);
+    await completePracticeSetupWizard(page, { questionCount: 5 });
     await completeInterviewPreparation(page);
 
     await page.getByRole('button', { name: /Start interview/i }).click();
     await expect(page).toHaveURL(/\/room/, { timeout: 8_000 });
     await expect(page.getByRole('heading', { name: /Mock Interview/i })).toBeVisible();
 
-    for (let index = 0; index < 3; index += 1) {
-      await page.getByRole('button', { name: /Submit answer/i }).evaluate((button) => {
-        (button as HTMLButtonElement).click();
+    for (let index = 0; index < 5; index += 1) {
+      const submitAnswer = page.getByRole('button', { name: /Submit answer/i });
+      await expect(page.getByText(new RegExp(`Question ${index + 1} / 5`, 'i'))).toBeVisible({
+        timeout: 10_000,
       });
-      if (index < 2) {
-        await expect(page.getByRole('button', { name: /Submit answer/i })).toBeEnabled({ timeout: 6_000 });
-      }
+      await expect(page.getByText(/You can start answering/i)).toBeVisible({ timeout: 10_000 });
+      await expect(submitAnswer).toBeEnabled();
+      await submitAnswer.click();
     }
 
     await expect(page).toHaveURL(/\/complete/, { timeout: 12_000 });

@@ -64,7 +64,9 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       </div>
     );
   }
-  const speechStatus = room.speech.isPlaying
+  const speechStatus = room.speech.isLoadingSpeech
+    ? t('practice.speech.loading')
+    : room.speech.isPlaying
     ? t('practice.speech.aiSpeaking')
     : room.speech.needsManualPlay
       ? null
@@ -90,7 +92,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       answerError: room.answerError,
     });
   const openRecorder = () => {
-    if (violationPaused || fullscreenBlocked || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
+    if (violationPaused || fullscreenBlocked || room.speech.isBusy || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
     setRecorderOpen(true);
   };
   return (
@@ -159,7 +161,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
           <div className="min-w-0 lg:col-span-2">
             <AnswerRecorderCard
               status={cardStatus}
-              disabled={violationPaused || fullscreenBlocked || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
+              disabled={violationPaused || fullscreenBlocked || room.speech.isBusy || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
               onOpenRecorder={openRecorder}
             />
           </div>
@@ -177,7 +179,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         ) : null}
 
         {room.speech.needsManualPlay ? (
-          <button type="button" className="btn-secondary self-start" disabled={violationPaused || fullscreenBlocked} onClick={room.speech.playManual}>
+          <button type="button" className="btn-secondary self-start" disabled={violationPaused || fullscreenBlocked || room.speech.isBusy} onClick={room.speech.playManual}>
             {t('practice.speech.play')}
           </button>
         ) : null}
@@ -192,7 +194,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         onSubmitAnswer={usesMockData('practice') ? async () => {
           const file = new File([new Uint8Array([0])], 'e2e-answer.webm', { type: 'audio/webm' });
           mockSubmitCountRef.current += 1;
-          if (mockSubmitCountRef.current >= 3) {
+          if (mockSubmitCountRef.current >= room.questions.length) {
             // Wait for the mock session to settle before changing routes. A
             // fire-and-forget submit raced WebKit's route render and could
             // leave the room mounted at /complete.
@@ -204,7 +206,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
         } : undefined}
         finishLabel={finishLabel}
         finishPrimary={room.interviewComplete}
-        disabled={violationPaused || fullscreenBlocked || (usesMockData('practice') ? false : room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut)}
+        disabled={violationPaused || fullscreenBlocked || room.speech.isBusy || (usesMockData('practice') ? false : room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut)}
       />
 
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />

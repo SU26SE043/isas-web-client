@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isPlaywrightRuntime } from '@/shared/mock';
+import { resumeSpeechAudioContext } from '@/features/practice/utils/interviewerSpeechBus';
 
 interface UseCampaignFullscreenOptions {
   enabled: boolean;
@@ -18,7 +19,9 @@ export function useCampaignFullscreen({ enabled, onExit }: UseCampaignFullscreen
   const hasEntered = useRef(initiallyFullscreen);
 
   const enterFullscreen = useCallback(async () => {
+    const audioResume = resumeSpeechAudioContext();
     if (!document.documentElement.requestFullscreen) {
+      await audioResume;
       if (testFallbackEnabled) {
         setTestFallbackFullscreen(true);
         hasEntered.current = true;
@@ -27,7 +30,7 @@ export function useCampaignFullscreen({ enabled, onExit }: UseCampaignFullscreen
       return false;
     }
     try {
-      await document.documentElement.requestFullscreen();
+      await Promise.all([audioResume, document.documentElement.requestFullscreen()]);
       return true;
     } catch {
       if (testFallbackEnabled) {

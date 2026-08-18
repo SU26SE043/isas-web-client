@@ -29,6 +29,33 @@ import { isValidPracticeSessionId } from '../utils/practiceSessionId';
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
 
+function createMockSpeechBlob(): Blob {
+  const sampleRate = 8_000;
+  const sampleCount = sampleRate;
+  const bytesPerSample = 2;
+  const buffer = new ArrayBuffer(44 + sampleCount * bytesPerSample);
+  const view = new DataView(buffer);
+  const writeAscii = (offset: number, value: string) => {
+    for (let index = 0; index < value.length; index += 1) {
+      view.setUint8(offset + index, value.charCodeAt(index));
+    }
+  };
+  writeAscii(0, 'RIFF');
+  view.setUint32(4, buffer.byteLength - 8, true);
+  writeAscii(8, 'WAVE');
+  writeAscii(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * bytesPerSample, true);
+  view.setUint16(32, bytesPerSample, true);
+  view.setUint16(34, 16, true);
+  writeAscii(36, 'data');
+  view.setUint32(40, sampleCount * bytesPerSample, true);
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
 function buildMockSession(payload: CreatePracticeSessionRequest): PracticeSessionResponse {
   const sessionId = `session-${crypto.randomUUID().slice(0, 8)}`;
   const count = payload.questionCount ?? 5;
@@ -188,16 +215,19 @@ async function enrichSessionWithRubricCatalog(
   }
 }
 
-export async function getQuestionSpeech(sessionId: string, questionId: string): Promise<Blob> {
+export async function getQuestionSpeech(
+  sessionId: string,
+  questionId: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
   if (usesMockData('practice')) {
     await mockDelay(200);
-    // Minimal silent-ish mpeg placeholder bytes (not a real frame) — room handles play errors.
-    return new Blob([new Uint8Array([0xff, 0xfb, 0x90, 0x00])], { type: 'audio/mpeg' });
+    return createMockSpeechBlob();
   }
 
   const response = await apiClient.get<Blob>(
     b2cPracticeSessionEndpoints.speech(sessionId, questionId),
-    { responseType: 'blob' },
+    { responseType: 'blob', signal },
   );
   return response.data;
 }

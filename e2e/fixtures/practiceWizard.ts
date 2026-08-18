@@ -42,10 +42,13 @@ export async function installPracticeRubricStub(page: Page): Promise<void> {
 }
 
 /**
- * Drive the 7-step B2C practice setup wizard through to /prepare.
- * CV/JD are optional; question count is set to 3 to match happy-path submit loops.
+ * Drive the B2C practice setup wizard through to /prepare.
+ * CV/JD are optional; callers may choose the question count needed by the scenario.
  */
-export async function completePracticeSetupWizard(page: Page): Promise<string> {
+export async function completePracticeSetupWizard(
+  page: Page,
+  { questionCount = 3 }: { questionCount?: number } = {},
+): Promise<string> {
   await installPracticeRubricStub(page);
   await page.goto('/practice');
   await expect(page.getByRole('heading', { name: /Choose a job category/i })).toBeVisible({
@@ -65,8 +68,7 @@ export async function completePracticeSetupWizard(page: Page): Promise<string> {
   // Time per question (default 120s is fine)
   await page.getByRole('button', { name: /^Next$/i }).click();
 
-  // Question count → 3 (matches interview-happy-path submit loop)
-  await page.getByRole('spinbutton', { name: /Question count/i }).fill('3');
+  await page.getByRole('spinbutton', { name: /Question count/i }).fill(String(questionCount));
   await page.getByRole('button', { name: /^Next$/i }).click();
 
   // Level (seniority): default preselection is fine

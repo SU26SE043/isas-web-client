@@ -39,7 +39,13 @@ export async function installMockMedia(page: Page) {
 
     Object.defineProperty(HTMLMediaElement.prototype, 'play', {
       configurable: true,
-      value: async () => undefined,
+      value: async function () {
+        // TTS now correctly locks recording until `ended`. Mirror a short,
+        // successful audio clip so room E2E does not hang on an immortal mock.
+        if (this instanceof HTMLAudioElement) {
+          window.setTimeout(() => this.dispatchEvent(new Event('ended')), 800);
+        }
+      },
     });
 
     Object.defineProperty(HTMLVideoElement.prototype, 'videoWidth', {

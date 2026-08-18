@@ -21,7 +21,13 @@ let attachedAudio: HTMLAudioElement | null = null;
 let timeDomain: Uint8Array<ArrayBuffer> | null = null;
 
 /** Một element chỉ được `createMediaElementSource` đúng một lần trong đời. */
-const routedElements = new WeakSet<HTMLAudioElement>();
+interface SpeechGraph {
+  source: MediaElementAudioSourceNode;
+  analyser: AnalyserNode;
+  timeDomain: Uint8Array<ArrayBuffer>;
+}
+
+const routedElements = new WeakMap<HTMLAudioElement, SpeechGraph>();
 
 function getAudioContextCtor(): AudioContextCtor | null {
   if (typeof window === 'undefined') return null;
@@ -45,6 +51,15 @@ async function ensureRunningContext(): Promise<AudioContext | null> {
 }
 
 /**
+ * Mở Web Audio ngay trong user gesture của nút "Bắt đầu". Trình duyệt web
+ * không có tương đương `setMediaPlaybackRequiresUserGesture(false)` của
+ * Android WebView, nên context phải được resume trước khi chuyển trang/chờ TTS.
+ */
+export async function resumeSpeechAudioContext(): Promise<boolean> {
+  return Boolean(await ensureRunningContext());
+}
+
+/**
  * Gắn analyser vào audio đang phát. Gọi **sau** khi `audio.play()` resolve —
  * lúc đó chắc chắn đã có user activation nên `resume()` sẽ thành công.
  */
@@ -53,22 +68,33 @@ export async function attachSpeechAudio(audio: HTMLAudioElement): Promise<void> 
   detachSpeechAudio();
   const context = await ensureRunningContext();
   if (!context) return;
-  // Element đã từng bị route ở lần phát trước: dựng lại source sẽ ném lỗi và
-  // làm mất tiếng, nên bỏ qua lip-sync cho element đó.
-  if (routedElements.has(audio)) return;
+  const existing = routedElements.get(audio);
+  if (existing) {
+    sourceNode = existing.source;
+    analyser = existing.analyser;
+    attachedAudio = audio;
+    timeDomain = existing.timeDomain;
+    return;
+  }
   try {
     const node = context.createMediaElementSource(audio);
-    routedElements.add(audio);
     const nextAnalyser = context.createAnalyser();
     nextAnalyser.fftSize = 1024;
     nextAnalyser.smoothingTimeConstant = 0.55;
     node.connect(nextAnalyser);
-    // Vẫn phải nối thẳng ra loa: analyser không tự đẩy tiếng đi tiếp.
-    node.connect(context.destination);
+    // Analyser nằm nối tiếp trên đường ra loa; nếu không nối destination thì
+    // element bị route qua Web Audio sẽ câm hoàn toàn.
+    nextAnalyser.connect(context.destination);
+    const nextTimeDomain = new Uint8Array(new ArrayBuffer(nextAnalyser.fftSize));
+    routedElements.set(audio, {
+      source: node,
+      analyser: nextAnalyser,
+      timeDomain: nextTimeDomain,
+    });
     sourceNode = node;
     analyser = nextAnalyser;
     attachedAudio = audio;
-    timeDomain = new Uint8Array(new ArrayBuffer(nextAnalyser.fftSize));
+    timeDomain = nextTimeDomain;
   } catch {
     detachSpeechAudio();
   }
@@ -76,11 +102,9 @@ export async function attachSpeechAudio(audio: HTMLAudioElement): Promise<void> 
 
 /** Ngắt analyser. Không đụng tới đường ra loa của element. */
 export function detachSpeechAudio(): void {
-  try {
-    analyser?.disconnect();
-  } catch {
-    /* node có thể đã bị context đóng */
-  }
+  // Không disconnect graph: một HTMLMediaElement chỉ được tạo source đúng một
+  // lần. Giữ graph để lượt phát kế tiếp trên cùng player dùng lại được; việc
+  // xoá các ref active khiến biên độ lập tức về `null`/miệng về trạng thái nghỉ.
   analyser = null;
   sourceNode = null;
   attachedAudio = null;

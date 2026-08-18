@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { resumeSpeechAudioContext } from '../utils/interviewerSpeechBus';
 
 export interface FullscreenRequestResult {
   supported: boolean;
@@ -7,13 +8,22 @@ export interface FullscreenRequestResult {
 
 export async function requestInterviewFullscreen(): Promise<FullscreenRequestResult> {
   if (typeof document === 'undefined') return { supported: false, entered: false };
-  if (document.fullscreenElement) return { supported: true, entered: true };
+  // Gọi ngay trong click handler để Web Audio nhận user activation trước khi
+  // route/countdown làm mất gesture. Lỗi resume không được chặn fullscreen.
+  const audioResume = resumeSpeechAudioContext();
+  if (document.fullscreenElement) {
+    await audioResume;
+    return { supported: true, entered: true };
+  }
 
   const requestFullscreen = document.documentElement.requestFullscreen;
-  if (!requestFullscreen) return { supported: false, entered: false };
+  if (!requestFullscreen) {
+    await audioResume;
+    return { supported: false, entered: false };
+  }
 
   try {
-    await requestFullscreen.call(document.documentElement);
+    await Promise.all([audioResume, requestFullscreen.call(document.documentElement)]);
     return { supported: true, entered: Boolean(document.fullscreenElement) };
   } catch {
     return { supported: true, entered: false };
