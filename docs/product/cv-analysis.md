@@ -11,6 +11,9 @@ BRD: FR-004–006, SCR-CAN-021–022.
 5. **Analyze** → `POST /api/v1/interview/practice/cv-analysis` `{ cvId, jdId?, jdText?, jobCategory, mustHave?, niceToHave? }`; `jdText` takes priority over `jdId` and each requirement is sent as `{ text }` without an id.
 6. **Report** landing → `GET /api/v1/interview/practice/cv-analysis/{id}` — render đúng fields response.
 
+The CV flow does not ask for or analyze a GitHub repository. Standalone repository analysis was
+retired from the frontend on 2026-08-18; the backend endpoint is outside this frontend story.
+
 ## Base URL
 
 `VITE_API_BASE_URL` = gateway **origin only** (no `/api` suffix).

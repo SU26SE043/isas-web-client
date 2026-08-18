@@ -27,6 +27,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-002 | Home landing page | E02 | normal | implemented | [US-002](./epics/E02-marketing/US-002-home-landing.md) |
 | US-003 | Auth modal + profile | E03 | high-risk | implemented | [US-003](./epics/E03-auth/US-003-auth-profile.md) |
 | US-004 | CV analysis flow UI | E04 | normal | implemented | [US-004](./epics/E04-cv-analysis/US-004-cv-analysis-ui.md) |
+| US-023 | Evidence-first CV report and source preview | E04 | high-risk | in_progress | [US-023](./epics/E04-cv-analysis/US-023-cv-evidence-report/overview.md) |
 | US-005 | Practice interview B2C | E05 | normal | implemented | [US-005](./epics/E05-practice/US-005-practice-interview.md) |
 | US-006 | Candidate dashboard heatmap | E03 | normal | implemented | [US-006](./epics/E03-auth/US-006-candidate-dashboard.md) |
 | US-007 | Campaign management employer workflow | E07 | normal | implemented | [US-007](./epics/E07-campaign-management/US-007-campaign-management.md) |
