@@ -79,6 +79,7 @@ export const CVAnalysisPage: React.FC = () => {
             jdFileError={flow.jdFileError}
             jdText={flow.jdText}
             isUploading={flow.isUploading}
+            isLoadingRequirements={flow.isLoadingJdRequirements}
             uploadStatus={flow.jdUploadStatus}
             fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
             domain={flow.domain}
@@ -100,6 +101,7 @@ export const CVAnalysisPage: React.FC = () => {
             jdFileName={flow.jdRecord?.originalName ?? flow.jdFile?.name}
             domain={flow.domain}
             hasJd={hasJd}
+            jdRequirements={flow.jdRequirements}
             onAnalyze={flow.runAnalysis}
             onBack={flow.goBack}
             onRetryUpload={flow.analyzeError ? flow.retryFromUpload : undefined}

@@ -8,7 +8,13 @@ import type {
   FileListParams,
   FileRecord,
   FileRecordPage,
+  Citation,
+  CvSection,
   JdMatch,
+  JdRequirement,
+  JdRequirementsResponse,
+  RequirementMatch,
+  RequirementSummary,
   ReplaceFileResponse,
   UploadedCvFile,
 } from '../types/cvAnalysis.types';
@@ -20,6 +26,7 @@ export type CvAnalysisErrorCode =
   | 'insufficientCredits'
   | 'forbidden'
   | 'notFound'
+  | 'rateLimited'
   | 'aiBusy'
   | 'serverError'
   | 'uploadFailed'
@@ -47,6 +54,8 @@ function statusToCode(status?: number): CvAnalysisErrorCode {
       return 'forbidden';
     case 404:
       return 'notFound';
+    case 429:
+      return 'rateLimited';
     case 500:
       return 'serverError';
     case 502:
@@ -80,6 +89,82 @@ function parseJdMatch(raw: unknown): JdMatch | null {
   };
 }
 
+function parseCitation(raw: unknown): Citation | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  return {
+    sourceUrl: String(data.sourceUrl ?? ''),
+    sourceType: String(data.sourceType ?? ''),
+  };
+}
+
+function parseCitations(raw: unknown): Citation[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(parseCitation).filter((item): item is Citation => item !== null);
+}
+
+function parseJdRequirement(raw: unknown): JdRequirement {
+  const data = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  return {
+    text: String(data.text ?? ''),
+    citations: parseCitations(data.citations),
+  };
+}
+
+function parseRequirementSummary(raw: unknown): RequirementSummary | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  const parseLevelCount = (value: unknown) => {
+    const item = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+    return {
+      total: Number(item.total ?? 0),
+      strong: Number(item.strong ?? 0),
+      partial: Number(item.partial ?? 0),
+      weak: Number(item.weak ?? 0),
+    };
+  };
+  return {
+    mustHave: parseLevelCount(data.mustHave),
+    niceToHave: parseLevelCount(data.niceToHave),
+  };
+}
+
+function parseRequirementMatch(raw: unknown): RequirementMatch | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  const evidence = data.evidence && typeof data.evidence === 'object'
+    ? data.evidence as Record<string, unknown>
+    : {};
+  return {
+    requirementId: String(data.requirementId ?? ''),
+    text: String(data.text ?? ''),
+    priority: data.priority === 'NiceToHave' ? 'NiceToHave' : 'MustHave',
+    level: data.level === 'Strong' || data.level === 'Partial' ? data.level : 'Weak',
+    evidence: {
+      quote: String(evidence.quote ?? ''),
+      page: evidence.page == null ? null : Number(evidence.page),
+      section: evidence.section == null ? null : String(evidence.section),
+      verified: Boolean(evidence.verified),
+    },
+  };
+}
+
+function parseRequirementMatches(raw: unknown): RequirementMatch[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(parseRequirementMatch).filter((item): item is RequirementMatch => item !== null);
+}
+
+function parseCvSections(raw: unknown): CvSection[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+    .map((item) => ({
+      title: String(item.title ?? ''),
+      kind: String(item.kind ?? ''),
+      page: Number(item.page ?? 0),
+    }));
+}
+
 function parseAnalysis(raw: unknown): CvAnalysisResult {
   if (!raw || typeof raw !== 'object') {
     throw new CvAnalysisError('unknown', 'Invalid analysis response.');
@@ -101,6 +186,11 @@ function parseAnalysis(raw: unknown): CvAnalysisResult {
     weaknesses: asStringArray(data.weaknesses),
     suggestions: asStringArray(data.suggestions),
     jdMatch: parseJdMatch(data.jdMatch),
+    requirementSummary: parseRequirementSummary(data.requirementSummary),
+    mustHaveMatches: parseRequirementMatches(data.mustHaveMatches),
+    niceToHaveMatches: parseRequirementMatches(data.niceToHaveMatches),
+    cvSections: parseCvSections(data.cvSections),
+    citations: parseCitations(data.citations),
     createdAt: String(data.createdAt ?? ''),
   };
 }
@@ -225,7 +315,46 @@ export const cvAnalysisService = {
       if (error instanceof Error && error.message === 'JOB_CATEGORY_REQUIRED') {
         throw new CvAnalysisError('badRequest', 'Job category is required.');
       }
+      if (error instanceof Error && ['JD_TEXT_TOO_LONG', 'REQUIREMENT_LIMIT_EXCEEDED', 'REQUIREMENT_TEXT_TOO_LONG'].includes(error.message)) {
+        throw new CvAnalysisError('badRequest', error.message);
+      }
       throw toCvAnalysisError(error, 'CV analysis failed.');
+    }
+  },
+
+  async getJdRequirements(input: {
+    jdId?: string | null;
+    jdText?: string | null;
+    jobCategory: string;
+  }): Promise<JdRequirementsResponse> {
+    const jdText = input.jdText?.trim() ?? '';
+    if (!input.jobCategory.trim()) {
+      throw new CvAnalysisError('badRequest', 'Job category is required.', 400);
+    }
+    if (jdText.length > 20_000) {
+      throw new CvAnalysisError('badRequest', 'JD text is too long.', 400);
+    }
+    const body: {
+      jdText?: string;
+      jdId?: string;
+      jobCategory: string;
+    } = {
+      jobCategory: input.jobCategory.trim(),
+    };
+    if (jdText) body.jdText = jdText;
+    else if (input.jdId?.trim()) body.jdId = input.jdId.trim();
+    else throw new CvAnalysisError('badRequest', 'A JD text or id is required.', 400);
+
+    try {
+      const response = await apiClient.post<unknown>(cvAnalysisEndpoints.jdRequirements, body);
+      const data = unwrapData(response.data);
+      const record = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+      return {
+        mustHave: Array.isArray(record.mustHave) ? record.mustHave.map(parseJdRequirement) : [],
+        niceToHave: Array.isArray(record.niceToHave) ? record.niceToHave.map(parseJdRequirement) : [],
+      };
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not extract JD requirements.');
     }
   },
 

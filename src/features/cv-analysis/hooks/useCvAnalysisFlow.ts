@@ -8,7 +8,7 @@ import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
 import { cvAnalysisService, CvAnalysisError } from '../services/cvAnalysis.service';
 import type { CvAnalysisDomain } from '../types/cvDomain.types';
 import { isCvAnalysisDomain } from '../types/cvDomain.types';
-import type { FileRecord } from '../types/cvAnalysis.types';
+import type { FileRecord, JdRequirementsResponse } from '../types/cvAnalysis.types';
 import { domainToJobCategoryLabel } from '../types/cvAnalysis.types';
 import { validatePdfFile } from '../utils/cvFileValidation';
 import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
@@ -93,6 +93,8 @@ export function useCvAnalysisFlow() {
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
   const [jdText, setJdText] = useState('');
+  const [jdRequirements, setJdRequirements] = useState<JdRequirementsResponse | null>(null);
+  const [isLoadingJdRequirements, setIsLoadingJdRequirements] = useState(false);
   const [jdSkipped, setJdSkipped] = useState(false);
   const [repoUrl, setRepoUrl] = useState('');
   const [repoAnalysis, setRepoAnalysis] = useState<RepoAnalysisResponse | null>(null);
@@ -145,6 +147,7 @@ export function useCvAnalysisFlow() {
       setJdFile(null);
       setJdId(record.id);
       setJdRecord(record);
+      setJdRequirements(null);
       setJdUploadStatus('completed');
       uploadedJdKeyRef.current = null;
       setJdFileError(null);
@@ -270,6 +273,7 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
+        setJdRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setJdFileError(null);
@@ -285,6 +289,7 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
+        setJdRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
@@ -298,6 +303,7 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
+        setJdRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
@@ -320,6 +326,7 @@ export function useCvAnalysisFlow() {
       setJdFile(next);
       setJdId(null);
       setJdRecord(null);
+      setJdRequirements(null);
       setJdUploadStatus('uploading');
       setIsUploading(true);
       uploadedJdKeyRef.current = null;
@@ -332,6 +339,7 @@ export function useCvAnalysisFlow() {
         uploadedJdKeyRef.current = key;
         setJdId(record.id);
         setJdRecord(record);
+        setJdRequirements(null);
         setJdUploadStatus('completed');
         toast.success(t('cv.uploadJdSuccess'));
       } catch (error) {
@@ -407,14 +415,36 @@ export function useCvAnalysisFlow() {
   }, [clearFailure, domain, failStep, isAnalyzingRepo, repoAnalysis?.repoUrl, repoUrl, skipGithub, t]);
 
   /** Advance only — never calls upload API. */
-  const goNextFromJd = useCallback(() => {
+  const goNextFromJd = useCallback(async () => {
     if (isUploading) return;
     const hasFileJd = jdUploadStatus === 'completed' && Boolean(jdId);
     const hasTextJd = jdText.trim().length > 0;
     if (!hasFileJd && !hasTextJd && !jdSkipped) return;
     clearFailure();
-    setStep(5);
-  }, [clearFailure, isUploading, jdId, jdSkipped, jdText, jdUploadStatus]);
+
+    if (jdSkipped || (!hasFileJd && !hasTextJd)) {
+      setJdRequirements(null);
+      setStep(5);
+      return;
+    }
+
+    if (!domain || isLoadingJdRequirements) return;
+    setIsLoadingJdRequirements(true);
+    try {
+      const requirements = await cvAnalysisService.getJdRequirements({
+        jdId,
+        jdText,
+        jobCategory: domainToJobCategoryLabel(domain),
+      });
+      setJdRequirements(requirements);
+      setStep(5);
+    } catch (error) {
+      const message = resolveAnalyzeMessage(error, t);
+      failStep('job-description', message);
+    } finally {
+      setIsLoadingJdRequirements(false);
+    }
+  }, [clearFailure, domain, failStep, isLoadingJdRequirements, isUploading, jdId, jdSkipped, jdText, jdUploadStatus, t]);
 
   const skipJd = useCallback(() => {
     setJdSkipped(true);
@@ -422,6 +452,7 @@ export function useCvAnalysisFlow() {
     setJdFile(null);
     setJdId(null);
     setJdRecord(null);
+    setJdRequirements(null);
     setJdUploadStatus('idle');
     setJdFileError(null);
     clearFailure();
@@ -455,6 +486,11 @@ export function useCvAnalysisFlow() {
         weaknesses: ['Add more measurable outcomes'],
         suggestions: ['Quantify the impact of your recent projects.'],
         jdMatch: null,
+        requirementSummary: null,
+        mustHaveMatches: [],
+        niceToHaveMatches: [],
+        cvSections: [],
+        citations: [],
         createdAt: new Date().toISOString(),
       };
       writeStorage(CV_ANALYSIS_ID_KEY, result.id);
@@ -472,6 +508,8 @@ export function useCvAnalysisFlow() {
         jobCategory: domainToJobCategoryLabel(domain),
         jdId,
         jdText,
+        mustHave: jdRequirements?.mustHave.map(({ text }) => ({ text })),
+        niceToHave: jdRequirements?.niceToHave.map(({ text }) => ({ text })),
       });
       const result = await cvAnalysisService.analyze(payload);
 
@@ -510,6 +548,11 @@ export function useCvAnalysisFlow() {
           weaknesses: ['Add more measurable outcomes'],
           suggestions: ['Quantify the impact of your recent projects.'],
           jdMatch: null,
+          requirementSummary: null,
+          mustHaveMatches: [],
+          niceToHaveMatches: [],
+          cvSections: [],
+          citations: [],
           createdAt: new Date().toISOString(),
         };
         writeStorage(CV_ANALYSIS_ID_KEY, result.id);
@@ -544,6 +587,7 @@ export function useCvAnalysisFlow() {
     domain,
     failStep,
     isAnalyzing,
+    jdRequirements,
     jdFile?.name,
     jdId,
     jdRecord?.originalName,
@@ -571,7 +615,7 @@ export function useCvAnalysisFlow() {
       void executeAnalysis();
       return;
     }
-    goNextFromJd();
+    void goNextFromJd();
   }, [cvId, executeAnalysis, goNextFromJd, jdId, jdSkipped, jdText, jdUploadStatus]);
 
   const timelineStatuses = useMemo<CvTimelineStatuses>(() => {
@@ -603,6 +647,8 @@ export function useCvAnalysisFlow() {
     fileError,
     jdFileError,
     jdText,
+    jdRequirements,
+    isLoadingJdRequirements,
     repoUrl,
     repoAnalysis,
     repoError,

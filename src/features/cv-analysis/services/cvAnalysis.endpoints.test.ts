@@ -6,6 +6,12 @@ describe('cvAnalysisEndpoints file contract', () => {
     expect(cvAnalysisEndpoints.listFiles).toBe('/api/v1/interview/files/files');
   });
 
+  it('exposes JD requirements extraction through the gateway', () => {
+    expect(cvAnalysisEndpoints.jdRequirements).toBe(
+      '/api/v1/interview/practice/jd-requirements',
+    );
+  });
+
   it('exposes parsed text as a separate endpoint', () => {
     expect(cvAnalysisEndpoints.parsedText('file/123')).toBe(
       '/api/v1/interview/files/file%2F123/parsed-text',

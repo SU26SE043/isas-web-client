@@ -19,6 +19,7 @@ export interface UploadJDProps {
   jdFileError: string | null;
   jdText: string;
   isUploading?: boolean;
+  isLoadingRequirements?: boolean;
   uploadStatus?: FileUploadStatus;
   fileName?: string;
   domain?: CvAnalysisDomain | null;
@@ -43,6 +44,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
   jdFileError,
   jdText,
   isUploading = false,
+  isLoadingRequirements = false,
   uploadStatus = 'idle',
   fileName,
   domain,
@@ -61,7 +63,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
   const fileReady = uploadStatus === 'completed' && Boolean(selectedFileId);
   const textReady = jdText.trim().length > 0 && jdText.trim().length <= 20_000;
   const canNext =
-    (fileReady || textReady || isPlaywrightRuntime()) && !jdFileError && !isUploading;
+    (fileReady || textReady || isPlaywrightRuntime()) && !jdFileError && !isUploading && !isLoadingRequirements;
 
   return (
     <CvFlowSectionCard
@@ -96,7 +98,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
           type="button"
           role="tab"
           aria-selected={activeTab === 'uploaded'}
-          disabled={isUploading}
+          disabled={isUploading || isLoadingRequirements}
           onClick={() => setActiveTab('uploaded')}
           className={activeTab === 'uploaded' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
         >
@@ -106,7 +108,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
           type="button"
           role="tab"
           aria-selected={activeTab === 'new'}
-          disabled={isUploading}
+          disabled={isUploading || isLoadingRequirements}
           onClick={() => setActiveTab('new')}
           className={activeTab === 'new' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
         >
@@ -116,7 +118,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
           type="button"
           role="tab"
           aria-selected={activeTab === 'text'}
-          disabled={isUploading}
+          disabled={isUploading || isLoadingRequirements}
           onClick={() => setActiveTab('text')}
           className={activeTab === 'text' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
         >
@@ -162,7 +164,7 @@ export const UploadJD: React.FC<UploadJDProps> = ({
       </ul>
 
       <div className="mt-4">
-        <button type="button" className="btn-ghost text-sm" onClick={onSkip} disabled={isUploading}>
+        <button type="button" className="btn-ghost text-sm" onClick={onSkip} disabled={isUploading || isLoadingRequirements}>
           {t('cv.skipJd')}
         </button>
       </div>

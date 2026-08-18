@@ -42,6 +42,61 @@ export interface JdMatch {
   missingSkills: string[];
 }
 
+export interface Citation {
+  sourceUrl: string;
+  sourceType: string;
+}
+
+export interface JdRequirement {
+  text: string;
+  citations: Citation[];
+}
+
+export interface JdRequirementsResponse {
+  mustHave: JdRequirement[];
+  niceToHave: JdRequirement[];
+}
+
+export interface RequirementInput {
+  text: string;
+}
+
+export interface LevelCount {
+  total: number;
+  strong: number;
+  partial: number;
+  weak: number;
+}
+
+export interface RequirementSummary {
+  mustHave: LevelCount;
+  niceToHave: LevelCount;
+}
+
+export type RequirementPriority = 'MustHave' | 'NiceToHave';
+export type RequirementLevel = 'Strong' | 'Partial' | 'Weak';
+
+export interface Evidence {
+  quote: string;
+  page: number | null;
+  section: string | null;
+  verified: boolean;
+}
+
+export interface RequirementMatch {
+  requirementId: string;
+  text: string;
+  priority: RequirementPriority;
+  level: RequirementLevel;
+  evidence: Evidence;
+}
+
+export interface CvSection {
+  title: string;
+  kind: string;
+  page: number;
+}
+
 /** Analyze + detail response — render only API fields. */
 export interface CvAnalysisResult {
   id: string;
@@ -53,6 +108,11 @@ export interface CvAnalysisResult {
   weaknesses: string[];
   suggestions: string[];
   jdMatch: JdMatch | null;
+  requirementSummary: RequirementSummary | null;
+  mustHaveMatches: RequirementMatch[];
+  niceToHaveMatches: RequirementMatch[];
+  cvSections: CvSection[];
+  citations: Citation[];
   createdAt: string;
 }
 
@@ -62,6 +122,8 @@ export interface AnalyzeCvRequest {
   jobCategory: string;
   jdId?: string;
   jdText?: string;
+  mustHave?: RequirementInput[];
+  niceToHave?: RequirementInput[];
 }
 
 /** API list/detail response shape. */

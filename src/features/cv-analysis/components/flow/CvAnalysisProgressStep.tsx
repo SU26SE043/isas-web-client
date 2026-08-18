@@ -2,8 +2,10 @@ import React from 'react';
 import { XCircle } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
+import type { JdRequirementsResponse } from '../../types/cvAnalysis.types';
 import { AnalyzeButton } from './AnalyzeButton';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
+import { CvJdRequirementsPanel } from './CvJdRequirementsPanel';
 
 interface CvAnalysisProgressStepProps {
   parseProgress: number;
@@ -13,6 +15,7 @@ interface CvAnalysisProgressStepProps {
   jdFileName?: string | null;
   domain?: CvAnalysisDomain | null;
   hasJd?: boolean;
+  jdRequirements?: JdRequirementsResponse | null;
   onAnalyze: () => void;
   onBack: () => void;
   onRetryUpload?: () => void;
@@ -26,6 +29,7 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
   jdFileName,
   domain,
   hasJd = false,
+  jdRequirements = null,
   onAnalyze,
   onBack,
   onRetryUpload,
@@ -104,6 +108,8 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
           </span>
         </p>
       </div>
+
+      {jdRequirements ? <CvJdRequirementsPanel requirements={jdRequirements} /> : null}
 
       <p className="body-text mt-6 max-w-xl">{t('cv.analyzeHint')}</p>
 
