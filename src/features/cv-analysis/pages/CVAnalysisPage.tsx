@@ -7,7 +7,6 @@ import {
 import { CvDomainStep } from '../components/flow/CvDomainStep';
 import { UploadCV } from '../components/flow/UploadCV';
 import { UploadJD } from '../components/flow/UploadJD';
-import { CvGitHubStep } from '../components/flow/CvGitHubStep';
 import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
 import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 import { isPlaywrightRuntime } from '@/shared/mock';
@@ -60,25 +59,13 @@ export const CVAnalysisPage: React.FC = () => {
         ) : null}
 
         {flow.step === 3 ? (
-          <CvGitHubStep
-            repoUrl={flow.repoUrl}
-            repoAnalysis={flow.repoAnalysis}
-            error={flow.repoError}
-            isAnalyzing={flow.isAnalyzingRepo}
-            onRepoUrlChange={flow.setRepoUrl}
-            onSkip={flow.skipGithub}
-            onBack={flow.goBack}
-            onNext={flow.goNextFromGithub}
-          />
-        ) : null}
-
-        {flow.step === 4 ? (
           <UploadJD
             jdFile={flow.jdFile}
             selectedFileId={flow.jdId}
             jdFileError={flow.jdFileError}
             jdText={flow.jdText}
             isUploading={flow.isUploading}
+            isLoadingRequirements={flow.isLoadingJdRequirements}
             uploadStatus={flow.jdUploadStatus}
             fileName={flow.cvRecord?.originalName ?? flow.cvFile?.name}
             domain={flow.domain}
@@ -91,7 +78,7 @@ export const CVAnalysisPage: React.FC = () => {
           />
         ) : null}
 
-        {flow.step === 5 ? (
+        {flow.step === 4 ? (
           <CvAnalysisProgressStep
             parseProgress={flow.parseProgress}
             isAnalyzing={flow.isAnalyzing}
@@ -100,6 +87,9 @@ export const CVAnalysisPage: React.FC = () => {
             jdFileName={flow.jdRecord?.originalName ?? flow.jdFile?.name}
             domain={flow.domain}
             hasJd={hasJd}
+            jdRequirements={flow.jdRequirements}
+            editableRequirements={flow.editableRequirements}
+            onRequirementsChange={flow.setEditableRequirements}
             onAnalyze={flow.runAnalysis}
             onBack={flow.goBack}
             onRetryUpload={flow.analyzeError ? flow.retryFromUpload : undefined}

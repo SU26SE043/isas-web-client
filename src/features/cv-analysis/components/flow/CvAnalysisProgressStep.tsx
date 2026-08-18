@@ -2,8 +2,10 @@ import React from 'react';
 import { XCircle } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
+import type { JdRequirementsResponse } from '../../types/cvAnalysis.types';
 import { AnalyzeButton } from './AnalyzeButton';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
+import { CvJdRequirementsPanel, type EditableRequirementGroups } from './CvJdRequirementsPanel';
 
 interface CvAnalysisProgressStepProps {
   parseProgress: number;
@@ -13,6 +15,9 @@ interface CvAnalysisProgressStepProps {
   jdFileName?: string | null;
   domain?: CvAnalysisDomain | null;
   hasJd?: boolean;
+  jdRequirements?: JdRequirementsResponse | null;
+  editableRequirements?: EditableRequirementGroups | null;
+  onRequirementsChange?: (requirements: EditableRequirementGroups) => void;
   onAnalyze: () => void;
   onBack: () => void;
   onRetryUpload?: () => void;
@@ -26,6 +31,9 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
   jdFileName,
   domain,
   hasJd = false,
+  jdRequirements = null,
+  editableRequirements = null,
+  onRequirementsChange,
   onAnalyze,
   onBack,
   onRetryUpload,
@@ -104,6 +112,21 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
           </span>
         </p>
       </div>
+
+      {editableRequirements && onRequirementsChange ? (
+        <CvJdRequirementsPanel
+          requirements={editableRequirements}
+          onChange={onRequirementsChange}
+        />
+      ) : jdRequirements ? (
+        <CvJdRequirementsPanel
+          requirements={{
+            mustHave: jdRequirements.mustHave.map(({ text }) => ({ text })),
+            niceToHave: jdRequirements.niceToHave.map(({ text }) => ({ text })),
+          }}
+          onChange={() => undefined}
+        />
+      ) : null}
 
       <p className="body-text mt-6 max-w-xl">{t('cv.analyzeHint')}</p>
 

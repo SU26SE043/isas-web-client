@@ -59,4 +59,27 @@ describe('buildCreateCvAnalysisRequest', () => {
       }),
     ).toThrow('JD_TEXT_TOO_LONG');
   });
+
+  it('includes extracted requirement inputs without client ids', () => {
+    const request = buildCreateCvAnalysisRequest({
+      cvId: 'cv-1',
+      jobCategory: 'FE',
+      jdId: 'jd-1',
+      mustHave: [{ text: 'React' }],
+      niceToHave: [{ text: 'Testing' }],
+    });
+
+    expect(request.mustHave).toEqual([{ text: 'React' }]);
+    expect(request.niceToHave).toEqual([{ text: 'Testing' }]);
+  });
+
+  it('rejects more than 20 extracted requirements', () => {
+    expect(() =>
+      buildCreateCvAnalysisRequest({
+        cvId: 'cv-1',
+        jobCategory: 'FE',
+        mustHave: Array.from({ length: 21 }, (_, index) => ({ text: `Requirement ${index}` })),
+      }),
+    ).toThrow('REQUIREMENT_LIMIT_EXCEEDED');
+  });
 });

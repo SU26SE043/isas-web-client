@@ -1215,7 +1215,7 @@ flowchart TB
 | FS-061 | CV upload (step 1 in wizard) | P4 | M03 | F-CV-001 | Candidate | CAN-021–022 | P0 | FS-016 | M | UF-006, FR-004 | Upload ok in wizard |
 | FS-062 | CV upload validation | P4 | M03 | F-CV-001 | Candidate | CAN-022 | P0 | FS-061 | S | ERR-021–022 | — |
 | FS-063 | CV analysis progress UI | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-061 | M | UF-007, BRL-051 | Wizard step 3 |
-| FS-064 | CV analysis results | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-063 | M | FR-005 | `/candidate/cv/analysis/report` |
+| FS-064 | CV analysis results | P4 | M03 | F-CV-002 | Candidate | CAN-022 | P0 | FS-063 | M | FR-005 | Evidence-backed strengths/gaps + authenticated CV/JD PDF viewer at `/candidate/cv/analysis/report` |
 | FS-065 | CV-to-profile mapping | P4 | M03 | F-CV-003 | Candidate | CAN-022 | P0 | FS-064 | M | FR-006 | Accept mapping |
 | FS-066 | Candidate sidebar nav | P4 | M02 | F-PROF-001 | Candidate | — | P0 | FS-019 | M | All routes | Active state |
 

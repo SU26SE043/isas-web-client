@@ -4,10 +4,13 @@ import { useLanguage } from '@/shared/languages';
 import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { AnalysisFileMeta, CvAnalysisResult } from '../../types/cvAnalysis.types';
 import { CvMatchScoreRing } from './CvMatchScoreRing';
+import { CvReportSourceActions } from './CvReportSourceActions';
 
 interface CvAnalysisLandingHeroProps {
   result: CvAnalysisResult;
   meta?: AnalysisFileMeta | null;
+  onOpenCv: () => void;
+  onOpenJd: () => void;
 }
 
 function formatDate(value: string, locale: string): string {
@@ -20,7 +23,7 @@ function formatDate(value: string, locale: string): string {
   }).format(date);
 }
 
-export function CvAnalysisLandingHero({ result, meta }: CvAnalysisLandingHeroProps) {
+export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAnalysisLandingHeroProps) {
   const { language, t } = useLanguage();
   const score = result.jdMatch?.score;
 
@@ -52,21 +55,14 @@ export function CvAnalysisLandingHero({ result, meta }: CvAnalysisLandingHeroPro
               <CalendarClock className="size-3.5" aria-hidden />
               {formatDate(result.createdAt, language)}
             </span>
-            {meta?.cvFileName ? (
-              <span className="truncate rounded-md border border-satin bg-surface-overlay px-3 py-1.5 text-foreground">
-                {meta.cvFileName}
-              </span>
-            ) : null}
-            {result.jdId ? (
-              <span className="rounded-md border border-satin bg-surface-overlay px-3 py-1.5">
-                {meta?.jdFileName || t('cv.report.jdUploaded')}
-              </span>
-            ) : (
-              <span className="rounded-md border border-satin bg-surface-overlay px-3 py-1.5">
-                {t('cv.report.noJd')}
-              </span>
-            )}
           </div>
+
+          <CvReportSourceActions
+            analysis={result}
+            meta={meta}
+            onOpenCv={onOpenCv}
+            onOpenJd={onOpenJd}
+          />
 
           <div className="flex flex-wrap gap-3 pt-2">
             <Link to="/candidate/cv/analysis" className="btn-primary inline-flex rounded-md">

@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import type { CvAnalysisResult } from '../../types/cvAnalysis.types';
+import {
+  CvDocumentViewerDialog,
+  type CvDocumentViewerTarget,
+} from './CvDocumentViewerDialog';
+import { CvEvidenceInsights } from './CvEvidenceInsights';
 import { JDMatchCard } from './JDMatchCard';
-import { StrengthCard } from './StrengthCard';
 import { SuggestionCard } from './SuggestionCard';
-import { WeaknessCard } from './WeaknessCard';
+import { CvReportSourceActions } from './CvReportSourceActions';
 
 interface CvAnalysisReportDetailProps {
   analysis: CvAnalysisResult;
@@ -12,6 +17,7 @@ interface CvAnalysisReportDetailProps {
 
 export function CvAnalysisReportDetail({ analysis }: CvAnalysisReportDetailProps) {
   const { language, t } = useLanguage();
+  const [viewerTarget, setViewerTarget] = useState<CvDocumentViewerTarget | null>(null);
   const category =
     formatJobCategoryDisplay(analysis.jobCategory, language) || analysis.jobCategory;
   const analyzedAt = analysis.createdAt
@@ -54,14 +60,27 @@ export function CvAnalysisReportDetail({ analysis }: CvAnalysisReportDetailProps
             </dd>
           </div>
         </dl>
+        <div className="mt-5 border-t border-satin/60 pt-4">
+          <CvReportSourceActions
+            analysis={analysis}
+            onOpenCv={() => setViewerTarget({ kind: 'cv', fileId: analysis.cvId })}
+            onOpenJd={() => analysis.jdId && setViewerTarget({ kind: 'jd', fileId: analysis.jdId })}
+          />
+        </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <StrengthCard strengths={analysis.strengths} />
-        <WeaknessCard weaknesses={analysis.weaknesses} />
-      </div>
+      <CvEvidenceInsights
+        analysis={analysis}
+        onViewCv={(match) => setViewerTarget({
+          kind: 'cv',
+          fileId: analysis.cvId,
+          page: match.page,
+          evidence: match,
+        })}
+      />
 
       <SuggestionCard suggestions={analysis.suggestions} />
+      <CvDocumentViewerDialog target={viewerTarget} onClose={() => setViewerTarget(null)} />
     </div>
   );
 }

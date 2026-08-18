@@ -60,6 +60,7 @@ Living contract for **what the frontend product is**. Module and screen mapping:
 
 - **Public campaign browse** (open catalog at `/candidate/campaigns`) — **out of scope**
 - **My invited campaigns** (`/candidate/campaigns`) — **in scope**; magic link email lands here after auth
+- Standalone GitHub repository analysis and repository input inside CV analysis
 - Native iOS/Android, offline mode, live human video interview
 - See [`module-scope.md`](./module-scope.md) for route-level reconcile
 
