@@ -13,8 +13,9 @@ BRD: FR-004–006, SCR-CAN-021–022.
 
 ## Report behavior
 
-- The report groups requirement matches into evidence-backed strengths (`Strong`) and gaps
-  (`Partial`/`Weak`) instead of presenting the legacy summary arrays as unverifiable claims.
+- The report groups requirement matches into evidence-backed strengths (`Strong`/`Partial`) and gaps
+  (`Weak`) instead of presenting the legacy summary arrays as unverifiable claims. The original
+  level label remains visible so a partial match is not presented as a full match.
 - Selecting a requirement reveals the verbatim `evidence`, `sectionTitle`, and `page` returned by
   the API. Blank evidence and backend missing-evidence sentinels are rendered as an explicit
   “not found in CV” state; the frontend never invents a quote.

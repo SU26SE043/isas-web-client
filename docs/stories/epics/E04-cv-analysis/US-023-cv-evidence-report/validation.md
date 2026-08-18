@@ -10,7 +10,7 @@ routes behind.
 
 | Layer | Cases |
 | --- | --- |
-| Unit | Group Strong vs Partial/Weak; detect verified vs missing evidence; construct PDF page hash |
+| Unit | Group Strong/Partial vs Weak; detect verified vs missing evidence; construct PDF page hash |
 | Integration | Service returns an authenticated PDF blob; viewer handles success/retry/cleanup |
 | E2E | Open a CV report, select strength/gap evidence, open CV/JD source viewer |
 | Platform | Production build, i18n parity, UI file-size limit |
@@ -37,8 +37,9 @@ npx playwright test e2e/specs/b2c/cv-upload.spec.ts
 
 ## Acceptance Evidence
 
-- Unit/component/service: 6 CV-analysis test files, 21 tests passed, covering grouping, sentinel
-  rejection, page hashes, evidence disclosure, legacy fallback, and authenticated PDF blobs.
+- Unit/component/service: 6 CV-analysis test files, 22 tests passed, covering Strong/Partial versus
+  Weak grouping, sentinel rejection, page hashes, evidence disclosure, legacy fallback, and
+  authenticated PDF blobs.
 - E2E: `e2e/specs/b2c/cv-upload.spec.ts` passed 3/3 in Chromium, including upload → report → exact
   quote → CV viewer → JD viewer.
 - Browser QA: verified at 1280×720, 768×900, and 375×812. All widths reported
@@ -46,6 +47,9 @@ npx playwright test e2e/specs/b2c/cv-upload.spec.ts
   or errors were emitted.
 - Viewer QA: CV evidence opened with `#page=1&zoom=page-width`; JD opened in the same enlarged
   authenticated viewer; the Weak fixture displayed the explicit no-evidence state without a quote.
+- Grouping QA: the Partial PostgreSQL fixture appears in the Strengths column with its original
+  `Đáp ứng một phần` label and evidence, while only the Weak Kubernetes fixture appears in
+  Weaknesses. Desktop and 375×812 layouts have no horizontal overflow.
 - Platform: typecheck, i18n parity, UI-size limit, and production build passed. The build retains the
   existing bundle chunk-size advisory only.
 - Full Vitest run reached 405/408 passing; its only failures came from the user's unrelated,

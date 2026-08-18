@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NO_EVIDENCE, type CvAnalysisResult } from '../../types/cvAnalysis.types';
@@ -24,6 +24,7 @@ const messages: Record<string, string> = {
   'cv.report.priority.MustHave': 'Bắt buộc',
   'cv.report.priority.NiceToHave': 'Ưu tiên',
   'cv.report.level.Strong': 'Tốt',
+  'cv.report.level.Partial': 'Đáp ứng một phần',
   'cv.report.level.Weak': 'Chưa đạt',
 };
 
@@ -36,10 +37,16 @@ afterEach(cleanup);
 const analysis: CvAnalysisResult = {
   id: 'analysis-1', cvId: 'cv-1', jdId: 'jd-1', jobCategory: 'BE', summary: '',
   strengths: [], weaknesses: [], suggestions: [], jdMatch: null, requirementSummary: null,
-  mustHaveMatches: [{
-    requirementId: 'strong-1', text: 'ASP.NET Core', priority: 'MustHave', level: 'Strong',
-    evidence: 'Developed ASP.NET Core APIs for three years', page: 2, sectionTitle: 'Experience',
-  }],
+  mustHaveMatches: [
+    {
+      requirementId: 'strong-1', text: 'ASP.NET Core', priority: 'MustHave', level: 'Strong',
+      evidence: 'Developed ASP.NET Core APIs for three years', page: 2, sectionTitle: 'Experience',
+    },
+    {
+      requirementId: 'partial-1', text: 'Docker', priority: 'MustHave', level: 'Partial',
+      evidence: 'Used Docker for local development', page: 3, sectionTitle: 'Skills',
+    },
+  ],
   niceToHaveMatches: [{
     requirementId: 'weak-1', text: 'Kubernetes', priority: 'NiceToHave', level: 'Weak',
     evidence: NO_EVIDENCE, page: null, sectionTitle: null,
@@ -48,6 +55,17 @@ const analysis: CvAnalysisResult = {
 };
 
 describe('CvEvidenceInsights', () => {
+  it('shows Partial matches in strengths and Weak matches in weaknesses', () => {
+    render(<CvEvidenceInsights analysis={analysis} onViewCv={vi.fn()} />);
+
+    const strengths = screen.getByText('Điểm mạnh').closest('section');
+    const weaknesses = screen.getByText('Điểm yếu').closest('section');
+    expect(strengths).not.toBeNull();
+    expect(weaknesses).not.toBeNull();
+    expect(within(strengths!).getByRole('button', { name: /Docker.*Đáp ứng một phần/ })).toBeVisible();
+    expect(within(weaknesses!).getByRole('button', { name: /Kubernetes.*Chưa đạt/ })).toBeVisible();
+  });
+
   it('reveals a verbatim quote and opens the CV at its evidence', async () => {
     const onViewCv = vi.fn();
     const user = userEvent.setup();

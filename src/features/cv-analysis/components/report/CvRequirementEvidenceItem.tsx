@@ -19,7 +19,7 @@ export function CvRequirementEvidenceItem({
   onViewCv,
 }: CvRequirementEvidenceItemProps) {
   const { t } = useLanguage();
-  const isStrength = match.level === 'Strong';
+  const isStrength = match.level !== 'Weak';
   const hasEvidence = hasVerifiedCvEvidence(match);
   const panelId = `cv-evidence-${match.requirementId}`;
 

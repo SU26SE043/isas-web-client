@@ -3,8 +3,9 @@
 ## Domain Model
 
 `RequirementMatch` remains the evidence unit: requirement text, priority, level, verified evidence,
-page, and section title. `Strong` matches appear as strengths; `Partial` and `Weak` matches appear as
-gaps. The backend sentinel `Không thấy bằng chứng` means absence, not a quote.
+page, and section title. `Strong` and `Partial` matches appear as strengths, while only `Weak`
+matches appear as gaps. The original level label remains visible. The backend sentinel
+`Không thấy bằng chứng` means absence, not a quote.
 
 ## Application Flow
 

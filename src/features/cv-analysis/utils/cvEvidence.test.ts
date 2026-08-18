@@ -16,6 +16,16 @@ const strong: RequirementMatch = {
   sectionTitle: 'Experience',
 };
 
+const partial: RequirementMatch = {
+  requirementId: 'r-partial',
+  text: 'Docker',
+  priority: 'MustHave',
+  level: 'Partial',
+  evidence: 'Used Docker for local development',
+  page: 2,
+  sectionTitle: 'Skills',
+};
+
 const weak: RequirementMatch = {
   requirementId: 'r-2',
   text: 'Kubernetes',
@@ -27,9 +37,9 @@ const weak: RequirementMatch = {
 };
 
 describe('CV evidence helpers', () => {
-  it('groups Strong requirements separately from Partial and Weak gaps', () => {
-    expect(groupRequirementEvidence({ mustHaveMatches: [strong], niceToHaveMatches: [weak] })).toEqual({
-      strengths: [strong],
+  it('groups Strong and Partial requirements as strengths, with only Weak as gaps', () => {
+    expect(groupRequirementEvidence({ mustHaveMatches: [strong, partial], niceToHaveMatches: [weak] })).toEqual({
+      strengths: [strong, partial],
       gaps: [weak],
     });
   });

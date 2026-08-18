@@ -14,8 +14,8 @@ export function groupRequirementEvidence(
 ): CvEvidenceGroups {
   const matches = [...analysis.mustHaveMatches, ...analysis.niceToHaveMatches];
   return {
-    strengths: matches.filter((match) => match.level === 'Strong'),
-    gaps: matches.filter((match) => match.level !== 'Strong'),
+    strengths: matches.filter((match) => match.level !== 'Weak'),
+    gaps: matches.filter((match) => match.level === 'Weak'),
   };
 }
 
