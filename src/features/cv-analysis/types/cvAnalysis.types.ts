@@ -43,8 +43,16 @@ export interface JdMatch {
 }
 
 export interface Citation {
+  chunkId: string;
   sourceUrl: string;
-  sourceType: string;
+  sourceTitle: string;
+}
+
+export interface AnalysisCitation {
+  chunkId: string;
+  content: string;
+  sourceUrl: string | null;
+  sourceTitle: string | null;
 }
 
 export interface JdRequirement {
@@ -76,25 +84,22 @@ export interface RequirementSummary {
 export type RequirementPriority = 'MustHave' | 'NiceToHave';
 export type RequirementLevel = 'Strong' | 'Partial' | 'Weak';
 
-export interface Evidence {
-  quote: string;
-  page: number | null;
-  section: string | null;
-  verified: boolean;
-}
+export const NO_EVIDENCE = 'Không thấy bằng chứng';
 
 export interface RequirementMatch {
   requirementId: string;
   text: string;
   priority: RequirementPriority;
   level: RequirementLevel;
-  evidence: Evidence;
+  evidence: string;
+  page: number | null;
+  sectionTitle: string | null;
 }
 
 export interface CvSection {
   title: string;
   kind: string;
-  page: number;
+  startsWith: string;
 }
 
 /** Analyze + detail response — render only API fields. */
@@ -112,7 +117,7 @@ export interface CvAnalysisResult {
   mustHaveMatches: RequirementMatch[];
   niceToHaveMatches: RequirementMatch[];
   cvSections: CvSection[];
-  citations: Citation[];
+  citations: AnalysisCitation[];
   createdAt: string;
 }
 

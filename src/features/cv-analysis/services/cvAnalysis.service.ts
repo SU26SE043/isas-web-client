@@ -3,6 +3,7 @@ import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { downloadBlobAsFile } from '@/shared/utils/downloadBlob';
 import type {
   AnalyzeCvRequest,
+  AnalysisCitation,
   CvAnalysisResult,
   CvAnalysisPage,
   FileListParams,
@@ -93,8 +94,9 @@ function parseCitation(raw: unknown): Citation | null {
   if (!raw || typeof raw !== 'object') return null;
   const data = raw as Record<string, unknown>;
   return {
+    chunkId: String(data.chunkId ?? ''),
     sourceUrl: String(data.sourceUrl ?? ''),
-    sourceType: String(data.sourceType ?? ''),
+    sourceTitle: String(data.sourceTitle ?? ''),
   };
 }
 
@@ -109,6 +111,22 @@ function parseJdRequirement(raw: unknown): JdRequirement {
     text: String(data.text ?? ''),
     citations: parseCitations(data.citations),
   };
+}
+
+function parseAnalysisCitation(raw: unknown): AnalysisCitation | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const data = raw as Record<string, unknown>;
+  return {
+    chunkId: String(data.chunkId ?? ''),
+    content: String(data.content ?? ''),
+    sourceUrl: data.sourceUrl == null ? null : String(data.sourceUrl),
+    sourceTitle: data.sourceTitle == null ? null : String(data.sourceTitle),
+  };
+}
+
+function parseAnalysisCitations(raw: unknown): AnalysisCitation[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(parseAnalysisCitation).filter((item): item is AnalysisCitation => item !== null);
 }
 
 function parseRequirementSummary(raw: unknown): RequirementSummary | null {
@@ -132,20 +150,14 @@ function parseRequirementSummary(raw: unknown): RequirementSummary | null {
 function parseRequirementMatch(raw: unknown): RequirementMatch | null {
   if (!raw || typeof raw !== 'object') return null;
   const data = raw as Record<string, unknown>;
-  const evidence = data.evidence && typeof data.evidence === 'object'
-    ? data.evidence as Record<string, unknown>
-    : {};
   return {
     requirementId: String(data.requirementId ?? ''),
     text: String(data.text ?? ''),
     priority: data.priority === 'NiceToHave' ? 'NiceToHave' : 'MustHave',
     level: data.level === 'Strong' || data.level === 'Partial' ? data.level : 'Weak',
-    evidence: {
-      quote: String(evidence.quote ?? ''),
-      page: evidence.page == null ? null : Number(evidence.page),
-      section: evidence.section == null ? null : String(evidence.section),
-      verified: Boolean(evidence.verified),
-    },
+    evidence: String(data.evidence ?? ''),
+    page: data.page == null ? null : Number(data.page),
+    sectionTitle: data.sectionTitle == null ? null : String(data.sectionTitle),
   };
 }
 
@@ -161,11 +173,11 @@ function parseCvSections(raw: unknown): CvSection[] {
     .map((item) => ({
       title: String(item.title ?? ''),
       kind: String(item.kind ?? ''),
-      page: Number(item.page ?? 0),
+      startsWith: String(item.startsWith ?? ''),
     }));
 }
 
-function parseAnalysis(raw: unknown): CvAnalysisResult {
+export function parseAnalysis(raw: unknown): CvAnalysisResult {
   if (!raw || typeof raw !== 'object') {
     throw new CvAnalysisError('unknown', 'Invalid analysis response.');
   }
@@ -190,7 +202,7 @@ function parseAnalysis(raw: unknown): CvAnalysisResult {
     mustHaveMatches: parseRequirementMatches(data.mustHaveMatches),
     niceToHaveMatches: parseRequirementMatches(data.niceToHaveMatches),
     cvSections: parseCvSections(data.cvSections),
-    citations: parseCitations(data.citations),
+    citations: parseAnalysisCitations(data.citations),
     createdAt: String(data.createdAt ?? ''),
   };
 }
