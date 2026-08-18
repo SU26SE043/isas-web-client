@@ -48,7 +48,7 @@ export function B2cPracticeRoomDialogs({
             ),
           )}
           sharedStream={room.media.stream}
-          disabled={room.isTimingOut || room.remainingSeconds <= 0}
+          disabled={room.speech.isBusy || room.isTimingOut || room.remainingSeconds <= 0}
           paused={room.isTimingOut}
           onStatusChange={onRecorderStatusChange}
           onSubmitRecording={(file, durationSec) => room.submitAnswerWithFile(file, durationSec)}

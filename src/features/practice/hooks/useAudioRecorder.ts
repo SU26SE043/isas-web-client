@@ -11,6 +11,7 @@ import {
   isAudioFileTooLarge,
   pickAudioRecorderMimeType,
 } from '../utils/audioRecorder.utils';
+import { ANSWER_AUDIO_CONSTRAINTS } from '../utils/answerAudioConstraints';
 
 const INITIAL_STATE: AudioRecorderState = {
   status: 'idle',
@@ -255,7 +256,7 @@ export function useAudioRecorder({
         stream = new MediaStream(liveAudioTracks);
         ownsStreamRef.current = false;
       } else {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ audio: ANSWER_AUDIO_CONSTRAINTS });
         ownsStreamRef.current = true;
         previousAudioEnabledRef.current = [];
       }

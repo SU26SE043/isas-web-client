@@ -59,7 +59,9 @@ export function useB2cPracticeRoom(
   const countdownQuestionRef = useRef<string | null>(null);
   const violationPausedRef = useRef(Boolean(options?.violationPaused));
   violationPausedRef.current = Boolean(options?.violationPaused);
-  const media = useInterviewMedia(micEnabled, cameraEnabled);
+  // Khóa cả audio track thật trong loading/countdown/reading, không chỉ khóa
+  // nút. Nhờ vậy không có đường MediaRecorder nào vô tình thu tiếng câu hỏi.
+  const media = useInterviewMedia(micEnabled && phase === 'answering', cameraEnabled);
   const recorder = usePracticeAnswerRecorder(media.stream);
   const sessionReady = store.sessionId === sessionId && store.questions.length > 0;
 
@@ -102,29 +104,45 @@ export function useB2cPracticeRoom(
         countdownTimeoutRef.current = null;
         if (countdownQuestionRef.current !== useB2cPracticeInterviewStore.getState().currentQuestionId) return;
         setCountdownValue(null);
-        // Answerable as soon as the countdown ends: no longer wait for the AI
-        // narration to finish playing. Actual answer capture happens in the
-        // AudioRecorderModal (useAudioRecorder), which opens its own
-        // MediaRecorder on demand — do not also start `recorder`
-        // (usePracticeAnswerRecorder) here.
         setInitialCountdownComplete(true);
-        setPhase('answering');
-        useB2cPracticeInterviewStore.getState().setQuestionState(questionId, 'recording');
+        setPhase('reading');
       }, COUNTDOWN_START_HOLD_MS);
     }, COUNTDOWN_STEP_MS);
   }, [clearQuestionCountdown, media.state]);
-
-  // Narration is now purely supplementary: it plays in the background and no
-  // longer gates `phase`, so candidates can answer as soon as the question
-  // text is on screen instead of waiting for the AI voice to load and finish.
-  const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
-    enabled: media.state === 'ready' && initialCountdownComplete && sessionReady,
-  });
 
   const currentQuestion = useMemo(
     () => store.questions.find((q) => q.id === store.currentQuestionId) ?? null,
     [store.currentQuestionId, store.questions],
   );
+
+  // Chữ đã nằm trong store và render độc lập. Audio bắt đầu tải ngay khi có
+  // questionId (kể cả trong countdown), nhưng chỉ được phát sau gate bắt đầu.
+  // `text` chỉ là nguồn cho Web Speech fallback khi endpoint blob vượt trần 9s.
+  const speech = useQuestionSpeech(sessionId || null, store.currentQuestionId, {
+    enabled: media.state === 'ready' && initialCountdownComplete && sessionReady,
+    text: currentQuestion?.content,
+    language: store.session?.language ?? 'vi',
+  });
+
+  useEffect(() => {
+    if (!initialCountdownComplete || !sessionReady || media.state !== 'ready') return;
+    setPhase(speech.isBusy ? 'reading' : 'answering');
+    if (
+      !speech.isBusy
+      && store.currentQuestionId
+      && store.questionStates[store.currentQuestionId] !== 'recording'
+    ) {
+      store.setQuestionState(store.currentQuestionId, 'recording');
+    }
+  }, [
+    initialCountdownComplete,
+    media.state,
+    sessionReady,
+    speech.isBusy,
+    store.currentQuestionId,
+    store.questionStates,
+    store.setQuestionState,
+  ]);
 
   useEffect(() => {
     if (!options?.deadlineAt) {
@@ -249,14 +267,10 @@ export function useB2cPracticeRoom(
   useEffect(() => {
     clearQuestionCountdown();
     const ready = media.state === 'ready' && (!options?.startWithCountdown || options.countdownReady !== false);
-    // The very first question still goes through the 3-2-1 countdown (started by
-    // the effect below); everything after that is answerable the moment the
-    // question text is set, without waiting for the AI narration to play.
+    // Câu đầu vẫn đi qua countdown 3-2-1. Mỗi câu chuyển sang `reading` ngay
+    // khi active để mic tiếp tục khóa trong lúc TTS tải/phát.
     const pendingInitialCountdown = Boolean(options?.startWithCountdown) && !initialCountdownComplete;
-    setPhase(ready ? (pendingInitialCountdown ? 'loading' : 'answering') : 'loading');
-    if (ready && !pendingInitialCountdown && store.currentQuestionId) {
-      store.setQuestionState(store.currentQuestionId, 'recording');
-    }
+    setPhase(ready ? (pendingInitialCountdown ? 'loading' : 'reading') : 'loading');
     warned10Ref.current = false;
     timeoutHandledForQuestionRef.current = null;
     setIsTimingOut(false);
@@ -439,7 +453,7 @@ export function useB2cPracticeRoom(
     lastNextAction: store.lastNextAction,
     speechWarning: store.speechWarning,
     media,
-    micEnabled,
+    micEnabled: micEnabled && phase === 'answering',
     cameraEnabled,
     toggleMic: () => setMicEnabled((value) => !value),
     toggleCamera: () => setCameraEnabled((value) => !value),
@@ -469,7 +483,7 @@ export function useB2cPracticeRoom(
     unansweredCount,
     hasPendingRecording,
     startRecording: () => {
-      if (options?.violationPaused || effectiveRemainingSeconds <= 0 || isTimingOut) return;
+      if (options?.violationPaused || speech.isBusy || effectiveRemainingSeconds <= 0 || isTimingOut) return;
       if (store.answersByQuestionId[store.currentQuestionId ?? '']) {
         setRetryConfirmOpen(true);
         return;
@@ -480,7 +494,7 @@ export function useB2cPracticeRoom(
       }
     },
     confirmRetryRecording: () => {
-      if (options?.violationPaused || isTimingOut || effectiveRemainingSeconds <= 0) return;
+      if (options?.violationPaused || speech.isBusy || isTimingOut || effectiveRemainingSeconds <= 0) return;
       setRetryConfirmOpen(false);
       recorder.clearRecording();
       recorder.startRecording();

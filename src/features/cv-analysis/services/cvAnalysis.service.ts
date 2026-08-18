@@ -208,29 +208,81 @@ export function parseAnalysis(raw: unknown): CvAnalysisResult {
   };
 }
 
-function parseFileRecord(raw: unknown): FileRecord {
+type FileRecordFallback = Partial<Pick<
+  FileRecord,
+  'fileType' | 'originalName' | 'mimeType' | 'fileSize' | 'parsedStatus' | 'createdAt'
+>>;
+
+function firstDefined(data: Record<string, unknown>, keys: string[]): unknown {
+  for (const key of keys) {
+    if (data[key] !== undefined && data[key] !== null) return data[key];
+  }
+  return undefined;
+}
+
+function finiteFileSize(value: unknown, fallback = 0): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function validFileDate(value: unknown, fallback = ''): string {
+  if (typeof value !== 'string' || !value.trim()) return fallback;
+  return Number.isNaN(Date.parse(value)) ? fallback : value;
+}
+
+export function parseFileRecord(
+  raw: unknown,
+  fallback: FileRecordFallback = {},
+): FileRecord {
   if (!raw || typeof raw !== 'object') {
     throw new CvAnalysisError('uploadFailed', 'Invalid upload response.');
   }
   const data = raw as Record<string, unknown>;
-  const id = String(data.fileId ?? data.id ?? data.cvId ?? data.jdId ?? '');
+  const id = String(firstDefined(data, [
+    'fileId', 'id', 'cvId', 'jdId',
+    'FileId', 'Id', 'CvId', 'JdId',
+  ]) ?? '');
   if (!id) {
     throw new CvAnalysisError('uploadFailed', 'Upload response missing file id.');
   }
 
+  const fileSize = finiteFileSize(
+    firstDefined(data, ['fileSize', 'fileSizeBytes', 'size', 'FileSize', 'FileSizeBytes', 'Size']),
+    finiteFileSize(fallback.fileSize, 0),
+  );
+  const createdAtFallback = validFileDate(fallback.createdAt, '');
+  const createdAt = validFileDate(
+    firstDefined(data, ['createdAt', 'uploadedAt', 'CreatedAt', 'UploadedAt']),
+    createdAtFallback,
+  );
+
   return {
     id,
-    fileType: String(data.fileType ?? ''),
-    originalName: String(data.originalName ?? data.fileName ?? data.name ?? 'file.pdf'),
-    mimeType: String(data.mimeType ?? 'application/pdf'),
-    fileSize: typeof data.fileSize === 'number' ? data.fileSize : Number(data.fileSize ?? 0),
-    parsedStatus: String(data.parsedStatus ?? data.parseStatus ?? 'pending'),
-    createdAt: String(data.createdAt ?? new Date().toISOString()),
-    updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
-    userId: typeof data.userId === 'string' ? data.userId : undefined,
-    storagePath: typeof data.storagePath === 'string' ? data.storagePath : undefined,
-    storageBucket: typeof data.storageBucket === 'string' ? data.storageBucket : undefined,
-    parsedText: typeof data.parsedText === 'string' ? data.parsedText : null,
+    fileType: String(firstDefined(data, ['fileType', 'FileType']) ?? fallback.fileType ?? ''),
+    originalName: String(firstDefined(data, [
+      'originalName', 'fileName', 'name', 'OriginalName', 'FileName', 'Name',
+    ]) ?? fallback.originalName ?? 'file.pdf'),
+    mimeType: String(firstDefined(data, ['mimeType', 'MimeType']) ?? fallback.mimeType ?? 'application/pdf'),
+    fileSize,
+    parsedStatus: String(firstDefined(data, [
+      'parsedStatus', 'parseStatus', 'ParsedStatus', 'ParseStatus',
+    ]) ?? fallback.parsedStatus ?? 'pending'),
+    createdAt,
+    updatedAt: typeof firstDefined(data, ['updatedAt', 'UpdatedAt']) === 'string'
+      ? String(firstDefined(data, ['updatedAt', 'UpdatedAt']))
+      : undefined,
+    userId: typeof firstDefined(data, ['userId', 'UserId']) === 'string'
+      ? String(firstDefined(data, ['userId', 'UserId']))
+      : undefined,
+    storagePath: typeof firstDefined(data, ['storagePath', 'StoragePath']) === 'string'
+      ? String(firstDefined(data, ['storagePath', 'StoragePath']))
+      : undefined,
+    storageBucket: typeof firstDefined(data, ['storageBucket', 'StorageBucket']) === 'string'
+      ? String(firstDefined(data, ['storageBucket', 'StorageBucket']))
+      : undefined,
+    parsedText: typeof firstDefined(data, ['parsedText', 'ParsedText']) === 'string'
+      ? String(firstDefined(data, ['parsedText', 'ParsedText']))
+      : null,
   };
 }
 
@@ -283,7 +335,13 @@ async function uploadPdf(file: File, fileType: 'cv' | 'jd'): Promise<FileRecord>
     const response = await apiClient.post<unknown>(cvAnalysisEndpoints.uploadFile(fileType), formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return parseFileRecord(unwrapData(response.data));
+    return parseFileRecord(unwrapData(response.data), {
+      fileType,
+      originalName: file.name,
+      mimeType: file.type || 'application/pdf',
+      fileSize: file.size,
+      createdAt: new Date().toISOString(),
+    });
   } catch (error) {
     throw toCvAnalysisError(error, 'File upload failed.');
   }
@@ -298,7 +356,7 @@ async function fetchFileRecordsPage(params?: FileListParams): Promise<FileRecord
     },
   });
   return {
-    items: unwrapList(response.data).map(parseFileRecord),
+    items: unwrapList(response.data).map((item) => parseFileRecord(item)),
     nextCursor: readNextCursor(response.headers),
   };
 }

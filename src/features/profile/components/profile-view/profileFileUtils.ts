@@ -1,4 +1,5 @@
 export function formatProfileFileSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '—';
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;
   if (kb < 1024) return `${kb.toFixed(0)} KB`;
@@ -6,7 +7,9 @@ export function formatProfileFileSize(bytes: number): string {
 }
 
 export function formatProfileFileDate(value: string, locale: 'vi' | 'en'): string {
-  return new Date(value).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US', {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

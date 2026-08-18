@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ANSWER_AUDIO_CONSTRAINTS } from '../utils/answerAudioConstraints';
 
 export type InterviewMediaState = 'idle' | 'starting' | 'ready' | 'error';
 
@@ -73,7 +74,7 @@ export function useInterviewMedia(micEnabled: boolean, cameraEnabled = true) {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
-        audio: true,
+        audio: ANSWER_AUDIO_CONSTRAINTS,
       });
 
       if (generation !== startGenerationRef.current) {

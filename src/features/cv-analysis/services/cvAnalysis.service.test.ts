@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NO_EVIDENCE } from '../types/cvAnalysis.types';
-import { parseAnalysis } from './cvAnalysis.service';
+import { parseAnalysis, parseFileRecord } from './cvAnalysis.service';
 
 const baseResponse = {
   id: 'analysis-1',
@@ -94,5 +94,46 @@ describe('parseAnalysis', () => {
     expect(result.cvSections).toEqual([]);
     expect(result.citations).toEqual([]);
     expect(result.requirementSummary).toBeNull();
+  });
+});
+
+describe('parseFileRecord', () => {
+  it('normalizes legacy uploaded-file metadata aliases', () => {
+    const result = parseFileRecord({
+      id: 'cv-legacy',
+      fileType: 'cv',
+      fileName: 'legacy.pdf',
+      fileSizeBytes: 2_048,
+      uploadedAt: '2026-08-18T10:00:00Z',
+      parseStatus: 'completed',
+    });
+
+    expect(result).toMatchObject({
+      id: 'cv-legacy',
+      originalName: 'legacy.pdf',
+      fileSize: 2_048,
+      createdAt: '2026-08-18T10:00:00Z',
+      parsedStatus: 'completed',
+    });
+  });
+
+  it('uses selected-file metadata when a rolling deploy returns a partial upload response', () => {
+    const result = parseFileRecord(
+      { fileId: 'cv-partial', parsedStatus: 'completed' },
+      {
+        fileType: 'cv',
+        originalName: 'candidate.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 3_549_520,
+        createdAt: '2026-08-18T10:05:00Z',
+      },
+    );
+
+    expect(result).toMatchObject({
+      id: 'cv-partial',
+      originalName: 'candidate.pdf',
+      fileSize: 3_549_520,
+      createdAt: '2026-08-18T10:05:00Z',
+    });
   });
 });

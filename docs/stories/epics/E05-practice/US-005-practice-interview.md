@@ -29,6 +29,9 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - `/interview/:sessionId/prepare` fetches the live session detail once through TanStack Query, validates the route ID, and presents localized loading, `401`, `403`, `404`, generic error, retry, and success states without mock fallback.
 - B2C flow after confirm: prepare consent → device check → waiting room → interview room (skip `/identity`).
 - Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
+- Question text is visible from session state without waiting for TTS. TTS preloads during the start countdown, survives React StrictMode, and recording/timer remain locked while speech is loading or playing.
+- TTS load fails over after 9s to Web Speech when supported; playback has a 60s watchdog. All failures (including 502/504, codec/stall, Web Speech failure, and autoplay rejection) leave the text visible and provide a recoverable text-only/manual-play path.
+- The speech blob is fetched through the authenticated client, object URLs are revoked on replacement/stop, and one persistent speech coordinator owns both the reusable HTML audio element and the mutually-exclusive browser fallback.
 - B2C: **no** proctoring banner, tab listeners, periodic snapshots, or violation pause.
 - B2B campaign sessions: terms gate → identity → camera always on → periodic face capture (mock) → violation pause → auto-submit at max violations.
 - Ephemeral device/consent progress may be persisted per session in `sessionStorage`; durable roadmap ownership is carried by the `roadmapId` and `lessonId` route context, not inferred from a session ID or browser storage.
@@ -49,6 +52,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 | --- | --- |
 | Platform | `npm run build` |
 | i18n | `npm run check:i18n` |
+| Focused | `npm test -- --run src/features/practice/hooks/useQuestionSpeech.test.ts src/features/practice/utils/speechPlaybackWatchdog.test.ts` |
 | E2E | `e2e/specs/b2c/interview-happy-path.spec.ts`, `e2e/specs/b2c/results-learning.spec.ts` (Chromium) |
 
 ## Evidence
