@@ -19,7 +19,7 @@ implemented until tests or validation evidence exist.
 
 | Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| TBD | Add rows when story packets are created | no | no | no | no | planned | none |
+| US-023 | Evidence-first CV report and source preview | yes | yes | yes | yes | implemented | 21 scoped tests; Chromium 3/3; responsive browser QA at 1280/768/375; build/typecheck/i18n/UI-size pass |
 
 ## Evidence Rules
 

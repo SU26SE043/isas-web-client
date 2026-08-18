@@ -37,4 +37,21 @@ npx playwright test e2e/specs/b2c/cv-upload.spec.ts
 
 ## Acceptance Evidence
 
-Pending implementation and verification.
+- Unit/component/service: 6 CV-analysis test files, 21 tests passed, covering grouping, sentinel
+  rejection, page hashes, evidence disclosure, legacy fallback, and authenticated PDF blobs.
+- E2E: `e2e/specs/b2c/cv-upload.spec.ts` passed 3/3 in Chromium, including upload → report → exact
+  quote → CV viewer → JD viewer.
+- Browser QA: verified at 1280×720, 768×900, and 375×812. All widths reported
+  `scrollWidth === clientWidth`; strengths/gaps stack at responsive breakpoints; no console warnings
+  or errors were emitted.
+- Viewer QA: CV evidence opened with `#page=1&zoom=page-width`; JD opened in the same enlarged
+  authenticated viewer; the Weak fixture displayed the explicit no-evidence state without a quote.
+- Platform: typecheck, i18n parity, UI-size limit, and production build passed. The build retains the
+  existing bundle chunk-size advisory only.
+- Full Vitest run reached 405/408 passing; its only failures came from the user's unrelated,
+  untracked `src/features/practice/hooks/useQuestionSpeech.test.ts`. The CV-analysis suite is green
+  and those practice files were neither modified nor staged by this story. Re-running the suite
+  with that one unrelated file excluded passed 403/403.
+- Harness friction: the checkout does not contain `scripts/bin/harness-cli`, and the project-scoped
+  UI skill paths named by the repository instructions are absent. Validation was recorded in this
+  story packet and performed against `docs/UI_GUIDE.md` plus the browser workflow instead.

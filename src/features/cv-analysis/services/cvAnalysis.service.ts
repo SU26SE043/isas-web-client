@@ -454,6 +454,19 @@ export const cvAnalysisService = {
     }
   },
 
+  async getFileBlob(id: string): Promise<Blob> {
+    try {
+      const response = await apiClient.get<Blob>(cvAnalysisEndpoints.downloadFile(id), {
+        responseType: 'blob',
+      });
+      return response.data.type === 'application/pdf'
+        ? response.data
+        : new Blob([response.data], { type: 'application/pdf' });
+    } catch (error) {
+      throw toCvAnalysisError(error, 'Could not preview file.');
+    }
+  },
+
   async getParsedText(id: string): Promise<string> {
     try {
       const response = await apiClient.get<unknown>(cvAnalysisEndpoints.parsedText(id));

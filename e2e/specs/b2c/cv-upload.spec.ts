@@ -66,6 +66,34 @@ test.describe('cv upload smoke', () => {
   test('candidate can upload CV and reach match report', async ({ page }) => {
     await loginAsCandidate(page);
 
+    const analysisResponse = {
+      id: 'e2e-analysis-001',
+      cvId: 'e2e-cv-id',
+      jdId: 'e2e-jd-id',
+      jobCategory: 'FE',
+      summary: 'Strong frontend alignment with solid React fundamentals.',
+      strengths: ['React', 'TypeScript'],
+      weaknesses: ['System design depth'],
+      suggestions: ['Add quantified impact to project bullets.'],
+      jdMatch: null,
+      requirementSummary: {
+        mustHave: { total: 1, strong: 1, partial: 0, weak: 0 },
+        niceToHave: { total: 1, strong: 0, partial: 0, weak: 1 },
+      },
+      mustHaveMatches: [{
+        requirementId: 'requirement-react', priority: 'MustHave', text: 'React delivery',
+        level: 'Strong', evidence: 'Built React applications used by 10,000 customers',
+        page: 1, sectionTitle: 'Experience',
+      }],
+      niceToHaveMatches: [{
+        requirementId: 'requirement-graphql', priority: 'NiceToHave', text: 'GraphQL',
+        level: 'Weak', evidence: 'Không thấy bằng chứng', page: null, sectionTitle: null,
+      }],
+      cvSections: [],
+      citations: [],
+      createdAt: '2026-07-15T00:00:00.000Z',
+    };
+
     await page.route('**/api/v1/interview/files/upload**', async (route) => {
       const url = route.request().url();
       const fileType = url.includes('fileType=jd') ? 'jd' : 'cv';
@@ -92,22 +120,7 @@ test.describe('cv upload smoke', () => {
         await route.fulfill({
           status: 201,
           contentType: 'application/json',
-          body: JSON.stringify({
-            id: 'e2e-analysis-001',
-            cvId: 'e2e-cv-id',
-            jdId: 'e2e-jd-id',
-            jobCategory: 'FE',
-            summary: 'Strong frontend alignment with solid React fundamentals.',
-            strengths: ['React', 'TypeScript'],
-            weaknesses: ['System design depth'],
-            suggestions: ['Add quantified impact to project bullets.'],
-            jdMatch: {
-              score: 85,
-              matchedSkills: ['React'],
-              missingSkills: ['GraphQL'],
-            },
-            createdAt: '2026-07-15T00:00:00.000Z',
-          }),
+          body: JSON.stringify(analysisResponse),
         });
         return;
       }
@@ -116,22 +129,7 @@ test.describe('cv upload smoke', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            id: 'e2e-analysis-001',
-            cvId: 'e2e-cv-id',
-            jdId: 'e2e-jd-id',
-            jobCategory: 'FE',
-            summary: 'Strong frontend alignment with solid React fundamentals.',
-            strengths: ['React', 'TypeScript'],
-            weaknesses: ['System design depth'],
-            suggestions: ['Add quantified impact to project bullets.'],
-            jdMatch: {
-              score: 85,
-              matchedSkills: ['React'],
-              missingSkills: ['GraphQL'],
-            },
-            createdAt: '2026-07-15T00:00:00.000Z',
-          }),
+          body: JSON.stringify(analysisResponse),
         });
         return;
       }
@@ -140,6 +138,14 @@ test.describe('cv upload smoke', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([]),
+      });
+    });
+
+    await page.route('**/api/v1/interview/files/e2e-*-id/download', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/pdf',
+        body: Buffer.from('%PDF-1.4 evidence preview'),
       });
     });
 
@@ -175,6 +181,18 @@ test.describe('cv upload smoke', () => {
 
     await expect(page.getByRole('heading', { level: 1, name: /frontend/i }).first()).toBeVisible();
     await expect(page.getByText(/strong frontend alignment/i)).toBeVisible();
+    await page.getByRole('button', { name: /React delivery/i }).click();
+    await expect(page.getByText('“Built React applications used by 10,000 customers”')).toBeVisible();
+    await page.getByRole('button', { name: /view in cv/i }).click();
+    const cvDialog = page.getByRole('dialog');
+    await expect(cvDialog.getByRole('heading', { name: /view cv/i })).toBeVisible();
+    await expect(cvDialog.locator('iframe')).toBeVisible();
+    await cvDialog.getByRole('button', { name: /^close$/i }).last().click();
+
+    await page.getByRole('button', { name: /e2e-jd\.pdf/i }).click();
+    const jdDialog = page.getByRole('dialog');
+    await expect(jdDialog.getByRole('heading', { name: /view jd/i })).toBeVisible();
+    await expect(jdDialog.locator('iframe')).toBeVisible();
   });
 
   test('legacy cv upload route redirects to analysis', async ({ page }) => {

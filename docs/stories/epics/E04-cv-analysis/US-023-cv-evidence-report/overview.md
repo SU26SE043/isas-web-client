@@ -1,11 +1,20 @@
 # US-023 Evidence-first CV Report and Source Preview
 
-## Current Behavior
+Status: implemented (2026-08-18)
+
+## Previous Behavior
 
 The CV result page renders top-level `strengths[]` and `weaknesses[]` as plain text. Although the
 detail API already returns requirement matches with verified CV evidence, page number, and section,
 the UI does not render them. CV/JD file labels are passive and cannot open the source document.
 Repository-analysis source also remains in the frontend after its CV step and route were removed.
+
+## Implemented Behavior
+
+The report now uses requirement matches as the source of strengths and gaps, expands each item to
+show its exact CV evidence, and opens authenticated CV/JD blobs in a large native PDF viewer. A
+missing-evidence result is labelled explicitly. The standalone repository-analysis frontend has
+been removed.
 
 ## Target Behavior
 

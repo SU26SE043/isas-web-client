@@ -1,13 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { CvAnalysisLandingHero } from '../components/report/CvAnalysisLandingHero';
-import { StrengthCard } from '../components/report/StrengthCard';
-import { WeaknessCard } from '../components/report/WeaknessCard';
 import { SuggestionCard } from '../components/report/SuggestionCard';
 import { JDMatchCard } from '../components/report/JDMatchCard';
+import { CvEvidenceInsights } from '../components/report/CvEvidenceInsights';
+import {
+  CvDocumentViewerDialog,
+  type CvDocumentViewerTarget,
+} from '../components/report/CvDocumentViewerDialog';
 import { CV_ANALYSIS_ID_KEY, CV_ANALYSIS_META_KEY } from '../hooks/useCvAnalysisFlow';
 import { useCvAnalysisResult } from '../hooks/useCvAnalysisResult';
 import type { AnalysisFileMeta } from '../types/cvAnalysis.types';
@@ -35,6 +38,7 @@ export const CVResultPage: React.FC = () => {
   const analysisIdFromQuery = params.get('analysisId') ?? undefined;
   const analysisId = analysisIdFromQuery ?? readStoredAnalysisId();
   const meta = useMemo(() => readMeta(), []);
+  const [viewerTarget, setViewerTarget] = useState<CvDocumentViewerTarget | null>(null);
 
   const { result, isLoading, error } = useCvAnalysisResult(analysisId);
 
@@ -84,17 +88,37 @@ export const CVResultPage: React.FC = () => {
   return (
     <div className="min-h-full overflow-y-auto bg-surface-base">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:py-12">
-        <CvAnalysisLandingHero result={result} meta={meta} />
+        <CvAnalysisLandingHero
+          result={result}
+          meta={meta}
+          onOpenCv={() => setViewerTarget({
+            kind: 'cv',
+            fileId: result.cvId,
+            fileName: meta?.cvFileName,
+          })}
+          onOpenJd={() => result.jdId && setViewerTarget({
+            kind: 'jd',
+            fileId: result.jdId,
+            fileName: meta?.jdFileName,
+          })}
+        />
 
         {result.jdMatch ? <JDMatchCard jdMatch={result.jdMatch} /> : null}
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <StrengthCard strengths={result.strengths} />
-          <WeaknessCard weaknesses={result.weaknesses} />
-        </div>
+        <CvEvidenceInsights
+          analysis={result}
+          onViewCv={(match) => setViewerTarget({
+            kind: 'cv',
+            fileId: result.cvId,
+            fileName: meta?.cvFileName,
+            page: match.page,
+            evidence: match,
+          })}
+        />
 
         <SuggestionCard suggestions={result.suggestions} />
       </div>
+      <CvDocumentViewerDialog target={viewerTarget} onClose={() => setViewerTarget(null)} />
     </div>
   );
 };

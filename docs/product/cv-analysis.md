@@ -11,6 +11,19 @@ BRD: FR-004–006, SCR-CAN-021–022.
 5. **Analyze** → `POST /api/v1/interview/practice/cv-analysis` `{ cvId, jdId?, jdText?, jobCategory, mustHave?, niceToHave? }`; `jdText` takes priority over `jdId` and each requirement is sent as `{ text }` without an id.
 6. **Report** landing → `GET /api/v1/interview/practice/cv-analysis/{id}` — render đúng fields response.
 
+## Report behavior
+
+- The report groups requirement matches into evidence-backed strengths (`Strong`) and gaps
+  (`Partial`/`Weak`) instead of presenting the legacy summary arrays as unverifiable claims.
+- Selecting a requirement reveals the verbatim `evidence`, `sectionTitle`, and `page` returned by
+  the API. Blank evidence and backend missing-evidence sentinels are rendered as an explicit
+  “not found in CV” state; the frontend never invents a quote.
+- Uploaded CV/JD sources open through the authenticated download endpoint in a large PDF dialog.
+  Native PDF controls provide zoom/page navigation, and evidence navigation adds the source page
+  to the viewer URL. Text-only JD analyses show a non-clickable text-source label.
+- Legacy/no-JD results remain readable and clearly state that requirement-level evidence is not
+  available.
+
 The CV flow does not ask for or analyze a GitHub repository. Standalone repository analysis was
 retired from the frontend on 2026-08-18; the backend endpoint is outside this frontend story.
 
@@ -44,4 +57,5 @@ Errors are mapped for `400` (missing required fields), `402` (credit), `403` (ow
 
 ## Status
 
-The live Interview API path is wired; the existing local mock switch remains available for Playwright fixtures.
+The live Interview API path and evidence/source report are wired. The existing local mock switch
+remains available for Playwright fixtures.
