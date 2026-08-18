@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { downloadBlobAsFile } from '@/shared/utils/downloadBlob';
@@ -329,6 +330,12 @@ export const cvAnalysisService = {
       }
       if (error instanceof Error && ['JD_TEXT_TOO_LONG', 'REQUIREMENT_LIMIT_EXCEEDED', 'REQUIREMENT_TEXT_TOO_LONG'].includes(error.message)) {
         throw new CvAnalysisError('badRequest', error.message);
+      }
+      // A cross-origin 502 without CORS headers is exposed to Axios as a
+      // network error, so the browser cannot provide response.status. Treat
+      // this specific analysis failure as an AI/gateway outage in the UI.
+      if (axios.isAxiosError(error) && !error.response && error.code === 'ERR_NETWORK') {
+        throw new CvAnalysisError('aiBusy', 'The CV analysis gateway is unavailable.', 502);
       }
       throw toCvAnalysisError(error, 'CV analysis failed.');
     }
