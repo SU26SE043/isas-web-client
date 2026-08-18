@@ -5,7 +5,7 @@ import type { CvAnalysisDomain } from '../../types/cvDomain.types';
 import type { JdRequirementsResponse } from '../../types/cvAnalysis.types';
 import { AnalyzeButton } from './AnalyzeButton';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
-import { CvJdRequirementsPanel } from './CvJdRequirementsPanel';
+import { CvJdRequirementsPanel, type EditableRequirementGroups } from './CvJdRequirementsPanel';
 
 interface CvAnalysisProgressStepProps {
   parseProgress: number;
@@ -16,6 +16,8 @@ interface CvAnalysisProgressStepProps {
   domain?: CvAnalysisDomain | null;
   hasJd?: boolean;
   jdRequirements?: JdRequirementsResponse | null;
+  editableRequirements?: EditableRequirementGroups | null;
+  onRequirementsChange?: (requirements: EditableRequirementGroups) => void;
   onAnalyze: () => void;
   onBack: () => void;
   onRetryUpload?: () => void;
@@ -30,6 +32,8 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
   domain,
   hasJd = false,
   jdRequirements = null,
+  editableRequirements = null,
+  onRequirementsChange,
   onAnalyze,
   onBack,
   onRetryUpload,
@@ -109,7 +113,20 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
         </p>
       </div>
 
-      {jdRequirements ? <CvJdRequirementsPanel requirements={jdRequirements} /> : null}
+      {editableRequirements && onRequirementsChange ? (
+        <CvJdRequirementsPanel
+          requirements={editableRequirements}
+          onChange={onRequirementsChange}
+        />
+      ) : jdRequirements ? (
+        <CvJdRequirementsPanel
+          requirements={{
+            mustHave: jdRequirements.mustHave.map(({ text }) => ({ text })),
+            niceToHave: jdRequirements.niceToHave.map(({ text }) => ({ text })),
+          }}
+          onChange={() => undefined}
+        />
+      ) : null}
 
       <p className="body-text mt-6 max-w-xl">{t('cv.analyzeHint')}</p>
 

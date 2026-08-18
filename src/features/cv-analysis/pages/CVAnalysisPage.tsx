@@ -102,6 +102,8 @@ export const CVAnalysisPage: React.FC = () => {
             domain={flow.domain}
             hasJd={hasJd}
             jdRequirements={flow.jdRequirements}
+            editableRequirements={flow.editableRequirements}
+            onRequirementsChange={flow.setEditableRequirements}
             onAnalyze={flow.runAnalysis}
             onBack={flow.goBack}
             onRetryUpload={flow.analyzeError ? flow.retryFromUpload : undefined}

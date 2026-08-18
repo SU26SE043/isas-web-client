@@ -21,6 +21,7 @@ import {
 import { isPlaywrightRuntime } from '@/shared/mock';
 import { repoAnalysisService, RepoAnalysisError } from '@/features/repo-analysis/services/repoAnalysis.service';
 import type { RepoAnalysisResponse } from '@/features/repo-analysis/types/repoAnalysis.types';
+import type { EditableRequirementGroups } from '../components/flow/CvJdRequirementsPanel';
 
 export const CV_ANALYSIS_ID_KEY = 'cv-analysis:lastId';
 export const CV_ANALYSIS_DOMAIN_KEY = 'cv-analysis:domain';
@@ -94,6 +95,7 @@ export function useCvAnalysisFlow() {
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
   const [jdText, setJdText] = useState('');
   const [jdRequirements, setJdRequirements] = useState<JdRequirementsResponse | null>(null);
+  const [editableRequirements, setEditableRequirements] = useState<EditableRequirementGroups | null>(null);
   const [isLoadingJdRequirements, setIsLoadingJdRequirements] = useState(false);
   const [jdSkipped, setJdSkipped] = useState(false);
   const [repoUrl, setRepoUrl] = useState('');
@@ -148,6 +150,7 @@ export function useCvAnalysisFlow() {
       setJdId(record.id);
       setJdRecord(record);
       setJdRequirements(null);
+      setEditableRequirements(null);
       setJdUploadStatus('completed');
       uploadedJdKeyRef.current = null;
       setJdFileError(null);
@@ -274,6 +277,7 @@ export function useCvAnalysisFlow() {
         setJdId(null);
         setJdRecord(null);
         setJdRequirements(null);
+        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setJdFileError(null);
@@ -290,6 +294,7 @@ export function useCvAnalysisFlow() {
         setJdId(null);
         setJdRecord(null);
         setJdRequirements(null);
+        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
@@ -304,6 +309,7 @@ export function useCvAnalysisFlow() {
         setJdId(null);
         setJdRecord(null);
         setJdRequirements(null);
+        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
@@ -327,6 +333,7 @@ export function useCvAnalysisFlow() {
       setJdId(null);
       setJdRecord(null);
       setJdRequirements(null);
+      setEditableRequirements(null);
       setJdUploadStatus('uploading');
       setIsUploading(true);
       uploadedJdKeyRef.current = null;
@@ -340,6 +347,7 @@ export function useCvAnalysisFlow() {
         setJdId(record.id);
         setJdRecord(record);
         setJdRequirements(null);
+        setEditableRequirements(null);
         setJdUploadStatus('completed');
         toast.success(t('cv.uploadJdSuccess'));
       } catch (error) {
@@ -443,12 +451,17 @@ export function useCvAnalysisFlow() {
         jobCategory: domainToJobCategoryLabel(domain),
       });
       setJdRequirements(requirements);
+      setEditableRequirements({
+        mustHave: requirements.mustHave.map(({ text }) => ({ text })),
+        niceToHave: requirements.niceToHave.map(({ text }) => ({ text })),
+      });
       setStep(5);
     } catch (error) {
       if (isPlaywrightRuntime()) {
         // The E2E journey stubs the analysis endpoint; keep the journey moving
         // when the optional requirements endpoint is not stubbed yet.
-        setJdRequirements(null);
+      setJdRequirements(null);
+      setEditableRequirements(null);
         setStep(5);
         return;
       }
@@ -521,8 +534,8 @@ export function useCvAnalysisFlow() {
         jobCategory: domainToJobCategoryLabel(domain),
         jdId,
         jdText,
-        mustHave: jdRequirements?.mustHave.map(({ text }) => ({ text })),
-        niceToHave: jdRequirements?.niceToHave.map(({ text }) => ({ text })),
+        mustHave: editableRequirements?.mustHave,
+        niceToHave: editableRequirements?.niceToHave,
       });
       const result = await cvAnalysisService.analyze(payload);
 
@@ -600,6 +613,7 @@ export function useCvAnalysisFlow() {
     domain,
     failStep,
     isAnalyzing,
+    editableRequirements,
     jdRequirements,
     jdFile?.name,
     jdId,
@@ -661,6 +675,8 @@ export function useCvAnalysisFlow() {
     jdFileError,
     jdText,
     jdRequirements,
+    editableRequirements,
+    setEditableRequirements,
     isLoadingJdRequirements,
     repoUrl,
     repoAnalysis,

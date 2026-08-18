@@ -24,8 +24,12 @@ export function buildCreateCvAnalysisRequest(input: {
     throw new Error('JD_TEXT_TOO_LONG');
   }
 
-  const mustHave = input.mustHave ?? [];
-  const niceToHave = input.niceToHave ?? [];
+  const mustHave = (input.mustHave ?? [])
+    .map(({ text }) => ({ text: text.trim() }))
+    .filter(({ text }) => text.length > 0);
+  const niceToHave = (input.niceToHave ?? [])
+    .map(({ text }) => ({ text: text.trim() }))
+    .filter(({ text }) => text.length > 0);
   if (mustHave.length + niceToHave.length > CV_ANALYSIS_MAX_REQUIREMENTS) {
     throw new Error('REQUIREMENT_LIMIT_EXCEEDED');
   }
@@ -44,9 +48,9 @@ export function buildCreateCvAnalysisRequest(input: {
     body.jdId = input.jdId.trim();
   }
 
-  if (mustHave.length > 0 || niceToHave.length > 0) {
-    body.mustHave = mustHave.map(({ text }) => ({ text: text.trim() }));
-    body.niceToHave = niceToHave.map(({ text }) => ({ text: text.trim() }));
+  if (input.mustHave !== undefined || input.niceToHave !== undefined) {
+    body.mustHave = mustHave;
+    body.niceToHave = niceToHave;
   }
 
   return body;
