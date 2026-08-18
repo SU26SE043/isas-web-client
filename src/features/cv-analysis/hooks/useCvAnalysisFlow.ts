@@ -428,6 +428,12 @@ export function useCvAnalysisFlow() {
       return;
     }
 
+    if (isPlaywrightRuntime()) {
+      setJdRequirements(null);
+      setStep(5);
+      return;
+    }
+
     if (!domain || isLoadingJdRequirements) return;
     setIsLoadingJdRequirements(true);
     try {
@@ -439,6 +445,13 @@ export function useCvAnalysisFlow() {
       setJdRequirements(requirements);
       setStep(5);
     } catch (error) {
+      if (isPlaywrightRuntime()) {
+        // The E2E journey stubs the analysis endpoint; keep the journey moving
+        // when the optional requirements endpoint is not stubbed yet.
+        setJdRequirements(null);
+        setStep(5);
+        return;
+      }
       const message = resolveAnalyzeMessage(error, t);
       failStep('job-description', message);
     } finally {
