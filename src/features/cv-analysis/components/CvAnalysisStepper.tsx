@@ -8,12 +8,11 @@ import {
   type CvTimelineStatuses,
 } from '../utils/cvTimelineStatus';
 
-export type CvAnalysisStep = 'domain' | 'upload' | 'github' | 'job-description' | 'analysis' | 'report';
+export type CvAnalysisStep = 'domain' | 'upload' | 'job-description' | 'analysis' | 'report';
 
 const STEP_KEYS: Record<CvAnalysisStep, string> = {
   domain: 'cv.step.domain',
   upload: 'cv.step.upload',
-  github: 'cv.step.github',
   'job-description': 'cv.step.jobDescription',
   analysis: 'cv.step.analysis',
   report: 'cv.step.report',

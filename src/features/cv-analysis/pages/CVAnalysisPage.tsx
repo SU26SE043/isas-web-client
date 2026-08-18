@@ -7,7 +7,6 @@ import {
 import { CvDomainStep } from '../components/flow/CvDomainStep';
 import { UploadCV } from '../components/flow/UploadCV';
 import { UploadJD } from '../components/flow/UploadJD';
-import { CvGitHubStep } from '../components/flow/CvGitHubStep';
 import { CvAnalysisProgressStep } from '../components/flow/CvAnalysisProgressStep';
 import { useCvAnalysisFlow } from '../hooks/useCvAnalysisFlow';
 import { isPlaywrightRuntime } from '@/shared/mock';
@@ -60,19 +59,6 @@ export const CVAnalysisPage: React.FC = () => {
         ) : null}
 
         {flow.step === 3 ? (
-          <CvGitHubStep
-            repoUrl={flow.repoUrl}
-            repoAnalysis={flow.repoAnalysis}
-            error={flow.repoError}
-            isAnalyzing={flow.isAnalyzingRepo}
-            onRepoUrlChange={flow.setRepoUrl}
-            onSkip={flow.skipGithub}
-            onBack={flow.goBack}
-            onNext={flow.goNextFromGithub}
-          />
-        ) : null}
-
-        {flow.step === 4 ? (
           <UploadJD
             jdFile={flow.jdFile}
             selectedFileId={flow.jdId}
@@ -92,7 +78,7 @@ export const CVAnalysisPage: React.FC = () => {
           />
         ) : null}
 
-        {flow.step === 5 ? (
+        {flow.step === 4 ? (
           <CvAnalysisProgressStep
             parseProgress={flow.parseProgress}
             isAnalyzing={flow.isAnalyzing}

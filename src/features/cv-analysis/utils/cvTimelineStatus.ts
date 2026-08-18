@@ -4,7 +4,6 @@ import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
 export const CV_TIMELINE_STEPS: readonly CvAnalysisStep[] = [
   'domain',
   'upload',
-  'github',
   'job-description',
   'analysis',
   'report',
