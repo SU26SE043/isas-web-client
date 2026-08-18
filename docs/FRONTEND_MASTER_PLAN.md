@@ -399,7 +399,7 @@ flowchart TB
 | Field | Chi tiết |
 |-------|----------|
 | **Mục tiêu** | Hồ sơ ứng viên + upload/phân tích CV — **main profile** lightweight (basic info + uploaded CV list) |
-| **Trạng thái triển khai** | ✅ **Done (mock)** — `ProfileViewPage` simplified; wizard/section CRUD legacy routes retained; E2E `cv-upload.spec.ts` |
+| **Trạng thái triển khai** | ✅ **Done (live CV API)** — `ProfileViewPage` simplified; Interview file upload/list/download wired; wizard/section CRUD legacy routes retained; E2E `cv-upload.spec.ts` |
 | **Business Value** | Data foundation cho phỏng vấn AI; auto-fill từ CV (FR-006) |
 | **Vai trò** | Candidate (ROL-002) |
 | **Screens** | SCR-CAN-012–022 (Dashboard, Profile sections, CV) |
@@ -444,7 +444,7 @@ flowchart TB
 | **Layout** | `FullscreenLayout` (no sidebar; lock tab) |
 | **Validation** | Camera/mic required (BRL-025); consent (SEC-025) |
 | **Error** | ERR-011–020 interview errors |
-| **Loading** | "Generating next question..." (ERR-015) |
+| **Loading** | "Generating next question..." (ERR-015); question text renders independently; TTS preloads with a 9s ceiling, then uses mutually-exclusive Web Speech fallback when supported; answer recording stays locked only while loading/playing |
 | **Empty** | — |
 | **Permission** | Email verified (BR-01); B2C: token reserve sufficient (BR-B2C-02–03); B2B: magic link valid (BR-B2B-23); one active session (BRL-005) |
 | **Deliverables** | Shared interview room; B2C practice (no identity, no anti-cheat, camera forced + live preview); B2B assessment (terms, identity, strict proctoring) |
@@ -1229,8 +1229,8 @@ flowchart TB
 | FS-073 | Identity verification (B2B only) | P5 | M05 | F-INT-003 | Candidate | CAN-030 | P0 | FS-072 | L | UF-012, FR-010 | B2C skips → waiting |
 | FS-074 | Waiting room | P5 | M05 | F-INT-004 | Candidate | CAN-032 | P0 | FS-072 | S | BRL-005 | B2C after device; B2B after identity |
 | FS-075 | Interview room shell | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-074 | XL | Fullscreen + live camera mirror | Layout ok |
-| FS-076 | Question display + timer | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | L | FR-011, BRL-042 | Timer colors |
-| FS-077 | Audio/video recording | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | XL | FR-012 | WebRTC works |
+| FS-076 | Question display + timer | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | L | FR-011, BRL-042 | Text independent from TTS; timer starts after speech gate/fallback |
+| FS-077 | Audio/video recording | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | XL | FR-012 | Mic locked during TTS load/play; WebRTC works |
 | FS-078 | Answer submit + next Q | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-076 | L | UF-014 steps 4–7 | Loop works |
 | FS-079 | Proctoring alerts (tab/focus, B2B) | P5 | M05 | F-INT-008 | Candidate | CAN-033 | P0 | FS-075 | M | BR-B2B-17 | B2C off |
 | FS-080 | Network loss dialog | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | FS-075 | M | ERR-013, BRL-035 | Auto resume |

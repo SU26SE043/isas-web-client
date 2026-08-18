@@ -34,7 +34,9 @@ Authenticated candidate completes a **4-step CV analysis wizard** (domain → up
 - [x] `/candidate/cv/upload` redirects to analysis entry (no standalone upload nav).
 - [x] Protected route requires auth.
 - [x] E2E: `e2e/specs/b2c/cv-upload.spec.ts`.
-- [ ] API presign, parse poll — deferred to backend integration.
+- [x] Live authenticated upload/list/download API integration.
+- [x] Uploaded-file metadata remains valid across current and legacy response aliases; the UI
+  never renders `NaN` file sizes or `Invalid Date`.
 
 ## Validation
 

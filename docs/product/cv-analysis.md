@@ -50,6 +50,12 @@ Auth: `Authorization: Bearer {accessToken}` via `apiClient` (Candidate).
 
 ## Response contract
 
+Upload responses are normalized to `{ fileId, fileType, originalName, mimeType, fileSize,
+parsedStatus, createdAt }`. The uploaded-files list uses the same metadata with `id` and the
+legacy status field `parseStatus`. During rolling deploys the frontend also accepts
+`fileSizeBytes`/`uploadedAt` and uses the selected local file as the immediate upload fallback;
+invalid metadata must never render as `NaN` or `Invalid Date`.
+
 Create/detail/list items return `{ id, cvId, jdId?, jobCategory, summary, strengths, weaknesses, suggestions, jdMatch, requirementSummary, mustHaveMatches, niceToHaveMatches, cvSections, citations, createdAt }`.
 `jdMatch` is `null` when no JD is supplied, otherwise contains `score`, `matchedSkills`, and `missingSkills`.
 New requirement-mode responses use `jdMatch: null` and expose requirement-level matches with evidence. `null` and `[]` are distinct: omit requirement fields for the legacy mode; sending empty arrays selects the new mode.
