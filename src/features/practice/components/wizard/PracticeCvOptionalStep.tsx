@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, RefreshCw, Upload } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
@@ -14,9 +14,11 @@ interface PracticeCvOptionalStepProps {
   isLoading: boolean;
   isUploading: boolean;
   uploadError: string | null;
+  loadError?: boolean;
   disabled?: boolean;
   onSelect: (fileId: string | null) => void;
   onUpload: (file: File) => void;
+  onRetryLoad?: () => void;
   onBack: () => void;
   onNext: () => void;
 }
@@ -33,9 +35,11 @@ export function PracticeCvOptionalStep({
   isLoading,
   isUploading,
   uploadError,
+  loadError = false,
   disabled,
   onSelect,
   onUpload,
+  onRetryLoad,
   onBack,
   onNext,
 }: PracticeCvOptionalStepProps) {
@@ -96,6 +100,23 @@ export function PracticeCvOptionalStep({
         <p className="mt-3 text-sm text-error" role="alert">
           {errorMessage}
         </p>
+      ) : null}
+
+      {loadError ? (
+        <div className="mt-4 rounded-2xl border border-error/30 bg-error/10 p-4 text-center" role="alert">
+          <p className="text-sm font-medium text-error">{t('practice.setup.cv.loadError')}</p>
+          {onRetryLoad ? (
+            <button
+              type="button"
+              className="btn-secondary mt-3 inline-flex items-center gap-2"
+              onClick={onRetryLoad}
+              disabled={isLoading || disabled}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              {t('practice.setup.cv.retry')}
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="mt-4 grid gap-3">
