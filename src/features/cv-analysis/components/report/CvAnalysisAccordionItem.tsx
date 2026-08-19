@@ -12,6 +12,8 @@ interface CvAnalysisAccordionItemProps {
   item: CvAnalysisResult;
   isOpen: boolean;
   onToggle: () => void;
+  /** Original CV file name resolved from `item.cvId`; omitted when the file was deleted. */
+  cvFileName?: string;
 }
 
 function formatDate(iso: string, language: 'vi' | 'en') {
@@ -22,21 +24,19 @@ function formatDate(iso: string, language: 'vi' | 'en') {
   });
 }
 
-function matchScoreLabel(score: number | undefined, t: (key: string) => string) {
-  if (score == null) return t('cv.report.noJdShort');
-  if (score >= 80) return t('cv.report.matchGood');
-  if (score >= 60) return t('cv.report.matchFair');
-  return t('cv.report.matchLow');
-}
-
-export function CvAnalysisAccordionItem({ item, isOpen, onToggle }: CvAnalysisAccordionItemProps) {
+export function CvAnalysisAccordionItem({
+  item,
+  isOpen,
+  onToggle,
+  cvFileName,
+}: CvAnalysisAccordionItemProps) {
   const { language, t } = useLanguage();
   const detailQuery = useCvAnalysisDetail(item.id, isOpen);
   const category = formatJobCategoryDisplay(item.jobCategory, language) || item.jobCategory;
   const panelId = `cv-analysis-panel-${item.id}`;
   const headerId = `cv-analysis-header-${item.id}`;
-  const score = item.jdMatch?.score;
   const hasJd = item.jdMatch != null || Boolean(item.jdId);
+  const jdLabel = hasJd ? t('cv.report.withJd') : t('cv.report.withoutJd');
 
   const detailError =
     detailQuery.isError && detailQuery.error instanceof CvAnalysisError
@@ -62,15 +62,25 @@ export function CvAnalysisAccordionItem({ item, isOpen, onToggle }: CvAnalysisAc
         >
           <span className="min-w-0 space-y-1">
             <span className="block text-sm font-semibold text-zinc-100">{category}</span>
-            <span className="block text-xs text-zinc-500">
-              {formatDate(item.createdAt, language)} ·{' '}
-              {hasJd ? t('cv.report.withJd') : t('cv.report.withoutJd')}
-            </span>
-            {score != null ? (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
-                {t('cv.report.jdMatchScore')}: {score}% · {matchScoreLabel(score, t)}
+            {/* Falls back to the JD label alone when the CV file was deleted —
+                the raw cvId is never surfaced. Stacks on narrow screens so a
+                long file name cannot hide the JD label behind an ellipsis. */}
+            <span className="flex flex-col text-xs text-zinc-400 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5">
+              {cvFileName ? (
+                <span className="min-w-0 max-w-full truncate" title={cvFileName}>
+                  {cvFileName}
+                </span>
+              ) : null}
+              <span className="shrink-0">
+                {cvFileName ? (
+                  <span aria-hidden className="mr-1.5 hidden sm:inline">
+                    ·
+                  </span>
+                ) : null}
+                {jdLabel}
               </span>
-            ) : null}
+            </span>
+            <span className="block text-xs text-zinc-500">{formatDate(item.createdAt, language)}</span>
             <span className="block text-xs font-medium text-zinc-400">{t('cv.report.viewDetail')}</span>
           </span>
           <ChevronDown

@@ -4,35 +4,46 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { profileService } from '@/features/profile/services/profile.service';
-import type { CvAnalysisStep } from '../components/CvAnalysisStepper';
 import { cvAnalysisService, CvAnalysisError } from '../services/cvAnalysis.service';
 import type { CvAnalysisDomain } from '../types/cvDomain.types';
 import { isCvAnalysisDomain } from '../types/cvDomain.types';
-import type { FileRecord, JdRequirementsResponse } from '../types/cvAnalysis.types';
+import type {
+  FileRecord,
+  JdRequirementsResponse,
+  RequirementInput,
+} from '../types/cvAnalysis.types';
 import { domainToJobCategoryLabel } from '../types/cvAnalysis.types';
 import { validatePdfFile } from '../utils/cvFileValidation';
 import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
+import { createRequirementId, normalizeRequirementKey } from '../utils/jdRequirementMerge';
+import { resolveJdErrorMessage } from '../utils/resolveJdError';
+import { useJdWorkspace } from './useJdWorkspace';
 import { prependCvAnalysisToCache } from './useCvAnalyses';
 import { cvAnalysisDetailQueryKey } from './useCvAnalysisDetail';
 import {
   buildCvTimelineStatuses,
+  type CvAnalysisStep,
   type CvTimelineStatuses,
 } from '../utils/cvTimelineStatus';
 import { isPlaywrightRuntime } from '@/shared/mock';
-import type { EditableRequirementGroups } from '../components/flow/CvJdRequirementsPanel';
 
 export const CV_ANALYSIS_ID_KEY = 'cv-analysis:lastId';
 export const CV_ANALYSIS_DOMAIN_KEY = 'cv-analysis:domain';
 export const CV_ANALYSIS_META_KEY = 'cv-analysis:lastMeta';
 
-export type CvFlowStep = 1 | 2 | 3 | 4;
+export type CvFlowStep = 1 | 2 | 3 | 4 | 5;
 export type FileUploadStatus = 'idle' | 'uploading' | 'completed' | 'error';
 
+/**
+ * 1 Field · 2 CV · 3 Job (JD + requirements) · 4 Confirm · 5 Analysing.
+ * Step 6 of the timeline (`report`) is a different route.
+ */
 const FLOW_STEP_TO_TIMELINE: Record<CvFlowStep, CvAnalysisStep> = {
   1: 'domain',
-  2: 'upload',
-  3: 'job-description',
-  4: 'analysis',
+  2: 'cv',
+  3: 'job',
+  4: 'confirm',
+  5: 'analysis',
 };
 
 function fileIdentityKey(file: File): string {
@@ -54,14 +65,27 @@ function readStoredDomain(): CvAnalysisDomain | null {
   return isCvAnalysisDomain(raw) ? raw : null;
 }
 
-function resolveAnalyzeMessage(error: unknown, t: (key: string) => string): string {
-  let message = t('cv.error.parseFailed');
-  if (error instanceof CvAnalysisError) {
-    const key = `cv.error.${error.code}` as const;
-    const translated = t(key);
-    message = translated === key ? error.message : translated;
-  }
-  return message;
+/**
+ * Flat requirement projection kept for the interim JD panel and for the
+ * invariant tests. The workspace owns the real list; this is a view of it.
+ */
+export interface EditableRequirementGroups {
+  mustHave: RequirementInput[];
+  niceToHave: RequirementInput[];
+}
+
+/**
+ * Requirement groups in the shape the flat panel expects.
+ * The workspace owns the real list; this is a read-only projection.
+ */
+function toEditableGroups(
+  requirements: ReturnType<typeof useJdWorkspace>['requirements'],
+): EditableRequirementGroups | null {
+  if (requirements.length === 0) return null;
+  return {
+    mustHave: requirements.filter((item) => item.group === 'must').map(({ text }) => ({ text })),
+    niceToHave: requirements.filter((item) => item.group === 'nice').map(({ text }) => ({ text })),
+  };
 }
 
 /**
@@ -90,11 +114,6 @@ export function useCvAnalysisFlow() {
   const [parseProgress, setParseProgress] = useState(0);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [failedStep, setFailedStep] = useState<CvAnalysisStep | null>(null);
-  const [jdText, setJdText] = useState('');
-  const [jdRequirements, setJdRequirements] = useState<JdRequirementsResponse | null>(null);
-  const [editableRequirements, setEditableRequirements] = useState<EditableRequirementGroups | null>(null);
-  const [isLoadingJdRequirements, setIsLoadingJdRequirements] = useState(false);
-  const [jdSkipped, setJdSkipped] = useState(false);
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [insufficientCreditOpen, setInsufficientCreditOpen] = useState(false);
 
@@ -102,6 +121,41 @@ export function useCvAnalysisFlow() {
   const uploadedJdKeyRef = useRef<string | null>(null);
   const cvUploadGenerationRef = useRef(0);
   const jdUploadGenerationRef = useRef(0);
+
+  /**
+   * Step 2 owns exactly one JD and exactly one requirement list. Before this,
+   * three independent pieces of state (`jdText`, `jdId`, `editableRequirements`)
+   * plus a one-way `jdSkipped` latch could disagree with each other and with
+   * what the user saw on screen — J1, J2 and J3.
+   */
+  const jdWorkspace = useJdWorkspace({
+    jobCategory: domain ? domainToJobCategoryLabel(domain) : null,
+  });
+  const {
+    jdText,
+    source: jdSource,
+    setJdText,
+    loadJdFile,
+    clearJd,
+    clearRequirements,
+    replaceRequirements,
+    buildAnalysisPayload,
+    requirements,
+  } = jdWorkspace;
+  const editableRequirements = useMemo(() => toEditableGroups(requirements), [requirements]);
+  const jdRequirements = useMemo<JdRequirementsResponse | null>(
+    () =>
+      editableRequirements
+        ? {
+            mustHave: editableRequirements.mustHave.map(({ text }) => ({ text, citations: [] })),
+            niceToHave: editableRequirements.niceToHave.map(({ text }) => ({
+              text,
+              citations: [],
+            })),
+          }
+        : null,
+    [editableRequirements],
+  );
 
   const clearFailure = useCallback(() => {
     setFailedStep(null);
@@ -131,7 +185,7 @@ export function useCvAnalysisFlow() {
       uploadedCvKeyRef.current = null;
       setFileError(null);
       setIsUploading(false);
-      if (failedStep === 'upload') clearFailure();
+      if (failedStep === 'cv') clearFailure();
     },
     [clearFailure, failedStep],
   );
@@ -142,15 +196,15 @@ export function useCvAnalysisFlow() {
       setJdFile(null);
       setJdId(record.id);
       setJdRecord(record);
-      setJdRequirements(null);
-      setEditableRequirements(null);
       setJdUploadStatus('completed');
       uploadedJdKeyRef.current = null;
       setJdFileError(null);
       setIsUploading(false);
-      if (failedStep === 'job-description') clearFailure();
+      // The file is a way to *load* the one JD, not a second JD (J1/J10).
+      void loadJdFile({ id: record.id, name: record.originalName });
+      if (failedStep === 'job') clearFailure();
     },
-    [clearFailure, failedStep],
+    [clearFailure, failedStep, loadJdFile],
   );
 
   const selectCvFile = useCallback(
@@ -178,7 +232,7 @@ export function useCvAnalysisFlow() {
         setCvUploadStatus('idle');
         uploadedCvKeyRef.current = null;
         setIsUploading(false);
-        failStep('upload', message);
+        failStep('cv', message);
         return;
       }
       if (validation === 'invalidSize') {
@@ -191,7 +245,7 @@ export function useCvAnalysisFlow() {
         setCvUploadStatus('idle');
         uploadedCvKeyRef.current = null;
         setIsUploading(false);
-        failStep('upload', message);
+        failStep('cv', message);
         return;
       }
 
@@ -202,7 +256,7 @@ export function useCvAnalysisFlow() {
         setFileError(null);
         setCvFile(next);
         setCvUploadStatus('completed');
-        if (failedStep === 'upload') clearFailure();
+        if (failedStep === 'cv') clearFailure();
         return;
       }
 
@@ -214,7 +268,7 @@ export function useCvAnalysisFlow() {
       setCvUploadStatus('uploading');
       setIsUploading(true);
       uploadedCvKeyRef.current = null;
-      if (failedStep === 'upload') clearFailure();
+      if (failedStep === 'cv') clearFailure();
 
       try {
         const record = await cvAnalysisService.uploadCv(next);
@@ -245,14 +299,13 @@ export function useCvAnalysisFlow() {
           return;
         }
 
-        const message =
-          error instanceof CvAnalysisError ? error.message : t('cv.error.uploadFailed');
+        const message = resolveJdErrorMessage(error, 'uploadCv', t);
         setFileError(message);
         setCvId(null);
         setCvRecord(null);
         setCvUploadStatus('error');
         uploadedCvKeyRef.current = null;
-        failStep('upload', message);
+        failStep('cv', message);
       } finally {
         if (generation === cvUploadGenerationRef.current) {
           setIsUploading(false);
@@ -269,12 +322,11 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
-        setJdRequirements(null);
-        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setJdFileError(null);
         setIsUploading(false);
+        clearJd();
         return;
       }
 
@@ -286,12 +338,10 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
-        setJdRequirements(null);
-        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
-        failStep('job-description', message);
+        failStep('job', message);
         return;
       }
       if (validation === 'invalidSize') {
@@ -301,12 +351,10 @@ export function useCvAnalysisFlow() {
         setJdFile(null);
         setJdId(null);
         setJdRecord(null);
-        setJdRequirements(null);
-        setEditableRequirements(null);
         setJdUploadStatus('idle');
         uploadedJdKeyRef.current = null;
         setIsUploading(false);
-        failStep('job-description', message);
+        failStep('job', message);
         return;
       }
 
@@ -316,7 +364,7 @@ export function useCvAnalysisFlow() {
         setJdFileError(null);
         setJdFile(next);
         setJdUploadStatus('completed');
-        if (failedStep === 'job-description') clearFailure();
+        if (failedStep === 'job') clearFailure();
         return;
       }
 
@@ -325,12 +373,10 @@ export function useCvAnalysisFlow() {
       setJdFile(next);
       setJdId(null);
       setJdRecord(null);
-      setJdRequirements(null);
-      setEditableRequirements(null);
       setJdUploadStatus('uploading');
       setIsUploading(true);
       uploadedJdKeyRef.current = null;
-      if (failedStep === 'job-description') clearFailure();
+      if (failedStep === 'job') clearFailure();
 
       try {
         const record = await cvAnalysisService.uploadJd(next);
@@ -339,28 +385,26 @@ export function useCvAnalysisFlow() {
         uploadedJdKeyRef.current = key;
         setJdId(record.id);
         setJdRecord(record);
-        setJdRequirements(null);
-        setEditableRequirements(null);
         setJdUploadStatus('completed');
+        void loadJdFile({ id: record.id, name: record.originalName });
         toast.success(t('cv.uploadJdSuccess'));
       } catch (error) {
         if (generation !== jdUploadGenerationRef.current) return;
 
-        const message =
-          error instanceof CvAnalysisError ? error.message : t('cv.error.uploadFailed');
+        const message = resolveJdErrorMessage(error, 'uploadJd', t);
         setJdFileError(message);
         setJdId(null);
         setJdRecord(null);
         setJdUploadStatus('error');
         uploadedJdKeyRef.current = null;
-        failStep('job-description', message);
+        failStep('job', message);
       } finally {
         if (generation === jdUploadGenerationRef.current) {
           setIsUploading(false);
         }
       }
     },
-    [clearFailure, failStep, failedStep, jdId, jdUploadStatus, t],
+    [clearFailure, clearJd, failStep, failedStep, jdId, jdUploadStatus, loadJdFile, t],
   );
 
   const goBack = useCallback(() => {
@@ -371,76 +415,51 @@ export function useCvAnalysisFlow() {
     setStep((current) => (current > 1 ? ((current - 1) as CvFlowStep) : current));
   }, [clearFailure]);
 
-  /** Advance only — never calls upload API. */
-  const goNextFromUpload = useCallback(() => {
+  /** Step 1 → 2. The field is the only input of step 1, so it gates Next. */
+  const goNextFromDomain = useCallback(() => {
+    if (!domain) return;
+    clearFailure();
+    setStep(2);
+  }, [clearFailure, domain]);
+
+  /** Step 2 → 3. Advance only — never calls the upload API. */
+  const goNextFromCv = useCallback(() => {
     if (isUploading || cvUploadStatus !== 'completed' || !cvId) return;
     clearFailure();
     setStep(3);
   }, [clearFailure, cvId, cvUploadStatus, isUploading]);
 
-  /** Advance only — never calls upload API. */
-  const goNextFromJd = useCallback(async () => {
-    if (isUploading) return;
-    const hasFileJd = jdUploadStatus === 'completed' && Boolean(jdId);
-    const hasTextJd = jdText.trim().length > 0;
-    if (!hasFileJd && !hasTextJd && !jdSkipped) return;
-    clearFailure();
-
-    if (jdSkipped || (!hasFileJd && !hasTextJd)) {
-      setJdRequirements(null);
-      setStep(4);
-      return;
-    }
-
-    if (isPlaywrightRuntime()) {
-      setJdRequirements(null);
-      setStep(4);
-      return;
-    }
-
-    if (!domain || isLoadingJdRequirements) return;
-    setIsLoadingJdRequirements(true);
-    try {
-      const requirements = await cvAnalysisService.getJdRequirements({
-        jdId,
-        jdText,
-        jobCategory: domainToJobCategoryLabel(domain),
-      });
-      setJdRequirements(requirements);
-      setEditableRequirements({
-        mustHave: requirements.mustHave.map(({ text }) => ({ text })),
-        niceToHave: requirements.niceToHave.map(({ text }) => ({ text })),
-      });
-      setStep(4);
-    } catch (error) {
-      if (isPlaywrightRuntime()) {
-        // The E2E journey stubs the analysis endpoint; keep the journey moving
-        // when the optional requirements endpoint is not stubbed yet.
-      setJdRequirements(null);
-      setEditableRequirements(null);
-        setStep(4);
-        return;
-      }
-      const message = resolveAnalyzeMessage(error, t);
-      failStep('job-description', message);
-    } finally {
-      setIsLoadingJdRequirements(false);
-    }
-  }, [clearFailure, domain, failStep, isLoadingJdRequirements, isUploading, jdId, jdSkipped, jdText, jdUploadStatus, t]);
-
-  const skipJd = useCallback(() => {
-    setJdSkipped(true);
-    setJdText('');
-    setJdFile(null);
-    setJdId(null);
-    setJdRecord(null);
-    setJdRequirements(null);
-    setJdUploadStatus('idle');
-    setJdFileError(null);
+  /**
+   * Step 3 → 4. Pure navigation.
+   *
+   * Extraction used to run *inside* this button: unnamed, unstoppable, and
+   * charged against a 10-request/10-minute limit the user could not see (J4).
+   * It is an explicit action in step 2 now, so "Continue" only continues.
+   */
+  const goNextFromJd = useCallback(() => {
     clearFailure();
     setStep(4);
   }, [clearFailure]);
 
+  /**
+   * "No JD" is a valid, complete answer — it just empties the one JD.
+   * The requirement list goes with it: requirements read off a JD the user has
+   * removed must never reach the analysis (J3). Nothing latches, so providing a
+   * JD later restores evidence mode (J2).
+   */
+  const skipJd = useCallback(() => {
+    setJdFile(null);
+    setJdId(null);
+    setJdRecord(null);
+    setJdUploadStatus('idle');
+    setJdFileError(null);
+    clearJd();
+    clearRequirements();
+    clearFailure();
+    setStep(4);
+  }, [clearFailure, clearJd, clearRequirements]);
+
+  /** "Try again" after a failed analysis goes back to the CV step, not the field. */
   const retryFromUpload = useCallback(() => {
     setAnalyzeError(null);
     setIsAnalyzing(false);
@@ -452,46 +471,26 @@ export function useCvAnalysisFlow() {
   const executeAnalysis = useCallback(async () => {
     if (!cvId || !domain || isAnalyzing) return;
 
+    // Step 5 *is* the running analysis — the confirmation screen it replaces
+    // stays behind at step 4 so Back returns to something meaningful. The
+    // credit dialog has done its job by now, and leaving it up would cover the
+    // progress it is asking the user to wait for.
+    setStep(5);
+    setCreditDialogOpen(false);
     setIsAnalyzing(true);
     setParseProgress(35);
     setAnalyzeError(null);
     clearFailure();
 
-    if (isPlaywrightRuntime() && !jdId && !jdText.trim()) {
-      const result = {
-        id: `e2e-analysis-${crypto.randomUUID()}`,
-        cvId,
-        jdId: null,
-        jobCategory: 'Match report',
-        summary: 'Your CV analysis is ready.',
-        strengths: ['Relevant experience'],
-        weaknesses: ['Add more measurable outcomes'],
-        suggestions: ['Quantify the impact of your recent projects.'],
-        jdMatch: null,
-        requirementSummary: null,
-        mustHaveMatches: [],
-        niceToHaveMatches: [],
-        cvSections: [],
-        citations: [],
-        createdAt: new Date().toISOString(),
-      };
-      writeStorage(CV_ANALYSIS_ID_KEY, result.id);
-      writeStorage(CV_ANALYSIS_DOMAIN_KEY, domain);
-      prependCvAnalysisToCache(queryClient, result);
-      queryClient.setQueryData(cvAnalysisDetailQueryKey(result.id), result);
-      setParseProgress(100);
-      navigate('/candidate/cv/analysis/report', { replace: true });
-      return;
-    }
-
     try {
+      // The workspace decides jdId vs jdText (I5) and omits the requirement
+      // keys entirely when the list is empty (I1) — a `[]` would put the
+      // backend in requirement mode with nothing to score: blank report, and
+      // the credit is already spent.
       const payload = buildCreateCvAnalysisRequest({
         cvId,
         jobCategory: domainToJobCategoryLabel(domain),
-        jdId,
-        jdText,
-        mustHave: editableRequirements?.mustHave,
-        niceToHave: editableRequirements?.niceToHave,
+        ...buildAnalysisPayload(),
       });
       const result = await cvAnalysisService.analyze(payload);
 
@@ -501,7 +500,13 @@ export function useCvAnalysisFlow() {
         CV_ANALYSIS_META_KEY,
         JSON.stringify({
           cvFileName: cvRecord?.originalName ?? cvFile?.name,
-          jdFileName: jdRecord?.originalName ?? jdFile?.name ?? null,
+          // The workspace owns the one JD, so its source names the file even
+          // when step 2 uploaded it without going through this hook.
+          jdFileName:
+            (jdSource.kind === 'file' && !jdSource.detached ? jdSource.fileName : null) ??
+            jdRecord?.originalName ??
+            jdFile?.name ??
+            null,
         }),
       );
 
@@ -515,53 +520,26 @@ export function useCvAnalysisFlow() {
       }
 
       setParseProgress(100);
-      setCreditDialogOpen(false);
       toast.success(t('cv.createSuccess'));
       navigate('/candidate/cv/analysis/report', { replace: true });
     } catch (error) {
-      if (isPlaywrightRuntime() && cvId && domain) {
-        const result = {
-          id: `e2e-analysis-${crypto.randomUUID()}`,
-          cvId,
-          jdId,
-          jobCategory: 'Match report',
-          summary: 'Your CV analysis is ready.',
-          strengths: ['Relevant experience'],
-          weaknesses: ['Add more measurable outcomes'],
-          suggestions: ['Quantify the impact of your recent projects.'],
-          jdMatch: null,
-          requirementSummary: null,
-          mustHaveMatches: [],
-          niceToHaveMatches: [],
-          cvSections: [],
-          citations: [],
-          createdAt: new Date().toISOString(),
-        };
-        writeStorage(CV_ANALYSIS_ID_KEY, result.id);
-        writeStorage(CV_ANALYSIS_DOMAIN_KEY, domain);
-        prependCvAnalysisToCache(queryClient, result);
-        queryClient.setQueryData(cvAnalysisDetailQueryKey(result.id), result);
-        setParseProgress(100);
-        setCreditDialogOpen(false);
-        navigate('/candidate/cv/analysis/report', { replace: true });
-        return;
-      }
-
       if (error instanceof CvAnalysisError && error.code === 'insufficientCredits') {
-        setCreditDialogOpen(false);
+        // No credit was spent, so this is not a failed analysis — send the user
+        // back to the confirmation screen instead of leaving step 5 empty.
         setInsufficientCreditOpen(true);
         setParseProgress(0);
         setIsAnalyzing(false);
+        setStep(4);
         return;
       }
-      const message = resolveAnalyzeMessage(error, t);
+      const message = resolveJdErrorMessage(error, 'analyze', t);
       setAnalyzeError(message);
       setParseProgress(0);
       setIsAnalyzing(false);
-      setCreditDialogOpen(false);
       failStep('analysis', message);
     }
   }, [
+    buildAnalysisPayload,
     clearFailure,
     cvFile?.name,
     cvId,
@@ -569,12 +547,9 @@ export function useCvAnalysisFlow() {
     domain,
     failStep,
     isAnalyzing,
-    editableRequirements,
-    jdRequirements,
     jdFile?.name,
-    jdId,
     jdRecord?.originalName,
-    jdText,
+    jdSource,
     navigate,
     queryClient,
     t,
@@ -589,22 +564,47 @@ export function useCvAnalysisFlow() {
     void executeAnalysis();
   }, [executeAnalysis]);
 
-  const advanceFromJd = useCallback(() => {
-    const hasJd =
-      (jdUploadStatus === 'completed' && Boolean(jdId)) ||
-      jdText.trim().length > 0 ||
-      jdSkipped;
-    if (isPlaywrightRuntime() && !hasJd && cvId) {
-      void executeAnalysis();
-      return;
-    }
-    void goNextFromJd();
-  }, [cvId, executeAnalysis, goNextFromJd, jdId, jdSkipped, jdText, jdUploadStatus]);
+  /**
+   * Compat shim for the flat requirement panel, which edits the list as two
+   * flat string groups. It writes back into the one workspace list instead of a
+   * parallel copy, keeping ids (and therefore JD quotes) wherever the text is
+   * unchanged.
+   */
+  const setEditableRequirements = useCallback(
+    (groups: EditableRequirementGroups | null) => {
+      if (!groups) {
+        clearRequirements();
+        return;
+      }
+      const byKey = new Map(
+        requirements.map((item) => [normalizeRequirementKey(item.text), item]),
+      );
+      const rebuild = (list: { text: string }[], group: 'must' | 'nice') =>
+        list
+          .map(({ text }) => text.trim())
+          .filter(Boolean)
+          .map((text) => {
+            const previous = byKey.get(normalizeRequirementKey(text));
+            return previous && previous.text === text
+              ? { ...previous, group }
+              : {
+                  id: previous?.id ?? createRequirementId(),
+                  text,
+                  group,
+                  origin: 'user' as const,
+                  jdQuote: null,
+                };
+          });
+      replaceRequirements([
+        ...rebuild(groups.mustHave, 'must'),
+        ...rebuild(groups.niceToHave, 'nice'),
+      ]);
+    },
+    [clearRequirements, replaceRequirements, requirements],
+  );
 
   const timelineStatuses = useMemo<CvTimelineStatuses>(() => {
-    const isProcessing =
-      (step === 3 && isUploading) ||
-      (step === 4 && isAnalyzing);
+    const isProcessing = (isUploading && step <= 3) || (step === 5 && isAnalyzing);
 
     return buildCvTimelineStatuses({
       activeIndex: step - 1,
@@ -632,8 +632,12 @@ export function useCvAnalysisFlow() {
     jdRequirements,
     editableRequirements,
     setEditableRequirements,
-    isLoadingJdRequirements,
+    isLoadingJdRequirements: jdWorkspace.aiStatus === 'loading',
     setJdText,
+    /** Full JD step API — the step-2 UI is built on this. */
+    jdWorkspace,
+    /** How many requirements the analysis will be matched against (step 3). */
+    requirementCount: requirements.length,
     isUploading,
     isAnalyzing,
     parseProgress,
@@ -651,25 +655,12 @@ export function useCvAnalysisFlow() {
     selectJdFile,
     selectExistingJd,
     goBack,
-    goNextFromUpload,
-    goNextFromJd: advanceFromJd,
+    goNextFromDomain,
+    goNextFromCv,
+    goNextFromJd,
     skipJd,
-    goNext: () => {
-      if (failedStep) return;
-      if (isPlaywrightRuntime() && step === 1 && cvFile) {
-        setStep(3);
-        return;
-      }
-      setStep((current) => (current < 5 ? ((current + 1) as CvFlowStep) : current));
-    },
     retryFromUpload,
-    runAnalysis: () => {
-      if (isPlaywrightRuntime()) {
-        void executeAnalysis();
-        return;
-      }
-      runAnalysis();
-    },
+    runAnalysis,
     confirmAnalysis,
   };
 }

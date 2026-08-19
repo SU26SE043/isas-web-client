@@ -17,7 +17,17 @@ export function CvReportSourceActions({
   onOpenJd,
 }: CvReportSourceActionsProps) {
   const { t } = useLanguage();
-  const hasRequirementData = analysis.mustHaveMatches.length + analysis.niceToHaveMatches.length > 0;
+  /**
+   * Was a JD used at all? Requirement matches prove one only in requirement
+   * mode; a pasted JD with no requirements is a supported path (D6) and lands
+   * in legacy mode, where `jdMatch` is the evidence. Same rule as the history
+   * row (`CvAnalysisAccordionItem`) — without the `jdMatch` half, a report that
+   * renders a "compared against the JD" card right below was labelling itself
+   * "no JD".
+   */
+  const hasJd =
+    analysis.jdMatch != null ||
+    analysis.mustHaveMatches.length + analysis.niceToHaveMatches.length > 0;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -35,7 +45,7 @@ export function CvReportSourceActions({
         </Button>
       ) : (
         <span className="rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-xs text-muted-foreground">
-          {hasRequirementData ? t('cv.report.source.jdText') : t('cv.report.noJd')}
+          {hasJd ? t('cv.report.source.jdText') : t('cv.report.noJd')}
         </span>
       )}
     </div>

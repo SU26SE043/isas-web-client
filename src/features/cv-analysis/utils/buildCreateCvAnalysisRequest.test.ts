@@ -73,6 +73,42 @@ describe('buildCreateCvAnalysisRequest', () => {
     expect(request.niceToHave).toEqual([{ text: 'Testing' }]);
   });
 
+  // I1 — the backend switches into requirement mode on `MustHave is not null`,
+  // so an empty array means "score against zero requirements": blank report,
+  // 1 credit gone. The workspace omits the keys instead of sending [].
+  it('omits both requirement keys when the caller passes none (I1)', () => {
+    const request = buildCreateCvAnalysisRequest({
+      cvId: 'cv-1',
+      jobCategory: 'FE',
+      jdText: 'Build APIs',
+    });
+
+    expect('mustHave' in request).toBe(false);
+    expect('niceToHave' in request).toBe(false);
+  });
+
+  it('still forwards empty arrays verbatim when a caller insists (documents the trap)', () => {
+    const request = buildCreateCvAnalysisRequest({
+      cvId: 'cv-1',
+      jobCategory: 'FE',
+      mustHave: [],
+      niceToHave: [],
+    });
+
+    expect(request.mustHave).toEqual([]);
+    expect(request.niceToHave).toEqual([]);
+  });
+
+  it('keeps the keys omitted when every requirement text is blank', () => {
+    const request = buildCreateCvAnalysisRequest({
+      cvId: 'cv-1',
+      jobCategory: 'FE',
+      jdText: 'Build APIs',
+    });
+
+    expect(request).toEqual({ cvId: 'cv-1', jobCategory: 'FE', jdText: 'Build APIs' });
+  });
+
   it('rejects more than 20 extracted requirements', () => {
     expect(() =>
       buildCreateCvAnalysisRequest({

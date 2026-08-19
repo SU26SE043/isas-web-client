@@ -16,8 +16,8 @@ export interface UploadCVProps {
   uploadStatus?: FileUploadStatus;
   onFileSelect: (file: File | null) => void;
   onExistingSelect: (record: FileRecord) => void;
+  onBack: () => void;
   onNext: () => void;
-  onBack?: () => void;
 }
 
 function resolveInitialTab(file: File | null, selectedFileId: string | null): CvFlowFileSourceTab {
@@ -26,7 +26,12 @@ function resolveInitialTab(file: File | null, selectedFileId: string | null): Cv
   return 'new';
 }
 
-/** Step 2 — pick an uploaded CV or upload a new PDF. */
+/**
+ * Step 2 — pick or upload the CV. The field is its own step before this one.
+ *
+ * The upload interaction (tabs, dropzone, progress) is unchanged; redesigning
+ * the dropzone is a separate PR.
+ */
 export const UploadCV: React.FC<UploadCVProps> = ({
   file,
   selectedFileId,
@@ -35,51 +40,70 @@ export const UploadCV: React.FC<UploadCVProps> = ({
   uploadStatus = 'idle',
   onFileSelect,
   onExistingSelect,
-  onNext,
   onBack,
+  onNext,
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<CvFlowFileSourceTab>(() =>
     resolveInitialTab(file, selectedFileId),
   );
 
-  const isReady = uploadStatus === 'completed' && Boolean(selectedFileId);
-  const canNext = isReady && !fileError && !isUploading;
+  const isFileReady = uploadStatus === 'completed' && Boolean(selectedFileId);
+  const canNext = isFileReady && !fileError && !isUploading;
+  const blockedHint = !isFileReady && !isUploading ? t('cv.needCvHint') : null;
 
   return (
-    <CvFlowSectionCard title={t('cv.step.upload')} description={t('cv.stepDesc.upload')}>
-      <CvFlowFileSourceTabs
-        activeTab={activeTab}
-        uploadedLabel={t('cv.tab.uploadedCv')}
-        newLabel={t('cv.tab.uploadNewCv')}
-        onChange={setActiveTab}
-        disabled={isUploading}
-      />
+    <CvFlowSectionCard title={t('cv.step.cv')} description={t('cv.stepDesc.cv')}>
+      <div className="space-y-7">
+        <section aria-labelledby="cv-file-section-label">
+          <h3
+            id="cv-file-section-label"
+            className="mb-3 text-sm font-semibold text-foreground"
+          >
+            {t('cv.cvSectionTitle')}
+          </h3>
 
-      <div className="mt-4" role="tabpanel">
-        {activeTab === 'uploaded' ? (
-          <CvFlowUploadedFilesPanel
-            fileType="cv"
-            selectedFileId={selectedFileId}
+          <CvFlowFileSourceTabs
+            activeTab={activeTab}
+            uploadedLabel={t('cv.tab.uploadedCv')}
+            newLabel={t('cv.tab.uploadNewCv')}
+            onChange={setActiveTab}
             disabled={isUploading}
-            onSelect={onExistingSelect}
           />
-        ) : (
-          <CvFlowNewPdfUploadPanel
-            file={file}
-            fileError={fileError}
-            isUploading={isUploading}
-            uploadStatus={uploadStatus}
-            dropTitle={t('cv.dropTitle')}
-            dropDescription={t('cv.dropDescription')}
-            chooseFileLabel={t('cv.chooseFile')}
-            changeFileLabel={t('cv.changeFile')}
-            uploadingLabel={t('cv.uploading')}
-            uploadCompletedLabel={t('cv.uploadCompleted')}
-            onFileSelect={onFileSelect}
-          />
-        )}
+
+          <div className="mt-4" role="tabpanel">
+            {activeTab === 'uploaded' ? (
+              <CvFlowUploadedFilesPanel
+                fileType="cv"
+                selectedFileId={selectedFileId}
+                disabled={isUploading}
+                onSelect={onExistingSelect}
+              />
+            ) : (
+              <CvFlowNewPdfUploadPanel
+                file={file}
+                fileError={fileError}
+                isUploading={isUploading}
+                uploadStatus={uploadStatus}
+                dropTitle={t('cv.dropTitle')}
+                dropDescription={t('cv.dropDescription')}
+                chooseFileLabel={t('cv.chooseFile')}
+                changeFileLabel={t('cv.changeFile')}
+                uploadingLabel={t('cv.uploading')}
+                uploadCompletedLabel={t('cv.uploadCompleted')}
+                onFileSelect={onFileSelect}
+                minHeightClass="min-h-[200px]"
+              />
+            )}
+          </div>
+        </section>
       </div>
+
+      {blockedHint ? (
+        <p className="mt-6 text-sm text-muted-foreground" aria-live="polite">
+          {blockedHint}
+        </p>
+      ) : null}
 
       <CvFlowStepActions
         canNext={canNext}

@@ -6,6 +6,10 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
+import {
+  DEV_AUTH_SEED_SCRIPT,
+  handleInterviewMockRequest,
+} from './scripts/dev-mocks/interviewFiles.mock'
 
 const E2E_ADMIN_ANALYTICS_PATH = '/api/v1/auth/admin/analytics'
 const E2E_CV_ANALYSIS_PATH = '/api/v1/interview/practice/cv-analysis'
@@ -86,11 +90,14 @@ function createE2ePdf(label: string): Buffer {
 }
 
 function createE2eApiMock(): Plugin {
-  const middleware = (
+  const middleware = async (
     request: IncomingMessage,
     response: ServerResponse,
     next: () => void,
   ) => {
+    // Interview files / JD requirements / analysis — see scripts/dev-mocks.
+    if (await handleInterviewMockRequest(request, response)) return
+
     const url = request.url?.split('?')[0]
     if (url === E2E_AUTH_LOGIN_PATH) {
       response.statusCode = 200
@@ -151,6 +158,19 @@ function createE2eApiMock(): Plugin {
     },
     configurePreviewServer(server) {
       server.middlewares.use(middleware)
+    },
+    // Auto-login seed. `context.server` is only set while the dev server is
+    // running, so the snippet can never be baked into a production build.
+    transformIndexHtml: {
+      order: 'pre',
+      handler(_html, context) {
+        if (!context.server) return
+        return [{
+          tag: 'script',
+          injectTo: 'head-prepend' as const,
+          children: DEV_AUTH_SEED_SCRIPT,
+        }]
+      },
     },
   }
 }
