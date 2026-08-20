@@ -17,6 +17,8 @@ const baseState = (): PracticeSetupState => ({
   rubricCriterionIds: [],
   language: 'vi',
   seniority: 'Junior',
+  adaptiveEnabled: true,
+  maxDeepPerQuestion: null,
 });
 
 describe('buildCreatePracticeSessionRequest', () => {
@@ -90,5 +92,46 @@ describe('canStartPracticeSession', () => {
         jdText: 'a'.repeat(20_001),
       }),
     ).toBe(false);
+  });
+});
+
+describe('chế độ và độ sâu đào sâu', () => {
+  it('không gửi adaptiveEnabled khi bật — server mặc định đã bật, gửi true không đổi được gì', () => {
+    const request = buildCreatePracticeSessionRequest(baseState());
+    expect(request.adaptiveEnabled).toBeUndefined();
+  });
+
+  it('gửi adaptiveEnabled=false khi ứng viên chọn buổi tĩnh', () => {
+    const request = buildCreatePracticeSessionRequest({
+      ...baseState(),
+      adaptiveEnabled: false,
+      maxDeepPerQuestion: 3,
+    });
+    expect(request.adaptiveEnabled).toBe(false);
+    // Tắt đào sâu thì độ sâu vô nghĩa — gửi kèm chỉ làm payload tự mâu thuẫn.
+    expect(request.maxDeepPerQuestion).toBeUndefined();
+  });
+
+  it('gửi độ sâu đã chọn khi bật đào sâu', () => {
+    const request = buildCreatePracticeSessionRequest({
+      ...baseState(),
+      maxDeepPerQuestion: 2,
+    });
+    expect(request.maxDeepPerQuestion).toBe(2);
+  });
+
+  it('không gửi khoá độ sâu khi chưa biết dải server cho phép', () => {
+    const request = buildCreatePracticeSessionRequest(baseState());
+    expect(request.maxDeepPerQuestion).toBeUndefined();
+  });
+
+  // Server KHÔNG có trường `RubricCriterionIds` — System.Text.Json bỏ qua member lạ trong im lặng,
+  // nên nó đã được gửi đi vô ích suốt. Test này chặn việc ai đó thêm lại.
+  it('không gửi rubricCriterionIds — server không có trường đó', () => {
+    const request = buildCreatePracticeSessionRequest({
+      ...baseState(),
+      rubricCriterionIds: ['a', 'b'],
+    });
+    expect(request).not.toHaveProperty('rubricCriterionIds');
   });
 });

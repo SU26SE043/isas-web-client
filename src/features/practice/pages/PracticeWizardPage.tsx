@@ -85,6 +85,10 @@ export function PracticeWizardPage() {
           isLoadingOptions={flow.loadingSessionOptions}
           optionsError={flow.sessionOptionsError}
           onRetryOptions={flow.retrySessionOptions}
+          adaptiveEnabled={flow.adaptiveEnabled}
+          onAdaptiveChange={flow.setAdaptiveEnabled}
+          maxDeepPerQuestion={flow.maxDeepPerQuestion}
+          onDepthChange={flow.setMaxDeepPerQuestion}
         />
       ) : null}
 
@@ -122,6 +126,8 @@ export function PracticeWizardPage() {
           timeLimitSec={flow.timeLimitSec}
           seniority={flow.seniority}
           questionCount={flow.questionCount}
+          adaptiveEnabled={flow.adaptiveEnabled}
+          maxDeepPerQuestion={flow.maxDeepPerQuestion}
           criteria={flow.rubricCriteria.filter((criterion) => flow.rubricCriterionIds.includes(criterion.id))}
           canStart={flow.canStart}
           isCreating={flow.isCreatingSession}

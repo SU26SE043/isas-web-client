@@ -126,6 +126,8 @@ export async function getPracticeSessionOptions(
         questionCount: index + 1,
         seedCount: Math.max(1, Math.ceil((index + 1) / 3)),
       })),
+      maxDeepPerQuestionMin: 1,
+      maxDeepPerQuestionMax: 3,
     };
   }
 

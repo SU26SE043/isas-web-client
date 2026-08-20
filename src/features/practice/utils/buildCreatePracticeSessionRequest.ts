@@ -56,8 +56,17 @@ export function buildCreatePracticeSessionRequest(
     jdId: normalizedJdText.length > 0 ? undefined : state.jdId || undefined,
     timeLimitSec: state.timeLimitSec,
     questionCount: state.questionCount,
-    rubricCriterionIds: state.rubricCriterionIds,
     language: state.language,
     seniority: state.seniority,
+    // `false` = ứng viên xin buổi tĩnh. Chỉ gửi khi TẮT: `true` là mặc định của server và gửi nó
+    // không bật được gì (server chỉ cho từ chối, không cho tự bật), nên gửi thừa chỉ làm payload
+    // trông như đang điều khiển một thứ nó không điều khiển được.
+    adaptiveEnabled: state.adaptiveEnabled ? undefined : false,
+    // null = chưa biết dải server cho phép ⇒ KHÔNG gửi khoá, để server dùng mặc định của nó.
+    // Tuyệt đối không gửi 0 thay cho "tắt": server từ chối 0, và 0 vốn có nghĩa khác (chế độ engine).
+    maxDeepPerQuestion:
+      state.adaptiveEnabled && state.maxDeepPerQuestion !== null
+        ? state.maxDeepPerQuestion
+        : undefined,
   };
 }

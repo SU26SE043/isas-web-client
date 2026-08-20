@@ -51,6 +51,8 @@ const SESSION_OPTIONS = {
   defaultQuestionCount: 5,
   presets: [],
   preview: [],
+  maxDeepPerQuestionMin: 1,
+  maxDeepPerQuestionMax: 3,
 };
 
 const CV_FILES = [
@@ -209,9 +211,63 @@ describe('usePracticeSetupFlow — chốt và tạo buổi luyện', () => {
       jdId: undefined,
       timeLimitSec: 240,
       questionCount: 7,
-      rubricCriterionIds: ['c-1', 'c-2'],
       language: 'vi',
       seniority: 'Middle',
+      // Mặc định bật đào sâu ⇒ không gửi cờ (server đã bật sẵn, gửi `true` không đổi được gì).
+      adaptiveEnabled: undefined,
+      // Lấy từ dải server trả về, không phải hằng số phía FE.
+      maxDeepPerQuestion: 3,
     });
+    // Server KHÔNG có trường này — nó đã được gửi đi vô ích suốt và bị bỏ qua im lặng.
+    expect(mocks.createPracticeSession.mock.calls[0][0]).not.toHaveProperty('rubricCriterionIds');
+  });
+
+  it('gửi adaptiveEnabled=false và bỏ độ sâu khi chọn buổi tĩnh', async () => {
+    const { result } = renderFlow();
+    await goToCriteriaStep(result);
+    act(() => {
+      result.current.setAdaptiveEnabled(false);
+    });
+    await waitFor(() => expect(result.current.canStart).toBe(true));
+
+    await act(async () => {
+      await result.current.handleStart();
+    });
+
+    const payload = mocks.createPracticeSession.mock.calls[0][0];
+    expect(payload.adaptiveEnabled).toBe(false);
+    expect(payload.maxDeepPerQuestion).toBeUndefined();
+  });
+
+  // Đổi ngành/ngôn ngữ có thể đổi dải cho phép (gói khác, kill-switch khác). Giữ nguyên một giá trị
+  // vừa thành không hợp lệ là để ứng viên bấm "Bắt đầu" rồi nhận 400 mà không hiểu vì sao.
+  it('kẹp độ sâu về dải server khi server chỉ cho tối đa 1', async () => {
+    mocks.getPracticeSessionOptions.mockResolvedValue({
+      ...SESSION_OPTIONS,
+      maxDeepPerQuestion: 1,
+      maxDeepPerQuestionMax: 1,
+    });
+    const { result } = renderFlow();
+    await goToCriteriaStep(result);
+
+    await waitFor(() => expect(result.current.maxDeepPerQuestion).toBe(1));
+  });
+
+  it('không gửi độ sâu khi server không cho chọn', async () => {
+    mocks.getPracticeSessionOptions.mockResolvedValue({
+      ...SESSION_OPTIONS,
+      adaptiveEnabled: false,
+      maxDeepPerQuestion: 0,
+      maxDeepPerQuestionMin: 0,
+      maxDeepPerQuestionMax: 0,
+    });
+    const { result } = renderFlow();
+    await goToCriteriaStep(result);
+    await waitFor(() => expect(result.current.maxDeepPerQuestion).toBeNull());
+
+    await act(async () => {
+      await result.current.handleStart();
+    });
+    expect(mocks.createPracticeSession.mock.calls[0][0].maxDeepPerQuestion).toBeUndefined();
   });
 });

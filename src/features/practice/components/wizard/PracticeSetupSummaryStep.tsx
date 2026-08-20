@@ -41,6 +41,8 @@ interface PracticeSetupSummaryStepProps {
   timeLimitSec: PracticeTimeLimitSec;
   seniority: PracticeSeniority;
   questionCount: number;
+  adaptiveEnabled: boolean;
+  maxDeepPerQuestion: number | null;
   criteria: PracticeRubricCriterion[];
   canStart: boolean;
   isCreating: boolean;
@@ -84,6 +86,8 @@ export function PracticeSetupSummaryStep({
   timeLimitSec,
   seniority,
   questionCount,
+  adaptiveEnabled,
+  maxDeepPerQuestion,
   criteria,
   canStart,
   isCreating,
@@ -120,6 +124,12 @@ export function PracticeSetupSummaryStep({
     {
       label: t('practice.setup.summary.timeLimit'),
       value: t(TIME_LABEL[timeLimitSec]),
+    },
+    {
+      label: t('practice.setup.summary.depth'),
+      value: adaptiveEnabled
+        ? t('practice.setup.summary.depthAdaptive').replace('{n}', String(maxDeepPerQuestion ?? '-'))
+        : t('practice.setup.summary.depthExact'),
     },
     {
       label: t('practice.wizard.steps.level'),

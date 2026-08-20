@@ -48,6 +48,10 @@ export function usePracticeSetupFlow() {
   const [questionCount, setQuestionCount] = useState(5);
   const [rubricCriterionIds, setRubricCriterionIds] = useState<string[]>([]);
   const [seniority, setSeniority] = useState<PracticeSeniority>('Junior');
+  // Mặc định BẬT đào sâu — giữ nguyên hành vi mà mọi buổi đang có; ứng viên phải chủ động tắt.
+  const [adaptiveEnabled, setAdaptiveEnabled] = useState(true);
+  // null = chưa biết dải server cho phép ⇒ không gửi, để server dùng mặc định của chính nó.
+  const [maxDeepPerQuestion, setMaxDeepPerQuestion] = useState<number | null>(null);
   const [sessionOptions, setSessionOptions] = useState<PracticeSessionOptions | null>(null);
   const [loadingSessionOptions, setLoadingSessionOptions] = useState(false);
   const [sessionOptionsError, setSessionOptionsError] = useState<string | null>(null);
@@ -76,8 +80,11 @@ export function usePracticeSetupFlow() {
       rubricCriterionIds,
       language,
       seniority,
+      adaptiveEnabled,
+      maxDeepPerQuestion,
     }),
-    [cvId, jdId, jdTab, jdText, jobCategory, language, questionCount, rubricCriterionIds, seniority, timeLimitSec],
+    [adaptiveEnabled, cvId, jdId, jdTab, jdText, jobCategory, language, maxDeepPerQuestion,
+      questionCount, rubricCriterionIds, seniority, timeLimitSec],
   );
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
@@ -157,6 +164,17 @@ export function usePracticeSetupFlow() {
           const min = options.questionCountMin;
           const max = options.questionCountMax;
           return current >= min && current <= max ? current : options.defaultQuestionCount;
+        });
+        // Kẹp lại theo dải server, đúng khuôn `questionCount` ngay trên. Đổi ngành/ngôn ngữ có thể
+        // đổi dải (gói khác, kill-switch khác), nên giá trị đang giữ có thể vừa thành không hợp lệ —
+        // giữ nguyên nó là để ứng viên bấm "Bắt đầu" rồi nhận 400 mà không hiểu vì sao.
+        setMaxDeepPerQuestion((current) => {
+          const max = options.maxDeepPerQuestionMax;
+          if (max <= 0) return null;   // server không cho chọn ⇒ đừng gửi gì
+          const min = options.maxDeepPerQuestionMin;
+          return current !== null && current >= min && current <= max
+            ? current
+            : Math.min(options.maxDeepPerQuestion, max);
         });
       })
       .catch((error: unknown) => {
@@ -315,6 +333,10 @@ export function usePracticeSetupFlow() {
     retryRubric: () => void rubricQuery.refetch(),
     seniority,
     setSeniority,
+    adaptiveEnabled,
+    setAdaptiveEnabled,
+    maxDeepPerQuestion,
+    setMaxDeepPerQuestion,
     language,
     sessionOptions,
     loadingSessionOptions,
