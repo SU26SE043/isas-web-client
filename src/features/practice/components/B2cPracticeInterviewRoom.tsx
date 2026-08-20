@@ -143,6 +143,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
             <InterviewQuestionPanel
               currentIndex={room.currentIndex}
               totalQuestions={room.questions.length}
+              displayNumber={room.displayNumber}
+              plannedTotal={room.plannedTotal}
               remainingSeconds={room.remainingSeconds}
               question={room.currentQuestion}
               questions={room.questions}
