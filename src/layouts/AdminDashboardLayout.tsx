@@ -22,6 +22,8 @@ import {
   Shield,
   Users,
   Wrench,
+  SlidersHorizontal,
+  ClipboardList,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
@@ -58,6 +60,8 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/content', label: t('admin.nav.content'), icon: <FileText className="h-4 w-4" aria-hidden /> },
       { to: '/admin/learning', label: t('admin.nav.learning'), icon: <BookOpen className="h-4 w-4" aria-hidden /> },
       { to: '/admin/ai-config', label: t('admin.nav.aiConfig'), icon: <Bot className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
       { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <Bell className="h-4 w-4" aria-hidden /> },
       { to: '/admin/reports', label: t('admin.nav.reports'), icon: <FileText className="h-4 w-4" aria-hidden /> },
       { to: '/admin/audit-logs', label: t('admin.nav.audit'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
