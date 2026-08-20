@@ -6,6 +6,8 @@ describe('adminApiEndpoints', () => {
     expect(adminApiEndpoints.prompts).toBe('/api/v1/interview/admin/prompts');
     expect(adminApiEndpoints.promptHistory('question generation')).toBe('/api/v1/interview/admin/prompts/question%20generation/history');
     expect(adminApiEndpoints.knowledgeReindex('source/1')).toBe('/api/v1/interview/admin/knowledge/source%2F1/reindex');
+    expect(adminApiEndpoints.rubric('Business Analyst')).toBe('/api/v1/interview/admin/rubrics/Business%20Analyst');
+    expect(adminApiEndpoints.rubricSuggestLevels('Frontend')).toBe('/api/v1/interview/admin/rubrics/Frontend/levels/suggest');
   });
 
   it('keeps Payment enum values in the request path as numeric values', () => {

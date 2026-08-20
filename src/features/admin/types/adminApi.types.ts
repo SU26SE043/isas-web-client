@@ -16,6 +16,11 @@ export type InterviewAdminAnalytics = {
 export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null };
 export type UpdatePromptInput = { body: string; changeNote?: string };
 
+export type RubricLevel = { score: number; description: string };
+export type RubricCriterion = { id?: string; key: string; name?: string; levels: RubricLevel[] };
+export type RubricSet = { category: string; language: 'vi' | 'en'; version: number; criteria: RubricCriterion[]; updatedAt?: string | null; updatedBy?: string | null };
+export type RubricPreviewInput = { criterionKey: string; answer: string };
+
 export type KnowledgeSource = { id: string; title: string; jobCategory?: string | null; sourceType: 'Context7' | 'Url' | 'Manual' | string; sourceRef?: string | null; reputation?: string | null; status: 'Active' | 'Archived' | string; chunkCount: number; createdAt: string };
 export type CreateKnowledgeInput = { title: string; jobCategory?: string; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
 export type Context7Library = { id: string; title: string; reputation?: string | null; snippets: number };

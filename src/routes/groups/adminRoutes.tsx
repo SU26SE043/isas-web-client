@@ -16,6 +16,8 @@ import { AdminResourcePage } from '@/features/admin/pages/AdminResourcePage';
 import { AdminRolesPage } from '@/features/admin/pages/AdminRolesPage';
 import { AdminSystemConfigPage } from '@/features/admin/pages/AdminSystemConfigPage';
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
+import { AdminPromptsPage } from '@/features/admin/pages/AdminPromptsPage';
+import { AdminRubricsPage } from '@/features/admin/pages/AdminRubricsPage';
 import { HelpPage } from '@/features/engagement/pages/HelpPage';
 import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
 import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
@@ -48,6 +50,8 @@ export const adminRoutes: RouteObject[] = [
               { path: 'content', element: <AdminResourcePage resourceKey="content" /> },
               { path: 'learning', element: <AdminResourcePage resourceKey="learning" /> },
               { path: 'ai-config', element: <AdminAiConfigPage /> },
+              { path: 'prompts', element: <AdminPromptsPage /> },
+              { path: 'rubrics', element: <AdminRubricsPage /> },
               { path: 'notification-templates', element: <AdminResourcePage resourceKey="notificationTemplates" /> },
               { path: 'reports', element: <AdminResourcePage resourceKey="reports" /> },
               { path: 'audit-logs', element: <AdminAuditLogsPage /> },
