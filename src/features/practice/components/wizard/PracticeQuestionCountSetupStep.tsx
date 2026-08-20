@@ -1,4 +1,4 @@
-import { Hash } from 'lucide-react';
+import { Hash, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import {
@@ -21,6 +21,7 @@ interface PracticeQuestionCountSetupStepProps {
   options?: PracticeSessionOptions | null;
   isLoadingOptions?: boolean;
   optionsError?: string | null;
+  onRetryOptions?: () => void;
 }
 
 export function PracticeQuestionCountSetupStep({
@@ -32,6 +33,7 @@ export function PracticeQuestionCountSetupStep({
   options,
   isLoadingOptions = false,
   optionsError,
+  onRetryOptions,
 }: PracticeQuestionCountSetupStepProps) {
   const { t } = useLanguage();
   const min = options?.questionCountMin ?? PRACTICE_QUESTION_COUNT_MIN;
@@ -58,9 +60,20 @@ export function PracticeQuestionCountSetupStep({
       ) : null}
 
       {optionsError ? (
-        <p className="mb-4 text-sm text-error" role="alert">
-          {t('practice.setup.questionCount.optionsError')}
-        </p>
+        <div className="mb-4" role="alert">
+          <p className="text-sm text-error">{t('practice.setup.questionCount.optionsError')}</p>
+          {onRetryOptions ? (
+            <button
+              type="button"
+              className="btn-secondary mt-3 inline-flex items-center gap-2"
+              onClick={onRetryOptions}
+              disabled={isLoadingOptions || disabled}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              {t('practice.setup.questionCount.retryOptions')}
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="flex flex-wrap gap-2">

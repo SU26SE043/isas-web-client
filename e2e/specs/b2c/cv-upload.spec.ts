@@ -62,6 +62,13 @@ async function loginAsCandidate(page: import('@playwright/test').Page) {
   await page.waitForURL(/\/candidate\/dashboard/);
 }
 
+const JD_BODY = [
+  'We are hiring a Frontend Developer to build and ship customer-facing product surfaces.',
+  'Must have: 3+ years of React and TypeScript, strong CSS fundamentals, and experience',
+  'shipping accessible interfaces. Nice to have: GraphQL, design-system ownership, and',
+  'end-to-end testing with Playwright. You will work closely with design and backend.',
+].join(' ');
+
 test.describe('cv upload smoke', () => {
   test('candidate can upload CV and reach match report', async ({ page }) => {
     await loginAsCandidate(page);
@@ -149,13 +156,40 @@ test.describe('cv upload smoke', () => {
       });
     });
 
+    // Uploading a JD hydrates the one JD body from the file, so the wizard can
+    // show and edit what it is about to send.
+    await page.route('**/api/v1/interview/files/*/parsed-text', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ parsedText: JD_BODY, parsedStatus: 'completed' }),
+      });
+    });
+
+    await page.route('**/api/v1/interview/practice/jd-requirements', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          mustHave: [{ text: 'React delivery', citations: [], jdQuote: null }],
+          niceToHave: [{ text: 'GraphQL', citations: [], jdQuote: null }],
+        }),
+      });
+    });
+
     await page.goto('/candidate/cv/analysis');
 
     await expect(page.getByRole('heading', { level: 1, name: /cv analysis/i })).toBeVisible();
 
-    await page.getByRole('button', { name: /frontend/i }).click();
+    // Step 1 — the field, on its own screen: `jobCategory` is a required input
+    // of both /jd-requirements and /cv-analysis, so it has to be settled before
+    // the JD step.
+    await expect(page.getByRole('heading', { name: /^step 1 of 6$/i })).toBeAttached();
+    await page.getByRole('button', { name: /^frontend developer$/i }).click();
     await page.getByRole('button', { name: /^next$/i }).click();
 
+    // Step 2 — the CV.
+    await expect(page.getByRole('heading', { name: /^step 2 of 6$/i })).toBeAttached();
     const cvInput = page.locator('input[type="file"]').first();
     await cvInput.setInputFiles({
       name: 'e2e-cv.pdf',
@@ -164,19 +198,42 @@ test.describe('cv upload smoke', () => {
     });
     await expect(page.getByText(/e2e-cv\.pdf/i)).toBeVisible();
     await page.getByRole('button', { name: /^next$/i }).click();
-    await expect(page.getByRole('heading', { name: /upload jd|tải jd/i })).toBeVisible();
 
-    const jdInput = page.locator('input[type="file"]').first();
-    await jdInput.setInputFiles({
+    // Step 3 — the job. Asserted through the stepper rather than the panel
+    // heading, so the assertion survives the job-step rewrite.
+    await expect(page.getByRole('heading', { name: /^step 3 of 6$/i })).toBeAttached();
+
+    // A JD file is a way to fill the one JD, so the body appears in the editor.
+    await page.getByLabel(/^upload jd$/i).setInputFiles({
       name: 'e2e-jd.pdf',
       mimeType: 'application/pdf',
       buffer: Buffer.from('%PDF-1.4 e2e test jd'),
     });
-    await expect(page.getByText(/e2e-jd\.pdf/i)).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: /^next$/i }).click();
+    await expect(page.getByText(/e2e-jd\.pdf/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('textbox', { name: /jd content/i })).toHaveValue(
+      /hiring a Frontend Developer/,
+      { timeout: 10000 },
+    );
+    // Extraction is an explicit, named action now — it no longer hides inside
+    // the Continue button.
+    await page.getByRole('button', { name: /find requirements in the jd/i }).click();
+    await expect(page.getByText(/^React delivery$/)).toBeVisible({ timeout: 10000 });
 
-    await expect(page.getByRole('button', { name: /^analyze cv$/i })).toBeVisible();
+    await page.getByRole('button', { name: /^continue$/i }).click();
+
+    // Step 4 — read-only confirmation. Reviewing moved off the screen that
+    // spends the credit, so this step only restates what will be sent.
+    await expect(page.getByRole('heading', { name: /^step 4 of 6$/i })).toBeAttached();
+    await expect(page.getByText(/2 requirements will be used for matching/i)).toBeVisible();
+
     await page.getByRole('button', { name: /^analyze cv$/i }).click();
+
+    // The credit dialog is no longer bypassed under Playwright — the only way
+    // to spend a credit is the same one a real user takes.
+    const creditDialog = page.getByRole('dialog');
+    await expect(creditDialog.getByRole('heading', { name: /confirm cv analysis/i })).toBeVisible();
+    await creditDialog.getByRole('button', { name: /confirm and analyze/i }).click();
+
     await page.waitForURL(/\/candidate\/cv\/analysis\/report/, { timeout: 15000 });
 
     await expect(page.getByRole('heading', { level: 1, name: /frontend/i }).first()).toBeVisible();

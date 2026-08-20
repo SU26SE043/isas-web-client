@@ -2,20 +2,13 @@ import React from 'react';
 import type { FlowStepStatus } from '@/components/ui/flow-stepper';
 import { FlowWizardShell } from '@/components/patterns/flow-wizard/FlowWizardShell';
 import { useLanguage } from '@/shared/languages';
-import type { CvAnalysisStep } from '../CvAnalysisStepper';
 import {
   buildCvTimelineStatuses,
+  CV_TIMELINE_STEP_LABEL_KEYS,
   CV_TIMELINE_STEPS,
+  type CvAnalysisStep,
   type CvTimelineStatuses,
 } from '../../utils/cvTimelineStatus';
-
-const STEP_KEYS: Record<CvAnalysisStep, string> = {
-  domain: 'cv.step.domain',
-  upload: 'cv.step.upload',
-  'job-description': 'cv.step.jobDescription',
-  analysis: 'cv.step.analysis',
-  report: 'cv.step.report',
-};
 
 interface CvAnalysisFlowShellProps {
   currentStep: CvAnalysisStep;
@@ -46,7 +39,7 @@ export const CvAnalysisFlowShell: React.FC<CvAnalysisFlowShellProps> = ({
     <FlowWizardShell
       accent="indigo"
       currentStep={activeIndex}
-      steps={CV_TIMELINE_STEPS.map((step) => t(STEP_KEYS[step]))}
+      steps={CV_TIMELINE_STEPS.map((step) => t(CV_TIMELINE_STEP_LABEL_KEYS[step]))}
       stepperAriaLabel={t('cv.flowLabel')}
       stepOfLabel={t('cv.step.progress')}
       pageTitle={t('cv.title')}

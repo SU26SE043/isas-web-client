@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
 import type { AnalysisFileMeta, CvAnalysisResult } from '../../types/cvAnalysis.types';
-import { CvMatchScoreRing } from './CvMatchScoreRing';
 import { CvReportSourceActions } from './CvReportSourceActions';
 
 interface CvAnalysisLandingHeroProps {
@@ -25,7 +24,6 @@ function formatDate(value: string, locale: string): string {
 
 export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAnalysisLandingHeroProps) {
   const { language, t } = useLanguage();
-  const score = result.jdMatch?.score;
 
   return (
     <section className="relative overflow-hidden rounded-3xl frame-satin bg-surface-raised">
@@ -33,8 +31,8 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.08),transparent_55%)]"
       />
-      <div className="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1.2fr_auto] lg:items-center lg:gap-12 lg:p-12">
-        <div className="space-y-6">
+      <div className="relative p-6 sm:p-10 lg:p-12">
+        <div className="max-w-3xl space-y-6">
           <p className="text-label text-muted-foreground">{t('cv.landing.kicker')}</p>
           <div className="space-y-3">
             <h1 className="heading-primary text-4xl tracking-tight text-foreground sm:text-5xl">
@@ -74,13 +72,6 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
             </Link>
           </div>
         </div>
-
-        {score != null ? (
-          <div className="flex flex-col items-center gap-3 justify-self-center lg:justify-self-end">
-            <CvMatchScoreRing score={score} className="size-44 [&_svg]:size-44" />
-            <p className="text-sm text-muted-foreground">{t('cv.landing.matchLabel')}</p>
-          </div>
-        ) : null}
       </div>
     </section>
   );

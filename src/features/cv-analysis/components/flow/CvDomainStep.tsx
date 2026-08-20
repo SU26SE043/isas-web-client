@@ -11,6 +11,13 @@ interface CvDomainStepProps {
   onNext: () => void;
 }
 
+/**
+ * Step 1 — the field, on its own screen.
+ *
+ * It cannot move later in the wizard: `jobCategory` is a required input of both
+ * POST /practice/jd-requirements and POST /practice/cv-analysis, so it has to be
+ * settled before the JD step runs any extraction.
+ */
 export function CvDomainStep({ domain, onSelect, onNext }: CvDomainStepProps) {
   const { t } = useLanguage();
 

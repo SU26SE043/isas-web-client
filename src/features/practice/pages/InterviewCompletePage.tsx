@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { getPracticeSession } from '../services/b2cPracticeSession.service';
+import { practiceSessionResultKeys } from '../hooks/usePracticeSessionResult';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { isCampaignSessionId, isLearningSessionId } from '../types/interviewFlow.types';
@@ -11,6 +12,11 @@ import { isValidPracticeSessionId } from '../utils/practiceSessionId';
 import { SessionResultErrorState } from '../components/result/SessionResultErrorState';
 import { isPlaywrightRuntime } from '@/shared/mock';
 import { isPracticeReportFailed, isPracticeReportReady } from '../utils/practiceReportStatus';
+import {
+  PRACTICE_SCORING_SLOW_POLL_AFTER_MS,
+  getPracticeScoringPollIntervalMs,
+  getPracticeScoringProgress,
+} from '../utils/practiceScoringProgress';
 
 export function InterviewCompletePage() {
   const { sessionId = '' } = useParams();
@@ -23,9 +29,10 @@ export function InterviewCompletePage() {
     isPlaywrightRuntime() && /^session-[0-9a-f]+$/i.test(sessionId);
   const isValidSessionId = isValidPracticeSessionId(sessionId);
   const [scoringTimedOut, setScoringTimedOut] = useState(false);
+  const scoringStartedAtRef = useRef(Date.now());
 
   const query = useQuery({
-    queryKey: ['practice-session', sessionId],
+    queryKey: practiceSessionResultKeys.detail(sessionId),
     queryFn: () => getPracticeSession(sessionId),
     enabled: isValidSessionId && !isLegacy,
     refetchInterval: (q) => {
@@ -33,12 +40,15 @@ export function InterviewCompletePage() {
       if (session && (isPracticeReportReady(session) || isPracticeReportFailed(session.status))) {
         return false;
       }
-      return scoringTimedOut ? false : 3000;
+      // Scoring regularly outlives the "taking longer" notice, so the screen
+      // keeps listening at a slower cadence instead of freezing for good.
+      return getPracticeScoringPollIntervalMs(Date.now() - scoringStartedAtRef.current);
     },
   });
 
   const session = query.data;
   const isScored = session ? isPracticeReportReady(session) : false;
+  const scoringProgress = getPracticeScoringProgress(session);
 
   useEffect(() => {
     if (session) updateSession(session);
@@ -56,11 +66,15 @@ export function InterviewCompletePage() {
 
   useEffect(() => {
     if (isLegacy || isScored || query.isError || scoringTimedOut) return;
-    const timer = window.setTimeout(() => setScoringTimedOut(true), 120_000);
+    const timer = window.setTimeout(
+      () => setScoringTimedOut(true),
+      PRACTICE_SCORING_SLOW_POLL_AFTER_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [isLegacy, isScored, query.isError, scoringTimedOut]);
 
   const retryScoring = () => {
+    scoringStartedAtRef.current = Date.now();
     setScoringTimedOut(false);
     void query.refetch();
   };
@@ -135,22 +149,38 @@ export function InterviewCompletePage() {
               {t('practice.scoring.description')}
             </p>
           </div>
-          <ol className="space-y-2 text-left text-sm text-muted-foreground">
-            <li>{t('practice.scoring.received')}</li>
-            <li>{t('practice.scoring.analyzing')}</li>
-            <li>{t('practice.scoring.criteria')}</li>
-            <li>{t('practice.scoring.report')}</li>
-          </ol>
+          <div className="space-y-2" aria-live="polite">
+            <p className="text-sm font-medium text-foreground">
+              {scoringProgress.total > 0
+                ? t('practice.scoring.progress')
+                    .replace('{done}', String(scoringProgress.settled))
+                    .replace('{total}', String(scoringProgress.total))
+                : t('practice.scoring.progressPending')}
+            </p>
+            <div
+              className="h-2 overflow-hidden rounded-full bg-surface-overlay"
+              role="progressbar"
+              aria-label={t('practice.scoring.title')}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={scoringProgress.percent}
+            >
+              <div
+                className="h-full rounded-full bg-foreground transition-[width] duration-300"
+                style={{ width: `${scoringProgress.percent}%` }}
+              />
+            </div>
+          </div>
           {scoringTimedOut ? (
             <div className="space-y-3 border-t border-subtle pt-4">
-              <p className="text-sm text-warning">{t('practice.scoring.takingLonger')}</p>
+              <p className="text-sm text-warning">{t('practice.scoring.stillScoring')}</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <button type="button" className="btn-primary" onClick={retryScoring}>
-                  {t('practice.scoring.retry')}
-                </button>
-                <Link to="/candidate/dashboard" className="btn-secondary inline-flex">
+                <Link to="/candidate/dashboard" className="btn-primary inline-flex">
                   {t('practice.flow.backToDashboard')}
                 </Link>
+                <button type="button" className="btn-secondary" onClick={retryScoring}>
+                  {t('practice.scoring.retry')}
+                </button>
               </div>
             </div>
           ) : null}

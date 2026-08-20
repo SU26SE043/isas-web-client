@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReportCategoryAccordion } from '@/features/practice/components/reports/ReportCategoryAccordion';
 import { useLanguage } from '@/shared/languages';
 import { useCvAnalyses } from '../../hooks/useCvAnalyses';
+import { useInterviewFiles } from '../../hooks/useInterviewFiles';
 import { CvAnalysisAccordionItem } from './CvAnalysisAccordionItem';
 import { CvAnalysisListSkeleton } from './CvAnalysisReportSkeleton';
 
 export function CvAnalysisReportsSection() {
   const { t } = useLanguage();
   const { data: analyses = [], isLoading, isError, refetch, isFetching } = useCvAnalyses();
+  // `CvAnalysisResult` only carries `cvId`, so the file name is joined here once
+  // for the whole list instead of per row.
+  const { files } = useInterviewFiles();
+  const cvNameById = useMemo(
+    () => new Map(files.map((file) => [file.id, file.originalName])),
+    [files],
+  );
   const [openId, setOpenId] = useState<string | null>(null);
 
   const toggle = (id: string) => {
@@ -57,6 +65,7 @@ export function CvAnalysisReportsSection() {
               item={item}
               isOpen={openId === item.id}
               onToggle={() => toggle(item.id)}
+              cvFileName={cvNameById.get(item.cvId)}
             />
           ))}
         </div>

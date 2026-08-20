@@ -2,10 +2,8 @@ import React from 'react';
 import { XCircle } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
-import type { JdRequirementsResponse } from '../../types/cvAnalysis.types';
 import { AnalyzeButton } from './AnalyzeButton';
 import { CvFlowSectionCard } from './CvFlowSectionCard';
-import { CvJdRequirementsPanel, type EditableRequirementGroups } from './CvJdRequirementsPanel';
 
 interface CvAnalysisProgressStepProps {
   parseProgress: number;
@@ -15,14 +13,28 @@ interface CvAnalysisProgressStepProps {
   jdFileName?: string | null;
   domain?: CvAnalysisDomain | null;
   hasJd?: boolean;
-  jdRequirements?: JdRequirementsResponse | null;
-  editableRequirements?: EditableRequirementGroups | null;
-  onRequirementsChange?: (requirements: EditableRequirementGroups) => void;
+  /** How many requirements the report will be matched against (0 = none). */
+  requirementCount?: number;
   onAnalyze: () => void;
   onBack: () => void;
   onRetryUpload?: () => void;
 }
 
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+      <dt className="shrink-0 text-sm text-muted-foreground sm:w-40">{label}</dt>
+      <dd className="min-w-0 break-words text-sm font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * Steps 3 and 4. Step 3 is the read-only confirmation that spends a credit;
+ * step 4 is the running analysis. They used to share one screen labelled "AI
+ * analysis" that in fact asked the user to review and edit requirements — the
+ * editing now lives in step 2, where the JD it belongs to is on screen.
+ */
 export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
   parseProgress,
   isAnalyzing,
@@ -31,9 +43,7 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
   jdFileName,
   domain,
   hasJd = false,
-  jdRequirements = null,
-  editableRequirements = null,
-  onRequirementsChange,
+  requirementCount = 0,
   onAnalyze,
   onBack,
   onRetryUpload,
@@ -91,42 +101,24 @@ export const CvAnalysisProgressStep: React.FC<CvAnalysisProgressStepProps> = ({
     );
   }
 
-  return (
-    <CvFlowSectionCard title={t('cv.step.analysis')} description={t('cv.stepDesc.analysisReady')}>
-      <div className="space-y-4 rounded-xl border border-satin bg-white/[0.04] px-4 py-4 text-sm text-muted-foreground">
-        {domain ? (
-          <p>
-            {t('cv.selectedDomain')}:{' '}
-            <span className="font-medium text-foreground">{t(`cv.domain.${domain}.title`)}</span>
-          </p>
-        ) : null}
-        {fileName ? (
-          <p>
-            {t('cv.attachedFile')}: <span className="font-medium text-foreground">{fileName}</span>
-          </p>
-        ) : null}
-        <p>
-          {t('cv.jdTitle')}:{' '}
-          <span className="font-medium text-foreground">
-            {hasJd ? jdFileName || t('cv.jdUploaded') : t('cv.jdSkipped')}
-          </span>
-        </p>
-      </div>
+  const requirementLine =
+    requirementCount > 0
+      ? t('cv.confirm.requirementCount').replace('{count}', String(requirementCount))
+      : t('cv.confirm.requirementNone');
 
-      {editableRequirements && onRequirementsChange ? (
-        <CvJdRequirementsPanel
-          requirements={editableRequirements}
-          onChange={onRequirementsChange}
+  return (
+    <CvFlowSectionCard title={t('cv.step.confirm')} description={t('cv.stepDesc.confirm')}>
+      <dl className="space-y-3 rounded-xl border border-satin bg-white/[0.04] px-4 py-4">
+        {domain ? (
+          <SummaryRow label={t('cv.selectedDomain')} value={t(`cv.domain.${domain}.title`)} />
+        ) : null}
+        {fileName ? <SummaryRow label={t('cv.attachedFile')} value={fileName} /> : null}
+        <SummaryRow
+          label={t('cv.jdTitle')}
+          value={hasJd ? jdFileName || t('cv.jdUploaded') : t('cv.jdSkipped')}
         />
-      ) : jdRequirements ? (
-        <CvJdRequirementsPanel
-          requirements={{
-            mustHave: jdRequirements.mustHave.map(({ text }) => ({ text })),
-            niceToHave: jdRequirements.niceToHave.map(({ text }) => ({ text })),
-          }}
-          onChange={() => undefined}
-        />
-      ) : null}
+        <SummaryRow label={t('cv.confirm.requirementLabel')} value={requirementLine} />
+      </dl>
 
       <p className="body-text mt-6 max-w-xl">{t('cv.analyzeHint')}</p>
 

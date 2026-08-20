@@ -14,14 +14,30 @@ import type {
   CvSection,
   JdMatch,
   JdRequirement,
-  JdRequirementsResponse,
   RequirementMatch,
   RequirementSummary,
   ReplaceFileResponse,
   UploadedCvFile,
 } from '../types/cvAnalysis.types';
-import { buildCreateCvAnalysisRequest } from '../utils/buildCreateCvAnalysisRequest';
+import {
+  buildCreateCvAnalysisRequest,
+  CV_JD_TEXT_MAX_CHARS,
+} from '../utils/buildCreateCvAnalysisRequest';
 import { cvAnalysisEndpoints } from './cvAnalysis.endpoints';
+
+/** AI extraction is user-facing and interactive — never let it hang (J21). */
+export const JD_REQUIREMENTS_TIMEOUT_MS = 20_000;
+
+/**
+ * Opt out of the shared 429 auto-retry in `createApiClient`, which sleeps for
+ * `Retry-After` (up to 60s) and replays the request before the caller ever sees
+ * the error. That is right for background calls; it is wrong for a button the
+ * user just pressed — the screen would freeze for 45 seconds and only then
+ * report the rate limit, with no countdown and no way to fall back to typing
+ * requirements by hand. Pre-setting the interceptor's own guard flag makes it
+ * skip the retry for this request only; every other endpoint is unaffected.
+ */
+const SKIP_RATE_LIMIT_RETRY = { _rateLimitRetry: true } as const;
 
 export type CvAnalysisErrorCode =
   | 'badRequest'
@@ -32,17 +48,41 @@ export type CvAnalysisErrorCode =
   | 'aiBusy'
   | 'serverError'
   | 'uploadFailed'
+  | 'timeout'
+  | 'canceled'
+  | 'parsePending'
+  | 'parseFailed'
   | 'unknown';
+
+export interface CvAnalysisErrorOptions {
+  /**
+   * Message taken from the response body only. `message` may hold transport
+   * noise ("Request failed with status code 404"); this field never does, so
+   * error mappers can show it without leaking axios strings into the UI (P1).
+   */
+  serverMessage?: string | null;
+  /** Parsed from the `Retry-After` header (429) so the UI can count down. */
+  retryAfterSeconds?: number | null;
+}
 
 export class CvAnalysisError extends Error {
   readonly code: CvAnalysisErrorCode;
   readonly status?: number;
+  readonly serverMessage: string | null;
+  readonly retryAfterSeconds: number | null;
 
-  constructor(code: CvAnalysisErrorCode, message: string, status?: number) {
+  constructor(
+    code: CvAnalysisErrorCode,
+    message: string,
+    status?: number,
+    options: CvAnalysisErrorOptions = {},
+  ) {
     super(message);
     this.name = 'CvAnalysisError';
     this.code = code;
     this.status = status;
+    this.serverMessage = options.serverMessage ?? null;
+    this.retryAfterSeconds = options.retryAfterSeconds ?? null;
   }
 }
 
@@ -56,6 +96,8 @@ function statusToCode(status?: number): CvAnalysisErrorCode {
       return 'forbidden';
     case 404:
       return 'notFound';
+    case 409:
+      return 'parseFailed';
     case 429:
       return 'rateLimited';
     case 500:
@@ -67,10 +109,74 @@ function statusToCode(status?: number): CvAnalysisErrorCode {
   }
 }
 
+function isAbortError(error: unknown): boolean {
+  if (axios.isCancel(error)) return true;
+  if (error instanceof Error && (error.name === 'CanceledError' || error.name === 'AbortError')) {
+    return true;
+  }
+  return axios.isAxiosError(error) && error.code === 'ERR_CANCELED';
+}
+
+function isTimeoutError(error: unknown): boolean {
+  if (!axios.isAxiosError(error) || error.response) return false;
+  return error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
+}
+
+/** Message straight from the response body — never an axios/transport string. */
+export function readServerMessage(error: unknown): string | null {
+  if (!axios.isAxiosError(error)) return null;
+  const data: unknown = error.response?.data;
+  if (typeof data === 'string') return data.trim() || null;
+  if (!data || typeof data !== 'object') return null;
+  const body = data as Record<string, unknown>;
+  for (const key of ['message', 'error', 'detail', 'title']) {
+    const value = body[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function readHeaderValue(headers: unknown, name: string): string | null {
+  if (!headers || typeof headers !== 'object') return null;
+  const record = headers as Record<string, unknown> & { get?: (key: string) => unknown };
+  const raw = typeof record.get === 'function'
+    ? record.get(name) ?? record.get(name.toLowerCase())
+    : record[name] ?? record[name.toLowerCase()];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : null;
+}
+
+/** `Retry-After` is either delta-seconds or an HTTP date; body wins when present. */
+export function readRetryAfterSeconds(error: unknown): number | null {
+  if (!axios.isAxiosError(error)) return null;
+  const data: unknown = error.response?.data;
+  if (data && typeof data === 'object') {
+    const body = data as Record<string, unknown>;
+    const fromBody = Number(body.retryAfterSeconds ?? body.retryAfter);
+    if (Number.isFinite(fromBody) && fromBody >= 0) return Math.ceil(fromBody);
+  }
+  const header = readHeaderValue(error.response?.headers, 'retry-after');
+  if (!header) return null;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds);
+  const timestamp = Date.parse(header);
+  if (Number.isNaN(timestamp)) return null;
+  return Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
+}
+
 function toCvAnalysisError(error: unknown, fallback: string): CvAnalysisError {
   if (error instanceof CvAnalysisError) return error;
+  if (isAbortError(error)) {
+    return new CvAnalysisError('canceled', 'Request canceled.');
+  }
+  if (isTimeoutError(error)) {
+    return new CvAnalysisError('timeout', 'Request timed out.');
+  }
   const status = getApiStatusCode(error);
-  return new CvAnalysisError(statusToCode(status), getApiErrorMessage(error, fallback), status);
+  return new CvAnalysisError(statusToCode(status), getApiErrorMessage(error, fallback), status, {
+    serverMessage: readServerMessage(error),
+    retryAfterSeconds: readRetryAfterSeconds(error),
+  });
 }
 
 function asStringArray(value: unknown): string[] {
@@ -106,11 +212,27 @@ function parseCitations(raw: unknown): Citation[] {
   return raw.map(parseCitation).filter((item): item is Citation => item !== null);
 }
 
-function parseJdRequirement(raw: unknown): JdRequirement {
+/**
+ * A `/jd-requirements` item. `jdQuote` is the verbatim JD sentence behind the
+ * suggestion (BE-2); it stays `null` while the backend rolls out, and the UI
+ * simply hides "Xem trong JD" instead of breaking.
+ */
+export interface JdRequirementSuggestion extends JdRequirement {
+  jdQuote: string | null;
+}
+
+export interface JdRequirementSuggestions {
+  mustHave: JdRequirementSuggestion[];
+  niceToHave: JdRequirementSuggestion[];
+}
+
+function parseJdRequirement(raw: unknown): JdRequirementSuggestion {
   const data = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  const quote = data.jdQuote ?? data.JdQuote;
   return {
     text: String(data.text ?? ''),
     citations: parseCitations(data.citations),
+    jdQuote: typeof quote === 'string' && quote.trim() ? quote : null,
   };
 }
 
@@ -286,6 +408,11 @@ export function parseFileRecord(
   };
 }
 
+export type ParsedTextResult =
+  | { status: 'completed'; parsedText: string }
+  | { status: 'pending' }
+  | { status: 'failed' };
+
 /** Unwrap `{ data: T }` envelopes without treating `data: null` as missing payload root. */
 function unwrapData(payload: unknown): unknown {
   if (payload && typeof payload === 'object' && 'data' in payload) {
@@ -399,16 +526,26 @@ export const cvAnalysisService = {
     }
   },
 
-  async getJdRequirements(input: {
-    jdId?: string | null;
-    jdText?: string | null;
-    jobCategory: string;
-  }): Promise<JdRequirementsResponse> {
+  /**
+   * Extract requirements from a JD.
+   *
+   * `apiClient` sets no timeout, so without one a stalled AI call hangs the
+   * step forever (J21). The caller can also abort through `signal` — pressing
+   * "Tiếp tục" mid-extraction must move on, not wait.
+   */
+  async getJdRequirements(
+    input: {
+      jdId?: string | null;
+      jdText?: string | null;
+      jobCategory: string;
+    },
+    options: { signal?: AbortSignal; timeoutMs?: number } = {},
+  ): Promise<JdRequirementSuggestions> {
     const jdText = input.jdText?.trim() ?? '';
     if (!input.jobCategory.trim()) {
       throw new CvAnalysisError('badRequest', 'Job category is required.', 400);
     }
-    if (jdText.length > 20_000) {
+    if (jdText.length > CV_JD_TEXT_MAX_CHARS) {
       throw new CvAnalysisError('badRequest', 'JD text is too long.', 400);
     }
     const body: {
@@ -423,7 +560,11 @@ export const cvAnalysisService = {
     else throw new CvAnalysisError('badRequest', 'A JD text or id is required.', 400);
 
     try {
-      const response = await apiClient.post<unknown>(cvAnalysisEndpoints.jdRequirements, body);
+      const response = await apiClient.post<unknown>(cvAnalysisEndpoints.jdRequirements, body, {
+        ...SKIP_RATE_LIMIT_RETRY,
+        signal: options.signal,
+        timeout: options.timeoutMs ?? JD_REQUIREMENTS_TIMEOUT_MS,
+      });
       const data = unwrapData(response.data);
       const record = data && typeof data === 'object' ? data as Record<string, unknown> : {};
       return {
@@ -525,20 +666,50 @@ export const cvAnalysisService = {
     }
   },
 
-  async getParsedText(id: string): Promise<string> {
+  /**
+   * Read the extracted text of an uploaded file.
+   *
+   * BE-1/B3 splits the states the old 422 hid: 200 done · 202 still parsing
+   * (client may poll) · 409 parsing failed (stop polling, ask for pasted text).
+   */
+  async readParsedText(id: string): Promise<ParsedTextResult> {
     try {
-      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.parsedText(id));
+      const response = await apiClient.get<unknown>(cvAnalysisEndpoints.parsedText(id), {
+        validateStatus: (status) => (status >= 200 && status < 300) || status === 409,
+      });
+      if (response.status === 409) return { status: 'failed' };
+
       const data = unwrapData(response.data);
-      const parsedText = data && typeof data === 'object'
-        ? (data as Record<string, unknown>).parsedText
-        : undefined;
-      if (typeof parsedText !== 'string') {
-        throw new CvAnalysisError('unknown', 'Parsed text missing from response.');
+      const record = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+      const parsedStatus = typeof record.parsedStatus === 'string'
+        ? record.parsedStatus.toLowerCase()
+        : '';
+      if (parsedStatus === 'failed') return { status: 'failed' };
+
+      const parsedText = record.parsedText;
+      if (typeof parsedText === 'string' && parsedText.length > 0) {
+        return { status: 'completed', parsedText };
       }
-      return parsedText;
+      if (response.status === 202 || parsedStatus === 'pending' || parsedStatus === 'processing') {
+        return { status: 'pending' };
+      }
+      if (typeof parsedText === 'string') {
+        return { status: 'completed', parsedText };
+      }
+      throw new CvAnalysisError('unknown', 'Parsed text missing from response.');
     } catch (error) {
       throw toCvAnalysisError(error, 'Could not load parsed text.');
     }
+  },
+
+  /** Text-or-throw helper for callers that cannot render a pending state. */
+  async getParsedText(id: string): Promise<string> {
+    const result = await this.readParsedText(id);
+    if (result.status === 'completed') return result.parsedText;
+    if (result.status === 'pending') {
+      throw new CvAnalysisError('parsePending', 'The file is still being parsed.', 202);
+    }
+    throw new CvAnalysisError('parseFailed', 'The file could not be parsed.', 409);
   },
 
   async replaceFile(id: string, newFile: File): Promise<ReplaceFileResponse> {

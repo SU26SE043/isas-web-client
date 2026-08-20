@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
@@ -22,6 +22,7 @@ import type {
   PracticeSeniority,
   PracticeTimeLimitSec,
 } from '../types/b2cPracticeSession.types';
+import type { PracticeRubricCriterion } from '../types/practiceSetup.types';
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
@@ -51,9 +52,12 @@ export function usePracticeSetupFlow() {
   const [loadingSessionOptions, setLoadingSessionOptions] = useState(false);
   const [sessionOptionsError, setSessionOptionsError] = useState<string | null>(null);
 
+  const [sessionOptionsReloadId, setSessionOptionsReloadId] = useState(0);
+
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [jdFiles, setJdFiles] = useState<FileRecord[]>([]);
   const [loadingCv, setLoadingCv] = useState(false);
+  const [cvError, setCvError] = useState(false);
   const [loadingJd, setLoadingJd] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -104,19 +108,36 @@ export function usePracticeSetupFlow() {
     [rubricCriterionIds, validRubricIds],
   );
 
+  // Bộ rubric đã được tick sẵn hộ ứng viên. Giữ theo THAM CHIẾU dữ liệu chứ
+  // không theo "danh sách chọn đang rỗng".
+  const seededRubricRef = useRef<PracticeRubricCriterion[] | null>(null);
+
   useEffect(() => {
+    seededRubricRef.current = null;
     setRubricCriterionIds([]);
   }, [jobCategory]);
 
   useEffect(() => {
-    if (!rubricQuery.data) return;
+    const data = rubricQuery.data;
+    if (!data) return;
 
-    if (rubricCriterionIds.length === 0 && validRubricIds.size > 0) {
-      setRubricCriterionIds([...validRubricIds]);
-    } else if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
+    // Tick sẵn toàn bộ tiêu chí đúng MỘT lần cho mỗi bộ rubric tải về. Điều
+    // kiện cũ là "đang rỗng thì tick hết", nên bỏ tick tiêu chí CUỐI CÙNG là cả
+    // danh sách tự tick lại — ứng viên không cách nào chọn lại từ đầu, và cảnh
+    // báo "phải chọn ít nhất một tiêu chí" của bước này không bao giờ hiện.
+    if (seededRubricRef.current !== data) {
+      seededRubricRef.current = data;
+      if (validRubricIds.size > 0) {
+        setRubricCriterionIds([...validRubricIds]);
+        return;
+      }
+    }
+
+    // Rubric đổi (đổi ngôn ngữ, tải lại) ⇒ bỏ các id không còn tồn tại.
+    if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
       setRubricCriterionIds(validSelectedRubricIds);
     }
-  }, [rubricQuery.data, rubricCriterionIds.length, validSelectedRubricIds]);
+  }, [rubricQuery.data, rubricCriterionIds.length, validRubricIds, validSelectedRubricIds]);
 
   useEffect(() => {
     if (!jobCategory) {
@@ -150,15 +171,35 @@ export function usePracticeSetupFlow() {
     return () => {
       cancelled = true;
     };
-  }, [jobCategory, language]);
+  }, [jobCategory, language, sessionOptionsReloadId]);
+
+  // Không tải được session-options thì `canStart` tắt vĩnh viễn: ứng viên đi hết
+  // wizard rồi đứng ở bước chốt với nút "Bắt đầu" xám ngắt, chỉ F5 hoặc đổi
+  // ngành mới thoát. Cho phép thử lại tại chỗ.
+  const retrySessionOptions = useCallback(() => {
+    setSessionOptionsReloadId((value) => value + 1);
+  }, []);
+
+  // Lượt tải mới luôn thắng lượt cũ: StrictMode gắn-tháo-gắn và việc đi tới/lùi
+  // lại giữa các bước đều bắn nhiều request chồng nhau.
+  const cvRequestIdRef = useRef(0);
 
   const loadCvFiles = useCallback(async () => {
+    const requestId = cvRequestIdRef.current + 1;
+    cvRequestIdRef.current = requestId;
     setLoadingCv(true);
+    setCvError(false);
     try {
       const files = await practiceSetupService.listUploadedCvs();
+      if (requestId !== cvRequestIdRef.current) return;
       setCvFiles(files);
+    } catch {
+      // Thiếu nhánh này thì lỗi mạng thành unhandled rejection và bước chọn CV
+      // hiện đúng như khi tài khoản chưa có CV nào.
+      if (requestId !== cvRequestIdRef.current) return;
+      setCvError(true);
     } finally {
-      setLoadingCv(false);
+      if (requestId === cvRequestIdRef.current) setLoadingCv(false);
     }
   }, []);
 
@@ -200,8 +241,14 @@ export function usePracticeSetupFlow() {
     [language, t],
   );
 
+  // Nút "Bắt đầu" chỉ tắt sau khi React vẽ lại; hai cú bấm rơi vào cùng một
+  // nhịp thì cả hai đều thấy `canStart` còn bật ⇒ hai buổi luyện, hai lần trừ
+  // credit. Chốt bằng ref để chặn ngay trong nhịp đầu.
+  const createInFlightRef = useRef(false);
+
   const handleStart = useCallback(async () => {
-    if (!canStart || !jobCategory) return;
+    if (!canStart || !jobCategory || createInFlightRef.current) return;
+    createInFlightRef.current = true;
     setIsCreatingSession(true);
     setCreateErrorCode(null);
     setCreateErrorMessage(null);
@@ -221,6 +268,8 @@ export function usePracticeSetupFlow() {
       setCreateErrorCode(mapped.code);
       setCreateErrorMessage(mapped.message);
       setIsCreatingSession(false);
+    } finally {
+      createInFlightRef.current = false;
     }
   }, [
     canStart,
@@ -270,9 +319,12 @@ export function usePracticeSetupFlow() {
     sessionOptions,
     loadingSessionOptions,
     sessionOptionsError,
+    retrySessionOptions,
     cvFiles,
     jdFiles,
     loadingCv,
+    cvError,
+    retryCvFiles: loadCvFiles,
     loadingJd,
     uploadingCv,
     uploadError,

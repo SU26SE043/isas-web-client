@@ -37,9 +37,11 @@ export function PracticeWizardPage() {
           isLoading={flow.loadingCv}
           isUploading={flow.uploadingCv}
           uploadError={flow.uploadError}
+          loadError={flow.cvError}
           disabled={disabled}
           onSelect={flow.setCvId}
           onUpload={(file) => void flow.handleUploadCv(file)}
+          onRetryLoad={() => void flow.retryCvFiles()}
           onBack={() => flow.goToStep(0)}
           onNext={() => flow.goToStep(2)}
         />
@@ -82,6 +84,7 @@ export function PracticeWizardPage() {
           options={flow.sessionOptions}
           isLoadingOptions={flow.loadingSessionOptions}
           optionsError={flow.sessionOptionsError}
+          onRetryOptions={flow.retrySessionOptions}
         />
       ) : null}
 

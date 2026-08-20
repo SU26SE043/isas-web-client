@@ -1,176 +1,79 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Briefcase } from 'lucide-react';
+import { FlowWizardNav } from '@/components/patterns/flow-wizard/FlowWizardNav';
+import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { FileRecord } from '../../types/cvAnalysis.types';
+import type { JdWorkspace } from '../../hooks/useJdWorkspace';
 import type { CvAnalysisDomain } from '../../types/cvDomain.types';
-import type { FileUploadStatus } from '../../hooks/useCvAnalysisFlow';
-import { CvFlowSectionCard } from './CvFlowSectionCard';
-import type { CvFlowFileSourceTab } from './CvFlowFileSourceTabs';
-import { CvFlowUploadedFilesPanel } from './CvFlowUploadedFilesPanel';
-import { CvFlowNewPdfUploadPanel } from './CvFlowNewPdfUploadPanel';
-import { CvFlowStepActions } from './CvFlowStepActions';
-import { CvJdTextPanel } from './CvJdTextPanel';
-import { isPlaywrightRuntime } from '@/shared/mock';
-
-type JdSourceTab = CvFlowFileSourceTab | 'text';
+import { JdWorkspacePanel } from './jd/JdWorkspacePanel';
 
 export interface UploadJDProps {
-  jdFile: File | null;
-  selectedFileId: string | null;
-  jdFileError: string | null;
-  jdText: string;
-  isUploading?: boolean;
-  isLoadingRequirements?: boolean;
-  uploadStatus?: FileUploadStatus;
-  fileName?: string;
+  /** The whole step-(2) state machine, owned by the page (`useJdWorkspace`). */
+  workspace: JdWorkspace;
   domain?: CvAnalysisDomain | null;
-  onJdFileSelect: (file: File | null) => void;
-  onExistingSelect: (record: FileRecord) => void;
-  onJdTextChange: (value: string) => void;
-  onSkip: () => void;
+  cvFileName?: string;
   onBack: () => void;
   onNext: () => void;
 }
 
-function resolveInitialTab(file: File | null, selectedFileId: string | null, jdText: string): JdSourceTab {
-  if (jdText.trim()) return 'text';
-  if (file) return 'new';
-  if (selectedFileId) return 'uploaded';
-  return 'new';
-}
-
+/**
+ * Step (2) — "Công việc đang ứng tuyển".
+ *
+ * A thin shell: the section chrome, a one-line reminder of what step (1)
+ * produced, and the wizard nav. Everything else lives in `JdWorkspacePanel`.
+ */
 export const UploadJD: React.FC<UploadJDProps> = ({
-  jdFile,
-  selectedFileId,
-  jdFileError,
-  jdText,
-  isUploading = false,
-  isLoadingRequirements = false,
-  uploadStatus = 'idle',
-  fileName,
+  workspace,
   domain,
-  onJdFileSelect,
-  onExistingSelect,
-  onJdTextChange,
-  onSkip,
+  cvFileName,
   onBack,
   onNext,
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<JdSourceTab>(() =>
-    resolveInitialTab(jdFile, selectedFileId, jdText),
-  );
 
-  const fileReady = uploadStatus === 'completed' && Boolean(selectedFileId);
-  const textReady = jdText.trim().length > 0 && jdText.trim().length <= 20_000;
-  const canNext =
-    (fileReady || textReady || isPlaywrightRuntime()) && !jdFileError && !isUploading && !isLoadingRequirements;
+  const handleNext = () => {
+    // "Tiếp tục" is never disabled. Pressing it while the extraction is still
+    // running abandons that request and moves on with the current list.
+    workspace.cancelAiRequest();
+    onNext();
+  };
+
+  const contextText = [
+    cvFileName ? `${t('cv.jd.contextCv')}: ${cvFileName}` : null,
+    domain ? t(`cv.domain.${domain}.title`) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  // The panel header keeps this aside on the title's row and refuses to shrink
+  // it, so an un-capped file name starved the heading down to one word per line
+  // between 640px and 1024px. Cap it and let the tooltip carry the full text.
+  const context = contextText ? (
+    <p
+      title={contextText}
+      className="frame-satin-soft max-w-[11rem] truncate rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-muted-foreground lg:max-w-xs"
+    >
+      {contextText}
+    </p>
+  ) : undefined;
 
   return (
-    <CvFlowSectionCard
-      title={t('cv.step.jobDescription')}
-      description={t('cv.stepDesc.job-description-optional')}
+    <SectionPanel
+      icon={<Briefcase className="size-5" aria-hidden />}
+      title={t('cv.jd.step.title')}
+      description={t('cv.jd.step.description')}
+      headerAside={context}
+      footer={
+        <FlowWizardNav
+          backLabel={t('cv.back')}
+          nextLabel={t('cv.jd.continue')}
+          onBack={onBack}
+          onNext={handleNext}
+        />
+      }
     >
-      {fileName || domain ? (
-        <div className="mb-4 space-y-2 rounded-xl border border-satin bg-white/[0.04] px-4 py-3 text-sm text-muted-foreground">
-          {domain ? (
-            <p>
-              {t('cv.selectedDomain')}:{' '}
-              <span className="font-medium text-foreground">{t(`cv.domain.${domain}.title`)}</span>
-            </p>
-          ) : null}
-          {fileName ? (
-            <p>
-              {t('cv.attachedFile')}: <span className="font-medium text-foreground">{fileName}</span>
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm font-medium text-foreground">{t('cv.jdTitle')}</span>
-        <span className="text-caption rounded-lg border border-satin bg-white/[0.04] px-2.5 py-1">
-          {t('cv.optional')}
-        </span>
-      </div>
-
-      <div className="mb-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'uploaded'}
-          disabled={isUploading || isLoadingRequirements}
-          onClick={() => setActiveTab('uploaded')}
-          className={activeTab === 'uploaded' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
-        >
-          {t('cv.tab.uploadedJd')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'new'}
-          disabled={isUploading || isLoadingRequirements}
-          onClick={() => setActiveTab('new')}
-          className={activeTab === 'new' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
-        >
-          {t('cv.tab.uploadNewJd')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'text'}
-          disabled={isUploading || isLoadingRequirements}
-          onClick={() => setActiveTab('text')}
-          className={activeTab === 'text' ? 'btn-secondary text-sm' : 'btn-ghost text-sm'}
-        >
-          {t('cv.tab.jdText')}
-        </button>
-      </div>
-
-      <div className="mt-4" role="tabpanel">
-        {activeTab === 'uploaded' ? (
-          <CvFlowUploadedFilesPanel
-            fileType="jd"
-            selectedFileId={selectedFileId}
-            disabled={isUploading}
-            onSelect={onExistingSelect}
-          />
-        ) : null}
-        {activeTab === 'new' ? (
-          <CvFlowNewPdfUploadPanel
-            file={jdFile}
-            fileError={jdFileError}
-            isUploading={isUploading}
-            uploadStatus={uploadStatus}
-            dropTitle={t('cv.jdDropTitle')}
-            dropDescription={t('cv.jdDropDescription')}
-            chooseFileLabel={t('cv.chooseFile')}
-            changeFileLabel={t('cv.changeFile')}
-            uploadingLabel={t('cv.uploading')}
-            uploadCompletedLabel={t('cv.uploadCompleted')}
-            onFileSelect={onJdFileSelect}
-            minHeightClass="min-h-[180px]"
-            showRemove
-            removeLabel={t('cv.jdRemoveFile')}
-          />
-        ) : null}
-        {activeTab === 'text' ? (
-          <CvJdTextPanel value={jdText} onChange={onJdTextChange} disabled={isUploading} />
-        ) : null}
-      </div>
-
-      <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-        <li>{t('cv.tipJd')}</li>
-        <li>{t('cv.tipJdOptional')}</li>
-      </ul>
-
-      <div className="mt-4">
-        <button type="button" className="btn-ghost text-sm" onClick={onSkip} disabled={isUploading || isLoadingRequirements}>
-          {t('cv.skipJd')}
-        </button>
-      </div>
-
-      <CvFlowStepActions canNext={canNext} isBusy={isUploading} onBack={onBack} onNext={onNext} />
-    </CvFlowSectionCard>
+      <JdWorkspacePanel workspace={workspace} />
+    </SectionPanel>
   );
 };
 

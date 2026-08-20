@@ -4,6 +4,11 @@ import { getPracticeSession } from '../services/b2cPracticeSession.service';
 import { shouldPollPracticeReport } from '../utils/practiceReportStatus';
 import { isValidPracticeSessionId } from '../utils/practiceSessionId';
 
+/**
+ * Shared with `InterviewCompletePage`: both screens read the same session
+ * payload (which drags a heavy benchmark query along on the server), so they
+ * must land on one cache entry instead of refetching it after the redirect.
+ */
 export const practiceSessionResultKeys = {
   detail: (sessionId: string) => ['practice-session-result', sessionId] as const,
 };
@@ -25,5 +30,8 @@ export function usePracticeSessionResult(sessionId: string | null) {
       return failureCount < 2;
     },
     refetchOnWindowFocus: false,
+    // Keeps the hand-off from the scoring screen free of a duplicate fetch;
+    // `refetchInterval` still runs while the report is pending.
+    staleTime: 30_000,
   });
 }
