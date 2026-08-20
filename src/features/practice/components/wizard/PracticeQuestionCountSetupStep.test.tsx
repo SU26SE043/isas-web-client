@@ -14,6 +14,10 @@ const baseProps = {
   onChange: vi.fn(),
   onBack: vi.fn(),
   onNext: vi.fn(),
+  adaptiveEnabled: true,
+  onAdaptiveChange: vi.fn(),
+  maxDeepPerQuestion: 3,
+  onDepthChange: vi.fn(),
 };
 
 afterEach(() => {

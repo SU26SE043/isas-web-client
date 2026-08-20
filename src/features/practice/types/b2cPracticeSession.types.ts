@@ -52,6 +52,15 @@ export interface PracticeSessionOptions {
   defaultQuestionCount: number;
   presets: PracticeSessionOptionPreset[];
   preview: PracticeSessionOptionPreview[];
+  /**
+   * Dải độ sâu ứng viên được chọn, do server cấp. `max === 0` = không cho chọn (adaptive tắt hoặc
+   * kill-switch) ⇒ ẩn hẳn ô, đừng hiện một ô vô hiệu.
+   *
+   * ⚠ KHÔNG tự suy dải này ở FE. Server dùng ĐÚNG hai số này để từ chối request; tính lại ở đây là
+   * tái tạo lỗi đã dính với `questionCount` — UI cho bấm rồi server trả 400.
+   */
+  maxDeepPerQuestionMin: number;
+  maxDeepPerQuestionMax: number;
 }
 
 export interface CreatePracticeSessionRequest {
@@ -61,9 +70,12 @@ export interface CreatePracticeSessionRequest {
   jdText?: string;
   timeLimitSec?: PracticeTimeLimitSec;
   questionCount?: number;
-  rubricCriterionIds?: string[];
   language?: PracticeLanguage;
   seniority?: PracticeSeniority;
+  /** `false` = buổi tĩnh, đúng số câu đã chọn. Bỏ trống = giữ mặc định server. */
+  adaptiveEnabled?: boolean;
+  /** 1..`maxDeepPerQuestionMax`. Bỏ trống = giữ mặc định server. KHÔNG gửi 0 — server từ chối. */
+  maxDeepPerQuestion?: number;
 }
 
 export interface PracticeSetupState {
@@ -76,6 +88,10 @@ export interface PracticeSetupState {
   rubricCriterionIds: string[];
   language: PracticeLanguage;
   seniority: PracticeSeniority;
+  /** true = có câu đào sâu (mặc định), false = đúng số câu đã chọn. */
+  adaptiveEnabled: boolean;
+  /** null = chưa biết dải server cho phép ⇒ không gửi, để server tự quyết. */
+  maxDeepPerQuestion: number | null;
 }
 
 export interface PracticeQuestionResponse {

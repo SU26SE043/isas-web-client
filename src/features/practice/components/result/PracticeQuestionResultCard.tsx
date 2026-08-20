@@ -31,10 +31,19 @@ export function PracticeQuestionResultCard({
   question,
   sessionId,
   defaultOpen = true,
+  displayNumber,
 }: {
   question: QuestionResultViewModel;
   sessionId: string;
   defaultOpen?: boolean;
+  /**
+   * Số thứ tự trong danh sách báo cáo. Vắng ⇒ rơi về `orderNo`.
+   *
+   * `orderNo` là số của backend và nó CÓ KHOẢNG TRỐNG có chủ đích (câu gốc 1, 5, 9… chừa chỗ cho
+   * chuỗi đào sâu), nên in thẳng ra thì báo cáo hiện "Câu 1, Câu 2, Câu 5, Câu 9" — người đọc tưởng
+   * mình mất bài.
+   */
+  displayNumber?: number;
 }) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(defaultOpen);
@@ -72,7 +81,7 @@ export function PracticeQuestionResultCard({
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-satin px-5 py-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <h3 className="text-lg font-semibold text-foreground">
-            {t('practice.result.question')} {question.orderNo}
+            {t('practice.result.question')} {displayNumber ?? question.orderNo}
           </h3>
           {question.timeLimitSec != null ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-info/20 bg-info/10 px-2.5 py-1 text-xs font-medium text-info-light">

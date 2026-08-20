@@ -7,6 +7,7 @@ import {
   type PracticeSessionOptions,
 } from '../../types/b2cPracticeSession.types';
 import { isValidPracticeQuestionCount } from '../../utils/buildCreatePracticeSessionRequest';
+import { PracticeDepthChoice } from './PracticeDepthChoice';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
@@ -22,6 +23,12 @@ interface PracticeQuestionCountSetupStepProps {
   isLoadingOptions?: boolean;
   optionsError?: string | null;
   onRetryOptions?: () => void;
+  // Chế độ + độ sâu ở CÙNG bước với số câu có chủ đích: ba thứ chia chung một ngân sách, tách ra hai
+  // màn thì ứng viên chỉnh ở màn này và thấy hậu quả ở màn kia.
+  adaptiveEnabled: boolean;
+  onAdaptiveChange: (value: boolean) => void;
+  maxDeepPerQuestion: number | null;
+  onDepthChange: (value: number) => void;
 }
 
 export function PracticeQuestionCountSetupStep({
@@ -34,6 +41,10 @@ export function PracticeQuestionCountSetupStep({
   isLoadingOptions = false,
   optionsError,
   onRetryOptions,
+  adaptiveEnabled,
+  onAdaptiveChange,
+  maxDeepPerQuestion,
+  onDepthChange,
 }: PracticeQuestionCountSetupStepProps) {
   const { t } = useLanguage();
   const min = options?.questionCountMin ?? PRACTICE_QUESTION_COUNT_MIN;
@@ -123,6 +134,16 @@ export function PracticeQuestionCountSetupStep({
           </p>
         ) : null}
       </div>
+
+      <PracticeDepthChoice
+        adaptiveEnabled={adaptiveEnabled}
+        onAdaptiveChange={onAdaptiveChange}
+        maxDeepPerQuestion={maxDeepPerQuestion}
+        onDepthChange={onDepthChange}
+        depthMin={options?.maxDeepPerQuestionMin ?? 0}
+        depthMax={options?.maxDeepPerQuestionMax ?? 0}
+        disabled={disabled}
+      />
     </PracticeWizardStepCard>
   );
 }

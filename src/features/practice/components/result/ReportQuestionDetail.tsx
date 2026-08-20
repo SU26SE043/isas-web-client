@@ -63,7 +63,7 @@ export function ReportQuestionDetail({
                         : 'border-satin bg-surface-overlay/30 text-muted-foreground hover:border-info/40 hover:bg-info/10 hover:text-info-light',
                   )}
                 >
-                  {t('practice.result.question')} {item.orderNo}
+                  {t('practice.result.question')} {index + 1}
                 </button>
               );
             })}
@@ -76,6 +76,7 @@ export function ReportQuestionDetail({
         question={question}
         sessionId={sessionId}
         defaultOpen
+        displayNumber={activeQuestionIndex + 1}
       />
     </section>
   );
