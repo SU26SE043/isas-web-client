@@ -65,6 +65,34 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
       <h2 className="heading-secondary text-lg">{t('practice.roadmapWizard.confirm.title')}</h2>
       <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.confirm.description')}</p>
 
+      {/*
+        Ô tên đặt Ở ĐẦU, trước bảng tóm tắt: đây là thứ DUY NHẤT ở bước này người dùng còn NHẬP,
+        phần còn lại chỉ để đọc lại. Để nó lẫn dưới cuối danh sách thì người dùng lướt qua bảng
+        tóm tắt rồi bấm luôn nút tạo mà không thấy mình đặt tên được.
+      */}
+      <label className="mt-5 block space-y-2">
+        <span className="text-sm font-medium text-foreground">
+          {t('practice.roadmapWizard.confirm.nameLabel')}
+        </span>
+        <input
+          id="roadmap-confirm-name"
+          value={name}
+          onChange={(event) => onNameChange(event.target.value)}
+          maxLength={ROADMAP_NAME_MAX_CHARS + 1}
+          className="h-10 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder={t('practice.roadmapWizard.confirm.namePlaceholder')}
+          disabled={isSubmitting}
+        />
+        <span className="flex justify-between text-caption text-muted-foreground">
+          <span>
+            {nameTooLong
+              ? t('practice.roadmapWizard.confirm.nameTooLong')
+              : t('practice.roadmapWizard.confirm.nameHint')}
+          </span>
+          <span>{name.trim().length}/{ROADMAP_NAME_MAX_CHARS}</span>
+        </span>
+      </label>
+
       <dl className="mt-5 space-y-3 text-sm">
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
@@ -164,29 +192,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dd className="font-medium text-foreground">{selectedReports.length}</dd>
         </div>
       </dl>
-
-      <label className="mt-5 block space-y-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('practice.roadmapWizard.confirm.nameLabel')}
-        </span>
-        <input
-          id="roadmap-confirm-name"
-          value={name}
-          onChange={(event) => onNameChange(event.target.value)}
-          maxLength={ROADMAP_NAME_MAX_CHARS + 1}
-          className="h-10 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={t('practice.roadmapWizard.confirm.namePlaceholder')}
-          disabled={isSubmitting}
-        />
-        <span className="flex justify-between text-caption text-muted-foreground">
-          <span>
-            {nameTooLong
-              ? t('practice.roadmapWizard.confirm.nameTooLong')
-              : t('practice.roadmapWizard.confirm.nameHint')}
-          </span>
-          <span>{name.trim().length}/{ROADMAP_NAME_MAX_CHARS}</span>
-        </span>
-      </label>
 
       {selectedReports.length > 0 ? (
         <ul className="mt-4 space-y-2">

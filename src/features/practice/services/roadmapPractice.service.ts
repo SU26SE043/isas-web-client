@@ -117,17 +117,27 @@ function mapAnswerDetail(raw: unknown): PracticeAnswerDetail {
   };
 }
 
-function mapRadar(raw: unknown): RadarData[] {
+/**
+ * `thresholdByName` — ngưỡng đạt của từng tiêu chí, lấy từ `levelEvaluation`.
+ *
+ * Backend KHÔNG gửi ngưỡng bên trong từng dòng radar: radar chỉ mang điểm đạt
+ * (`percentage`), còn ngưỡng nằm ở mảng `levelEvaluation` cùng response, ghép theo TÊN tiêu chí.
+ * Không ghép thì series "Mục tiêu" toàn 0 và biểu đồ vẽ một chấm ở tâm.
+ */
+function mapRadar(raw: unknown, thresholdByName: Map<string, number> = new Map()): RadarData[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((item, index) => {
     const row = asRecord(item);
+    const subject = pickString(row.subject, row.name, row.label, `Skill ${index + 1}`);
     return {
-      subject: pickString(row.subject, row.name, row.label, `Skill ${index + 1}`),
-      subjectVi:
-        pickString(row.subjectVi, row.nameVi, row.labelVi) ||
-        pickString(row.subject, row.name, row.label, `Skill ${index + 1}`),
-      A: pickNumber(row.A, row.current, row.value, row.score),
-      B: pickNumber(row.B, row.target, row.goal),
+      subject,
+      subjectVi: pickString(row.subjectVi, row.nameVi, row.labelVi) || subject,
+      // `row.percentage` là tên field THẬT của backend (CriterionScoreResponse.Percentage).
+      // Bốn tên trước đó chỉ tồn tại trong fixtures mock — chạy với dữ liệu thật thì mọi giá trị
+      // rơi về 0, biểu đồ có đủ nhãn trục nhưng không vẽ gì. Đo trên deploy: một roadmap đã hoàn
+      // thành với 40%/60%/70% vẫn hiện radar rỗng.
+      A: pickNumber(row.A, row.current, row.value, row.score, row.percentage),
+      B: pickNumber(row.B, row.target, row.goal) || thresholdByName.get(subject) || 0,
       fullMark: pickNumber(row.fullMark, 100) || 100,
     };
   });
@@ -178,7 +188,9 @@ function mapRoadmapReport(raw: unknown, roadmapId: string): RoadmapPracticeRepor
     weaknessesVi: pickStringArray(item.weaknessesVi),
     improvements: pickStringArray(item.improvements, item.tips),
     improvementsVi: pickStringArray(item.improvementsVi, item.tipsVi),
-    radarData: mapRadar(item.radarData ?? item.radar ?? item.skills),
+    radarData: mapRadar(
+      item.radarData ?? item.radar ?? item.skills,
+      new Map(levelEvaluation.map((e) => [e.criterionName, e.levelThreshold]))),
   };
 }
 

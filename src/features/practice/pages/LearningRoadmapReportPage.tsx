@@ -97,17 +97,27 @@ export function LearningRoadmapReportPage() {
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-3">
+        {/*
+          Chọn bản `...Vi` theo ĐỘ DÀI, không phải bằng `??`: mapper dùng `pickStringArray` nên khi
+          backend không gửi field `...Vi` nó trả MẢNG RỖNG chứ không phải undefined — `??` sẽ không
+          bao giờ kích hoạt và ba ô này hiện dấu "—".
+
+          Backend chỉ trả MỘT bộ `strengths/weaknesses/improvements`, và tên tiêu chí trong đó ĐÃ
+          theo đúng ngôn ngữ của lộ trình (rubric `vi` cho roadmap `vi`), nên bản không-Vi dùng được
+          ngay. Cặp `...Vi` chỉ tồn tại trong fixtures mock — đó là lý do lỗi chạy đẹp lúc phát
+          triển và chỉ lộ ra với dữ liệu thật.
+        */}
         <ListBlock
           title={t('practice.learningPath.strengths')}
-          items={language === 'vi' ? data.strengthsVi : data.strengths}
+          items={language === 'vi' && data.strengthsVi.length > 0 ? data.strengthsVi : data.strengths}
         />
         <ListBlock
           title={t('practice.learningPath.weaknesses')}
-          items={language === 'vi' ? data.weaknessesVi : data.weaknesses}
+          items={language === 'vi' && data.weaknessesVi.length > 0 ? data.weaknessesVi : data.weaknesses}
         />
         <ListBlock
           title={t('practice.learningPath.improvements')}
-          items={language === 'vi' ? data.improvementsVi : data.improvements}
+          items={language === 'vi' && data.improvementsVi.length > 0 ? data.improvementsVi : data.improvements}
         />
       </section>
 
