@@ -165,6 +165,28 @@ describe('LearningRoadmapDetailPage — luyện lại bài', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('không đóng được hộp thoại khi buổi đang được tạo — giữ trạng thái đang chạy', async () => {
+    // Chỗ giữ thật chống hai buổi là nút trong danh sách + bản đồ in-flight;
+    // guard này giữ phần PHẢN HỒI: nhấn Esc giữa chừng mà hộp thoại biến mất
+    // thì người học không còn thấy gì đang chạy, và bấm lại là chuyện hiển nhiên.
+    let release!: (v: unknown) => void;
+    retryLesson.mockReturnValue(new Promise((r) => { release = r; }));
+    renderPage();
+    await clickRetry();
+    await userEvent.click(screen.getByRole('button', { name: 'Làm lại bài' }));
+
+    await screen.findByRole('button', { name: /Đang tạo buổi luyện/ });
+    await userEvent.keyboard('{Escape}');
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Đang tạo buổi luyện/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Huỷ' })).toBeDisabled();
+
+    // Thả request ra để hộp thoại đóng — không để modal treo rò sang test sau.
+    release({ ok: false, code: 'generic' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('lỗi khác 402 dùng thông điệp lỗi chung, KHÔNG dẫn nhầm sang trang nạp credit', async () => {
     retryLesson.mockResolvedValue({ ok: false, code: 'ai_failed' });
     renderPage();
