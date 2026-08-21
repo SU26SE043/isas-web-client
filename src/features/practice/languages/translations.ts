@@ -648,6 +648,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.level': 'Cấp độ mục tiêu',
     'practice.roadmapWizard.confirm.count': 'Số báo cáo phỏng vấn',
     'practice.roadmapWizard.confirm.cv': 'CV',
+    'practice.roadmapWizard.confirm.cvNone': 'Chưa có CV. Roadmap sẽ dựa trên các báo cáo phỏng vấn đã chọn.',
     'practice.roadmapWizard.confirm.reportsNotSent':
       'Các session đã chọn sẽ được gửi làm baseline (sessionIds) khi tạo roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
@@ -1735,6 +1736,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.level': 'Target level',
     'practice.roadmapWizard.confirm.count': 'Interview reports',
     'practice.roadmapWizard.confirm.cv': 'CV',
+    'practice.roadmapWizard.confirm.cvNone': 'No CV uploaded. The roadmap will be based on the selected interview reports.',
     'practice.roadmapWizard.confirm.reportsNotSent':
       'Selected scored sessions will be sent as baseline sessionIds when creating the roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':

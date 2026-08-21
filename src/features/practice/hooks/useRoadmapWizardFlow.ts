@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { useLanguage } from '@/shared/languages';
 import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
@@ -31,6 +32,7 @@ export function useRoadmapWizardFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [cvId, setCvId] = useState<string | undefined>();
+  const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [cvAnalysisId, setCvAnalysisId] = useState<string | undefined>();
   const [priorRoadmapId, setPriorRoadmapId] = useState<string | undefined>();
   const [focus, setFocus] = useState('');
@@ -56,6 +58,7 @@ export function useRoadmapWizardFlow() {
         .slice(0, ROADMAP_REPORT_PREVIEW_LIMIT);
       setAllReports(filtered);
       setSelectedIds([]);
+      setCvFiles(cvs);
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
       setPriorRoadmapId(undefined);
@@ -141,6 +144,7 @@ export function useRoadmapWizardFlow() {
     selectedIds,
     targetLevel,
     cvId,
+    cvFiles,
     cvAnalysisId,
     priorRoadmapId,
     focus,
@@ -152,6 +156,7 @@ export function useRoadmapWizardFlow() {
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setCvId,
     setFocus,
     setCvAnalysisId,
     setPriorRoadmapId,

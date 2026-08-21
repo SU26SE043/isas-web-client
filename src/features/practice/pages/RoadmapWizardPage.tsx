@@ -65,6 +65,8 @@ export function RoadmapWizardPage() {
           targetLevel={flow.targetLevel}
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
+          cvFiles={flow.cvFiles}
+          onCvChange={flow.setCvId}
           focus={flow.focus}
           onFocusChange={flow.setFocus}
           isSubmitting={flow.isSubmitting}
