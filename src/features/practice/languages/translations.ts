@@ -493,8 +493,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reviewLesson': 'Xem lại lesson',
     'practice.learningPath.lessonDone': 'Đã hoàn thành bài học',
     'practice.learningPath.lessonDoneHint': 'Bạn có thể xem lại nội dung lý thuyết.',
-    'practice.learningPath.backToDashboard': 'Quay lại Học tập',
-    'practice.learningPath.backToRoadmap': 'Quay lại lộ trình',
+    'practice.learningPath.backToDashboard': 'Quay lại danh sách lộ trình',
+    'practice.learningPath.backToRoadmap': 'Quay lại lộ trình này',
     'practice.learningPath.backToTheory': 'Quay lại Theory',
     'practice.learningPath.readOnly': 'Chỉ xem',
     'practice.learningPath.milestone': 'Cột mốc {n}',
@@ -557,11 +557,28 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reportKindInterim': 'Báo cáo tạm thời',
     'practice.learningPath.reportKindSnapshot': 'Báo cáo tổng quan',
     'practice.learningPath.levelEvaluation': 'Đánh giá cấp độ',
-    'practice.learningPath.improvements': 'Cải thiện',
+    'practice.learningPath.improvements': 'Đã tiến bộ',
     'practice.learningPath.overallComment': 'Nhận xét tổng quan',
     'practice.learningPath.loadingReport': 'Đang tải báo cáo...',
     'practice.learningPath.reportLoadError': 'Không tải được báo cáo lộ trình. Vui lòng thử lại.',
     'practice.learningPath.radarEmpty': 'Chưa có dữ liệu radar cho báo cáo này.',
+    'practice.learningPath.reportEmptyTitle': 'Chưa có dữ liệu để tổng hợp',
+    'practice.learningPath.reportEmptyDesc':
+      'Hoàn thành ít nhất một bài luyện trong lộ trình để hệ thống chấm điểm và dựng báo cáo. Đây không phải lỗi — chỉ là chưa có buổi nào được chấm.',
+    'practice.learningPath.reportInterimTitle': 'Báo cáo giữa chừng',
+    'practice.learningPath.reportInterimDesc':
+      'Lộ trình chưa hoàn thành nên đây là số liệu tạm tính trên các buổi đã chấm. Phần nhận xét tổng quan của AI chỉ có khi bạn hoàn tất lộ trình.',
+    'practice.learningPath.viewRoadmapReportInterim': 'Xem báo cáo tạm thời',
+    'practice.learningPath.improvementsEmpty':
+      'Chưa có tiêu chí nào đủ dữ liệu để so với lúc bắt đầu.',
+    'practice.learningPath.progressChartTitle': 'Tiến triển qua từng buổi',
+    'practice.learningPath.progressChartDesc':
+      'Điểm tổng mỗi buổi theo thứ tự thời gian — cho biết bạn đang đi lên hay đi xuống, điều mà radar không nói được.',
+    'practice.learningPath.progressChartOverall': 'Điểm tổng',
+    'practice.learningPath.progressChartToggleHint':
+      'Bật thêm tiêu chí để xem riêng từng đường (chọn ít thôi cho dễ đọc):',
+    'practice.learningPath.progressChartTooFew':
+      'Cần ít nhất hai buổi đã chấm mới thấy được xu hướng. Một buổi chỉ là một điểm, chưa phải một đường đi lên hay đi xuống.',
     'practice.learningPath.theoryCompleted': 'Đã sẵn sàng thực hành',
     'practice.learningPath.continueToPractice': 'Tiếp tục thực hành →',
     'practice.learningPath.practiceWithInterviewRoom': 'Tiếp tục với phòng phỏng vấn',
@@ -880,8 +897,13 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.practice.error': 'Không thể tải phiên luyện tập.',
 
     // Radar Chart
-    'practice.radar.current': 'Hiện tại',
+    'practice.radar.current': 'Gần đây',
     'practice.radar.target': 'Mục tiêu',
+    'practice.radar.start': 'Lúc bắt đầu',
+    'practice.radar.noStart': 'chưa có mốc',
+    'practice.radar.sampleSize': 'Dựa trên {count} buổi',
+    'practice.radar.startHint':
+      '"Gần đây" tính trên tối đa 3 buổi mới nhất. Tiêu chí mới có một buổi thì chưa có mốc bắt đầu để so.',
 
     // Gap Analysis
     'practice.gap.current': 'Hiện tại',
@@ -1618,8 +1640,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reviewLesson': 'Review lesson',
     'practice.learningPath.lessonDone': 'Lesson completed',
     'practice.learningPath.lessonDoneHint': 'You can review the theory content anytime.',
-    'practice.learningPath.backToDashboard': 'Back to Learning',
-    'practice.learningPath.backToRoadmap': 'Back to roadmap',
+    'practice.learningPath.backToDashboard': 'Back to roadmaps',
+    'practice.learningPath.backToRoadmap': 'Back to this roadmap',
     'practice.learningPath.backToTheory': 'Back to theory',
     'practice.learningPath.readOnly': 'Read-only',
     'practice.learningPath.milestone': 'Milestone {n}',
@@ -1682,11 +1704,28 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reportKindInterim': 'Interim report',
     'practice.learningPath.reportKindSnapshot': 'Snapshot report',
     'practice.learningPath.levelEvaluation': 'Level evaluation',
-    'practice.learningPath.improvements': 'Improvements',
+    'practice.learningPath.improvements': 'Improved',
     'practice.learningPath.overallComment': 'Overall comment',
     'practice.learningPath.loadingReport': 'Loading report...',
     'practice.learningPath.reportLoadError': 'Could not load the roadmap report. Please try again.',
     'practice.learningPath.radarEmpty': 'No radar data for this report yet.',
+    'practice.learningPath.reportEmptyTitle': 'Nothing to summarise yet',
+    'practice.learningPath.reportEmptyDesc':
+      'Finish at least one practice lesson so the system can score it and build a report. This is not an error — no session has been scored yet.',
+    'practice.learningPath.reportInterimTitle': 'Interim report',
+    'practice.learningPath.reportInterimDesc':
+      'This roadmap is still in progress, so these figures cover only the sessions scored so far. The AI overall comment appears once you complete the roadmap.',
+    'practice.learningPath.viewRoadmapReportInterim': 'View interim report',
+    'practice.learningPath.improvementsEmpty':
+      'No criterion has enough data yet to compare against the starting point.',
+    'practice.learningPath.progressChartTitle': 'Progress across sessions',
+    'practice.learningPath.progressChartDesc':
+      'Overall score per session in chronological order — it shows whether you are trending up or down, which the radar cannot.',
+    'practice.learningPath.progressChartOverall': 'Overall score',
+    'practice.learningPath.progressChartToggleHint':
+      'Turn on individual criteria to plot them separately (keep it to a few for readability):',
+    'practice.learningPath.progressChartTooFew':
+      'At least two scored sessions are needed to show a trend. One session is a single point, not a direction.',
     'practice.learningPath.theoryCompleted': 'Ready to practice',
     'practice.learningPath.continueToPractice': 'Continue to Practice →',
     'practice.learningPath.practiceWithInterviewRoom': 'Continue to interview room',
@@ -2005,8 +2044,13 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.practice.error': 'Could not load practice session.',
 
     // Radar Chart
-    'practice.radar.current': 'Current',
+    'practice.radar.current': 'Recent',
     'practice.radar.target': 'Target',
+    'practice.radar.start': 'At start',
+    'practice.radar.noStart': 'no baseline yet',
+    'practice.radar.sampleSize': 'Based on {count} session(s)',
+    'practice.radar.startHint':
+      '"Recent" averages up to the 3 latest sessions. A criterion with only one session has no baseline to compare against.',
 
     // Gap Analysis
     'practice.gap.current': 'Current',
