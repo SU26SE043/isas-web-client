@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, BrainCircuit, Database, FileCode2, Lock, RotateCcw, Star } from 'lucide-react';
+import { BookOpen, BrainCircuit, Database, FileCode2, Lock, Star } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
 
@@ -7,14 +7,13 @@ interface LearningRoadmapMilestonesProps {
   roadmap: LearningRoadmapDetail;
   language: string;
   launchingLessonId: string | null;
-  /** Bài đang chờ server tạo buổi luyện lại — khoá nút để không bấm ra hai buổi. */
-  retryingLessonId?: string | null;
   onOpenPractice: (lessonId: string, title: string, sessionId?: string | null) => void;
-  /** Mở hộp thoại xác nhận. KHÔNG được gọi thẳng API ở đây (thao tác tiêu credit). */
-  onRetryPractice?: (lessonId: string, title: string) => void;
 }
 
-export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId, retryingLessonId = null, onOpenPractice, onRetryPractice }: LearningRoadmapMilestonesProps) {
+// Nút "Làm lại bài" KHÔNG nằm ở đây mà ở trang chi tiết bài (`LearningTheoryActions`):
+// mỗi hàng bài trong danh sách vốn đã có hai nút, thêm nút thứ ba làm hàng nút tràn và rối,
+// trong khi thao tác đó tiêu credit nên đáng để người học mở bài ra đọc lại trước khi quyết.
+export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId, onOpenPractice }: LearningRoadmapMilestonesProps) {
   const { t } = useLanguage();
 
   return (
@@ -36,39 +35,47 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
             <p className="mt-1 text-sm text-muted-foreground">
               {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} · {milestone.progressPercent}%
             </p>
-            {milestone.status === 'completed' && milestone.improvement?.length ? (
-              <div className="mt-4 rounded-xl border border-info/30 bg-surface-overlay/60 p-4">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t('practice.learningPath.improvementTitle')}
-                </h3>
-                <ul className="mt-2 grid gap-2 sm:grid-cols-2" aria-label={t('practice.learningPath.improvementTitle')}>
-                  {milestone.improvement.map((item) => (
-                    <li key={item.criterionName} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-muted-foreground">{item.criterionName}</span>
-                      <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
-                        {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+            {/*
+              MỘT DÒNG, không phải bảng. Trang lộ trình là nơi ĐIỀU HƯỚNG — nhét vào giữa danh
+              sách chặng một hộp lưới 6 dòng "tiêu chí · ±n%" là mang bảng phân tích đặt vào chỗ
+              người ta chỉ lướt qua, mà trên dữ liệu thật 4/6 dòng là "+0%".
+
+              Nên chỉ nêu tiêu chí DỊCH CHUYỂN MẠNH NHẤT mỗi chiều (nhiều nhất 2 mục), và nói rõ
+              đang so với CHẶNG TRƯỚC — số ở đây đúng (kiểm tay: 70→50 ra −20%) nhưng hai chặng
+              luyện trên hai bộ bài khác đề, để trần thì người học đọc "−20%" thành "tôi kém đi".
+              Phân tích đầy đủ nằm ở trang báo cáo, nơi đã có biểu đồ theo từng buổi.
+            */}
+            {milestone.status === 'completed' && milestone.improvement?.length
+              ? (() => {
+                  const moved = milestone.improvement.filter((item) => item.deltaPct !== 0);
+                  if (moved.length === 0) return null;
+                  const up = moved.reduce((a, b) => (b.deltaPct > a.deltaPct ? b : a));
+                  const down = moved.reduce((a, b) => (b.deltaPct < a.deltaPct ? b : a));
+                  const picks = [
+                    up.deltaPct > 0 ? up : null,
+                    down.deltaPct < 0 ? down : null,
+                  ].filter((x): x is NonNullable<typeof x> => x !== null);
+                  return (
+                    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
+                      <span>{t('practice.learningPath.improvementTitle')}</span>
+                      {picks.map((item) => (
+                        <span key={item.criterionName} className="inline-flex items-center gap-1">
+                          <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
+                            {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
+                          </span>
+                          <span>{item.criterionName}</span>
+                        </span>
+                      ))}
+                    </p>
+                  );
+                })()
+              : null}
             <ul className="mt-4 space-y-2">
               {milestone.lessons.map((lessonItem, lessonIndex) => {
                 const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
                 const canOpenTheory = !locked && (lessonItem.theoryStatus === 'available' || lessonItem.theoryStatus === 'completed' || roadmap.readOnly);
                 const canOpenPractice = !locked && !roadmap.readOnly && (lessonItem.practiceStatus === 'available' || lessonItem.apiStatus === 'Practicing');
                 const reportLink = lessonItem.practiceReportId ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report` : null;
-                // `canRetry` do SERVER quyết định — không suy từ apiStatus/practiceStatus.
-                //
-                // ⚠ CỐ Ý không gác thêm `!roadmap.readOnly`: `readOnly` bật khi lộ trình đã
-                // Hoàn thành (`roadmapMapper.ts:249`), mà đó CHÍNH LÀ lúc người học muốn luyện
-                // lại để nâng điểm. Backend được thiết kế đúng theo hướng đó — làm lại một bài
-                // sẽ MỞ LẠI lộ trình đã hoàn thành và tính lại báo cáo. Gác ở đây làm nút biến
-                // mất ở đúng trạng thái tính năng sinh ra để phục vụ, và triệu chứng duy nhất
-                // là "không thấy nút" chứ không có lỗi nào nổ.
-                const canRetry = lessonItem.canRetry === true && Boolean(onRetryPractice);
-                const isRetrying = retryingLessonId === lessonItem.id;
                 return (
                   <li key={lessonItem.id} className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -85,21 +92,6 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                         {canOpenTheory ? <Link to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`} className="inline-flex items-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-2.5 text-xs font-semibold text-foreground"><BookOpen className="size-4 text-info" aria-hidden />{t('practice.learningPath.openTheory')}</Link> : null}
                         {canOpenPractice ? <button type="button" className="btn-primary inline-flex text-xs" disabled={launchingLessonId === lessonItem.id} onClick={() => onOpenPractice(lessonItem.id, lessonTitle, lessonItem.sessionId)}>{launchingLessonId === lessonItem.id ? t('practice.learningPath.saving') : lessonItem.apiStatus === 'Practicing' ? t('practice.learningPath.continuePracticeSession') : t('practice.learningPath.openPractice')}</button> : null}
                         {lessonItem.apiStatus === 'Done' ? <Link to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`} className="btn-secondary inline-flex text-xs">{t('practice.learningPath.reviewLesson')}</Link> : null}
-                        {canRetry ? (
-                          <button
-                            type="button"
-                            className="btn-secondary inline-flex items-center gap-2 text-xs"
-                            disabled={isRetrying}
-                            onClick={() => onRetryPractice?.(lessonItem.id, lessonTitle)}
-                          >
-                            <RotateCcw className="size-4" aria-hidden />
-                            {isRetrying ? t('practice.learningPath.retryStarting') : t('practice.learningPath.retryLesson')}
-                            {/* Báo giá TRƯỚC khi bấm, không đợi server trả 402. */}
-                            <span className="text-caption text-muted-foreground">
-                              · {t('practice.learningPath.retryCostHint')}
-                            </span>
-                          </button>
-                        ) : null}
                         {reportLink ? <Link to={reportLink} className="btn-ghost inline-flex text-xs">{t('practice.learningPath.viewReport')}</Link> : null}
                       </div>
                     </div>

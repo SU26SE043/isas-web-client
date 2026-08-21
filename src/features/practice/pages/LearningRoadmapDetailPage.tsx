@@ -9,10 +9,8 @@ import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { LearningCreditWarningDialog } from '../components/learning-path/LearningCreditWarningDialog';
 import { LearningRoadmapCreditSummary } from '../components/learning-path/LearningRoadmapCreditSummary';
 import { LearningRoadmapMilestones } from '../components/learning-path/LearningRoadmapMilestones';
-import { LessonRetryConfirmDialog } from '../components/learning-path/LessonRetryConfirmDialog';
 import { RoadmapNameEditor } from '../components/learning-path/RoadmapNameEditor';
 import { invalidateLearningRoadmaps, updateRoadmapNameInCache, useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
-import { useLessonRetry } from '../hooks/useLessonRetry';
 import { roadmapService } from '../services/roadmap.service';
 import {
   learningInterviewPreparePath,
@@ -31,11 +29,6 @@ export function LearningRoadmapDetailPage() {
   const [renameError, setRenameError] = useState<string | null>(null);
   const [pendingPractice, setPendingPractice] = useState<{ lessonId: string; title: string } | null>(null);
   const { available: creditsRemaining } = useTokenWallet();
-  const retry = useLessonRetry({
-    roadmapId,
-    onStarted: (sessionId, lessonId) =>
-      navigate(learningInterviewPreparePath(sessionId, { roadmapId, lessonId })),
-  });
 
   const { data: roadmap, isLoading, isError, error, refetch, isFetching } =
     useLearningRoadmapDetail(roadmapId);
@@ -235,16 +228,13 @@ export function LearningRoadmapDetailPage() {
         roadmap={roadmap}
         language={language}
         launchingLessonId={launchingLessonId}
-        retryingLessonId={retry.pendingLessonId}
         onOpenPractice={(lessonId, lessonTitle, sessionId) => void openPractice(lessonId, lessonTitle, sessionId)}
-        onRetryPractice={retry.ask}
       />
       {launchError ? (
         <p className="mt-4 text-sm text-error" role="alert">
           {t('practice.learningPath.startError')}
         </p>
       ) : null}
-      <LessonRetryConfirmDialog {...retry.dialogProps} balance={creditsRemaining ?? 0} />
       <LearningCreditWarningDialog
         open={creditOpen}
         onOpenChange={setCreditOpen}

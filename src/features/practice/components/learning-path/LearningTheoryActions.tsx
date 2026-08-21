@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
@@ -12,6 +12,8 @@ import {
 } from '../../utils/launchLearningInterviewPractice';
 import { findNextLesson, theoryPath } from '../../utils/learningPathNavigation';
 import { LearningCreditWarningDialog } from './LearningCreditWarningDialog';
+import { LessonRetryConfirmDialog } from './LessonRetryConfirmDialog';
+import { useLessonRetry } from '../../hooks/useLessonRetry';
 
 interface LearningTheoryActionsProps {
   roadmap: LearningRoadmapDetail;
@@ -31,6 +33,16 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   const [startError, setStartError] = useState(false);
   const [creditRejected, setCreditRejected] = useState(false);
   const { available: creditsRemaining } = useTokenWallet();
+
+  // Luyện LẠI bài đã xong. Nút nằm ở ĐÂY (trang chi tiết bài) chứ không ở danh sách
+  // chặng: ngoài danh sách mỗi bài đã có sẵn hai nút, thêm nút thứ ba làm hàng nút
+  // tràn và rối, trong khi thao tác này tiêu credit nên đáng để người học mở bài ra
+  // đọc lại trước khi quyết định.
+  const retry = useLessonRetry({
+    roadmapId: roadmap.id,
+    onStarted: (sessionId, lessonId) =>
+      navigate(learningInterviewPreparePath(sessionId, { roadmapId: roadmap.id, lessonId })),
+  });
 
   const nextLesson = findNextLesson(roadmap, opened.id);
   const isDone = opened.apiStatus === 'Done';
@@ -145,6 +157,23 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
               {t('practice.learningPath.startError')}
             </p>
           ) : null}
+          {isDone && opened.canRetry ? (
+            <button
+              type="button"
+              className="btn-secondary inline-flex items-center gap-2"
+              disabled={retry.pendingLessonId !== null}
+              onClick={() => retry.ask(opened.id, title)}
+            >
+              <RotateCcw className="size-4" aria-hidden />
+              {retry.pendingLessonId !== null
+                ? t('practice.learningPath.retryStarting')
+                : t('practice.learningPath.retryLesson')}
+              {/* Báo giá TRƯỚC khi bấm, không đợi server trả 402. */}
+              <span className="text-caption text-muted-foreground">
+                {t('practice.learningPath.retryCostHint')}
+              </span>
+            </button>
+          ) : null}
           {isDone && nextLesson ? (
             <Link to={theoryPath(roadmap.id, nextLesson.id)} className="btn-primary inline-flex">
               {t('practice.learningPath.nextLesson')}
@@ -158,6 +187,14 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
           </Link>
         </div>
       ) : null}
+
+      {opened.attemptCount > 1 ? (
+        <p className="text-caption text-muted-foreground">
+          {t('practice.learningPath.attemptCount').replace('{count}', String(opened.attemptCount))}
+        </p>
+      ) : null}
+
+      <LessonRetryConfirmDialog {...retry.dialogProps} balance={creditsRemaining ?? 0} />
 
       <LearningCreditWarningDialog
         open={creditOpen}
