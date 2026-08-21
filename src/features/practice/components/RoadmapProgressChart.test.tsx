@@ -77,6 +77,19 @@ describe('RoadmapProgressChart', () => {
     expect(lines()).toHaveLength(2);
     expect(lines()[1]!.getAttribute('data-name')).toBe('Giao tiếp');
     expect(lines()[1]!.getAttribute('data-connect-nulls')).toBe('false');
+    /*
+      Khoá luôn ĐƯỜNG TRA CỨU, không chỉ khoá cái nhãn.
+      `data-name` chỉ là chữ hiện ở chú thích; thứ quyết định đường có vẽ ra gì hay
+      không là `dataKey`. Trỏ nó vào tên tiêu chí thì recharts tra một khoá không tồn
+      tại trong hàng dữ liệu (và với tên có dấu chấm thì nó còn hiểu là đường dẫn a.b)
+      ⇒ đường vẽ RỖNG mà không lỗi ở đâu cả — đúng lớp lỗi khoá dữ liệu đang chặn.
+    */
+    const key = lines()[1]!.getAttribute('data-key')!;
+    expect(key).toBe('crit_0');
+    const rows = JSON.parse(
+      document.querySelector('[data-stub="LineChart"]')!.getAttribute('data-chart-data')!,
+    ) as Array<Record<string, unknown>>;
+    expect(Object.keys(rows[0]!)).toContain(key);
 
     // Bấm lại để tắt.
     await user.click(screen.getByRole('button', { name: /Giao tiếp/ }));

@@ -65,6 +65,45 @@ describe('SkillRadarChart — lớp "lúc bắt đầu"', () => {
     expect(screen.getByText('practice.radar.startHint')).toBeInTheDocument();
   });
 
+  /*
+    Tooltip in nhiều số cùng lúc, nên A/B phải chọn sao cho KHÔNG chứa chuỗi "0%":
+    với A=70,B=60 mặc định thì `not.toContain('0%')` đỏ vì bắt nhầm "70%"/"60%" —
+    khẳng định lỏng như thế không đo được điều đang cần đo.
+  */
+  const tipRow = (overrides: Partial<RadarData> = {}) => row({ A: 73, B: 61, ...overrides });
+  const tipText = () => document.querySelector('[data-stub="Tooltip"]')!.textContent ?? '';
+
+  it('tooltip: mốc KHUYẾT in ra "chưa có mốc", tuyệt đối không in "0%" hay "null%"', () => {
+    // Stub kích hoạt tooltip cho HÀNG ĐẦU TIÊN ⇒ đặt hàng cần kiểm lên đầu.
+    render(
+      <SkillRadarChart
+        data={[tipRow({ C: null }), tipRow({ subject: 'B', subjectVi: 'B', C: 30 })]}
+        language="vi"
+      />,
+    );
+    expect(tipText()).toContain('practice.radar.noStart');
+    expect(tipText()).not.toContain('0%');
+    expect(tipText()).not.toContain('null');
+  });
+
+  it('tooltip: có mốc thì in đúng phần trăm của mốc', () => {
+    render(<SkillRadarChart data={[tipRow({ C: 30 })]} language="vi" />);
+    expect(tipText()).toContain('30%');
+    expect(tipText()).not.toContain('practice.radar.noStart');
+  });
+
+  it('tooltip: mốc 0 là số đo thật ⇒ in "0%", KHÔNG in "chưa có mốc"', () => {
+    // Phân biệt "đo được 0" với "chưa đo được" ngay tại chỗ người dùng đọc.
+    render(<SkillRadarChart data={[tipRow({ C: 0 })]} language="vi" />);
+    expect(tipText()).toContain('0%');
+    expect(tipText()).not.toContain('practice.radar.noStart');
+  });
+
+  it('tooltip: nêu cỡ mẫu để nan 1 buổi không bị đọc ngang nan 4 buổi', () => {
+    render(<SkillRadarChart data={[tipRow({ C: 20, recentCount: 3 })]} language="vi" />);
+    expect(tipText()).toContain('practice.radar.sampleSize');
+  });
+
   it('không hiện chú thích lớp bắt đầu khi không có lớp đó', () => {
     render(<SkillRadarChart data={[row()]} language="vi" />);
     expect(screen.queryByText('practice.radar.startHint')).not.toBeInTheDocument();
