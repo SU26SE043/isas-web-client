@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, Code2, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
@@ -8,7 +9,8 @@ import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { LearningCreditWarningDialog } from '../components/learning-path/LearningCreditWarningDialog';
 import { LearningRoadmapCreditSummary } from '../components/learning-path/LearningRoadmapCreditSummary';
 import { LearningRoadmapMilestones } from '../components/learning-path/LearningRoadmapMilestones';
-import { useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
+import { RoadmapNameEditor } from '../components/learning-path/RoadmapNameEditor';
+import { invalidateLearningRoadmaps, updateRoadmapNameInCache, useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
 import { roadmapService } from '../services/roadmap.service';
 import {
   learningInterviewPreparePath,
@@ -17,11 +19,14 @@ import {
 export function LearningRoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { language, t } = useLanguage();
   const [launchingLessonId, setLaunchingLessonId] = useState<string | null>(null);
   const [creditOpen, setCreditOpen] = useState(false);
   const [creditRejected, setCreditRejected] = useState(false);
   const [launchError, setLaunchError] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
   const [pendingPractice, setPendingPractice] = useState<{ lessonId: string; title: string } | null>(null);
   const { available: creditsRemaining } = useTokenWallet();
 
@@ -124,6 +129,21 @@ export function LearningRoadmapDetailPage() {
     }
   };
 
+  const saveRoadmapName = async (nextName: string) => {
+    setIsSavingName(true);
+    setRenameError(null);
+    try {
+      const savedName = await roadmapService.renameRoadmap(roadmap.id, nextName);
+      updateRoadmapNameInCache(queryClient, roadmap.id, savedName);
+      await invalidateLearningRoadmaps(queryClient);
+    } catch {
+      setRenameError(t('practice.learningPath.renameError'));
+      throw new Error('ROADMAP_NAME_SAVE_FAILED');
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
   return (
     <div className="page-container page-section min-h-screen bg-[radial-gradient(circle_at_80%_0%,rgba(37,99,235,0.15),transparent_32%),radial-gradient(circle_at_20%_100%,rgba(124,58,237,0.12),transparent_28%)]">
       <Link to="/candidate/learning" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground">
@@ -134,7 +154,12 @@ export function LearningRoadmapDetailPage() {
       <header className="relative mt-5 space-y-4 overflow-hidden rounded-2xl border border-info/45 bg-surface-raised/70 p-6 shadow-[0_20px_60px_-40px_rgba(59,130,246,0.85)] sm:p-8">
         <div className="absolute -right-12 -top-16 size-52 rounded-full border border-info/20" aria-hidden />
         <div className="relative flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl border border-info/45 bg-info/10 text-info"><Code2 className="size-6" aria-hidden /></span><p className="text-sm font-medium text-muted-foreground">{language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} · {t(`practice.learningPath.status.${roadmap.status}`)}</p></div>
-        <h1 className="relative heading-primary text-4xl text-foreground sm:text-5xl">{title}</h1>
+        <RoadmapNameEditor
+          name={title}
+          isSaving={isSavingName}
+          error={renameError}
+          onSave={saveRoadmapName}
+        />
         <p className="text-sm text-muted-foreground">
           {(language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel)} ·{' '}
           {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} ·{' '}

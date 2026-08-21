@@ -140,6 +140,20 @@ export const roadmapService = {
     return mapApiRoadmapDetail(unwrapDataPayload(response.data));
   },
 
+  async renameRoadmap(roadmapId: string, name: string): Promise<string> {
+    const response = await apiClient.patch<unknown>(
+      learningEndpoints.roadmap(roadmapId),
+      { name },
+      { validateStatus: (status) => status >= 200 && status < 300 },
+    );
+    const payload = unwrapDataPayload(response.data);
+    if (payload && typeof payload === 'object') {
+      const returnedName = (payload as Record<string, unknown>).name;
+      if (typeof returnedName === 'string' && returnedName.trim()) return returnedName.trim();
+    }
+    return name;
+  },
+
   /**
    * Open a lesson. Call only on explicit user navigation to the lesson page —
    * not on list/detail hover or render.
