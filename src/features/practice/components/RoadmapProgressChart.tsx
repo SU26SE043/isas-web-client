@@ -92,7 +92,10 @@ export const RoadmapProgressChart = memo(function RoadmapProgressChart({
               tickFormatter={(value: number) => `${value}%`}
             />
             <Tooltip
-              formatter={(value: number | null) => (value == null ? '—' : `${value}%`)}
+              // Recharts khai `formatter` theo `ValueType` (string | number | mảng), KHÔNG phải
+              // `number | null` — thu hẹp tham số ngay ở chữ ký làm nó không khớp và `npm run
+              // build` đỏ. Nhận đúng kiểu thư viện rồi tự thu hẹp bên trong.
+              formatter={(value) => (typeof value === 'number' ? `${value}%` : '—')}
               contentStyle={{
                 background: 'var(--chart-tooltip-bg)',
                 border: '1px solid var(--chart-tooltip-border)',

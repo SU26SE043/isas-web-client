@@ -15,7 +15,7 @@ afterEach(cleanup);
 function renderStep() {
   return render(
     <RoadmapTargetLevelStep
-      selectedLevel={null}
+      selectedLevel=""
       onSelect={vi.fn()}
       onBack={vi.fn()}
       onNext={vi.fn()}
