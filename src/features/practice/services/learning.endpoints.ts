@@ -11,6 +11,12 @@ export const learningEndpoints = {
   /** POST — mark theory done / start practice session (charges 1 credit). */
   startLesson: (roadmapId: string, lessonId: string) =>
     `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}/start`,
+  /**
+   * POST — luyện LẠI một bài đã hoàn thành (tính 1 credit, tạo buổi mới).
+   * Trả về CÙNG hình dạng với `startLesson` nên dùng chung mapper.
+   */
+  retryLesson: (roadmapId: string, lessonId: string) =>
+    `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}/retry`,
   /** GET — practice session detail (questions, progress). */
   practiceSession: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}`,
   /** POST — upload answer audio (multipart). */

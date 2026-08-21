@@ -31,6 +31,15 @@ export type ApiRoadmapLesson = {
   sessionId?: string | null;
   status?: ApiLessonStatus;
   practiceReportId?: string | null;
+  /** Số lần đã luyện bài này. Server sở hữu; FE không tự đếm. */
+  attemptCount?: number;
+  /**
+   * SERVER quyết định bài có được luyện lại hay không.
+   * Điều kiện thật gồm cả trạng thái, ví credit và quyền sở hữu — FE tự suy từ
+   * `status` sẽ lệch với backend ngay lần đổi luật đầu tiên, và triệu chứng là
+   * nút hiện ra rồi bấm vào báo lỗi.
+   */
+  canRetry?: boolean;
   resources?: LearningResource[] | null;
   citations?: LearningCitation[] | null;
 };

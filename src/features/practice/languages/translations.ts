@@ -537,6 +537,21 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.remainingLessons': 'Còn {count} bài học · mỗi bài dùng 1 credit',
     'practice.learningPath.creditCostPerLesson': 'Chi phí bắt đầu: {cost} credit / bài',
     'practice.learningPath.creditsUnit': 'credit',
+    'practice.learningPath.retryLesson': 'Làm lại bài',
+    'practice.learningPath.retryCostHint': 'Tốn 1 credit',
+    'practice.learningPath.attemptCount': 'Đã luyện {count} lần',
+    'practice.learningPath.retryStarting': 'Đang tạo buổi luyện...',
+    'practice.learningPath.retryConfirmTitle': 'Làm lại bài học này?',
+    'practice.learningPath.retryConfirmDescription':
+      'Buổi luyện lại tốn 1 credit. Số dư hiện tại của bạn là {balance} credit.',
+    'practice.learningPath.retryConfirmPointQuestions': 'Câu hỏi lần này sẽ khác lần trước.',
+    'practice.learningPath.retryConfirmPointScore':
+      'Điểm lần này được ghi thêm, không đè lên kết quả cũ.',
+    'practice.learningPath.retryConfirmCta': 'Làm lại bài',
+    'practice.learningPath.retryCancel': 'Huỷ',
+    'practice.learningPath.retryInsufficientCredits':
+      'Không đủ credit để làm lại bài này. Hãy nạp thêm rồi thử lại.',
+    'practice.learningPath.retryError': 'Không thể tạo buổi luyện lại. Vui lòng thử lại.',
     'practice.learningPath.buyCredits': 'Mua credit',
     'practice.learningPath.answerEmpty': 'Chưa ghi được câu trả lời. Hãy nói rồi nộp lại.',
     'practice.learningPath.answerTooLarge': 'Tệp câu trả lời vượt quá 50 MB. Hãy ghi ngắn hơn.',
@@ -1684,6 +1699,21 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.remainingLessons': '{count} lessons remaining · each uses 1 credit',
     'practice.learningPath.creditCostPerLesson': 'Start cost: {cost} credit / lesson',
     'practice.learningPath.creditsUnit': 'credits',
+    'practice.learningPath.retryLesson': 'Retry lesson',
+    'practice.learningPath.retryCostHint': 'Costs 1 credit',
+    'practice.learningPath.attemptCount': 'Practised {count} times',
+    'practice.learningPath.retryStarting': 'Creating practice session...',
+    'practice.learningPath.retryConfirmTitle': 'Retry this lesson?',
+    'practice.learningPath.retryConfirmDescription':
+      'A retry costs 1 credit. Your current balance is {balance} credits.',
+    'practice.learningPath.retryConfirmPointQuestions': 'The questions will differ from last time.',
+    'practice.learningPath.retryConfirmPointScore':
+      'This attempt is recorded in addition to — not on top of — the previous result.',
+    'practice.learningPath.retryConfirmCta': 'Retry lesson',
+    'practice.learningPath.retryCancel': 'Cancel',
+    'practice.learningPath.retryInsufficientCredits':
+      'Not enough credits to retry this lesson. Top up and try again.',
+    'practice.learningPath.retryError': 'Could not create the retry session. Please try again.',
     'practice.learningPath.buyCredits': 'Buy credits',
     'practice.learningPath.answerEmpty': 'No answer recorded. Speak, then submit again.',
     'practice.learningPath.answerTooLarge': 'Answer file exceeds 50MB. Please record a shorter answer.',
