@@ -140,8 +140,20 @@ describe('LearningRoadmapMilestones — nút làm lại bài', () => {
     expect(screen.queryByText(/Đã luyện/)).not.toBeInTheDocument();
   });
 
-  it('lộ trình chỉ-xem thì không cho làm lại', () => {
+  // ĐẢO TIỀN ĐỀ có chủ đích. Test cũ khẳng định "lộ trình chỉ-xem thì không cho làm lại" —
+  // nghe hợp lý nhưng khoá đúng một hành vi SAI: `readOnly` bật khi lộ trình đã Hoàn thành
+  // (`roadmapMapper.ts:249`), mà đó chính là lúc người học muốn luyện lại để nâng điểm.
+  // Backend được thiết kế theo hướng đó — làm lại một bài sẽ MỞ LẠI lộ trình đã hoàn thành
+  // và tính lại báo cáo. Đo trên deploy: API trả `canRetry: true` cho bài đã Done của một
+  // lộ trình Completed, còn giao diện không hiện nút nào.
+  it('lộ trình đã hoàn thành VẪN cho làm lại — đó là lúc cần nút này nhất', () => {
     renderList(roadmap([lesson()], true));
+    expect(screen.getByRole('button', { name: RETRY })).toBeInTheDocument();
+  });
+
+  // Quyền quyết định nằm ở SERVER. Giao diện không được tự suy ra từ trạng thái lộ trình.
+  it('server nói không thì không hiện, bất kể lộ trình đang mở hay chỉ-xem', () => {
+    renderList(roadmap([lesson({ canRetry: false })], false));
     expect(screen.queryByRole('button', { name: RETRY })).not.toBeInTheDocument();
   });
 });

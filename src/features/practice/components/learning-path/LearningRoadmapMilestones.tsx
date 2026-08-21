@@ -60,7 +60,14 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                 const canOpenPractice = !locked && !roadmap.readOnly && (lessonItem.practiceStatus === 'available' || lessonItem.apiStatus === 'Practicing');
                 const reportLink = lessonItem.practiceReportId ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report` : null;
                 // `canRetry` do SERVER quyết định — không suy từ apiStatus/practiceStatus.
-                const canRetry = lessonItem.canRetry === true && !roadmap.readOnly && Boolean(onRetryPractice);
+                //
+                // ⚠ CỐ Ý không gác thêm `!roadmap.readOnly`: `readOnly` bật khi lộ trình đã
+                // Hoàn thành (`roadmapMapper.ts:249`), mà đó CHÍNH LÀ lúc người học muốn luyện
+                // lại để nâng điểm. Backend được thiết kế đúng theo hướng đó — làm lại một bài
+                // sẽ MỞ LẠI lộ trình đã hoàn thành và tính lại báo cáo. Gác ở đây làm nút biến
+                // mất ở đúng trạng thái tính năng sinh ra để phục vụ, và triệu chứng duy nhất
+                // là "không thấy nút" chứ không có lỗi nào nổ.
+                const canRetry = lessonItem.canRetry === true && Boolean(onRetryPractice);
                 const isRetrying = retryingLessonId === lessonItem.id;
                 return (
                   <li key={lessonItem.id} className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]">
