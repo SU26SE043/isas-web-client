@@ -2,6 +2,7 @@ import { getApiStatusCode } from '@/shared/api/apiError';
 
 export type CreateRoadmapErrorCode =
   | 'invalid_input'
+  | 'unsupported_level'
   | 'forbidden'
   | 'cv_not_found'
   | 'ai_failed'

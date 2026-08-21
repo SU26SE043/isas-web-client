@@ -50,8 +50,8 @@ function resolveJobCategoryFromDomainId(domainId: string): JobCategoryEnum {
   return resolveJobDomainFromCategory(domainId)?.jobCategoryEnum ?? 'FE';
 }
 
-/** Map wizard UI levels (incl. intern/lead) → API Fresher|Junior|Middle|Senior. */
-function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
+/** Map wizard UI levels to API levels; unsupported values must be handled explicitly. */
+export function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
   const mapped: Record<string, PracticeLevel> = {
     intern: 'Fresher',
     fresher: 'Fresher',
@@ -61,7 +61,11 @@ function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
     lead: 'Senior',
   };
   const key = targetLevel.trim().toLowerCase();
-  return mapped[key] ?? resolvePracticeLevel(targetLevel) ?? 'Fresher';
+  const resolved = mapped[key] ?? resolvePracticeLevel(targetLevel);
+  if (!resolved) {
+    throw new CreateRoadmapError('unsupported_level');
+  }
+  return resolved;
 }
 
 function normalizeRoadmapSteps(raw: unknown): RoadmapStep[] {
