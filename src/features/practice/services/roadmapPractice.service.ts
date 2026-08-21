@@ -278,40 +278,52 @@ function isScoredStatus(status: string): boolean {
   );
 }
 
+/**
+ * Hai đường tạo buổi luyện cho một bài (start lần đầu / retry bài đã xong) trả
+ * về CÙNG hợp đồng, nên dùng chung đúng một mapper + một bảng mã lỗi. Tách
+ * nhánh riêng cho retry là cách hai đường trôi xa nhau mà không test nào đỏ.
+ */
+async function postLessonSession(url: string): Promise<StartLessonResult> {
+  try {
+    const response = await apiClient.post(url, {}, {
+      validateStatus: (status) => status === 201 || (status >= 200 && status < 300),
+    });
+    const session = mapPracticeSessionResponse(response.data);
+    if (!session.sessionId) {
+      return { ok: false, code: 'generic', message: 'Missing sessionId' };
+    }
+    return { ok: true, session, resumed: false };
+  } catch (error) {
+    const status = getApiStatusCode(error);
+    if (status === 409) {
+      const sessionId = extractConflictSessionId(error);
+      if (sessionId) {
+        return {
+          ok: true,
+          resumed: true,
+          session: { sessionId },
+        };
+      }
+      return { ok: false, code: 'conflict_resume', message: 'Session conflict' };
+    }
+    if (status === 402) return { ok: false, code: 'insufficient_credits' };
+    if (status === 403) return { ok: false, code: 'forbidden' };
+    if (status === 404) return { ok: false, code: 'not_found' };
+    if (status === 502) return { ok: false, code: 'ai_failed' };
+    return { ok: false, code: 'generic' };
+  }
+}
+
 export const roadmapPracticeService = {
   maxAnswerBytes: MAX_ANSWER_BYTES,
 
   async startLesson(roadmapId: string, lessonId: string): Promise<StartLessonResult> {
-    try {
-      const response = await apiClient.post(
-        learningEndpoints.startLesson(roadmapId, lessonId),
-        {},
-        { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
-      );
-      const session = mapPracticeSessionResponse(response.data);
-      if (!session.sessionId) {
-        return { ok: false, code: 'generic', message: 'Missing sessionId' };
-      }
-      return { ok: true, session, resumed: false };
-    } catch (error) {
-      const status = getApiStatusCode(error);
-      if (status === 409) {
-        const sessionId = extractConflictSessionId(error);
-        if (sessionId) {
-          return {
-            ok: true,
-            resumed: true,
-            session: { sessionId },
-          };
-        }
-        return { ok: false, code: 'conflict_resume', message: 'Session conflict' };
-      }
-      if (status === 402) return { ok: false, code: 'insufficient_credits' };
-      if (status === 403) return { ok: false, code: 'forbidden' };
-      if (status === 404) return { ok: false, code: 'not_found' };
-      if (status === 502) return { ok: false, code: 'ai_failed' };
-      return { ok: false, code: 'generic' };
-    }
+    return postLessonSession(learningEndpoints.startLesson(roadmapId, lessonId));
+  },
+
+  /** Luyện LẠI bài đã hoàn thành — tiêu 1 credit, tạo buổi mới với câu hỏi khác. */
+  async retryLesson(roadmapId: string, lessonId: string): Promise<StartLessonResult> {
+    return postLessonSession(learningEndpoints.retryLesson(roadmapId, lessonId));
   },
 
   async getPracticeSession(sessionId: string): Promise<PracticeSessionResponse> {

@@ -171,6 +171,11 @@ function mapLessonFromApi(lesson: ApiRoadmapLesson, index: number): LearningLess
     apiStatus,
     sessionId: pickString(lesson.sessionId) || null,
     practiceReportId: pickString(lesson.practiceReportId) || undefined,
+    attemptCount: pickNumber(lesson.attemptCount),
+    // Đọc THẲNG từ server. Không suy từ `apiStatus === 'Done'`: điều kiện thật
+    // của backend còn gồm ví credit và quyền sở hữu, suy ở FE là hai bên lệch
+    // nhau trong im lặng.
+    canRetry: lesson.canRetry === true,
   };
 }
 
