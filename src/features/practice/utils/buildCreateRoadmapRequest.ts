@@ -1,12 +1,13 @@
 import {
   ROADMAP_FOCUS_MAX_CHARS,
+  ROADMAP_NAME_MAX_CHARS,
   type CreateRoadmapApiRequest,
   type CreateRoadmapInput,
 } from '../types/learning.types';
 
 export type BuildCreateRoadmapPayloadResult =
   | { ok: true; body: CreateRoadmapApiRequest }
-  | { ok: false; reason: 'invalid_input' | 'focus_too_long' };
+  | { ok: false; reason: 'invalid_input' | 'focus_too_long' | 'name_too_long' };
 
 function uniqueNonEmptyIds(ids: string[] | undefined): string[] {
   if (!ids?.length) return [];
@@ -27,7 +28,7 @@ export function buildCreateRoadmapRequest(
   level: string,
   input: Pick<
     CreateRoadmapInput,
-    'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language'
+    'name' | 'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language'
   >,
 ): BuildCreateRoadmapPayloadResult {
   if (!jobCategory.trim() || !level.trim()) {
@@ -37,6 +38,11 @@ export function buildCreateRoadmapRequest(
   const focus = input.focus?.trim() ?? '';
   if (focus.length > ROADMAP_FOCUS_MAX_CHARS) {
     return { ok: false, reason: 'focus_too_long' };
+  }
+
+  const name = input.name?.trim() ?? '';
+  if (name.length > ROADMAP_NAME_MAX_CHARS) {
+    return { ok: false, reason: 'name_too_long' };
   }
 
   const sessionIds = uniqueNonEmptyIds(input.sessionIds ?? input.reportIds);
@@ -51,6 +57,7 @@ export function buildCreateRoadmapRequest(
   if (input.cvAnalysisId?.trim()) body.cvAnalysisId = input.cvAnalysisId.trim();
   if (input.priorRoadmapId?.trim()) body.priorRoadmapId = input.priorRoadmapId.trim();
   if (focus) body.focus = focus;
+  if (name) body.name = name;
 
   return { ok: true, body };
 }

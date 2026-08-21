@@ -57,6 +57,7 @@ export interface RoadmapResponse {
   regenerateLimit: number;
   domainId?: string;
   targetLevel?: string;
+  name?: string;
   sourceReportIds?: string[];
   jobCategory?: 'BA' | 'BE' | 'FE' | string;
   language?: 'vi' | 'en' | string;
@@ -93,6 +94,7 @@ export interface RoadmapApiMilestone {
 export interface CreateRoadmapInput {
   domainId: string;
   targetLevel: string;
+  name?: string;
   reportIds?: string[];
   /** Selected scored practice sessions used as baseline (sent as sessionIds). */
   sessionIds?: string[];
@@ -109,6 +111,7 @@ export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 export interface CreateRoadmapApiRequest {
   jobCategory: string;
   level: RoadmapLevel | string;
+  name?: string;
   cvId?: string;
   sessionIds?: string[];
   cvAnalysisId?: string;
@@ -118,6 +121,7 @@ export interface CreateRoadmapApiRequest {
 }
 
 export const ROADMAP_FOCUS_MAX_CHARS = 2000;
+export const ROADMAP_NAME_MAX_CHARS = 120;
 
 export interface ProgressWeekPoint {
   weekLabel: string;

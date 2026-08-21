@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
-import type { LearningDashboardQuery, LearningRoadmapDetail } from '../types/learningPath.types';
+import type { LearningDashboardQuery, LearningRoadmapCard, LearningRoadmapDetail } from '../types/learningPath.types';
 import { roadmapService } from '../services/roadmap.service';
 import { learningPathService } from '../services/learningPath.service';
 
@@ -146,6 +146,21 @@ export function useLearningLesson(roadmapId: string, lessonId: string, enabled =
 
 export function invalidateLearningRoadmaps(queryClient: ReturnType<typeof useQueryClient>) {
   return queryClient.invalidateQueries({ queryKey: LEARNING_ROADMAPS_QUERY_KEY });
+}
+
+export function updateRoadmapNameInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roadmapId: string,
+  name: string,
+) {
+  queryClient.setQueryData<LearningRoadmapDetail>(
+    learningRoadmapDetailQueryKey(roadmapId),
+    (current) => current ? { ...current, name, nameVi: name } : current,
+  );
+  queryClient.setQueriesData<LearningRoadmapCard[]>(
+    { queryKey: LEARNING_ROADMAPS_QUERY_KEY },
+    (current) => current?.map((item) => item.id === roadmapId ? { ...item, name, nameVi: name } : item),
+  );
 }
 
 export function invalidateLearningRoadmapDetail(

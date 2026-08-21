@@ -121,6 +121,7 @@ function normalizeCreateRoadmapResponse(
     regenerateLimit: Number(payload.regenerateLimit ?? MOCK_ROADMAP.regenerateLimit),
     domainId: input.domainId,
     targetLevel: input.targetLevel,
+    name: typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim() : input.name?.trim() || undefined,
     // Keep selected scored sessions available to the wizard/history UI as well.
     sourceReportIds: input.reportIds ? [...input.reportIds] : [],
     jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,

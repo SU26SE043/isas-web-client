@@ -156,7 +156,6 @@ export function LearningSidebar({ roadmap, currentLessonId }: LearningSidebarPro
       aria-label={t('practice.learningPath.sidebarLabel')}
     >
       <div className="border-b border-subtle p-4">
-        <p className="text-caption text-muted-foreground">{t('practice.learningPath.sidebarRoadmap')}</p>
         <h2 className="mt-1 text-base font-semibold text-foreground">{name}</h2>
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
