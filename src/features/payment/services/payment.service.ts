@@ -96,6 +96,10 @@ function requiredInt(value: unknown, field: string): number {
 interface LivePaymentAccount {
   remainingCredits: number;
   reservedCredits: number;
+  /** `false` khi backend báo người dùng chưa có ví nào (PAY-14). */
+  walletExists: boolean;
+  /** Suất dùng thử backend sẽ cấp NGAY khi ví được tạo lần đầu. */
+  pendingFreeCredits: number;
 }
 
 const mockOrders = new Map<string, PaymentOrder>();
@@ -188,6 +192,11 @@ function parseLiveAccount(payload: unknown): LivePaymentAccount {
   return {
     remainingCredits: requiredInt(data.remainingCredits, 'remainingCredits'),
     reservedCredits: requiredInt(data.reservedCredits, 'reservedCredits'),
+    // Hai trường dưới là TUỲ CHỌN: backend cũ hơn không trả chúng. Mặc định phải là
+    // chiều lùi an toàn — "coi như ví đã tồn tại, không có suất chờ" — để bản parse
+    // không bao giờ tự bịa ra credit cho một payload nó không hiểu.
+    walletExists: typeof data.walletExists === 'boolean' ? data.walletExists : true,
+    pendingFreeCredits: toInt(data.pendingFreeCredits),
   };
 }
 
@@ -305,10 +314,18 @@ export const paymentService = {
       fetchLiveCreditTransactions(),
     ]);
     const account = parseLiveAccount(accountResponse.data);
+    // Ví chỉ được tạo lúc reserve credit đầu tiên, và backend cấp suất dùng thử ngay
+    // BÊN TRONG câu INSERT đó (PAY-14). Nên trước lần reserve đầu, `remainingCredits`
+    // luôn là 0 dù người dùng thật sự tiêu được `pendingFreeCredits`.
+    // Ví đã tồn tại thì suất ấy đã nằm sẵn trong `remainingCredits` — cộng nữa là đếm hai lần.
+    const pendingGrant = account.walletExists ? 0 : account.pendingFreeCredits;
     return {
-      balance: account.remainingCredits + account.reservedCredits,
+      // Giữ bất biến `balance = available + reserved`: TokenWalletAccountCard hiện
+      // `balance` làm số lớn và `available`/`reserved` là phần chi tiết của nó, nên
+      // cộng suất chờ vào `available` mà bỏ `balance` sẽ ra "khả dụng > số dư".
+      balance: account.remainingCredits + account.reservedCredits + pendingGrant,
       reserved: account.reservedCredits,
-      available: account.remainingCredits,
+      available: account.remainingCredits + pendingGrant,
       transactions: liveTransactions.map(toWalletTransaction),
     };
   },
