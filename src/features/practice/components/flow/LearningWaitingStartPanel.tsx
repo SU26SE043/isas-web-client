@@ -1,15 +1,7 @@
-import { Link } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
+import { LearningCreditWarningDialog } from '../learning-path/LearningCreditWarningDialog';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -92,36 +84,15 @@ export function LearningWaitingStartPanel({
         ) : null}
       </div>
 
-      <Dialog open={creditOpen} onOpenChange={onCreditOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('practice.learningPath.creditWarningDescription')
-                .replace('{cost}', '1')
-                .replace('{balance}', creditsRemaining.toLocaleString())}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onCreditOpenChange(false)}>
-              {t('practice.learningPath.keepLearning')}
-            </Button>
-            <Link to="/candidate/credits" className="btn-primary inline-flex">
-              {t('practice.learningPath.buyCredits')}
-            </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                onCreditOpenChange(false);
-                onStart();
-              }}
-            >
-              {t('practice.learningPath.continueAnyway')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LearningCreditWarningDialog
+        open={creditOpen}
+        onOpenChange={onCreditOpenChange}
+        balance={creditsRemaining}
+        onContinue={() => {
+          onCreditOpenChange(false);
+          onStart();
+        }}
+      />
     </>
   );
 }

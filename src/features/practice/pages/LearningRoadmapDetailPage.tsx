@@ -20,6 +20,8 @@ export function LearningRoadmapDetailPage() {
   const { language, t } = useLanguage();
   const [launchingLessonId, setLaunchingLessonId] = useState<string | null>(null);
   const [creditOpen, setCreditOpen] = useState(false);
+  const [creditRejected, setCreditRejected] = useState(false);
+  const [launchError, setLaunchError] = useState(false);
   const [pendingPractice, setPendingPractice] = useState<{ lessonId: string; title: string } | null>(null);
   const { available: creditsRemaining } = useTokenWallet();
 
@@ -87,11 +89,13 @@ export function LearningRoadmapDetailPage() {
   );
   const openPractice = async (lessonId: string, lessonTitle: string, sessionId?: string | null, bypassCreditWarning = false) => {
     if (!sessionId && !bypassCreditWarning && (creditsRemaining ?? 0) < 1) {
+      setCreditRejected(false);
       setPendingPractice({ lessonId, title: lessonTitle });
       setCreditOpen(true);
       return;
     }
     setLaunchingLessonId(lessonId);
+    setLaunchError(false);
     try {
       if (sessionId) {
         navigate(learningInterviewPreparePath(sessionId, { roadmapId, lessonId }));
@@ -104,11 +108,19 @@ export function LearningRoadmapDetailPage() {
       });
       if (!result.ok) {
         setLaunchingLessonId(null);
+        if (result.code === 'insufficient_credits') {
+          setCreditRejected(true);
+          setPendingPractice({ lessonId, title: lessonTitle });
+          setCreditOpen(true);
+        } else {
+          setLaunchError(true);
+        }
         return;
       }
       navigate(learningInterviewPreparePath(result.session.sessionId, { roadmapId, lessonId }));
     } catch {
       setLaunchingLessonId(null);
+      setLaunchError(true);
     }
   };
 
@@ -156,15 +168,22 @@ export function LearningRoadmapDetailPage() {
         launchingLessonId={launchingLessonId}
         onOpenPractice={(lessonId, lessonTitle, sessionId) => void openPractice(lessonId, lessonTitle, sessionId)}
       />
+      {launchError ? (
+        <p className="mt-4 text-sm text-error" role="alert">
+          {t('practice.learningPath.startError')}
+        </p>
+      ) : null}
       <LearningCreditWarningDialog
         open={creditOpen}
         onOpenChange={setCreditOpen}
         balance={creditsRemaining ?? 0}
+        backendRejected={creditRejected}
         onContinue={() => {
           if (!pendingPractice) return;
           const pending = pendingPractice;
           setCreditOpen(false);
           setPendingPractice(null);
+          setCreditRejected(false);
           void openPractice(pending.lessonId, pending.title, undefined, true);
         }}
       />
