@@ -32,6 +32,23 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
             <p className="mt-1 text-sm text-muted-foreground">
               {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} · {milestone.progressPercent}%
             </p>
+            {milestone.status === 'completed' && milestone.improvement?.length ? (
+              <div className="mt-4 rounded-xl border border-info/30 bg-surface-overlay/60 p-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {t('practice.learningPath.improvementTitle')}
+                </h3>
+                <ul className="mt-2 grid gap-2 sm:grid-cols-2" aria-label={t('practice.learningPath.improvementTitle')}>
+                  {milestone.improvement.map((item) => (
+                    <li key={item.criterionName} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-muted-foreground">{item.criterionName}</span>
+                      <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
+                        {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <ul className="mt-4 space-y-2">
               {milestone.lessons.map((lessonItem, lessonIndex) => {
                 const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;

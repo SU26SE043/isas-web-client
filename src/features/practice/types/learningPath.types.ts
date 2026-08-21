@@ -88,6 +88,17 @@ export interface LearningMilestone {
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
 }
 
+export interface LearningRoadmapResolvedSession {
+  id: string;
+  date: string | null;
+}
+
+export interface LearningRoadmapResolvedFrom {
+  sessions: LearningRoadmapResolvedSession[];
+  baselineAvailable: boolean;
+  scope: string;
+}
+
 export interface LearningRoadmapCard {
   id: string;
   name: string;
@@ -118,6 +129,7 @@ export interface LearningRoadmapCard {
 export interface LearningRoadmapDetail extends LearningRoadmapCard {
   milestones: LearningMilestone[];
   reports: LearningPracticeReport[];
+  resolvedFrom?: LearningRoadmapResolvedFrom | null;
 }
 
 export interface LearningDashboardQuery {
