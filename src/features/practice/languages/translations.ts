@@ -517,6 +517,7 @@ export const practiceTranslations: TranslationDictionary = {
       'Bạn cần ít nhất 1 credit để bắt đầu bài luyện của lesson này.',
     'practice.learningPath.creditWarningDescription':
       'Bài luyện này dùng {cost} credit. Số dư hiện tại của bạn là {balance} credit. Bạn vẫn có thể tiếp tục; hệ thống sẽ xác nhận giao dịch.',
+    'practice.learningPath.creditStartRejected': 'Máy chủ từ chối bắt đầu vì số dư credit chưa đủ. Hãy nạp thêm hoặc tiếp tục để thử lại.',
     'practice.learningPath.keepLearning': 'Quay lại học tập',
     'practice.learningPath.continueAnyway': 'Tiếp tục dù chưa đủ',
     'practice.learningPath.roadmapCreditsNeeded': 'Credit cần để hoàn thành',
@@ -1619,6 +1620,7 @@ export const practiceTranslations: TranslationDictionary = {
       'You need at least 1 credit to start this lesson practice.',
     'practice.learningPath.creditWarningDescription':
       'This practice uses {cost} credit. Your current balance is {balance} credits. You can continue anyway; the system will confirm the transaction.',
+    'practice.learningPath.creditStartRejected': 'The server rejected the start because the credit balance is insufficient. Top up or continue to try again.',
     'practice.learningPath.keepLearning': 'Keep learning',
     'practice.learningPath.continueAnyway': 'Continue anyway',
     'practice.learningPath.roadmapCreditsNeeded': 'Credits needed to finish',

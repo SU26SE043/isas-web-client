@@ -8,9 +8,10 @@ interface LearningCreditWarningDialogProps {
   onOpenChange: (open: boolean) => void;
   balance: number;
   onContinue: () => void;
+  backendRejected?: boolean;
 }
 
-export function LearningCreditWarningDialog({ open, onOpenChange, balance, onContinue }: LearningCreditWarningDialogProps) {
+export function LearningCreditWarningDialog({ open, onOpenChange, balance, onContinue, backendRejected = false }: LearningCreditWarningDialogProps) {
   const { t } = useLanguage();
 
   return (
@@ -18,6 +19,11 @@ export function LearningCreditWarningDialog({ open, onOpenChange, balance, onCon
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
+          {backendRejected ? (
+            <p className="text-sm text-error" role="alert">
+              {t('practice.learningPath.creditStartRejected')}
+            </p>
+          ) : null}
           <DialogDescription>
             {t('practice.learningPath.creditWarningDescription')
               .replace('{cost}', '1')

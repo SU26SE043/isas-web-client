@@ -2,15 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Check, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
@@ -20,6 +11,7 @@ import {
   startLearningLessonPractice,
 } from '../../utils/launchLearningInterviewPractice';
 import { findNextLesson, theoryPath } from '../../utils/learningPathNavigation';
+import { LearningCreditWarningDialog } from './LearningCreditWarningDialog';
 
 interface LearningTheoryActionsProps {
   roadmap: LearningRoadmapDetail;
@@ -37,6 +29,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   const [isOpening, setIsOpening] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
   const [startError, setStartError] = useState(false);
+  const [creditRejected, setCreditRejected] = useState(false);
   const { available: creditsRemaining } = useTokenWallet();
 
   const nextLesson = findNextLesson(roadmap, opened.id);
@@ -51,6 +44,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   const handleEnterInterviewPractice = async (bypassCreditWarning = false) => {
     if (isOpening) return;
     if (!opened.sessionId && !bypassCreditWarning && (creditsRemaining ?? 0) < 1) {
+      setCreditRejected(false);
       setCreditOpen(true);
       return;
     }
@@ -71,6 +65,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
       });
       if (!result.ok) {
         if (result.code === 'insufficient_credits') {
+          setCreditRejected(true);
           setCreditOpen(true);
           return;
         }
@@ -164,36 +159,17 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
         </div>
       ) : null}
 
-      <Dialog open={creditOpen} onOpenChange={setCreditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('practice.learningPath.creditWarningDescription')
-                .replace('{cost}', '1')
-                .replace('{balance}', (creditsRemaining ?? 0).toLocaleString())}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => setCreditOpen(false)}>
-              {t('practice.learningPath.keepLearning')}
-            </Button>
-            <Link to="/candidate/credits" className="btn-primary inline-flex">
-              {t('practice.learningPath.buyCredits')}
-            </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setCreditOpen(false);
-                void handleEnterInterviewPractice(true);
-              }}
-            >
-              {t('practice.learningPath.continueAnyway')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LearningCreditWarningDialog
+        open={creditOpen}
+        onOpenChange={setCreditOpen}
+        balance={creditsRemaining ?? 0}
+        backendRejected={creditRejected}
+        onContinue={() => {
+          setCreditOpen(false);
+          setCreditRejected(false);
+          void handleEnterInterviewPractice(true);
+        }}
+      />
     </div>
   );
 }
