@@ -77,9 +77,14 @@ export function useRoadmapWizardFlow() {
     }
   }, []);
 
+  // Thứ tự bước, khai một chỗ để đổi thứ tự không phải đi tìm số rải rác. Trước đây chỗ nạp
+  // báo cáo ghim số 1; khi chèn bước "Tên & mục tiêu" vào giữa, bước Báo cáo dời sang 2 và điều
+  // kiện cũ lặng lẽ không bao giờ khớp nữa — danh sách báo cáo sẽ trống mà không có lỗi nào.
+  const STEP_REPORTS = 2;
+
   const goToStep = useCallback(
     (nextStep: number) => {
-      if (nextStep === 1 && domainId) {
+      if (nextStep === STEP_REPORTS && domainId) {
         void loadReportsForDomain(domainId);
       }
       setStep(nextStep);

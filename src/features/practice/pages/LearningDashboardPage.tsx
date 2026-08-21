@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
@@ -22,10 +22,24 @@ export function LearningDashboardPage() {
 
   return (
     <div className="page-container page-section min-h-screen">
-      <header className="mb-6 space-y-2">
-        <h1 className="heading-primary text-3xl text-foreground">{t('practice.learningPath.title')}</h1>
-        <p className="body-text text-sm text-muted-foreground">{t('practice.learningPath.subtitle')}</p>
-        <p className="text-caption text-muted-foreground">{t('practice.learningPath.noCreateHint')}</p>
+      {/*
+        Trang này nay là lối vào DUY NHẤT của lộ trình: vừa liệt kê lộ trình đang có, vừa tạo mới.
+        Trước đây menu tách làm hai mục ("Học tập" để xem, "Lộ trình" để tạo) và trang này phải ghi
+        hẳn một dòng "không tạo lộ trình tại đây — dùng menu Lộ trình" — một dòng chữ để bù cho việc
+        điều hướng bắt người dùng đoán. Gộp lại thì dòng đó không còn lý do tồn tại.
+      */}
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="heading-primary text-3xl text-foreground">{t('practice.learningPath.title')}</h1>
+          <p className="body-text text-sm text-muted-foreground">{t('practice.learningPath.subtitle')}</p>
+        </div>
+        <Link
+          to="/candidate/roadmap"
+          className="btn-primary inline-flex shrink-0 items-center gap-2"
+        >
+          <Plus className="size-4" aria-hidden />
+          {t('practice.learningPath.createRoadmap')}
+        </Link>
       </header>
 
       <LearningDashboardToolbar query={query} onChange={setQuery} />

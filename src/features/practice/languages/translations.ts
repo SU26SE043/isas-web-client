@@ -434,9 +434,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmap.regenLimit': 'Bạn đã đạt giới hạn tạo lại lộ trình trong kỳ này.',
     'practice.roadmap.error': 'Không thể tải lộ trình. Vui lòng thử lại.',
     'practice.roadmap.goToLearning': 'Đến trung tâm học tập',
-    'practice.learningPath.title': 'Học tập',
+    // Gộp hai mục menu cũ nên tên phải đồng nhất: menu, tiêu đề trang và thanh trên cùng
+    // đều dùng key này. Để lệch ("Lộ trình" ở menu, "Học tập" ở tiêu đề) thì người dùng không
+    // chắc mình đang ở đúng chỗ vừa bấm.
+    'practice.learningPath.title': 'Lộ trình',
     'practice.learningPath.subtitle': 'Quản lý và học theo các lộ trình AI đã tạo cho bạn.',
-    'practice.learningPath.noCreateHint': 'Không tạo lộ trình tại đây — dùng menu Lộ trình để tạo mới.',
+    'practice.learningPath.createRoadmap': 'Tạo lộ trình',
     'practice.learningPath.resumeLabel': 'Tiếp tục học',
     'practice.learningPath.continueLearning': 'Tiếp tục học',
     'practice.learningPath.search': 'Tìm kiếm',
@@ -681,6 +684,14 @@ export const practiceTranslations: TranslationDictionary = {
       'Các session đã chọn sẽ được gửi làm baseline (sessionIds) khi tạo roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
       'Các session đã chấm được chọn sẽ gửi kèm để AI cá nhân hóa lộ trình. Các trường khác là tùy chọn.',
+    'practice.roadmapWizard.steps.nameFocus': 'Tên & mục tiêu',
+    'practice.roadmapWizard.confirm.nameAuto': 'Máy chủ tự đặt',
+    'practice.roadmapWizard.confirm.focusNone': 'Không có',
+    'practice.roadmapWizard.nameFocus.title': 'Đặt tên và mục tiêu',
+    'practice.roadmapWizard.nameFocus.description':
+      'Cả hai đều tuỳ chọn — bỏ trống cũng tạo được lộ trình.',
+    'practice.roadmapWizard.nameFocus.focusHint':
+      'Mô tả bạn muốn AI tập trung vào đâu, ví dụ: luyện trả lời tình huống, đào sâu phân tích yêu cầu.',
     'practice.roadmapWizard.confirm.focusLabel': 'Mục tiêu tập trung (tuỳ chọn)',
     'practice.roadmapWizard.confirm.focusPlaceholder':
       'Ví dụ: cải thiện trả lời behavioral, luyện system design ngắn...',
@@ -1551,9 +1562,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmap.regenLimit': 'You reached the roadmap regeneration limit for this period.',
     'practice.roadmap.error': 'Could not load the roadmap. Please try again.',
     'practice.roadmap.goToLearning': 'Go to learning hub',
-    'practice.learningPath.title': 'Learning',
+    'practice.learningPath.title': 'Roadmaps',
     'practice.learningPath.subtitle': 'Manage and study the roadmaps AI already created for you.',
-    'practice.learningPath.noCreateHint': 'You cannot create a roadmap here — use the Roadmap menu.',
+    'practice.learningPath.createRoadmap': 'Create roadmap',
     'practice.learningPath.resumeLabel': 'Resume learning',
     'practice.learningPath.continueLearning': 'Continue Learning',
     'practice.learningPath.search': 'Search',
@@ -1798,6 +1809,14 @@ export const practiceTranslations: TranslationDictionary = {
       'Selected scored sessions will be sent as baseline sessionIds when creating the roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
       'Selected scored sessions are sent so AI can personalize the roadmap. Other fields are optional.',
+    'practice.roadmapWizard.steps.nameFocus': 'Name & goal',
+    'practice.roadmapWizard.confirm.nameAuto': 'Server picks one',
+    'practice.roadmapWizard.confirm.focusNone': 'None',
+    'practice.roadmapWizard.nameFocus.title': 'Name and goal',
+    'practice.roadmapWizard.nameFocus.description':
+      'Both are optional — you can create the roadmap without either.',
+    'practice.roadmapWizard.nameFocus.focusHint':
+      'Describe what the AI should focus on, e.g. situational answers, deeper requirement analysis.',
     'practice.roadmapWizard.confirm.focusLabel': 'Focus goal (optional)',
     'practice.roadmapWizard.confirm.focusPlaceholder':
       'Example: improve behavioral answers, short system-design drills...',
