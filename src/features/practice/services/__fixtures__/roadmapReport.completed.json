@@ -1,0 +1,129 @@
+{
+  "radar": [
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000002",
+      "name": "Giao tiếp & trình bày",
+      "maxScore": 5,
+      "weight": 0.18,
+      "percentage": 60.0,
+      "averageScore": 3.0,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    },
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000003",
+      "name": "Hiểu nghiệp vụ & các bên liên quan",
+      "maxScore": 5,
+      "weight": 0.18,
+      "percentage": 60.0,
+      "averageScore": 3.0,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    },
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000005",
+      "name": "Ngữ pháp & dùng từ",
+      "maxScore": 5,
+      "weight": 0.09,
+      "percentage": 75.0,
+      "averageScore": 3.75,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    },
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000001",
+      "name": "Phân tích yêu cầu",
+      "maxScore": 5,
+      "weight": 0.22,
+      "percentage": 40.0,
+      "averageScore": 2.0,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    },
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000006",
+      "name": "Thuật ngữ chuyên ngành",
+      "maxScore": 5,
+      "weight": 0.09,
+      "percentage": 60.0,
+      "averageScore": 3.0,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    },
+    {
+      "criterionId": "0b100000-0000-0000-0000-000000000007",
+      "name": "Độ trôi chảy & tự tin",
+      "maxScore": 5,
+      "weight": 0.1,
+      "percentage": 70.0,
+      "averageScore": 3.5,
+      "startPercentage": null,
+      "sessionCount": 0,
+      "recentCount": 0
+    }
+  ],
+  "levelEvaluation": [
+    {
+      "criterionName": "Giao tiếp & trình bày",
+      "percentage": 60.0,
+      "levelThreshold": 60,
+      "passed": true
+    },
+    {
+      "criterionName": "Hiểu nghiệp vụ & các bên liên quan",
+      "percentage": 60.0,
+      "levelThreshold": 60,
+      "passed": true
+    },
+    {
+      "criterionName": "Ngữ pháp & dùng từ",
+      "percentage": 75.0,
+      "levelThreshold": 60,
+      "passed": true
+    },
+    {
+      "criterionName": "Phân tích yêu cầu",
+      "percentage": 40.0,
+      "levelThreshold": 60,
+      "passed": false
+    },
+    {
+      "criterionName": "Thuật ngữ chuyên ngành",
+      "percentage": 60.0,
+      "levelThreshold": 60,
+      "passed": true
+    },
+    {
+      "criterionName": "Độ trôi chảy & tự tin",
+      "percentage": 70.0,
+      "levelThreshold": 60,
+      "passed": true
+    }
+  ],
+  "strengths": [
+    "Giao tiếp & trình bày",
+    "Hiểu nghiệp vụ & các bên liên quan",
+    "Ngữ pháp & dùng từ",
+    "Thuật ngữ chuyên ngành",
+    "Độ trôi chảy & tự tin"
+  ],
+  "weaknesses": [
+    "Phân tích yêu cầu"
+  ],
+  "improvements": [
+    "Giao tiếp & trình bày",
+    "Hiểu nghiệp vụ & các bên liên quan",
+    "Ngữ pháp & dùng từ",
+    "Phân tích yêu cầu",
+    "Thuật ngữ chuyên ngành",
+    "Độ trôi chảy & tự tin"
+  ],
+  "overallComment": "Bạn đã thể hiện nhiều điểm mạnh đáng kể, đạt ngưỡng Junior ở hầu hết các tiêu chí như giao tiếp, hiểu nghiệp vụ, ngữ pháp, thuật ngữ và độ tự tin. Tuy nhiên, kỹ năng phân tích yêu cầu vẫn cần được cải thiện để đạt được mục tiêu. Hướng ôn luyện tiếp theo nên tập trung sâu vào việc nâng cao năng lực phân tích yêu cầu để hoàn thiện bộ kỹ năng cho vị trí Business Analyst Junior.",
+  "roadmapStatus": "Completed",
+  "progress": []
+}

@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { SkillRadarChart } from '../components/SkillRadarChart';
+import { RoadmapProgressChart } from '../components/RoadmapProgressChart';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
 import type { RoadmapLevelEvaluationItem } from '../types/roadmapPractice.api.types';
 
@@ -57,6 +58,20 @@ export function LearningRoadmapReportPage() {
     language === 'vi'
       ? data.overallCommentVi || data.overallComment
       : data.overallComment || data.overallCommentVi;
+  const isInterim = data.kind !== 'snapshot';
+  /*
+    "Chưa có buổi nào được chấm" KHÁC "hệ thống hỏng", và cũng KHÁC ca "mới có một buổi".
+    Backend trả 200 với mọi mảng rỗng khi lộ trình chưa hoàn thành bài nào — trước đây
+    trạng thái này chưa ai nhìn thấy vì nút báo cáo bị khoá sau `status === 'completed'`.
+    Radar không có nan nào sẽ vẽ ra một chấm/hình méo, người dùng đọc thành lỗi hệ thống.
+  */
+  const hasRadar = data.radarData.length > 0;
+  /*
+    Ngưỡng đạt là hằng số theo cấp độ, nên lấy dòng đầu của `levelEvaluation` là đủ.
+    Không có dòng nào ⇒ `null` = KHÔNG BIẾT ⇒ biểu đồ đường không vẽ đường ngang,
+    chứ không vẽ một ngưỡng 0% bịa ra.
+  */
+  const threshold = data.levelEvaluation[0]?.levelThreshold ?? null;
 
   return (
     <div className="page-container page-section min-h-full space-y-6 py-8">
@@ -70,13 +85,40 @@ export function LearningRoadmapReportPage() {
         </p>
       </header>
 
-      {data.radarData.length > 0 ? (
-        <SkillRadarChart data={data.radarData} language={language} />
-      ) : (
-        <p className="text-sm text-muted-foreground">{t('practice.learningPath.radarEmpty')}</p>
-      )}
+      {isInterim ? (
+        <section
+          className="rounded-xl border border-warning/40 bg-warning/10 p-4"
+          role="status"
+          data-testid="report-interim-banner"
+        >
+          <h2 className="text-sm font-semibold text-warning">
+            {t('practice.learningPath.reportInterimTitle')}
+          </h2>
+          <p className="mt-1 text-sm text-warning/90">
+            {t('practice.learningPath.reportInterimDesc')}
+          </p>
+        </section>
+      ) : null}
 
-      {data.levelEvaluation.length > 0 ? (
+      {!hasRadar ? (
+        <section
+          className="rounded-2xl border border-satin bg-surface-raised p-6"
+          data-testid="report-empty-state"
+        >
+          <h2 className="heading-secondary text-xl text-foreground">
+            {t('practice.learningPath.reportEmptyTitle')}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t('practice.learningPath.reportEmptyDesc')}
+          </p>
+        </section>
+      ) : null}
+
+      {hasRadar ? <SkillRadarChart data={data.radarData} language={language} /> : null}
+
+      {hasRadar ? <RoadmapProgressChart progress={data.progress} threshold={threshold} /> : null}
+
+      {hasRadar && data.levelEvaluation.length > 0 ? (
         <section className="space-y-4 rounded-xl border border-subtle bg-surface-raised p-5">
           <h2 className="heading-secondary text-lg text-foreground">
             {t('practice.learningPath.levelEvaluation')}
@@ -115,9 +157,14 @@ export function LearningRoadmapReportPage() {
           title={t('practice.learningPath.weaknesses')}
           items={language === 'vi' && data.weaknessesVi.length > 0 ? data.weaknessesVi : data.weaknesses}
         />
+        {/*
+          Ô này RỖNG một cách hợp lệ khi chưa tiêu chí nào có mốc để so, nên nó cần
+          câu giải thích riêng — dấu "—" trơ ở đây bị đọc thành "hệ thống hỏng".
+        */}
         <ListBlock
           title={t('practice.learningPath.improvements')}
           items={language === 'vi' && data.improvementsVi.length > 0 ? data.improvementsVi : data.improvements}
+          emptyText={t('practice.learningPath.improvementsEmpty')}
         />
       </section>
 
@@ -187,12 +234,20 @@ function LevelEvaluationRow({
   );
 }
 
-function ListBlock({ title, items }: { title: string; items: string[] }) {
+function ListBlock({
+  title,
+  items,
+  emptyText,
+}: {
+  title: string;
+  items: string[];
+  emptyText?: string;
+}) {
   return (
     <div className="rounded-xl border border-subtle bg-surface-raised p-5">
       <h2 className="text-sm font-medium text-foreground">{title}</h2>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">—</p>
+        <p className="mt-2 text-sm text-muted-foreground">{emptyText ?? '—'}</p>
       ) : (
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           {items.map((item) => (

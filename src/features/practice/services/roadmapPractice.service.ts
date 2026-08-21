@@ -10,6 +10,8 @@ import type {
   PracticeSessionResponse,
   RoadmapLevelEvaluationItem,
   RoadmapPracticeReport,
+  RoadmapProgressCriterionScore,
+  RoadmapProgressPoint,
   RoadmapReportKind,
   StartLessonResult,
   SubmitPracticeAnswerInput,
@@ -38,6 +40,22 @@ function pickNumber(...values: unknown[]): number {
     }
   }
   return 0;
+}
+
+/**
+ * Khác `pickNumber` ở đúng một điểm, và điểm đó là cả lý do nó tồn tại:
+ * thiếu giá trị trả `null` chứ KHÔNG trả `0`.
+ *
+ * `0` và "không có số đo" là hai chuyện khác hẳn nhau. Dùng `pickNumber` cho
+ * `startPercentage` sẽ biến "tiêu chí này mới có 1 buổi" thành "buổi đầu được 0%",
+ * tức bịa ra một mốc xuất phát ở đáy rồi vẽ mọi thứ như đang tiến bộ vượt bậc.
+ */
+function pickNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+  return null;
 }
 
 function pickStringArray(...values: unknown[]): string[] {
@@ -139,8 +157,48 @@ function mapRadar(raw: unknown, thresholdByName: Map<string, number> = new Map()
       A: pickNumber(row.A, row.current, row.value, row.score, row.percentage),
       B: pickNumber(row.B, row.target, row.goal) || thresholdByName.get(subject) || 0,
       fullMark: pickNumber(row.fullMark, 100) || 100,
+      // Ba field dưới đây đọc ĐÚNG tên trong hợp đồng backend, không có nhánh đoán mò:
+      // chuỗi fallback ở `A` phía trên chính là thứ từng khiến radar vẽ rỗng với dữ liệu
+      // thật (mọi tên trước `percentage` chỉ tồn tại trong fixtures mock).
+      C: pickNullableNumber(row.startPercentage),
+      sessionCount: pickNumber(row.sessionCount),
+      recentCount: pickNumber(row.recentCount),
     };
   });
+}
+
+function mapProgressScores(raw: unknown): RoadmapProgressCriterionScore[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      const row = asRecord(entry);
+      const name = pickString(row.name);
+      if (!name) return null;
+      return { name, percentage: pickNumber(row.percentage) };
+    })
+    .filter((item): item is RoadmapProgressCriterionScore => item != null);
+}
+
+/**
+ * `order` quyết định thứ tự trên trục thời gian, nên sắp lại ở đây thay vì tin
+ * thứ tự mảng: một buổi vẽ sai chỗ sẽ đảo ngược chính cái xu hướng đang cần đọc.
+ */
+function mapProgress(raw: unknown): RoadmapProgressPoint[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry, index) => {
+      const row = asRecord(entry);
+      return {
+        // `index + 1` là giá trị mặc định khi backend thiếu `order`, KHÔNG phải tên field đoán thêm.
+        order: pickNumber(row.order, index + 1),
+        lessonTitle: pickString(row.lessonTitle),
+        completedAt:
+          typeof row.completedAt === 'string' && row.completedAt.trim() ? row.completedAt : null,
+        overallPercentage: pickNumber(row.overallPercentage),
+        scores: mapProgressScores(row.scores),
+      };
+    })
+    .sort((a, b) => a.order - b.order);
 }
 
 function mapLevelEvaluation(raw: unknown): RoadmapLevelEvaluationItem[] {
@@ -191,6 +249,7 @@ function mapRoadmapReport(raw: unknown, roadmapId: string): RoadmapPracticeRepor
     radarData: mapRadar(
       item.radarData ?? item.radar ?? item.skills,
       new Map(levelEvaluation.map((e) => [e.criterionName, e.levelThreshold]))),
+    progress: mapProgress(item.progress),
   };
 }
 
