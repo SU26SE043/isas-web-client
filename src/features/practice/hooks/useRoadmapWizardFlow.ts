@@ -3,10 +3,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
+import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { useLanguage } from '@/shared/languages';
 import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
+import { learningPathService } from '../services/learningPath.service';
+import type { LearningRoadmapCard } from '../types/learningPath.types';
 import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
 import {
@@ -31,6 +35,9 @@ export function useRoadmapWizardFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [cvId, setCvId] = useState<string | undefined>();
+  const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
+  const [cvAnalyses, setCvAnalyses] = useState<CvAnalysisResult[]>([]);
+  const [completedRoadmaps, setCompletedRoadmaps] = useState<LearningRoadmapCard[]>([]);
   const [cvAnalysisId, setCvAnalysisId] = useState<string | undefined>();
   const [priorRoadmapId, setPriorRoadmapId] = useState<string | undefined>();
   const [focus, setFocus] = useState('');
@@ -42,13 +49,15 @@ export function useRoadmapWizardFlow() {
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
     try {
-      const [history, cvs] = await Promise.all([
+      const [history, cvs, analyses, roadmaps] = await Promise.all([
         fetchInterviewHistory({
           page: 1,
           pageSize: 100,
           includeDeleted: false,
         }),
         cvAnalysisService.listUploadedCvs().catch(() => []),
+        cvAnalysisService.listAnalyses().catch(() => []),
+        learningPathService.listRoadmaps({ status: 'completed' }).catch(() => []),
       ]);
       const filtered = history.interviews
         .filter((item) => item.status === 'completed' && item.domainId === nextDomainId)
@@ -56,6 +65,9 @@ export function useRoadmapWizardFlow() {
         .slice(0, ROADMAP_REPORT_PREVIEW_LIMIT);
       setAllReports(filtered);
       setSelectedIds([]);
+      setCvFiles(cvs);
+      setCvAnalyses(analyses);
+      setCompletedRoadmaps(roadmaps);
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
       setPriorRoadmapId(undefined);
@@ -141,6 +153,9 @@ export function useRoadmapWizardFlow() {
     selectedIds,
     targetLevel,
     cvId,
+    cvFiles,
+    cvAnalyses,
+    completedRoadmaps,
     cvAnalysisId,
     priorRoadmapId,
     focus,
@@ -152,6 +167,7 @@ export function useRoadmapWizardFlow() {
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setCvId,
     setFocus,
     setCvAnalysisId,
     setPriorRoadmapId,

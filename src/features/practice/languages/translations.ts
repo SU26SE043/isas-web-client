@@ -648,6 +648,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.level': 'Cấp độ mục tiêu',
     'practice.roadmapWizard.confirm.count': 'Số báo cáo phỏng vấn',
     'practice.roadmapWizard.confirm.cv': 'CV',
+    'practice.roadmapWizard.confirm.cvNone': 'Chưa có CV. Roadmap sẽ dựa trên các báo cáo phỏng vấn đã chọn.',
+    'practice.roadmapWizard.confirm.cvAnalysis': 'Phân tích CV có sẵn',
+    'practice.roadmapWizard.confirm.cvAnalysisNone': 'Chưa có phân tích CV đã lưu.',
+    'practice.roadmapWizard.confirm.priorRoadmap': 'Roadmap trước đó',
+    'practice.roadmapWizard.confirm.priorRoadmapNone': 'Chưa có roadmap đã hoàn thành.',
+    'practice.roadmapWizard.confirm.notSelected': 'Không chọn',
     'practice.roadmapWizard.confirm.reportsNotSent':
       'Các session đã chọn sẽ được gửi làm baseline (sessionIds) khi tạo roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
@@ -1735,6 +1741,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.level': 'Target level',
     'practice.roadmapWizard.confirm.count': 'Interview reports',
     'practice.roadmapWizard.confirm.cv': 'CV',
+    'practice.roadmapWizard.confirm.cvNone': 'No CV uploaded. The roadmap will be based on the selected interview reports.',
+    'practice.roadmapWizard.confirm.cvAnalysis': 'Existing CV analysis',
+    'practice.roadmapWizard.confirm.cvAnalysisNone': 'No saved CV analysis available.',
+    'practice.roadmapWizard.confirm.priorRoadmap': 'Earlier roadmap',
+    'practice.roadmapWizard.confirm.priorRoadmapNone': 'No completed roadmap available.',
+    'practice.roadmapWizard.confirm.notSelected': 'Not selected',
     'practice.roadmapWizard.confirm.reportsNotSent':
       'Selected scored sessions will be sent as baseline sessionIds when creating the roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
