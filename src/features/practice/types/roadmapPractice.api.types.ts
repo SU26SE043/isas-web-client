@@ -69,6 +69,26 @@ export type RoadmapLevelEvaluationItem = {
   passed: boolean;
 };
 
+/** Một tiêu chí được chấm trong MỘT buổi của lộ trình. */
+export type RoadmapProgressCriterionScore = {
+  name: string;
+  percentage: number;
+};
+
+/**
+ * Một điểm trên trục thời gian của lộ trình = một buổi luyện đã chấm.
+ *
+ * Đây là thứ radar KHÔNG trả lời được: radar cho biết "đang ở đâu", còn mảng này
+ * cho biết "đang đi lên hay đi xuống".
+ */
+export type RoadmapProgressPoint = {
+  order: number;
+  lessonTitle: string;
+  completedAt: string | null;
+  overallPercentage: number;
+  scores: RoadmapProgressCriterionScore[];
+};
+
 export type RoadmapPracticeReport = {
   roadmapId: string;
   kind: RoadmapReportKind;
@@ -85,6 +105,11 @@ export type RoadmapPracticeReport = {
   improvements: string[];
   improvementsVi: string[];
   radarData: RadarData[];
+  /**
+   * Có thể RỖNG: báo cáo cũ đã chốt sổ trước khi backend trả field này.
+   * Mọi chỗ tiêu thụ phải chịu được `[]` chứ không được giả định luôn có dữ liệu.
+   */
+  progress: RoadmapProgressPoint[];
 };
 
 export type StartLessonErrorCode =
