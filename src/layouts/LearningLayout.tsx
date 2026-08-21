@@ -3,7 +3,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { useLanguage } from '@/shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 
-/** Full Learning workspace chrome — no candidate system sidebar. */
+/** Chrome Learning độc lập cho các route không dùng DashboardLayout. */
 export function LearningLayout() {
   const { t } = useLanguage();
 
