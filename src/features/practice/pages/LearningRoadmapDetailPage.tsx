@@ -210,14 +210,19 @@ export function LearningRoadmapDetailPage() {
         </section>
       ) : null}
 
-      {roadmap.status === 'completed' ? (
-        <Link
-          to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
-          className="btn-secondary mt-4 inline-flex text-sm"
-        >
-          {t('practice.learningPath.viewRoadmapReport')}
-        </Link>
-      ) : null}
+      {/*
+        KHÔNG khoá sau `status === 'completed'`: backend vốn đã dựng báo cáo TẠM THỜI cho
+        lộ trình đang học (không gọi AI, nên thiếu phần nhận xét tổng quan — trang báo cáo
+        tự nói rõ điều đó bằng banner). Khoá lại chỉ giấu mất dữ liệu đã có sẵn.
+      */}
+      <Link
+        to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
+        className="btn-secondary mt-4 inline-flex text-sm"
+      >
+        {roadmap.status === 'completed'
+          ? t('practice.learningPath.viewRoadmapReport')
+          : t('practice.learningPath.viewRoadmapReportInterim')}
+      </Link>
 
       <LearningRoadmapMilestones
         roadmap={roadmap}
