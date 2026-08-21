@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '@/shared/languages';
-import { ROADMAP_FOCUS_MAX_CHARS } from '../../types/learning.types';
+import { ROADMAP_FOCUS_MAX_CHARS, ROADMAP_NAME_MAX_CHARS } from '../../types/learning.types';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import type { CvAnalysisResult, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
@@ -11,6 +11,8 @@ import { RoadmapWizardNav } from './RoadmapWizardNav';
 interface RoadmapConfirmStepProps {
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
+  name: string;
+  onNameChange: (value: string) => void;
   selectedReports: InterviewHistoryItem[];
   cvId?: string;
   cvFiles: UploadedCvFile[];
@@ -31,6 +33,8 @@ interface RoadmapConfirmStepProps {
 export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
   targetLevel,
+  name,
+  onNameChange,
   selectedReports,
   cvId,
   cvFiles,
@@ -54,6 +58,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
       : domain.name
     : '—';
   const focusTooLong = focus.trim().length > ROADMAP_FOCUS_MAX_CHARS;
+  const nameTooLong = name.trim().length > ROADMAP_NAME_MAX_CHARS;
 
   return (
     <section className="rounded-xl border border-subtle bg-surface-raised p-6">
@@ -160,6 +165,29 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         </div>
       </dl>
 
+      <label className="mt-5 block space-y-2">
+        <span className="text-sm font-medium text-foreground">
+          {t('practice.roadmapWizard.confirm.nameLabel')}
+        </span>
+        <input
+          id="roadmap-confirm-name"
+          value={name}
+          onChange={(event) => onNameChange(event.target.value)}
+          maxLength={ROADMAP_NAME_MAX_CHARS + 1}
+          className="h-10 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder={t('practice.roadmapWizard.confirm.namePlaceholder')}
+          disabled={isSubmitting}
+        />
+        <span className="flex justify-between text-caption text-muted-foreground">
+          <span>
+            {nameTooLong
+              ? t('practice.roadmapWizard.confirm.nameTooLong')
+              : t('practice.roadmapWizard.confirm.nameHint')}
+          </span>
+          <span>{name.trim().length}/{ROADMAP_NAME_MAX_CHARS}</span>
+        </span>
+      </label>
+
       {selectedReports.length > 0 ? (
         <ul className="mt-4 space-y-2">
           {selectedReports.map((report) => (
@@ -210,7 +238,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         onNext={onConfirm}
         nextLabel={t('practice.roadmapWizard.confirm.create')}
         isLoading={isSubmitting}
-        nextDisabled={!domain || !targetLevel || isSubmitting || focusTooLong}
+        nextDisabled={!domain || !targetLevel || isSubmitting || focusTooLong || nameTooLong}
       />
     </section>
   );

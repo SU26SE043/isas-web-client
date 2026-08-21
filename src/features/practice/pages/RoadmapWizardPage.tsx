@@ -65,6 +65,8 @@ export function RoadmapWizardPage() {
         <RoadmapConfirmStep
           domain={flow.selectedDomain}
           targetLevel={flow.targetLevel}
+          name={flow.name}
+          onNameChange={flow.setName}
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
           cvFiles={flow.cvFiles}

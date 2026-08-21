@@ -33,6 +33,22 @@ describe('buildCreateRoadmapRequest', () => {
     });
   });
 
+  it('omits name when the optional input is blank', () => {
+    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '   ' });
+    expect(result).toEqual({
+      ok: true,
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi' },
+    });
+  });
+
+  it('trims and includes a non-empty roadmap name', () => {
+    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '  My path  ' });
+    expect(result).toEqual({
+      ok: true,
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', name: 'My path' },
+    });
+  });
+
   it('rejects focus longer than 2000 characters', () => {
     const result = buildCreateRoadmapRequest('BA', 'Fresher', {
       focus: 'x'.repeat(2001),

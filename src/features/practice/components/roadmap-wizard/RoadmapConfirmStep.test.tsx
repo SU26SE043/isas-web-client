@@ -15,6 +15,8 @@ vi.mock('@/shared/languages', () => ({
 
 const baseProps = {
   targetLevel: 'junior' as const,
+  name: '',
+  onNameChange: vi.fn(),
   selectedReports: [],
   focus: '',
   onFocusChange: vi.fn(),

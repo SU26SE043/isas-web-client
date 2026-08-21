@@ -34,6 +34,7 @@ export function useRoadmapWizardFlow() {
   const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
+  const [name, setName] = useState('');
   const [cvId, setCvId] = useState<string | undefined>();
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [cvAnalyses, setCvAnalyses] = useState<CvAnalysisResult[]>([]);
@@ -117,6 +118,7 @@ export function useRoadmapWizardFlow() {
       await learningService.createRoadmap({
         domainId,
         targetLevel,
+        name,
         reportIds: uniqueSessionIds,
         sessionIds: uniqueSessionIds,
         cvId,
@@ -152,6 +154,7 @@ export function useRoadmapWizardFlow() {
     allReports,
     selectedIds,
     targetLevel,
+    name,
     cvId,
     cvFiles,
     cvAnalyses,
@@ -167,6 +170,7 @@ export function useRoadmapWizardFlow() {
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setName,
     setCvId,
     setFocus,
     setCvAnalysisId,
