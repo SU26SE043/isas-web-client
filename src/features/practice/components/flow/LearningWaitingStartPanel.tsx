@@ -22,6 +22,8 @@ interface LearningWaitingStartPanelProps {
   onStart: () => void;
   canStart: boolean;
   isReady: boolean;
+  hasSufficientTokens: boolean;
+  creditsRemaining: number;
 }
 
 export function LearningWaitingStartPanel({
@@ -33,8 +35,17 @@ export function LearningWaitingStartPanel({
   onStart,
   canStart,
   isReady,
+  hasSufficientTokens,
+  creditsRemaining,
 }: LearningWaitingStartPanelProps) {
   const { t } = useLanguage();
+  const handleStart = () => {
+    if (!hasSufficientTokens) {
+      onCreditOpenChange(true);
+      return;
+    }
+    onStart();
+  };
 
   return (
     <>
@@ -55,7 +66,7 @@ export function LearningWaitingStartPanel({
           type="button"
           className="btn-primary inline-flex items-center justify-center gap-2"
           disabled={isStarting || !canStart || !isReady}
-          onClick={onStart}
+          onClick={handleStart}
         >
           {isStarting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
           {isStarting
@@ -86,16 +97,28 @@ export function LearningWaitingStartPanel({
           <DialogHeader>
             <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
             <DialogDescription>
-              {t('practice.learningPath.insufficientCreditsDescription')}
+              {t('practice.learningPath.creditWarningDescription')
+                .replace('{cost}', '1')
+                .replace('{balance}', creditsRemaining.toLocaleString())}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onCreditOpenChange(false)}>
-              {t('practice.learningPath.backToRoadmap')}
+              {t('practice.learningPath.keepLearning')}
             </Button>
             <Link to="/candidate/credits" className="btn-primary inline-flex">
               {t('practice.learningPath.buyCredits')}
             </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                onCreditOpenChange(false);
+                onStart();
+              }}
+            >
+              {t('practice.learningPath.continueAnyway')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -515,6 +515,15 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.insufficientCreditsTitle': 'Không đủ credit',
     'practice.learningPath.insufficientCreditsDescription':
       'Bạn cần ít nhất 1 credit để bắt đầu bài luyện của lesson này.',
+    'practice.learningPath.creditWarningDescription':
+      'Bài luyện này dùng {cost} credit. Số dư hiện tại của bạn là {balance} credit. Bạn vẫn có thể tiếp tục; hệ thống sẽ xác nhận giao dịch.',
+    'practice.learningPath.keepLearning': 'Quay lại học tập',
+    'practice.learningPath.continueAnyway': 'Tiếp tục dù chưa đủ',
+    'practice.learningPath.roadmapCreditsNeeded': 'Credit cần để hoàn thành',
+    'practice.learningPath.currentBalance': 'Số dư hiện tại',
+    'practice.learningPath.remainingLessons': 'Còn {count} bài học · mỗi bài dùng 1 credit',
+    'practice.learningPath.creditCostPerLesson': 'Chi phí bắt đầu: {cost} credit / bài',
+    'practice.learningPath.creditsUnit': 'credit',
     'practice.learningPath.buyCredits': 'Mua credit',
     'practice.learningPath.answerEmpty': 'Chưa ghi được câu trả lời. Hãy nói rồi nộp lại.',
     'practice.learningPath.answerTooLarge': 'Tệp câu trả lời vượt quá 50 MB. Hãy ghi ngắn hơn.',
@@ -1608,6 +1617,15 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.insufficientCreditsTitle': 'Out of credits',
     'practice.learningPath.insufficientCreditsDescription':
       'You need at least 1 credit to start this lesson practice.',
+    'practice.learningPath.creditWarningDescription':
+      'This practice uses {cost} credit. Your current balance is {balance} credits. You can continue anyway; the system will confirm the transaction.',
+    'practice.learningPath.keepLearning': 'Keep learning',
+    'practice.learningPath.continueAnyway': 'Continue anyway',
+    'practice.learningPath.roadmapCreditsNeeded': 'Credits needed to finish',
+    'practice.learningPath.currentBalance': 'Current balance',
+    'practice.learningPath.remainingLessons': '{count} lessons remaining · each uses 1 credit',
+    'practice.learningPath.creditCostPerLesson': 'Start cost: {cost} credit / lesson',
+    'practice.learningPath.creditsUnit': 'credits',
     'practice.learningPath.buyCredits': 'Buy credits',
     'practice.learningPath.answerEmpty': 'No answer recorded. Speak, then submit again.',
     'practice.learningPath.answerTooLarge': 'Answer file exceeds 50MB. Please record a shorter answer.',

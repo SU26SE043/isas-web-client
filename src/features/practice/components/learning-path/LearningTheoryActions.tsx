@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
+import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
 import type { OpenedLearningLesson } from '../../utils/roadmapMapper';
 import {
@@ -36,6 +37,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   const [isOpening, setIsOpening] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
   const [startError, setStartError] = useState(false);
+  const { available: creditsRemaining } = useTokenWallet();
 
   const nextLesson = findNextLesson(roadmap, opened.id);
   const isDone = opened.apiStatus === 'Done';
@@ -46,8 +48,12 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
     setTheoryMarkedComplete(true);
   };
 
-  const handleEnterInterviewPractice = async () => {
+  const handleEnterInterviewPractice = async (bypassCreditWarning = false) => {
     if (isOpening) return;
+    if (!opened.sessionId && !bypassCreditWarning && (creditsRemaining ?? 0) < 1) {
+      setCreditOpen(true);
+      return;
+    }
     setIsOpening(true);
     setStartError(false);
 
@@ -163,16 +169,28 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
           <DialogHeader>
             <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
             <DialogDescription>
-              {t('practice.learningPath.insufficientCreditsDescription')}
+              {t('practice.learningPath.creditWarningDescription')
+                .replace('{cost}', '1')
+                .replace('{balance}', (creditsRemaining ?? 0).toLocaleString())}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-end">
             <Button type="button" variant="outline" onClick={() => setCreditOpen(false)}>
-              {t('practice.learningPath.backToRoadmap')}
+              {t('practice.learningPath.keepLearning')}
             </Button>
             <Link to="/candidate/credits" className="btn-primary inline-flex">
               {t('practice.learningPath.buyCredits')}
             </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setCreditOpen(false);
+                void handleEnterInterviewPractice(true);
+              }}
+            >
+              {t('practice.learningPath.continueAnyway')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

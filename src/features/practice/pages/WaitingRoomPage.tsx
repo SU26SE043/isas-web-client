@@ -10,6 +10,7 @@ import {
 } from '../types/interviewFlow.types';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
+import { useInterviewGate } from '../hooks/useInterviewGate';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
 import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingStartPanel';
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
@@ -33,6 +34,7 @@ export const WaitingRoomPage: React.FC = () => {
   const isCampaign = isCampaignSessionId(sessionId);
   const learningContext = getLearningSessionRouteContext(searchParams);
   const isLearning = Boolean(learningContext);
+  const creditGate = useInterviewGate(sessionId);
   const redirectToPrep = !isCampaign && !isLearning;
   const campaignRoomPath = () => {
     const campaign = readCampaignInterviewSession(sessionId);
@@ -133,6 +135,8 @@ export const WaitingRoomPage: React.FC = () => {
             onStart={() => void handleLearningStart()}
             canStart={Boolean(learningContext)}
             isReady={status === 'ready'}
+            hasSufficientTokens={creditGate.hasSufficientTokens}
+            creditsRemaining={creditGate.creditsRemaining}
           />
         ) : null}
 
