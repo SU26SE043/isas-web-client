@@ -19,7 +19,7 @@ Maps Tier 1/2/3 to frontend modules, routes, and screen inventory. Compares **pr
 | CV analysis | T1 | Upload + report (within practice flow) | `/candidate/cv/analysis*` | Implemented (mock) |
 | GitHub repository analysis | — | Retired from the frontend product; CV analysis no longer requests a repository | — | Retired 2026-08-18 |
 | Interview practice (B2C) | T1 | Entry, prep, room, result, history | `interviewRoutes`, practice history | Implemented (mock) |
-| Learning roadmap | T1 | Creation wizard → AI path → Learning | `/candidate/roadmap` | Implemented (mock wizard) |
+| Learning roadmap | T1 | Creation wizard → AI path → Learning | `/candidate/roadmap` | Implemented |
 | Payment B2C | T1 | Wallet, checkout, token usage | `/candidate/credits`, `/candidate/usage`, payment | Implemented (mock) |
 | Usage & billing UI | T1 | Token history, estimates, settle display | `/candidate/usage`, employer invoices | Implemented (mock) |
 | Payment B2B | T1 | Monthly usage, invoices | `/employer/billing`, `/employer/invoices` | Implemented (mock, Phase 15 E2E covered) |
