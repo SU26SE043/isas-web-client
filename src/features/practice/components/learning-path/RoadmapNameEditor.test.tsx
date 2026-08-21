@@ -32,4 +32,9 @@ describe('RoadmapNameEditor', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Could not save');
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
+
+  it('shows a save error before editing starts', () => {
+    render(<RoadmapNameEditor name="Old path" isSaving={false} error="Could not save" onSave={vi.fn()} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not save');
+  });
 });
