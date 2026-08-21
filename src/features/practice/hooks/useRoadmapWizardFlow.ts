@@ -1,3 +1,4 @@
+import type { RoadmapScope } from '../types/learning.types';
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +36,9 @@ export function useRoadmapWizardFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [name, setName] = useState('');
+  // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
+  // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
+  const [scope, setScope] = useState<RoadmapScope>('Quick');
   const [cvId, setCvId] = useState<string | undefined>();
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [cvAnalyses, setCvAnalyses] = useState<CvAnalysisResult[]>([]);
@@ -130,6 +134,7 @@ export function useRoadmapWizardFlow() {
         cvAnalysisId,
         priorRoadmapId,
         focus,
+        scope,
       });
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
@@ -180,6 +185,8 @@ export function useRoadmapWizardFlow() {
     setFocus,
     setCvAnalysisId,
     setPriorRoadmapId,
+    scope,
+    setScope,
     toggleReport,
     selectAllReports,
     unselectAllReports,

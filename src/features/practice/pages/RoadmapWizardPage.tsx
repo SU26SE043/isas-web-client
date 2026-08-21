@@ -81,6 +81,8 @@ export function RoadmapWizardPage() {
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
           cvFiles={flow.cvFiles}
+          scope={flow.scope}
+          onScopeChange={flow.setScope}
           onCvChange={flow.setCvId}
           cvAnalyses={flow.cvAnalyses}
           cvAnalysisId={flow.cvAnalysisId}

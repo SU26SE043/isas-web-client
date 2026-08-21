@@ -1,6 +1,12 @@
 import React from 'react';
 import { useLanguage } from '@/shared/languages';
-import { ROADMAP_FOCUS_MAX_CHARS, ROADMAP_NAME_MAX_CHARS } from '../../types/learning.types';
+import {
+  ROADMAP_FOCUS_MAX_CHARS,
+  ROADMAP_NAME_MAX_CHARS,
+  ROADMAP_SCOPES,
+  ROADMAP_SCOPE_LESSONS,
+  type RoadmapScope,
+} from '../../types/learning.types';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import type { CvAnalysisResult, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
@@ -9,6 +15,8 @@ import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 
 interface RoadmapConfirmStepProps {
+  scope: RoadmapScope;
+  onScopeChange: (scope: RoadmapScope) => void;
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
   name: string;
@@ -37,6 +45,8 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   cvFiles,
   onCvChange,
   cvAnalyses,
+  scope,
+  onScopeChange,
   cvAnalysisId,
   onCvAnalysisChange,
   completedRoadmaps,
@@ -87,6 +97,39 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.level')}</dt>
           <dd className="font-medium text-foreground">
             {targetLevel ? t(`practice.roadmapWizard.level.${targetLevel}`) : '—'}
+          </dd>
+        </div>
+        {/*
+          Quy mô quyết định SỐ BÀI, mà mỗi bài tiêu 1 credit — nên nó phải nằm ở đúng
+          chỗ người dùng đang quyết "có tạo không", kèm giá. Trước khi có hàng này, mọi
+          lộ trình tạo qua giao diện đều là Standard (12 bài) trong khi suất dùng thử
+          chỉ có 3: người mới chạm 402 ở bài thứ tư mà không hiểu vì sao.
+        */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.scope')}</dt>
+          <dd className="flex items-center gap-3">
+            <label className="sr-only" htmlFor="roadmap-confirm-scope">
+              {t('practice.roadmapWizard.confirm.scope')}
+            </label>
+            <select
+              id="roadmap-confirm-scope"
+              value={scope}
+              onChange={(event) => onScopeChange(event.target.value as RoadmapScope)}
+              disabled={isSubmitting}
+              className="rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-right font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {ROADMAP_SCOPES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`practice.roadmapWizard.confirm.scope.${s.toLowerCase()}`)}
+                </option>
+              ))}
+            </select>
+            <span className="text-caption text-muted-foreground">
+              {t('practice.roadmapWizard.confirm.scopeCost').replace(
+                '{count}',
+                String(ROADMAP_SCOPE_LESSONS[scope]),
+              )}
+            </span>
           </dd>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">

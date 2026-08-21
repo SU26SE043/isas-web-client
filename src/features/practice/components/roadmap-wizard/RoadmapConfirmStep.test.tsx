@@ -32,6 +32,8 @@ function renderStep(overrides: Partial<ComponentProps<typeof RoadmapConfirmStep>
         {...baseProps}
         domain={{ id: 'frontend', name: 'Frontend', nameVi: 'Frontend' } as never}
         cvFiles={[]}
+        scope="Quick"
+        onScopeChange={vi.fn()}
         onCvChange={vi.fn()}
         cvAnalyses={[]}
         onCvAnalysisChange={vi.fn()}

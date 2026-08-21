@@ -103,7 +103,21 @@ export interface CreateRoadmapInput {
   priorRoadmapId?: string;
   focus?: string;
   language?: 'vi' | 'en';
+  /**
+   * Quy mô lộ trình. Backend nhận "Quick" (2 chặng × 2 bài) hoặc "Standard"
+   * (4 chặng × 3 bài); không gửi ⇒ Standard.
+   *
+   * Đây là lựa chọn có GIÁ: mỗi bài tiêu 1 credit, mà suất dùng thử chỉ có 3.
+   * Trước khi nối trường này, mọi lộ trình tạo qua giao diện đều là Standard —
+   * người mới tạo xong sẽ chạm 402 ở bài thứ tư mà không hiểu vì sao.
+   */
+  scope?: RoadmapScope;
 }
+
+export const ROADMAP_SCOPES = ['Quick', 'Standard'] as const;
+export type RoadmapScope = (typeof ROADMAP_SCOPES)[number];
+/** Số bài mỗi quy mô sinh ra — dùng để báo giá credit TRƯỚC khi bấm tạo. */
+export const ROADMAP_SCOPE_LESSONS: Record<RoadmapScope, number> = { Quick: 4, Standard: 12 };
 
 export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 
@@ -118,6 +132,7 @@ export interface CreateRoadmapApiRequest {
   priorRoadmapId?: string;
   focus?: string;
   language?: 'vi' | 'en';
+  scope?: RoadmapScope;
 }
 
 export const ROADMAP_FOCUS_MAX_CHARS = 2000;
