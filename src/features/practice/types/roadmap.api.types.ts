@@ -48,6 +48,20 @@ export type ApiRoadmapMilestone = {
   lessons?: ApiRoadmapLesson[];
 };
 
+export type ApiRoadmapResolvedSession = string | {
+  id?: string;
+  sessionId?: string;
+  date?: string;
+  createdAt?: string;
+  completedAt?: string;
+};
+
+export type ApiRoadmapResolvedFrom = {
+  sessionIds?: ApiRoadmapResolvedSession[] | null;
+  baselineAvailable?: boolean;
+  scope?: string | null;
+};
+
 export type ApiRoadmapListItem = {
   id: string;
   name?: string;
@@ -77,6 +91,7 @@ export type ApiRoadmapListItem = {
 export type ApiRoadmapDetail = ApiRoadmapListItem & {
   milestones?: ApiRoadmapMilestone[];
   reports?: unknown[];
+  resolvedFrom?: ApiRoadmapResolvedFrom | null;
 };
 
 /** Shared lesson detail contract (roadmap nested + GET lesson). */

@@ -16,6 +16,8 @@ import type {
   ApiRoadmapLessonDetail,
   ApiRoadmapListItem,
   ApiRoadmapMilestone,
+  ApiRoadmapResolvedFrom,
+  ApiRoadmapResolvedSession,
   LearningResource,
 } from '../types/roadmap.api.types';
 
@@ -58,6 +60,24 @@ function pickNumber(...values: unknown[]): number {
     }
   }
   return 0;
+}
+
+function mapResolvedFrom(raw: ApiRoadmapResolvedFrom | null | undefined): LearningRoadmapDetail['resolvedFrom'] {
+  if (!raw || typeof raw !== 'object') return null;
+  const sessions = asArray<ApiRoadmapResolvedSession>(raw.sessionIds)
+    .map((session) => {
+      const item = typeof session === 'string' ? null : asRecord(session);
+      const id = typeof session === 'string' ? session.trim() : pickString(item?.id, item?.sessionId);
+      if (!id) return null;
+      const date = item ? pickString(item.date, item.createdAt, item.completedAt) || null : null;
+      return { id, date };
+    })
+    .filter((session): session is { id: string; date: string | null } => session !== null);
+  return {
+    sessions,
+    baselineAvailable: raw.baselineAvailable === true,
+    scope: pickString(raw.scope),
+  };
 }
 
 function normalizeApiLessonStatus(status: ApiLessonStatus | undefined): 'Theory' | 'Practicing' | 'Done' {
@@ -287,6 +307,7 @@ export function mapApiRoadmapDetail(raw: unknown): LearningRoadmapDetail {
     currentLessonTitleVi: card.currentLessonTitleVi || currentLesson?.titleVi || '',
     milestones,
     reports: [],
+    resolvedFrom: mapResolvedFrom(item.resolvedFrom),
   };
 }
 
