@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FlowWizardNav } from '@/components/patterns/flow-wizard/FlowWizardNav';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
+import { useInterviewGate } from '../../hooks/useInterviewGate';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { practiceSessionService } from '../../services/practiceSession.service';
 import { LearningWaitingStartPanel } from '../flow/LearningWaitingStartPanel';
@@ -31,6 +32,7 @@ export function WaitingRoomStep({ sessionId, session, onBack, learningContext }:
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isLearning = Boolean(learningContext);
+  const creditGate = useInterviewGate(sessionId);
   const campaignSession = readCampaignInterviewSession(sessionId);
 
   const [status, setStatus] = useState<'polling' | 'ready' | 'error'>('polling');
@@ -151,6 +153,8 @@ export function WaitingRoomStep({ sessionId, session, onBack, learningContext }:
             onStart={() => void handleLearningStart()}
             canStart={Boolean(learningContext)}
             isReady={status === 'ready'}
+            hasSufficientTokens={creditGate.hasSufficientTokens}
+            creditsRemaining={creditGate.creditsRemaining}
           />
         ) : null}
 
