@@ -45,15 +45,25 @@ export const RoadmapTargetLevelStep: React.FC<RoadmapTargetLevelStepProps> = ({
               type="button"
               onClick={() => onSelect(level)}
               className={[
-                'flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left font-medium transition',
+                'flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-left transition',
                 isSelected
                   ? 'border-info/70 bg-info/10 text-foreground shadow-[0_0_28px_-16px_rgba(59,130,246,0.9)]'
                   : 'border-subtle bg-black/20 text-muted-foreground hover:border-info/35 hover:bg-info/[0.06] hover:text-foreground',
               ].join(' ')}
               aria-pressed={isSelected}
             >
-              <span>{t(`practice.roadmapWizard.level.${level}`)}</span>
-              {isSelected ? <Check className="size-4 shrink-0 text-info" aria-hidden /> : null}
+              {/*
+                Mỗi ô nói luôn cấp độ đó nghĩa là gì. Chỉ hiện tên trơ thì người dùng phải đoán
+                "Trung cấp" khác "Sơ cấp" chỗ nào — mà lựa chọn này quyết định độ khó của toàn bộ
+                câu hỏi và bài giảng họ sẽ nhận, tức là thứ đắt nhất trong cả wizard.
+              */}
+              <span className="min-w-0">
+                <span className="block font-medium">{t(`practice.roadmapWizard.level.${level}`)}</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">
+                  {t(`practice.roadmapWizard.level.${level}.desc`)}
+                </span>
+              </span>
+              {isSelected ? <Check className="mt-1 size-4 shrink-0 text-info" aria-hidden /> : null}
             </button>
           );
         })}

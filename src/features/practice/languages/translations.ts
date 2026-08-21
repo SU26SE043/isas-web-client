@@ -674,13 +674,20 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.reports.score': 'Điểm',
     'practice.roadmapWizard.reports.minutes': 'phút',
     'practice.roadmapWizard.level.title': 'Chọn cấp độ mục tiêu',
-    'practice.roadmapWizard.level.description': 'AI sẽ dùng cấp độ mục tiêu này để xây dựng lộ trình.',
-    'practice.roadmapWizard.level.intern': 'Thực tập',
+    // Nói ĐÚNG cấp độ này đổi cái gì. Trước đây chỉ ghi "AI sẽ dùng cấp độ mục tiêu này để xây
+    // dựng lộ trình" rồi liệt kê sáu cái tên trơ — người dùng chọn mà không biết mình đang đổi gì.
+    // Thực tế nó chảy xuống ba chỗ: độ khó câu hỏi phỏng vấn (Seniority), độ sâu bài giảng, và
+    // ngưỡng đạt của từng tiêu chí.
+    'practice.roadmapWizard.level.description':
+      'Cấp độ này quyết định độ khó câu hỏi phỏng vấn và độ sâu bài giảng trong lộ trình. Chọn nơi bạn muốn tới, không phải nơi bạn đang đứng.',
     'practice.roadmapWizard.level.fresher': 'Mới tốt nghiệp',
+    'practice.roadmapWizard.level.fresher.desc': 'Kiến thức nền tảng và câu hỏi tình huống cơ bản.',
     'practice.roadmapWizard.level.junior': 'Sơ cấp',
+    'practice.roadmapWizard.level.junior.desc': 'Kỹ năng vận hành và giải quyết vấn đề thực tế.',
     'practice.roadmapWizard.level.middle': 'Trung cấp',
+    'practice.roadmapWizard.level.middle.desc': 'Thiết kế hệ thống vừa và ra quyết định kỹ thuật.',
     'practice.roadmapWizard.level.senior': 'Cao cấp',
-    'practice.roadmapWizard.level.lead': 'Trưởng nhóm',
+    'practice.roadmapWizard.level.senior.desc': 'Kiến trúc, đánh đổi kỹ thuật và dẫn dắt chuyên môn.',
     'practice.roadmapWizard.confirm.title': 'Xác nhận',
     'practice.roadmapWizard.confirm.description': 'Kiểm tra lại trước khi AI tạo lộ trình học tập.',
     'practice.roadmapWizard.confirm.domain': 'Lĩnh vực',
@@ -1821,13 +1828,16 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.reports.score': 'Score',
     'practice.roadmapWizard.reports.minutes': 'min',
     'practice.roadmapWizard.level.title': 'Choose target level',
-    'practice.roadmapWizard.level.description': 'AI will use this target level when building your path.',
-    'practice.roadmapWizard.level.intern': 'Intern',
+    'practice.roadmapWizard.level.description':
+      'This level drives how hard the interview questions are and how deep the lessons go. Pick where you want to get to, not where you are now.',
     'practice.roadmapWizard.level.fresher': 'Fresher',
+    'practice.roadmapWizard.level.fresher.desc': 'Fundamentals and basic situational questions.',
     'practice.roadmapWizard.level.junior': 'Junior',
+    'practice.roadmapWizard.level.junior.desc': 'Day-to-day skills and real problem solving.',
     'practice.roadmapWizard.level.middle': 'Middle',
+    'practice.roadmapWizard.level.middle.desc': 'Mid-size system design and technical decisions.',
     'practice.roadmapWizard.level.senior': 'Senior',
-    'practice.roadmapWizard.level.lead': 'Lead',
+    'practice.roadmapWizard.level.senior.desc': 'Architecture, trade-offs and technical leadership.',
     'practice.roadmapWizard.confirm.title': 'Confirm',
     'practice.roadmapWizard.confirm.description': 'Review your choices before AI creates the roadmap.',
     'practice.roadmapWizard.confirm.domain': 'Domain',
