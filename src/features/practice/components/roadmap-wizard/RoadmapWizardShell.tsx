@@ -4,6 +4,7 @@ import { useLanguage } from '@/shared/languages';
 
 const ROADMAP_WIZARD_STEPS = [
   'practice.roadmapWizard.steps.domain',
+  'practice.roadmapWizard.steps.nameFocus',
   'practice.roadmapWizard.steps.reports',
   'practice.roadmapWizard.steps.level',
   'practice.roadmapWizard.steps.confirm',

@@ -81,13 +81,20 @@ export async function startLearningLessonPractice(input: {
   roadmapId: string;
   lessonId: string;
   title: string;
+  /** 'retry' = luyện lại bài đã hoàn thành (POST .../retry). */
+  mode?: 'start' | 'retry';
 }): Promise<StartLessonResult> {
-  const key = `${input.roadmapId}:${input.lessonId}`;
+  const mode = input.mode ?? 'start';
+  // Khoá gồm cả mode: start và retry tạo hai buổi khác nhau, gộp chung khoá thì
+  // một lượt retry sẽ bị trả về kết quả của lượt start đang bay.
+  const key = `${mode}:${input.roadmapId}:${input.lessonId}`;
   const existing = inFlightStarts.get(key);
   if (existing) return existing;
 
   const promise = (async (): Promise<StartLessonResult> => {
-    const result = await roadmapPracticeService.startLesson(input.roadmapId, input.lessonId);
+    const result = mode === 'retry'
+      ? await roadmapPracticeService.retryLesson(input.roadmapId, input.lessonId)
+      : await roadmapPracticeService.startLesson(input.roadmapId, input.lessonId);
     if (!result.ok) return result;
 
     registerFromPracticeSessionResponse({
@@ -128,6 +135,15 @@ export async function startLearningLessonPractice(input: {
 
   inFlightStarts.set(key, promise);
   return promise;
+}
+
+/** Luyện LẠI bài đã hoàn thành. Cùng đường đăng ký session với lượt start. */
+export async function retryLearningLessonPractice(input: {
+  roadmapId: string;
+  lessonId: string;
+  title: string;
+}): Promise<StartLessonResult> {
+  return startLearningLessonPractice({ ...input, mode: 'retry' });
 }
 
 /** Legacy helper — throws on failure. Prefer startLearningLessonPractice. */

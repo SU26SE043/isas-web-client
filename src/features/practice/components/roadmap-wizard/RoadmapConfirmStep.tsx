@@ -12,7 +12,6 @@ interface RoadmapConfirmStepProps {
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
   name: string;
-  onNameChange: (value: string) => void;
   selectedReports: InterviewHistoryItem[];
   cvId?: string;
   cvFiles: UploadedCvFile[];
@@ -24,7 +23,6 @@ interface RoadmapConfirmStepProps {
   priorRoadmapId?: string;
   onPriorRoadmapChange: (value: string | undefined) => void;
   focus: string;
-  onFocusChange: (value: string) => void;
   isSubmitting: boolean;
   onBack: () => void;
   onConfirm: () => void;
@@ -34,7 +32,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
   targetLevel,
   name,
-  onNameChange,
   selectedReports,
   cvId,
   cvFiles,
@@ -46,7 +43,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   priorRoadmapId,
   onPriorRoadmapChange,
   focus,
-  onFocusChange,
   isSubmitting,
   onBack,
   onConfirm,
@@ -66,6 +62,23 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
       <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.confirm.description')}</p>
 
       <dl className="mt-5 space-y-3 text-sm">
+        {/*
+          Tên và Mục tiêu nay được NHẬP ở bước 2, đây chỉ hiển thị lại để rà soát — cùng vai với
+          Lĩnh vực / Cấp độ bên dưới. Đặt ô nhập ở cả hai bước sẽ có hai nguồn cho một giá trị, và
+          người dùng không biết cái nào thắng.
+        */}
+        <div className="flex justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.nameLabel')}</dt>
+          <dd className="max-w-[70%] text-right font-medium text-foreground">
+            {name.trim() || t('practice.roadmapWizard.confirm.nameAuto')}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.focusLabel')}</dt>
+          <dd className="max-w-[70%] whitespace-pre-wrap text-right font-medium text-foreground">
+            {focus.trim() || t('practice.roadmapWizard.confirm.focusNone')}
+          </dd>
+        </div>
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
           <dd className="font-medium text-foreground">{domainLabel}</dd>
@@ -165,29 +178,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         </div>
       </dl>
 
-      <label className="mt-5 block space-y-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('practice.roadmapWizard.confirm.nameLabel')}
-        </span>
-        <input
-          id="roadmap-confirm-name"
-          value={name}
-          onChange={(event) => onNameChange(event.target.value)}
-          maxLength={ROADMAP_NAME_MAX_CHARS + 1}
-          className="h-10 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={t('practice.roadmapWizard.confirm.namePlaceholder')}
-          disabled={isSubmitting}
-        />
-        <span className="flex justify-between text-caption text-muted-foreground">
-          <span>
-            {nameTooLong
-              ? t('practice.roadmapWizard.confirm.nameTooLong')
-              : t('practice.roadmapWizard.confirm.nameHint')}
-          </span>
-          <span>{name.trim().length}/{ROADMAP_NAME_MAX_CHARS}</span>
-        </span>
-      </label>
-
       {selectedReports.length > 0 ? (
         <ul className="mt-4 space-y-2">
           {selectedReports.map((report) => (
@@ -204,30 +194,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         </ul>
       ) : null}
 
-      <label className="mt-5 block space-y-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('practice.roadmapWizard.confirm.focusLabel')}
-        </span>
-        <textarea
-          value={focus}
-          onChange={(event) => onFocusChange(event.target.value)}
-          rows={4}
-          maxLength={ROADMAP_FOCUS_MAX_CHARS + 50}
-          className="w-full rounded-xl border border-satin bg-surface-overlay px-3 py-2 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={t('practice.roadmapWizard.confirm.focusPlaceholder')}
-          disabled={isSubmitting}
-        />
-        <span className="flex justify-between text-caption text-muted-foreground">
-          <span>
-            {focusTooLong
-              ? t('practice.roadmapWizard.confirm.focusTooLong')
-              : t('practice.roadmapWizard.confirm.focusHint')}
-          </span>
-          <span>
-            {focus.trim().length}/{ROADMAP_FOCUS_MAX_CHARS}
-          </span>
-        </span>
-      </label>
 
       <p className="mt-4 text-caption text-muted-foreground">
         {t('practice.roadmapWizard.confirm.sessionsHint')}

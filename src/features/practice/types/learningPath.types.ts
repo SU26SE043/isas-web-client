@@ -71,6 +71,10 @@ export interface LearningLesson {
   /** Practice session id when status is Practicing. */
   sessionId?: string | null;
   practiceReportId?: string;
+  /** Số lần đã luyện bài này (server đếm). 0 = chưa làm lần nào. */
+  attemptCount: number;
+  /** SERVER quyết định — TUYỆT ĐỐI không suy từ `apiStatus`/`practiceStatus`. */
+  canRetry: boolean;
   theoryContent?: string | null;
   resources?: Array<{ title: string; type: string; publisher?: string | null; url?: string | null }>;
   citations?: Array<{ chunkId: string; sourceUrl: string; sourceTitle: string }> | null;

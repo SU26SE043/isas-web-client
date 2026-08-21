@@ -10,6 +10,8 @@ import type {
   PracticeSessionResponse,
   RoadmapLevelEvaluationItem,
   RoadmapPracticeReport,
+  RoadmapProgressCriterionScore,
+  RoadmapProgressPoint,
   RoadmapReportKind,
   StartLessonResult,
   SubmitPracticeAnswerInput,
@@ -38,6 +40,22 @@ function pickNumber(...values: unknown[]): number {
     }
   }
   return 0;
+}
+
+/**
+ * Khác `pickNumber` ở đúng một điểm, và điểm đó là cả lý do nó tồn tại:
+ * thiếu giá trị trả `null` chứ KHÔNG trả `0`.
+ *
+ * `0` và "không có số đo" là hai chuyện khác hẳn nhau. Dùng `pickNumber` cho
+ * `startPercentage` sẽ biến "tiêu chí này mới có 1 buổi" thành "buổi đầu được 0%",
+ * tức bịa ra một mốc xuất phát ở đáy rồi vẽ mọi thứ như đang tiến bộ vượt bậc.
+ */
+function pickNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+  return null;
 }
 
 function pickStringArray(...values: unknown[]): string[] {
@@ -117,20 +135,70 @@ function mapAnswerDetail(raw: unknown): PracticeAnswerDetail {
   };
 }
 
-function mapRadar(raw: unknown): RadarData[] {
+/**
+ * `thresholdByName` — ngưỡng đạt của từng tiêu chí, lấy từ `levelEvaluation`.
+ *
+ * Backend KHÔNG gửi ngưỡng bên trong từng dòng radar: radar chỉ mang điểm đạt
+ * (`percentage`), còn ngưỡng nằm ở mảng `levelEvaluation` cùng response, ghép theo TÊN tiêu chí.
+ * Không ghép thì series "Mục tiêu" toàn 0 và biểu đồ vẽ một chấm ở tâm.
+ */
+function mapRadar(raw: unknown, thresholdByName: Map<string, number> = new Map()): RadarData[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((item, index) => {
     const row = asRecord(item);
+    const subject = pickString(row.subject, row.name, row.label, `Skill ${index + 1}`);
     return {
-      subject: pickString(row.subject, row.name, row.label, `Skill ${index + 1}`),
-      subjectVi:
-        pickString(row.subjectVi, row.nameVi, row.labelVi) ||
-        pickString(row.subject, row.name, row.label, `Skill ${index + 1}`),
-      A: pickNumber(row.A, row.current, row.value, row.score),
-      B: pickNumber(row.B, row.target, row.goal),
+      subject,
+      subjectVi: pickString(row.subjectVi, row.nameVi, row.labelVi) || subject,
+      // `row.percentage` là tên field THẬT của backend (CriterionScoreResponse.Percentage).
+      // Bốn tên trước đó chỉ tồn tại trong fixtures mock — chạy với dữ liệu thật thì mọi giá trị
+      // rơi về 0, biểu đồ có đủ nhãn trục nhưng không vẽ gì. Đo trên deploy: một roadmap đã hoàn
+      // thành với 40%/60%/70% vẫn hiện radar rỗng.
+      A: pickNumber(row.A, row.current, row.value, row.score, row.percentage),
+      B: pickNumber(row.B, row.target, row.goal) || thresholdByName.get(subject) || 0,
       fullMark: pickNumber(row.fullMark, 100) || 100,
+      // Ba field dưới đây đọc ĐÚNG tên trong hợp đồng backend, không có nhánh đoán mò:
+      // chuỗi fallback ở `A` phía trên chính là thứ từng khiến radar vẽ rỗng với dữ liệu
+      // thật (mọi tên trước `percentage` chỉ tồn tại trong fixtures mock).
+      C: pickNullableNumber(row.startPercentage),
+      sessionCount: pickNumber(row.sessionCount),
+      recentCount: pickNumber(row.recentCount),
     };
   });
+}
+
+function mapProgressScores(raw: unknown): RoadmapProgressCriterionScore[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      const row = asRecord(entry);
+      const name = pickString(row.name);
+      if (!name) return null;
+      return { name, percentage: pickNumber(row.percentage) };
+    })
+    .filter((item): item is RoadmapProgressCriterionScore => item != null);
+}
+
+/**
+ * `order` quyết định thứ tự trên trục thời gian, nên sắp lại ở đây thay vì tin
+ * thứ tự mảng: một buổi vẽ sai chỗ sẽ đảo ngược chính cái xu hướng đang cần đọc.
+ */
+function mapProgress(raw: unknown): RoadmapProgressPoint[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry, index) => {
+      const row = asRecord(entry);
+      return {
+        // `index + 1` là giá trị mặc định khi backend thiếu `order`, KHÔNG phải tên field đoán thêm.
+        order: pickNumber(row.order, index + 1),
+        lessonTitle: pickString(row.lessonTitle),
+        completedAt:
+          typeof row.completedAt === 'string' && row.completedAt.trim() ? row.completedAt : null,
+        overallPercentage: pickNumber(row.overallPercentage),
+        scores: mapProgressScores(row.scores),
+      };
+    })
+    .sort((a, b) => a.order - b.order);
 }
 
 function mapLevelEvaluation(raw: unknown): RoadmapLevelEvaluationItem[] {
@@ -178,7 +246,10 @@ function mapRoadmapReport(raw: unknown, roadmapId: string): RoadmapPracticeRepor
     weaknessesVi: pickStringArray(item.weaknessesVi),
     improvements: pickStringArray(item.improvements, item.tips),
     improvementsVi: pickStringArray(item.improvementsVi, item.tipsVi),
-    radarData: mapRadar(item.radarData ?? item.radar ?? item.skills),
+    radarData: mapRadar(
+      item.radarData ?? item.radar ?? item.skills,
+      new Map(levelEvaluation.map((e) => [e.criterionName, e.levelThreshold]))),
+    progress: mapProgress(item.progress),
   };
 }
 
@@ -207,40 +278,52 @@ function isScoredStatus(status: string): boolean {
   );
 }
 
+/**
+ * Hai đường tạo buổi luyện cho một bài (start lần đầu / retry bài đã xong) trả
+ * về CÙNG hợp đồng, nên dùng chung đúng một mapper + một bảng mã lỗi. Tách
+ * nhánh riêng cho retry là cách hai đường trôi xa nhau mà không test nào đỏ.
+ */
+async function postLessonSession(url: string): Promise<StartLessonResult> {
+  try {
+    const response = await apiClient.post(url, {}, {
+      validateStatus: (status) => status === 201 || (status >= 200 && status < 300),
+    });
+    const session = mapPracticeSessionResponse(response.data);
+    if (!session.sessionId) {
+      return { ok: false, code: 'generic', message: 'Missing sessionId' };
+    }
+    return { ok: true, session, resumed: false };
+  } catch (error) {
+    const status = getApiStatusCode(error);
+    if (status === 409) {
+      const sessionId = extractConflictSessionId(error);
+      if (sessionId) {
+        return {
+          ok: true,
+          resumed: true,
+          session: { sessionId },
+        };
+      }
+      return { ok: false, code: 'conflict_resume', message: 'Session conflict' };
+    }
+    if (status === 402) return { ok: false, code: 'insufficient_credits' };
+    if (status === 403) return { ok: false, code: 'forbidden' };
+    if (status === 404) return { ok: false, code: 'not_found' };
+    if (status === 502) return { ok: false, code: 'ai_failed' };
+    return { ok: false, code: 'generic' };
+  }
+}
+
 export const roadmapPracticeService = {
   maxAnswerBytes: MAX_ANSWER_BYTES,
 
   async startLesson(roadmapId: string, lessonId: string): Promise<StartLessonResult> {
-    try {
-      const response = await apiClient.post(
-        learningEndpoints.startLesson(roadmapId, lessonId),
-        {},
-        { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
-      );
-      const session = mapPracticeSessionResponse(response.data);
-      if (!session.sessionId) {
-        return { ok: false, code: 'generic', message: 'Missing sessionId' };
-      }
-      return { ok: true, session, resumed: false };
-    } catch (error) {
-      const status = getApiStatusCode(error);
-      if (status === 409) {
-        const sessionId = extractConflictSessionId(error);
-        if (sessionId) {
-          return {
-            ok: true,
-            resumed: true,
-            session: { sessionId },
-          };
-        }
-        return { ok: false, code: 'conflict_resume', message: 'Session conflict' };
-      }
-      if (status === 402) return { ok: false, code: 'insufficient_credits' };
-      if (status === 403) return { ok: false, code: 'forbidden' };
-      if (status === 404) return { ok: false, code: 'not_found' };
-      if (status === 502) return { ok: false, code: 'ai_failed' };
-      return { ok: false, code: 'generic' };
-    }
+    return postLessonSession(learningEndpoints.startLesson(roadmapId, lessonId));
+  },
+
+  /** Luyện LẠI bài đã hoàn thành — tiêu 1 credit, tạo buổi mới với câu hỏi khác. */
+  async retryLesson(roadmapId: string, lessonId: string): Promise<StartLessonResult> {
+    return postLessonSession(learningEndpoints.retryLesson(roadmapId, lessonId));
   },
 
   async getPracticeSession(sessionId: string): Promise<PracticeSessionResponse> {

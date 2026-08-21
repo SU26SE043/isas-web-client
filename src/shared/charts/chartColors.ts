@@ -32,6 +32,11 @@ export const CHART_RADAR = {
   targetFill: 'var(--chart-radar-target-fill)',
   targetFillOpacity: 1,
   strokeWidth: 2.5,
+  /* Lớp thứ ba "lúc bắt đầu" — xem ghi chú trong colors.css. */
+  startStroke: 'var(--chart-radar-start-stroke)',
+  startFill: 'var(--chart-radar-start-fill)',
+  startFillOpacity: 1,
+  startStrokeWidth: 1.5,
 } as const;
 
 export const CHART_GRID = {

@@ -434,9 +434,12 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmap.regenLimit': 'Bạn đã đạt giới hạn tạo lại lộ trình trong kỳ này.',
     'practice.roadmap.error': 'Không thể tải lộ trình. Vui lòng thử lại.',
     'practice.roadmap.goToLearning': 'Đến trung tâm học tập',
-    'practice.learningPath.title': 'Học tập',
+    // Gộp hai mục menu cũ nên tên phải đồng nhất: menu, tiêu đề trang và thanh trên cùng
+    // đều dùng key này. Để lệch ("Lộ trình" ở menu, "Học tập" ở tiêu đề) thì người dùng không
+    // chắc mình đang ở đúng chỗ vừa bấm.
+    'practice.learningPath.title': 'Lộ trình',
     'practice.learningPath.subtitle': 'Quản lý và học theo các lộ trình AI đã tạo cho bạn.',
-    'practice.learningPath.noCreateHint': 'Không tạo lộ trình tại đây — dùng menu Lộ trình để tạo mới.',
+    'practice.learningPath.createRoadmap': 'Tạo lộ trình',
     'practice.learningPath.resumeLabel': 'Tiếp tục học',
     'practice.learningPath.continueLearning': 'Tiếp tục học',
     'practice.learningPath.search': 'Tìm kiếm',
@@ -490,8 +493,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reviewLesson': 'Xem lại lesson',
     'practice.learningPath.lessonDone': 'Đã hoàn thành bài học',
     'practice.learningPath.lessonDoneHint': 'Bạn có thể xem lại nội dung lý thuyết.',
-    'practice.learningPath.backToDashboard': 'Quay lại Học tập',
-    'practice.learningPath.backToRoadmap': 'Quay lại lộ trình',
+    'practice.learningPath.backToDashboard': 'Quay lại danh sách lộ trình',
+    'practice.learningPath.backToRoadmap': 'Quay lại lộ trình này',
     'practice.learningPath.backToTheory': 'Quay lại Theory',
     'practice.learningPath.readOnly': 'Chỉ xem',
     'practice.learningPath.milestone': 'Cột mốc {n}',
@@ -499,7 +502,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.milestoneStatus.current': 'Hiện tại',
     'practice.learningPath.milestoneStatus.completed': 'Đã hoàn thành',
     'practice.learningPath.lessonCount': '{count} bài học',
-    'practice.learningPath.improvementTitle': 'Mức thay đổi theo tiêu chí',
+    'practice.learningPath.improvementTitle': 'So với chặng trước:',
     'practice.learningPath.sourceTitle': 'Cơ sở của lộ trình',
     'practice.learningPath.sourceSessions': 'Lộ trình này dựa trên {count} phiên luyện tập',
     'practice.learningPath.sourceSessionDateUnavailable': 'Ngày phiên luyện chưa có',
@@ -534,6 +537,21 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.remainingLessons': 'Còn {count} bài học · mỗi bài dùng 1 credit',
     'practice.learningPath.creditCostPerLesson': 'Chi phí bắt đầu: {cost} credit / bài',
     'practice.learningPath.creditsUnit': 'credit',
+    'practice.learningPath.retryLesson': 'Làm lại bài',
+    'practice.learningPath.retryCostHint': 'Tốn 1 credit',
+    'practice.learningPath.attemptCount': 'Đã luyện {count} lần',
+    'practice.learningPath.retryStarting': 'Đang tạo buổi luyện...',
+    'practice.learningPath.retryConfirmTitle': 'Làm lại bài học này?',
+    'practice.learningPath.retryConfirmDescription':
+      'Buổi luyện lại tốn 1 credit. Số dư hiện tại của bạn là {balance} credit.',
+    'practice.learningPath.retryConfirmPointQuestions': 'Câu hỏi lần này sẽ khác lần trước.',
+    'practice.learningPath.retryConfirmPointScore':
+      'Điểm lần này được ghi thêm, không đè lên kết quả cũ.',
+    'practice.learningPath.retryConfirmCta': 'Làm lại bài',
+    'practice.learningPath.retryCancel': 'Huỷ',
+    'practice.learningPath.retryInsufficientCredits':
+      'Không đủ credit để làm lại bài này. Hãy nạp thêm rồi thử lại.',
+    'practice.learningPath.retryError': 'Không thể tạo buổi luyện lại. Vui lòng thử lại.',
     'practice.learningPath.buyCredits': 'Mua credit',
     'practice.learningPath.answerEmpty': 'Chưa ghi được câu trả lời. Hãy nói rồi nộp lại.',
     'practice.learningPath.answerTooLarge': 'Tệp câu trả lời vượt quá 50 MB. Hãy ghi ngắn hơn.',
@@ -554,11 +572,28 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reportKindInterim': 'Báo cáo tạm thời',
     'practice.learningPath.reportKindSnapshot': 'Báo cáo tổng quan',
     'practice.learningPath.levelEvaluation': 'Đánh giá cấp độ',
-    'practice.learningPath.improvements': 'Cải thiện',
+    'practice.learningPath.improvements': 'Đã tiến bộ',
     'practice.learningPath.overallComment': 'Nhận xét tổng quan',
     'practice.learningPath.loadingReport': 'Đang tải báo cáo...',
     'practice.learningPath.reportLoadError': 'Không tải được báo cáo lộ trình. Vui lòng thử lại.',
     'practice.learningPath.radarEmpty': 'Chưa có dữ liệu radar cho báo cáo này.',
+    'practice.learningPath.reportEmptyTitle': 'Chưa có dữ liệu để tổng hợp',
+    'practice.learningPath.reportEmptyDesc':
+      'Hoàn thành ít nhất một bài luyện trong lộ trình để hệ thống chấm điểm và dựng báo cáo. Đây không phải lỗi — chỉ là chưa có buổi nào được chấm.',
+    'practice.learningPath.reportInterimTitle': 'Báo cáo giữa chừng',
+    'practice.learningPath.reportInterimDesc':
+      'Lộ trình chưa hoàn thành nên đây là số liệu tạm tính trên các buổi đã chấm. Phần nhận xét tổng quan của AI chỉ có khi bạn hoàn tất lộ trình.',
+    'practice.learningPath.viewRoadmapReportInterim': 'Xem báo cáo tạm thời',
+    'practice.learningPath.improvementsEmpty':
+      'Chưa có tiêu chí nào đủ dữ liệu để so với lúc bắt đầu.',
+    'practice.learningPath.progressChartTitle': 'Tiến triển qua từng buổi',
+    'practice.learningPath.progressChartDesc':
+      'Điểm tổng mỗi buổi theo thứ tự thời gian — cho biết bạn đang đi lên hay đi xuống, điều mà radar không nói được.',
+    'practice.learningPath.progressChartOverall': 'Điểm tổng',
+    'practice.learningPath.progressChartToggleHint':
+      'Bật thêm tiêu chí để xem riêng từng đường (chọn ít thôi cho dễ đọc):',
+    'practice.learningPath.progressChartTooFew':
+      'Cần ít nhất hai buổi đã chấm mới thấy được xu hướng. Một buổi chỉ là một điểm, chưa phải một đường đi lên hay đi xuống.',
     'practice.learningPath.theoryCompleted': 'Đã sẵn sàng thực hành',
     'practice.learningPath.continueToPractice': 'Tiếp tục thực hành →',
     'practice.learningPath.practiceWithInterviewRoom': 'Tiếp tục với phòng phỏng vấn',
@@ -654,13 +689,20 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.reports.score': 'Điểm',
     'practice.roadmapWizard.reports.minutes': 'phút',
     'practice.roadmapWizard.level.title': 'Chọn cấp độ mục tiêu',
-    'practice.roadmapWizard.level.description': 'AI sẽ dùng cấp độ mục tiêu này để xây dựng lộ trình.',
-    'practice.roadmapWizard.level.intern': 'Thực tập',
+    // Nói ĐÚNG cấp độ này đổi cái gì. Trước đây chỉ ghi "AI sẽ dùng cấp độ mục tiêu này để xây
+    // dựng lộ trình" rồi liệt kê sáu cái tên trơ — người dùng chọn mà không biết mình đang đổi gì.
+    // Thực tế nó chảy xuống ba chỗ: độ khó câu hỏi phỏng vấn (Seniority), độ sâu bài giảng, và
+    // ngưỡng đạt của từng tiêu chí.
+    'practice.roadmapWizard.level.description':
+      'Cấp độ này quyết định độ khó câu hỏi phỏng vấn và độ sâu bài giảng trong lộ trình. Chọn nơi bạn muốn tới, không phải nơi bạn đang đứng.',
     'practice.roadmapWizard.level.fresher': 'Mới tốt nghiệp',
+    'practice.roadmapWizard.level.fresher.desc': 'Kiến thức nền tảng và câu hỏi tình huống cơ bản.',
     'practice.roadmapWizard.level.junior': 'Sơ cấp',
+    'practice.roadmapWizard.level.junior.desc': 'Kỹ năng vận hành và giải quyết vấn đề thực tế.',
     'practice.roadmapWizard.level.middle': 'Trung cấp',
+    'practice.roadmapWizard.level.middle.desc': 'Thiết kế hệ thống vừa và ra quyết định kỹ thuật.',
     'practice.roadmapWizard.level.senior': 'Cao cấp',
-    'practice.roadmapWizard.level.lead': 'Trưởng nhóm',
+    'practice.roadmapWizard.level.senior.desc': 'Kiến trúc, đánh đổi kỹ thuật và dẫn dắt chuyên môn.',
     'practice.roadmapWizard.confirm.title': 'Xác nhận',
     'practice.roadmapWizard.confirm.description': 'Kiểm tra lại trước khi AI tạo lộ trình học tập.',
     'practice.roadmapWizard.confirm.domain': 'Lĩnh vực',
@@ -681,6 +723,14 @@ export const practiceTranslations: TranslationDictionary = {
       'Các session đã chọn sẽ được gửi làm baseline (sessionIds) khi tạo roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
       'Các session đã chấm được chọn sẽ gửi kèm để AI cá nhân hóa lộ trình. Các trường khác là tùy chọn.',
+    'practice.roadmapWizard.steps.nameFocus': 'Tên & mục tiêu',
+    'practice.roadmapWizard.confirm.nameAuto': 'Máy chủ tự đặt',
+    'practice.roadmapWizard.confirm.focusNone': 'Không có',
+    'practice.roadmapWizard.nameFocus.title': 'Đặt tên và mục tiêu',
+    'practice.roadmapWizard.nameFocus.description':
+      'Cả hai đều tuỳ chọn — bỏ trống cũng tạo được lộ trình.',
+    'practice.roadmapWizard.nameFocus.focusHint':
+      'Mô tả bạn muốn AI tập trung vào đâu, ví dụ: luyện trả lời tình huống, đào sâu phân tích yêu cầu.',
     'practice.roadmapWizard.confirm.focusLabel': 'Mục tiêu tập trung (tuỳ chọn)',
     'practice.roadmapWizard.confirm.focusPlaceholder':
       'Ví dụ: cải thiện trả lời behavioral, luyện system design ngắn...',
@@ -869,8 +919,13 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.practice.error': 'Không thể tải phiên luyện tập.',
 
     // Radar Chart
-    'practice.radar.current': 'Hiện tại',
+    'practice.radar.current': 'Gần đây',
     'practice.radar.target': 'Mục tiêu',
+    'practice.radar.start': 'Lúc bắt đầu',
+    'practice.radar.noStart': 'chưa có mốc',
+    'practice.radar.sampleSize': 'Dựa trên {count} buổi',
+    'practice.radar.startHint':
+      '"Gần đây" tính trên tối đa 3 buổi mới nhất. Tiêu chí mới có một buổi thì chưa có mốc bắt đầu để so.',
 
     // Gap Analysis
     'practice.gap.current': 'Hiện tại',
@@ -1551,9 +1606,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmap.regenLimit': 'You reached the roadmap regeneration limit for this period.',
     'practice.roadmap.error': 'Could not load the roadmap. Please try again.',
     'practice.roadmap.goToLearning': 'Go to learning hub',
-    'practice.learningPath.title': 'Learning',
+    'practice.learningPath.title': 'Roadmaps',
     'practice.learningPath.subtitle': 'Manage and study the roadmaps AI already created for you.',
-    'practice.learningPath.noCreateHint': 'You cannot create a roadmap here — use the Roadmap menu.',
+    'practice.learningPath.createRoadmap': 'Create roadmap',
     'practice.learningPath.resumeLabel': 'Resume learning',
     'practice.learningPath.continueLearning': 'Continue Learning',
     'practice.learningPath.search': 'Search',
@@ -1607,8 +1662,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reviewLesson': 'Review lesson',
     'practice.learningPath.lessonDone': 'Lesson completed',
     'practice.learningPath.lessonDoneHint': 'You can review the theory content anytime.',
-    'practice.learningPath.backToDashboard': 'Back to Learning',
-    'practice.learningPath.backToRoadmap': 'Back to roadmap',
+    'practice.learningPath.backToDashboard': 'Back to roadmaps',
+    'practice.learningPath.backToRoadmap': 'Back to this roadmap',
     'practice.learningPath.backToTheory': 'Back to theory',
     'practice.learningPath.readOnly': 'Read-only',
     'practice.learningPath.milestone': 'Milestone {n}',
@@ -1616,7 +1671,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.milestoneStatus.current': 'Current',
     'practice.learningPath.milestoneStatus.completed': 'Completed',
     'practice.learningPath.lessonCount': '{count} lessons',
-    'practice.learningPath.improvementTitle': 'Progress by criterion',
+    'practice.learningPath.improvementTitle': 'vs. previous milestone:',
     'practice.learningPath.sourceTitle': 'What this path is based on',
     'practice.learningPath.sourceSessions': 'This path is based on {count} practice sessions',
     'practice.learningPath.sourceSessionDateUnavailable': 'Practice date unavailable',
@@ -1651,6 +1706,21 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.remainingLessons': '{count} lessons remaining · each uses 1 credit',
     'practice.learningPath.creditCostPerLesson': 'Start cost: {cost} credit / lesson',
     'practice.learningPath.creditsUnit': 'credits',
+    'practice.learningPath.retryLesson': 'Retry lesson',
+    'practice.learningPath.retryCostHint': 'Costs 1 credit',
+    'practice.learningPath.attemptCount': 'Practised {count} times',
+    'practice.learningPath.retryStarting': 'Creating practice session...',
+    'practice.learningPath.retryConfirmTitle': 'Retry this lesson?',
+    'practice.learningPath.retryConfirmDescription':
+      'A retry costs 1 credit. Your current balance is {balance} credits.',
+    'practice.learningPath.retryConfirmPointQuestions': 'The questions will differ from last time.',
+    'practice.learningPath.retryConfirmPointScore':
+      'This attempt is recorded in addition to — not on top of — the previous result.',
+    'practice.learningPath.retryConfirmCta': 'Retry lesson',
+    'practice.learningPath.retryCancel': 'Cancel',
+    'practice.learningPath.retryInsufficientCredits':
+      'Not enough credits to retry this lesson. Top up and try again.',
+    'practice.learningPath.retryError': 'Could not create the retry session. Please try again.',
     'practice.learningPath.buyCredits': 'Buy credits',
     'practice.learningPath.answerEmpty': 'No answer recorded. Speak, then submit again.',
     'practice.learningPath.answerTooLarge': 'Answer file exceeds 50MB. Please record a shorter answer.',
@@ -1671,11 +1741,28 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.reportKindInterim': 'Interim report',
     'practice.learningPath.reportKindSnapshot': 'Snapshot report',
     'practice.learningPath.levelEvaluation': 'Level evaluation',
-    'practice.learningPath.improvements': 'Improvements',
+    'practice.learningPath.improvements': 'Improved',
     'practice.learningPath.overallComment': 'Overall comment',
     'practice.learningPath.loadingReport': 'Loading report...',
     'practice.learningPath.reportLoadError': 'Could not load the roadmap report. Please try again.',
     'practice.learningPath.radarEmpty': 'No radar data for this report yet.',
+    'practice.learningPath.reportEmptyTitle': 'Nothing to summarise yet',
+    'practice.learningPath.reportEmptyDesc':
+      'Finish at least one practice lesson so the system can score it and build a report. This is not an error — no session has been scored yet.',
+    'practice.learningPath.reportInterimTitle': 'Interim report',
+    'practice.learningPath.reportInterimDesc':
+      'This roadmap is still in progress, so these figures cover only the sessions scored so far. The AI overall comment appears once you complete the roadmap.',
+    'practice.learningPath.viewRoadmapReportInterim': 'View interim report',
+    'practice.learningPath.improvementsEmpty':
+      'No criterion has enough data yet to compare against the starting point.',
+    'practice.learningPath.progressChartTitle': 'Progress across sessions',
+    'practice.learningPath.progressChartDesc':
+      'Overall score per session in chronological order — it shows whether you are trending up or down, which the radar cannot.',
+    'practice.learningPath.progressChartOverall': 'Overall score',
+    'practice.learningPath.progressChartToggleHint':
+      'Turn on individual criteria to plot them separately (keep it to a few for readability):',
+    'practice.learningPath.progressChartTooFew':
+      'At least two scored sessions are needed to show a trend. One session is a single point, not a direction.',
     'practice.learningPath.theoryCompleted': 'Ready to practice',
     'practice.learningPath.continueToPractice': 'Continue to Practice →',
     'practice.learningPath.practiceWithInterviewRoom': 'Continue to interview room',
@@ -1771,13 +1858,16 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.reports.score': 'Score',
     'practice.roadmapWizard.reports.minutes': 'min',
     'practice.roadmapWizard.level.title': 'Choose target level',
-    'practice.roadmapWizard.level.description': 'AI will use this target level when building your path.',
-    'practice.roadmapWizard.level.intern': 'Intern',
+    'practice.roadmapWizard.level.description':
+      'This level drives how hard the interview questions are and how deep the lessons go. Pick where you want to get to, not where you are now.',
     'practice.roadmapWizard.level.fresher': 'Fresher',
+    'practice.roadmapWizard.level.fresher.desc': 'Fundamentals and basic situational questions.',
     'practice.roadmapWizard.level.junior': 'Junior',
+    'practice.roadmapWizard.level.junior.desc': 'Day-to-day skills and real problem solving.',
     'practice.roadmapWizard.level.middle': 'Middle',
+    'practice.roadmapWizard.level.middle.desc': 'Mid-size system design and technical decisions.',
     'practice.roadmapWizard.level.senior': 'Senior',
-    'practice.roadmapWizard.level.lead': 'Lead',
+    'practice.roadmapWizard.level.senior.desc': 'Architecture, trade-offs and technical leadership.',
     'practice.roadmapWizard.confirm.title': 'Confirm',
     'practice.roadmapWizard.confirm.description': 'Review your choices before AI creates the roadmap.',
     'practice.roadmapWizard.confirm.domain': 'Domain',
@@ -1798,6 +1888,14 @@ export const practiceTranslations: TranslationDictionary = {
       'Selected scored sessions will be sent as baseline sessionIds when creating the roadmap.',
     'practice.roadmapWizard.confirm.sessionsHint':
       'Selected scored sessions are sent so AI can personalize the roadmap. Other fields are optional.',
+    'practice.roadmapWizard.steps.nameFocus': 'Name & goal',
+    'practice.roadmapWizard.confirm.nameAuto': 'Server picks one',
+    'practice.roadmapWizard.confirm.focusNone': 'None',
+    'practice.roadmapWizard.nameFocus.title': 'Name and goal',
+    'practice.roadmapWizard.nameFocus.description':
+      'Both are optional — you can create the roadmap without either.',
+    'practice.roadmapWizard.nameFocus.focusHint':
+      'Describe what the AI should focus on, e.g. situational answers, deeper requirement analysis.',
     'practice.roadmapWizard.confirm.focusLabel': 'Focus goal (optional)',
     'practice.roadmapWizard.confirm.focusPlaceholder':
       'Example: improve behavioral answers, short system-design drills...',
@@ -1986,8 +2084,13 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learning.practice.error': 'Could not load practice session.',
 
     // Radar Chart
-    'practice.radar.current': 'Current',
+    'practice.radar.current': 'Recent',
     'practice.radar.target': 'Target',
+    'practice.radar.start': 'At start',
+    'practice.radar.noStart': 'no baseline yet',
+    'practice.radar.sampleSize': 'Based on {count} session(s)',
+    'practice.radar.startHint':
+      '"Recent" averages up to the 3 latest sessions. A criterion with only one session has no baseline to compare against.',
 
     // Gap Analysis
     'practice.gap.current': 'Current',

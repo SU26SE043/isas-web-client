@@ -10,6 +10,9 @@ interface LearningRoadmapMilestonesProps {
   onOpenPractice: (lessonId: string, title: string, sessionId?: string | null) => void;
 }
 
+// Nút "Làm lại bài" KHÔNG nằm ở đây mà ở trang chi tiết bài (`LearningTheoryActions`):
+// mỗi hàng bài trong danh sách vốn đã có hai nút, thêm nút thứ ba làm hàng nút tràn và rối,
+// trong khi thao tác đó tiêu credit nên đáng để người học mở bài ra đọc lại trước khi quyết.
 export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId, onOpenPractice }: LearningRoadmapMilestonesProps) {
   const { t } = useLanguage();
 
@@ -32,23 +35,41 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
             <p className="mt-1 text-sm text-muted-foreground">
               {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} · {milestone.progressPercent}%
             </p>
-            {milestone.status === 'completed' && milestone.improvement?.length ? (
-              <div className="mt-4 rounded-xl border border-info/30 bg-surface-overlay/60 p-4">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t('practice.learningPath.improvementTitle')}
-                </h3>
-                <ul className="mt-2 grid gap-2 sm:grid-cols-2" aria-label={t('practice.learningPath.improvementTitle')}>
-                  {milestone.improvement.map((item) => (
-                    <li key={item.criterionName} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-muted-foreground">{item.criterionName}</span>
-                      <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
-                        {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+            {/*
+              MỘT DÒNG, không phải bảng. Trang lộ trình là nơi ĐIỀU HƯỚNG — nhét vào giữa danh
+              sách chặng một hộp lưới 6 dòng "tiêu chí · ±n%" là mang bảng phân tích đặt vào chỗ
+              người ta chỉ lướt qua, mà trên dữ liệu thật 4/6 dòng là "+0%".
+
+              Nên chỉ nêu tiêu chí DỊCH CHUYỂN MẠNH NHẤT mỗi chiều (nhiều nhất 2 mục), và nói rõ
+              đang so với CHẶNG TRƯỚC — số ở đây đúng (kiểm tay: 70→50 ra −20%) nhưng hai chặng
+              luyện trên hai bộ bài khác đề, để trần thì người học đọc "−20%" thành "tôi kém đi".
+              Phân tích đầy đủ nằm ở trang báo cáo, nơi đã có biểu đồ theo từng buổi.
+            */}
+            {milestone.status === 'completed' && milestone.improvement?.length
+              ? (() => {
+                  const moved = milestone.improvement.filter((item) => item.deltaPct !== 0);
+                  if (moved.length === 0) return null;
+                  const up = moved.reduce((a, b) => (b.deltaPct > a.deltaPct ? b : a));
+                  const down = moved.reduce((a, b) => (b.deltaPct < a.deltaPct ? b : a));
+                  const picks = [
+                    up.deltaPct > 0 ? up : null,
+                    down.deltaPct < 0 ? down : null,
+                  ].filter((x): x is NonNullable<typeof x> => x !== null);
+                  return (
+                    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
+                      <span>{t('practice.learningPath.improvementTitle')}</span>
+                      {picks.map((item) => (
+                        <span key={item.criterionName} className="inline-flex items-center gap-1">
+                          <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
+                            {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
+                          </span>
+                          <span>{item.criterionName}</span>
+                        </span>
+                      ))}
+                    </p>
+                  );
+                })()
+              : null}
             <ul className="mt-4 space-y-2">
               {milestone.lessons.map((lessonItem, lessonIndex) => {
                 const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
@@ -61,6 +82,11 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                       <div>
                         <p className="flex items-center gap-3 font-medium text-foreground"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-info/40 bg-info/10 text-info"><LessonIcon index={lessonIndex} /></span>{lessonTitle}</p>
                         <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}: {t(`practice.learningPath.part.${lessonItem.theoryStatus}`)} · {t('practice.learningPath.practice')}: {t(`practice.learningPath.part.${lessonItem.practiceStatus}`)}</p>
+                        {lessonItem.attemptCount > 1 ? (
+                          <p className="text-caption text-muted-foreground">
+                            {t('practice.learningPath.attemptCount').replace('{count}', String(lessonItem.attemptCount))}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {canOpenTheory ? <Link to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`} className="inline-flex items-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-2.5 text-xs font-semibold text-foreground"><BookOpen className="size-4 text-info" aria-hidden />{t('practice.learningPath.openTheory')}</Link> : null}

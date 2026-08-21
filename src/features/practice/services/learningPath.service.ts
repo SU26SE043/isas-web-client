@@ -417,6 +417,9 @@ function milestoneSeed(
         order: index + 1,
         theoryStatus: order === 1 && index === 0 ? 'available' : 'locked',
         practiceStatus: 'locked',
+        // Lộ trình vừa tạo: chưa luyện lần nào nên chưa có gì để làm lại.
+        attemptCount: 0,
+        canRetry: false,
         content: html.content,
         contentVi: html.contentVi,
         status: 'not_started' as const,

@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { RoadmapWizardShell } from '../components/roadmap-wizard/RoadmapWizardShell';
 import { RoadmapDomainStep } from '../components/roadmap-wizard/RoadmapDomainStep';
+import { RoadmapNameFocusStep } from '../components/roadmap-wizard/RoadmapNameFocusStep';
 import { RoadmapReportsStep } from '../components/roadmap-wizard/RoadmapReportsStep';
 import { RoadmapTargetLevelStep } from '../components/roadmap-wizard/RoadmapTargetLevelStep';
 import { RoadmapConfirmStep } from '../components/roadmap-wizard/RoadmapConfirmStep';
@@ -40,6 +41,17 @@ export function RoadmapWizardPage() {
       ) : null}
 
       {flow.step === 1 ? (
+        <RoadmapNameFocusStep
+          name={flow.name}
+          onNameChange={flow.setName}
+          focus={flow.focus}
+          onFocusChange={flow.setFocus}
+          onBack={() => flow.goToStep(0)}
+          onNext={() => flow.goToStep(2)}
+        />
+      ) : null}
+
+      {flow.step === 2 ? (
         <RoadmapReportsStep
           reports={flow.allReports}
           selectedIds={flow.selectedIds}
@@ -47,26 +59,25 @@ export function RoadmapWizardPage() {
           onToggle={flow.toggleReport}
           onSelectAll={flow.selectAllReports}
           onUnselectAll={flow.unselectAllReports}
-          onBack={() => flow.goToStep(0)}
-          onNext={() => flow.goToStep(2)}
-        />
-      ) : null}
-
-      {flow.step === 2 ? (
-        <RoadmapTargetLevelStep
-          selectedLevel={flow.targetLevel}
-          onSelect={flow.setTargetLevel}
           onBack={() => flow.goToStep(1)}
           onNext={() => flow.goToStep(3)}
         />
       ) : null}
 
       {flow.step === 3 ? (
+        <RoadmapTargetLevelStep
+          selectedLevel={flow.targetLevel}
+          onSelect={flow.setTargetLevel}
+          onBack={() => flow.goToStep(2)}
+          onNext={() => flow.goToStep(4)}
+        />
+      ) : null}
+
+      {flow.step === 4 ? (
         <RoadmapConfirmStep
           domain={flow.selectedDomain}
           targetLevel={flow.targetLevel}
           name={flow.name}
-          onNameChange={flow.setName}
           selectedReports={flow.selectedReports}
           cvId={flow.cvId}
           cvFiles={flow.cvFiles}
@@ -78,9 +89,8 @@ export function RoadmapWizardPage() {
           priorRoadmapId={flow.priorRoadmapId}
           onPriorRoadmapChange={flow.setPriorRoadmapId}
           focus={flow.focus}
-          onFocusChange={flow.setFocus}
           isSubmitting={flow.isSubmitting}
-          onBack={() => flow.goToStep(2)}
+          onBack={() => flow.goToStep(3)}
           onConfirm={() => void flow.handleCreate()}
         />
       ) : null}
