@@ -2,7 +2,6 @@ import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { FullscreenLayout } from '@/layouts/FullscreenLayout';
-import { LearningLayout } from '@/layouts/LearningLayout';
 import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
 import { PracticeHistoryResultPage } from '@/features/practice/pages/PracticeHistoryResultPage';
@@ -66,44 +65,39 @@ export const candidateRoutes: RouteObject[] = [
         children: [
           {
             path: '/candidate/learning',
-            element: <DashboardLayout />,
+            element: <DashboardLayout sectionTitleKey="practice.learningPath.title" />,
             children: [
               {
-                element: <LearningLayout />,
+                index: true,
+                element: <LearningHubPage />,
+              },
+              {
+                path: 'roadmaps/:roadmapId',
+                element: <LearningRoadmapDetailPage />,
+              },
+              {
+                path: 'roadmaps/:roadmapId/report',
+                element: <LearningRoadmapReportPage />,
+              },
+              {
+                path: 'roadmaps/:roadmapId/lessons/:lessonId',
+                element: <LearningReaderLayout />,
                 children: [
+                  { path: 'theory', element: <LearningTheoryPage /> },
                   {
-                    index: true,
-                    element: <LearningHubPage />,
+                    path: 'practice/device-check',
+                    element: <LearningPracticeDeviceCheckPage />,
                   },
+                  { path: 'practice', element: <LearningLessonPracticePage /> },
                   {
-                    path: 'roadmaps/:roadmapId',
-                    element: <LearningRoadmapDetailPage />,
+                    path: 'practice/questions/:questionId/report',
+                    element: <LearningQuestionReportPage />,
                   },
-                  {
-                    path: 'roadmaps/:roadmapId/report',
-                    element: <LearningRoadmapReportPage />,
-                  },
-                  {
-                    path: 'roadmaps/:roadmapId/lessons/:lessonId',
-                    element: <LearningReaderLayout />,
-                    children: [
-                      { path: 'theory', element: <LearningTheoryPage /> },
-                      {
-                        path: 'practice/device-check',
-                        element: <LearningPracticeDeviceCheckPage />,
-                      },
-                      { path: 'practice', element: <LearningLessonPracticePage /> },
-                      {
-                        path: 'practice/questions/:questionId/report',
-                        element: <LearningQuestionReportPage />,
-                      },
-                      { path: 'report', element: <LearningPracticeReportPage /> },
-                    ],
-                  },
-                  { path: ':moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
-                  { path: ':moduleId', element: <Navigate to="/candidate/learning" replace /> },
+                  { path: 'report', element: <LearningPracticeReportPage /> },
                 ],
               },
+              { path: ':moduleId/practice', element: <Navigate to="/candidate/learning" replace /> },
+              { path: ':moduleId', element: <Navigate to="/candidate/learning" replace /> },
             ],
           },
           {

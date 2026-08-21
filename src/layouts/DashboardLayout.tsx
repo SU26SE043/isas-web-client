@@ -18,7 +18,11 @@ const navLinkClassName = (isActive: boolean, isCollapsed: boolean) =>
       : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
   ].join(' ');
 
-export const DashboardLayout: React.FC = () => {
+interface DashboardLayoutProps {
+  sectionTitleKey?: string;
+}
+
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKey }) => {
   const { t } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -34,7 +38,7 @@ export const DashboardLayout: React.FC = () => {
           ].join(' ')}
         >
           <div
-            className={`flex items-center border-b border-subtle px-3 py-4 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
+            className={`flex h-14 items-center border-b border-subtle px-3 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
           >
             {!isCollapsed ? (
               <Link to="/" className="focus-ring hidden rounded-md sm:block">
@@ -144,7 +148,15 @@ export const DashboardLayout: React.FC = () => {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
-          <Outlet />
+          {sectionTitleKey ? (
+            <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
+              <span className="truncate text-sm font-medium text-muted-foreground">{t(sectionTitleKey)}</span>
+              <LanguageToggle compact />
+            </header>
+          ) : null}
+          <div className="min-w-0">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
