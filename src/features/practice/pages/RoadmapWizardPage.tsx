@@ -17,6 +17,8 @@ export function RoadmapWizardPage() {
         <p className="mb-4 text-sm text-error" role="alert">
           {flow.submitError === 'invalid_input'
             ? t('practice.roadmapWizard.confirm.errorInvalid')
+            : flow.submitError === 'unsupported_level'
+              ? t('practice.roadmapWizard.confirm.errorUnsupportedLevel')
             : flow.submitError === 'forbidden'
               ? t('practice.roadmapWizard.confirm.errorForbidden')
               : flow.submitError === 'cv_not_found'
