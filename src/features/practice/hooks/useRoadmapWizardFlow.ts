@@ -1,3 +1,4 @@
+import type { RoadmapScope } from '../types/learning.types';
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +23,7 @@ import type { RoadmapMode } from '../types/learning.types';
 
 export type RoadmapWizardStep =
   | 'domain'
+  | 'nameFocus'
   | 'cv'
   | 'currentLevel'
   | 'mode'
@@ -54,6 +56,9 @@ export function useRoadmapWizardFlow() {
   const [currentLevelSource, setCurrentLevelSource] = useState<'cv' | 'default' | 'manual'>('default');
   const [mode, setMode] = useState<RoadmapMode>('LevelUp');
   const [name, setName] = useState('');
+  // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
+  // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
+  const [scope, setScope] = useState<RoadmapScope>('Quick');
   const [cvId, setCvId] = useState<string | undefined>();
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
   const [cvAnalyses, setCvAnalyses] = useState<CvAnalysisResult[]>([]);
@@ -75,6 +80,8 @@ export function useRoadmapWizardFlow() {
           page: 1,
           pageSize: 100,
           includeDeleted: false,
+          status: 'Scored',
+          excludeCampaign: true,
         }),
         cvAnalysisService.listUploadedCvs().catch(() => []),
         cvAnalysisService.listAnalyses().catch(() => []),
@@ -106,7 +113,7 @@ export function useRoadmapWizardFlow() {
   }, []);
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
-    const next: RoadmapWizardStep[] = ['domain', 'cv', 'currentLevel', 'mode', 'targetLevel'];
+    const next: RoadmapWizardStep[] = ['domain', 'nameFocus', 'cv', 'currentLevel', 'mode', 'targetLevel'];
     if (loadingReports || allReports.length > 0) next.push('reports');
     if (loadingReports || completedRoadmaps.length > 0) next.push('priorRoadmap');
     next.push('confirm');
@@ -115,7 +122,7 @@ export function useRoadmapWizardFlow() {
 
   const goToStep = useCallback(
     (nextStep: RoadmapWizardStep) => {
-      if (nextStep === 'cv' && domainId && !loadingReports && allReports.length === 0 && cvFiles.length === 0 && cvAnalyses.length === 0) {
+      if ((nextStep === 'cv' || nextStep === 'reports') && domainId && !loadingReports && allReports.length === 0 && cvFiles.length === 0 && cvAnalyses.length === 0) {
         void loadReportsForDomain(domainId);
       }
       setStep(nextStep);
@@ -167,6 +174,7 @@ export function useRoadmapWizardFlow() {
         priorRoadmapId,
         focus,
         mode,
+        scope,
       });
       const firstLessonId = created.milestones?.flatMap((milestone) => milestone.lessons)[0]?.id;
       if (created.id && firstLessonId) {
@@ -234,6 +242,8 @@ export function useRoadmapWizardFlow() {
     setFocus,
     setCvAnalysisId,
     setPriorRoadmapId,
+    scope,
+    setScope,
     toggleReport,
     selectAllReports,
     unselectAllReports,

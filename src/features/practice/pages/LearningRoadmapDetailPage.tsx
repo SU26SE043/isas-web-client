@@ -88,6 +88,13 @@ export function LearningRoadmapDetailPage() {
   }
 
   const title = language === 'vi' ? roadmap.nameVi : roadmap.name;
+  const resolvedFrom = roadmap.resolvedFrom;
+  const formatSessionDate = (date: string | null) => {
+    if (!date) return t('practice.learningPath.sourceSessionDateUnavailable');
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return date;
+    return new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium' }).format(parsed);
+  };
   const remainingLessons = roadmap.milestones.reduce(
     (sum, milestone) => sum + milestone.lessons.filter((lesson) => lesson.apiStatus !== 'Done').length,
     0,
@@ -179,14 +186,44 @@ export function LearningRoadmapDetailPage() {
         <LearningRoadmapCreditSummary remainingLessons={remainingLessons} balance={creditsRemaining ?? 0} />
       </header>
 
-      {roadmap.status === 'completed' ? (
-        <Link
-          to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
-          className="btn-secondary mt-4 inline-flex text-sm"
-        >
-          {t('practice.learningPath.viewRoadmapReport')}
-        </Link>
+      {resolvedFrom ? (
+        <section className="mt-5 rounded-2xl border border-satin bg-surface-raised/70 p-5" aria-labelledby="roadmap-source-title">
+          <h2 id="roadmap-source-title" className="text-base font-semibold text-foreground">
+            {t('practice.learningPath.sourceTitle')}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('practice.learningPath.sourceSessions').replace('{count}', String(resolvedFrom.sessions.length))}
+          </p>
+          {resolvedFrom.sessions.length > 0 ? (
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {resolvedFrom.sessions.map((session) => (
+                <li key={session.id} className="rounded-xl border border-satin/70 bg-surface-overlay/60 px-3 py-2 text-sm text-foreground">
+                  {formatSessionDate(session.date)}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {!resolvedFrom.baselineAvailable ? (
+            <p className="mt-3 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+              {t('practice.learningPath.sourceGenericWarning')}
+            </p>
+          ) : null}
+        </section>
       ) : null}
+
+      {/*
+        KHÔNG khoá sau `status === 'completed'`: backend vốn đã dựng báo cáo TẠM THỜI cho
+        lộ trình đang học (không gọi AI, nên thiếu phần nhận xét tổng quan — trang báo cáo
+        tự nói rõ điều đó bằng banner). Khoá lại chỉ giấu mất dữ liệu đã có sẵn.
+      */}
+      <Link
+        to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
+        className="btn-secondary mt-4 inline-flex text-sm"
+      >
+        {roadmap.status === 'completed'
+          ? t('practice.learningPath.viewRoadmapReport')
+          : t('practice.learningPath.viewRoadmapReportInterim')}
+      </Link>
 
       <LearningRoadmapMilestones
         roadmap={roadmap}

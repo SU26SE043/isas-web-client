@@ -1,6 +1,10 @@
 import React from 'react';
 import { useLanguage } from '@/shared/languages';
-import { ROADMAP_FOCUS_MAX_CHARS, ROADMAP_NAME_MAX_CHARS } from '../../types/learning.types';
+import {
+  ROADMAP_SCOPES,
+  ROADMAP_SCOPE_LESSONS,
+  type RoadmapScope,
+} from '../../types/learning.types';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
 import type { CvAnalysisResult, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
@@ -8,13 +12,15 @@ import type { LearningRoadmapCard } from '../../types/learningPath.types';
 import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
 import type { RoadmapMode } from '../../types/learning.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
+import { RoadmapConfirmSources } from './RoadmapConfirmSources';
 
 interface RoadmapConfirmStepProps {
+  scope: RoadmapScope;
+  onScopeChange: (scope: RoadmapScope) => void;
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
   mode?: RoadmapMode;
   name: string;
-  onNameChange: (value: string) => void;
   selectedReports: InterviewHistoryItem[];
   cvId?: string;
   cvFiles: UploadedCvFile[];
@@ -26,7 +32,6 @@ interface RoadmapConfirmStepProps {
   priorRoadmapId?: string;
   onPriorRoadmapChange: (value: string | undefined) => void;
   focus: string;
-  onFocusChange: (value: string) => void;
   isSubmitting: boolean;
   onBack: () => void;
   onConfirm: () => void;
@@ -37,11 +42,9 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   targetLevel,
   mode = 'LevelUp',
   name,
-  onNameChange,
   selectedReports,
-  cvId,
-  cvFiles,
-  onCvChange,
+  scope,
+  onScopeChange,
   cvAnalyses,
   cvAnalysisId,
   onCvAnalysisChange,
@@ -49,7 +52,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   priorRoadmapId,
   onPriorRoadmapChange,
   focus,
-  onFocusChange,
   isSubmitting,
   onBack,
   onConfirm,
@@ -60,8 +62,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
       ? domain.nameVi
       : domain.name
     : '—';
-  const focusTooLong = focus.trim().length > ROADMAP_FOCUS_MAX_CHARS;
-  const nameTooLong = name.trim().length > ROADMAP_NAME_MAX_CHARS;
 
   return (
     <section className="rounded-xl border border-subtle bg-surface-raised p-6">
@@ -69,6 +69,23 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
       <p className="body-text mt-1 text-sm">{t('practice.roadmapWizard.confirm.description')}</p>
 
       <dl className="mt-5 space-y-3 text-sm">
+        {/*
+          Tên và Mục tiêu nay được NHẬP ở bước 2, đây chỉ hiển thị lại để rà soát — cùng vai với
+          Lĩnh vực / Cấp độ bên dưới. Đặt ô nhập ở cả hai bước sẽ có hai nguồn cho một giá trị, và
+          người dùng không biết cái nào thắng.
+        */}
+        <div className="flex justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.nameLabel')}</dt>
+          <dd className="max-w-[70%] text-right font-medium text-foreground">
+            {name.trim() || t('practice.roadmapWizard.confirm.nameAuto')}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.focusLabel')}</dt>
+          <dd className="max-w-[70%] whitespace-pre-wrap text-right font-medium text-foreground">
+            {focus.trim() || t('practice.roadmapWizard.confirm.focusNone')}
+          </dd>
+        </div>
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
           <dd className="font-medium text-foreground">{domainLabel}</dd>
@@ -80,117 +97,45 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
             {targetLevel ? t(`practice.roadmapWizard.level.${targetLevel}`) : '—'}
           </dd>
         </div>
+        {/*
+          Quy mô quyết định SỐ BÀI, mà mỗi bài tiêu 1 credit — nên nó phải nằm ở đúng
+          chỗ người dùng đang quyết "có tạo không", kèm giá. Trước khi có hàng này, mọi
+          lộ trình tạo qua giao diện đều là Standard (12 bài) trong khi suất dùng thử
+          chỉ có 3: người mới chạm 402 ở bài thứ tư mà không hiểu vì sao.
+        */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.cv')}</dt>
-          {cvFiles.length > 0 ? (
-            <dd>
-              <label className="sr-only" htmlFor="roadmap-confirm-cv">
-                {t('practice.roadmapWizard.confirm.cv')}
-              </label>
-              <select
-                id="roadmap-confirm-cv"
-                value={cvId ?? ''}
-                onChange={(event) => onCvChange(event.target.value || undefined)}
-                disabled={isSubmitting}
-                className="min-w-0 max-w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-right font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {cvFiles.map((cv) => (
-                  <option key={cv.id} value={cv.id}>
-                    {cv.fileName}
-                  </option>
-                ))}
-              </select>
-            </dd>
-          ) : (
-            <dd className="max-w-[70%] text-right font-medium text-muted-foreground">
-              {t('practice.roadmapWizard.confirm.cvNone')}
-            </dd>
-          )}
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.scope')}</dt>
+          <dd className="flex items-center gap-3">
+            <label className="sr-only" htmlFor="roadmap-confirm-scope">
+              {t('practice.roadmapWizard.confirm.scope')}
+            </label>
+            <select
+              id="roadmap-confirm-scope"
+              value={scope}
+              onChange={(event) => onScopeChange(event.target.value as RoadmapScope)}
+              disabled={isSubmitting}
+              className="rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-right font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {ROADMAP_SCOPES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`practice.roadmapWizard.confirm.scope.${s.toLowerCase()}`)}
+                </option>
+              ))}
+            </select>
+            <span className="text-caption text-muted-foreground">
+              {t('practice.roadmapWizard.confirm.scopeCost').replace(
+                '{count}',
+                String(ROADMAP_SCOPE_LESSONS[scope]),
+              )}
+            </span>
+          </dd>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.cvAnalysis')}</dt>
-          {cvAnalyses.length > 0 ? (
-            <dd>
-              <label className="sr-only" htmlFor="roadmap-confirm-analysis">
-                {t('practice.roadmapWizard.confirm.cvAnalysis')}
-              </label>
-              <select
-                id="roadmap-confirm-analysis"
-                value={cvAnalysisId ?? ''}
-                onChange={(event) => onCvAnalysisChange(event.target.value || undefined)}
-                disabled={isSubmitting}
-                className="min-w-0 max-w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-right font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">{t('practice.roadmapWizard.confirm.notSelected')}</option>
-                {cvAnalyses.map((analysis) => (
-                  <option key={analysis.id} value={analysis.id}>
-                    {analysis.jobCategory} · {new Date(analysis.createdAt).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
-            </dd>
-          ) : (
-            <dd className="max-w-[70%] text-right font-medium text-muted-foreground">
-              {t('practice.roadmapWizard.confirm.cvAnalysisNone')}
-            </dd>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.priorRoadmap')}</dt>
-          {completedRoadmaps.length > 0 ? (
-            <dd>
-              <label className="sr-only" htmlFor="roadmap-confirm-prior">
-                {t('practice.roadmapWizard.confirm.priorRoadmap')}
-              </label>
-              <select
-                id="roadmap-confirm-prior"
-                value={priorRoadmapId ?? ''}
-                onChange={(event) => onPriorRoadmapChange(event.target.value || undefined)}
-                disabled={isSubmitting}
-                className="min-w-0 max-w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-right font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">{t('practice.roadmapWizard.confirm.notSelected')}</option>
-                {completedRoadmaps.map((roadmap) => (
-                  <option key={roadmap.id} value={roadmap.id}>
-                    {language === 'vi' ? roadmap.nameVi : roadmap.name}
-                  </option>
-                ))}
-              </select>
-            </dd>
-          ) : (
-            <dd className="max-w-[70%] text-right font-medium text-muted-foreground">
-              {t('practice.roadmapWizard.confirm.priorRoadmapNone')}
-            </dd>
-          )}
-        </div>
+        <RoadmapConfirmSources cvAnalyses={cvAnalyses} cvAnalysisId={cvAnalysisId} onCvAnalysisChange={onCvAnalysisChange} completedRoadmaps={completedRoadmaps} priorRoadmapId={priorRoadmapId} onPriorRoadmapChange={onPriorRoadmapChange} isSubmitting={isSubmitting} />
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.count')}</dt>
           <dd className="font-medium text-foreground">{selectedReports.length}</dd>
         </div>
       </dl>
-
-      <label className="mt-5 block space-y-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('practice.roadmapWizard.confirm.nameLabel')}
-        </span>
-        <input
-          id="roadmap-confirm-name"
-          value={name}
-          onChange={(event) => onNameChange(event.target.value)}
-          maxLength={ROADMAP_NAME_MAX_CHARS + 1}
-          className="h-10 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={t('practice.roadmapWizard.confirm.namePlaceholder')}
-          disabled={isSubmitting}
-        />
-        <span className="flex justify-between text-caption text-muted-foreground">
-          <span>
-            {nameTooLong
-              ? t('practice.roadmapWizard.confirm.nameTooLong')
-              : t('practice.roadmapWizard.confirm.nameHint')}
-          </span>
-          <span>{name.trim().length}/{ROADMAP_NAME_MAX_CHARS}</span>
-        </span>
-      </label>
 
       {selectedReports.length > 0 ? (
         <ul className="mt-4 space-y-2">
@@ -208,30 +153,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         </ul>
       ) : null}
 
-      <label className="mt-5 block space-y-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('practice.roadmapWizard.confirm.focusLabel')}
-        </span>
-        <textarea
-          value={focus}
-          onChange={(event) => onFocusChange(event.target.value)}
-          rows={4}
-          maxLength={ROADMAP_FOCUS_MAX_CHARS + 50}
-          className="w-full rounded-xl border border-satin bg-surface-overlay px-3 py-2 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={t('practice.roadmapWizard.confirm.focusPlaceholder')}
-          disabled={isSubmitting}
-        />
-        <span className="flex justify-between text-caption text-muted-foreground">
-          <span>
-            {focusTooLong
-              ? t('practice.roadmapWizard.confirm.focusTooLong')
-              : t('practice.roadmapWizard.confirm.focusHint')}
-          </span>
-          <span>
-            {focus.trim().length}/{ROADMAP_FOCUS_MAX_CHARS}
-          </span>
-        </span>
-      </label>
 
       <p className="mt-4 text-caption text-muted-foreground">
         {t('practice.roadmapWizard.confirm.sessionsHint')}
@@ -242,7 +163,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         onNext={onConfirm}
         nextLabel={t('practice.roadmapWizard.confirm.create')}
         isLoading={isSubmitting}
-        nextDisabled={!domain || !targetLevel || isSubmitting || focusTooLong || nameTooLong}
+        nextDisabled={!domain || !targetLevel || isSubmitting}
       />
     </section>
   );

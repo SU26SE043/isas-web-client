@@ -16,6 +16,8 @@ import type {
   ApiRoadmapLessonDetail,
   ApiRoadmapListItem,
   ApiRoadmapMilestone,
+  ApiRoadmapResolvedFrom,
+  ApiRoadmapResolvedSession,
   LearningResource,
 } from '../types/roadmap.api.types';
 
@@ -33,6 +35,9 @@ export type OpenedLearningLesson = {
   pathStatus: LearningPathStatus;
   resources: LearningResource[];
   citations: import('../types/roadmap.api.types').LearningCitation[] | null;
+  // Do SERVER quyết định — trang chi tiết bài KHÔNG được tự suy từ `apiStatus`.
+  canRetry: boolean;
+  attemptCount: number;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -58,6 +63,24 @@ function pickNumber(...values: unknown[]): number {
     }
   }
   return 0;
+}
+
+function mapResolvedFrom(raw: ApiRoadmapResolvedFrom | null | undefined): LearningRoadmapDetail['resolvedFrom'] {
+  if (!raw || typeof raw !== 'object') return null;
+  const sessions = asArray<ApiRoadmapResolvedSession>(raw.sessionIds)
+    .map((session) => {
+      const item = typeof session === 'string' ? null : asRecord(session);
+      const id = typeof session === 'string' ? session.trim() : pickString(item?.id, item?.sessionId);
+      if (!id) return null;
+      const date = item ? pickString(item.date, item.createdAt, item.completedAt) || null : null;
+      return { id, date };
+    })
+    .filter((session): session is { id: string; date: string | null } => session !== null);
+  return {
+    sessions,
+    baselineAvailable: raw.baselineAvailable === true,
+    scope: pickString(raw.scope),
+  };
 }
 
 function normalizeApiLessonStatus(status: ApiLessonStatus | undefined): 'Theory' | 'Practicing' | 'Done' {
@@ -151,6 +174,11 @@ function mapLessonFromApi(lesson: ApiRoadmapLesson, index: number): LearningLess
     apiStatus,
     sessionId: pickString(lesson.sessionId) || null,
     practiceReportId: pickString(lesson.practiceReportId) || undefined,
+    attemptCount: pickNumber(lesson.attemptCount),
+    // Đọc THẲNG từ server. Không suy từ `apiStatus === 'Done'`: điều kiện thật
+    // của backend còn gồm ví credit và quyền sở hữu, suy ở FE là hai bên lệch
+    // nhau trong im lặng.
+    canRetry: lesson.canRetry === true,
   };
 }
 
@@ -289,6 +317,7 @@ export function mapApiRoadmapDetail(raw: unknown): LearningRoadmapDetail {
     currentLessonTitleVi: card.currentLessonTitleVi || currentLesson?.titleVi || '',
     milestones,
     reports: [],
+    resolvedFrom: mapResolvedFrom(item.resolvedFrom),
   };
 }
 
@@ -333,6 +362,8 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
     pathStatus: parts.pathStatus,
     resources: mapLearningResources(item.resources),
     citations: Array.isArray(item.citations) ? item.citations : null,
+    canRetry: (item as Record<string, unknown>).canRetry === true,
+    attemptCount: pickNumber((item as Record<string, unknown>).attemptCount, 0),
   };
 }
 

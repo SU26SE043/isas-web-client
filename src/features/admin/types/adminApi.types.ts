@@ -21,6 +21,16 @@ export type RubricCriterion = { id?: string; key: string; name?: string; levels:
 export type RubricSet = { category: string; language: 'vi' | 'en'; version: number; criteria: RubricCriterion[]; updatedAt?: string | null; updatedBy?: string | null };
 export type RubricPreviewInput = { criterionKey: string; answer: string };
 
+/**
+ * Ngưỡng ĐẠT của lộ trình theo cấp độ. Backend luôn trả một phần tử cho MỌI cấp độ.
+ *
+ * `isOverridden` do server nói, KHÔNG suy từ `effectivePct !== defaultPct`: admin đặt
+ * override trùng giá trị mặc định vẫn LÀ override (và vẫn phải hiện nút trả-về-mặc-định).
+ * `isKnownLevel === false` = hàng mồ côi, cấp độ đã bị gỡ khỏi hệ nhưng override còn sót.
+ */
+export type RoadmapThreshold = { level: string; effectivePct: number; defaultPct: number; isOverridden: boolean; updatedBy?: string | null; updatedAt?: string | null; isKnownLevel: boolean };
+export type RoadmapThresholdUpdateInput = { thresholds: Record<string, number> };
+
 export type KnowledgeSource = { id: string; title: string; jobCategory?: string | null; sourceType: 'Context7' | 'Url' | 'Manual' | string; sourceRef?: string | null; reputation?: string | null; status: 'Active' | 'Archived' | string; chunkCount: number; createdAt: string };
 export type CreateKnowledgeInput = { title: string; jobCategory?: string; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
 export type Context7Library = { id: string; title: string; reputation?: string | null; snippets: number };

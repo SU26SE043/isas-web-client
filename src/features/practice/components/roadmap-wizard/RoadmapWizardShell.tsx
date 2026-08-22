@@ -7,6 +7,7 @@ const ROADMAP_WIZARD_STEPS = [
   'practice.roadmapWizard.steps.cv',
   'practice.roadmapWizard.steps.currentLevel',
   'practice.roadmapWizard.steps.mode',
+  'practice.roadmapWizard.steps.nameFocus',
   'practice.roadmapWizard.steps.level',
   'practice.roadmapWizard.steps.reports',
   'practice.roadmapWizard.steps.priorRoadmap',

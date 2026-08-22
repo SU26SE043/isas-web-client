@@ -39,7 +39,7 @@ interface PracticeSetupSummaryStepProps {
   jdText: string;
   jdTab: 'file' | 'text';
   timeLimitSec: PracticeTimeLimitSec;
-  seniority: PracticeSeniority;
+  seniority: PracticeSeniority | null;
   questionCount: number;
   adaptiveEnabled: boolean;
   maxDeepPerQuestion: number | null;
@@ -133,7 +133,7 @@ export function PracticeSetupSummaryStep({
     },
     {
       label: t('practice.wizard.steps.level'),
-      value: t(SENIORITY_LABEL[seniority]),
+      value: seniority ? t(SENIORITY_LABEL[seniority]) : '—',
     },
     {
       label: t('practice.setup.summary.credit'),

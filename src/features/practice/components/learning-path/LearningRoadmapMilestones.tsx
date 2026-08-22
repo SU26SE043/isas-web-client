@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, BrainCircuit, Database, FileCode2, Lock, Star } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { MilestoneImprovementDisclosure } from './MilestoneImprovementDisclosure';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
 
 interface LearningRoadmapMilestonesProps {
@@ -10,6 +11,9 @@ interface LearningRoadmapMilestonesProps {
   onOpenPractice: (lessonId: string, title: string, sessionId?: string | null) => void;
 }
 
+// Nút "Làm lại bài" KHÔNG nằm ở đây mà ở trang chi tiết bài (`LearningTheoryActions`):
+// mỗi hàng bài trong danh sách vốn đã có hai nút, thêm nút thứ ba làm hàng nút tràn và rối,
+// trong khi thao tác đó tiêu credit nên đáng để người học mở bài ra đọc lại trước khi quyết.
 export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId, onOpenPractice }: LearningRoadmapMilestonesProps) {
   const { t } = useLanguage();
 
@@ -32,6 +36,21 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
             <p className="mt-1 text-sm text-muted-foreground">
               {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} · {milestone.progressPercent}%
             </p>
+            {/*
+              MỘT DÒNG, không phải bảng. Trang lộ trình là nơi ĐIỀU HƯỚNG — nhét vào giữa danh
+              sách chặng một hộp lưới 6 dòng "tiêu chí · ±n%" là mang bảng phân tích đặt vào chỗ
+              người ta chỉ lướt qua, mà trên dữ liệu thật 4/6 dòng là "+0%".
+
+              Nhưng dòng đó nói "−20%" mà không cho biết 20% ở đâu ra thì là một KHẲNG ĐỊNH
+              KHÔNG KIỂM CHỨNG ĐƯỢC. Nay nó mở ra được: bấm vào là thấy điểm từng tiêu chí,
+              mốc đem so, và những buổi đã cộng vào mỗi vế.
+            */}
+            <MilestoneImprovementDisclosure
+              roadmapId={roadmap.id}
+              milestoneId={milestone.id}
+              milestoneStatus={milestone.status}
+              improvement={milestone.improvement}
+            />
             <ul className="mt-4 space-y-2">
               {milestone.lessons.map((lessonItem, lessonIndex) => {
                 const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
@@ -44,6 +63,11 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                       <div>
                         <p className="flex items-center gap-3 font-medium text-foreground"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-info/40 bg-info/10 text-info"><LessonIcon index={lessonIndex} /></span>{lessonTitle}</p>
                         <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}: {t(`practice.learningPath.part.${lessonItem.theoryStatus}`)} · {t('practice.learningPath.practice')}: {t(`practice.learningPath.part.${lessonItem.practiceStatus}`)}</p>
+                        {lessonItem.attemptCount > 1 ? (
+                          <p className="text-caption text-muted-foreground">
+                            {t('practice.learningPath.attemptCount').replace('{count}', String(lessonItem.attemptCount))}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {canOpenTheory ? <Link to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`} className="inline-flex items-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-2.5 text-xs font-semibold text-foreground"><BookOpen className="size-4 text-info" aria-hidden />{t('practice.learningPath.openTheory')}</Link> : null}

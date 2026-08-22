@@ -52,6 +52,9 @@ function lesson(
     contentVi: html.contentVi,
     status,
     practiceReportId,
+    // Fixture mock: server thật mới là nguồn của hai trường này.
+    attemptCount: practice === 'completed' ? 1 : 0,
+    canRetry: false,
   };
 }
 

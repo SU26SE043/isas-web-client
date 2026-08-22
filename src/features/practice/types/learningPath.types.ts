@@ -71,6 +71,10 @@ export interface LearningLesson {
   /** Practice session id when status is Practicing. */
   sessionId?: string | null;
   practiceReportId?: string;
+  /** Số lần đã luyện bài này (server đếm). 0 = chưa làm lần nào. */
+  attemptCount: number;
+  /** SERVER quyết định — TUYỆT ĐỐI không suy từ `apiStatus`/`practiceStatus`. */
+  canRetry: boolean;
   theoryContent?: string | null;
   resources?: Array<{ title: string; type: string; publisher?: string | null; url?: string | null }>;
   citations?: Array<{ chunkId: string; sourceUrl: string; sourceTitle: string }> | null;
@@ -86,6 +90,17 @@ export interface LearningMilestone {
   lessons: LearningLesson[];
   focusCriteria?: string[];
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
+}
+
+export interface LearningRoadmapResolvedSession {
+  id: string;
+  date: string | null;
+}
+
+export interface LearningRoadmapResolvedFrom {
+  sessions: LearningRoadmapResolvedSession[];
+  baselineAvailable: boolean;
+  scope: string;
 }
 
 export interface LearningRoadmapCard {
@@ -120,6 +135,7 @@ export interface LearningRoadmapCard {
 export interface LearningRoadmapDetail extends LearningRoadmapCard {
   milestones: LearningMilestone[];
   reports: LearningPracticeReport[];
+  resolvedFrom?: LearningRoadmapResolvedFrom | null;
 }
 
 export interface LearningDashboardQuery {

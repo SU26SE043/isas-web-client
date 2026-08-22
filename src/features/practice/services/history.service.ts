@@ -65,6 +65,8 @@ export async function getPracticeSessionHistory(
     params: {
       cursor: params.cursor || undefined,
       limit,
+      status: params.status || undefined,
+      excludeCampaign: params.excludeCampaign,
     },
   });
   return parsePracticeSessionHistoryPage(response.data, response.headers);
@@ -84,6 +86,8 @@ export async function fetchInterviewHistory(
     const pageData = await getPracticeSessionHistory({
       cursor: query.cursor || undefined,
       limit: pageSize,
+      status: 'Scored',
+      excludeCampaign: true,
     });
     return {
       interviews: pageData.items.map(mapPracticeHistoryToInterviewItem),

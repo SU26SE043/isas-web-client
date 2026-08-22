@@ -18,6 +18,7 @@ import { AdminSystemConfigPage } from '@/features/admin/pages/AdminSystemConfigP
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 import { AdminPromptsPage } from '@/features/admin/pages/AdminPromptsPage';
 import { AdminRubricsPage } from '@/features/admin/pages/AdminRubricsPage';
+import { AdminRoadmapThresholdsPage } from '@/features/admin/pages/AdminRoadmapThresholdsPage';
 import { HelpPage } from '@/features/engagement/pages/HelpPage';
 import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
 import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
@@ -52,6 +53,7 @@ export const adminRoutes: RouteObject[] = [
               { path: 'ai-config', element: <AdminAiConfigPage /> },
               { path: 'prompts', element: <AdminPromptsPage /> },
               { path: 'rubrics', element: <AdminRubricsPage /> },
+              { path: 'roadmap-thresholds', element: <AdminRoadmapThresholdsPage /> },
               { path: 'notification-templates', element: <AdminResourcePage resourceKey="notificationTemplates" /> },
               { path: 'reports', element: <AdminResourcePage resourceKey="reports" /> },
               { path: 'audit-logs', element: <AdminAuditLogsPage /> },

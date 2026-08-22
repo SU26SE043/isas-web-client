@@ -31,6 +31,15 @@ export type ApiRoadmapLesson = {
   sessionId?: string | null;
   status?: ApiLessonStatus;
   practiceReportId?: string | null;
+  /** Số lần đã luyện bài này. Server sở hữu; FE không tự đếm. */
+  attemptCount?: number;
+  /**
+   * SERVER quyết định bài có được luyện lại hay không.
+   * Điều kiện thật gồm cả trạng thái, ví credit và quyền sở hữu — FE tự suy từ
+   * `status` sẽ lệch với backend ngay lần đổi luật đầu tiên, và triệu chứng là
+   * nút hiện ra rồi bấm vào báo lỗi.
+   */
+  canRetry?: boolean;
   resources?: LearningResource[] | null;
   citations?: LearningCitation[] | null;
 };
@@ -46,6 +55,20 @@ export type ApiRoadmapMilestone = {
   focusCriteria?: string[];
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons?: ApiRoadmapLesson[];
+};
+
+export type ApiRoadmapResolvedSession = string | {
+  id?: string;
+  sessionId?: string;
+  date?: string;
+  createdAt?: string;
+  completedAt?: string;
+};
+
+export type ApiRoadmapResolvedFrom = {
+  sessionIds?: ApiRoadmapResolvedSession[] | null;
+  baselineAvailable?: boolean;
+  scope?: string | null;
 };
 
 export type ApiRoadmapListItem = {
@@ -79,6 +102,7 @@ export type ApiRoadmapListItem = {
 export type ApiRoadmapDetail = ApiRoadmapListItem & {
   milestones?: ApiRoadmapMilestone[];
   reports?: unknown[];
+  resolvedFrom?: ApiRoadmapResolvedFrom | null;
 };
 
 /** Shared lesson detail contract (roadmap nested + GET lesson). */

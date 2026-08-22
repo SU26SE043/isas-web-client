@@ -31,6 +31,7 @@ export function isValidPracticeQuestionCount(value: unknown): value is number {
 
 export function canStartPracticeSession(state: PracticeSetupState): boolean {
   if (!state.jobCategory) return false;
+  if (!state.seniority) return false;
   if (!isValidPracticeQuestionCount(state.questionCount)) return false;
   if (!isPracticeTimeLimitSec(state.timeLimitSec)) return false;
   if (state.jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS) return false;
@@ -45,6 +46,13 @@ export function buildCreatePracticeSessionRequest(
 ): CreatePracticeSessionRequest {
   if (!state.jobCategory) {
     throw new Error('jobCategory is required');
+  }
+
+  // Ném thay vì bỏ khoá: `seniority` là trường TUỲ CHỌN của server, bỏ trống thì server rơi về
+  // mặc định `Junior` của chính nó — tức đúng con bug vừa gỡ ở phía FE quay lại qua cửa sau,
+  // vẫn im lặng và vẫn sau khi đã trừ credit.
+  if (!state.seniority) {
+    throw new Error('seniority is required');
   }
 
   const normalizedJdText = state.jdText.trim();

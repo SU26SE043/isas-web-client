@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapApiRoadmapLessonDetail } from './roadmapMapper';
+import { mapApiRoadmapDetail, mapApiRoadmapLessonDetail } from './roadmapMapper';
 
 describe('mapApiRoadmapLessonDetail resources', () => {
   it('maps learning resources and keeps null urls as null', () => {
@@ -44,5 +44,36 @@ describe('mapApiRoadmapLessonDetail resources', () => {
       status: 'Done',
     });
     expect(mapped.resources).toEqual([]);
+  });
+});
+
+describe('mapApiRoadmapDetail provenance', () => {
+  it('maps resolved practice sessions and preserves a missing baseline', () => {
+    const mapped = mapApiRoadmapDetail({
+      id: 'roadmap-1',
+      name: 'Frontend path',
+      milestones: [],
+      resolvedFrom: {
+        sessionIds: [
+          { sessionId: 'session-1', createdAt: '2026-08-20T10:00:00Z' },
+          { id: 'session-2', date: '2026-08-21T10:00:00Z' },
+        ],
+        baselineAvailable: false,
+        scope: 'Frontend',
+      },
+    });
+
+    expect(mapped.resolvedFrom).toEqual({
+      sessions: [
+        { id: 'session-1', date: '2026-08-20T10:00:00Z' },
+        { id: 'session-2', date: '2026-08-21T10:00:00Z' },
+      ],
+      baselineAvailable: false,
+      scope: 'Frontend',
+    });
+  });
+
+  it('keeps provenance absent when the backend omits resolvedFrom', () => {
+    expect(mapApiRoadmapDetail({ id: 'roadmap-2', milestones: [] }).resolvedFrom).toBeNull();
   });
 });

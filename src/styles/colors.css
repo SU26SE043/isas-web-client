@@ -112,6 +112,10 @@
   --chart-radar-fill: rgb(129 140 248 / 0.25);
   --chart-radar-target-stroke: var(--chart-cat-3);
   --chart-radar-target-fill: rgb(251 191 36 / 0.2);
+  /* Lớp "lúc bắt đầu" của radar 3 lớp: màu TRUNG TÍNH, tô mờ hơn lớp gần đây.
+     Cố ý không lấy màu categorical — ba vùng bão hoà chồng nhau thì không đọc được nan nào. */
+  --chart-radar-start-stroke: #94a3b8;
+  --chart-radar-start-fill: rgb(148 163 184 / 0.14);
 
   --chart-grid: #334155;
   --chart-axis: #64748b;

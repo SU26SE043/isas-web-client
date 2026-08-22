@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
-  Building2,
   Bell,
   BookOpen,
   Bot,
   Briefcase,
+  Building2,
   CircleHelp,
   ClipboardCheck,
+  ClipboardList,
   CreditCard,
   DatabaseBackup,
   FileText,
@@ -20,10 +21,10 @@ import {
   LogOut,
   Settings,
   Shield,
+  SlidersHorizontal,
+  Target,
   Users,
   Wrench,
-  SlidersHorizontal,
-  ClipboardList,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
@@ -62,6 +63,7 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/ai-config', label: t('admin.nav.aiConfig'), icon: <Bot className="h-4 w-4" aria-hidden /> },
       { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
       { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
       { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <Bell className="h-4 w-4" aria-hidden /> },
       { to: '/admin/reports', label: t('admin.nav.reports'), icon: <FileText className="h-4 w-4" aria-hidden /> },
       { to: '/admin/audit-logs', label: t('admin.nav.audit'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
