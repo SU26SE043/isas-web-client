@@ -7,6 +7,7 @@ import { useLanguage } from '@/shared/languages';
 import { LessonHtmlContent } from '../components/learning-path/LessonHtmlContent';
 import { LearningTheoryActions } from '../components/learning-path/LearningTheoryActions';
 import { LearningResourceList } from '../components/learning-path/LearningResourceList';
+import { LessonCitationList } from '../components/learning-path/LessonCitationList';
 import { useLearningWorkspaceOptional } from '../context/LearningWorkspaceContext';
 import { useLearningLesson, useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
 import { roadmapService } from '../services/roadmap.service';
@@ -147,6 +148,7 @@ export function LearningTheoryPage() {
             <p className="text-sm text-muted-foreground">{t('practice.learningPath.theoryEmpty')}</p>
           )}
           <LearningResourceList resources={opened.resources ?? []} />
+          <LessonCitationList citations={opened.citations} />
         </article>
 
         <LearningTheoryActions roadmap={roadmap} opened={opened} />

@@ -2,6 +2,7 @@ import { BookOpen, FileText, GraduationCap, Newspaper, Video } from 'lucide-reac
 import type { LucideIcon } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { LearningResource, LearningResourceType } from '../../types/roadmap.api.types';
+import { isSafeExternalUrl } from '../../utils/externalUrl';
 
 const RESOURCE_ICONS: Record<string, LucideIcon> = {
   Doc: FileText,
@@ -10,16 +11,6 @@ const RESOURCE_ICONS: Record<string, LucideIcon> = {
   Video: Video,
   Article: Newspaper,
 };
-
-function isSafeExternalUrl(value: string | null | undefined): value is string {
-  if (!value?.trim()) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 function normalizeResources(resources: LearningResource[] | null | undefined): LearningResource[] {
   if (!Array.isArray(resources)) return [];
