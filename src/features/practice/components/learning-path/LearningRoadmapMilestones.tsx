@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, BrainCircuit, Database, FileCode2, Lock, Star } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { MilestoneImprovementDisclosure } from './MilestoneImprovementDisclosure';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
 
 interface LearningRoadmapMilestonesProps {
@@ -40,36 +41,16 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
               sách chặng một hộp lưới 6 dòng "tiêu chí · ±n%" là mang bảng phân tích đặt vào chỗ
               người ta chỉ lướt qua, mà trên dữ liệu thật 4/6 dòng là "+0%".
 
-              Nên chỉ nêu tiêu chí DỊCH CHUYỂN MẠNH NHẤT mỗi chiều (nhiều nhất 2 mục), và nói rõ
-              đang so với CHẶNG TRƯỚC — số ở đây đúng (kiểm tay: 70→50 ra −20%) nhưng hai chặng
-              luyện trên hai bộ bài khác đề, để trần thì người học đọc "−20%" thành "tôi kém đi".
-              Phân tích đầy đủ nằm ở trang báo cáo, nơi đã có biểu đồ theo từng buổi.
+              Nhưng dòng đó nói "−20%" mà không cho biết 20% ở đâu ra thì là một KHẲNG ĐỊNH
+              KHÔNG KIỂM CHỨNG ĐƯỢC. Nay nó mở ra được: bấm vào là thấy điểm từng tiêu chí,
+              mốc đem so, và những buổi đã cộng vào mỗi vế.
             */}
-            {milestone.status === 'completed' && milestone.improvement?.length
-              ? (() => {
-                  const moved = milestone.improvement.filter((item) => item.deltaPct !== 0);
-                  if (moved.length === 0) return null;
-                  const up = moved.reduce((a, b) => (b.deltaPct > a.deltaPct ? b : a));
-                  const down = moved.reduce((a, b) => (b.deltaPct < a.deltaPct ? b : a));
-                  const picks = [
-                    up.deltaPct > 0 ? up : null,
-                    down.deltaPct < 0 ? down : null,
-                  ].filter((x): x is NonNullable<typeof x> => x !== null);
-                  return (
-                    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
-                      <span>{t('practice.learningPath.improvementTitle')}</span>
-                      {picks.map((item) => (
-                        <span key={item.criterionName} className="inline-flex items-center gap-1">
-                          <span className={item.deltaPct < 0 ? 'font-semibold text-error' : 'font-semibold text-success'}>
-                            {item.deltaPct >= 0 ? '+' : '−'}{Math.abs(item.deltaPct)}%
-                          </span>
-                          <span>{item.criterionName}</span>
-                        </span>
-                      ))}
-                    </p>
-                  );
-                })()
-              : null}
+            <MilestoneImprovementDisclosure
+              roadmapId={roadmap.id}
+              milestoneId={milestone.id}
+              milestoneStatus={milestone.status}
+              improvement={milestone.improvement}
+            />
             <ul className="mt-4 space-y-2">
               {milestone.lessons.map((lessonItem, lessonIndex) => {
                 const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;

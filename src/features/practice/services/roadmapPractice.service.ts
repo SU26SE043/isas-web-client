@@ -8,6 +8,11 @@ import type {
   PracticeAnswerDetail,
   PracticeSessionQuestionDto,
   PracticeSessionResponse,
+  MilestoneScoreCriterion,
+  MilestoneScoreComparedWith,
+  MilestoneScoreReport,
+  MilestoneScoreSession,
+  MilestoneScoreSource,
   RoadmapLevelEvaluationItem,
   RoadmapPracticeReport,
   RoadmapProgressCriterionScore,
@@ -314,6 +319,69 @@ async function postLessonSession(url: string): Promise<StartLessonResult> {
   }
 }
 
+const SCORE_SOURCES: MilestoneScoreSource[] = ['snapshot', 'computed', 'recomputed'];
+const COMPARED_WITH: MilestoneScoreComparedWith[] = ['previousMilestone', 'baseline', 'none'];
+
+/** Giá trị lạ -> `unknown`, KHÔNG gán bừa về một nhãn đã biết. */
+function pickEnum<T extends string>(raw: unknown, allowed: T[]): T | 'unknown' {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  return (allowed as string[]).includes(value) ? (value as T) : 'unknown';
+}
+
+function mapScoreSession(raw: unknown, index: number): MilestoneScoreSession {
+  const item = asRecord(raw);
+  return {
+    sessionId: pickString(item.sessionId, item.id) || `session-${index + 1}`,
+    lessonTitle: pickString(item.lessonTitle, item.title, item.lesson),
+    attemptNo: pickNumber(item.attemptNo, item.attempt, 1) || 1,
+    // pickNullableNumber, KHÔNG pickNumber: buổi chưa chấm phải là "khuyết", không phải 0%.
+    percentage: pickNullableNumber(item.percentage),
+    scoredAt: pickString(item.scoredAt, item.completedAt) || null,
+  };
+}
+
+function mapScoreSessions(raw: unknown): MilestoneScoreSession[] {
+  return Array.isArray(raw) ? raw.map(mapScoreSession) : [];
+}
+
+function mapScoreCriterion(raw: unknown): MilestoneScoreCriterion {
+  const item = asRecord(raw);
+  return {
+    name: pickString(item.name, item.criterionName),
+    currentAveragePercentage: pickNullableNumber(item.currentAveragePercentage),
+    currentSessions: mapScoreSessions(item.currentSessions),
+    referenceAveragePercentage: pickNullableNumber(item.referenceAveragePercentage),
+    referenceSessions: mapScoreSessions(item.referenceSessions),
+    deltaPct: pickNullableNumber(item.deltaPct),
+    headlineDeltaPct: pickNullableNumber(item.headlineDeltaPct),
+  };
+}
+
+export function mapMilestoneScoreReport(raw: unknown, milestoneId: string): MilestoneScoreReport {
+  const item = asRecord(unwrapData(raw));
+  return {
+    milestoneId: pickString(item.milestoneId, item.id) || milestoneId,
+    milestoneTitle: pickString(item.milestoneTitle, item.title),
+    orderNo: pickNumber(item.orderNo, item.order),
+    milestoneStatus: pickString(item.milestoneStatus, item.status),
+    source: pickEnum<MilestoneScoreSource>(item.source, SCORE_SOURCES),
+    comparedWith: pickEnum<MilestoneScoreComparedWith>(item.comparedWith, COMPARED_WITH),
+    comparedWithTitle: pickString(item.comparedWithTitle) || null,
+    criteria: Array.isArray(item.criteria) ? item.criteria.map(mapScoreCriterion) : [],
+  };
+}
+
+/**
+ * Có tiêu chí nào mà con số vừa tính KHÁC con số đang hiện ở tiêu đề không.
+ *
+ * Bám vào ĐỘ LỆCH THẬT chứ không gate theo `source === 'recomputed'`: nếu một
+ * báo cáo `snapshot` cũng lệch thì đó là bug thật, người dùng càng phải thấy.
+ * Hai vế `null` không so được nên không tính là lệch.
+ */
+export function hasHeadlineMismatch(criteria: MilestoneScoreCriterion[]): boolean {
+  return criteria.some((c) => c.deltaPct != null && c.headlineDeltaPct != null && c.deltaPct !== c.headlineDeltaPct);
+}
+
 export const roadmapPracticeService = {
   maxAnswerBytes: MAX_ANSWER_BYTES,
 
@@ -447,5 +515,10 @@ export const roadmapPracticeService = {
   async getRoadmapReport(roadmapId: string): Promise<RoadmapPracticeReport> {
     const response = await apiClient.get(learningEndpoints.roadmapReport(roadmapId));
     return mapRoadmapReport(response.data, roadmapId);
+  },
+
+  async getMilestoneScoreReport(roadmapId: string, milestoneId: string): Promise<MilestoneScoreReport> {
+    const response = await apiClient.get(learningEndpoints.milestoneScoreReport(roadmapId, milestoneId));
+    return mapMilestoneScoreReport(response.data, milestoneId);
   },
 };

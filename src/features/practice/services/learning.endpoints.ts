@@ -25,6 +25,12 @@ export const learningEndpoints = {
   /** GET — answer / progressive scoring result. */
   answer: (sessionId: string, answerId: string) =>
     `/api/v1/interview/practice/sessions/${sessionId}/answers/${answerId}`,
+  /**
+   * GET — phần TÍNH ra con số ở dòng "So với chặng trước" của MỘT chặng:
+   * điểm từng tiêu chí, mốc đem so, và danh sách buổi đã cộng vào mỗi vế.
+   */
+  milestoneScoreReport: (roadmapId: string, milestoneId: string) =>
+    `/api/v1/interview/practice/roadmaps/${roadmapId}/milestones/${milestoneId}/score-report`,
   /** GET — roadmap interim / snapshot report. */
   roadmapReport: (roadmapId: string) => `/api/v1/interview/practice/roadmaps/${roadmapId}/report`,
 } as const;
