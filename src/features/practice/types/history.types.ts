@@ -49,6 +49,7 @@ export type PracticeSessionHistoryItem = {
   createdAt: string;
   completedAt?: string | null;
   overallScore?: number | null;
+  seniority?: string | null;
 };
 
 export type PracticeSessionHistoryPage = {

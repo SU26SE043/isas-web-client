@@ -4,6 +4,7 @@ import {
   filterAndSortPracticeHistory,
   formatOverallScoreLabel,
   getPracticeHistoryStatusGroup,
+  mapPracticeHistoryToInterviewItem,
 } from './practiceSessionHistoryActions';
 import {
   parsePracticeSessionHistoryPage,
@@ -37,6 +38,15 @@ describe('practiceSessionHistoryApi', () => {
 });
 
 describe('practiceSessionHistoryActions', () => {
+  it('maps the live category and seniority into roadmap filter fields', () => {
+    const mapped = mapPracticeHistoryToInterviewItem({
+      id: 's1', status: 'Scored', jobCategory: 'BE', seniority: 'Senior',
+      createdAt: '2026-07-25T10:00:00Z', completedAt: '2026-07-25T10:25:00Z', overallScore: 82,
+    });
+    expect(mapped.domainId).toBe('backend');
+    expect(mapped.level).toBe('senior');
+  });
+
   it('maps known statuses and falls back for unknown', () => {
     expect(getPracticeHistoryStatusGroup('Scored')).toBe('completed');
     expect(getPracticeHistoryStatusGroup('InProgress')).toBe('inProgress');

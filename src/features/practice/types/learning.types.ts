@@ -94,6 +94,7 @@ export interface RoadmapApiMilestone {
  */
 export interface CreateRoadmapInput {
   domainId: string;
+  currentLevel?: string;
   targetLevel: string;
   name?: string;
   reportIds?: string[];
@@ -114,6 +115,7 @@ export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 /** Request body for POST /api/v1/interview/practice/roadmaps */
 export interface CreateRoadmapApiRequest {
   jobCategory: string;
+  currentLevel?: string;
   level: RoadmapLevel | string;
   mode?: RoadmapMode;
   name?: string;

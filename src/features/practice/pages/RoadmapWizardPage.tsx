@@ -3,6 +3,9 @@ import { useLanguage } from '@/shared/languages';
 import { RoadmapWizardShell } from '../components/roadmap-wizard/RoadmapWizardShell';
 import { RoadmapDomainStep } from '../components/roadmap-wizard/RoadmapDomainStep';
 import { RoadmapReportsStep } from '../components/roadmap-wizard/RoadmapReportsStep';
+import { RoadmapCvStep } from '../components/roadmap-wizard/RoadmapCvStep';
+import { RoadmapCurrentLevelStep } from '../components/roadmap-wizard/RoadmapCurrentLevelStep';
+import { RoadmapPriorStep } from '../components/roadmap-wizard/RoadmapPriorStep';
 import { RoadmapModeStep } from '../components/roadmap-wizard/RoadmapModeStep';
 import { RoadmapTargetLevelStep } from '../components/roadmap-wizard/RoadmapTargetLevelStep';
 import { RoadmapConfirmStep } from '../components/roadmap-wizard/RoadmapConfirmStep';
@@ -13,7 +16,7 @@ export function RoadmapWizardPage() {
   const flow = useRoadmapWizardFlow();
 
   return (
-    <RoadmapWizardShell currentStep={flow.step}>
+    <RoadmapWizardShell currentStep={Math.max(flow.steps.indexOf(flow.step), 0)} stepKeys={flow.steps.map((step) => `practice.roadmapWizard.steps.${step === 'currentLevel' ? 'currentLevel' : step === 'priorRoadmap' ? 'priorRoadmap' : step}`)}>
       {flow.submitError ? (
         <p className="mb-4 text-sm text-error" role="alert">
           {flow.submitErrorMessage || (flow.submitError === 'invalid_input'
@@ -30,17 +33,25 @@ export function RoadmapWizardPage() {
         </p>
       ) : null}
 
-      {flow.step === 0 ? (
+      {flow.step === 'domain' ? (
         <RoadmapDomainStep
           domains={flow.domains}
           selectedId={flow.domainId}
           isLoading={flow.loadingDomains}
           onSelect={flow.handleSelectDomain}
-          onNext={() => flow.goToStep(1)}
+          onNext={() => flow.goToStep('cv')}
         />
       ) : null}
 
-      {flow.step === 1 ? (
+      {flow.step === 'cv' ? (
+        <RoadmapCvStep files={flow.cvFiles} analyses={flow.cvAnalyses} cvId={flow.cvId} analysisId={flow.cvAnalysisId} onCvChange={flow.setCvId} onAnalysisChange={flow.setCvAnalysisId} onBack={() => flow.goToStep('domain')} onNext={() => flow.goToStep('currentLevel')} />
+      ) : null}
+
+      {flow.step === 'currentLevel' ? (
+        <RoadmapCurrentLevelStep value={flow.currentLevel} source={flow.currentLevelSource} onChange={flow.setCurrentLevel} onBack={() => flow.goToStep('cv')} onNext={() => flow.goToStep('mode')} />
+      ) : null}
+
+      {flow.step === 'reports' ? (
         <RoadmapReportsStep
           reports={flow.allReports}
           selectedIds={flow.selectedIds}
@@ -48,32 +59,34 @@ export function RoadmapWizardPage() {
           onToggle={flow.toggleReport}
           onSelectAll={flow.selectAllReports}
           onUnselectAll={flow.unselectAllReports}
-          onBack={() => flow.goToStep(0)}
-          onNext={() => flow.goToStep(2)}
+          onBack={() => flow.goToStep('targetLevel')}
+          onNext={() => flow.goToStep(flow.steps.includes('priorRoadmap') ? 'priorRoadmap' : 'confirm')}
         />
       ) : null}
 
-      {flow.step === 2 ? (
+      {flow.step === 'mode' ? (
         <RoadmapModeStep
           selectedMode={flow.mode}
           selectedSessionCount={flow.selectedIds.length}
           onSelect={flow.setMode}
-          onBack={() => flow.goToStep(1)}
-          onNext={() => flow.goToStep(3)}
-          onBackToReports={() => flow.goToStep(1)}
+          onBack={() => flow.goToStep('currentLevel')}
+          onNext={() => flow.goToStep('targetLevel')}
+          onBackToReports={() => flow.goToStep('reports')}
         />
       ) : null}
 
-      {flow.step === 3 ? (
+      {flow.step === 'targetLevel' ? (
         <RoadmapTargetLevelStep
           selectedLevel={flow.targetLevel}
           onSelect={flow.setTargetLevel}
-          onBack={() => flow.goToStep(2)}
-          onNext={() => flow.goToStep(4)}
+          onBack={() => flow.goToStep('mode')}
+          onNext={() => flow.goToStep(flow.steps.includes('reports') ? 'reports' : flow.steps.includes('priorRoadmap') ? 'priorRoadmap' : 'confirm')}
         />
       ) : null}
 
-      {flow.step === 4 ? (
+      {flow.step === 'priorRoadmap' ? <RoadmapPriorStep roadmaps={flow.completedRoadmaps} value={flow.priorRoadmapId} onChange={flow.setPriorRoadmapId} onBack={() => flow.goToStep(flow.steps.includes('reports') ? 'reports' : 'targetLevel')} onNext={() => flow.goToStep('confirm')} /> : null}
+
+      {flow.step === 'confirm' ? (
         <RoadmapConfirmStep
           domain={flow.selectedDomain}
           targetLevel={flow.targetLevel}
@@ -93,7 +106,7 @@ export function RoadmapWizardPage() {
           focus={flow.focus}
           onFocusChange={flow.setFocus}
           isSubmitting={flow.isSubmitting}
-          onBack={() => flow.goToStep(3)}
+          onBack={() => flow.goToStep(flow.steps.includes('priorRoadmap') ? 'priorRoadmap' : flow.steps.includes('reports') ? 'reports' : 'targetLevel')}
           onConfirm={() => void flow.handleCreate()}
         />
       ) : null}

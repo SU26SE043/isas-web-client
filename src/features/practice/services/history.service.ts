@@ -40,6 +40,7 @@ function mapInterviewItemToPracticeHistoryItem(
     completedAt:
       item.completedAt ?? (item.status === 'completed' ? item.date : null),
     overallScore: item.overallScoreNullable ?? item.overallScore,
+    seniority: item.level,
   };
 }
 

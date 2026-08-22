@@ -6,19 +6,29 @@ import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.se
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { useLanguage } from '@/shared/languages';
-import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
+import { invalidateLearningRoadmaps, learningLessonQueryKey } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
 import { learningPathService } from '../services/learningPath.service';
+import { roadmapService } from '../services/roadmap.service';
 import type { LearningRoadmapCard } from '../types/learningPath.types';
 import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
 import {
   ROADMAP_DOMAINS,
-  ROADMAP_REPORT_PREVIEW_LIMIT,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
 import type { RoadmapMode } from '../types/learning.types';
+
+export type RoadmapWizardStep =
+  | 'domain'
+  | 'cv'
+  | 'currentLevel'
+  | 'mode'
+  | 'targetLevel'
+  | 'reports'
+  | 'priorRoadmap'
+  | 'confirm';
 import {
   CreateRoadmapError,
   type CreateRoadmapErrorCode,
@@ -29,12 +39,14 @@ export function useRoadmapWizardFlow() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<RoadmapWizardStep>('domain');
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
   const [domainId, setDomainId] = useState('');
   const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
+  const [currentLevel, setCurrentLevel] = useState<RoadmapTargetLevel>('fresher');
+  const [currentLevelSource, setCurrentLevelSource] = useState<'cv' | 'default' | 'manual'>('default');
   const [mode, setMode] = useState<RoadmapMode>('LevelUp');
   const [name, setName] = useState('');
   const [cvId, setCvId] = useState<string | undefined>();
@@ -65,8 +77,7 @@ export function useRoadmapWizardFlow() {
       ]);
       const filtered = history.interviews
         .filter((item) => item.status === 'completed' && item.domainId === nextDomainId)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, ROADMAP_REPORT_PREVIEW_LIMIT);
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setAllReports(filtered);
       setSelectedIds([]);
       setCvFiles(cvs);
@@ -74,25 +85,43 @@ export function useRoadmapWizardFlow() {
       setCompletedRoadmaps(roadmaps);
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
+      const inferredLevel = analyses.find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
+      if (inferredLevel && ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(inferredLevel)) {
+        setCurrentLevel(inferredLevel as RoadmapTargetLevel);
+        setCurrentLevelSource('cv');
+      } else {
+        setCurrentLevel('fresher');
+        setCurrentLevelSource('default');
+      }
       setPriorRoadmapId(undefined);
     } finally {
       setLoadingReports(false);
     }
   }, []);
 
+  const steps = useMemo<RoadmapWizardStep[]>(() => {
+    const next: RoadmapWizardStep[] = ['domain', 'cv', 'currentLevel', 'mode', 'targetLevel'];
+    if (loadingReports || allReports.length > 0) next.push('reports');
+    if (loadingReports || completedRoadmaps.length > 0) next.push('priorRoadmap');
+    next.push('confirm');
+    return next;
+  }, [allReports.length, completedRoadmaps.length, loadingReports]);
+
   const goToStep = useCallback(
-    (nextStep: number) => {
-      if (nextStep === 1 && domainId) {
+    (nextStep: RoadmapWizardStep) => {
+      if (nextStep === 'cv' && domainId && !loadingReports && allReports.length === 0 && cvFiles.length === 0 && cvAnalyses.length === 0) {
         void loadReportsForDomain(domainId);
       }
       setStep(nextStep);
     },
-    [domainId, loadReportsForDomain],
+    [allReports.length, cvAnalyses.length, cvFiles.length, domainId, loadReportsForDomain, loadingReports],
   );
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
     setTargetLevel('');
+    setCurrentLevel('fresher');
+    setCurrentLevelSource('default');
     setMode('LevelUp');
     setSelectedIds([]);
   };
@@ -120,9 +149,10 @@ export function useRoadmapWizardFlow() {
       const uniqueSessionIds = Array.from(
         new Set(selectedIds.map((id) => id.trim()).filter(Boolean)),
       );
-      await learningService.createRoadmap({
+      const created = await learningService.createRoadmap({
         domainId,
         targetLevel,
+        currentLevel,
         name,
         reportIds: uniqueSessionIds,
         sessionIds: uniqueSessionIds,
@@ -132,6 +162,15 @@ export function useRoadmapWizardFlow() {
         focus,
         mode,
       });
+      const firstLessonId = created.milestones?.flatMap((milestone) => milestone.lessons)[0]?.id;
+      if (created.id && firstLessonId) {
+        // Deliberately fire-and-forget: closing the tab forfeits warming the cache, and a fast click can briefly duplicate the AI request. The backend idempotency guard keeps the result correct; the narrow extra-cost window is accepted for a faster first lesson.
+        void queryClient.prefetchQuery({
+          queryKey: learningLessonQueryKey(created.id, firstLessonId),
+          queryFn: () => roadmapService.getLesson(created.id as string, firstLessonId),
+          staleTime: 60_000,
+        }).catch(() => {});
+      }
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
       navigate('/candidate/learning', { replace: true });
@@ -161,6 +200,8 @@ export function useRoadmapWizardFlow() {
     allReports,
     selectedIds,
     targetLevel,
+    currentLevel,
+    currentLevelSource,
     mode,
     name,
     cvId,
@@ -179,6 +220,8 @@ export function useRoadmapWizardFlow() {
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setCurrentLevel: (value: RoadmapTargetLevel) => { setCurrentLevel(value); setCurrentLevelSource('manual'); },
+    setCurrentLevelSource,
     setMode,
     setName,
     setCvId,
@@ -189,6 +232,7 @@ export function useRoadmapWizardFlow() {
     selectAllReports,
     unselectAllReports,
     goToStep,
+    steps,
     handleCreate,
   };
 }

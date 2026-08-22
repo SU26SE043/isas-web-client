@@ -119,6 +119,8 @@ export interface CvAnalysisResult {
   cvSections: CvSection[];
   citations: AnalysisCitation[];
   createdAt: string;
+  /** Optional backend-derived level; absent on older analysis records. */
+  currentLevel?: string | null;
 }
 
 export interface AnalyzeCvRequest {

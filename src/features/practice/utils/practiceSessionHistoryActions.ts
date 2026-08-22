@@ -6,6 +6,14 @@ import type {
   PracticeHistoryStatusGroup,
   PracticeSessionHistoryItem,
 } from '../types/history.types';
+import { resolveJobDomainFromCategory } from '@/shared/domain/jobDomains';
+
+function normalizeHistoryLevel(value?: string | null): InterviewHistoryItem['level'] {
+  const normalized = value?.trim().toLowerCase();
+  return ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(normalized ?? '')
+    ? (normalized as InterviewHistoryItem['level'])
+    : 'fresher';
+}
 
 export function getPracticeHistoryStatusGroup(
   status: string,
@@ -168,8 +176,8 @@ export function mapPracticeHistoryToInterviewItem(
     status: uiStatus,
     overallScore: item.overallScore ?? 0,
     duration,
-    domainId: '',
-    level: 'junior',
+    domainId: resolveJobDomainFromCategory(item.jobCategory)?.id ?? '',
+    level: normalizeHistoryLevel(item.seniority),
     deletedAt: null,
     jobCategory: item.jobCategory,
     createdAt: item.createdAt,

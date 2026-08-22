@@ -63,6 +63,7 @@ export function parsePracticeSessionHistoryItem(
     createdAt,
     completedAt: pickString(record, 'completedAt', 'CompletedAt'),
     overallScore: pickNumber(record, 'overallScore', 'OverallScore'),
+    seniority: pickString(record, 'seniority', 'Seniority', 'level', 'Level'),
   };
 }
 

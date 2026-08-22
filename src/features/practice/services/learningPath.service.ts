@@ -208,7 +208,7 @@ export const learningPathService = {
   },
 
   async registerCreatedRoadmap(input: CreateRoadmapInput & { roadmapId?: string }): Promise<LearningRoadmapDetail> {
-    await mockDelay(200);
+    if (usesMockData('practice')) await mockDelay(200);
     const domain = ROADMAP_DOMAINS.find((item) => item.id === input.domainId);
     const id = input.roadmapId ?? `roadmap-${input.domainId}-${Date.now()}`;
     const created: LearningRoadmapDetail = {
