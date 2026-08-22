@@ -87,7 +87,11 @@ export interface PracticeSetupState {
   questionCount: number;
   rubricCriterionIds: string[];
   language: PracticeLanguage;
-  seniority: PracticeSeniority;
+  /**
+   * null = ứng viên CHƯA chọn trình độ. Không có giá trị mặc định: trình độ định khung
+   * độ khó của toàn bộ câu hỏi, nên đoán hộ là gán sai một cách im lặng.
+   */
+  seniority: PracticeSeniority | null;
   /** true = có câu đào sâu (mặc định), false = đúng số câu đã chọn. */
   adaptiveEnabled: boolean;
   /** null = chưa biết dải server cho phép ⇒ không gửi, để server tự quyết. */
