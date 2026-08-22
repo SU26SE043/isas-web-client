@@ -12,7 +12,7 @@ function normalizeHistoryLevel(value?: string | null): InterviewHistoryItem['lev
   const normalized = value?.trim().toLowerCase();
   return ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(normalized ?? '')
     ? (normalized as InterviewHistoryItem['level'])
-    : 'fresher';
+    : 'junior';
 }
 
 export function getPracticeHistoryStatusGroup(

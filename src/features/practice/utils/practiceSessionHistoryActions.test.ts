@@ -26,6 +26,7 @@ describe('practiceSessionHistoryApi', () => {
           createdAt: '2026-07-25T10:00:00Z',
           completedAt: '2026-07-25T10:25:00Z',
           overallScore: 82.5,
+          Seniority: 'Senior',
         },
       ],
       { 'x-next-cursor': 'next-1' },
@@ -34,6 +35,7 @@ describe('practiceSessionHistoryApi', () => {
     expect(page.nextCursor).toBe('next-1');
     expect(page.items).toHaveLength(1);
     expect(page.items[0]?.overallScore).toBe(82.5);
+    expect(page.items[0]?.seniority).toBe('Senior');
   });
 });
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SectionPanel } from '@/components/ui/section-panel';

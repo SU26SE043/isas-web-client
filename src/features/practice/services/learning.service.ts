@@ -165,8 +165,9 @@ export const learningService = {
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
+    const currentLevel = input.currentLevel ? resolveApiRoadmapLevel(input.currentLevel) : undefined;
     const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
-    const payload = buildCreateRoadmapRequest(jobCategory, level, input);
+    const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
     if (!payload.ok) {
       throw new CreateRoadmapError(
         payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',

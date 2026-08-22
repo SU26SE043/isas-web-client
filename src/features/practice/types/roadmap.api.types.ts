@@ -72,6 +72,7 @@ export type ApiRoadmapListItem = {
   createdAt?: string;
   completedAt?: string | null;
   readOnly?: boolean;
+  hasFinalReport?: boolean;
   milestones?: ApiRoadmapMilestone[];
 };
 

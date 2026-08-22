@@ -107,6 +107,7 @@ export interface LearningRoadmapCard {
   estimatedRemainingHours: number;
   updatedAt: string;
   readOnly: boolean;
+  hasFinalReport?: boolean;
   jobCategory?: string;
   language?: 'vi' | 'en' | string;
   level?: string;

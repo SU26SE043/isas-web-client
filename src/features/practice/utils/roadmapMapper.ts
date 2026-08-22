@@ -222,6 +222,7 @@ export function mapApiRoadmapListItem(raw: unknown): LearningRoadmapCard {
     estimatedRemainingHours: pickNumber(item.estimatedRemainingHours),
     updatedAt: pickString(item.updatedAt) || new Date().toISOString(),
     readOnly: Boolean(item.readOnly) || status === 'completed',
+    hasFinalReport: typeof item.hasFinalReport === 'boolean' ? item.hasFinalReport : undefined,
     jobCategory: pickString(item.jobCategory),
     language: pickString(item.language) || undefined,
     level: pickString(item.level, item.targetLevel) || undefined,

@@ -29,6 +29,11 @@ export type RoadmapWizardStep =
   | 'reports'
   | 'priorRoadmap'
   | 'confirm';
+
+/** Temporary compatibility: older list responses have no hasFinalReport yet. */
+export function filterCompletedRoadmapsForWizard(roadmaps: LearningRoadmapCard[]) {
+  return roadmaps.filter((roadmap) => roadmap.status === 'completed' && roadmap.hasFinalReport !== false);
+}
 import {
   CreateRoadmapError,
   type CreateRoadmapErrorCode,
@@ -82,7 +87,8 @@ export function useRoadmapWizardFlow() {
       setSelectedIds([]);
       setCvFiles(cvs);
       setCvAnalyses(analyses);
-      setCompletedRoadmaps(roadmaps);
+      // TODO: remove the status fallback once backend always exposes hasFinalReport.
+      setCompletedRoadmaps(filterCompletedRoadmapsForWizard(roadmaps));
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
       const inferredLevel = analyses.find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();

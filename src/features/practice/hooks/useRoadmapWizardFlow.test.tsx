@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useRoadmapWizardFlow } from './useRoadmapWizardFlow';
+import { filterCompletedRoadmapsForWizard, useRoadmapWizardFlow } from './useRoadmapWizardFlow';
 
 const { navigateMock, createRoadmapMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -30,6 +30,13 @@ vi.mock('./useLearningRoadmaps', () => ({
 }));
 
 describe('useRoadmapWizardFlow source wiring', () => {
+  it('hides completed roadmaps without a final report', () => {
+    expect(filterCompletedRoadmapsForWizard([
+      { id: 'with-report', status: 'completed', hasFinalReport: true },
+      { id: 'without-report', status: 'completed', hasFinalReport: false },
+    ] as never).map((item) => item.id)).toEqual(['with-report']);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     createRoadmapMock.mockResolvedValue({ id: 'created-roadmap' });

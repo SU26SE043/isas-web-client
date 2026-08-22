@@ -1,4 +1,3 @@
-import React from 'react';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { LearningRoadmapCard } from '../../types/learningPath.types';
