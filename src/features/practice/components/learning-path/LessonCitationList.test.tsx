@@ -86,6 +86,17 @@ describe('LessonCitationList', () => {
     expect(screen.getByText('practice.learningPath.citationsHint')).toBeInTheDocument();
   });
 
+  it('URL không an toàn: KHÔNG dựng link nhưng VẪN hiện tên nguồn dạng chữ', () => {
+    // 🔑 Ca này trước chỉ được khoá ở tầng hàm thuần (`normalizeCitations` trả `href: null`),
+    // còn nhánh RENDER thì không assert gì — bỏ mất dòng chữ vẫn xanh 777/777. Mà đó đúng là
+    // hành vi có chủ đích: nuốt luôn tên nguồn thì màn hình trông như "chưa có nguồn kiểm chứng"
+    // trong khi server CÓ trả nguồn, tức nói sai về mức độ đảm bảo của bài giảng.
+    render(<LessonCitationList citations={[cite('javascript:alert(1)', 'Nguồn lạ')]} />);
+    expect(screen.getByText('Nguồn lạ')).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.queryByText('practice.learningPath.citationsEmpty')).not.toBeInTheDocument();
+  });
+
   it('luôn có tiêu đề khối riêng — không lẫn vào khối tài nguyên học thêm', () => {
     render(<LessonCitationList citations={[]} />);
     expect(screen.getByRole('heading', { name: 'practice.learningPath.citationsTitle' })).toBeInTheDocument();
