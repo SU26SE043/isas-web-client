@@ -93,7 +93,14 @@ describe('AdminRoadmapThresholdsPage', () => {
 
     fireEvent.change(await screen.findByLabelText('admin.roadmapThresholds.column.effective Senior'), { target: { value: '150' } });
     expect(screen.getByText('admin.roadmapThresholds.invalidPct')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'admin.roadmapThresholds.save' }));
+
+    // Chốt bằng TRẠNG THÁI NÚT, không chỉ bằng "chưa ai gọi service": `mutate()` gọi
+    // mutationFn ở tick SAU, nên `not.toHaveBeenCalled()` ngay sau click là đúng KỂ CẢ
+    // khi nút đang bật — nó không chứng minh được gì. (Mutation M19 phát hiện.)
+    const saveButton = screen.getByRole('button', { name: 'admin.roadmapThresholds.save' });
+    expect(saveButton).toBeDisabled();
+    fireEvent.click(saveButton);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(update).not.toHaveBeenCalled();
   });
 

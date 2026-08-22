@@ -89,6 +89,19 @@ describe('MilestoneScoreReportPanel — phần tính ra con số "So với chặ
     expect(screen.getByText('−20%')).toBeInTheDocument();
   });
 
+  it('snapshot mà VẪN lệch thì cũng phải cảnh báo — cảnh báo bám độ lệch THẬT, không bám nhãn source', async () => {
+    // `snapshot` tự nhận là "chốt cùng lúc với tiêu đề ⇒ không thể lệch". Lệch mà vẫn
+    // im lặng thì đúng là "im lặng chọn một bên", và giấu mất một bug thật ở thượng nguồn.
+    vi.spyOn(roadmapPracticeService, 'getMilestoneScoreReport').mockResolvedValue(
+      report({ source: 'snapshot', criteria: [criterion({ deltaPct: -15, headlineDeltaPct: -20 })] }),
+    );
+    renderPanel();
+
+    expect(await screen.findByText('practice.milestoneReport.mismatchWarning')).toBeInTheDocument();
+    expect(screen.getByText('−15%')).toBeInTheDocument();
+    expect(screen.getByText('−20%')).toBeInTheDocument();
+  });
+
   it('trùng nhau thì KHÔNG cảnh báo (nếu không thì cảnh báo mất hết ý nghĩa)', async () => {
     vi.spyOn(roadmapPracticeService, 'getMilestoneScoreReport').mockResolvedValue(report({ source: 'recomputed' }));
     renderPanel();
