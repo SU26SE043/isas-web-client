@@ -479,6 +479,11 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.errorForbidden': 'Bạn không có quyền xem lộ trình này.',
     'practice.learningPath.retry': 'Thử lại',
     'practice.learningPath.theoryEmpty': 'Chưa có nội dung lý thuyết cho bài học này.',
+    'practice.learningPath.citationsTitle': 'Nguồn kiểm chứng',
+    'practice.learningPath.citationsHint':
+      'Nội dung lý thuyết ở trên dựa trên các nguồn dưới đây. Bấm để đọc bản gốc.',
+    'practice.learningPath.citationsEmpty':
+      'Bài này chưa có nguồn kiểm chứng — nội dung do AI soạn, bạn nên đối chiếu thêm trước khi tin.',
     'practice.learningPath.resourcesTitle': 'Tài nguyên học tập',
     'practice.learningPath.resourceType.Doc': 'Tài liệu',
     'practice.learningPath.resourceType.Course': 'Khóa học',
@@ -1680,6 +1685,11 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.learningPath.errorForbidden': 'You do not have permission to view this roadmap.',
     'practice.learningPath.retry': 'Try again',
     'practice.learningPath.theoryEmpty': 'Theory content is not available for this lesson yet.',
+    'practice.learningPath.citationsTitle': 'Verifiable sources',
+    'practice.learningPath.citationsHint':
+      'The theory above draws on the sources below. Open one to read the original.',
+    'practice.learningPath.citationsEmpty':
+      'This lesson has no verifiable source — it was written by AI, so double-check it before relying on it.',
     'practice.learningPath.resourcesTitle': 'Learning resources',
     'practice.learningPath.resourceType.Doc': 'Doc',
     'practice.learningPath.resourceType.Course': 'Course',
