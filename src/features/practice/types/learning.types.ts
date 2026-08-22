@@ -62,6 +62,7 @@ export interface RoadmapResponse {
   jobCategory?: 'BA' | 'BE' | 'FE' | string;
   language?: 'vi' | 'en' | string;
   level?: RoadmapLevel | string;
+  mode?: RoadmapMode;
   status?: 'Active' | 'Completed' | 'Abandoned' | string;
   createdAt?: string;
   completedAt?: string | null;
@@ -103,7 +104,10 @@ export interface CreateRoadmapInput {
   priorRoadmapId?: string;
   focus?: string;
   language?: 'vi' | 'en';
+  mode?: RoadmapMode;
 }
+
+export type RoadmapMode = 'LevelUp' | 'Reinforce';
 
 export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 
@@ -111,6 +115,7 @@ export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 export interface CreateRoadmapApiRequest {
   jobCategory: string;
   level: RoadmapLevel | string;
+  mode?: RoadmapMode;
   name?: string;
   cvId?: string;
   sessionIds?: string[];

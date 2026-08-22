@@ -225,6 +225,7 @@ export function mapApiRoadmapListItem(raw: unknown): LearningRoadmapCard {
     jobCategory: pickString(item.jobCategory),
     language: pickString(item.language) || undefined,
     level: pickString(item.level, item.targetLevel) || undefined,
+    mode: pickString(item.mode) || undefined,
     apiStatus: pickString(item.status) || undefined,
     createdAt: pickString(item.createdAt) || undefined,
     completedAt: typeof item.completedAt === 'string' ? item.completedAt : null,

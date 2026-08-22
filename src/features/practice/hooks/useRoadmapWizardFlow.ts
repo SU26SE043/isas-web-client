@@ -18,6 +18,7 @@ import {
   ROADMAP_REPORT_PREVIEW_LIMIT,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
+import type { RoadmapMode } from '../types/learning.types';
 import {
   CreateRoadmapError,
   type CreateRoadmapErrorCode,
@@ -34,6 +35,7 @@ export function useRoadmapWizardFlow() {
   const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
+  const [mode, setMode] = useState<RoadmapMode>('LevelUp');
   const [name, setName] = useState('');
   const [cvId, setCvId] = useState<string | undefined>();
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
@@ -46,6 +48,7 @@ export function useRoadmapWizardFlow() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<CreateRoadmapErrorCode | null>(null);
+  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
@@ -90,6 +93,7 @@ export function useRoadmapWizardFlow() {
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
     setTargetLevel('');
+    setMode('LevelUp');
     setSelectedIds([]);
   };
 
@@ -111,6 +115,7 @@ export function useRoadmapWizardFlow() {
     if (!domainId || !targetLevel || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
+    setSubmitErrorMessage(null);
     try {
       const uniqueSessionIds = Array.from(
         new Set(selectedIds.map((id) => id.trim()).filter(Boolean)),
@@ -125,6 +130,7 @@ export function useRoadmapWizardFlow() {
         cvAnalysisId,
         priorRoadmapId,
         focus,
+        mode,
       });
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
@@ -133,6 +139,7 @@ export function useRoadmapWizardFlow() {
       const mapped =
         error instanceof CreateRoadmapError ? error : new CreateRoadmapError('generic');
       setSubmitError(mapped.code);
+      setSubmitErrorMessage(mapped.message);
       setIsSubmitting(false);
     }
   };
@@ -154,6 +161,7 @@ export function useRoadmapWizardFlow() {
     allReports,
     selectedIds,
     targetLevel,
+    mode,
     name,
     cvId,
     cvFiles,
@@ -166,10 +174,12 @@ export function useRoadmapWizardFlow() {
     loadingReports,
     isSubmitting,
     submitError,
+    submitErrorMessage,
     selectedDomain,
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setMode,
     setName,
     setCvId,
     setFocus,

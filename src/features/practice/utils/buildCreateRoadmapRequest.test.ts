@@ -41,6 +41,14 @@ describe('buildCreateRoadmapRequest', () => {
     });
   });
 
+  it('includes the selected roadmap mode', () => {
+    const result = buildCreateRoadmapRequest('BE', 'Junior', { mode: 'Reinforce' });
+    expect(result).toEqual({
+      ok: true,
+      body: { jobCategory: 'BE', level: 'Junior', language: 'vi', mode: 'Reinforce' },
+    });
+  });
+
   it('trims and includes a non-empty roadmap name', () => {
     const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '  My path  ' });
     expect(result).toEqual({

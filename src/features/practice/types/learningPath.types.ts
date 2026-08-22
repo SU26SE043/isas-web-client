@@ -110,6 +110,7 @@ export interface LearningRoadmapCard {
   jobCategory?: string;
   language?: 'vi' | 'en' | string;
   level?: string;
+  mode?: 'LevelUp' | 'Reinforce' | string;
   apiStatus?: 'Active' | 'Completed' | 'Abandoned' | string;
   createdAt?: string;
   completedAt?: string | null;

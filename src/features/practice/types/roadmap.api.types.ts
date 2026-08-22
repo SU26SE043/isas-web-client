@@ -57,6 +57,7 @@ export type ApiRoadmapListItem = {
   language?: string;
   domainId?: string;
   level?: string;
+  mode?: 'LevelUp' | 'Reinforce' | string;
   targetLevel?: string;
   status?: string;
   progressPercent?: number;

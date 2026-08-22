@@ -127,6 +127,7 @@ function normalizeCreateRoadmapResponse(
     jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,
     language: typeof payload.language === 'string' ? payload.language : input.language ?? 'vi',
     level: typeof payload.level === 'string' ? payload.level : input.targetLevel,
+    mode: payload.mode === 'Reinforce' ? 'Reinforce' : 'LevelUp',
     status: typeof payload.status === 'string' ? payload.status : 'Active',
     createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : undefined,
     completedAt: typeof payload.completedAt === 'string' ? payload.completedAt : null,

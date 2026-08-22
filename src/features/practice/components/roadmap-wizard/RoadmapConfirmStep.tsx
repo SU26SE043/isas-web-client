@@ -6,11 +6,13 @@ import type { PracticeDomain } from '../../types/practiceSetup.types';
 import type { CvAnalysisResult, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { LearningRoadmapCard } from '../../types/learningPath.types';
 import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
+import type { RoadmapMode } from '../../types/learning.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 
 interface RoadmapConfirmStepProps {
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
+  mode?: RoadmapMode;
   name: string;
   onNameChange: (value: string) => void;
   selectedReports: InterviewHistoryItem[];
@@ -33,6 +35,7 @@ interface RoadmapConfirmStepProps {
 export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
   targetLevel,
+  mode = 'LevelUp',
   name,
   onNameChange,
   selectedReports,
@@ -70,6 +73,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
           <dd className="font-medium text-foreground">{domainLabel}</dd>
         </div>
+        <div className="flex justify-between gap-4 border-b border-subtle py-2"><dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.mode')}</dt><dd className="font-medium text-foreground">{t(`practice.roadmapWizard.mode.${mode === 'Reinforce' ? 'reinforce' : 'levelUp'}`)}</dd></div>
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.level')}</dt>
           <dd className="font-medium text-foreground">

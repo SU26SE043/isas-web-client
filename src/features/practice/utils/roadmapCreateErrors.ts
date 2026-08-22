@@ -1,4 +1,5 @@
 import { getApiStatusCode } from '@/shared/api/apiError';
+import { getApiErrorMessage } from '@/shared/api/apiError';
 
 export type CreateRoadmapErrorCode =
   | 'invalid_input'
@@ -24,7 +25,7 @@ export function mapCreateRoadmapError(error: unknown): CreateRoadmapError {
     return new CreateRoadmapError('invalid_input');
   }
   const status = getApiStatusCode(error);
-  if (status === 400) return new CreateRoadmapError('invalid_input');
+  if (status === 400) return new CreateRoadmapError('invalid_input', getApiErrorMessage(error));
   if (status === 403) return new CreateRoadmapError('forbidden');
   if (status === 404) return new CreateRoadmapError('cv_not_found');
   if (status === 502) return new CreateRoadmapError('ai_failed');
