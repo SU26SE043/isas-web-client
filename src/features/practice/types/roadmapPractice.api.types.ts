@@ -112,6 +112,52 @@ export type RoadmapPracticeReport = {
   progress: RoadmapProgressPoint[];
 };
 
+/**
+ * Nguồn của con số delta. Phải NÓI RA, không được nuốt:
+ * - `snapshot`  — chốt cùng lúc với tiêu đề ⇒ không thể lệch.
+ * - `computed`  — chặng chưa xong, tính lúc đọc.
+ * - `recomputed`— chặng hoàn thành TRƯỚC bản này ⇒ `deltaPct` CÓ THỂ lệch `headlineDeltaPct`.
+ * - `unknown`   — server trả giá trị lạ. KHÔNG gộp về `computed`: nói "không rõ" thì
+ *   trung thực, còn gán bừa một nhãn đã biết là khẳng định một điều mình không biết.
+ */
+export type MilestoneScoreSource = 'snapshot' | 'computed' | 'recomputed' | 'unknown';
+
+export type MilestoneScoreComparedWith = 'previousMilestone' | 'baseline' | 'none' | 'unknown';
+
+/** Một buổi đã cộng vào trung bình của một tiêu chí. */
+export type MilestoneScoreSession = {
+  sessionId: string;
+  lessonTitle: string;
+  attemptNo: number;
+  /** `null` = buổi chưa có điểm. KHÔNG phải 0. */
+  percentage: number | null;
+  scoredAt: string | null;
+};
+
+export type MilestoneScoreCriterion = {
+  name: string;
+  currentAveragePercentage: number | null;
+  currentSessions: MilestoneScoreSession[];
+  /** `null` = KHÔNG CÓ MỐC để so, khác hẳn "mốc bằng 0". */
+  referenceAveragePercentage: number | null;
+  referenceSessions: MilestoneScoreSession[];
+  /** `null` = không có mốc ⇒ hiện KHUYẾT, tuyệt đối không vẽ thành 0. */
+  deltaPct: number | null;
+  /** Chính con số đang hiện ở dòng tiêu đề trên trang lộ trình. */
+  headlineDeltaPct: number | null;
+};
+
+export type MilestoneScoreReport = {
+  milestoneId: string;
+  milestoneTitle: string;
+  orderNo: number;
+  milestoneStatus: string;
+  source: MilestoneScoreSource;
+  comparedWith: MilestoneScoreComparedWith;
+  comparedWithTitle: string | null;
+  criteria: MilestoneScoreCriterion[];
+};
+
 export type StartLessonErrorCode =
   | 'insufficient_credits'
   | 'forbidden'
