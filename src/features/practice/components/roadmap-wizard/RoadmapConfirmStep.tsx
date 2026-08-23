@@ -19,6 +19,7 @@ interface RoadmapConfirmStepProps {
   onScopeChange: (scope: RoadmapScope) => void;
   domain?: PracticeDomain;
   targetLevel: RoadmapTargetLevel | '';
+  currentLevel: RoadmapTargetLevel;
   name: string;
   selectedReports: InterviewHistoryItem[];
   cvId?: string;
@@ -26,10 +27,11 @@ interface RoadmapConfirmStepProps {
   onCvChange: (value: string | undefined) => void;
   cvAnalyses: CvAnalysisResult[];
   cvAnalysisId?: string;
-  onCvAnalysisChange: (value: string | undefined) => void;
   completedRoadmaps: LearningRoadmapCard[];
   priorRoadmapId?: string;
-  onPriorRoadmapChange: (value: string | undefined) => void;
+  /** Dẫn ngược về bước sở hữu giá trị. Vắng ⇒ bước đó không có trong `steps` ⇒ không vẽ nút Sửa. */
+  onEditCvAnalysis?: () => void;
+  onEditPriorRoadmap?: () => void;
   focus: string;
   isSubmitting: boolean;
   onBack: () => void;
@@ -39,16 +41,17 @@ interface RoadmapConfirmStepProps {
 export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
   targetLevel,
+  currentLevel,
   name,
   selectedReports,
   scope,
   onScopeChange,
   cvAnalyses,
   cvAnalysisId,
-  onCvAnalysisChange,
   completedRoadmaps,
   priorRoadmapId,
-  onPriorRoadmapChange,
+  onEditCvAnalysis,
+  onEditPriorRoadmap,
   focus,
   isSubmitting,
   onBack,
@@ -88,6 +91,17 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
           <dd className="font-medium text-foreground">{domainLabel}</dd>
         </div>
+        {/*
+          F6 — lộ trình sinh ra từ KHOẢNG CÁCH giữa trình độ hiện tại và cấp độ mục tiêu. Trước đây
+          bản tóm tắt chỉ hiện vế mục tiêu ⇒ giấu mất một nửa dữ kiện quyết định nội dung, và người
+          dùng không rà lại được giá trị mình vừa đặt ở bước trước.
+        */}
+        <div className="flex justify-between gap-4 border-b border-subtle py-2">
+          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.currentLevel')}</dt>
+          <dd className="font-medium text-foreground">
+            {t(`practice.roadmapWizard.level.${currentLevel}`)}
+          </dd>
+        </div>
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.level')}</dt>
           <dd className="font-medium text-foreground">
@@ -99,6 +113,11 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           chỗ người dùng đang quyết "có tạo không", kèm giá. Trước khi có hàng này, mọi
           lộ trình tạo qua giao diện đều là Standard (12 bài) trong khi suất dùng thử
           chỉ có 3: người mới chạm 402 ở bài thứ tư mà không hiểu vì sao.
+
+          ⚠ Đây là ô NHẬP duy nhất còn lại ở bước Xác nhận, và có chủ đích: quy mô KHÔNG
+          có bước riêng nào khác, nên nó chỉ có MỘT nguồn nhập — không rơi vào lỗi mà F5
+          sửa (hai ô nhập cho cùng một giá trị, người dùng không biết cái nào thắng).
+          Nếu sau này tách quy mô thành bước riêng thì hàng này phải chuyển sang chỉ đọc.
         */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.scope')}</dt>
@@ -127,7 +146,14 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
             </span>
           </dd>
         </div>
-        <RoadmapConfirmSources cvAnalyses={cvAnalyses} cvAnalysisId={cvAnalysisId} onCvAnalysisChange={onCvAnalysisChange} completedRoadmaps={completedRoadmaps} priorRoadmapId={priorRoadmapId} onPriorRoadmapChange={onPriorRoadmapChange} isSubmitting={isSubmitting} />
+        <RoadmapConfirmSources
+          cvAnalyses={cvAnalyses}
+          cvAnalysisId={cvAnalysisId}
+          completedRoadmaps={completedRoadmaps}
+          priorRoadmapId={priorRoadmapId}
+          onEditCvAnalysis={onEditCvAnalysis}
+          onEditPriorRoadmap={onEditPriorRoadmap}
+        />
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.count')}</dt>
           <dd className="font-medium text-foreground">{selectedReports.length}</dd>

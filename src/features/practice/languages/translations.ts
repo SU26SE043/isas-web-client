@@ -767,6 +767,10 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.scope.quick': 'Rút gọn',
     'practice.roadmapWizard.confirm.scope.standard': 'Đầy đủ',
     'practice.roadmapWizard.confirm.scopeCost': '{count} bài · mỗi bài 1 credit',
+    'practice.roadmapWizard.confirm.currentLevel': 'Trình độ hiện tại',
+    // Nút dẫn NGƯỢC về bước sở hữu giá trị. Bước Xác nhận chỉ đọc: sửa ở đây nữa là hai
+    // nguồn nhập cho cùng một giá trị, người dùng không biết cái nào thắng.
+    'practice.roadmapWizard.confirm.edit': 'Sửa',
     'practice.roadmapWizard.confirm.level': 'Cấp độ mục tiêu',
     'practice.roadmapWizard.confirm.nameLabel': 'Tên lộ trình (tuỳ chọn)',
     'practice.roadmapWizard.confirm.namePlaceholder': 'Ví dụ: Frontend nâng cao trong 8 tuần',
@@ -1991,6 +1995,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.scope.quick': 'Short',
     'practice.roadmapWizard.confirm.scope.standard': 'Full',
     'practice.roadmapWizard.confirm.scopeCost': '{count} lessons · 1 credit each',
+    'practice.roadmapWizard.confirm.currentLevel': 'Current level',
+    'practice.roadmapWizard.confirm.edit': 'Edit',
     'practice.roadmapWizard.confirm.level': 'Target level',
     'practice.roadmapWizard.confirm.nameLabel': 'Roadmap name (optional)',
     'practice.roadmapWizard.confirm.namePlaceholder': 'Example: Advanced frontend in 8 weeks',
