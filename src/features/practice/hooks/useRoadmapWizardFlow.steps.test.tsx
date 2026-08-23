@@ -24,7 +24,11 @@ vi.mock('../services/learningPath.service', () => ({
 vi.mock('../services/learning.service', () => ({ learningService: { createRoadmap: vi.fn() } }));
 vi.mock('./useLearningRoadmaps', () => ({ invalidateLearningRoadmaps: vi.fn() }));
 
-import { resolveOrphanStepFallback, useRoadmapWizardFlow } from './useRoadmapWizardFlow';
+import {
+  ROADMAP_WIZARD_STEP_ORDER,
+  resolveOrphanStepFallback,
+  useRoadmapWizardFlow,
+} from './useRoadmapWizardFlow';
 
 const beReport = { id: 's1', status: 'completed', domainId: 'backend', date: '2026-08-20T07:32:00Z' };
 const completedRoadmap = { id: '2929e93c', name: 'BE', nameVi: 'BE', status: 'completed', hasFinalReport: true };
@@ -46,8 +50,10 @@ function walkTo(result: { current: ReturnType<typeof useRoadmapWizardFlow> }, ta
 
 describe('bước mồ côi khi `steps` co lại', () => {
   it('resolveOrphanStepFallback lùi về bước hợp lệ gần nhất phía TRƯỚC', () => {
-    const shrunk = ['domain', 'nameFocus', 'cv', 'currentLevel', 'reports', 'targetLevel', 'confirm'] as const;
-    expect(resolveOrphanStepFallback('priorRoadmap', shrunk)).toBe('targetLevel');
+    // Thứ tự khớp `ROADMAP_WIZARD_STEP_ORDER` sau F4 (mục tiêu TRƯỚC báo cáo); đây là `steps` đã
+    // co lại vì không có roadmap đã hoàn tất nào.
+    const shrunk = ['domain', 'nameFocus', 'cv', 'currentLevel', 'targetLevel', 'reports', 'confirm'] as const;
+    expect(resolveOrphanStepFallback('priorRoadmap', shrunk)).toBe('reports');
     // Bước còn trong danh sách ⇒ không đụng vào.
     expect(resolveOrphanStepFallback('targetLevel', shrunk)).toBeNull();
     // Không còn bước nào phía trước ⇒ về bước đầu, không trả undefined.
@@ -71,7 +77,10 @@ describe('bước mồ côi khi `steps` co lại', () => {
     await waitFor(() => expect(result.current.loadingReports).toBe(false));
 
     expect(result.current.steps).not.toContain('priorRoadmap');
-    expect(result.current.step).toBe('targetLevel');
+    // Bước hợp lệ gần nhất phía TRƯỚC `priorRoadmap` nay là `reports` (F4 đổi thứ tự: mục tiêu
+    // trước báo cáo). Tiền đề đổi, ý định của test không đổi — vẫn là "không kẹt ở bước đã biến
+    // mất, và không nhảy TỚI một bước người dùng chưa xem".
+    expect(result.current.step).toBe('reports');
     expect(result.current.steps).toContain(result.current.step);
   });
 
@@ -114,5 +123,59 @@ describe('danh sách roadmap cho wizard không kéo theo N+1', () => {
       { status: 'completed' },
       { enrichCurrentPointers: false },
     );
+  });
+});
+
+/**
+ * F4 — thứ tự bước là HỢP ĐỒNG với người dùng, không phải chi tiết cài đặt: "Trình độ hiện tại" →
+ * "Cấp độ mục tiêu" là một cặp (lộ trình sinh từ KHOẢNG CÁCH giữa chúng), chèn bước chọn báo cáo
+ * vào giữa làm mất mạch. Khoá bằng danh sách đầy đủ chứ không chỉ khoá "targetLevel đứng trước
+ * reports": khoá quan hệ đôi thì hoán đổi hai bước KHÁC vẫn qua.
+ */
+describe('thứ tự bước của wizard lộ trình', () => {
+  it('giữ đúng thứ tự đã chốt với sản phẩm', () => {
+    expect([...ROADMAP_WIZARD_STEP_ORDER]).toEqual([
+      'domain',
+      'nameFocus',
+      'cv',
+      'currentLevel',
+      'targetLevel',
+      'reports',
+      'priorRoadmap',
+      'confirm',
+    ]);
+  });
+
+  // `steps` là mảng ĐỘNG (hai bước tuỳ chọn tự ẩn). Nó phải là tập con GIỮ THỨ TỰ của danh sách
+  // trên — nếu nó tự sắp lại thì thanh tiến trình và điều hướng next/back nói hai chuyện khác nhau.
+  it('steps lúc chạy là tập con giữ nguyên thứ tự của danh sách khai báo', async () => {
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('backend'));
+    act(() => result.current.goToStep('cv'));
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+
+    const indexes = result.current.steps.map((step) => ROADMAP_WIZARD_STEP_ORDER.indexOf(step));
+    expect(indexes).toEqual([...indexes].sort((a, b) => a - b));
+    expect(indexes).not.toContain(-1);
+    expect(result.current.steps.indexOf('targetLevel')).toBeLessThan(
+      result.current.steps.indexOf('reports'),
+    );
+  });
+
+  // Điều hướng phải DẪN XUẤT từ `steps`. Ghi cứng next/back ở từng bước là cách lỗi thứ tự sinh
+  // ra: một lần đổi thứ tự phải sửa đúng 8 chỗ, sót một chỗ thì wizard nhảy sai mà không lỗi nào nổ.
+  it('goNext đi đúng theo thứ tự đó, không nhảy cóc', async () => {
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('backend'));
+    act(() => result.current.goToStep('cv'));
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+
+    act(() => result.current.goToStep('currentLevel'));
+    act(() => result.current.goNext());
+    expect(result.current.step).toBe('targetLevel');
+    act(() => result.current.goNext());
+    expect(result.current.step).toBe('reports');
+    act(() => result.current.goBack());
+    expect(result.current.step).toBe('targetLevel');
   });
 });

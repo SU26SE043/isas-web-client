@@ -41,8 +41,11 @@ export const ROADMAP_WIZARD_STEP_ORDER: readonly RoadmapWizardStep[] = [
   'nameFocus',
   'cv',
   'currentLevel',
-  'reports',
+  // "Cấp độ mục tiêu" đứng NGAY SAU "Trình độ hiện tại", trước "Báo cáo": hai bước này là một cặp
+  // — lộ trình sinh ra từ KHOẢNG CÁCH giữa chúng, nên hỏi rời nhau (chèn bước chọn báo cáo vào
+  // giữa) làm người dùng mất mạch. Đây cũng là thứ tự đã chốt với sản phẩm.
   'targetLevel',
+  'reports',
   'priorRoadmap',
   'confirm',
 ];
