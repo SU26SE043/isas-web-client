@@ -1,11 +1,12 @@
 import type { RoadmapScope } from '../types/learning.types';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
+import { domainToJobCategoryEnum, type JobDomainId } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import { invalidateLearningRoadmaps, learningLessonQueryKey } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
@@ -32,6 +33,20 @@ export type RoadmapWizardStep =
   | 'priorRoadmap'
   | 'confirm';
 
+/**
+ * Bản phân tích CV thuộc ĐÚNG lĩnh vực đang chọn.
+ *
+ * 🔴 Ca thật (22/08): tạo lộ trình Backend nhưng ô "Bản phân tích CV" hiện `BA · 22/8/2026`.
+ * `listAnalyses()` trả TẤT CẢ bản phân tích của người dùng, không ai lọc. Chọn phải nó thì
+ * tóm tắt CV Business Analyst đi thẳng vào prompt sinh lộ trình Backend — không lỗi, không
+ * cảnh báo, chỉ ra nội dung sai ngành.
+ */
+export function analysesForDomain(analyses: CvAnalysisResult[], domainId: string) {
+  if (!domainId) return [];
+  const wanted = domainToJobCategoryEnum(domainId as JobDomainId);
+  return analyses.filter((a) => (a.jobCategory ?? '').trim().toUpperCase() === wanted);
+}
+
 /** Temporary compatibility: older list responses have no hasFinalReport yet. */
 export function filterCompletedRoadmapsForWizard(roadmaps: LearningRoadmapCard[]) {
   return roadmaps.filter((roadmap) => roadmap.status === 'completed' && roadmap.hasFinalReport !== false);
@@ -49,7 +64,7 @@ export function useRoadmapWizardFlow() {
   const [step, setStep] = useState<RoadmapWizardStep>('domain');
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
   const [domainId, setDomainId] = useState('');
-  const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
+  const [rawReports, setRawReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [currentLevel, setCurrentLevel] = useState<RoadmapTargetLevel>('fresher');
@@ -61,7 +76,7 @@ export function useRoadmapWizardFlow() {
   const [scope, setScope] = useState<RoadmapScope>('Quick');
   const [cvId, setCvId] = useState<string | undefined>();
   const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
-  const [cvAnalyses, setCvAnalyses] = useState<CvAnalysisResult[]>([]);
+  const [rawCvAnalyses, setRawCvAnalyses] = useState<CvAnalysisResult[]>([]);
   const [completedRoadmaps, setCompletedRoadmaps] = useState<LearningRoadmapCard[]>([]);
   const [cvAnalysisId, setCvAnalysisId] = useState<string | undefined>();
   const [priorRoadmapId, setPriorRoadmapId] = useState<string | undefined>();
@@ -87,18 +102,26 @@ export function useRoadmapWizardFlow() {
         cvAnalysisService.listAnalyses().catch(() => []),
         learningPathService.listRoadmaps({ status: 'completed' }).catch(() => []),
       ]);
-      const filtered = history.interviews
-        .filter((item) => item.status === 'completed' && item.domainId === nextDomainId)
+      // Lưu THÔ, lọc theo lĩnh vực ở tầng dẫn xuất (`allReports`/`cvAnalyses` bên dưới).
+      // Lọc tại đây bằng `nextDomainId` là SAI khi người dùng quay lại đổi lĩnh vực:
+      // `handleSelectDomain` KHÔNG nạp lại (goToStep chỉ nạp khi mọi danh sách đều rỗng),
+      // nên dữ liệu của lĩnh vực cũ nằm lại và hiện ra dưới lĩnh vực mới.
+      const sorted = history.interviews
+        .filter((item) => item.status === 'completed')
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setAllReports(filtered);
+      setRawReports(sorted);
       setSelectedIds([]);
       setCvFiles(cvs);
-      setCvAnalyses(analyses);
+      setRawCvAnalyses(analyses);
       // TODO: remove the status fallback once backend always exposes hasFinalReport.
       setCompletedRoadmaps(filterCompletedRoadmapsForWizard(roadmaps));
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
-      const inferredLevel = analyses.find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
+      // CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào
+      // lộ trình Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập
+      // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
+      const inferredLevel = analysesForDomain(analyses, nextDomainId)
+        .find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
       if (inferredLevel && ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(inferredLevel)) {
         setCurrentLevel(inferredLevel as RoadmapTargetLevel);
         setCurrentLevelSource('cv');
@@ -111,6 +134,31 @@ export function useRoadmapWizardFlow() {
       setLoadingReports(false);
     }
   }, []);
+
+  // Lọc theo lĩnh vực ở tầng DẪN XUẤT ⇒ đổi lĩnh vực là danh sách đúng ngay, không cần nạp lại.
+  const allReports = useMemo(
+    () => (domainId ? rawReports.filter((item) => item.domainId === domainId) : []),
+    [rawReports, domainId],
+  );
+  const cvAnalyses = useMemo(
+    () => analysesForDomain(rawCvAnalyses, domainId),
+    [rawCvAnalyses, domainId],
+  );
+
+  // Lựa chọn TREO: đổi lĩnh vực xong, id đã chọn của lĩnh vực cũ vẫn nằm trong state và vẫn
+  // được gửi lên — nhưng không còn hiện trên màn hình nào. Dọn ngay khi nó rời khỏi tập hợp lệ.
+  //
+  // ⚠ Gác bằng `raw*.length > 0`, KHÔNG bằng danh sách đã lọc: danh sách lọc rỗng có HAI nghĩa
+  // — "chưa tải xong" và "đã tải, ngành này không có cái nào". Chỉ ca thứ hai mới được dọn;
+  // dọn ở ca thứ nhất là xoá mất lựa chọn hợp lệ do người dùng (hoặc test) đặt trước khi tải.
+  useEffect(() => {
+    if (rawCvAnalyses.length === 0) return;
+    if (cvAnalysisId && !cvAnalyses.some((a) => a.id === cvAnalysisId)) setCvAnalysisId(undefined);
+  }, [rawCvAnalyses.length, cvAnalyses, cvAnalysisId]);
+  useEffect(() => {
+    if (rawReports.length === 0) return;
+    setSelectedIds((prev) => prev.filter((id) => allReports.some((item) => item.id === id)));
+  }, [rawReports.length, allReports]);
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
     const next: RoadmapWizardStep[] = ['domain', 'nameFocus', 'cv', 'currentLevel', 'mode', 'targetLevel'];
