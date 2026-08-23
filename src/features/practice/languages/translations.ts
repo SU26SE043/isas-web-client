@@ -737,6 +737,9 @@ export const practiceTranslations: TranslationDictionary = {
       'Chưa có báo cáo phỏng vấn cho lĩnh vực này. Bạn vẫn có thể tiếp tục tạo Roadmap.',
     'practice.roadmapWizard.reports.empty':
       'Bạn chưa có Interview Report thuộc Domain này. Hãy hoàn thành ít nhất 3 buổi Luyện phỏng vấn để tạo Roadmap.',
+    // Buổi luyện TỰ DO không sinh ra từ bài học nào nên hệ thống KHÔNG có tên thật cho nó.
+    // Tiền tố này nói rõ đây là nhãn ghép, không phải tên bài — 3/18 buổi đã chấm rơi vào nhóm này.
+    'practice.roadmapWizard.reports.freePractice': 'Luyện tự do',
     'practice.roadmapWizard.reports.selectAll': 'Chọn tất cả',
     'practice.roadmapWizard.reports.unselectAll': 'Bỏ chọn',
     'practice.roadmapWizard.reports.score': 'Điểm',
@@ -1964,6 +1967,7 @@ export const practiceTranslations: TranslationDictionary = {
       'No interview reports for this domain yet. You can still continue creating a roadmap.',
     'practice.roadmapWizard.reports.empty':
       'You do not have interview reports for this domain yet. Complete at least 3 practice interviews to create a roadmap.',
+    'practice.roadmapWizard.reports.freePractice': 'Free practice',
     'practice.roadmapWizard.reports.selectAll': 'Select all',
     'practice.roadmapWizard.reports.unselectAll': 'Clear selection',
     'practice.roadmapWizard.reports.score': 'Score',

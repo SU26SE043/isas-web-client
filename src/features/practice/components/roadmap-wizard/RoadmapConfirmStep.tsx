@@ -12,7 +12,7 @@ import type { LearningRoadmapCard } from '../../types/learningPath.types';
 import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 import { RoadmapConfirmSources } from './RoadmapConfirmSources';
-import { formatPracticeSessionStamp } from '../../utils/practiceReportLabel';
+import { formatPracticeSessionStamp, practiceReportTitle } from '../../utils/practiceReportLabel';
 
 interface RoadmapConfirmStepProps {
   scope: RoadmapScope;
@@ -141,7 +141,14 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
               key={report.id}
               className="rounded-lg border border-subtle bg-surface-overlay px-4 py-3 text-sm text-foreground"
             >
-              {report.jobTitle}
+              {/* Cùng nhãn với bảng chọn ở bước "Báo cáo" — hai chỗ liệt kê CÙNG một buổi mà gọi
+                  tên khác nhau thì người dùng không rà soát lại được mình đã tick đúng chưa. */}
+              {(() => {
+                const title = practiceReportTitle(report);
+                return title.isFreePractice
+                  ? `${t('practice.roadmapWizard.reports.freePractice')}${title.text ? ` · ${title.text}` : ''}`
+                  : title.text;
+              })()}
               {/* Danh sách này KHÔNG có cột ngày ⇒ kèm cả ngày lẫn giờ, nếu không mọi buổi cùng
                   ngành hiện y hệt nhau và người dùng không kiểm được mình đã chọn đúng buổi chưa. */}
               <span className="mt-1 block text-caption text-muted-foreground">
