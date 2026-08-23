@@ -13,7 +13,6 @@ export const ROADMAP_WIZARD_STEP_LABEL_KEYS: Record<RoadmapWizardStep, string> =
   nameFocus: 'practice.roadmapWizard.steps.nameFocus',
   cv: 'practice.roadmapWizard.steps.cv',
   currentLevel: 'practice.roadmapWizard.steps.currentLevel',
-  mode: 'practice.roadmapWizard.steps.mode',
   targetLevel: 'practice.roadmapWizard.steps.targetLevel',
   reports: 'practice.roadmapWizard.steps.reports',
   priorRoadmap: 'practice.roadmapWizard.steps.priorRoadmap',

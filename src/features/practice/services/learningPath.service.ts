@@ -166,7 +166,10 @@ function instantFeedback(): LearningPracticeQuestionFeedback {
 
 export const learningPathService = {
   /** Always live — GET /api/v1/interview/practice/roadmaps */
-  async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
+  async listRoadmaps(
+    query: LearningDashboardQuery = {},
+    options: { enrichCurrentPointers?: boolean } = {},
+  ): Promise<LearningRoadmapCard[]> {
     if (usesMockData('practice')) {
       await mockDelay(200);
       let items: LearningRoadmapCard[] = store.map(
@@ -193,7 +196,7 @@ export const learningPathService = {
           : +new Date(right.updatedAt) - +new Date(left.updatedAt),
       );
     }
-    return roadmapService.listRoadmaps(query);
+    return roadmapService.listRoadmaps(query, options);
   },
 
   /** Always live — GET /api/v1/interview/practice/roadmaps/{id} */
