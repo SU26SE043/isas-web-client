@@ -1,14 +1,21 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { navigateMock, fetchHistoryMock, listRoadmapsMock, listCvsMock, listAnalysesMock } =
-  vi.hoisted(() => ({
-    navigateMock: vi.fn(),
-    fetchHistoryMock: vi.fn(),
-    listRoadmapsMock: vi.fn(),
-    listCvsMock: vi.fn(),
-    listAnalysesMock: vi.fn(),
-  }));
+const {
+  navigateMock,
+  fetchHistoryMock,
+  listRoadmapsMock,
+  listCvsMock,
+  listAnalysesMock,
+  createRoadmapMock,
+} = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
+  fetchHistoryMock: vi.fn(),
+  listRoadmapsMock: vi.fn(),
+  listCvsMock: vi.fn(),
+  listAnalysesMock: vi.fn(),
+  createRoadmapMock: vi.fn(),
+}));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({}) }));
@@ -20,7 +27,7 @@ vi.mock('@/features/cv-analysis/services/cvAnalysis.service', () => ({
 vi.mock('../services/learningPath.service', () => ({
   learningPathService: { listRoadmaps: listRoadmapsMock },
 }));
-vi.mock('../services/learning.service', () => ({ learningService: { createRoadmap: vi.fn() } }));
+vi.mock('../services/learning.service', () => ({ learningService: { createRoadmap: createRoadmapMock } }));
 vi.mock('./useLearningRoadmaps', () => ({ invalidateLearningRoadmaps: vi.fn() }));
 
 import { inferCurrentLevelFromAnalyses, useRoadmapWizardFlow } from './useRoadmapWizardFlow';
@@ -36,6 +43,7 @@ beforeEach(() => {
   listCvsMock.mockResolvedValue([]);
   listAnalysesMock.mockResolvedValue([]);
   listRoadmapsMock.mockResolvedValue([]);
+  createRoadmapMock.mockResolvedValue({ id: 'created-roadmap' });
 });
 
 describe('inferCurrentLevelFromAnalyses', () => {
@@ -107,5 +115,54 @@ describe('wizard điền trình độ hiện tại từ phân tích CV', () => {
 
     expect(result.current.currentLevel).toBe('fresher');
     expect(result.current.currentLevelSource).toBe('default');
+  });
+});
+
+/**
+ * Lỗ hổng tự tìm ra khi rà lại: các phép trên chỉ chứng minh STATE được đặt đúng. Nhưng cái người
+ * dùng nhận là NỘI DUNG lộ trình, mà nội dung phụ thuộc `currentLevel` có tới được payload hay
+ * không. Đứt ở đoạn `handleCreate` thì mọi test trên vẫn xanh trong khi tính năng vẫn hỏng y như
+ * cũ — đúng lớp lỗi "sửa mà không sửa gì cho ai".
+ */
+describe('trình độ suy từ CV đi tới tận payload tạo lộ trình', () => {
+  it('gửi đúng cấp đã suy từ CV, không phải mặc định', async () => {
+    listAnalysesMock.mockResolvedValue([analysis({ jobCategory: 'BE', currentLevel: 'Middle' })]);
+
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('backend'));
+    act(() => result.current.goToStep('cv'));
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+    act(() => result.current.setTargetLevel('senior'));
+
+    await act(async () => {
+      await result.current.handleCreate();
+    });
+
+    expect(createRoadmapMock).toHaveBeenCalledWith(
+      // `middle` phải KHÁC `fresher` (mặc định) và KHÁC `senior` (mục tiêu) — nếu không, phép đo
+      // này không phân biệt được "gửi đúng" với "gửi nhầm biến".
+      expect.objectContaining({ currentLevel: 'middle', targetLevel: 'senior' }),
+    );
+  });
+
+  it('người dùng tự sửa thì giá trị sửa tay THẮNG giá trị suy từ CV', async () => {
+    listAnalysesMock.mockResolvedValue([analysis({ jobCategory: 'BE', currentLevel: 'Middle' })]);
+
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('backend'));
+    act(() => result.current.goToStep('cv'));
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+    act(() => {
+      result.current.setCurrentLevel('junior');
+      result.current.setTargetLevel('senior');
+    });
+
+    expect(result.current.currentLevelSource).toBe('manual');
+    await act(async () => {
+      await result.current.handleCreate();
+    });
+    expect(createRoadmapMock).toHaveBeenCalledWith(
+      expect.objectContaining({ currentLevel: 'junior' }),
+    );
   });
 });
