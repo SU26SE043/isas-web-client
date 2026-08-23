@@ -327,6 +327,23 @@ export function parseAnalysis(raw: unknown): CvAnalysisResult {
     cvSections: parseCvSections(data.cvSections),
     citations: parseAnalysisCitations(data.citations),
     createdAt: String(data.createdAt ?? ''),
+    // Trình độ NGHỀ NGHIỆP suy từ CV. Server trả ở CẢ list lẫn detail
+    // (`CvAnalysisListResponse` / `CvAnalysisResponse`, cùng tập đóng
+    // `Fresher|Junior|Middle|Senior`), nhưng trước đây parser bỏ qua ⇒ giá trị LUÔN
+    // `undefined` ⇒ bước "Trình độ hiện tại" của wizard lộ trình luôn rơi về `Fresher`,
+    // và chuỗi `currentLevel.fromCv` là copy không có đường nào hiển thị được.
+    //
+    // `null` là giá trị HỢP LỆ, không phải thiếu dữ liệu: CV không đủ căn cứ thì server
+    // cố ý trả `null` (đo trên prod ~2/5 bản phân tích). Chuẩn hoá chuỗi rỗng về `null`
+    // để phía tiêu thụ chỉ phải phân biệt "có" với "không", thay vì ba trạng thái.
+    //
+    // KHÔNG lọc theo tập giá trị ở đây: parser là tầng vận chuyển, nó phải nói đúng thứ
+    // server gửi. Việc "giá trị này có hiển thị/gửi lại được không" là chính sách, thuộc
+    // về nơi dùng (`useRoadmapWizardFlow`).
+    currentLevel:
+      typeof data.currentLevel === 'string' && data.currentLevel.trim()
+        ? data.currentLevel.trim()
+        : null,
   };
 }
 

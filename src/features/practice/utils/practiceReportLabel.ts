@@ -25,3 +25,26 @@ export function formatPracticeSessionStamp(
   const date = value.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
   return `${time} · ${date}`;
 }
+
+/**
+ * Nhãn hiển thị ở cột "Tiêu đề" của bảng chọn báo cáo.
+ *
+ * 🔴 Ca thật (23/08): cột đó lấy thẳng `jobCategory`, nên tám buổi `BE|Junior` liên tiếp của cùng
+ * một người hiện y hệt nhau — đúng một chữ "BE" — và không có cách nào chọn đúng buổi mình muốn.
+ *
+ * Nay backend trả `lessonTitle` (nguồn THẬT: `roadmap_lesson_attempts` → `roadmap_lessons.title`),
+ * nhưng `null` KHÔNG hiếm: đo trên dev 3/18 buổi đã chấm là luyện TỰ DO, và với nhóm đó hệ thống
+ * KHÔNG có nhãn nào. Ghép nhãn từ nghề + cấp độ là được, nhưng phải kèm cờ `isFreePractice` để
+ * chỗ hiển thị nói rõ đây là nhãn ghép — TUYỆT ĐỐI không dựng một cái tên rồi trình bày như tên
+ * thật. Đây là ranh giới trung thực, không phải chuyện thẩm mỹ.
+ */
+export function practiceReportTitle(report: {
+  lessonTitle?: string | null;
+  jobTitle?: string | null;
+  jobCategory?: string | null;
+}): { text: string; isFreePractice: boolean } {
+  const lesson = report.lessonTitle?.trim();
+  if (lesson) return { text: lesson, isFreePractice: false };
+  const fallback = report.jobTitle?.trim() || report.jobCategory?.trim() || '';
+  return { text: fallback, isFreePractice: true };
+}

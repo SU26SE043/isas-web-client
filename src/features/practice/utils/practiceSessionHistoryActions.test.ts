@@ -99,3 +99,54 @@ describe('practiceSessionHistoryActions', () => {
     expect(filtered.map((item) => item.id)).toEqual(['1']);
   });
 });
+
+/**
+ * F3 — `lessonTitle` phải đi HẾT dây: JSON của server → `parsePracticeSessionHistoryItem` →
+ * `mapPracticeHistoryToInterviewItem` → bảng chọn báo cáo. Đứt bất kỳ mắt nào thì cột "Tiêu đề"
+ * lại về đúng một chữ "BE" cho mọi dòng, mà không có lỗi nào nổ.
+ */
+describe('nhãn tên bài học đi hết dây', () => {
+  it('parser đọc lessonTitle ở cả camelCase lẫn PascalCase', () => {
+    const camel = parsePracticeSessionHistoryPage(
+      [{ id: 's1', status: 'Scored', jobCategory: 'BE', createdAt: '2026-08-20T07:00:00Z', lessonTitle: 'Truy vấn SQL nâng cao' }],
+      {},
+    );
+    expect(camel.items[0]?.lessonTitle).toBe('Truy vấn SQL nâng cao');
+
+    const pascal = parsePracticeSessionHistoryPage(
+      [{ id: 's1', status: 'Scored', jobCategory: 'BE', createdAt: '2026-08-20T07:00:00Z', LessonTitle: 'Thiết kế API' }],
+      {},
+    );
+    expect(pascal.items[0]?.lessonTitle).toBe('Thiết kế API');
+  });
+
+  // `null` = buổi luyện TỰ DO, là ca thật (3/18 trên dev) chứ không phải lỗi.
+  it('buổi luyện tự do ⇒ lessonTitle null, không phải chuỗi rỗng đội lốt', () => {
+    const page = parsePracticeSessionHistoryPage(
+      [{ id: 's1', status: 'Scored', jobCategory: 'BE', createdAt: '2026-08-20T07:00:00Z', lessonTitle: null }],
+      {},
+    );
+    expect(page.items[0]?.lessonTitle).toBeNull();
+  });
+
+  it('mapper chuyển tiếp lessonTitle sang shape mà bảng đọc', () => {
+    expect(
+      mapPracticeHistoryToInterviewItem({
+        id: 's1',
+        status: 'Scored',
+        jobCategory: 'BE',
+        createdAt: '2026-08-20T07:00:00Z',
+        lessonTitle: 'Truy vấn SQL nâng cao',
+      }).lessonTitle,
+    ).toBe('Truy vấn SQL nâng cao');
+
+    expect(
+      mapPracticeHistoryToInterviewItem({
+        id: 's2',
+        status: 'Scored',
+        jobCategory: 'BE',
+        createdAt: '2026-08-20T07:00:00Z',
+      }).lessonTitle,
+    ).toBeNull();
+  });
+});

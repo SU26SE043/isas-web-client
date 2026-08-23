@@ -24,6 +24,12 @@ export interface InterviewHistoryItem {
   completedAt?: string | null;
   rawStatus?: string | null;
   overallScoreNullable?: number | null;
+  /**
+   * Tên BÀI HỌC của lộ trình mà buổi luyện này thuộc về; `null`/vắng = buổi luyện TỰ DO.
+   * Nguồn là dữ liệu THẬT (`roadmap_lesson_attempts` → `roadmap_lessons.title`), không phải tên
+   * máy sinh. `null` KHÔNG hiếm — đo trên dev 3/18 buổi đã chấm là luyện tự do.
+   */
+  lessonTitle?: string | null;
 }
 
 export interface InterviewHistoryQuery {
@@ -52,6 +58,8 @@ export type PracticeSessionHistoryItem = {
   completedAt?: string | null;
   overallScore?: number | null;
   seniority?: string | null;
+  /** `PracticeSessionSummary.lessonTitle` — `null` = buổi luyện tự do, KHÔNG phải lỗi. */
+  lessonTitle?: string | null;
 };
 
 export type PracticeSessionHistoryPage = {

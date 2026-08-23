@@ -18,9 +18,9 @@ import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
 import {
   ROADMAP_DOMAINS,
+  ROADMAP_TARGET_LEVELS,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
-import type { RoadmapMode } from '../types/learning.types';
 
 export type RoadmapWizardStep =
   | 'domain'
@@ -41,8 +41,11 @@ export const ROADMAP_WIZARD_STEP_ORDER: readonly RoadmapWizardStep[] = [
   'nameFocus',
   'cv',
   'currentLevel',
-  'reports',
+  // "Cấp độ mục tiêu" đứng NGAY SAU "Trình độ hiện tại", trước "Báo cáo": hai bước này là một cặp
+  // — lộ trình sinh ra từ KHOẢNG CÁCH giữa chúng, nên hỏi rời nhau (chèn bước chọn báo cáo vào
+  // giữa) làm người dùng mất mạch. Đây cũng là thứ tự đã chốt với sản phẩm.
   'targetLevel',
+  'reports',
   'priorRoadmap',
   'confirm',
 ];
@@ -81,6 +84,36 @@ export function analysesForDomain(analyses: CvAnalysisResult[], domainId: string
   return analyses.filter((a) => (a.jobCategory ?? '').trim().toUpperCase() === wanted);
 }
 
+/**
+ * Trình độ hiện tại suy từ bản phân tích CV — nguồn để điền mặc định bước "Trình độ hiện tại".
+ *
+ * CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào lộ trình
+ * Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập môn người học đã
+ * nắm) nên hỏng âm thầm — không lỗi nào nổ.
+ *
+ * 🔑 Tập hợp lệ lấy TỪ `ROADMAP_TARGET_LEVELS`, không khai lại bằng tay. Danh sách viết tay trước
+ * đây còn `'intern'`/`'lead'` — hai giá trị mà cả backend (`RoadmapLevel`) lẫn ô chọn của bước
+ * này đều KHÔNG có. Rơi vào đó thì `<select value="lead">` không khớp option nào nên trình duyệt
+ * sáng đèn option ĐẦU TIÊN ("Mới tốt nghiệp"), trong khi `resolveApiRoadmapLevel` lại nén `lead`
+ * thành `Senior` lúc gửi: người dùng thấy Fresher, hệ thống gửi Senior, không cảnh báo nào.
+ * Buộc hai danh sách là MỘT thì cái lệch đó không dựng lại được.
+ *
+ * `null` = không suy ra được (CV không đủ căn cứ, hoặc chưa phân tích CV nào cho lĩnh vực này) ⇒
+ * nơi gọi rơi về `fresher` và nói rõ đó là mặc định, không phải suy từ CV.
+ */
+export function inferCurrentLevelFromAnalyses(
+  analyses: CvAnalysisResult[],
+  domainId: string,
+): RoadmapTargetLevel | null {
+  for (const analysis of analysesForDomain(analyses, domainId)) {
+    const level = analysis.currentLevel?.trim().toLowerCase();
+    if (level && (ROADMAP_TARGET_LEVELS as readonly string[]).includes(level)) {
+      return level as RoadmapTargetLevel;
+    }
+  }
+  return null;
+}
+
 /** Temporary compatibility: older list responses have no hasFinalReport yet. */
 export function filterCompletedRoadmapsForWizard(roadmaps: LearningRoadmapCard[]) {
   return roadmaps.filter((roadmap) => roadmap.status === 'completed' && roadmap.hasFinalReport !== false);
@@ -103,7 +136,6 @@ export function useRoadmapWizardFlow() {
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [currentLevel, setCurrentLevel] = useState<RoadmapTargetLevel>('fresher');
   const [currentLevelSource, setCurrentLevelSource] = useState<'cv' | 'default' | 'manual'>('default');
-  const [mode, setMode] = useState<RoadmapMode>('LevelUp');
   const [name, setName] = useState('');
   // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
   // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
@@ -164,15 +196,9 @@ export function useRoadmapWizardFlow() {
       // CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào
       // lộ trình Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập
       // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
-      const inferredLevel = analysesForDomain(analyses, nextDomainId)
-        .find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
-      if (inferredLevel && ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(inferredLevel)) {
-        setCurrentLevel(inferredLevel as RoadmapTargetLevel);
-        setCurrentLevelSource('cv');
-      } else {
-        setCurrentLevel('fresher');
-        setCurrentLevelSource('default');
-      }
+      const inferredLevel = inferCurrentLevelFromAnalyses(analyses, nextDomainId);
+      setCurrentLevel(inferredLevel ?? 'fresher');
+      setCurrentLevelSource(inferredLevel ? 'cv' : 'default');
       setPriorRoadmapId(undefined);
     } finally {
       setLoadingReports(false);
@@ -205,10 +231,11 @@ export function useRoadmapWizardFlow() {
   }, [rawReports.length, allReports]);
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
-    // Bước "Chế độ" (LevelUp/Reinforce) ĐÃ GỠ khỏi wizard theo quyết định sản phẩm — nó lọt vào
-    // từ một nhánh khác, không nằm trong thiết kế đã duyệt. `mode` giữ mặc định 'LevelUp' (đúng
-    // hành vi trước khi có bước đó); backend vẫn hiểu 'Reinforce' nhưng hiện KHÔNG có đường chọn
-    // từ giao diện — nêu ra để không ai tưởng chế độ ôn tập đang chạy.
+    // Chế độ lộ trình (LevelUp/Reinforce) KHÔNG còn tồn tại ở tầng giao diện: mỗi lộ trình nay là
+    // một BẢN TRỘN (vừa sửa điểm yếu đo được, vừa tiến lên cấp mục tiêu). Bước chọn chế độ đã gỡ ở
+    // `4d53085`, và vòng này gỡ nốt phần hiển thị + phần GỬI. Không state `mode`, không field
+    // `mode` trong payload ⇒ backend nhận `null` và tự hiểu là "LevelUp" (`CreateRoadmapRequest`
+    // khai `string? Mode = null`), đúng hành vi trước khi có bước đó.
     const showReports = loadingReports || allReports.length > 0;
     const showPrior = loadingReports || completedRoadmaps.length > 0;
     return ROADMAP_WIZARD_STEP_ORDER.filter((item) => {
@@ -265,7 +292,6 @@ export function useRoadmapWizardFlow() {
     setTargetLevel('');
     setCurrentLevel('fresher');
     setCurrentLevelSource('default');
-    setMode('LevelUp');
     setSelectedIds([]);
   };
 
@@ -303,7 +329,6 @@ export function useRoadmapWizardFlow() {
         cvAnalysisId,
         priorRoadmapId,
         focus,
-        mode,
         scope,
       });
       const firstLessonId = created.milestones?.flatMap((milestone) => milestone.lessons)[0]?.id;
@@ -346,7 +371,6 @@ export function useRoadmapWizardFlow() {
     targetLevel,
     currentLevel,
     currentLevelSource,
-    mode,
     name,
     cvId,
     cvFiles,
@@ -366,7 +390,6 @@ export function useRoadmapWizardFlow() {
     setTargetLevel,
     setCurrentLevel: (value: RoadmapTargetLevel) => { setCurrentLevel(value); setCurrentLevelSource('manual'); },
     setCurrentLevelSource,
-    setMode,
     setName,
     setCvId,
     setFocus,

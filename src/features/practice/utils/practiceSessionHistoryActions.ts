@@ -184,6 +184,7 @@ export function mapPracticeHistoryToInterviewItem(
     completedAt: item.completedAt ?? null,
     rawStatus: item.status,
     overallScoreNullable: item.overallScore ?? null,
+    lessonTitle: item.lessonTitle ?? null,
   };
 }
 

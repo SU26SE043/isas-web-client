@@ -12,10 +12,10 @@ vi.mock('@/shared/languages', () => ({
 
 afterEach(cleanup);
 
-function renderStep() {
+function renderStep(selectedLevel: '' | (typeof ROADMAP_TARGET_LEVELS)[number] = '') {
   return render(
     <RoadmapTargetLevelStep
-      selectedLevel=""
+      selectedLevel={selectedLevel}
       onSelect={vi.fn()}
       onBack={vi.fn()}
       onNext={vi.fn()}
@@ -45,5 +45,24 @@ describe('RoadmapTargetLevelStep', () => {
       expect(screen.getByText(`practice.roadmapWizard.level.${level}`)).toBeInTheDocument();
       expect(screen.getByText(`practice.roadmapWizard.level.${level}.desc`)).toBeInTheDocument();
     }
+  });
+});
+
+/**
+ * F10 — nút "Tiếp theo" bị khoá cho tới khi chọn một cấp, nhưng KHÔNG có một chữ nào giải thích:
+ * người dùng bấm, không có gì xảy ra, và không biết mình thiếu gì. Phải đọc code mới hiểu.
+ */
+describe('nút bị khoá phải nói lý do', () => {
+  it('chưa chọn ⇒ nút khoá VÀ có dòng nhắc đi kèm', () => {
+    renderStep('');
+    expect(screen.getByRole('button', { name: 'practice.roadmapWizard.next' })).toBeDisabled();
+    expect(screen.getByText('practice.roadmapWizard.level.required')).toBeInTheDocument();
+  });
+
+  // Lời nhắc đã hết hiệu lực cũng gây nhiễu như thiếu nó.
+  it('đã chọn ⇒ nút mở VÀ dòng nhắc biến mất', () => {
+    renderStep('middle');
+    expect(screen.getByRole('button', { name: 'practice.roadmapWizard.next' })).toBeEnabled();
+    expect(screen.queryByText('practice.roadmapWizard.level.required')).not.toBeInTheDocument();
   });
 });

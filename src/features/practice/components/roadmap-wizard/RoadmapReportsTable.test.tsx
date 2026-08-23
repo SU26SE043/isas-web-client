@@ -67,3 +67,58 @@ describe('RoadmapReportsTable — hai buổi cùng ngành phải phân biệt đ
     expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
   });
 });
+
+describe('RoadmapReportsTable — cột Tiêu đề nói đúng buổi nào là buổi nào', () => {
+  it('hiện tên bài học thật thay vì mã ngành', () => {
+    render(
+      <RoadmapReportsTable
+        reports={[
+          makeReport({ id: 'a', lessonTitle: 'Truy vấn SQL nâng cao (JOIN, GROUP BY)' }),
+          makeReport({ id: 'b', lessonTitle: 'Thiết kế API cho tính năng CRUD' }),
+        ]}
+        selectedIds={[]}
+        {...handlers}
+      />,
+    );
+
+    expect(screen.getByText('Truy vấn SQL nâng cao (JOIN, GROUP BY)')).toBeInTheDocument();
+    expect(screen.getByText('Thiết kế API cho tính năng CRUD')).toBeInTheDocument();
+    // Ô tick cũng phải đọc ra tên bài — người dùng màn hình đọc nếu chỉ nghe "BE" thì vẫn mù.
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByRole('checkbox').getAttribute('aria-label')).toContain('Truy vấn SQL');
+  });
+
+  // 🔑 Ranh giới trung thực: buổi luyện tự do KHÔNG có tên thật, nhãn ghép phải NHÌN RA được là
+  // nhãn ghép. Trình bày nó y như tên một bài học là nói dối về nguồn gốc dòng đó.
+  it('buổi luyện tự do được đánh dấu, không bị bịa thành tên bài học', () => {
+    const { container } = render(
+      <RoadmapReportsTable
+        reports={[makeReport({ id: 'free', lessonTitle: null })]}
+        selectedIds={[]}
+        {...handlers}
+      />,
+    );
+
+    const label = screen.getByText(/practice\.roadmapWizard\.reports\.freePractice/);
+    expect(label).toBeInTheDocument();
+    expect(label.className).toContain('italic');
+    expect(container.textContent).toContain('BE');
+  });
+
+  it('hai buổi — một có tên bài, một tự do — không hiện giống nhau', () => {
+    render(
+      <RoadmapReportsTable
+        reports={[
+          makeReport({ id: 'a', lessonTitle: 'Truy vấn SQL nâng cao' }),
+          makeReport({ id: 'b', lessonTitle: null }),
+        ]}
+        selectedIds={[]}
+        {...handlers}
+      />,
+    );
+
+    const rows = screen.getAllByRole('row').slice(1);
+    const labels = rows.map((row) => within(row).getByRole('checkbox').getAttribute('aria-label'));
+    expect(labels[0]).not.toEqual(labels[1]);
+  });
+});

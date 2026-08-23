@@ -105,7 +105,6 @@ export interface CreateRoadmapInput {
   priorRoadmapId?: string;
   focus?: string;
   language?: 'vi' | 'en';
-  mode?: RoadmapMode;
   /** Roadmap size; omitted by the backend means Standard. */
   scope?: RoadmapScope;
 }
@@ -131,7 +130,6 @@ export interface CreateRoadmapApiRequest {
   jobCategory: string;
   currentLevel?: string;
   level: RoadmapLevel | string;
-  mode?: RoadmapMode;
   name?: string;
   cvId?: string;
   sessionIds?: string[];

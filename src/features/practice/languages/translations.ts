@@ -695,7 +695,10 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.steps.domain': 'Lĩnh vực',
     'practice.roadmapWizard.steps.cv': 'CV',
     'practice.roadmapWizard.steps.currentLevel': 'Trình độ hiện tại',
-    'practice.roadmapWizard.steps.reports': 'Báo cáo',
+    // KHÔNG dùng riêng chữ "Báo cáo": nó đụng nghĩa với `practice.reports.title` (trang Báo
+    // cáo tổng kết lộ trình) và `profile.navReports` ở sidebar — hai thứ khác hẳn nhau. Nhãn
+    // bước phải khớp tiêu đề bên trong bước (`reports.title` = "Chọn báo cáo phỏng vấn").
+    'practice.roadmapWizard.steps.reports': 'Báo cáo phỏng vấn',
     'practice.roadmapWizard.steps.targetLevel': 'Cấp độ mục tiêu',
     'practice.roadmapWizard.steps.confirm': 'Xác nhận',
     'practice.roadmapWizard.steps.priorRoadmap': 'Roadmap đã hoàn tất',
@@ -737,6 +740,9 @@ export const practiceTranslations: TranslationDictionary = {
       'Chưa có báo cáo phỏng vấn cho lĩnh vực này. Bạn vẫn có thể tiếp tục tạo Roadmap.',
     'practice.roadmapWizard.reports.empty':
       'Bạn chưa có Interview Report thuộc Domain này. Hãy hoàn thành ít nhất 3 buổi Luyện phỏng vấn để tạo Roadmap.',
+    // Buổi luyện TỰ DO không sinh ra từ bài học nào nên hệ thống KHÔNG có tên thật cho nó.
+    // Tiền tố này nói rõ đây là nhãn ghép, không phải tên bài — 3/18 buổi đã chấm rơi vào nhóm này.
+    'practice.roadmapWizard.reports.freePractice': 'Luyện tự do',
     'practice.roadmapWizard.reports.selectAll': 'Chọn tất cả',
     'practice.roadmapWizard.reports.unselectAll': 'Bỏ chọn',
     'practice.roadmapWizard.reports.score': 'Điểm',
@@ -748,6 +754,7 @@ export const practiceTranslations: TranslationDictionary = {
     // ngưỡng đạt của từng tiêu chí.
     'practice.roadmapWizard.level.description':
       'Cấp độ này quyết định độ khó câu hỏi phỏng vấn và độ sâu bài giảng trong lộ trình. Chọn nơi bạn muốn tới, không phải nơi bạn đang đứng.',
+    'practice.roadmapWizard.level.required': 'Chọn một cấp độ để tiếp tục.',
     'practice.roadmapWizard.level.fresher': 'Mới tốt nghiệp',
     'practice.roadmapWizard.level.fresher.desc': 'Kiến thức nền tảng và câu hỏi tình huống cơ bản.',
     'practice.roadmapWizard.level.junior': 'Sơ cấp',
@@ -764,8 +771,11 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.scope.quick': 'Rút gọn',
     'practice.roadmapWizard.confirm.scope.standard': 'Đầy đủ',
     'practice.roadmapWizard.confirm.scopeCost': '{count} bài · mỗi bài 1 credit',
+    'practice.roadmapWizard.confirm.currentLevel': 'Trình độ hiện tại',
+    // Nút dẫn NGƯỢC về bước sở hữu giá trị. Bước Xác nhận chỉ đọc: sửa ở đây nữa là hai
+    // nguồn nhập cho cùng một giá trị, người dùng không biết cái nào thắng.
+    'practice.roadmapWizard.confirm.edit': 'Sửa',
     'practice.roadmapWizard.confirm.level': 'Cấp độ mục tiêu',
-    'practice.roadmapWizard.confirm.mode': 'Chế độ lộ trình',
     'practice.roadmapWizard.confirm.nameLabel': 'Tên lộ trình (tuỳ chọn)',
     'practice.roadmapWizard.confirm.namePlaceholder': 'Ví dụ: Frontend nâng cao trong 8 tuần',
     'practice.roadmapWizard.confirm.nameHint': 'Để trống để máy chủ tự đặt tên.',
@@ -1923,7 +1933,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.steps.domain': 'Domain',
     'practice.roadmapWizard.steps.cv': 'CV',
     'practice.roadmapWizard.steps.currentLevel': 'Current level',
-    'practice.roadmapWizard.steps.reports': 'Reports',
+    'practice.roadmapWizard.steps.reports': 'Interview reports',
     'practice.roadmapWizard.steps.targetLevel': 'Target level',
     'practice.roadmapWizard.steps.confirm': 'Confirm',
     'practice.roadmapWizard.steps.priorRoadmap': 'Completed roadmap',
@@ -1965,6 +1975,7 @@ export const practiceTranslations: TranslationDictionary = {
       'No interview reports for this domain yet. You can still continue creating a roadmap.',
     'practice.roadmapWizard.reports.empty':
       'You do not have interview reports for this domain yet. Complete at least 3 practice interviews to create a roadmap.',
+    'practice.roadmapWizard.reports.freePractice': 'Free practice',
     'practice.roadmapWizard.reports.selectAll': 'Select all',
     'practice.roadmapWizard.reports.unselectAll': 'Clear selection',
     'practice.roadmapWizard.reports.score': 'Score',
@@ -1972,6 +1983,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.level.title': 'Choose target level',
     'practice.roadmapWizard.level.description':
       'This level drives how hard the interview questions are and how deep the lessons go. Pick where you want to get to, not where you are now.',
+    'practice.roadmapWizard.level.required': 'Choose a level to continue.',
     'practice.roadmapWizard.level.fresher': 'Fresher',
     'practice.roadmapWizard.level.fresher.desc': 'Fundamentals and basic situational questions.',
     'practice.roadmapWizard.level.junior': 'Junior',
@@ -1988,8 +2000,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.confirm.scope.quick': 'Short',
     'practice.roadmapWizard.confirm.scope.standard': 'Full',
     'practice.roadmapWizard.confirm.scopeCost': '{count} lessons · 1 credit each',
+    'practice.roadmapWizard.confirm.currentLevel': 'Current level',
+    'practice.roadmapWizard.confirm.edit': 'Edit',
     'practice.roadmapWizard.confirm.level': 'Target level',
-    'practice.roadmapWizard.confirm.mode': 'Roadmap mode',
     'practice.roadmapWizard.confirm.nameLabel': 'Roadmap name (optional)',
     'practice.roadmapWizard.confirm.namePlaceholder': 'Example: Advanced frontend in 8 weeks',
     'practice.roadmapWizard.confirm.nameHint': 'Leave blank and the server will choose a name.',

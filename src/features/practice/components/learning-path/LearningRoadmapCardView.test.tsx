@@ -71,4 +71,18 @@ describe('LearningRoadmapCardView — chữ dài không được mất hẳn', (
     const subtitle = screen.getByText(/Lập trình Frontend/);
     expect(subtitle.getAttribute('title')).toContain('Lập trình Frontend');
   });
+
+  // F1 — "chế độ lộ trình" KHÔNG còn là khái niệm người dùng thấy: ôn tập và nâng trình đã gộp
+  // thành một bản trộn. Hai khoá `practice.roadmapWizard.mode.reinforce|levelUp` chưa bao giờ tồn
+  // tại trong `translations.ts`, nên thẻ hiện thẳng khoá thô cho người dùng
+  // (`Backend Developer · practice.roadmapWizard.mode.l…`). `check:i18n` KHÔNG bắt được vì nó chỉ
+  // so cân bằng vi/en chứ không kiểm khoá có tồn tại.
+  //
+  // `t` bị mock thành hàm đồng nhất, nên còn gọi `t('practice.roadmapWizard.mode.…')` là chuỗi đó
+  // nằm nguyên trong DOM ⇒ phép kiểm này bắt được cả trường hợp ai đó thêm lại khoá dịch.
+  it('không nhắc tới chế độ lộ trình ở bất kỳ đâu trên thẻ', () => {
+    const { container } = renderCard();
+    expect(container.textContent ?? '').not.toContain('roadmapWizard.mode');
+    expect(container.innerHTML).not.toContain('roadmapWizard.mode');
+  });
 });
