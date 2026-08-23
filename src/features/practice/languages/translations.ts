@@ -1051,7 +1051,12 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.source.lesson': 'Theo lộ trình',
      'practice.history.source.free': 'Luyện tự do',
      'practice.history.searchPlaceholder': 'Tìm theo lĩnh vực công việc...',
-     'practice.history.filterHint': 'Bộ lọc áp dụng cho trang hiện tại.',
+     // Lọc theo NGUỒN chạy phía server nên áp cho toàn bộ lịch sử, khác ba ô còn lại vốn chỉ lọc
+     // trang đang xem. Câu cũ ("Bộ lọc áp dụng cho trang hiện tại") nay sẽ nói sai về ô mới.
+     'practice.history.filterHint':
+       'Tìm kiếm, trạng thái và sắp xếp áp dụng cho trang hiện tại; lọc theo nguồn áp dụng cho toàn bộ lịch sử.',
+     'practice.history.filterSource': 'Lọc theo nguồn buổi luyện',
+     'practice.history.filters.allSources': 'Tất cả nguồn',
      'practice.history.filters.allStatuses': 'Tất cả trạng thái',
      'practice.history.statusGroup.completed': 'Đã hoàn thành',
      'practice.history.statusGroup.inProgress': 'Đang thực hiện',
@@ -2285,7 +2290,10 @@ export const practiceTranslations: TranslationDictionary = {
      'practice.history.source.lesson': 'From roadmap',
      'practice.history.source.free': 'Free practice',
      'practice.history.searchPlaceholder': 'Search by job field...',
-     'practice.history.filterHint': 'Filters apply to the current page only.',
+     'practice.history.filterHint':
+       'Search, status and sort apply to the current page; the source filter applies to your whole history.',
+     'practice.history.filterSource': 'Filter by practice source',
+     'practice.history.filters.allSources': 'All sources',
      'practice.history.filters.allStatuses': 'All statuses',
      'practice.history.statusGroup.completed': 'Completed',
      'practice.history.statusGroup.inProgress': 'In progress',

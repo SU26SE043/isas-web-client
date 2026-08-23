@@ -10,6 +10,7 @@ import { PracticeHistoryToolbar } from '../components/history/PracticeHistoryToo
 import { usePracticeSessionHistory } from '../hooks/usePracticeSessionHistory';
 import type {
   PracticeHistorySort,
+  PracticeHistorySourceFilter,
   PracticeHistoryStatusFilter,
 } from '../types/history.types';
 import {
@@ -25,6 +26,7 @@ export function InterviewHistoryPage() {
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<PracticeHistoryStatusFilter>('all');
+  const [source, setSource] = useState<PracticeHistorySourceFilter>('all');
   const [sort, setSort] = useState<PracticeHistorySort>('newest');
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentCursor, setCurrentCursor] = useState<string | null>(null);
@@ -36,6 +38,10 @@ export function InterviewHistoryPage() {
   const historyQuery = usePracticeSessionHistory({
     cursor: currentCursor ?? undefined,
     limit: pageSize,
+    // `all` ⇒ KHÔNG gửi `source`, backend trả tất cả. Lọc chạy phía SERVER (trong SQL, trước khi
+    // cắt trang) — cố ý không lọc lại phía client: lọc sau phân trang làm buổi hợp lệ nằm ngoài
+    // trang đầu biến mất.
+    source: source === 'all' ? undefined : source,
   });
 
   const nextCursor = historyQuery.data?.nextCursor ?? null;
@@ -53,8 +59,12 @@ export function InterviewHistoryPage() {
     [dateFilter, pageItems, search, sort, status],
   );
 
-  const hasClientFilters =
-    Boolean(search.trim()) || status !== 'all' || sort !== 'newest' || Boolean(dateFilter);
+  const hasActiveFilters =
+    Boolean(search.trim()) ||
+    status !== 'all' ||
+    source !== 'all' ||
+    sort !== 'newest' ||
+    Boolean(dateFilter);
 
   const resetPagination = () => {
     setCurrentCursor(null);
@@ -65,6 +75,10 @@ export function InterviewHistoryPage() {
   const clearFilters = () => {
     setSearch('');
     setStatus('all');
+    // Đổi nguồn là đổi TẬP dữ liệu server trả về ⇒ phải trả con trỏ trang về đầu, y như khi đổi ô
+    // lọc nguồn bên dưới.
+    setSource('all');
+    resetPagination();
     setSort('newest');
     if (dateFilter) {
       const next = new URLSearchParams(searchParams);
@@ -117,12 +131,19 @@ export function InterviewHistoryPage() {
         <PracticeHistoryToolbar
           search={search}
           status={status}
+          source={source}
           sort={sort}
           isFetching={historyQuery.isFetching}
           compareMode={compareMode}
           dateFilter={dateFilter || undefined}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
+          onSourceChange={(value) => {
+            setSource(value);
+            // Con trỏ trang thuộc về TẬP KẾT QUẢ cũ. Giữ lại là mở trang 3 của một danh sách vừa
+            // ngắn đi — trang trắng, hoặc tệ hơn là một cửa sổ dữ liệu lệch mà không báo gì.
+            resetPagination();
+          }}
           onSortChange={setSort}
           onRefresh={() => void historyQuery.refetch()}
           onToggleCompareMode={() => {
@@ -159,7 +180,7 @@ export function InterviewHistoryPage() {
             isFetching={historyQuery.isFetching}
             pageItems={pageItems}
             visibleItems={visibleItems}
-            hasClientFilters={hasClientFilters}
+            hasActiveFilters={hasActiveFilters}
             compareMode={compareMode}
             selectedIds={selectedIds}
             pageIndex={pageIndex}
