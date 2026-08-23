@@ -27,7 +27,6 @@ export type RoadmapWizardStep =
   | 'nameFocus'
   | 'cv'
   | 'currentLevel'
-  | 'mode'
   | 'targetLevel'
   | 'reports'
   | 'priorRoadmap'
@@ -161,8 +160,13 @@ export function useRoadmapWizardFlow() {
   }, [rawReports.length, allReports]);
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
-    const next: RoadmapWizardStep[] = ['domain', 'nameFocus', 'cv', 'currentLevel', 'mode', 'targetLevel'];
+    // Bước "Chế độ" (LevelUp/Reinforce) ĐÃ GỠ khỏi wizard theo quyết định sản phẩm — nó lọt vào
+    // từ một nhánh khác, không nằm trong thiết kế đã duyệt. `mode` giữ mặc định 'LevelUp' (đúng
+    // hành vi trước khi có bước đó); backend vẫn hiểu 'Reinforce' nhưng hiện KHÔNG có đường chọn
+    // từ giao diện — nêu ra để không ai tưởng chế độ ôn tập đang chạy.
+    const next: RoadmapWizardStep[] = ['domain', 'nameFocus', 'cv', 'currentLevel'];
     if (loadingReports || allReports.length > 0) next.push('reports');
+    next.push('targetLevel');
     if (loadingReports || completedRoadmaps.length > 0) next.push('priorRoadmap');
     next.push('confirm');
     return next;
@@ -177,6 +181,24 @@ export function useRoadmapWizardFlow() {
     },
     [allReports.length, cvAnalyses.length, cvFiles.length, domainId, loadReportsForDomain, loadingReports],
   );
+
+  // Điều hướng DẪN XUẤT từ `steps`, thay cho next/back ghi cứng ở từng bước.
+  // Ghi cứng là cách lỗi thứ-tự-bước ở trên sinh ra: một lần đổi thứ tự phải sửa đúng 8 chỗ,
+  // sót một chỗ thì wizard nhảy sai mà không có lỗi nào nổ. Ở đây thứ tự chỉ khai MỘT nơi.
+  //
+  // ⚠ PHẢI đi qua `goToStep`, KHÔNG gọi thẳng `setStep`: chỗ nạp dữ liệu (danh sách buổi luyện,
+  // CV, bản phân tích, roadmap cũ) nằm trong `goToStep`. Gọi tắt thì vào bước CV/Báo cáo mà
+  // không tải gì — mọi ô hiện "Bỏ qua", hai bước tuỳ chọn không bao giờ xuất hiện, và không có
+  // lỗi nào nổ. Tôi đã tự gây đúng lỗi này ở lượt đầu khi thay next/back ghi cứng.
+  const goNext = useCallback(() => {
+    const i = steps.indexOf(step);
+    if (i >= 0 && i < steps.length - 1) goToStep(steps[i + 1]);
+  }, [goToStep, step, steps]);
+  const goBack = useCallback(() => {
+    const i = steps.indexOf(step);
+    if (i > 0) goToStep(steps[i - 1]);
+  }, [goToStep, step, steps]);
+  const hasStep = useCallback((s: RoadmapWizardStep) => steps.includes(s), [steps]);
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
@@ -296,6 +318,9 @@ export function useRoadmapWizardFlow() {
     selectAllReports,
     unselectAllReports,
     goToStep,
+    goNext,
+    goBack,
+    hasStep,
     steps,
     handleCreate,
   };
