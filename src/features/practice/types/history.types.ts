@@ -78,18 +78,31 @@ export type GetPracticeSessionHistoryParams = {
    * Lọc theo NGUỒN buổi luyện — `lesson` = sinh từ bài học trong lộ trình, `free` = luyện tự do.
    * OPT-IN: vắng ⇒ trả tất cả, y hệt hôm nay.
    *
-   * ⚠ Tính đến 23/08 **backend CHƯA hỗ trợ** tham số này (`GET /practice/history` mới nhận
-   * `cursor`/`limit`/`status`/`excludeCampaign`). ASP.NET bỏ qua query param lạ, nên gửi lên sẽ
-   * nhận **200 kèm danh sách ĐẦY ĐỦ** chứ không báo lỗi. Vì vậy CHƯA có ô lọc nào trên giao diện:
-   * một ô lọc không lọc gì mà vẫn hiện "đang lọc" còn tệ hơn không có ô lọc. Kiểm tra backend đã
-   * nhận `source` chưa RỒI mới nối UI.
+   * ✅ Backend ĐÃ hỗ trợ (đo trực tiếp trên deploy dev 23/08, không suy đoán): không param ⇒ 3 buổi ·
+   * `?source=lesson` ⇒ 2 · `?source=free` ⇒ 1 · `?source=xyz` ⇒ **400**. Backend lọc trong SQL
+   * TRƯỚC khi cắt trang, và dùng chung nguồn dữ liệu với `lessonTitle`, nên nhãn trên hàng và bộ lọc
+   * không thể nói ngược nhau. Vì vậy TUYỆT ĐỐI không lọc lại phía client: lọc sau phân trang làm
+   * buổi hợp lệ nằm ngoài trang đầu biến mất.
    *
-   * ⚠ Khi nối UI, nhớ thêm `source` vào **cả `queryKey`** của `usePracticeSessionHistory` — hook
-   * đó đang dựng key từ danh sách field liệt kê tay, thiếu field mới thì hai bộ lọc khác nhau dùng
-   * chung một ô cache.
+   * ⚠ **Phân biệt HOA/thường**: `?source=LESSON` trả **400**, không phải 200. Kiểu
+   * `PracticeSessionSource` vốn là union chữ thường nên đường đi qua TypeScript an toàn — nhưng
+   * đừng `toUpperCase()` hay nhận chuỗi thô từ URL rồi đẩy thẳng xuống.
+   *
+   * ⚠ Ngữ nghĩa `free` của backend là *"không sinh từ bài học"*, RỘNG HƠN nhãn "Luyện tự do":
+   * nó gồm cả buổi phỏng vấn B2B khi trang không truyền `excludeCampaign` (trang Lịch sử hiện
+   * không truyền). Hôm nay vô hại — đo trên dev 24/24 buổi đều B2C — và `PracticeSessionHistoryItem`
+   * KHÔNG có trường nào cho biết buổi thuộc campaign, nên FE cũng chưa phân biệt được. Xem
+   * `practiceSessionSource` để biết vì sao không vá bằng cách đổi riêng nhãn ô lọc.
    */
   source?: PracticeSessionSource;
 };
+
+/**
+ * Trạng thái ô lọc nguồn buổi luyện. `all` = KHÔNG gửi `source` (backend trả tất cả) — cố ý không
+ * dùng chuỗi rỗng, vì `?source=` tuy được backend chấp nhận (đo: 200, đủ 3 buổi) nhưng gửi một
+ * tham số rỗng để nói "không lọc" là dựa vào hành vi khoan dung của server thay vì nói thẳng.
+ */
+export type PracticeHistorySourceFilter = 'all' | PracticeSessionSource;
 
 export type PracticeHistoryStatusGroup =
   | 'completed'

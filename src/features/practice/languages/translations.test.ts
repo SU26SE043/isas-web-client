@@ -184,6 +184,45 @@ describe('practiceTranslations', () => {
     }
   });
 
+  /**
+   * Ô lọc nguồn buổi luyện. Nhãn HAI lựa chọn chính dùng chung khoá với nhãn trên từng hàng của
+   * bảng (`PRACTICE_SESSION_SOURCE_LABEL_KEYS`) nên đã được `Record` ép ở tầng biên dịch; hai khoá
+   * còn lại là chuỗi tự do nên phải khoá sự TỒN TẠI ở đây — `check:i18n` chỉ so cân bằng vi/en, nên
+   * thiếu ở CẢ HAI ngôn ngữ thì nó không kêu, mà màn hình sẽ in ra nguyên chuỗi khoá.
+   */
+  it('ô lọc nguồn buổi luyện có đủ chuỗi ở cả vi lẫn en', () => {
+    for (const key of [
+      'practice.history.filterSource',
+      'practice.history.filters.allSources',
+      ...Object.values(PRACTICE_SESSION_SOURCE_LABEL_KEYS),
+    ]) {
+      expect(practiceTranslations.vi[key], `vi thiếu ${key}`).toBeTruthy();
+      expect(practiceTranslations.en[key], `en thiếu ${key}`).toBeTruthy();
+    }
+  });
+
+  // Nhãn ô lọc nguồn phải ĐỌC RA KHÁC nhau — hai lựa chọn cùng chữ thì ô lọc vô dụng.
+  it('hai lựa chọn nguồn có nhãn khác nhau, và khác nhãn "tất cả"', () => {
+    for (const lang of ['vi', 'en'] as const) {
+      const lesson = practiceTranslations[lang][PRACTICE_SESSION_SOURCE_LABEL_KEYS.lesson];
+      const free = practiceTranslations[lang][PRACTICE_SESSION_SOURCE_LABEL_KEYS.free];
+      const all = practiceTranslations[lang]['practice.history.filters.allSources'];
+      expect(new Set([lesson, free, all]).size).toBe(3);
+    }
+  });
+
+  /**
+   * Gợi ý dưới ô tìm kiếm từng viết "Bộ lọc áp dụng cho trang hiện tại" — câu đó nay SAI với ô lọc
+   * nguồn, vốn chạy phía server và áp cho toàn bộ lịch sử. Khoá bằng quan hệ (phải nhắc tới nguồn)
+   * chứ không khoá nguyên câu: khoá nguyên câu thì sửa câu chữ là test đỏ vô nghĩa.
+   */
+  it('gợi ý bộ lọc nói rõ ô lọc nguồn không chỉ áp cho trang hiện tại', () => {
+    expect(practiceTranslations.vi['practice.history.filterHint']).toContain('nguồn');
+    expect(practiceTranslations.en['practice.history.filterHint'].toLowerCase()).toContain(
+      'source',
+    );
+  });
+
   // Nút "Thử lại" của trang Báo cáo: nếu khuyết, ô báo lỗi hiện nút không chữ.
   it('nút thử lại của trang Báo cáo có chuỗi dịch ở CẢ vi lẫn en', () => {
     expect(practiceTranslations.vi['practice.reports.retry']).toBeTruthy();
