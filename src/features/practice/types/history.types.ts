@@ -1,3 +1,5 @@
+import type { PracticeSessionSource } from '../utils/practiceReportLabel';
+
 export type InterviewHistoryLevel =
   | 'intern'
   | 'fresher'
@@ -72,6 +74,21 @@ export type GetPracticeSessionHistoryParams = {
   limit?: number;
   status?: string;
   excludeCampaign?: boolean;
+  /**
+   * Lọc theo NGUỒN buổi luyện — `lesson` = sinh từ bài học trong lộ trình, `free` = luyện tự do.
+   * OPT-IN: vắng ⇒ trả tất cả, y hệt hôm nay.
+   *
+   * ⚠ Tính đến 23/08 **backend CHƯA hỗ trợ** tham số này (`GET /practice/history` mới nhận
+   * `cursor`/`limit`/`status`/`excludeCampaign`). ASP.NET bỏ qua query param lạ, nên gửi lên sẽ
+   * nhận **200 kèm danh sách ĐẦY ĐỦ** chứ không báo lỗi. Vì vậy CHƯA có ô lọc nào trên giao diện:
+   * một ô lọc không lọc gì mà vẫn hiện "đang lọc" còn tệ hơn không có ô lọc. Kiểm tra backend đã
+   * nhận `source` chưa RỒI mới nối UI.
+   *
+   * ⚠ Khi nối UI, nhớ thêm `source` vào **cả `queryKey`** của `usePracticeSessionHistory` — hook
+   * đó đang dựng key từ danh sách field liệt kê tay, thiếu field mới thì hai bộ lọc khác nhau dùng
+   * chung một ô cache.
+   */
+  source?: PracticeSessionSource;
 };
 
 export type PracticeHistoryStatusGroup =

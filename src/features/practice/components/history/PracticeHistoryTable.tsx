@@ -17,6 +17,11 @@ import {
   formatSessionDuration,
   getPracticeHistoryStatusGroup,
 } from '../../utils/practiceSessionHistoryActions';
+import {
+  PRACTICE_SESSION_SOURCE_LABEL_KEYS,
+  practiceReportTitle,
+  practiceSessionSource,
+} from '../../utils/practiceReportLabel';
 import { PracticeHistoryRowActions } from './PracticeHistoryRowActions';
 
 interface PracticeHistoryTableProps {
@@ -89,9 +94,7 @@ export function PracticeHistoryTable({
                     </TableCell>
                   ) : null}
                   <TableCell>
-                    <p className="font-medium text-foreground">
-                      {item.jobCategory.trim() || t('practice.history.unknownCategory')}
-                    </p>
+                    <PracticeSessionTitle item={item} />
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn(statusClass[group])}>
@@ -143,9 +146,7 @@ export function PracticeHistoryTable({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-foreground">
-                    {item.jobCategory.trim() || t('practice.history.unknownCategory')}
-                  </p>
+                  <PracticeSessionTitle item={item} />
                   <div className="mt-2">
                     <Badge variant="outline" className={cn(statusClass[group])}>
                       {group === 'unknown'
@@ -196,6 +197,37 @@ export function PracticeHistoryTable({
           );
         })}
       </div>
+    </>
+  );
+}
+
+/**
+ * Tiêu đề một dòng lịch sử, kèm NGUỒN của buổi (bài học trong lộ trình hay luyện tự do).
+ *
+ * 🔴 Ca thật (23/08): cột này lấy thẳng `jobCategory`, nên buổi sinh từ bài học và buổi luyện tự do
+ * cùng ngành hiện y hệt nhau — đúng một chữ "BE". Người dùng vừa học xong một bài mở lịch sử ra
+ * không có cách nào nhận ra buổi đó, và hai loại buổi khác hẳn nhau về ý nghĩa bị trộn làm một.
+ *
+ * Nhãn và cách phân loại đều lấy từ `practiceReportLabel` — KHÔNG đọc `lessonTitle` tại chỗ, để
+ * mục Báo cáo và bảng này không bao giờ nói hai điều khác nhau về cùng một buổi.
+ */
+function PracticeSessionTitle({ item }: { item: PracticeSessionHistoryItem }) {
+  const { t } = useLanguage();
+  const label = practiceReportTitle(item);
+  const source = practiceSessionSource(item);
+  const category = item.jobCategory.trim();
+
+  return (
+    <>
+      <p className="font-medium text-foreground">
+        {label.text || t('practice.history.unknownCategory')}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {t(PRACTICE_SESSION_SOURCE_LABEL_KEYS[source])}
+        {/* Buổi bài học lấy TÊN BÀI làm tiêu đề, nên ngành phải xuống dòng phụ chứ không mất đi.
+            Buổi tự do đã lấy chính ngành làm tiêu đề ⇒ nhắc lại là thừa. */}
+        {source === 'lesson' && category ? ` · ${category}` : ''}
+      </p>
     </>
   );
 }
