@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
-import { RoadmapWizardShell } from '../components/roadmap-wizard/RoadmapWizardShell';
+import { ROADMAP_WIZARD_STEP_LABEL_KEYS, RoadmapWizardShell } from '../components/roadmap-wizard/RoadmapWizardShell';
 import { RoadmapDomainStep } from '../components/roadmap-wizard/RoadmapDomainStep';
 import { RoadmapNameFocusStep } from '../components/roadmap-wizard/RoadmapNameFocusStep';
 import { RoadmapReportsStep } from '../components/roadmap-wizard/RoadmapReportsStep';
@@ -15,7 +15,7 @@ import { useRoadmapWizardFlow } from '../hooks/useRoadmapWizardFlow';
 export function RoadmapWizardPage() {
   const { t } = useLanguage();
   const flow = useRoadmapWizardFlow();
-  const stepKeys = flow.steps.map((step) => `practice.roadmapWizard.steps.${step}`);
+  const stepKeys = flow.steps.map((step) => ROADMAP_WIZARD_STEP_LABEL_KEYS[step]);
 
   return (
     <RoadmapWizardShell currentStep={Math.max(flow.steps.indexOf(flow.step), 0)} stepKeys={stepKeys}>

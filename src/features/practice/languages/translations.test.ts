@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { practiceTranslations } from './translations';
+import { ROADMAP_WIZARD_STEP_LABEL_KEYS } from '../components/roadmap-wizard/RoadmapWizardShell';
 
 /**
  * Repo KHÔNG có sẵn test này (brief giả định là có — xem báo cáo).
@@ -121,5 +122,24 @@ describe('practiceTranslations', () => {
     // Hai mục menu "Học tập" + "Lộ trình" đã gộp làm một (commit 1947e43).
     expect(practiceTranslations.vi['practice.learningPath.backToDashboard']).not.toContain('Học tập');
     expect(practiceTranslations.en['practice.learningPath.backToDashboard']).not.toContain('Learning');
+  });
+
+  // 🔴 Ca thật đã lọt ra người dùng (22/08): stepper của wizard lộ trình hiện thẳng chuỗi
+  // `practice.roadmapWizard.steps.targetLevel` ở bước 6. Gốc: page ghép khoá ĐỘNG
+  // `steps.${step}` từ id bước, mà id là `targetLevel` còn chuỗi dịch khai `steps.level`.
+  //
+  // Hai lớp lẽ ra phải bắt nhưng KHÔNG: TypeScript mù vì khoá ghép lúc chạy, và
+  // `check:i18n` chỉ so CÂN BẰNG VI/EN — cả hai ngôn ngữ cùng thiếu thì nó vẫn xanh.
+  //
+  // Nay page dùng `ROADMAP_WIZARD_STEP_LABEL_KEYS` (Record đầy đủ theo `RoadmapWizardStep`)
+  // nên quên MỘT BƯỚC là lỗi biên dịch. Test này khoá vế còn lại: khoá có tồn tại thật
+  // trong CẢ HAI ngôn ngữ, không chỉ được khai trong Record.
+  it('mọi nhãn bước của wizard lộ trình đều có chuỗi dịch ở CẢ vi lẫn en', () => {
+    const keys = Object.values(ROADMAP_WIZARD_STEP_LABEL_KEYS);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const key of keys) {
+      expect(practiceTranslations.vi[key], `thiếu vi: ${key}`).toBeTruthy();
+      expect(practiceTranslations.en[key], `thiếu en: ${key}`).toBeTruthy();
+    }
   });
 });
