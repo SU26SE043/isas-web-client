@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { practiceTranslations } from './translations';
 import { ROADMAP_WIZARD_STEP_LABEL_KEYS } from '../components/roadmap-wizard/RoadmapWizardShell';
+import { PRACTICE_SESSION_SOURCE_LABEL_KEYS } from '../utils/practiceReportLabel';
 
 /**
  * Repo KHÔNG có sẵn test này (brief giả định là có — xem báo cáo).
@@ -141,6 +142,24 @@ describe('practiceTranslations', () => {
       expect(practiceTranslations.vi[key], `thiếu vi: ${key}`).toBeTruthy();
       expect(practiceTranslations.en[key], `thiếu en: ${key}`).toBeTruthy();
     }
+  });
+
+  // Cùng lý do: `check:i18n` chỉ so CÂN BẰNG vi/en, nên khoá thiếu ở CẢ HAI ngôn ngữ vẫn xanh.
+  // Nhãn nguồn buổi luyện là thứ duy nhất phân biệt buổi bài học với buổi tự do trên bảng lịch
+  // sử — mất chuỗi dịch thì hai loại buổi lại hiện y hệt nhau, đúng bug vừa sửa.
+  it('nhãn nguồn buổi luyện (bài học / tự do) có chuỗi dịch ở CẢ vi lẫn en', () => {
+    const keys = Object.values(PRACTICE_SESSION_SOURCE_LABEL_KEYS);
+    expect(keys.length).toBe(2);
+    for (const key of keys) {
+      expect(practiceTranslations.vi[key], `thiếu vi: ${key}`).toBeTruthy();
+      expect(practiceTranslations.en[key], `thiếu en: ${key}`).toBeTruthy();
+    }
+  });
+
+  // Nút "Thử lại" của trang Báo cáo: nếu khuyết, ô báo lỗi hiện nút không chữ.
+  it('nút thử lại của trang Báo cáo có chuỗi dịch ở CẢ vi lẫn en', () => {
+    expect(practiceTranslations.vi['practice.reports.retry']).toBeTruthy();
+    expect(practiceTranslations.en['practice.reports.retry']).toBeTruthy();
   });
 
   // F8 — nhãn bước #5 là "Báo cáo", trùng chữ với mục "Báo cáo" ở sidebar

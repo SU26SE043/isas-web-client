@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatPracticeSessionStamp, practiceReportTitle } from './practiceReportLabel';
+import {
+  PRACTICE_SESSION_SOURCE_LABEL_KEYS,
+  formatPracticeSessionStamp,
+  practiceReportTitle,
+  practiceSessionSource,
+} from './practiceReportLabel';
 
 describe('formatPracticeSessionStamp', () => {
   it('không kèm ngày ⇒ chỉ giờ:phút (bảng đã có cột Ngày riêng)', () => {
@@ -60,5 +65,49 @@ describe('practiceReportTitle', () => {
 
   it('không có gì để ghép thì trả chuỗi rỗng, không trả "undefined"', () => {
     expect(practiceReportTitle({})).toEqual({ text: '', isFreePractice: true });
+  });
+});
+
+/**
+ * 🔴 Ca thật (23/08): trang Báo cáo hiện "Luyện tập theo lộ trình (0)" cho tài khoản đã học xong
+ * một bài, còn "Luyện phỏng vấn (2)" thì gộp CẢ buổi sinh từ bài học. Phân loại buổi vì thế phải
+ * có đúng MỘT định nghĩa, dùng chung cho mọi chỗ đọc nó.
+ */
+describe('practiceSessionSource', () => {
+  it('có tên bài học ⇒ buổi thuộc lộ trình', () => {
+    expect(practiceSessionSource({ lessonTitle: 'HTTP Methods', jobCategory: 'BE' })).toBe('lesson');
+  });
+
+  it('không có tên bài học ⇒ buổi luyện tự do', () => {
+    expect(practiceSessionSource({ jobCategory: 'BE' })).toBe('free');
+    expect(practiceSessionSource({ lessonTitle: null, jobCategory: 'BE' })).toBe('free');
+  });
+
+  it('tên bài học toàn khoảng trắng ⇒ vẫn là tự do, KHÔNG phải bài học tên rỗng', () => {
+    expect(practiceSessionSource({ lessonTitle: '   ', jobCategory: 'BE' })).toBe('free');
+  });
+
+  it('KHÔNG có buổi nào rơi ra ngoài hai nhóm, và không buổi nào thuộc cả hai', () => {
+    const samples = [
+      { lessonTitle: 'Bài 1' },
+      { lessonTitle: null, jobCategory: 'FE' },
+      { lessonTitle: '', jobTitle: 'BA' },
+      {},
+    ];
+    for (const sample of samples) {
+      const source = practiceSessionSource(sample);
+      expect(['lesson', 'free']).toContain(source);
+      // Đồng bộ với `practiceReportTitle`: hai nơi không được nói khác nhau về cùng một buổi.
+      expect(source === 'free').toBe(practiceReportTitle(sample).isFreePractice);
+    }
+  });
+});
+
+describe('PRACTICE_SESSION_SOURCE_LABEL_KEYS', () => {
+  it('khai đủ khoá cho cả hai nguồn (thiếu nhánh = lỗi biên dịch, không phải chuỗi khoá lọt ra UI)', () => {
+    expect(PRACTICE_SESSION_SOURCE_LABEL_KEYS).toEqual({
+      lesson: 'practice.history.source.lesson',
+      free: 'practice.history.source.free',
+    });
   });
 });
