@@ -358,43 +358,6 @@ export const learningPathService = {
     if (!report) throw new Error('REPORT_NOT_FOUND');
     return structuredClone(report);
   },
-
-  /** Flatten lesson practice reports across all roadmaps (hub /candidate/reports). */
-  async listAllPracticeReports(): Promise<
-    Array<LearningPracticeReport & { roadmapName: string; roadmapNameVi: string; lessonTitle: string; lessonTitleVi: string }>
-  > {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(250);
-    store = store.map((item) => recompute(item));
-
-    const items: Array<
-      LearningPracticeReport & {
-        roadmapName: string;
-        roadmapNameVi: string;
-        lessonTitle: string;
-        lessonTitleVi: string;
-      }
-    > = [];
-
-    for (const roadmap of store) {
-      for (const report of roadmap.reports) {
-        const lesson = roadmap.milestones
-          .flatMap((milestone) => milestone.lessons)
-          .find((item) => item.id === report.lessonId);
-        items.push({
-          ...structuredClone(report),
-          roadmapName: roadmap.name,
-          roadmapNameVi: roadmap.nameVi,
-          lessonTitle: lesson?.title ?? report.lessonId,
-          lessonTitleVi: lesson?.titleVi ?? report.lessonId,
-        });
-      }
-    }
-
-    return items.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  },
 };
 
 function milestoneSeed(

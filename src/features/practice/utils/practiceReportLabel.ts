@@ -48,3 +48,31 @@ export function practiceReportTitle(report: {
   const fallback = report.jobTitle?.trim() || report.jobCategory?.trim() || '';
   return { text: fallback, isFreePractice: true };
 }
+
+/**
+ * Nguồn của MỘT buổi luyện: sinh từ bài học trong lộ trình, hay luyện tự do.
+ *
+ * 🔴 Đây là chỗ DUY NHẤT được phép quyết định điều đó. Nó cố ý gọi lại
+ * `practiceReportTitle` thay vì tự đọc `lessonTitle`: hai nơi cùng phân loại là hai luật, và hai
+ * luật thì sẽ lệch nhau — lúc đó một buổi vừa đếm ở mục "Luyện phỏng vấn" vừa đếm ở mục "Luyện
+ * tập theo lộ trình", hoặc rơi khỏi cả hai. Muốn đổi định nghĩa thì sửa `practiceReportTitle`.
+ */
+export type PracticeSessionSource = 'lesson' | 'free';
+
+export function practiceSessionSource(report: {
+  lessonTitle?: string | null;
+  jobTitle?: string | null;
+  jobCategory?: string | null;
+}): PracticeSessionSource {
+  return practiceReportTitle(report).isFreePractice ? 'free' : 'lesson';
+}
+
+/**
+ * Khoá i18n theo nguồn. Khai bằng `Record<PracticeSessionSource, string>` chứ KHÔNG dựng khoá
+ * động `t(`...${source}`)`: khoá động thiếu bản dịch thì lặng lẽ in ra chính chuỗi khoá, còn
+ * Record thiếu nhánh là **lỗi biên dịch**. Mẫu `ROADMAP_WIZARD_STEP_LABEL_KEYS`.
+ */
+export const PRACTICE_SESSION_SOURCE_LABEL_KEYS: Record<PracticeSessionSource, string> = {
+  lesson: 'practice.history.source.lesson',
+  free: 'practice.history.source.free',
+};

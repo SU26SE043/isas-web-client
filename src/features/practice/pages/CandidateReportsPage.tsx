@@ -14,15 +14,25 @@ export function CandidateReportsPage() {
   const { language, t } = useLanguage();
   const [hub, setHub] = useState<CandidateReportsHub>(EMPTY_HUB);
   const [isHubLoading, setIsHubLoading] = useState(true);
+  // 🔴 Trước đây `catch` chỉ đặt lại hub rỗng ⇒ "không tải được" hiện ra y hệt "chưa có báo cáo
+  // nào". Người dùng vừa học xong một bài, mở trang này, thấy 0, và kết luận hệ thống không ghi
+  // nhận buổi học của họ. Tải hỏng phải NHÌN THẤY được, và phải thử lại được.
+  const [hasError, setHasError] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setIsHubLoading(true);
+    setHasError(false);
     void (async () => {
       try {
         const data = await fetchCandidateReportsHub();
         if (active) setHub(data);
       } catch {
-        if (active) setHub(EMPTY_HUB);
+        if (active) {
+          setHub(EMPTY_HUB);
+          setHasError(true);
+        }
       } finally {
         if (active) setIsHubLoading(false);
       }
@@ -30,7 +40,7 @@ export function CandidateReportsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadToken]);
 
   const scoreLabel = t('practice.reports.score');
 
@@ -48,6 +58,20 @@ export function CandidateReportsPage() {
           <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-4">
             <Loader2 className="size-5 animate-spin text-zinc-400" aria-hidden />
             <span className="text-sm text-zinc-400">{t('practice.reports.loading')}</span>
+          </div>
+        ) : hasError ? (
+          <div
+            role="alert"
+            className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span className="text-sm text-foreground">{t('practice.reports.error')}</span>
+            <button
+              type="button"
+              className="btn-secondary inline-flex self-start text-sm sm:self-auto"
+              onClick={() => setReloadToken((value) => value + 1)}
+            >
+              {t('practice.reports.retry')}
+            </button>
           </div>
         ) : (
           <>
