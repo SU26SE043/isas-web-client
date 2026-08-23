@@ -108,3 +108,71 @@ describe('PracticeHistoryTable — nhãn nguồn buổi luyện', () => {
     expect(screen.getAllByText('practice.history.source.lesson · BE')).toHaveLength(2);
   });
 });
+
+/**
+ * Ba lỗi người dùng chụp màn hình gửi về (23/08).
+ */
+describe('PracticeHistoryTable — trạng thái và thời lượng', () => {
+  // L1
+  it('header cột dùng tiêu đề "Trạng thái", KHÔNG dùng nhãn của ô lọc', () => {
+    renderTable([session()]);
+
+    expect(
+      screen.getByRole('columnheader', { name: 'practice.history.columns.status' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('columnheader', { name: 'practice.history.filterStatus' }),
+    ).not.toBeInTheDocument();
+  });
+
+  // L2 — ca chụp màn hình: chuỗi máy `SessionAbandoned` đứng cạnh nhãn đã dịch.
+  it('buổi bỏ ngang hiện nhãn đã dịch, KHÔNG in chuỗi máy `SessionAbandoned`', () => {
+    renderTable([session({ status: 'SessionAbandoned' })]);
+
+    expect(screen.queryByText('SessionAbandoned')).not.toBeInTheDocument();
+    expect(desktopRow().getByText('practice.history.status.sessionAbandoned')).toBeInTheDocument();
+  });
+
+  it('trạng thái backend chưa có nhóm cũng không lọt chuỗi máy ra UI', () => {
+    renderTable([session({ status: 'GeneratingQuestions' })]);
+
+    expect(screen.queryByText('GeneratingQuestions')).not.toBeInTheDocument();
+    expect(
+      desktopRow().getByText('practice.history.status.generatingQuestions'),
+    ).toBeInTheDocument();
+  });
+
+  it('trạng thái thật sự lạ ⇒ nói không biết, không in giá trị máy', () => {
+    renderTable([session({ status: 'SomethingBrandNew' })]);
+
+    expect(screen.queryByText('SomethingBrandNew')).not.toBeInTheDocument();
+    expect(desktopRow().getByText('practice.history.status.unknown')).toBeInTheDocument();
+  });
+
+  // L3 — ca chụp màn hình: buổi bỏ ngang hiện "2 giờ 7 phút" = độ trễ sweeper.
+  it('buổi bỏ ngang KHÔNG hiện thời lượng tính từ lúc sweeper đóng buổi', () => {
+    renderTable([
+      session({
+        status: 'SessionAbandoned',
+        createdAt: '2026-08-20T18:18:00Z',
+        completedAt: '2026-08-20T20:25:00Z',
+      }),
+    ]);
+
+    const row = desktopRow();
+    expect(row.getByText('practice.history.durationUnknown')).toBeInTheDocument();
+    expect(row.queryByText(/durationHours|durationMinutes/)).not.toBeInTheDocument();
+  });
+
+  it('buổi người dùng tự kết thúc vẫn hiện thời lượng thật', () => {
+    renderTable([
+      session({
+        status: 'Scored',
+        createdAt: '2026-08-20T18:00:00Z',
+        completedAt: '2026-08-20T18:20:00Z',
+      }),
+    ]);
+
+    expect(desktopRow().queryByText('practice.history.durationUnknown')).not.toBeInTheDocument();
+  });
+});

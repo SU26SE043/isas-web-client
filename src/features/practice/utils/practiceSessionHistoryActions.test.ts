@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PRACTICE_HISTORY_STATUS_GROUP_LABEL_KEYS,
+  PRACTICE_SESSION_STATUS_LABEL_KEYS,
   clampPracticeHistoryLimit,
   filterAndSortPracticeHistory,
   formatOverallScoreLabel,
   getPracticeHistoryStatusGroup,
+  isSystemClosedPracticeSession,
   mapPracticeHistoryToInterviewItem,
+  practiceSessionDurationMinutes,
+  practiceSessionStatusLabelKey,
 } from './practiceSessionHistoryActions';
 import {
   parsePracticeSessionHistoryPage,
@@ -148,5 +153,97 @@ describe('nhãn tên bài học đi hết dây', () => {
         createdAt: '2026-08-20T07:00:00Z',
       }).lessonTitle,
     ).toBeNull();
+  });
+});
+
+/**
+ * Tập trạng thái của enum `SessionStatus` (InterviewService). ĐỒNG BỘ TAY — hai repo nên TypeScript
+ * không bắt được khi backend thêm giá trị; test dưới là thứ duy nhất giữ danh sách khỏi trôi.
+ */
+const BACKEND_SESSION_STATUSES = [
+  'GeneratingQuestions',
+  'Ready',
+  'InProgress',
+  'Completed',
+  'Scoring',
+  'Scored',
+  'Failed',
+  'SessionAbandoned',
+] as const;
+
+/**
+ * 🔴 Ca thật (23/08): bảng Lịch sử in thẳng chuỗi máy `SessionAbandoned` cho người dùng, ngay cạnh
+ * "Đã hoàn thành" đã dịch tử tế. Nhánh cũ `item.status || t('...unknown')` ưu tiên GIÁ TRỊ MÁY nên
+ * trạng thái chưa dịch trông như nhãn hợp lệ.
+ */
+describe('practiceSessionStatusLabelKey', () => {
+  it('KHÔNG BAO GIỜ trả về chính chuỗi trạng thái thô', () => {
+    for (const status of [...BACKEND_SESSION_STATUSES, 'ToBeDetermined', 'xyz']) {
+      expect(practiceSessionStatusLabelKey(status)).not.toBe(status);
+      expect(practiceSessionStatusLabelKey(status)).toMatch(/^practice\.history\./);
+    }
+  });
+
+  it('cả 8 trạng thái backend đều có nhãn RIÊNG, không cái nào rơi về "không xác định"', () => {
+    const unknownKey = PRACTICE_HISTORY_STATUS_GROUP_LABEL_KEYS.unknown;
+    for (const status of BACKEND_SESSION_STATUSES) {
+      expect(practiceSessionStatusLabelKey(status), `thiếu nhãn: ${status}`).not.toBe(unknownKey);
+    }
+  });
+
+  it('ba trạng thái không thuộc nhóm nào vẫn có nhãn riêng (không chỉ mỗi SessionAbandoned)', () => {
+    expect(practiceSessionStatusLabelKey('SessionAbandoned')).toBe(
+      PRACTICE_SESSION_STATUS_LABEL_KEYS.sessionabandoned,
+    );
+    expect(practiceSessionStatusLabelKey('GeneratingQuestions')).toBe(
+      PRACTICE_SESSION_STATUS_LABEL_KEYS.generatingquestions,
+    );
+    expect(practiceSessionStatusLabelKey('Ready')).toBe(PRACTICE_SESSION_STATUS_LABEL_KEYS.ready);
+  });
+
+  it('trạng thái thật sự lạ ⇒ thừa nhận không biết, KHÔNG in giá trị máy', () => {
+    expect(practiceSessionStatusLabelKey('SomethingBrandNew')).toBe(
+      PRACTICE_HISTORY_STATUS_GROUP_LABEL_KEYS.unknown,
+    );
+  });
+
+  it('trạng thái đã có nhóm vẫn dùng nhãn của nhóm', () => {
+    expect(practiceSessionStatusLabelKey('Scored')).toBe(
+      PRACTICE_HISTORY_STATUS_GROUP_LABEL_KEYS.completed,
+    );
+  });
+});
+
+/**
+ * 🔴 Ca thật (23/08): buổi `SessionAbandoned` hiện "2 giờ 7 phút" (18:18 → 20:25) — đó là độ trễ
+ * của sweeper, không phải thời gian làm bài. Hệ thống KHÔNG lưu mốc người dùng thật sự dừng, nên
+ * nói không biết vẫn đúng hơn là trưng ra một con số đo nhầm thứ khác.
+ */
+describe('practiceSessionDurationMinutes', () => {
+  it('buổi bỏ ngang ⇒ null (dựng "chưa có dữ liệu"), KHÔNG phải khoảng cách tới lúc sweeper đóng', () => {
+    expect(
+      practiceSessionDurationMinutes({
+        status: 'SessionAbandoned',
+        createdAt: '2026-08-20T18:18:00Z',
+        completedAt: '2026-08-20T20:25:00Z',
+      }),
+    ).toBeNull();
+  });
+
+  it('buổi người dùng tự kết thúc vẫn giữ thời lượng thật', () => {
+    expect(
+      practiceSessionDurationMinutes({
+        status: 'Scored',
+        createdAt: '2026-08-20T18:00:00Z',
+        completedAt: '2026-08-20T18:20:00Z',
+      }),
+    ).toBe(20);
+  });
+
+  it('chỉ SessionAbandoned bị coi là hệ thống đóng — không siết rộng sang nhóm khác', () => {
+    expect(isSystemClosedPracticeSession('SessionAbandoned')).toBe(true);
+    for (const status of ['Scored', 'Completed', 'Scoring', 'Failed', 'InProgress', 'Ready']) {
+      expect(isSystemClosedPracticeSession(status), status).toBe(false);
+    }
   });
 });
