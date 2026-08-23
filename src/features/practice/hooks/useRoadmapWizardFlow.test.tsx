@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useRoadmapWizardFlow } from './useRoadmapWizardFlow';
+import { filterCompletedRoadmapsForWizard, useRoadmapWizardFlow } from './useRoadmapWizardFlow';
 
 const { navigateMock, createRoadmapMock, fetchHistoryMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -31,6 +31,13 @@ vi.mock('./useLearningRoadmaps', () => ({
 }));
 
 describe('useRoadmapWizardFlow source wiring', () => {
+  it('hides completed roadmaps without a final report', () => {
+    expect(filterCompletedRoadmapsForWizard([
+      { id: 'with-report', status: 'completed', hasFinalReport: true },
+      { id: 'without-report', status: 'completed', hasFinalReport: false },
+    ] as never).map((item) => item.id)).toEqual(['with-report']);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     createRoadmapMock.mockResolvedValue({ id: 'created-roadmap' });
@@ -73,9 +80,17 @@ describe('nạp báo cáo theo đúng số bước', () => {
     act(() => result.current.handleSelectDomain('frontend'));
     fetchHistoryMock.mockClear();
 
-    act(() => result.current.goToStep(2));
+    act(() => result.current.goToStep('reports'));
 
     await waitFor(() => expect(fetchHistoryMock).toHaveBeenCalled());
+    expect(fetchHistoryMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'Scored', excludeCampaign: true }));
+  });
+
+  it('lọc lịch sử theo Scored và loại campaign ngay từ API', async () => {
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('frontend'));
+    act(() => result.current.goToStep('reports'));
+    await waitFor(() => expect(fetchHistoryMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'Scored', excludeCampaign: true })));
   });
 
   it('đi tới bước KHÁC thì không nạp — tránh gọi mạng thừa mỗi lần bấm qua lại', async () => {
@@ -83,8 +98,8 @@ describe('nạp báo cáo theo đúng số bước', () => {
     act(() => result.current.handleSelectDomain('frontend'));
     fetchHistoryMock.mockClear();
 
-    act(() => result.current.goToStep(1));   // bước Tên & mục tiêu
-    act(() => result.current.goToStep(3));   // bước Cấp độ
+    act(() => result.current.goToStep('nameFocus'));
+    act(() => result.current.goToStep('currentLevel'));
 
     expect(fetchHistoryMock).not.toHaveBeenCalled();
   });

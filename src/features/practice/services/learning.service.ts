@@ -127,6 +127,7 @@ function normalizeCreateRoadmapResponse(
     jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,
     language: typeof payload.language === 'string' ? payload.language : input.language ?? 'vi',
     level: typeof payload.level === 'string' ? payload.level : input.targetLevel,
+    mode: payload.mode === 'Reinforce' ? 'Reinforce' : 'LevelUp',
     status: typeof payload.status === 'string' ? payload.status : 'Active',
     createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : undefined,
     completedAt: typeof payload.completedAt === 'string' ? payload.completedAt : null,
@@ -164,8 +165,9 @@ export const learningService = {
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
+    const currentLevel = input.currentLevel ? resolveApiRoadmapLevel(input.currentLevel) : undefined;
     const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
-    const payload = buildCreateRoadmapRequest(jobCategory, level, input);
+    const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
     if (!payload.ok) {
       throw new CreateRoadmapError(
         payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',

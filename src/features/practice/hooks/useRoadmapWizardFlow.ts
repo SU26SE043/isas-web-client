@@ -7,18 +7,35 @@ import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.se
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { useLanguage } from '@/shared/languages';
-import { invalidateLearningRoadmaps } from './useLearningRoadmaps';
+import { invalidateLearningRoadmaps, learningLessonQueryKey } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
 import { learningPathService } from '../services/learningPath.service';
+import { roadmapService } from '../services/roadmap.service';
 import type { LearningRoadmapCard } from '../types/learningPath.types';
 import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
 import {
   ROADMAP_DOMAINS,
-  ROADMAP_REPORT_PREVIEW_LIMIT,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
+import type { RoadmapMode } from '../types/learning.types';
+
+export type RoadmapWizardStep =
+  | 'domain'
+  | 'nameFocus'
+  | 'cv'
+  | 'currentLevel'
+  | 'mode'
+  | 'targetLevel'
+  | 'reports'
+  | 'priorRoadmap'
+  | 'confirm';
+
+/** Temporary compatibility: older list responses have no hasFinalReport yet. */
+export function filterCompletedRoadmapsForWizard(roadmaps: LearningRoadmapCard[]) {
+  return roadmaps.filter((roadmap) => roadmap.status === 'completed' && roadmap.hasFinalReport !== false);
+}
 import {
   CreateRoadmapError,
   type CreateRoadmapErrorCode,
@@ -29,12 +46,15 @@ export function useRoadmapWizardFlow() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<RoadmapWizardStep>('domain');
   const [domains] = useState<PracticeDomain[]>(() => structuredClone(ROADMAP_DOMAINS));
   const [domainId, setDomainId] = useState('');
   const [allReports, setAllReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
+  const [currentLevel, setCurrentLevel] = useState<RoadmapTargetLevel>('fresher');
+  const [currentLevelSource, setCurrentLevelSource] = useState<'cv' | 'default' | 'manual'>('default');
+  const [mode, setMode] = useState<RoadmapMode>('LevelUp');
   const [name, setName] = useState('');
   // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
   // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
@@ -50,6 +70,7 @@ export function useRoadmapWizardFlow() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<CreateRoadmapErrorCode | null>(null);
+  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
@@ -59,6 +80,8 @@ export function useRoadmapWizardFlow() {
           page: 1,
           pageSize: 100,
           includeDeleted: false,
+          status: 'Scored',
+          excludeCampaign: true,
         }),
         cvAnalysisService.listUploadedCvs().catch(() => []),
         cvAnalysisService.listAnalyses().catch(() => []),
@@ -66,39 +89,53 @@ export function useRoadmapWizardFlow() {
       ]);
       const filtered = history.interviews
         .filter((item) => item.status === 'completed' && item.domainId === nextDomainId)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, ROADMAP_REPORT_PREVIEW_LIMIT);
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setAllReports(filtered);
       setSelectedIds([]);
       setCvFiles(cvs);
       setCvAnalyses(analyses);
-      setCompletedRoadmaps(roadmaps);
+      // TODO: remove the status fallback once backend always exposes hasFinalReport.
+      setCompletedRoadmaps(filterCompletedRoadmapsForWizard(roadmaps));
       setCvId(cvs[0]?.id);
       setCvAnalysisId(undefined);
+      const inferredLevel = analyses.find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
+      if (inferredLevel && ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(inferredLevel)) {
+        setCurrentLevel(inferredLevel as RoadmapTargetLevel);
+        setCurrentLevelSource('cv');
+      } else {
+        setCurrentLevel('fresher');
+        setCurrentLevelSource('default');
+      }
       setPriorRoadmapId(undefined);
     } finally {
       setLoadingReports(false);
     }
   }, []);
 
-  // Thứ tự bước, khai một chỗ để đổi thứ tự không phải đi tìm số rải rác. Trước đây chỗ nạp
-  // báo cáo ghim số 1; khi chèn bước "Tên & mục tiêu" vào giữa, bước Báo cáo dời sang 2 và điều
-  // kiện cũ lặng lẽ không bao giờ khớp nữa — danh sách báo cáo sẽ trống mà không có lỗi nào.
-  const STEP_REPORTS = 2;
+  const steps = useMemo<RoadmapWizardStep[]>(() => {
+    const next: RoadmapWizardStep[] = ['domain', 'nameFocus', 'cv', 'currentLevel', 'mode', 'targetLevel'];
+    if (loadingReports || allReports.length > 0) next.push('reports');
+    if (loadingReports || completedRoadmaps.length > 0) next.push('priorRoadmap');
+    next.push('confirm');
+    return next;
+  }, [allReports.length, completedRoadmaps.length, loadingReports]);
 
   const goToStep = useCallback(
-    (nextStep: number) => {
-      if (nextStep === STEP_REPORTS && domainId) {
+    (nextStep: RoadmapWizardStep) => {
+      if ((nextStep === 'cv' || nextStep === 'reports') && domainId && !loadingReports && allReports.length === 0 && cvFiles.length === 0 && cvAnalyses.length === 0) {
         void loadReportsForDomain(domainId);
       }
       setStep(nextStep);
     },
-    [domainId, loadReportsForDomain],
+    [allReports.length, cvAnalyses.length, cvFiles.length, domainId, loadReportsForDomain, loadingReports],
   );
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
     setTargetLevel('');
+    setCurrentLevel('fresher');
+    setCurrentLevelSource('default');
+    setMode('LevelUp');
     setSelectedIds([]);
   };
 
@@ -120,13 +157,15 @@ export function useRoadmapWizardFlow() {
     if (!domainId || !targetLevel || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
+    setSubmitErrorMessage(null);
     try {
       const uniqueSessionIds = Array.from(
         new Set(selectedIds.map((id) => id.trim()).filter(Boolean)),
       );
-      await learningService.createRoadmap({
+      const created = await learningService.createRoadmap({
         domainId,
         targetLevel,
+        currentLevel,
         name,
         reportIds: uniqueSessionIds,
         sessionIds: uniqueSessionIds,
@@ -134,8 +173,18 @@ export function useRoadmapWizardFlow() {
         cvAnalysisId,
         priorRoadmapId,
         focus,
+        mode,
         scope,
       });
+      const firstLessonId = created.milestones?.flatMap((milestone) => milestone.lessons)[0]?.id;
+      if (created.id && firstLessonId) {
+        // Deliberately fire-and-forget: closing the tab forfeits warming the cache, and a fast click can briefly duplicate the AI request. The backend idempotency guard keeps the result correct; the narrow extra-cost window is accepted for a faster first lesson.
+        void queryClient.prefetchQuery({
+          queryKey: learningLessonQueryKey(created.id, firstLessonId),
+          queryFn: () => roadmapService.getLesson(created.id as string, firstLessonId),
+          staleTime: 60_000,
+        }).catch(() => {});
+      }
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
       navigate('/candidate/learning', { replace: true });
@@ -143,6 +192,7 @@ export function useRoadmapWizardFlow() {
       const mapped =
         error instanceof CreateRoadmapError ? error : new CreateRoadmapError('generic');
       setSubmitError(mapped.code);
+      setSubmitErrorMessage(mapped.message);
       setIsSubmitting(false);
     }
   };
@@ -164,6 +214,9 @@ export function useRoadmapWizardFlow() {
     allReports,
     selectedIds,
     targetLevel,
+    currentLevel,
+    currentLevelSource,
+    mode,
     name,
     cvId,
     cvFiles,
@@ -176,10 +229,14 @@ export function useRoadmapWizardFlow() {
     loadingReports,
     isSubmitting,
     submitError,
+    submitErrorMessage,
     selectedDomain,
     selectedReports,
     handleSelectDomain,
     setTargetLevel,
+    setCurrentLevel: (value: RoadmapTargetLevel) => { setCurrentLevel(value); setCurrentLevelSource('manual'); },
+    setCurrentLevelSource,
+    setMode,
     setName,
     setCvId,
     setFocus,
@@ -191,6 +248,7 @@ export function useRoadmapWizardFlow() {
     selectAllReports,
     unselectAllReports,
     goToStep,
+    steps,
     handleCreate,
   };
 }

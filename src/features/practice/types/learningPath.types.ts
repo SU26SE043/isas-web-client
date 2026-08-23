@@ -122,9 +122,11 @@ export interface LearningRoadmapCard {
   estimatedRemainingHours: number;
   updatedAt: string;
   readOnly: boolean;
+  hasFinalReport?: boolean;
   jobCategory?: string;
   language?: 'vi' | 'en' | string;
   level?: string;
+  mode?: 'LevelUp' | 'Reinforce' | string;
   apiStatus?: 'Active' | 'Completed' | 'Abandoned' | string;
   createdAt?: string;
   completedAt?: string | null;

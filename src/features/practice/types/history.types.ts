@@ -31,6 +31,8 @@ export interface InterviewHistoryQuery {
   pageSize?: number;
   includeDeleted?: boolean;
   cursor?: string;
+  status?: string;
+  excludeCampaign?: boolean;
 }
 
 export interface InterviewHistoryResponse {
@@ -49,6 +51,7 @@ export type PracticeSessionHistoryItem = {
   createdAt: string;
   completedAt?: string | null;
   overallScore?: number | null;
+  seniority?: string | null;
 };
 
 export type PracticeSessionHistoryPage = {
@@ -59,6 +62,8 @@ export type PracticeSessionHistoryPage = {
 export type GetPracticeSessionHistoryParams = {
   cursor?: string;
   limit?: number;
+  status?: string;
+  excludeCampaign?: boolean;
 };
 
 export type PracticeHistoryStatusGroup =

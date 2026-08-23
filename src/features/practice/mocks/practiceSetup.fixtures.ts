@@ -34,9 +34,8 @@ export const ROADMAP_TARGET_LEVELS = [
 
 export type RoadmapTargetLevel = (typeof ROADMAP_TARGET_LEVELS)[number];
 
-/** Minimum completed reports required to create a roadmap; UI preview lists up to this many */
+/** Minimum completed reports required to create a roadmap. */
 export const ROADMAP_MIN_REPORTS = 3;
-export const ROADMAP_REPORT_PREVIEW_LIMIT = 3;
 
 export const DEFAULT_PRACTICE_RUBRIC: PracticeRubricCriterion[] = [
   {

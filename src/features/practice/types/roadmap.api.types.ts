@@ -80,6 +80,7 @@ export type ApiRoadmapListItem = {
   language?: string;
   domainId?: string;
   level?: string;
+  mode?: 'LevelUp' | 'Reinforce' | string;
   targetLevel?: string;
   status?: string;
   progressPercent?: number;
@@ -94,6 +95,7 @@ export type ApiRoadmapListItem = {
   createdAt?: string;
   completedAt?: string | null;
   readOnly?: boolean;
+  hasFinalReport?: boolean;
   milestones?: ApiRoadmapMilestone[];
 };
 
