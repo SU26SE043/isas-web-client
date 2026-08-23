@@ -13,6 +13,7 @@ import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
 import type { RoadmapMode } from '../../types/learning.types';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 import { RoadmapConfirmSources } from './RoadmapConfirmSources';
+import { formatPracticeSessionStamp } from '../../utils/practiceReportLabel';
 
 interface RoadmapConfirmStepProps {
   scope: RoadmapScope;
@@ -145,8 +146,16 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
               className="rounded-lg border border-subtle bg-surface-overlay px-4 py-3 text-sm text-foreground"
             >
               {report.jobTitle}
+              {/* Danh sách này KHÔNG có cột ngày ⇒ kèm cả ngày lẫn giờ, nếu không mọi buổi cùng
+                  ngành hiện y hệt nhau và người dùng không kiểm được mình đã chọn đúng buổi chưa. */}
               <span className="mt-1 block text-caption text-muted-foreground">
-                {t(`practice.roadmapWizard.level.${report.level}`)} · {report.overallScore}
+                {[
+                  formatPracticeSessionStamp(report.date, language, { withDate: true }),
+                  t(`practice.roadmapWizard.level.${report.level}`),
+                  String(report.overallScore),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
             </li>
           ))}

@@ -730,6 +730,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.prior.title': 'Roadmap đã hoàn tất',
     'practice.roadmapWizard.prior.description': 'Có thể chọn một roadmap cũ để AI tham chiếu tiến độ trước đó.',
     'practice.roadmapWizard.prior.label': 'Roadmap tham chiếu',
+    'practice.roadmapWizard.prior.loading': 'Đang tải danh sách lộ trình đã hoàn tất…',
+    'practice.roadmapWizard.prior.empty':
+      'Bạn chưa có lộ trình nào đã hoàn tất kèm báo cáo tổng kết. Bỏ qua bước này cũng được.',
     'practice.roadmapWizard.reports.emptyOptional':
       'Chưa có báo cáo phỏng vấn cho lĩnh vực này. Bạn vẫn có thể tiếp tục tạo Roadmap.',
     'practice.roadmapWizard.reports.empty':
@@ -1955,6 +1958,9 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.prior.title': 'Completed roadmap',
     'practice.roadmapWizard.prior.description': 'Optionally choose an older roadmap for AI to reference.',
     'practice.roadmapWizard.prior.label': 'Reference roadmap',
+    'practice.roadmapWizard.prior.loading': 'Loading your completed roadmaps…',
+    'practice.roadmapWizard.prior.empty':
+      'You have no completed roadmap with a final report yet. You can skip this step.',
     'practice.roadmapWizard.reports.emptyOptional':
       'No interview reports for this domain yet. You can still continue creating a roadmap.',
     'practice.roadmapWizard.reports.empty':
