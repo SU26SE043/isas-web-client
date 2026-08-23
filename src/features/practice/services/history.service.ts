@@ -63,10 +63,10 @@ export async function getPracticeSessionHistory(
 
   const response = await apiClient.get<unknown>(b2cPracticeSessionEndpoints.history, {
     params: {
-      cursor: params.cursor || undefined,
       limit,
-      status: params.status || undefined,
-      excludeCampaign: params.excludeCampaign,
+      ...(params.cursor ? { cursor: params.cursor } : {}),
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.excludeCampaign !== undefined ? { excludeCampaign: params.excludeCampaign } : {}),
     },
   });
   return parsePracticeSessionHistoryPage(response.data, response.headers);
@@ -86,8 +86,8 @@ export async function fetchInterviewHistory(
     const pageData = await getPracticeSessionHistory({
       cursor: query.cursor || undefined,
       limit: pageSize,
-      status: 'Scored',
-      excludeCampaign: true,
+      status: query.status,
+      excludeCampaign: query.excludeCampaign,
     });
     return {
       interviews: pageData.items.map(mapPracticeHistoryToInterviewItem),
