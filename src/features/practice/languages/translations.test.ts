@@ -142,4 +142,22 @@ describe('practiceTranslations', () => {
       expect(practiceTranslations.en[key], `thiếu en: ${key}`).toBeTruthy();
     }
   });
+
+  // F8 — nhãn bước #5 là "Báo cáo", trùng chữ với mục "Báo cáo" ở sidebar
+  // (`profile.navReports`) và trang Báo cáo tổng kết lộ trình (`practice.reports.title`) — ba thứ
+  // khác hẳn nhau. Tiêu đề BÊN TRONG bước lại ghi đúng ("Chọn báo cáo phỏng vấn"), nên chính
+  // thanh tiến trình là chỗ nói sai.
+  //
+  // Khoá bằng QUAN HỆ (khác nhau, và là tiền tố của tiêu đề bước) chứ không khoá chuỗi cụ thể:
+  // khoá chuỗi thì đổi câu chữ là test đỏ vô nghĩa, mà cái cần giữ là "đọc ra không lẫn".
+  it('nhãn bước "báo cáo" của wizard không đụng nghĩa với mục Báo cáo khác trong app', () => {
+    for (const lang of ['vi', 'en'] as const) {
+      const stepLabel = practiceTranslations[lang]['practice.roadmapWizard.steps.reports'];
+      expect(stepLabel).toBeTruthy();
+      expect(stepLabel).not.toBe(practiceTranslations[lang]['practice.reports.title']);
+      // …và phải khớp tiêu đề bên trong bước, để thanh tiến trình và nội dung nói cùng một thứ.
+      const stepTitle = practiceTranslations[lang]['practice.roadmapWizard.reports.title'];
+      expect(stepTitle.toLowerCase()).toContain(stepLabel.toLowerCase());
+    }
+  });
 });

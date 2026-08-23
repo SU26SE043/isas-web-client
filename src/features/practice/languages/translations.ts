@@ -695,7 +695,10 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.steps.domain': 'Lĩnh vực',
     'practice.roadmapWizard.steps.cv': 'CV',
     'practice.roadmapWizard.steps.currentLevel': 'Trình độ hiện tại',
-    'practice.roadmapWizard.steps.reports': 'Báo cáo',
+    // KHÔNG dùng riêng chữ "Báo cáo": nó đụng nghĩa với `practice.reports.title` (trang Báo
+    // cáo tổng kết lộ trình) và `profile.navReports` ở sidebar — hai thứ khác hẳn nhau. Nhãn
+    // bước phải khớp tiêu đề bên trong bước (`reports.title` = "Chọn báo cáo phỏng vấn").
+    'practice.roadmapWizard.steps.reports': 'Báo cáo phỏng vấn',
     'practice.roadmapWizard.steps.targetLevel': 'Cấp độ mục tiêu',
     'practice.roadmapWizard.steps.confirm': 'Xác nhận',
     'practice.roadmapWizard.steps.priorRoadmap': 'Roadmap đã hoàn tất',
@@ -751,6 +754,7 @@ export const practiceTranslations: TranslationDictionary = {
     // ngưỡng đạt của từng tiêu chí.
     'practice.roadmapWizard.level.description':
       'Cấp độ này quyết định độ khó câu hỏi phỏng vấn và độ sâu bài giảng trong lộ trình. Chọn nơi bạn muốn tới, không phải nơi bạn đang đứng.',
+    'practice.roadmapWizard.level.required': 'Chọn một cấp độ để tiếp tục.',
     'practice.roadmapWizard.level.fresher': 'Mới tốt nghiệp',
     'practice.roadmapWizard.level.fresher.desc': 'Kiến thức nền tảng và câu hỏi tình huống cơ bản.',
     'practice.roadmapWizard.level.junior': 'Sơ cấp',
@@ -1929,7 +1933,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.steps.domain': 'Domain',
     'practice.roadmapWizard.steps.cv': 'CV',
     'practice.roadmapWizard.steps.currentLevel': 'Current level',
-    'practice.roadmapWizard.steps.reports': 'Reports',
+    'practice.roadmapWizard.steps.reports': 'Interview reports',
     'practice.roadmapWizard.steps.targetLevel': 'Target level',
     'practice.roadmapWizard.steps.confirm': 'Confirm',
     'practice.roadmapWizard.steps.priorRoadmap': 'Completed roadmap',
@@ -1979,6 +1983,7 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.roadmapWizard.level.title': 'Choose target level',
     'practice.roadmapWizard.level.description':
       'This level drives how hard the interview questions are and how deep the lessons go. Pick where you want to get to, not where you are now.',
+    'practice.roadmapWizard.level.required': 'Choose a level to continue.',
     'practice.roadmapWizard.level.fresher': 'Fresher',
     'practice.roadmapWizard.level.fresher.desc': 'Fundamentals and basic situational questions.',
     'practice.roadmapWizard.level.junior': 'Junior',

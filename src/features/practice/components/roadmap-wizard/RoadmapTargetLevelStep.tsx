@@ -74,7 +74,20 @@ export const RoadmapTargetLevelStep: React.FC<RoadmapTargetLevelStepProps> = ({
         tác dụng khi cha là flex-column — ở đây thì không). Hệ quả: đường kẻ dính sát đáy lưới ô,
         trông như đang cắt ngang hai ô cuối. Bọc thêm một lớp cách.
       */}
+      {/*
+        F10 — nút "Tiếp theo" bị khoá cho tới khi chọn một cấp, nhưng trước đây KHÔNG có một chữ
+        nào giải thích: người dùng bấm, không có gì xảy ra, và không biết mình thiếu gì. Một nút
+        vô hiệu không tự nói được lý do — phải có dòng chữ đi kèm.
+
+        `role="status"` để người dùng đọc màn hình nghe được thay đổi này, và nó BIẾN MẤT ngay khi
+        đã chọn: giữ lại một lời nhắc đã hết hiệu lực cũng gây nhiễu như thiếu nó.
+      */}
       <div className="mt-8">
+        {!selectedLevel ? (
+          <p className="mb-3 text-caption text-muted-foreground" role="status">
+            {t('practice.roadmapWizard.level.required')}
+          </p>
+        ) : null}
         <RoadmapWizardNav onBack={onBack} onNext={onNext} nextDisabled={!selectedLevel} />
       </div>
     </section>
