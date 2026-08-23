@@ -74,6 +74,14 @@ describe('RoadmapConfirmStep source selectors', () => {
     expect(onPriorRoadmapChange).toHaveBeenLastCalledWith(undefined);
   });
 
+  // F1 — hàng "Chế độ lộ trình" đã gỡ khỏi bản tóm tắt. Khoá `practice.roadmapWizard.mode.levelUp`
+  // chưa bao giờ tồn tại nên hàng đó hiện thẳng khoá thô; và bản thân khái niệm cũng không còn.
+  it('không còn hàng "chế độ lộ trình" trong bản tóm tắt', () => {
+    const { container } = renderStep();
+    expect(container.innerHTML).not.toContain('roadmapWizard.mode');
+    expect(screen.queryByText('practice.roadmapWizard.confirm.mode')).not.toBeInTheDocument();
+  });
+
   it('shows empty states without rendering empty selects', () => {
     const onCvAnalysisChange = vi.fn();
     const onPriorRoadmapChange = vi.fn();

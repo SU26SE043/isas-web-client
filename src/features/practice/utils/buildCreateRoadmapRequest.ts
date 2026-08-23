@@ -28,7 +28,7 @@ export function buildCreateRoadmapRequest(
   level: string,
   input: Pick<
     CreateRoadmapInput,
-    'name' | 'currentLevel' | 'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language' | 'mode' | 'scope'
+    'name' | 'currentLevel' | 'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language' | 'scope'
   >,
 ): BuildCreateRoadmapPayloadResult {
   if (!jobCategory.trim() || !level.trim()) {
@@ -54,7 +54,6 @@ export function buildCreateRoadmapRequest(
 
   if (input.currentLevel?.trim()) body.currentLevel = input.currentLevel.trim();
 
-  if (input.mode) body.mode = input.mode;
   // Chỉ gửi khi khác mặc định — backend coi vắng mặt là "Standard", nên gửi thừa
   // không sai nhưng làm payload nói nhiều hơn ý định của người dùng.
   if (input.scope && input.scope !== 'Standard') body.scope = input.scope;

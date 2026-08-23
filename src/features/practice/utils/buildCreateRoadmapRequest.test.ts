@@ -42,11 +42,24 @@ describe('buildCreateRoadmapRequest', () => {
     });
   });
 
-  it('includes the selected roadmap mode', () => {
-    const result = buildCreateRoadmapRequest('BE', 'Junior', { mode: 'Reinforce' });
+  // TIỀN ĐỀ ĐẢO CÓ CHỦ ĐÍCH (F1). Test cũ khẳng định "gửi mode người dùng đã chọn" — nhưng KHÔNG
+  // còn ai chọn: chế độ ôn tập/nâng trình đã gộp thành MỘT bản trộn, bước chọn chế độ gỡ ở
+  // `4d53085`, phần hiển thị gỡ ở vòng này. Giữ nguyên test cũ là khoá lại một đường ghi mà giao
+  // diện không còn nuôi ⇒ nó chỉ có thể mang giá trị do code tự đặt, tức một lời nói dối về ý
+  // định người dùng. Backend khai `string? Mode = null` và coi `null` là "LevelUp", nên KHÔNG gửi
+  // là hợp lệ và đúng hành vi mặc định.
+  //
+  // ⚠ Đây là ca `never` cố ý: TypeScript đã cấm `mode` (gỡ khỏi `CreateRoadmapInput`), nhưng kiểu
+  // chỉ chặn được lúc biên dịch. Ép kiểu để chứng minh vế còn lại — có ai đó nhét `mode` vào
+  // object lúc CHẠY (payload dựng động, JSON parse, `...spread` từ nguồn cũ) thì builder vẫn KHÔNG
+  // đưa nó vào body.
+  it('KHÔNG gửi mode — chế độ lộ trình không còn là lựa chọn của người dùng', () => {
+    const result = buildCreateRoadmapRequest('BE', 'Junior', {
+      mode: 'Reinforce',
+    } as unknown as Parameters<typeof buildCreateRoadmapRequest>[2]);
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'BE', level: 'Junior', language: 'vi', mode: 'Reinforce' },
+      body: { jobCategory: 'BE', level: 'Junior', language: 'vi' },
     });
   });
 
