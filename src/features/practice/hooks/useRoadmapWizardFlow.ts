@@ -18,6 +18,7 @@ import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
 import {
   ROADMAP_DOMAINS,
+  ROADMAP_TARGET_LEVELS,
   type RoadmapTargetLevel,
 } from '../mocks/practiceSetup.fixtures';
 
@@ -78,6 +79,36 @@ export function analysesForDomain(analyses: CvAnalysisResult[], domainId: string
   if (!domainId) return [];
   const wanted = domainToJobCategoryEnum(domainId as JobDomainId);
   return analyses.filter((a) => (a.jobCategory ?? '').trim().toUpperCase() === wanted);
+}
+
+/**
+ * Trình độ hiện tại suy từ bản phân tích CV — nguồn để điền mặc định bước "Trình độ hiện tại".
+ *
+ * CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào lộ trình
+ * Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập môn người học đã
+ * nắm) nên hỏng âm thầm — không lỗi nào nổ.
+ *
+ * 🔑 Tập hợp lệ lấy TỪ `ROADMAP_TARGET_LEVELS`, không khai lại bằng tay. Danh sách viết tay trước
+ * đây còn `'intern'`/`'lead'` — hai giá trị mà cả backend (`RoadmapLevel`) lẫn ô chọn của bước
+ * này đều KHÔNG có. Rơi vào đó thì `<select value="lead">` không khớp option nào nên trình duyệt
+ * sáng đèn option ĐẦU TIÊN ("Mới tốt nghiệp"), trong khi `resolveApiRoadmapLevel` lại nén `lead`
+ * thành `Senior` lúc gửi: người dùng thấy Fresher, hệ thống gửi Senior, không cảnh báo nào.
+ * Buộc hai danh sách là MỘT thì cái lệch đó không dựng lại được.
+ *
+ * `null` = không suy ra được (CV không đủ căn cứ, hoặc chưa phân tích CV nào cho lĩnh vực này) ⇒
+ * nơi gọi rơi về `fresher` và nói rõ đó là mặc định, không phải suy từ CV.
+ */
+export function inferCurrentLevelFromAnalyses(
+  analyses: CvAnalysisResult[],
+  domainId: string,
+): RoadmapTargetLevel | null {
+  for (const analysis of analysesForDomain(analyses, domainId)) {
+    const level = analysis.currentLevel?.trim().toLowerCase();
+    if (level && (ROADMAP_TARGET_LEVELS as readonly string[]).includes(level)) {
+      return level as RoadmapTargetLevel;
+    }
+  }
+  return null;
 }
 
 /** Temporary compatibility: older list responses have no hasFinalReport yet. */
@@ -162,15 +193,9 @@ export function useRoadmapWizardFlow() {
       // CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào
       // lộ trình Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập
       // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
-      const inferredLevel = analysesForDomain(analyses, nextDomainId)
-        .find((analysis) => analysis.currentLevel)?.currentLevel?.toLowerCase();
-      if (inferredLevel && ['intern', 'fresher', 'junior', 'middle', 'senior', 'lead'].includes(inferredLevel)) {
-        setCurrentLevel(inferredLevel as RoadmapTargetLevel);
-        setCurrentLevelSource('cv');
-      } else {
-        setCurrentLevel('fresher');
-        setCurrentLevelSource('default');
-      }
+      const inferredLevel = inferCurrentLevelFromAnalyses(analyses, nextDomainId);
+      setCurrentLevel(inferredLevel ?? 'fresher');
+      setCurrentLevelSource(inferredLevel ? 'cv' : 'default');
       setPriorRoadmapId(undefined);
     } finally {
       setLoadingReports(false);
