@@ -58,6 +58,20 @@ describe('PracticeSessionTopics', () => {
     expect(screen.queryByText(MOCK_SESSION_TOPICS_EIGHT[0].label)).not.toBeInTheDocument();
   });
 
+  it('renders the wizard compact preview from the selected category before session creation', () => {
+    render(
+      <PracticeSessionTopics
+        topics={null}
+        jobCategory="BE"
+        seniority="Junior"
+        variant="compact"
+      />,
+    );
+
+    expect(screen.getByText(/Backend Developer/)).toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
   it('does not expose cvEvidence when a topic has Weak cvLevel', () => {
     const weakTopic = {
       ...MOCK_SESSION_TOPICS_EIGHT[0],

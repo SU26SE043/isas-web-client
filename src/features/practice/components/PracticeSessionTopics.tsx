@@ -9,6 +9,8 @@ type PracticeSessionTopicsVariant = 'full' | 'compact';
 
 export interface PracticeSessionTopicsProps {
   topics?: PracticeSessionTopic[] | null;
+  /** Wizard preview source: the session has no catalog until it is created. */
+  jobCategory?: PracticeJobCategory | null;
   seniority?: PracticeSeniority | null;
   variant: PracticeSessionTopicsVariant;
 }
@@ -33,21 +35,27 @@ function getCategoryFromTopicKey(topicKey: string | undefined): PracticeJobCateg
 
 export function PracticeSessionTopics({
   topics,
+  jobCategory,
   seniority,
   variant,
 }: PracticeSessionTopicsProps) {
   const { t } = useLanguage();
 
-  if (!topics?.length) return null;
+  const canRenderCompactPreview = variant === 'compact' && Boolean(jobCategory);
+  if (!topics?.length && !canRenderCompactPreview) return null;
 
   const level = seniority ?? 'Junior';
   const levelLabel = t(SENIORITY_KEYS[level]);
-  const category = getCategoryFromTopicKey(topics[0]?.key);
+  const category = jobCategory ?? getCategoryFromTopicKey(topics?.[0]?.key);
   const categoryLabel = category ? t(CATEGORY_KEYS[category]) : t('practice.topics.genericCategory');
 
   if (variant === 'compact') {
     return (
-      <p className="text-sm leading-6 text-muted-foreground" data-variant="compact">
+      <p
+        className="text-sm leading-6 text-muted-foreground"
+        data-variant="compact"
+        data-testid="practice-session-topics-compact"
+      >
         {t('practice.topics.compact')
           .replace('{category}', categoryLabel)
           .replace('{seniority}', levelLabel)}
@@ -74,7 +82,7 @@ export function PracticeSessionTopics({
         className="mt-4 grid gap-2.5 sm:grid-cols-2"
         aria-label={t('practice.topics.listLabel')}
       >
-        {topics.map((topic, index) => (
+        {(topics ?? []).map((topic, index) => (
           <li
             key={topic.key}
             className="flex min-w-0 items-start gap-3 rounded-xl border border-satin/70 bg-surface-overlay px-3 py-3"

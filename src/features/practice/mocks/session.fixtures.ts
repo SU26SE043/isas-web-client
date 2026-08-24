@@ -10,6 +10,8 @@ export interface PracticeSession {
   title: string;
   description: string;
   jobCategory?: string;
+  seniority?: import('../types/b2cPracticeSession.types').PracticeSeniority | null;
+  topics?: import('../types/b2cPracticeSession.types').PracticeSessionTopic[] | null;
   status: 'initializing' | 'ready' | 'in_progress' | 'completed';
   questions: PracticeQuestion[];
   campaignId?: string;
