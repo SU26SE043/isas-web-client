@@ -4,6 +4,7 @@ import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
 import { useLiveReportTabs } from '../../hooks/useLiveReportTabs';
 import { mapPracticeSessionResponseToViewModel } from '../../utils/practiceSessionResultViewModel';
+import { PracticeSessionTopics } from '../PracticeSessionTopics';
 import { LiveReportTabBar } from './LiveReportTabBar';
 import { ReportCriteriaScores } from './ReportCriteriaScores';
 import { ReportOverview } from './ReportOverview';
@@ -38,7 +39,24 @@ export function PracticeLiveResultReport({
 
       <div className="min-h-[320px]" role="tabpanel">
         {activeTab === 'overview' ? <ReportOverview view={view} /> : null}
-        {activeTab === 'criteria' ? <ReportCriteriaScores view={view} /> : null}
+        {activeTab === 'criteria' ? (
+          <div
+            className={
+              session.topics?.length
+                ? 'grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] lg:items-start'
+                : undefined
+            }
+          >
+            <ReportCriteriaScores view={view} />
+            {session.topics?.length ? (
+              <PracticeSessionTopics
+                topics={session.topics}
+                seniority={session.seniority}
+                variant="full"
+              />
+            ) : null}
+          </div>
+        ) : null}
         {activeTab === 'questions' ? (
           <ReportQuestionDetail
             questions={view.questions}
