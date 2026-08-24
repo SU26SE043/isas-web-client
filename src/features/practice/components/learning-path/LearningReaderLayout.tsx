@@ -65,6 +65,7 @@ function LearningReaderShell() {
     );
   }
 
+  // DashboardLayout sở hữu header Learning 3.5rem dùng chung; giữ offset reader thẳng hàng.
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
       <div
@@ -78,24 +79,26 @@ function LearningReaderShell() {
         ) : null}
       </div>
 
-      <div className="relative min-w-0 flex-1">
-        <button
-          type="button"
-          className="absolute left-3 top-3 z-20 hidden rounded-lg border border-subtle bg-surface-elevated p-2 text-muted-foreground transition hover:text-foreground lg:inline-flex"
-          aria-pressed={sidebarOpen}
-          aria-label={
-            sidebarOpen
-              ? t('practice.learningPath.hideSidebar')
-              : t('practice.learningPath.showSidebar')
-          }
-          onClick={() => setSidebarOpen((value) => !value)}
-        >
-          {sidebarOpen ? (
-            <PanelLeftClose className="size-4" aria-hidden />
-          ) : (
-            <PanelLeft className="size-4" aria-hidden />
-          )}
-        </button>
+      <div className="min-w-0 flex-1">
+        <div className="hidden h-12 items-center border-b border-subtle px-4 lg:flex">
+          <button
+            type="button"
+            className="rounded-lg border border-subtle bg-surface-elevated p-2 text-muted-foreground transition hover:text-foreground"
+            aria-pressed={sidebarOpen}
+            aria-label={
+              sidebarOpen
+                ? t('practice.learningPath.hideSidebar')
+                : t('practice.learningPath.showSidebar')
+            }
+            onClick={() => setSidebarOpen((value) => !value)}
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="size-4" aria-hidden />
+            ) : (
+              <PanelLeft className="size-4" aria-hidden />
+            )}
+          </button>
+        </div>
 
         <details className="border-b border-subtle lg:hidden">
           <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground">

@@ -13,7 +13,11 @@ interface PracticeHistoryContentProps {
   isFetching: boolean;
   pageItems: PracticeSessionHistoryItem[];
   visibleItems: PracticeSessionHistoryItem[];
-  hasClientFilters: boolean;
+  /**
+   * Có bộ lọc nào đang bật không — GỒM CẢ bộ lọc chạy phía server (`source`), không chỉ bộ lọc
+   * phía client. Tên cũ `hasClientFilters` nay sẽ nói dối.
+   */
+  hasActiveFilters: boolean;
   compareMode: boolean;
   selectedIds: string[];
   pageIndex: number;
@@ -36,7 +40,7 @@ export function PracticeHistoryContent({
   isFetching,
   pageItems,
   visibleItems,
-  hasClientFilters,
+  hasActiveFilters,
   compareMode,
   selectedIds,
   pageIndex,
@@ -81,7 +85,11 @@ export function PracticeHistoryContent({
     );
   }
 
-  if (pageItems.length === 0) {
+  // 🔴 Bộ lọc `source` chạy phía SERVER, nên lọc không ra gì làm `pageItems` RỖNG — rơi thẳng vào
+  // ô "bạn chưa có buổi luyện nào" kèm nút "Luyện tập mới". Với người có sẵn 3 buổi mà vừa bấm
+  // "Theo lộ trình", đó là một câu nói dối, và nút nó đưa ra cũng sai việc. Còn bộ lọc thì phải
+  // rơi xuống nhánh "không tìm thấy phiên phù hợp" bên dưới — nhánh có nút xoá lọc.
+  if (pageItems.length === 0 && !hasActiveFilters) {
     return (
       <EmptyState
         variant="no-data"
@@ -103,7 +111,7 @@ export function PracticeHistoryContent({
         title={t('practice.history.emptyFilteredTitle')}
         description={t('practice.history.emptyFilteredDesc')}
         action={
-          hasClientFilters ? (
+          hasActiveFilters ? (
             <Button type="button" variant="outline" onClick={onClearFilters}>
               {t('practice.history.clearFilters')}
             </Button>

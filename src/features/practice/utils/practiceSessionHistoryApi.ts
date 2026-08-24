@@ -63,6 +63,10 @@ export function parsePracticeSessionHistoryItem(
     createdAt,
     completedAt: pickString(record, 'completedAt', 'CompletedAt'),
     overallScore: pickNumber(record, 'overallScore', 'OverallScore'),
+    seniority: pickString(record, 'seniority', 'Seniority', 'level', 'Level'),
+    // `pickString` trả `null` cho cả "vắng field" lẫn "chuỗi rỗng" — đúng ngữ nghĩa ở đây, vì cả
+    // hai đều nghĩa là "không có nhãn bài học", tức buổi luyện tự do.
+    lessonTitle: pickString(record, 'lessonTitle', 'LessonTitle'),
   };
 }
 

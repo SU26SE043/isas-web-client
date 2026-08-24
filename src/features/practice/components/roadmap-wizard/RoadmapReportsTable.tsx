@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { InterviewHistoryItem } from '../../types/history.types';
+import { formatPracticeSessionStamp, practiceReportTitle } from '../../utils/practiceReportLabel';
 
 interface RoadmapReportsTableProps {
   reports: InterviewHistoryItem[];
@@ -29,12 +30,17 @@ export function RoadmapReportsTable({
   const { language, t } = useLanguage();
   const allSelected = reports.length > 0 && reports.every((item) => selectedIds.includes(item.id));
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
+  // Có guard vì `new Date('')` cho ra chuỗi "Invalid Date" HIỂN THỊ THẲNG cho người dùng —
+  // lỗi có sẵn, lộ ra khi thêm test cho dòng thiếu mốc thời gian.
+  const formatDate = (iso: string) => {
+    const value = new Date(iso);
+    if (!iso || Number.isNaN(value.getTime())) return '—';
+    return value.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
+  };
 
   const statusLabel = (status: InterviewHistoryItem['status']) => {
     if (status === 'in-progress') return t('practice.history.status.inProgress');
@@ -78,6 +84,9 @@ export function RoadmapReportsTable({
         <TableBody>
           {reports.map((report) => {
             const checked = selectedIds.includes(report.id);
+            // Người dùng đọc màn hình cũng chỉ nghe "BE" cho mọi ô tick nếu không kèm mốc giờ.
+            const stamp = formatPracticeSessionStamp(report.date, language, { withDate: true });
+            const title = practiceReportTitle(report);
             return (
               <TableRow key={report.id} data-state={checked ? 'selected' : undefined}>
                 <TableCell>
@@ -85,12 +94,32 @@ export function RoadmapReportsTable({
                     type="checkbox"
                     className="size-4 accent-foreground"
                     checked={checked}
-                    aria-label={report.jobTitle}
+                    aria-label={stamp ? `${title.text} · ${stamp}` : title.text}
                     onChange={() => onToggle(report.id)}
                   />
                 </TableCell>
                 <TableCell>
-                  <p className="font-medium text-foreground">{report.jobTitle}</p>
+                  {/* Buổi luyện TỰ DO không có tên thật ⇒ nhãn ghép phải NHÌN RA được là nhãn
+                      ghép: tiền tố + chữ nghiêng nhạt. Trình bày nó y như một tên bài học là nói
+                      dối người dùng về nguồn gốc dòng đó. */}
+                  <p
+                    className={
+                      title.isFreePractice
+                        ? 'italic font-medium text-muted-foreground'
+                        : 'font-medium text-foreground'
+                    }
+                  >
+                    {title.isFreePractice
+                      ? `${t('practice.roadmapWizard.reports.freePractice')}${title.text ? ` · ${title.text}` : ''}`
+                      : title.text}
+                  </p>
+                  {/* Dòng phụ = giờ bắt đầu. Cột Ngày tách được các buổi khác ngày, nhưng hai buổi
+                      CÙNG ngày cùng ngành thì trước đây hiện y hệt nhau. */}
+                  {formatPracticeSessionStamp(report.date, language) ? (
+                    <p className="text-xs text-muted-foreground">
+                      {formatPracticeSessionStamp(report.date, language)}
+                    </p>
+                  ) : null}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(report.date)}

@@ -28,6 +28,12 @@ describe('buildCreatePracticeSessionRequest', () => {
     ).toThrow(/jobCategory/i);
   });
 
+  it('requires seniority — bỏ trống thì server tự điền Junior, đúng bug đang gỡ', () => {
+    expect(() =>
+      buildCreatePracticeSessionRequest({ ...baseState(), seniority: null }),
+    ).toThrow(/seniority/i);
+  });
+
   it('omits empty cvId and jdId', () => {
     const request = buildCreatePracticeSessionRequest({
       ...baseState(),
@@ -71,6 +77,10 @@ describe('canStartPracticeSession', () => {
 
   it('rejects missing job category', () => {
     expect(canStartPracticeSession({ ...baseState(), jobCategory: null })).toBe(false);
+  });
+
+  it('rejects missing seniority', () => {
+    expect(canStartPracticeSession({ ...baseState(), seniority: null })).toBe(false);
   });
 
   it('rejects invalid question counts', () => {

@@ -47,7 +47,9 @@ export function usePracticeSetupFlow() {
   const [timeLimitSec, setTimeLimitSec] = useState<PracticeTimeLimitSec>(120);
   const [questionCount, setQuestionCount] = useState(5);
   const [rubricCriterionIds, setRubricCriterionIds] = useState<string[]>([]);
-  const [seniority, setSeniority] = useState<PracticeSeniority>('Junior');
+  // KHÔNG mặc định trình độ. Mặc định 'Junior' im lặng khiến ứng viên senior không bấm đổi
+  // bước này vẫn nhận trọn bộ câu hỏi Junior — không lỗi, không cảnh báo, sau khi đã trừ credit.
+  const [seniority, setSeniority] = useState<PracticeSeniority | null>(null);
   // Mặc định BẬT đào sâu — giữ nguyên hành vi mà mọi buổi đang có; ứng viên phải chủ động tắt.
   const [adaptiveEnabled, setAdaptiveEnabled] = useState(true);
   // null = chưa biết dải server cho phép ⇒ không gửi, để server dùng mặc định của chính nó.

@@ -166,7 +166,10 @@ function instantFeedback(): LearningPracticeQuestionFeedback {
 
 export const learningPathService = {
   /** Always live — GET /api/v1/interview/practice/roadmaps */
-  async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
+  async listRoadmaps(
+    query: LearningDashboardQuery = {},
+    options: { enrichCurrentPointers?: boolean } = {},
+  ): Promise<LearningRoadmapCard[]> {
     if (usesMockData('practice')) {
       await mockDelay(200);
       let items: LearningRoadmapCard[] = store.map(
@@ -193,7 +196,7 @@ export const learningPathService = {
           : +new Date(right.updatedAt) - +new Date(left.updatedAt),
       );
     }
-    return roadmapService.listRoadmaps(query);
+    return roadmapService.listRoadmaps(query, options);
   },
 
   /** Always live — GET /api/v1/interview/practice/roadmaps/{id} */
@@ -208,7 +211,7 @@ export const learningPathService = {
   },
 
   async registerCreatedRoadmap(input: CreateRoadmapInput & { roadmapId?: string }): Promise<LearningRoadmapDetail> {
-    await mockDelay(200);
+    if (usesMockData('practice')) await mockDelay(200);
     const domain = ROADMAP_DOMAINS.find((item) => item.id === input.domainId);
     const id = input.roadmapId ?? `roadmap-${input.domainId}-${Date.now()}`;
     const created: LearningRoadmapDetail = {
@@ -355,43 +358,6 @@ export const learningPathService = {
     if (!report) throw new Error('REPORT_NOT_FOUND');
     return structuredClone(report);
   },
-
-  /** Flatten lesson practice reports across all roadmaps (hub /candidate/reports). */
-  async listAllPracticeReports(): Promise<
-    Array<LearningPracticeReport & { roadmapName: string; roadmapNameVi: string; lessonTitle: string; lessonTitleVi: string }>
-  > {
-    if (!usesMockData('practice')) {
-      throw new Error('Learning path API is not wired yet.');
-    }
-    await mockDelay(250);
-    store = store.map((item) => recompute(item));
-
-    const items: Array<
-      LearningPracticeReport & {
-        roadmapName: string;
-        roadmapNameVi: string;
-        lessonTitle: string;
-        lessonTitleVi: string;
-      }
-    > = [];
-
-    for (const roadmap of store) {
-      for (const report of roadmap.reports) {
-        const lesson = roadmap.milestones
-          .flatMap((milestone) => milestone.lessons)
-          .find((item) => item.id === report.lessonId);
-        items.push({
-          ...structuredClone(report),
-          roadmapName: roadmap.name,
-          roadmapNameVi: roadmap.nameVi,
-          lessonTitle: lesson?.title ?? report.lessonId,
-          lessonTitleVi: lesson?.titleVi ?? report.lessonId,
-        });
-      }
-    }
-
-    return items.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  },
 };
 
 function milestoneSeed(
@@ -417,6 +383,9 @@ function milestoneSeed(
         order: index + 1,
         theoryStatus: order === 1 && index === 0 ? 'available' : 'locked',
         practiceStatus: 'locked',
+        // Lộ trình vừa tạo: chưa luyện lần nào nên chưa có gì để làm lại.
+        attemptCount: 0,
+        canRetry: false,
         content: html.content,
         contentVi: html.contentVi,
         status: 'not_started' as const,

@@ -77,11 +77,16 @@ function renderFlow() {
   return renderHook(() => usePracticeSetupFlow(), { wrapper });
 }
 
-/** Chọn ngành, chờ session-options, rồi ghé bước 5 để rubric được tải. */
+/**
+ * Chọn ngành, chờ session-options, rồi ghé bước 5 để rubric được tải.
+ * Chọn luôn trình độ vì ứng viên đi tới bước tiêu chí là đã qua bước trình độ —
+ * bước đó nay bắt buộc chọn (không còn mặc định 'Junior' im lặng).
+ */
 async function goToCriteriaStep(result: { current: ReturnType<typeof usePracticeSetupFlow> }) {
   act(() => result.current.setJobCategory('BE'));
   await waitFor(() => expect(result.current.sessionOptions).not.toBeNull());
   act(() => result.current.goToStep(5));
+  act(() => result.current.setSeniority('Junior'));
   await waitFor(() => expect(result.current.rubricCriteria).toHaveLength(CRITERIA.length));
 }
 
@@ -170,6 +175,56 @@ describe('usePracticeSetupFlow — lựa chọn số câu hỏi', () => {
 
     await waitFor(() => expect(result.current.sessionOptions).not.toBeNull());
     expect(result.current.sessionOptionsError).toBeNull();
+  });
+});
+
+describe('usePracticeSetupFlow — trình độ phỏng vấn', () => {
+  it('không tự chọn trình độ nào cho ứng viên', () => {
+    const { result } = renderFlow();
+
+    // Mặc định im lặng 'Junior' từng khiến ứng viên senior nhận trọn bộ câu hỏi Junior.
+    expect(result.current.seniority).toBeNull();
+  });
+
+  it('chưa chọn trình độ thì không cho bắt đầu buổi luyện', async () => {
+    const { result } = renderFlow();
+    act(() => result.current.setJobCategory('BE'));
+    await waitFor(() => expect(result.current.sessionOptions).not.toBeNull());
+    act(() => result.current.goToStep(5));
+    await waitFor(() => expect(result.current.rubricCriteria).toHaveLength(CRITERIA.length));
+
+    expect(result.current.seniority).toBeNull();
+    expect(result.current.canStart).toBe(false);
+
+    act(() => result.current.setSeniority('Senior'));
+
+    await waitFor(() => expect(result.current.canStart).toBe(true));
+  });
+
+  it('gửi đúng trình độ ứng viên đã chọn, không phải mặc định', async () => {
+    const { result } = renderFlow();
+    await goToCriteriaStep(result);
+    act(() => result.current.setSeniority('Senior'));
+    await waitFor(() => expect(result.current.canStart).toBe(true));
+
+    await act(async () => {
+      await result.current.handleStart();
+    });
+
+    expect(mocks.createPracticeSession.mock.calls[0][0].seniority).toBe('Senior');
+  });
+
+  it('không bao giờ bỏ trống trình độ trong payload — server sẽ tự điền Junior', async () => {
+    const { result } = renderFlow();
+    await goToCriteriaStep(result);
+    await waitFor(() => expect(result.current.canStart).toBe(true));
+
+    await act(async () => {
+      await result.current.handleStart();
+    });
+
+    const payload = mocks.createPracticeSession.mock.calls[0][0];
+    expect(payload.seniority).toBeDefined();
   });
 });
 

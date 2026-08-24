@@ -1,15 +1,7 @@
-import { Link } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
+import { LearningCreditWarningDialog } from '../learning-path/LearningCreditWarningDialog';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -22,6 +14,8 @@ interface LearningWaitingStartPanelProps {
   onStart: () => void;
   canStart: boolean;
   isReady: boolean;
+  hasSufficientTokens: boolean;
+  creditsRemaining: number;
 }
 
 export function LearningWaitingStartPanel({
@@ -33,8 +27,17 @@ export function LearningWaitingStartPanel({
   onStart,
   canStart,
   isReady,
+  hasSufficientTokens,
+  creditsRemaining,
 }: LearningWaitingStartPanelProps) {
   const { t } = useLanguage();
+  const handleStart = () => {
+    if (!hasSufficientTokens) {
+      onCreditOpenChange(true);
+      return;
+    }
+    onStart();
+  };
 
   return (
     <>
@@ -55,7 +58,7 @@ export function LearningWaitingStartPanel({
           type="button"
           className="btn-primary inline-flex items-center justify-center gap-2"
           disabled={isStarting || !canStart || !isReady}
-          onClick={onStart}
+          onClick={handleStart}
         >
           {isStarting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
           {isStarting
@@ -81,24 +84,15 @@ export function LearningWaitingStartPanel({
         ) : null}
       </div>
 
-      <Dialog open={creditOpen} onOpenChange={onCreditOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('practice.learningPath.insufficientCreditsTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('practice.learningPath.insufficientCreditsDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onCreditOpenChange(false)}>
-              {t('practice.learningPath.backToRoadmap')}
-            </Button>
-            <Link to="/candidate/credits" className="btn-primary inline-flex">
-              {t('practice.learningPath.buyCredits')}
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LearningCreditWarningDialog
+        open={creditOpen}
+        onOpenChange={onCreditOpenChange}
+        balance={creditsRemaining}
+        onContinue={() => {
+          onCreditOpenChange(false);
+          onStart();
+        }}
+      />
     </>
   );
 }

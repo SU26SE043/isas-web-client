@@ -7,7 +7,8 @@ import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 const SENIORITIES: PracticeSeniority[] = ['Fresher', 'Junior', 'Middle', 'Senior'];
 
 interface PracticeSeniorityStepProps {
-  value: PracticeSeniority;
+  /** null = chưa chọn. Không tiền chọn mức nào — xem `usePracticeSetupFlow`. */
+  value: PracticeSeniority | null;
   disabled?: boolean;
   onSelect: (value: PracticeSeniority) => void;
   onBack: () => void;
@@ -28,7 +29,7 @@ export function PracticeSeniorityStep({
       icon={<BriefcaseBusiness className="size-4" aria-hidden />}
       title={t('practice.wizard.level.title')}
       description={t('practice.wizard.level.description')}
-      footer={<PracticeWizardNav onBack={onBack} onNext={onNext} nextDisabled={disabled} />}
+      footer={<PracticeWizardNav onBack={onBack} onNext={onNext} nextDisabled={!value || disabled} />}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         {SENIORITIES.map((seniority) => (

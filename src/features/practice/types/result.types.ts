@@ -6,6 +6,19 @@ export interface RadarData {
   fullMark: number;
   rawScore?: number;
   maxScore?: number;
+  /**
+   * C = % của buổi ĐẦU TIÊN ("lúc bắt đầu"), để so với A ("gần đây").
+   *
+   * `null` = tiêu chí mới có ĐÚNG MỘT buổi ⇒ không có mốc xuất phát để so.
+   * KHÔNG được quy về 0: vẽ mốc thiếu thành 0 làm người học trông như đang VƯỢT
+   * chính mình ở đúng tiêu chí chưa hề có mốc — sai lệch nghiêng về phía KHEN,
+   * tức kiểu sai không ai đi báo (tiền lệ F14).
+   */
+  C?: number | null;
+  /** Tổng số buổi có chấm tiêu chí này. Các nan KHÔNG cùng cỡ mẫu ⇒ độ tin cậy khác nhau. */
+  sessionCount?: number;
+  /** Số buổi thực sự dùng để tính A (tối đa 3). */
+  recentCount?: number;
 }
 
 export interface GapAnalysisItem {

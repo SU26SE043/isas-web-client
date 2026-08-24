@@ -50,8 +50,8 @@ function resolveJobCategoryFromDomainId(domainId: string): JobCategoryEnum {
   return resolveJobDomainFromCategory(domainId)?.jobCategoryEnum ?? 'FE';
 }
 
-/** Map wizard UI levels (incl. intern/lead) → API Fresher|Junior|Middle|Senior. */
-function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
+/** Map wizard UI levels to API levels; unsupported values must be handled explicitly. */
+export function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
   const mapped: Record<string, PracticeLevel> = {
     intern: 'Fresher',
     fresher: 'Fresher',
@@ -61,7 +61,11 @@ function resolveApiRoadmapLevel(targetLevel: string): PracticeLevel {
     lead: 'Senior',
   };
   const key = targetLevel.trim().toLowerCase();
-  return mapped[key] ?? resolvePracticeLevel(targetLevel) ?? 'Fresher';
+  const resolved = mapped[key] ?? resolvePracticeLevel(targetLevel);
+  if (!resolved) {
+    throw new CreateRoadmapError('unsupported_level');
+  }
+  return resolved;
 }
 
 function normalizeRoadmapSteps(raw: unknown): RoadmapStep[] {
@@ -117,11 +121,13 @@ function normalizeCreateRoadmapResponse(
     regenerateLimit: Number(payload.regenerateLimit ?? MOCK_ROADMAP.regenerateLimit),
     domainId: input.domainId,
     targetLevel: input.targetLevel,
+    name: typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim() : input.name?.trim() || undefined,
     // Keep selected scored sessions available to the wizard/history UI as well.
     sourceReportIds: input.reportIds ? [...input.reportIds] : [],
     jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,
     language: typeof payload.language === 'string' ? payload.language : input.language ?? 'vi',
     level: typeof payload.level === 'string' ? payload.level : input.targetLevel,
+    mode: payload.mode === 'Reinforce' ? 'Reinforce' : 'LevelUp',
     status: typeof payload.status === 'string' ? payload.status : 'Active',
     createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : undefined,
     completedAt: typeof payload.completedAt === 'string' ? payload.completedAt : null,
@@ -159,8 +165,9 @@ export const learningService = {
     }
 
     const level = resolveApiRoadmapLevel(input.targetLevel);
+    const currentLevel = input.currentLevel ? resolveApiRoadmapLevel(input.currentLevel) : undefined;
     const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
-    const payload = buildCreateRoadmapRequest(jobCategory, level, input);
+    const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
     if (!payload.ok) {
       throw new CreateRoadmapError(
         payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',

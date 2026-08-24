@@ -1,10 +1,17 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, BookOpen, BrainCircuit, Code2, Database, FileCode2, Loader2, Lock, Star } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Code2, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
-import { useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
+import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
+import { LearningCreditWarningDialog } from '../components/learning-path/LearningCreditWarningDialog';
+import { LearningRoadmapCreditSummary } from '../components/learning-path/LearningRoadmapCreditSummary';
+import { LearningRoadmapMilestones } from '../components/learning-path/LearningRoadmapMilestones';
+import { RoadmapNameEditor } from '../components/learning-path/RoadmapNameEditor';
+import { RoadmapSourceSection } from '../components/learning-path/RoadmapSourceSection';
+import { invalidateLearningRoadmaps, updateRoadmapNameInCache, useLearningRoadmapDetail } from '../hooks/useLearningRoadmaps';
 import { roadmapService } from '../services/roadmap.service';
 import {
   learningInterviewPreparePath,
@@ -13,8 +20,16 @@ import {
 export function LearningRoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { language, t } = useLanguage();
   const [launchingLessonId, setLaunchingLessonId] = useState<string | null>(null);
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [creditRejected, setCreditRejected] = useState(false);
+  const [launchError, setLaunchError] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [pendingPractice, setPendingPractice] = useState<{ lessonId: string; title: string } | null>(null);
+  const { available: creditsRemaining } = useTokenWallet();
 
   const { data: roadmap, isLoading, isError, error, refetch, isFetching } =
     useLearningRoadmapDetail(roadmapId);
@@ -74,8 +89,20 @@ export function LearningRoadmapDetailPage() {
   }
 
   const title = language === 'vi' ? roadmap.nameVi : roadmap.name;
-  const openPractice = async (lessonId: string, lessonTitle: string, sessionId?: string | null) => {
+  const resolvedFrom = roadmap.resolvedFrom;
+  const remainingLessons = roadmap.milestones.reduce(
+    (sum, milestone) => sum + milestone.lessons.filter((lesson) => lesson.apiStatus !== 'Done').length,
+    0,
+  );
+  const openPractice = async (lessonId: string, lessonTitle: string, sessionId?: string | null, bypassCreditWarning = false) => {
+    if (!sessionId && !bypassCreditWarning && (creditsRemaining ?? 0) < 1) {
+      setCreditRejected(false);
+      setPendingPractice({ lessonId, title: lessonTitle });
+      setCreditOpen(true);
+      return;
+    }
     setLaunchingLessonId(lessonId);
+    setLaunchError(false);
     try {
       if (sessionId) {
         navigate(learningInterviewPreparePath(sessionId, { roadmapId, lessonId }));
@@ -88,11 +115,34 @@ export function LearningRoadmapDetailPage() {
       });
       if (!result.ok) {
         setLaunchingLessonId(null);
+        if (result.code === 'insufficient_credits') {
+          setCreditRejected(true);
+          setPendingPractice({ lessonId, title: lessonTitle });
+          setCreditOpen(true);
+        } else {
+          setLaunchError(true);
+        }
         return;
       }
       navigate(learningInterviewPreparePath(result.session.sessionId, { roadmapId, lessonId }));
     } catch {
       setLaunchingLessonId(null);
+      setLaunchError(true);
+    }
+  };
+
+  const saveRoadmapName = async (nextName: string) => {
+    setIsSavingName(true);
+    setRenameError(null);
+    try {
+      const savedName = await roadmapService.renameRoadmap(roadmap.id, nextName);
+      updateRoadmapNameInCache(queryClient, roadmap.id, savedName);
+      await invalidateLearningRoadmaps(queryClient);
+    } catch {
+      setRenameError(t('practice.learningPath.renameError'));
+      throw new Error('ROADMAP_NAME_SAVE_FAILED');
+    } finally {
+      setIsSavingName(false);
     }
   };
 
@@ -106,7 +156,12 @@ export function LearningRoadmapDetailPage() {
       <header className="relative mt-5 space-y-4 overflow-hidden rounded-2xl border border-info/45 bg-surface-raised/70 p-6 shadow-[0_20px_60px_-40px_rgba(59,130,246,0.85)] sm:p-8">
         <div className="absolute -right-12 -top-16 size-52 rounded-full border border-info/20" aria-hidden />
         <div className="relative flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl border border-info/45 bg-info/10 text-info"><Code2 className="size-6" aria-hidden /></span><p className="text-sm font-medium text-muted-foreground">{language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} · {t(`practice.learningPath.status.${roadmap.status}`)}</p></div>
-        <h1 className="relative heading-primary text-4xl text-foreground sm:text-5xl">{title}</h1>
+        <RoadmapNameEditor
+          name={title}
+          isSaving={isSavingName}
+          error={renameError}
+          onSave={saveRoadmapName}
+        />
         <p className="text-sm text-muted-foreground">
           {(language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel)} ·{' '}
           {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} ·{' '}
@@ -122,128 +177,52 @@ export function LearningRoadmapDetailPage() {
             <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500" style={{ width: `${roadmap.progressPercent}%` }} />
           </div>
         </div>
+        <LearningRoadmapCreditSummary remainingLessons={remainingLessons} balance={creditsRemaining ?? 0} />
       </header>
 
-      {roadmap.status === 'completed' ? (
-        <Link
-          to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
-          className="btn-secondary mt-4 inline-flex text-sm"
-        >
-          {t('practice.learningPath.viewRoadmapReport')}
-        </Link>
+      {resolvedFrom ? (
+        <RoadmapSourceSection resolvedFrom={resolvedFrom} language={language} t={t} />
       ) : null}
 
-      <div className="mt-8 space-y-4">
-        {roadmap.milestones.map((milestone) => {
-          const locked = milestone.status === 'locked';
-          const milestoneTitle = language === 'vi' ? milestone.titleVi : milestone.title;
-          return (
-            <section
-              key={milestone.id}
-              className="rounded-2xl border border-info/55 bg-surface-raised/80 p-5 shadow-[0_18px_50px_-35px_rgba(59,130,246,0.8)] backdrop-blur-sm sm:p-6"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="flex items-center gap-3 heading-secondary text-lg text-foreground">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full border border-violet-400/50 bg-violet-500/10 text-violet-300"><Star className="size-5" aria-hidden /></span>
-                  {t('practice.learningPath.milestone').replace('{n}', String(milestone.order))} ·{' '}
-                  {milestoneTitle}
-                </h2>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  {locked ? <Lock className="size-3.5" aria-hidden /> : null}
-                  {t(`practice.learningPath.milestoneStatus.${milestone.status}`)}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} ·{' '}
-                {milestone.progressPercent}%
-              </p>
+      {/*
+        KHÔNG khoá sau `status === 'completed'`: backend vốn đã dựng báo cáo TẠM THỜI cho
+        lộ trình đang học (không gọi AI, nên thiếu phần nhận xét tổng quan — trang báo cáo
+        tự nói rõ điều đó bằng banner). Khoá lại chỉ giấu mất dữ liệu đã có sẵn.
+      */}
+      <Link
+        to={`/candidate/learning/roadmaps/${roadmap.id}/report`}
+        className="btn-secondary mt-4 inline-flex text-sm"
+      >
+        {roadmap.status === 'completed'
+          ? t('practice.learningPath.viewRoadmapReport')
+          : t('practice.learningPath.viewRoadmapReportInterim')}
+      </Link>
 
-              <ul className="mt-4 space-y-2">
-                {milestone.lessons.map((lessonItem, lessonIndex) => {
-                  const lessonTitle = language === 'vi' ? lessonItem.titleVi : lessonItem.title;
-                  const canOpenTheory =
-                    !locked &&
-                    (lessonItem.theoryStatus === 'available' ||
-                      lessonItem.theoryStatus === 'completed' ||
-                      roadmap.readOnly);
-                  const canOpenPractice =
-                    !locked &&
-                    !roadmap.readOnly &&
-                    (lessonItem.practiceStatus === 'available' ||
-                      lessonItem.apiStatus === 'Practicing');
-                  const reportLink = lessonItem.practiceReportId
-                    ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report`
-                    : null;
-
-                  return (
-                    <li
-                      key={lessonItem.id}
-                      className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="flex items-center gap-3 font-medium text-foreground"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-info/40 bg-info/10 text-info"><LessonIcon index={lessonIndex} /></span>{lessonTitle}</p>
-                          <p className="text-caption text-muted-foreground">
-                            {t('practice.learningPath.theory')}:{' '}
-                            {t(`practice.learningPath.part.${lessonItem.theoryStatus}`)} ·{' '}
-                            {t('practice.learningPath.practice')}:{' '}
-                            {t(`practice.learningPath.part.${lessonItem.practiceStatus}`)}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {canOpenTheory ? (
-                            <Link
-                              to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`}
-                              className="inline-flex items-center gap-2 rounded-xl border border-info/70 bg-info/10 px-4 py-2.5 text-xs font-semibold text-foreground shadow-[0_0_24px_-10px_var(--color-info)] transition-colors hover:bg-info/20"
-                            >
-                              <BookOpen className="size-4 text-info" aria-hidden />
-                              {t('practice.learningPath.openTheory')}
-                            </Link>
-                          ) : null}
-                          {canOpenPractice ? (
-                            <button
-                              type="button"
-                              className="btn-primary inline-flex text-xs"
-                              disabled={launchingLessonId === lessonItem.id}
-                              onClick={() =>
-                                void openPractice(lessonItem.id, lessonTitle, lessonItem.sessionId)
-                              }
-                            >
-                              {launchingLessonId === lessonItem.id
-                                ? t('practice.learningPath.saving')
-                                : lessonItem.apiStatus === 'Practicing'
-                                  ? t('practice.learningPath.continuePracticeSession')
-                                  : t('practice.learningPath.openPractice')}
-                            </button>
-                          ) : null}
-                          {lessonItem.apiStatus === 'Done' ? (
-                            <Link
-                              to={`/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/theory`}
-                              className="btn-secondary inline-flex text-xs"
-                            >
-                              {t('practice.learningPath.reviewLesson')}
-                            </Link>
-                          ) : null}
-                          {reportLink ? (
-                            <Link to={reportLink} className="btn-ghost inline-flex text-xs">
-                              {t('practice.learningPath.viewReport')}
-                            </Link>
-                          ) : null}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
+      <LearningRoadmapMilestones
+        roadmap={roadmap}
+        language={language}
+        launchingLessonId={launchingLessonId}
+        onOpenPractice={(lessonId, lessonTitle, sessionId) => void openPractice(lessonId, lessonTitle, sessionId)}
+      />
+      {launchError ? (
+        <p className="mt-4 text-sm text-error" role="alert">
+          {t('practice.learningPath.startError')}
+        </p>
+      ) : null}
+      <LearningCreditWarningDialog
+        open={creditOpen}
+        onOpenChange={setCreditOpen}
+        balance={creditsRemaining ?? 0}
+        backendRejected={creditRejected}
+        onContinue={() => {
+          if (!pendingPractice) return;
+          const pending = pendingPractice;
+          setCreditOpen(false);
+          setPendingPractice(null);
+          setCreditRejected(false);
+          void openPractice(pending.lessonId, pending.title, undefined, true);
+        }}
+      />
     </div>
   );
-}
-
-function LessonIcon({ index }: { index: number }) {
-  const Icon = [FileCode2, Database, BrainCircuit][index % 3] ?? BookOpen;
-  return <Icon className="size-5" aria-hidden />;
 }

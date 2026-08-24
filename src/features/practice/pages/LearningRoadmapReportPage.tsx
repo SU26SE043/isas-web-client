@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AlertCircle, Check, Loader2, X } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import { SkillRadarChart } from '../components/SkillRadarChart';
+import { RoadmapProgressChart } from '../components/RoadmapProgressChart';
+import { LevelEvaluationRow, ListBlock } from '../components/RoadmapReportBlocks';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
-import type { RoadmapLevelEvaluationItem } from '../types/roadmapPractice.api.types';
 
 export function LearningRoadmapReportPage() {
   const { roadmapId = '' } = useParams();
@@ -57,6 +58,20 @@ export function LearningRoadmapReportPage() {
     language === 'vi'
       ? data.overallCommentVi || data.overallComment
       : data.overallComment || data.overallCommentVi;
+  const isInterim = data.kind !== 'snapshot';
+  /*
+    "Chưa có buổi nào được chấm" KHÁC "hệ thống hỏng", và cũng KHÁC ca "mới có một buổi".
+    Backend trả 200 với mọi mảng rỗng khi lộ trình chưa hoàn thành bài nào — trước đây
+    trạng thái này chưa ai nhìn thấy vì nút báo cáo bị khoá sau `status === 'completed'`.
+    Radar không có nan nào sẽ vẽ ra một chấm/hình méo, người dùng đọc thành lỗi hệ thống.
+  */
+  const hasRadar = data.radarData.length > 0;
+  /*
+    Ngưỡng đạt là hằng số theo cấp độ, nên lấy dòng đầu của `levelEvaluation` là đủ.
+    Không có dòng nào ⇒ `null` = KHÔNG BIẾT ⇒ biểu đồ đường không vẽ đường ngang,
+    chứ không vẽ một ngưỡng 0% bịa ra.
+  */
+  const threshold = data.levelEvaluation[0]?.levelThreshold ?? null;
 
   return (
     <div className="page-container page-section min-h-full space-y-6 py-8">
@@ -70,13 +85,40 @@ export function LearningRoadmapReportPage() {
         </p>
       </header>
 
-      {data.radarData.length > 0 ? (
-        <SkillRadarChart data={data.radarData} language={language} />
-      ) : (
-        <p className="text-sm text-muted-foreground">{t('practice.learningPath.radarEmpty')}</p>
-      )}
+      {isInterim ? (
+        <section
+          className="rounded-xl border border-warning/40 bg-warning/10 p-4"
+          role="status"
+          data-testid="report-interim-banner"
+        >
+          <h2 className="text-sm font-semibold text-warning">
+            {t('practice.learningPath.reportInterimTitle')}
+          </h2>
+          <p className="mt-1 text-sm text-warning/90">
+            {t('practice.learningPath.reportInterimDesc')}
+          </p>
+        </section>
+      ) : null}
 
-      {data.levelEvaluation.length > 0 ? (
+      {!hasRadar ? (
+        <section
+          className="rounded-2xl border border-satin bg-surface-raised p-6"
+          data-testid="report-empty-state"
+        >
+          <h2 className="heading-secondary text-xl text-foreground">
+            {t('practice.learningPath.reportEmptyTitle')}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t('practice.learningPath.reportEmptyDesc')}
+          </p>
+        </section>
+      ) : null}
+
+      {hasRadar ? <SkillRadarChart data={data.radarData} language={language} /> : null}
+
+      {hasRadar ? <RoadmapProgressChart progress={data.progress} threshold={threshold} /> : null}
+
+      {hasRadar && data.levelEvaluation.length > 0 ? (
         <section className="space-y-4 rounded-xl border border-subtle bg-surface-raised p-5">
           <h2 className="heading-secondary text-lg text-foreground">
             {t('practice.learningPath.levelEvaluation')}
@@ -97,17 +139,32 @@ export function LearningRoadmapReportPage() {
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-3">
+        {/*
+          Chọn bản `...Vi` theo ĐỘ DÀI, không phải bằng `??`: mapper dùng `pickStringArray` nên khi
+          backend không gửi field `...Vi` nó trả MẢNG RỖNG chứ không phải undefined — `??` sẽ không
+          bao giờ kích hoạt và ba ô này hiện dấu "—".
+
+          Backend chỉ trả MỘT bộ `strengths/weaknesses/improvements`, và tên tiêu chí trong đó ĐÃ
+          theo đúng ngôn ngữ của lộ trình (rubric `vi` cho roadmap `vi`), nên bản không-Vi dùng được
+          ngay. Cặp `...Vi` chỉ tồn tại trong fixtures mock — đó là lý do lỗi chạy đẹp lúc phát
+          triển và chỉ lộ ra với dữ liệu thật.
+        */}
         <ListBlock
           title={t('practice.learningPath.strengths')}
-          items={language === 'vi' ? data.strengthsVi : data.strengths}
+          items={language === 'vi' && data.strengthsVi.length > 0 ? data.strengthsVi : data.strengths}
         />
         <ListBlock
           title={t('practice.learningPath.weaknesses')}
-          items={language === 'vi' ? data.weaknessesVi : data.weaknesses}
+          items={language === 'vi' && data.weaknessesVi.length > 0 ? data.weaknessesVi : data.weaknesses}
         />
+        {/*
+          Ô này RỖNG một cách hợp lệ khi chưa tiêu chí nào có mốc để so, nên nó cần
+          câu giải thích riêng — dấu "—" trơ ở đây bị đọc thành "hệ thống hỏng".
+        */}
         <ListBlock
           title={t('practice.learningPath.improvements')}
-          items={language === 'vi' ? data.improvementsVi : data.improvements}
+          items={language === 'vi' && data.improvementsVi.length > 0 ? data.improvementsVi : data.improvements}
+          emptyText={t('practice.learningPath.improvementsEmpty')}
         />
       </section>
 
@@ -128,68 +185,6 @@ export function LearningRoadmapReportPage() {
           {t('practice.learningPath.backToDashboard')}
         </Link>
       </div>
-    </div>
-  );
-}
-
-function LevelEvaluationRow({
-  item,
-  t,
-}: {
-  item: RoadmapLevelEvaluationItem;
-  t: (key: string) => string;
-}) {
-  const pct = Math.max(0, Math.min(100, item.percentage));
-  const threshold = Math.max(0, Math.min(100, item.levelThreshold));
-  return (
-    <li className="rounded-lg border border-subtle bg-surface-overlay p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-foreground">{item.criterionName}</p>
-        <span
-          className={`inline-flex items-center gap-1 text-xs font-medium ${
-            item.passed ? 'text-success' : 'text-warning'
-          }`}
-        >
-          {item.passed ? <Check className="size-3.5" aria-hidden /> : <X className="size-3.5" aria-hidden />}
-          {item.passed
-            ? t('practice.learningPath.levelEvaluationPassed')
-            : t('practice.learningPath.levelEvaluationFailed')}
-        </span>
-      </div>
-      <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-        <span>{pct}%</span>
-        <span>
-          {t('practice.learningPath.levelThreshold')}: {threshold}%
-        </span>
-      </div>
-      <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-surface-base">
-        <div
-          className={`h-full rounded-full ${item.passed ? 'bg-success' : 'bg-warning'}`}
-          style={{ width: `${pct}%` }}
-        />
-        <div
-          className="absolute inset-y-0 w-0.5 bg-foreground/60"
-          style={{ left: `${threshold}%` }}
-          aria-hidden
-        />
-      </div>
-    </li>
-  );
-}
-
-function ListBlock({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="rounded-xl border border-subtle bg-surface-raised p-5">
-      <h2 className="text-sm font-medium text-foreground">{title}</h2>
-      {items.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">—</p>
-      ) : (
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          {items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

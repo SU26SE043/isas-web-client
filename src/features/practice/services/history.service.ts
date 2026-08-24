@@ -40,6 +40,11 @@ function mapInterviewItemToPracticeHistoryItem(
     completedAt:
       item.completedAt ?? (item.status === 'completed' ? item.date : null),
     overallScore: item.overallScoreNullable ?? item.overallScore,
+    seniority: item.level,
+    // Nhánh mock trước đây ĐÁNH RƠI field này, nên nhãn nguồn buổi (bài học / tự do) không bao giờ
+    // hiện ra dưới Playwright. Hôm nay chưa fixture nào khai `lessonTitle` nên chưa ai thấy, nhưng
+    // rơi im lặng ở đúng đường đang wire thì để lại là mời bug quay lại.
+    lessonTitle: item.lessonTitle ?? null,
   };
 }
 
@@ -62,8 +67,13 @@ export async function getPracticeSessionHistory(
 
   const response = await apiClient.get<unknown>(b2cPracticeSessionEndpoints.history, {
     params: {
-      cursor: params.cursor || undefined,
       limit,
+      ...(params.cursor ? { cursor: params.cursor } : {}),
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.excludeCampaign !== undefined ? { excludeCampaign: params.excludeCampaign } : {}),
+      // Tên tham số là HỢP ĐỒNG với backend (`?source=lesson|free`); có test khoá đúng chuỗi này.
+      // Chỉ gửi khi được yêu cầu — vắng nghĩa là "tất cả".
+      ...(params.source ? { source: params.source } : {}),
     },
   });
   return parsePracticeSessionHistoryPage(response.data, response.headers);
@@ -83,6 +93,8 @@ export async function fetchInterviewHistory(
     const pageData = await getPracticeSessionHistory({
       cursor: query.cursor || undefined,
       limit: pageSize,
+      status: query.status,
+      excludeCampaign: query.excludeCampaign,
     });
     return {
       interviews: pageData.items.map(mapPracticeHistoryToInterviewItem),

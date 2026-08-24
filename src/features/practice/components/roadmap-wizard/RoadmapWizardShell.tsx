@@ -1,29 +1,43 @@
+import type { RoadmapWizardStep } from '../../hooks/useRoadmapWizardFlow';
 import React from 'react';
 import { FlowWizardShell } from '@/components/patterns/flow-wizard/FlowWizardShell';
 import { useLanguage } from '@/shared/languages';
 
-const ROADMAP_WIZARD_STEPS = [
-  'practice.roadmapWizard.steps.domain',
-  'practice.roadmapWizard.steps.reports',
-  'practice.roadmapWizard.steps.level',
-  'practice.roadmapWizard.steps.confirm',
-] as const;
+// 🔑 Record ĐẦY ĐỦ theo `RoadmapWizardStep`, KHÔNG ghép chuỗi `steps.${step}` như trước.
+// Ghép động làm TypeScript không kiểm được gì: id bước `targetLevel` mà chuỗi dịch khai
+// `steps.level` ⇒ stepper hiện thẳng khoá `practice.roadmapWizard.steps.targetLevel` cho người
+// dùng, và `check:i18n` không kêu vì nó chỉ so CÂN BẰNG VI/EN chứ không kiểm khoá có tồn tại.
+// Với Record này, thêm một bước mà quên chuỗi dịch là LỖI BIÊN DỊCH, không phải lỗi lúc chạy.
+export const ROADMAP_WIZARD_STEP_LABEL_KEYS: Record<RoadmapWizardStep, string> = {
+  domain: 'practice.roadmapWizard.steps.domain',
+  nameFocus: 'practice.roadmapWizard.steps.nameFocus',
+  cv: 'practice.roadmapWizard.steps.cv',
+  currentLevel: 'practice.roadmapWizard.steps.currentLevel',
+  targetLevel: 'practice.roadmapWizard.steps.targetLevel',
+  reports: 'practice.roadmapWizard.steps.reports',
+  priorRoadmap: 'practice.roadmapWizard.steps.priorRoadmap',
+  confirm: 'practice.roadmapWizard.steps.confirm',
+};
+
+const ROADMAP_WIZARD_STEPS = Object.values(ROADMAP_WIZARD_STEP_LABEL_KEYS);
 
 export const ROADMAP_WIZARD_STEP_KEYS = [...ROADMAP_WIZARD_STEPS];
 
 interface RoadmapWizardShellProps {
   currentStep: number;
+  stepKeys?: readonly string[];
   onStepClick?: (step: number) => void;
   children: React.ReactNode;
 }
 
 export const RoadmapWizardShell: React.FC<RoadmapWizardShellProps> = ({
   currentStep,
+  stepKeys = ROADMAP_WIZARD_STEPS,
   onStepClick,
   children,
 }) => {
   const { t } = useLanguage();
-  const steps = ROADMAP_WIZARD_STEPS.map((key) => t(key));
+  const steps = stepKeys.map((key) => t(key));
 
   return (
     <FlowWizardShell

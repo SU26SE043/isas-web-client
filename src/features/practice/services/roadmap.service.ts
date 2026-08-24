@@ -129,15 +129,45 @@ export const roadmapService = {
     };
   },
 
-  async listRoadmaps(query: LearningDashboardQuery = {}): Promise<LearningRoadmapCard[]> {
+  /**
+   * `enrichCurrentPointers` mặc định BẬT cho dashboard (cần con trỏ chặng/bài đang học).
+   *
+   * Người gọi chỉ cần id/tên/trạng thái — ví dụ ô "Roadmap tham chiếu" trong wizard tạo lộ trình
+   * — phải TẮT: `enrichCardsMissingCurrentPointers` bắn thêm MỘT `GET /roadmaps/{id}` cho mỗi thẻ
+   * thiếu con trỏ (đo được: 3 thẻ ⇒ 3 lượt gọi phụ; tài khoản thật có 9 thẻ ⇒ tới 9 lượt), nên
+   * danh sách về rất chậm. Cửa sổ chờ đó chính là lúc bước "Roadmap đã hoàn tất" hiện ra với
+   * dropdown rỗng. Roadmap ĐÃ HOÀN TẤT còn không có bài nào "đang học" để mà điền — lượt gọi phụ
+   * cho đúng nhóm thẻ mà wizard cần là công cốc.
+   */
+  async listRoadmaps(
+    query: LearningDashboardQuery = {},
+    options: { enrichCurrentPointers?: boolean } = {},
+  ): Promise<LearningRoadmapCard[]> {
     const page = await this.listRoadmapsPage(query);
-    const cards = await enrichCardsMissingCurrentPointers(page.items);
+    const cards =
+      options.enrichCurrentPointers === false
+        ? page.items
+        : await enrichCardsMissingCurrentPointers(page.items);
     return filterAndSortCards(cards, query);
   },
 
   async getRoadmap(roadmapId: string): Promise<LearningRoadmapDetail> {
     const response = await apiClient.get<unknown>(learningEndpoints.roadmap(roadmapId));
     return mapApiRoadmapDetail(unwrapDataPayload(response.data));
+  },
+
+  async renameRoadmap(roadmapId: string, name: string): Promise<string> {
+    const response = await apiClient.patch<unknown>(
+      learningEndpoints.roadmap(roadmapId),
+      { name },
+      { validateStatus: (status) => status >= 200 && status < 300 },
+    );
+    const payload = unwrapDataPayload(response.data);
+    if (payload && typeof payload === 'object') {
+      const returnedName = (payload as Record<string, unknown>).name;
+      if (typeof returnedName === 'string' && returnedName.trim()) return returnedName.trim();
+    }
+    return name;
   },
 
   /**

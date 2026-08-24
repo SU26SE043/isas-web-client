@@ -11,6 +11,12 @@ export const learningEndpoints = {
   /** POST — mark theory done / start practice session (charges 1 credit). */
   startLesson: (roadmapId: string, lessonId: string) =>
     `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}/start`,
+  /**
+   * POST — luyện LẠI một bài đã hoàn thành (tính 1 credit, tạo buổi mới).
+   * Trả về CÙNG hình dạng với `startLesson` nên dùng chung mapper.
+   */
+  retryLesson: (roadmapId: string, lessonId: string) =>
+    `/api/v1/interview/practice/roadmaps/${roadmapId}/lessons/${lessonId}/retry`,
   /** GET — practice session detail (questions, progress). */
   practiceSession: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}`,
   /** POST — upload answer audio (multipart). */
@@ -19,6 +25,12 @@ export const learningEndpoints = {
   /** GET — answer / progressive scoring result. */
   answer: (sessionId: string, answerId: string) =>
     `/api/v1/interview/practice/sessions/${sessionId}/answers/${answerId}`,
+  /**
+   * GET — phần TÍNH ra con số ở dòng "So với chặng trước" của MỘT chặng:
+   * điểm từng tiêu chí, mốc đem so, và danh sách buổi đã cộng vào mỗi vế.
+   */
+  milestoneScoreReport: (roadmapId: string, milestoneId: string) =>
+    `/api/v1/interview/practice/roadmaps/${roadmapId}/milestones/${milestoneId}/score-report`,
   /** GET — roadmap interim / snapshot report. */
   roadmapReport: (roadmapId: string) => `/api/v1/interview/practice/roadmaps/${roadmapId}/report`,
 } as const;
