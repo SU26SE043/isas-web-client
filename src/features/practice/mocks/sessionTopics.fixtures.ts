@@ -62,4 +62,3 @@ export const MOCK_SESSION_TOPICS_EIGHT: PracticeSessionTopic[] = [
     cvEvidence: null,
   },
 ];
-
