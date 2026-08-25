@@ -3,6 +3,8 @@ export type EmployerCampaignMode = 'remote' | 'hybrid' | 'onsite';
 export type CampaignLocale = 'vi' | 'en';
 export type CampaignCandidateStatus = 'invited' | 'invite_pending';
 
+import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
+
 export interface CampaignProctoringConfig {
   faceCaptureIntervalSeconds: number;
   faceSimilarityThreshold: number;
@@ -22,6 +24,8 @@ export interface RubricCriterion {
   weight: number;
   description: string;
   maxScore: number;
+  /** Server-authored score anchors; keep them when renaming or editing a criterion. */
+  levels?: RubricLevel[];
 }
 
 export type CampaignQuestionSource = 'ai' | 'manual';

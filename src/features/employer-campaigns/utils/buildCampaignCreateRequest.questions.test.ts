@@ -57,4 +57,25 @@ describe('mapRubricToCreateCriteria', () => {
       ]),
     ).toEqual([{ name: 'Depth', description: null, weight: 1, maxScore: 2.5 }]);
   });
+
+  it('echoes existing score levels when a criterion is renamed', () => {
+    const levels = [
+      { score: 0, descriptor: 'No evidence' },
+      { score: 5, descriptor: 'Strong evidence' },
+    ];
+
+    expect(
+      mapRubricToCreateCriteria([
+        { id: 'r1', name: 'Renamed', description: '', weight: 100, maxScore: 5, levels },
+      ]),
+    ).toEqual([{ name: 'Renamed', description: null, weight: 1, maxScore: 5, levels }]);
+  });
+
+  it('does not send an empty levels array for a new criterion', () => {
+    expect(
+      mapRubricToCreateCriteria([
+        { id: 'r1', name: 'New', description: '', weight: 100, maxScore: 5, levels: [] },
+      ]),
+    ).toEqual([{ name: 'New', description: null, weight: 1, maxScore: 5 }]);
+  });
 });

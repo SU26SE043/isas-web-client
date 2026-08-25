@@ -53,6 +53,7 @@ export function mapRubricToCreateCriteria(
         description: item.description.trim() || null,
         weight,
         maxScore: Number(item.maxScore) || 1,
+        ...(item.levels?.length ? { levels: item.levels } : {}),
       };
     });
 }
@@ -84,6 +85,7 @@ function criteriaRequestToRubric(
     description: item.description?.trim() || '',
     weight: item.weight,
     maxScore: item.maxScore,
+    levels: item.levels ?? undefined,
   }));
 }
 
