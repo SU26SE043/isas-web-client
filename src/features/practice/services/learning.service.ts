@@ -109,6 +109,7 @@ function normalizeCreateRoadmapResponse(
             ? item.focusCriteria.filter((value): value is string => typeof value === 'string')
             : [],
           status: String(item.status ?? 'Pending'),
+          mistakeCount: typeof item.mistakeCount === 'number' ? item.mistakeCount : undefined,
           improvement: Array.isArray(item.improvement) ? item.improvement as Array<{ criterionName: string; deltaPct: number }> : null,
           lessons: Array.isArray(item.lessons) ? item.lessons as RoadmapApiMilestone['lessons'] : [],
         };

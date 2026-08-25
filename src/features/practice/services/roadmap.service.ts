@@ -9,6 +9,7 @@ import {
   type OpenedLearningLesson,
 } from '../utils/roadmapMapper';
 import { learningEndpoints } from './learning.endpoints';
+import { MOCK_LESSON_MISTAKES } from '../mocks/learningPath.fixtures';
 
 function unwrapDataPayload(data: unknown): unknown {
   if (!data || typeof data !== 'object') return data;
@@ -175,6 +176,12 @@ export const roadmapService = {
    * not on list/detail hover or render.
    */
   async getLesson(roadmapId: string, lessonId: string): Promise<OpenedLearningLesson> {
+    if (import.meta.env.DEV && import.meta.env.VITE_MOCK_LESSON_MISTAKES === '1') {
+      return mapApiRoadmapLessonDetail({
+        ...MOCK_LESSON_MISTAKES,
+        id: lessonId,
+      });
+    }
     const response = await apiClient.get<unknown>(learningEndpoints.lesson(roadmapId, lessonId));
     return mapApiRoadmapLessonDetail(unwrapDataPayload(response.data));
   },

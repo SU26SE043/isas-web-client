@@ -75,6 +75,7 @@ export interface RoadmapApiMilestone {
   title: string;
   focusCriteria: string[];
   status: 'Pending' | 'InProgress' | 'Completed' | string;
+  mistakeCount?: number;
   improvement: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons: Array<{
     id: string;
