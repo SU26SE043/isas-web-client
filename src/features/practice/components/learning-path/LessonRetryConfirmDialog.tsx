@@ -83,6 +83,7 @@ export function LessonRetryConfirmDialog({
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li>{t('practice.learningPath.retryConfirmPointQuestions')}</li>
           <li>{t('practice.learningPath.retryConfirmPointScore')}</li>
+          <li>{t('practice.learningPath.retryConfirmPointSnapshot')}</li>
         </ul>
         <DialogFooter className="gap-2 sm:justify-end">
           <Button

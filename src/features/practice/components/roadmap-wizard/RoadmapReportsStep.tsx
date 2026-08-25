@@ -5,6 +5,8 @@ import { useLanguage } from '@/shared/languages';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import { RoadmapReportsTable } from './RoadmapReportsTable';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface RoadmapReportsStepProps {
   reports: InterviewHistoryItem[];
@@ -15,6 +17,8 @@ interface RoadmapReportsStepProps {
   onUnselectAll: () => void;
   onBack: () => void;
   onNext: () => void;
+  loadError?: boolean;
+  reportCounts?: Record<string, number>;
 }
 
 export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
@@ -26,8 +30,11 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
   onUnselectAll,
   onBack,
   onNext,
+  loadError = false,
+  reportCounts = {},
 }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <SectionPanel
@@ -35,19 +42,29 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
       title={t('practice.roadmapWizard.reports.title')}
       description={t('practice.roadmapWizard.reports.description')}
       isLoading={isLoading}
-      footer={<RoadmapWizardNav onBack={onBack} onNext={onNext} />}
+      footer={<div className="space-y-3"><p className="text-sm text-muted-foreground" role="status">{selectedIds.length === 0 ? t('practice.roadmapWizard.reports.selectRequired') : null}</p><RoadmapWizardNav onBack={onBack} onNext={onNext} nextDisabled={selectedIds.length === 0} /></div>}
     >
       <p className="mb-4 text-caption text-muted-foreground">
         {t('practice.roadmapWizard.reports.futureNote')}
       </p>
 
-      {reports.length === 0 ? (
-        <p
-          className="rounded-lg border border-subtle bg-surface-overlay px-4 py-6 text-sm text-muted-foreground"
-          role="status"
-        >
-          {t('practice.roadmapWizard.reports.emptyOptional')}
-        </p>
+      {loadError ? (
+        <div className="space-y-4 rounded-lg border border-error/40 bg-error/10 px-4 py-5" role="alert">
+          <p className="text-sm text-error">{t('practice.roadmapWizard.reports.loadFailed')}</p>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" className="btn-primary" onClick={() => navigate('/practice')}>{t('practice.roadmapWizard.reports.practiceCta')}</Button>
+            <Button type="button" variant="outline" onClick={onBack}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
+          </div>
+        </div>
+      ) : reports.length === 0 ? (
+        <div className="space-y-4 rounded-lg border border-subtle bg-surface-overlay px-4 py-5">
+          <p className="text-sm text-muted-foreground" role="status">{t('practice.roadmapWizard.reports.emptyOptional')}</p>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" className="btn-primary" onClick={() => navigate('/practice')}>{t('practice.roadmapWizard.reports.practiceCta')}</Button>
+            <Button type="button" variant="outline" onClick={onBack}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">{t('practice.roadmapWizard.reports.countBadge').replace('{count}', String(reportCounts.__selectedDomain ?? 0))}</p>
+        </div>
       ) : (
         <RoadmapReportsTable
           reports={reports}

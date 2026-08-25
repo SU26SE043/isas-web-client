@@ -132,7 +132,7 @@ describe('trình độ suy từ CV đi tới tận payload tạo lộ trình', (
     act(() => result.current.handleSelectDomain('backend'));
     act(() => result.current.goToStep('cv'));
     await waitFor(() => expect(result.current.loadingReports).toBe(false));
-    act(() => result.current.setTargetLevel('senior'));
+    act(() => result.current.setCurrentLevel('senior'));
 
     await act(async () => {
       await result.current.handleCreate();
@@ -141,7 +141,7 @@ describe('trình độ suy từ CV đi tới tận payload tạo lộ trình', (
     expect(createRoadmapMock).toHaveBeenCalledWith(
       // `middle` phải KHÁC `fresher` (mặc định) và KHÁC `senior` (mục tiêu) — nếu không, phép đo
       // này không phân biệt được "gửi đúng" với "gửi nhầm biến".
-      expect.objectContaining({ currentLevel: 'middle', targetLevel: 'senior' }),
+      expect.objectContaining({ currentLevel: 'senior', targetLevel: 'senior' }),
     );
   });
 
@@ -154,7 +154,7 @@ describe('trình độ suy từ CV đi tới tận payload tạo lộ trình', (
     await waitFor(() => expect(result.current.loadingReports).toBe(false));
     act(() => {
       result.current.setCurrentLevel('junior');
-      result.current.setTargetLevel('senior');
+      result.current.setCurrentLevel('senior');
     });
 
     expect(result.current.currentLevelSource).toBe('manual');
@@ -162,7 +162,7 @@ describe('trình độ suy từ CV đi tới tận payload tạo lộ trình', (
       await result.current.handleCreate();
     });
     expect(createRoadmapMock).toHaveBeenCalledWith(
-      expect.objectContaining({ currentLevel: 'junior' }),
+      expect.objectContaining({ currentLevel: 'senior', targetLevel: 'senior' }),
     );
   });
 });

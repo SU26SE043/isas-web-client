@@ -73,8 +73,8 @@ export interface RoadmapApiMilestone {
   id: string;
   orderNo: number;
   title: string;
-  focusCriteria: string[];
   status: 'Pending' | 'InProgress' | 'Completed' | string;
+  mistakeCount?: number;
   improvement: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons: Array<{
     id: string;
@@ -95,7 +95,7 @@ export interface RoadmapApiMilestone {
 export interface CreateRoadmapInput {
   domainId: string;
   currentLevel?: string;
-  targetLevel: string;
+  targetLevel?: string;
   name?: string;
   reportIds?: string[];
   /** Selected scored practice sessions used as baseline (sent as sessionIds). */

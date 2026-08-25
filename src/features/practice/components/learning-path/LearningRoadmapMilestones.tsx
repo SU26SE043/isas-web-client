@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, BrainCircuit, Database, FileCode2, Lock, Star } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { Badge } from '@/components/ui/badge';
 import { MilestoneImprovementDisclosure } from './MilestoneImprovementDisclosure';
 import type { LearningRoadmapDetail } from '../../types/learningPath.types';
 
@@ -33,6 +34,11 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                 {locked ? <Lock className="size-3.5" aria-hidden /> : null} {t(`practice.learningPath.milestoneStatus.${milestone.status}`)}
               </span>
             </div>
+            {milestone.mistakeCount && milestone.mistakeCount > 0 ? (
+              <Badge variant="outline" className="mt-2 border-warning/40 bg-warning/10 text-warning">
+                {t('practice.learningPath.mistakeCount').replace('{count}', String(milestone.mistakeCount))}
+              </Badge>
+            ) : null}
             <p className="mt-1 text-sm text-muted-foreground">
               {t('practice.learningPath.lessonCount').replace('{count}', String(milestone.lessons.length))} · {milestone.progressPercent}%
             </p>

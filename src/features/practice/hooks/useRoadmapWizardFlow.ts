@@ -1,4 +1,4 @@
-import type { RoadmapScope } from '../types/learning.types';
+import { ROADMAP_SCOPE_LESSONS, type RoadmapScope } from '../types/learning.types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,6 @@ export type RoadmapWizardStep =
   | 'nameFocus'
   | 'cv'
   | 'currentLevel'
-  | 'targetLevel'
   | 'reports'
   | 'priorRoadmap'
   | 'confirm';
@@ -41,10 +40,8 @@ export const ROADMAP_WIZARD_STEP_ORDER: readonly RoadmapWizardStep[] = [
   'nameFocus',
   'cv',
   'currentLevel',
-  // "Cấp độ mục tiêu" đứng NGAY SAU "Trình độ hiện tại", trước "Báo cáo": hai bước này là một cặp
-  // — lộ trình sinh ra từ KHOẢNG CÁCH giữa chúng, nên hỏi rời nhau (chèn bước chọn báo cáo vào
-  // giữa) làm người dùng mất mạch. Đây cũng là thứ tự đã chốt với sản phẩm.
-  'targetLevel',
+  // Trình độ hiện tại được hỏi trước báo cáo để điều chỉnh độ khó; nội dung lộ trình vẫn lấy từ
+  // các điểm hụt trong những buổi luyện đã chọn.
   'reports',
   'priorRoadmap',
   'confirm',
@@ -133,9 +130,7 @@ export function useRoadmapWizardFlow() {
   const [domainId, setDomainId] = useState('');
   const [rawReports, setRawReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
-  const [currentLevel, setCurrentLevel] = useState<RoadmapTargetLevel>('fresher');
-  const [currentLevelSource, setCurrentLevelSource] = useState<'cv' | 'default' | 'manual'>('default');
+  const [manualLevel, setManualLevel] = useState<RoadmapTargetLevel | null>(null);
   const [name, setName] = useState('');
   // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
   // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
@@ -149,26 +144,29 @@ export function useRoadmapWizardFlow() {
   const [focus, setFocus] = useState('');
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
+  const [reportsError, setReportsError] = useState(false);
+  const [loadedDomainId, setLoadedDomainId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<CreateRoadmapErrorCode | null>(null);
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
   const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
     setLoadingReports(true);
+    setReportsError(false);
     try {
       // ⚠ CẢ BỐN lời gọi phải có `.catch` riêng. Trước đây `fetchInterviewHistory` là cái DUY NHẤT
       // không có: nó hỏng thì `Promise.all` reject ⇒ thân `try` dừng giữa chừng ⇒ **vứt luôn cả ba
       // kết quả kia** (file CV, bản phân tích, roadmap đã hoàn tất) dù chúng đã về thành công, và
       // vì chỗ gọi là `void loadReportsForDomain(...)` nên lỗi thoát ra thành unhandled rejection —
       // người dùng chỉ thấy mọi ô hiện "Bỏ qua", không lỗi, không cảnh báo. Đã tái hiện được.
-      const [history, cvs, analyses, roadmaps] = await Promise.all([
+      const results = await Promise.allSettled([
         fetchInterviewHistory({
           page: 1,
           pageSize: 100,
           includeDeleted: false,
           status: 'Scored',
           excludeCampaign: true,
-        }).catch(() => ({ interviews: [] as InterviewHistoryItem[] })),
+        }),
         cvAnalysisService.listUploadedCvs().catch(() => []),
         cvAnalysisService.listAnalyses().catch(() => []),
         // `enrichCurrentPointers: false` — wizard chỉ cần id/tên/trạng thái; bật thì mỗi thẻ thiếu
@@ -178,6 +176,11 @@ export function useRoadmapWizardFlow() {
           .listRoadmaps({ status: 'completed' }, { enrichCurrentPointers: false })
           .catch(() => []),
       ]);
+      const history = results[0].status === 'fulfilled' ? results[0].value : { interviews: [] as InterviewHistoryItem[] };
+      const cvs = results[1].status === 'fulfilled' ? results[1].value : [];
+      const analyses = results[2].status === 'fulfilled' ? results[2].value : [];
+      const roadmaps = results[3].status === 'fulfilled' ? results[3].value : [];
+      if (results[0].status === 'rejected') setReportsError(true);
       // Lưu THÔ, lọc theo lĩnh vực ở tầng dẫn xuất (`allReports`/`cvAnalyses` bên dưới).
       // Lọc tại đây bằng `nextDomainId` là SAI khi người dùng quay lại đổi lĩnh vực:
       // `handleSelectDomain` KHÔNG nạp lại (goToStep chỉ nạp khi mọi danh sách đều rỗng),
@@ -196,10 +199,13 @@ export function useRoadmapWizardFlow() {
       // CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào
       // lộ trình Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập
       // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
-      const inferredLevel = inferCurrentLevelFromAnalyses(analyses, nextDomainId);
-      setCurrentLevel(inferredLevel ?? 'fresher');
-      setCurrentLevelSource(inferredLevel ? 'cv' : 'default');
+      setManualLevel(null);
       setPriorRoadmapId(undefined);
+      setLoadedDomainId(nextDomainId);
+    } catch {
+      setReportsError(true);
+      setRawReports([]);
+      setLoadedDomainId(nextDomainId);
     } finally {
       setLoadingReports(false);
     }
@@ -214,6 +220,22 @@ export function useRoadmapWizardFlow() {
     () => analysesForDomain(rawCvAnalyses, domainId),
     [rawCvAnalyses, domainId],
   );
+  const inferredLevel = useMemo(
+    () => inferCurrentLevelFromAnalyses(rawCvAnalyses, domainId),
+    [rawCvAnalyses, domainId],
+  );
+  const currentLevel = manualLevel ?? inferredLevel ?? 'fresher';
+  const currentLevelSource: 'cv' | 'default' | 'manual' = manualLevel ? 'manual' : inferredLevel ? 'cv' : 'default';
+  const reportCounts = useMemo(() => rawReports.reduce<Record<string, number>>((counts, report) => {
+    counts[report.domainId] = (counts[report.domainId] ?? 0) + 1;
+    return counts;
+  }, {}), [rawReports]);
+
+  useEffect(() => {
+    if (domainId && domainId !== loadedDomainId && !loadingReports) {
+      void loadReportsForDomain(domainId).catch(() => {});
+    }
+  }, [domainId, loadedDomainId, loadReportsForDomain, loadingReports]);
 
   // Lựa chọn TREO: đổi lĩnh vực xong, id đã chọn của lĩnh vực cũ vẫn nằm trong state và vẫn
   // được gửi lên — nhưng không còn hiện trên màn hình nào. Dọn ngay khi nó rời khỏi tập hợp lệ.
@@ -232,14 +254,12 @@ export function useRoadmapWizardFlow() {
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
     // Chế độ lộ trình (LevelUp/Reinforce) KHÔNG còn tồn tại ở tầng giao diện: mỗi lộ trình nay là
-    // một BẢN TRỘN (vừa sửa điểm yếu đo được, vừa tiến lên cấp mục tiêu). Bước chọn chế độ đã gỡ ở
+    // một BẢN TRỘN (sửa điểm yếu đo được và điều chỉnh độ khó theo trình độ hiện tại). Bước chọn chế độ đã gỡ ở
     // `4d53085`, và vòng này gỡ nốt phần hiển thị + phần GỬI. Không state `mode`, không field
     // `mode` trong payload ⇒ backend nhận `null` và tự hiểu là "LevelUp" (`CreateRoadmapRequest`
     // khai `string? Mode = null`), đúng hành vi trước khi có bước đó.
-    const showReports = loadingReports || allReports.length > 0;
     const showPrior = loadingReports || completedRoadmaps.length > 0;
     return ROADMAP_WIZARD_STEP_ORDER.filter((item) => {
-      if (item === 'reports') return showReports;
       if (item === 'priorRoadmap') return showPrior;
       return true;
     });
@@ -289,9 +309,7 @@ export function useRoadmapWizardFlow() {
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
-    setTargetLevel('');
-    setCurrentLevel('fresher');
-    setCurrentLevelSource('default');
+    setManualLevel(null);
     setSelectedIds([]);
   };
 
@@ -310,7 +328,7 @@ export function useRoadmapWizardFlow() {
   };
 
   const handleCreate = async () => {
-    if (!domainId || !targetLevel || isSubmitting) return;
+    if (!domainId || !currentLevel || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitErrorMessage(null);
@@ -320,7 +338,7 @@ export function useRoadmapWizardFlow() {
       );
       const created = await learningService.createRoadmap({
         domainId,
-        targetLevel,
+        targetLevel: currentLevel,
         currentLevel,
         name,
         reportIds: uniqueSessionIds,
@@ -342,7 +360,11 @@ export function useRoadmapWizardFlow() {
       }
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
-      navigate('/candidate/learning', { replace: true });
+      const lessonCount = created.milestones?.flatMap((milestone) => milestone.lessons).length ?? 0;
+      navigate('/candidate/learning', {
+        replace: true,
+        state: { fewerLessons: lessonCount < ROADMAP_SCOPE_LESSONS[scope] },
+      });
     } catch (error) {
       const mapped =
         error instanceof CreateRoadmapError ? error : new CreateRoadmapError('generic');
@@ -368,7 +390,6 @@ export function useRoadmapWizardFlow() {
     domainId,
     allReports,
     selectedIds,
-    targetLevel,
     currentLevel,
     currentLevelSource,
     name,
@@ -381,15 +402,16 @@ export function useRoadmapWizardFlow() {
     focus,
     loadingDomains,
     loadingReports,
+    reportsError,
+    reportCounts,
     isSubmitting,
     submitError,
     submitErrorMessage,
     selectedDomain,
     selectedReports,
     handleSelectDomain,
-    setTargetLevel,
-    setCurrentLevel: (value: RoadmapTargetLevel) => { setCurrentLevel(value); setCurrentLevelSource('manual'); },
-    setCurrentLevelSource,
+    setCurrentLevel: (value: RoadmapTargetLevel) => setManualLevel(value),
+    setCurrentLevelSource: () => {},
     setName,
     setCvId,
     setFocus,

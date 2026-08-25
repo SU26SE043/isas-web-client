@@ -4,10 +4,10 @@ import { buildCreateRoadmapRequest } from './buildCreateRoadmapRequest';
 
 describe('buildCreateRoadmapRequest', () => {
   it('builds minimal payload with jobCategory and level only', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', {});
+    const result = buildCreateRoadmapRequest('FE', 'Junior', { sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi' },
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
@@ -35,10 +35,10 @@ describe('buildCreateRoadmapRequest', () => {
   });
 
   it('omits name when the optional input is blank', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '   ' });
+    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '   ', sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi' },
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
@@ -55,19 +55,19 @@ describe('buildCreateRoadmapRequest', () => {
   // đưa nó vào body.
   it('KHÔNG gửi mode — chế độ lộ trình không còn là lựa chọn của người dùng', () => {
     const result = buildCreateRoadmapRequest('BE', 'Junior', {
-      mode: 'Reinforce',
+      mode: 'Reinforce', sessionIds: ['s1'],
     } as unknown as Parameters<typeof buildCreateRoadmapRequest>[2]);
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'BE', level: 'Junior', language: 'vi' },
+      body: { jobCategory: 'BE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
   it('trims and includes a non-empty roadmap name', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '  My path  ' });
+    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '  My path  ', sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', name: 'My path' },
+      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'], name: 'My path' },
     });
   });
 
@@ -82,6 +82,13 @@ describe('buildCreateRoadmapRequest', () => {
     expect(buildCreateRoadmapRequest('', 'Junior', {})).toEqual({
       ok: false,
       reason: 'invalid_input',
+    });
+  });
+
+  it('rejects an empty session selection after field validation', () => {
+    expect(buildCreateRoadmapRequest('FE', 'Junior', {})).toEqual({
+      ok: false,
+      reason: 'sessions_required',
     });
   });
 });

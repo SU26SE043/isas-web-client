@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { LessonHtmlContent } from '../components/learning-path/LessonHtmlContent';
+import { LessonMistakeReview } from '../components/learning-path/LessonMistakeReview';
 import { LearningTheoryActions } from '../components/learning-path/LearningTheoryActions';
 import { LearningResourceList } from '../components/learning-path/LearningResourceList';
 import { LessonCitationList } from '../components/learning-path/LessonCitationList';
@@ -140,6 +141,12 @@ export function LearningTheoryPage() {
             <p className="text-sm text-success">{t('practice.learningPath.lessonDoneHint')}</p>
           ) : null}
         </header>
+
+        {Array.isArray(opened.mistakes) && opened.mistakes.length > 0 ? (
+          <div className="mt-8">
+            <LessonMistakeReview mistakes={opened.mistakes} />
+          </div>
+        ) : null}
 
         <article className="frame-satin mt-8 rounded-2xl border border-subtle bg-surface-raised p-6 sm:p-8 lg:p-10">
           {markdown ? (

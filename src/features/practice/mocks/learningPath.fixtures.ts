@@ -5,6 +5,7 @@ import type {
   LearningPracticeReport,
   LearningRoadmapDetail,
 } from '../types/learningPath.types';
+import type { ApiRoadmapLessonDetail } from '../types/roadmap.api.types';
 import { buildLessonHtml } from './lessonContent.fixtures';
 
 export const LEARNING_PRACTICE_QUESTIONS: LearningPracticeQuestion[] = [
@@ -191,3 +192,62 @@ export function createPracticeReportStub(partial: {
     createdAt: new Date().toISOString(),
   };
 }
+
+const LONG_SAMPLE_ANSWER = [
+  'Em sẽ tách orders và order_items, đặt khoá ngoại, ràng buộc UNIQUE cho mã đơn, và tạo chỉ mục cho các cột thường dùng để lọc. ',
+  'Khi thiết kế schema, em kiểm tra thêm tính toàn vẹn dữ liệu, giao dịch khi tạo đơn, chiến lược xoá mềm, và cách phân trang để tránh truy vấn quá nhiều bản ghi. ',
+].join('').repeat(5).trim();
+
+/** Raw GET /roadmaps/{id}/lessons/{lessonId} fixtures for MIS1-F1. */
+export const MOCK_LESSON_MISTAKES_NULL: ApiRoadmapLessonDetail = {
+  id: 'lesson-mistakes-null',
+  title: 'Legacy lesson',
+  status: 'Theory',
+  mistakes: null,
+};
+
+export const MOCK_LESSON_MISTAKES_EMPTY: ApiRoadmapLessonDetail = {
+  id: 'lesson-mistakes-empty',
+  title: 'Lesson without grouped mistakes',
+  status: 'Theory',
+  mistakes: [],
+};
+
+export const MOCK_LESSON_MISTAKES: ApiRoadmapLessonDetail = {
+  id: 'lesson-mistakes-rich',
+  title: 'Schema design review',
+  status: 'Theory',
+  theoryContent: 'Lesson theory content',
+  mistakes: [
+    {
+      id: 'm1',
+      criterionName: 'Chiều sâu kỹ thuật',
+      scorePct: 25,
+      question: 'Bạn thiết kế schema cho module đặt hàng thế nào?',
+      answer: 'Em sẽ tạo bảng orders với order_items, rồi join lại khi cần. # phần này cần kiểm tra\n> không phải markdown\n<strong>không phải HTML</strong>\n* không phải bullet',
+      whatWentWrong: 'Chưa nói tới ràng buộc toàn vẹn và chỉ mục cho cột lọc.',
+      howToFixIt: 'Nêu khoá ngoại, ràng buộc UNIQUE, và chỉ mục cho cột hay lọc.',
+      sampleAnswer: LONG_SAMPLE_ANSWER,
+    },
+    {
+      id: 'm2',
+      criterionName: 'Tư duy hệ thống',
+      scorePct: 40,
+      question: 'Bạn xử lý giao dịch tạo đơn ra sao?',
+      answer: 'Em dùng transaction để bảo đảm đơn và các dòng chi tiết cùng thành công.',
+      whatWentWrong: 'Chưa giải thích tình huống rollback.',
+      howToFixIt: 'Mô tả rõ commit, rollback và cách xử lý lỗi.',
+      sampleAnswer: 'Em bao toàn bộ thao tác tạo đơn trong một transaction và rollback khi bất kỳ bước nào thất bại.',
+    },
+    {
+      id: 'm3',
+      criterionName: 'Khả năng diễn đạt',
+      scorePct: 55,
+      question: 'Bạn theo dõi hiệu năng truy vấn thế nào?',
+      answer: 'Em xem execution plan và theo dõi truy vấn chậm.',
+      whatWentWrong: 'Chưa nêu ngưỡng cảnh báo và chỉ số theo dõi.',
+      howToFixIt: 'Nêu metric, ngưỡng cảnh báo và cách xác minh sau tối ưu.',
+      sampleAnswer: 'Em kết hợp execution plan với metric truy vấn chậm, đặt ngưỡng cảnh báo, sau đó đo lại trước và sau khi thêm chỉ mục.',
+    },
+  ],
+};

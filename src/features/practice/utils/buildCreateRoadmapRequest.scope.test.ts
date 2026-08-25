@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCreateRoadmapRequest } from './buildCreateRoadmapRequest';
 import { ROADMAP_SCOPE_LESSONS, ROADMAP_SCOPES } from '../types/learning.types';
 
-const base = { name: '', cvId: undefined, sessionIds: [], reportIds: [] };
+const base = { name: '', cvId: undefined, sessionIds: ['session-1'], reportIds: [] };
 
 describe('buildCreateRoadmapRequest — quy mô lộ trình', () => {
   // Trước khi nối trường này, giao diện KHÔNG gửi scope nên backend luôn dựng bản

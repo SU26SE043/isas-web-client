@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,13 @@ import { useLanguage } from '@/shared/languages';
 import { LearningDashboardToolbar } from '../components/learning-path/LearningDashboardToolbar';
 import { LearningRoadmapCardView } from '../components/learning-path/LearningRoadmapCardView';
 import { useLearningRoadmaps } from '../hooks/useLearningRoadmaps';
+import { useHasScoredSession } from '../hooks/useHasScoredSession';
 import type { LearningDashboardQuery } from '../types/learningPath.types';
 
 export function LearningDashboardPage() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState<LearningDashboardQuery>({
     search: '',
     domainId: 'all',
@@ -19,6 +22,12 @@ export function LearningDashboardPage() {
   });
 
   const { data: items = [], isLoading, isError, refetch, isFetching } = useLearningRoadmaps(query);
+  const scoredSessionQuery = useHasScoredSession();
+  const showPracticeCta = scoredSessionQuery.isSuccess && scoredSessionQuery.data === false;
+  const fewerLessons = Boolean((location.state as { fewerLessons?: boolean } | null)?.fewerLessons);
+  useEffect(() => {
+    if (fewerLessons) navigate(location.pathname, { replace: true, state: null });
+  }, [fewerLessons, location.pathname, navigate]);
 
   return (
     <div className="page-container page-section min-h-screen">
@@ -43,6 +52,7 @@ export function LearningDashboardPage() {
       </header>
 
       <LearningDashboardToolbar query={query} onChange={setQuery} />
+      {fewerLessons ? <p className="mt-4 rounded-lg border border-info/40 bg-info/10 px-4 py-3 text-sm text-info" role="status">{t('practice.learningPath.fewerLessonsNotice')}</p> : null}
 
       {isLoading ? (
         <div className="mt-10 flex justify-center" role="status">
@@ -70,10 +80,10 @@ export function LearningDashboardPage() {
             className="frame-satin"
             variant="no-data"
             title={t('practice.learningPath.emptyTitle')}
-            description={t('practice.learningPath.empty')}
+            description={showPracticeCta ? t('practice.learningPath.empty.needPracticeFirst') : t('practice.learningPath.empty')}
             action={
-              <Link to="/candidate/roadmap" className="btn-primary inline-flex">
-                {t('practice.learningPath.goCreate')}
+              <Link to={showPracticeCta ? '/practice' : '/candidate/roadmap'} className="btn-primary inline-flex">
+                {showPracticeCta ? t('practice.learningPath.empty.practiceCta') : t('practice.learningPath.goCreate')}
               </Link>
             }
           />

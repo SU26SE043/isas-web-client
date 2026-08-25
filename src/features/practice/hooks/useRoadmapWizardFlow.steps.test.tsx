@@ -52,10 +52,10 @@ describe('bước mồ côi khi `steps` co lại', () => {
   it('resolveOrphanStepFallback lùi về bước hợp lệ gần nhất phía TRƯỚC', () => {
     // Thứ tự khớp `ROADMAP_WIZARD_STEP_ORDER` sau F4 (mục tiêu TRƯỚC báo cáo); đây là `steps` đã
     // co lại vì không có roadmap đã hoàn tất nào.
-    const shrunk = ['domain', 'nameFocus', 'cv', 'currentLevel', 'targetLevel', 'reports', 'confirm'] as const;
+    const shrunk = ['domain', 'nameFocus', 'cv', 'currentLevel', 'reports', 'confirm'] as const;
     expect(resolveOrphanStepFallback('priorRoadmap', shrunk)).toBe('reports');
     // Bước còn trong danh sách ⇒ không đụng vào.
-    expect(resolveOrphanStepFallback('targetLevel', shrunk)).toBeNull();
+    expect(resolveOrphanStepFallback('currentLevel', shrunk)).toBeNull();
     // Không còn bước nào phía trước ⇒ về bước đầu, không trả undefined.
     expect(resolveOrphanStepFallback('reports', ['confirm'])).toBe('confirm');
   });
@@ -127,10 +127,8 @@ describe('danh sách roadmap cho wizard không kéo theo N+1', () => {
 });
 
 /**
- * F4 — thứ tự bước là HỢP ĐỒNG với người dùng, không phải chi tiết cài đặt: "Trình độ hiện tại" →
- * "Cấp độ mục tiêu" là một cặp (lộ trình sinh từ KHOẢNG CÁCH giữa chúng), chèn bước chọn báo cáo
- * vào giữa làm mất mạch. Khoá bằng danh sách đầy đủ chứ không chỉ khoá "targetLevel đứng trước
- * reports": khoá quan hệ đôi thì hoán đổi hai bước KHÁC vẫn qua.
+ * F5 đổi tiền đề sản phẩm: chỉ giữ một bước trình độ hiện tại để chỉnh độ khó; nội dung luôn
+ * lấy từ lỗi trong session đã chọn. Khoá đủ danh sách để không vô tình đưa lại ô mục tiêu.
  */
 describe('thứ tự bước của wizard lộ trình', () => {
   it('giữ đúng thứ tự đã chốt với sản phẩm', () => {
@@ -139,7 +137,6 @@ describe('thứ tự bước của wizard lộ trình', () => {
       'nameFocus',
       'cv',
       'currentLevel',
-      'targetLevel',
       'reports',
       'priorRoadmap',
       'confirm',
@@ -157,9 +154,7 @@ describe('thứ tự bước của wizard lộ trình', () => {
     const indexes = result.current.steps.map((step) => ROADMAP_WIZARD_STEP_ORDER.indexOf(step));
     expect(indexes).toEqual([...indexes].sort((a, b) => a - b));
     expect(indexes).not.toContain(-1);
-    expect(result.current.steps.indexOf('targetLevel')).toBeLessThan(
-      result.current.steps.indexOf('reports'),
-    );
+    expect(result.current.steps).not.toContain('targetLevel');
   });
 
   // Điều hướng phải DẪN XUẤT từ `steps`. Ghi cứng next/back ở từng bước là cách lỗi thứ tự sinh
@@ -172,10 +167,8 @@ describe('thứ tự bước của wizard lộ trình', () => {
 
     act(() => result.current.goToStep('currentLevel'));
     act(() => result.current.goNext());
-    expect(result.current.step).toBe('targetLevel');
-    act(() => result.current.goNext());
     expect(result.current.step).toBe('reports');
     act(() => result.current.goBack());
-    expect(result.current.step).toBe('targetLevel');
+    expect(result.current.step).toBe('currentLevel');
   });
 });

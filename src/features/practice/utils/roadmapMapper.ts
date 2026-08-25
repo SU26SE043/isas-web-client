@@ -11,6 +11,7 @@ import type {
 } from '../types/learningPath.types';
 import type {
   ApiLessonStatus,
+  ApiLessonMistake,
   ApiRoadmapDetail,
   ApiRoadmapLesson,
   ApiRoadmapLessonDetail,
@@ -38,6 +39,7 @@ export type OpenedLearningLesson = {
   // Do SERVER quyết định — trang chi tiết bài KHÔNG được tự suy từ `apiStatus`.
   canRetry: boolean;
   attemptCount: number;
+  mistakes?: ApiLessonMistake[] | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -207,8 +209,8 @@ function mapMilestoneFromApi(
     order: pickNumber(milestone.orderNo, milestone.order, index + 1),
     status: gate,
     progressPercent: pickNumber(milestone.progressPercent, Math.round((completedParts / totalParts) * 100)),
+    mistakeCount: typeof milestone.mistakeCount === 'number' ? milestone.mistakeCount : undefined,
     lessons,
-    focusCriteria: Array.isArray(milestone.focusCriteria) ? milestone.focusCriteria : [],
     improvement: Array.isArray(milestone.improvement) ? milestone.improvement : null,
   };
 }
@@ -362,6 +364,7 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
     pathStatus: parts.pathStatus,
     resources: mapLearningResources(item.resources),
     citations: Array.isArray(item.citations) ? item.citations : null,
+    mistakes: Array.isArray(item.mistakes) ? item.mistakes : item.mistakes === null ? null : undefined,
     canRetry: (item as Record<string, unknown>).canRetry === true,
     attemptCount: pickNumber((item as Record<string, unknown>).attemptCount, 0),
   };

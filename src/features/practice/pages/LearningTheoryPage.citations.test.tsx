@@ -24,7 +24,7 @@ import { LearningTheoryPage } from './LearningTheoryPage';
 
 type Citation = { chunkId: string; sourceUrl: string; sourceTitle: string };
 
-function renderPage(citations: Citation[] | null) {
+function renderPage(citations: Citation[] | null, mistakes: Array<Record<string, unknown>> | null = null) {
   vi.mocked(useLearningRoadmapDetail).mockReturnValue({
     data: { id: 'rm-1', milestones: [] },
     isLoading: false,
@@ -49,6 +49,7 @@ function renderPage(citations: Citation[] | null) {
       pathStatus: 'in_progress',
       resources: [],
       citations,
+      mistakes,
       canRetry: false,
       attemptCount: 0,
     },
@@ -95,5 +96,26 @@ describe('LearningTheoryPage — khối nguồn kiểm chứng', () => {
   it('bài KHÔNG có nguồn → trang nói rõ, không bỏ trống', () => {
     renderPage(null);
     expect(screen.getByText('practice.learningPath.citationsEmpty')).toBeInTheDocument();
+  });
+
+  it('bài CÓ lỗi → khối lỗi nằm trước thân bài và không gọi thêm lesson API', () => {
+    renderPage(null, [
+      {
+        id: 'm1',
+        criterionName: 'Chiều sâu kỹ thuật',
+        scorePct: 25,
+        question: 'Bạn thiết kế schema thế nào?',
+        answer: 'Em sẽ tách bảng orders và order_items.',
+        whatWentWrong: 'Chưa nói tới ràng buộc toàn vẹn.',
+        howToFixIt: 'Nêu khoá ngoại và chỉ mục.',
+        sampleAnswer: 'Em sẽ tách orders và order_items, đặt khoá ngoại.',
+      },
+    ]);
+
+    const review = screen.getByText('practice.learningPath.mistakes.title');
+    const article = screen.getByText('theory-html');
+    expect(review.compareDocumentPosition(article) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText('practice.learningPath.mistakes.whatWentWrong')).toBeInTheDocument();
+    expect(vi.mocked(useLearningLesson)).toHaveBeenCalledTimes(1);
   });
 });

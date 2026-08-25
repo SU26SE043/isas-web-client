@@ -10,6 +10,7 @@ interface RoadmapDomainStepProps {
   isLoading: boolean;
   onSelect: (domainId: string) => void;
   onNext: () => void;
+  reportCounts?: Record<string, number>;
 }
 
 export function RoadmapDomainStep({
@@ -18,6 +19,7 @@ export function RoadmapDomainStep({
   isLoading,
   onSelect,
   onNext,
+  reportCounts = {},
 }: RoadmapDomainStepProps) {
   const { language, t } = useLanguage();
   const getDomainTitle = (domain: PracticeDomain) => {
@@ -38,6 +40,7 @@ export function RoadmapDomainStep({
             key={domain.id}
             title={getDomainTitle(domain)}
             description={language === 'vi' ? domain.descriptionVi : domain.description}
+            meta={t('practice.roadmapWizard.reports.countBadge').replace('{count}', String(reportCounts[domain.id] ?? 0))}
             selected={domain.id === selectedId}
             onClick={() => onSelect(domain.id)}
           />
