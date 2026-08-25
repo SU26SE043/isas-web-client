@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapQuestionsToApiRequest } from './buildCampaignCreateRequest';
+import { mapQuestionsToApiRequest, mapRubricToCreateCriteria } from './buildCampaignCreateRequest';
 import type { CampaignQuestion } from '../types/campaignManagement.types';
 
 describe('mapQuestionsToApiRequest', () => {
@@ -34,5 +34,27 @@ describe('mapQuestionsToApiRequest', () => {
         isRequired: false,
       },
     ]);
+  });
+});
+
+describe('mapRubricToCreateCriteria', () => {
+  it('converts UI percentage weights to decimal API weights', () => {
+    expect(
+      mapRubricToCreateCriteria([
+        { id: 'r1', name: 'Communication', description: '', weight: 1, maxScore: 10 },
+        { id: 'r2', name: 'Technical', description: '', weight: 99, maxScore: 10 },
+      ]),
+    ).toEqual([
+      { name: 'Communication', description: null, weight: 0.01, maxScore: 10 },
+      { name: 'Technical', description: null, weight: 0.99, maxScore: 10 },
+    ]);
+  });
+
+  it('preserves fractional max scores instead of rounding them', () => {
+    expect(
+      mapRubricToCreateCriteria([
+        { id: 'r1', name: 'Depth', description: '', weight: 100, maxScore: 2.5 },
+      ]),
+    ).toEqual([{ name: 'Depth', description: null, weight: 1, maxScore: 2.5 }]);
   });
 });

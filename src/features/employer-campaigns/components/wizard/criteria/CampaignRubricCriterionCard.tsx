@@ -93,7 +93,7 @@ export function CampaignRubricCriterionCard({
             type="number"
             min={0}
             max={100}
-            step={1}
+            step={0.1}
             disabled={disabled}
             value={criterion.weight}
             onChange={(event) => onChange({ weight: Number(event.target.value) })}
@@ -120,7 +120,7 @@ export function CampaignRubricCriterionCard({
             type="number"
             min={1}
             max={10}
-            step={1}
+            step={0.1}
             disabled={disabled}
             value={criterion.maxScore}
             aria-invalid={!maxScoreValid}

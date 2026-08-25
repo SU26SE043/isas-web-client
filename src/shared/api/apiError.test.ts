@@ -80,6 +80,51 @@ describe('apiError', () => {
     );
   });
 
+  it('reads ASP.NET ValidationProblemDetails field errors', () => {
+    const error = new axios.AxiosError(
+      'Request failed with status code 400',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: HttpStatus.BAD_REQUEST,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {} as never,
+        data: {
+          type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+          title: 'One or more validation errors occurred.',
+          status: 400,
+          errors: {
+            request: ['The JSON value could not be converted to System.Nullable`1.'],
+          },
+        },
+      },
+    );
+
+    expect(getApiErrorMessage(error)).toBe(
+      'request: The JSON value could not be converted to System.Nullable`1.',
+    );
+  });
+
+  it('does not surface Axios generic status text when the body is empty', () => {
+    const error = new axios.AxiosError(
+      'Request failed with status code 400',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: HttpStatus.BAD_REQUEST,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {} as never,
+        data: {},
+      },
+    );
+
+    expect(getApiErrorMessage(error)).toBe('Invalid request data.');
+  });
+
   it('falls back to getHttpErrorMessage when body and axios message are empty', () => {
     const error = new axios.AxiosError(
       'Request failed',

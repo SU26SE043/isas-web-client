@@ -47,12 +47,12 @@ export function mapRubricToCreateCriteria(
     .filter((item) => item.name.trim())
     .map((item) => {
       const rawWeight = Number(item.weight);
-      const weight = rawWeight > 1 ? Number((rawWeight / 100).toFixed(4)) : rawWeight;
+      const weight = Number((rawWeight / 100).toFixed(4));
       return {
         name: item.name.trim(),
         description: item.description.trim() || null,
         weight,
-        maxScore: Math.max(1, Math.round(Number(item.maxScore) || 1)),
+        maxScore: Number(item.maxScore) || 1,
       };
     });
 }
