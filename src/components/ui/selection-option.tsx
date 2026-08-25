@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export interface SelectionOptionProps {
   title: string;
   description?: string;
+  meta?: React.ReactNode;
   icon?: React.ReactNode;
   selected?: boolean;
   onClick?: () => void;
@@ -20,6 +21,7 @@ export interface SelectionOptionProps {
 export function SelectionOption({
   title,
   description,
+  meta,
   icon,
   selected = false,
   onClick,
@@ -76,6 +78,7 @@ export function SelectionOption({
             {description}
           </span>
         ) : null}
+        {meta ? <span className="mt-2 block text-xs text-muted-foreground">{meta}</span> : null}
       </span>
       {showChevron ? (
         <ChevronRight

@@ -7,6 +7,7 @@ import { useLanguage } from '@/shared/languages';
 import { LearningDashboardToolbar } from '../components/learning-path/LearningDashboardToolbar';
 import { LearningRoadmapCardView } from '../components/learning-path/LearningRoadmapCardView';
 import { useLearningRoadmaps } from '../hooks/useLearningRoadmaps';
+import { useHasScoredSession } from '../hooks/useHasScoredSession';
 import type { LearningDashboardQuery } from '../types/learningPath.types';
 
 export function LearningDashboardPage() {
@@ -19,6 +20,8 @@ export function LearningDashboardPage() {
   });
 
   const { data: items = [], isLoading, isError, refetch, isFetching } = useLearningRoadmaps(query);
+  const scoredSessionQuery = useHasScoredSession();
+  const showPracticeCta = scoredSessionQuery.isSuccess && scoredSessionQuery.data === false;
 
   return (
     <div className="page-container page-section min-h-screen">
@@ -70,10 +73,10 @@ export function LearningDashboardPage() {
             className="frame-satin"
             variant="no-data"
             title={t('practice.learningPath.emptyTitle')}
-            description={t('practice.learningPath.empty')}
+            description={showPracticeCta ? t('practice.learningPath.empty.needPracticeFirst') : t('practice.learningPath.empty')}
             action={
-              <Link to="/candidate/roadmap" className="btn-primary inline-flex">
-                {t('practice.learningPath.goCreate')}
+              <Link to={showPracticeCta ? '/practice' : '/candidate/roadmap'} className="btn-primary inline-flex">
+                {showPracticeCta ? t('practice.learningPath.empty.practiceCta') : t('practice.learningPath.goCreate')}
               </Link>
             }
           />

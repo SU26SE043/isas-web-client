@@ -67,7 +67,7 @@ describe('useRoadmapWizardFlow source wiring', () => {
   });
 });
 
-// Danh sách báo cáo chỉ được nạp khi đi VÀO đúng bước Báo cáo — `goToStep` so số bước để biết.
+// Danh sách báo cáo được nạp ngay khi chọn lĩnh vực để badge và bước Báo cáo đều có dữ liệu.
 //
 // Vì sao cần khoá bằng test: khi chèn bước "Tên & mục tiêu" vào giữa, bước Báo cáo dời từ 1 sang 2.
 // Điều kiện cũ ghim số 1 sẽ lặng lẽ không bao giờ khớp nữa ⇒ vào bước Báo cáo thấy danh sách TRỐNG,
@@ -78,7 +78,6 @@ describe('nạp báo cáo theo đúng số bước', () => {
   it('vào bước Báo cáo thì nạp danh sách của lĩnh vực đã chọn', async () => {
     const { result } = renderHook(() => useRoadmapWizardFlow());
     act(() => result.current.handleSelectDomain('frontend'));
-    fetchHistoryMock.mockClear();
 
     act(() => result.current.goToStep('reports'));
 
@@ -93,14 +92,9 @@ describe('nạp báo cáo theo đúng số bước', () => {
     await waitFor(() => expect(fetchHistoryMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'Scored', excludeCampaign: true })));
   });
 
-  it('đi tới bước KHÁC thì không nạp — tránh gọi mạng thừa mỗi lần bấm qua lại', async () => {
+  it('chọn lĩnh vực thì nạp ngay cả khi chưa đi tới bước Báo cáo', async () => {
     const { result } = renderHook(() => useRoadmapWizardFlow());
     act(() => result.current.handleSelectDomain('frontend'));
-    fetchHistoryMock.mockClear();
-
-    act(() => result.current.goToStep('nameFocus'));
-    act(() => result.current.goToStep('currentLevel'));
-
-    expect(fetchHistoryMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(fetchHistoryMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'Scored', excludeCampaign: true })));
   });
 });

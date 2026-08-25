@@ -171,7 +171,7 @@ export const learningService = {
     const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
     if (!payload.ok) {
       throw new CreateRoadmapError(
-        payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',
+        payload.reason === 'sessions_required' ? 'sessions_required' : 'invalid_input',
       );
     }
 
