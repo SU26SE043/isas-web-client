@@ -41,6 +41,7 @@ export function JobDescriptionTextEditor({
         <textarea
           id="campaign-jd-text"
           value={value}
+          maxLength={20000}
           disabled={disabled}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
@@ -57,7 +58,7 @@ export function JobDescriptionTextEditor({
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <p>
-          {charsLabel.replace('{count}', String(chars))}
+          {charsLabel.replace('{count}', String(chars))} / 20,000
           {' · '}
           {wordsLabel.replace('{count}', String(words))}
         </p>

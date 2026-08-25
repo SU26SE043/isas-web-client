@@ -85,6 +85,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
       return next;
     })();
 
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   return {
     title: campaign?.title ?? '',
     domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
@@ -95,7 +96,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
     passScorePct: campaign?.passScorePct ?? null,
     startsAt: toDatetimeLocalValue(start),
     expiresAt: toDatetimeLocalValue(end),
-    timezone: 'Asia/Ho_Chi_Minh',
+    timezone,
   };
 }
 
@@ -207,6 +208,9 @@ function mapSubmitError(
 
   if (status === 401) return { message: t('employer.campaigns.wizard.sessionExpired'), step: null };
   if (status === 403) {
+    if (message && /(max.?candidates?|quota|package|plan|limit|cap)/i.test(message)) {
+      return { message, step: 0 };
+    }
     return {
       message:
         kind === 'create'

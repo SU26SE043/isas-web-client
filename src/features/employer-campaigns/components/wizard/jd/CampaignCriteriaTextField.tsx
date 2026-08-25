@@ -22,11 +22,13 @@ export function CampaignCriteriaTextField({
         id="campaign-criteria-text"
         rows={4}
         value={value}
+        maxLength={2000}
         disabled={disabled}
         placeholder={t('employer.campaigns.wizard.criteriaTextPlaceholder')}
         onChange={(e) => onChange(e.target.value)}
         className="min-h-[120px] w-full resize-y rounded-xl border border-satin bg-surface-base px-3 py-2 text-sm leading-relaxed text-foreground outline-none transition focus-visible:border-[var(--border-focus)]"
       />
+      <p className="text-right text-xs text-muted-foreground">{value.length}/2,000</p>
     </div>
   );
 }

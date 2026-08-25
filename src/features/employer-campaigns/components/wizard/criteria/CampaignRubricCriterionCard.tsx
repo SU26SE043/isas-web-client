@@ -62,6 +62,7 @@ export function CampaignRubricCriterionCard({
             <Input
               id={`campaign-rubric-name-${criterion.id}`}
               value={criterion.name}
+              maxLength={255}
               disabled={disabled}
               onChange={(event) => onChange({ name: event.target.value })}
               className="h-9 border-satin bg-surface-overlay/70 text-sm font-semibold"

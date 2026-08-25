@@ -58,6 +58,7 @@ export function CampaignInfoStep({
               <Input
                 id="campaign-title"
                 value={info.title}
+                maxLength={255}
                 placeholder={t('employer.campaigns.form.titlePlaceholder')}
                 onChange={(e) => onChange({ title: e.target.value })}
                 aria-invalid={!!error && !info.title.trim()}
@@ -89,6 +90,7 @@ export function CampaignInfoStep({
                 id="campaign-max"
                 type="number"
                 min={1}
+                step={1}
                 value={info.maxCandidates ?? ''}
                 placeholder={t('employer.campaigns.form.maxCandidatesPlaceholder')}
                 onChange={(e) => {
@@ -130,6 +132,7 @@ export function CampaignInfoStep({
                   type="number"
                   min={0}
                   max={100}
+                  step={1}
                   value={info.passScorePct}
                   placeholder={t('employer.campaigns.form.passScorePlaceholder')}
                   onChange={(e) => {
@@ -151,6 +154,7 @@ export function CampaignInfoStep({
                 id="campaign-time-limit"
                 type="number"
                 min={1}
+                step={1}
                 value={info.timeLimitMinutes}
                 onChange={(e) =>
                   onChange({ timeLimitMinutes: Math.max(1, Number(e.target.value) || 1) })
