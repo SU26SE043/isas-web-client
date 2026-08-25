@@ -6,7 +6,6 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignInfoState } from '../../types/campaignWizard.types';
 import { CAMPAIGN_DOMAIN_OPTIONS, type CampaignDomainOption } from './campaignWizard.steps';
 import { CampaignInfoScheduleSection } from './CampaignInfoScheduleSection';
-import { CampaignLocationField } from './CampaignLocationField';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
@@ -64,15 +63,6 @@ export function CampaignInfoStep({
                 aria-invalid={!!error && !info.title.trim()}
               />
             </div>
-
-            <CampaignLocationField
-              value={info.location}
-              coordinates={info.locationCoordinates}
-              invalid={!!error && !info.location.trim()}
-              onChange={(location, locationCoordinates) =>
-                onChange({ location, locationCoordinates })
-              }
-            />
 
             <div className="space-y-2">
               <Label htmlFor="campaign-domain">{t('employer.campaigns.form.domain')}</Label>

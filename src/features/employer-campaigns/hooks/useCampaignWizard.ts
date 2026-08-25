@@ -50,6 +50,7 @@ import {
   defaultGenerateCount,
   effectiveMaxQuestions,
   hasWizardJd,
+  removePlaceholderQuestion,
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 
@@ -445,10 +446,14 @@ export function useCampaignWizard({
           campaignId: id,
           count,
         });
+        const generated = removePlaceholderQuestion(
+          updated.questions,
+          t('employer.campaigns.wizard.placeholderQuestion'),
+        );
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
-          questions: updated.questions,
+          questions: generated.questions,
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
@@ -461,8 +466,13 @@ export function useCampaignWizard({
           },
         }));
         setQuestionsSaved(true);
-        const received = updated.questions.length;
-        if (received < count) {
+        const received = generated.questions.length;
+        if (generated.removedCount > 0) {
+          toast(
+            t('employer.campaigns.campaignQuestions.success.generatedPlaceholderRemoved')
+              .replace('{{count}}', String(received)),
+          );
+        } else if (received < count) {
           toast(
             t('employer.campaigns.campaignQuestions.success.generatedLimited')
               .replace('{{requested}}', String(count))

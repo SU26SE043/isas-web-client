@@ -134,7 +134,6 @@ export type CampaignCreateRequest = {
   domain: string;
   language?: CampaignLanguage;
   seniority?: CampaignSeniority;
-  location: string;
   maxCandidates?: number | null;
   timeLimitMinutes: number;
   /** 0..100; null = HR decides */
@@ -177,7 +176,6 @@ export type CampaignUpdateRequest = {
   domain?: string;
   language?: CampaignLanguage;
   seniority?: CampaignSeniority;
-  location?: string;
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
   antiCheatEnabled?: boolean;

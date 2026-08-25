@@ -184,6 +184,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.campaignQuestions.actions.continue': 'Tiếp tục',
     'employer.campaigns.campaignQuestions.success.generated': 'AI đã tạo {{count}} câu hỏi.',
     'employer.campaigns.campaignQuestions.success.generatedExact': 'AI đã tạo thành công {{count}} câu hỏi.',
+    'employer.campaigns.campaignQuestions.success.generatedPlaceholderRemoved':
+      'AI đã tạo {{count}} câu hỏi; câu hỏi tạm đã được loại bỏ.',
     'employer.campaigns.campaignQuestions.success.generatedLimited': 'Bạn yêu cầu {{requested}} câu hỏi, nhưng chiến dịch chỉ nhận được {{received}} câu do giới hạn số câu hỏi hiện tại.',
     'employer.campaigns.campaignQuestions.success.saved': 'Đã lưu danh sách câu hỏi.',
     'employer.campaigns.campaignQuestions.validation.countRequired': 'Vui lòng nhập số lượng câu hỏi.',
@@ -1410,6 +1412,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.campaignQuestions.actions.continue': 'Continue',
     'employer.campaigns.campaignQuestions.success.generated': 'AI generated {{count}} questions.',
     'employer.campaigns.campaignQuestions.success.generatedExact': 'AI successfully generated {{count}} questions.',
+    'employer.campaigns.campaignQuestions.success.generatedPlaceholderRemoved':
+      'AI generated {{count}} questions; the temporary question was removed.',
     'employer.campaigns.campaignQuestions.success.generatedLimited': 'You requested {{requested}} questions, but the campaign received {{received}} due to the current limit.',
     'employer.campaigns.campaignQuestions.success.saved': 'Question list saved.',
     'employer.campaigns.campaignQuestions.validation.countRequired': 'Enter a question count.',
