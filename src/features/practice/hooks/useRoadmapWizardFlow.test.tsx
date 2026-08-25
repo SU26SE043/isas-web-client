@@ -48,7 +48,7 @@ describe('useRoadmapWizardFlow source wiring', () => {
 
     act(() => {
       result.current.handleSelectDomain('frontend');
-      result.current.setTargetLevel('junior');
+      result.current.setCurrentLevel('junior');
       result.current.setCvAnalysisId('analysis-1');
       result.current.setPriorRoadmapId('roadmap-1');
     });

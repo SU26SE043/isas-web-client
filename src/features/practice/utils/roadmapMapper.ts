@@ -211,7 +211,6 @@ function mapMilestoneFromApi(
     progressPercent: pickNumber(milestone.progressPercent, Math.round((completedParts / totalParts) * 100)),
     mistakeCount: typeof milestone.mistakeCount === 'number' ? milestone.mistakeCount : undefined,
     lessons,
-    focusCriteria: Array.isArray(milestone.focusCriteria) ? milestone.focusCriteria : [],
     improvement: Array.isArray(milestone.improvement) ? milestone.improvement : null,
   };
 }

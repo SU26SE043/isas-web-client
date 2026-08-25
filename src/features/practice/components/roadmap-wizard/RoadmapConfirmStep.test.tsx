@@ -14,7 +14,6 @@ vi.mock('@/shared/languages', () => ({
 }));
 
 const baseProps = {
-  targetLevel: 'junior' as const,
   currentLevel: 'fresher' as const,
   name: '',
   onNameChange: vi.fn(),
@@ -141,27 +140,22 @@ describe('RoadmapConfirmStep — bản tóm tắt CHỈ ĐỌC', () => {
 });
 
 /**
- * F6 — lộ trình sinh ra từ KHOẢNG CÁCH giữa trình độ hiện tại và cấp độ mục tiêu. Bản tóm tắt chỉ
- * hiện vế mục tiêu là giấu mất một nửa dữ kiện quyết định nội dung.
+ * F5 — mục tiêu đã được gỡ khỏi flow; màn xác nhận chỉ hiển thị trình độ hiện tại.
  */
 describe('RoadmapConfirmStep — hiện đủ cả hai vế của khoảng cách', () => {
   afterEach(() => cleanup());
 
-  it('hiện trình độ hiện tại bên cạnh cấp độ mục tiêu', () => {
-    renderStep({ currentLevel: 'junior', targetLevel: 'senior' });
+  it('hiện trình độ hiện tại và không còn hàng cấp độ mục tiêu', () => {
+    renderStep({ currentLevel: 'senior' });
 
     expect(screen.getByText('practice.roadmapWizard.confirm.currentLevel')).toBeInTheDocument();
-    expect(screen.getByText('practice.roadmapWizard.level.junior')).toBeInTheDocument();
-    expect(screen.getByText('practice.roadmapWizard.confirm.level')).toBeInTheDocument();
     expect(screen.getByText('practice.roadmapWizard.level.senior')).toBeInTheDocument();
+    expect(screen.queryByText('practice.roadmapWizard.confirm.level')).not.toBeInTheDocument();
   });
 
-  // Hai vế phải đọc ra được RIÊNG từng cái. Lấy nhầm biến (hiện tại ↔ mục tiêu) thì hai hàng
-  // trùng giá trị mà vẫn "có hiển thị" — đúng kiểu sai không ai để ý.
-  it('hai hàng đọc hai giá trị khác nhau, không cùng một biến', () => {
-    renderStep({ currentLevel: 'fresher', targetLevel: 'middle' });
+  it('chỉ có một giá trị trình độ ở màn xác nhận', () => {
+    renderStep({ currentLevel: 'middle' });
 
-    expect(screen.getByText('practice.roadmapWizard.level.fresher')).toBeInTheDocument();
     expect(screen.getByText('practice.roadmapWizard.level.middle')).toBeInTheDocument();
     expect(screen.queryAllByText('practice.roadmapWizard.level.middle')).toHaveLength(1);
   });

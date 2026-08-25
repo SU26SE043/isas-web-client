@@ -53,7 +53,6 @@ export type ApiRoadmapMilestone = {
   status?: string;
   progressPercent?: number;
   mistakeCount?: number;
-  focusCriteria?: string[];
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons?: ApiRoadmapLesson[];
 };

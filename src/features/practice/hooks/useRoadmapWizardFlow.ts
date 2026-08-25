@@ -1,4 +1,4 @@
-import type { RoadmapScope } from '../types/learning.types';
+import { ROADMAP_SCOPE_LESSONS, type RoadmapScope } from '../types/learning.types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,6 @@ export type RoadmapWizardStep =
   | 'nameFocus'
   | 'cv'
   | 'currentLevel'
-  | 'targetLevel'
   | 'reports'
   | 'priorRoadmap'
   | 'confirm';
@@ -41,10 +40,8 @@ export const ROADMAP_WIZARD_STEP_ORDER: readonly RoadmapWizardStep[] = [
   'nameFocus',
   'cv',
   'currentLevel',
-  // "Cấp độ mục tiêu" đứng NGAY SAU "Trình độ hiện tại", trước "Báo cáo": hai bước này là một cặp
-  // — lộ trình sinh ra từ KHOẢNG CÁCH giữa chúng, nên hỏi rời nhau (chèn bước chọn báo cáo vào
-  // giữa) làm người dùng mất mạch. Đây cũng là thứ tự đã chốt với sản phẩm.
-  'targetLevel',
+  // Trình độ hiện tại được hỏi trước báo cáo để điều chỉnh độ khó; nội dung lộ trình vẫn lấy từ
+  // các điểm hụt trong những buổi luyện đã chọn.
   'reports',
   'priorRoadmap',
   'confirm',
@@ -133,7 +130,6 @@ export function useRoadmapWizardFlow() {
   const [domainId, setDomainId] = useState('');
   const [rawReports, setRawReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [targetLevel, setTargetLevel] = useState<RoadmapTargetLevel | ''>('');
   const [manualLevel, setManualLevel] = useState<RoadmapTargetLevel | null>(null);
   const [name, setName] = useState('');
   // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
@@ -258,7 +254,7 @@ export function useRoadmapWizardFlow() {
 
   const steps = useMemo<RoadmapWizardStep[]>(() => {
     // Chế độ lộ trình (LevelUp/Reinforce) KHÔNG còn tồn tại ở tầng giao diện: mỗi lộ trình nay là
-    // một BẢN TRỘN (vừa sửa điểm yếu đo được, vừa tiến lên cấp mục tiêu). Bước chọn chế độ đã gỡ ở
+    // một BẢN TRỘN (sửa điểm yếu đo được và điều chỉnh độ khó theo trình độ hiện tại). Bước chọn chế độ đã gỡ ở
     // `4d53085`, và vòng này gỡ nốt phần hiển thị + phần GỬI. Không state `mode`, không field
     // `mode` trong payload ⇒ backend nhận `null` và tự hiểu là "LevelUp" (`CreateRoadmapRequest`
     // khai `string? Mode = null`), đúng hành vi trước khi có bước đó.
@@ -313,7 +309,6 @@ export function useRoadmapWizardFlow() {
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
-    setTargetLevel('');
     setManualLevel(null);
     setSelectedIds([]);
   };
@@ -333,7 +328,7 @@ export function useRoadmapWizardFlow() {
   };
 
   const handleCreate = async () => {
-    if (!domainId || !targetLevel || isSubmitting) return;
+    if (!domainId || !currentLevel || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitErrorMessage(null);
@@ -343,7 +338,7 @@ export function useRoadmapWizardFlow() {
       );
       const created = await learningService.createRoadmap({
         domainId,
-        targetLevel,
+        targetLevel: currentLevel,
         currentLevel,
         name,
         reportIds: uniqueSessionIds,
@@ -365,7 +360,11 @@ export function useRoadmapWizardFlow() {
       }
       await invalidateLearningRoadmaps(queryClient);
       toast.success(t('practice.roadmapWizard.createSuccess'));
-      navigate('/candidate/learning', { replace: true });
+      const lessonCount = created.milestones?.flatMap((milestone) => milestone.lessons).length ?? 0;
+      navigate('/candidate/learning', {
+        replace: true,
+        state: { fewerLessons: lessonCount < ROADMAP_SCOPE_LESSONS[scope] },
+      });
     } catch (error) {
       const mapped =
         error instanceof CreateRoadmapError ? error : new CreateRoadmapError('generic');
@@ -391,7 +390,6 @@ export function useRoadmapWizardFlow() {
     domainId,
     allReports,
     selectedIds,
-    targetLevel,
     currentLevel,
     currentLevelSource,
     name,
@@ -412,7 +410,6 @@ export function useRoadmapWizardFlow() {
     selectedDomain,
     selectedReports,
     handleSelectDomain,
-    setTargetLevel,
     setCurrentLevel: (value: RoadmapTargetLevel) => setManualLevel(value),
     setCurrentLevelSource: () => {},
     setName,

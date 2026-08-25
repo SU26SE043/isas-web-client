@@ -12,7 +12,7 @@ export function RoadmapCurrentLevelStep({ value, source, onChange, onBack, onNex
         {ROADMAP_TARGET_LEVELS.map((level) => <option key={level} value={level}>{t(`practice.roadmapWizard.level.${level}`)}</option>)}
       </select>
     </label>
-    <p className="mt-3 text-caption text-muted-foreground">{source === 'cv' ? t('practice.roadmapWizard.currentLevel.fromCv') : t('practice.roadmapWizard.currentLevel.default')}</p>
+    {source === 'cv' ? <p className="mt-3 text-caption text-muted-foreground">{t('practice.roadmapWizard.currentLevel.fromCv')}</p> : source === 'default' ? <p className="mt-3 text-caption text-muted-foreground">{t('practice.roadmapWizard.currentLevel.default')}</p> : null}
     <RoadmapWizardNav onBack={onBack} onNext={onNext} />
   </SectionPanel>;
 }

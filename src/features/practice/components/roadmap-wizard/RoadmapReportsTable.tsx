@@ -59,7 +59,8 @@ export function RoadmapReportsTable({
         </button>
       </div>
 
-      <Table className="min-w-[720px]">
+      <div className="hidden md:block">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12" scope="col">
@@ -150,6 +151,33 @@ export function RoadmapReportsTable({
           })}
         </TableBody>
       </Table>
+      </div>
+      <div className="space-y-3 md:hidden">
+        {reports.map((report) => {
+          const checked = selectedIds.includes(report.id);
+          const title = practiceReportTitle(report);
+          const stamp = formatPracticeSessionStamp(report.date, language, { withDate: true });
+          return (
+            <label key={report.id} className={cn('block rounded-xl border p-4', checked ? 'border-info/60 bg-info/10' : 'border-subtle bg-surface-overlay')}>
+              <span className="flex items-start gap-3">
+                <input type="checkbox" className="mt-1 size-4 accent-foreground" checked={checked} aria-label={stamp ? `${title.text} · ${stamp}` : title.text} onChange={() => onToggle(report.id)} />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-foreground">{title.isFreePractice ? `${t('practice.roadmapWizard.reports.freePractice')}${title.text ? ` · ${title.text}` : ''}` : title.text}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{stamp || formatDate(report.date)}</span>
+                  <span className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span>{t(`practice.roadmapWizard.level.${report.level}`)}</span>
+                    <span>·</span>
+                    <span className="font-semibold text-foreground">{report.overallScore}</span>
+                    <span>·</span>
+                    <span>{report.duration} {t('practice.roadmapWizard.reports.minutes')}</span>
+                  </span>
+                </span>
+                <Badge variant="outline">{statusLabel(report.status)}</Badge>
+              </span>
+            </label>
+          );
+        })}
+      </div>
     </div>
   );
 }

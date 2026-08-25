@@ -89,7 +89,6 @@ export interface LearningMilestone {
   progressPercent: number;
   mistakeCount?: number;
   lessons: LearningLesson[];
-  focusCriteria?: string[];
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
 }
 

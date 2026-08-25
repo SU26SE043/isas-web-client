@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import type { LearningDashboardQuery } from '../types/learningPath.types';
 
 export function LearningDashboardPage() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState<LearningDashboardQuery>({
     search: '',
     domainId: 'all',
@@ -22,6 +24,10 @@ export function LearningDashboardPage() {
   const { data: items = [], isLoading, isError, refetch, isFetching } = useLearningRoadmaps(query);
   const scoredSessionQuery = useHasScoredSession();
   const showPracticeCta = scoredSessionQuery.isSuccess && scoredSessionQuery.data === false;
+  const fewerLessons = Boolean((location.state as { fewerLessons?: boolean } | null)?.fewerLessons);
+  useEffect(() => {
+    if (fewerLessons) navigate(location.pathname, { replace: true, state: null });
+  }, [fewerLessons, location.pathname, navigate]);
 
   return (
     <div className="page-container page-section min-h-screen">
@@ -46,6 +52,7 @@ export function LearningDashboardPage() {
       </header>
 
       <LearningDashboardToolbar query={query} onChange={setQuery} />
+      {fewerLessons ? <p className="mt-4 rounded-lg border border-info/40 bg-info/10 px-4 py-3 text-sm text-info" role="status">{t('practice.learningPath.fewerLessonsNotice')}</p> : null}
 
       {isLoading ? (
         <div className="mt-10 flex justify-center" role="status">

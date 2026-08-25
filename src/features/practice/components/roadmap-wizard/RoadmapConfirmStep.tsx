@@ -18,7 +18,6 @@ interface RoadmapConfirmStepProps {
   scope: RoadmapScope;
   onScopeChange: (scope: RoadmapScope) => void;
   domain?: PracticeDomain;
-  targetLevel: RoadmapTargetLevel | '';
   currentLevel: RoadmapTargetLevel;
   name: string;
   selectedReports: InterviewHistoryItem[];
@@ -40,7 +39,6 @@ interface RoadmapConfirmStepProps {
 
 export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
-  targetLevel,
   currentLevel,
   name,
   selectedReports,
@@ -91,21 +89,10 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.domain')}</dt>
           <dd className="font-medium text-foreground">{domainLabel}</dd>
         </div>
-        {/*
-          F6 — lộ trình sinh ra từ KHOẢNG CÁCH giữa trình độ hiện tại và cấp độ mục tiêu. Trước đây
-          bản tóm tắt chỉ hiện vế mục tiêu ⇒ giấu mất một nửa dữ kiện quyết định nội dung, và người
-          dùng không rà lại được giá trị mình vừa đặt ở bước trước.
-        */}
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.currentLevel')}</dt>
           <dd className="font-medium text-foreground">
             {t(`practice.roadmapWizard.level.${currentLevel}`)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.level')}</dt>
-          <dd className="font-medium text-foreground">
-            {targetLevel ? t(`practice.roadmapWizard.level.${targetLevel}`) : '—'}
           </dd>
         </div>
         {/*
@@ -201,7 +188,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         onNext={onConfirm}
         nextLabel={t('practice.roadmapWizard.confirm.create')}
         isLoading={isSubmitting}
-        nextDisabled={!domain || !targetLevel || isSubmitting}
+        nextDisabled={!domain || !currentLevel || isSubmitting}
       />
     </section>
   );
