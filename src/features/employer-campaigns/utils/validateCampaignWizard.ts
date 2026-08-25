@@ -1,7 +1,6 @@
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
 import { validateCampaignPdf } from './campaignFiles';
 
-const MIN_JD_TEXT_LENGTH = 50;
 const LAST_STEP_INDEX = 6;
 const MAX_QUESTIONS_LIMIT = 20;
 
@@ -79,7 +78,6 @@ export function validateCampaignWizardStep(
     }
     const text = jd.jdText.trim();
     if (!text) return 'employer.campaigns.wizard.jdTextRequired';
-    if (text.length < MIN_JD_TEXT_LENGTH) return 'employer.campaigns.wizard.jdTextTooShort';
     return null;
   }
 

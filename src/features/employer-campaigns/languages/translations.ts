@@ -913,7 +913,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdRequired': 'Vui lòng tải lên tệp mô tả công việc.',
     'employer.campaigns.wizard.jdFileRequired': 'Vui lòng tải lên tệp mô tả công việc.',
     'employer.campaigns.wizard.jdTextRequired': 'Vui lòng nhập nội dung mô tả công việc.',
-    'employer.campaigns.wizard.jdTextTooShort': 'Vui lòng nhập mô tả công việc chi tiết hơn.',
     'employer.campaigns.wizard.jdUploadFailed': 'Không thể tải tệp JD lên',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'Cần tải file JD thành công trước khi xuất bản chiến dịch.',
@@ -2141,7 +2140,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdRequired': 'Please upload a job description file.',
     'employer.campaigns.wizard.jdFileRequired': 'Please upload a job description file.',
     'employer.campaigns.wizard.jdTextRequired': 'Please enter the job description content.',
-    'employer.campaigns.wizard.jdTextTooShort': 'Please enter a more detailed job description.',
     'employer.campaigns.wizard.jdUploadFailed': 'Could not upload the JD file',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'The JD file must upload successfully before publishing the campaign.',

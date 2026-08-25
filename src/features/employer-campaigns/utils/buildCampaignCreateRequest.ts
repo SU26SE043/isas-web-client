@@ -148,13 +148,11 @@ export function mergeCampaignWriteResult(
 }
 
 function resolveJdTextForCreate(jd: JobDescriptionState): string | null {
-  if (jd.inputMethod !== 'text') return null;
   const text = jd.jdText.trim();
   return text || null;
 }
 
 function resolveJdTextForUpdate(jd: JobDescriptionState): string | undefined {
-  if (jd.inputMethod !== 'text') return undefined;
   const text = jd.jdText.trim();
   return text || undefined;
 }
@@ -169,8 +167,8 @@ export type CampaignWizardSubmitSnapshot = {
 
 /**
  * Build POST /api/v1/campaign body from the full wizard (all 6 steps).
- * File-based JD is omitted (jdText: null) — the file itself is uploaded once,
- * right after this create call succeeds (see useCampaignWizard.handleCreateCampaign).
+ * Preserve any JD text already entered when the user switches to file mode. The
+ * file is still uploaded separately after the draft is created.
  */
 export function buildCampaignCreateRequest(
   snapshot: CampaignWizardSubmitSnapshot,
