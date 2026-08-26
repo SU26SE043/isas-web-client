@@ -172,3 +172,11 @@ describe('thứ tự bước của wizard lộ trình', () => {
     expect(result.current.step).toBe('currentLevel');
   });
 });
+
+describe('badge số buổi trên lưới domain', () => {
+  it('có số buổi trước khi người dùng chọn domain', async () => {
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+    expect(result.current.reportCounts.backend).toBe(1);
+  });
+});

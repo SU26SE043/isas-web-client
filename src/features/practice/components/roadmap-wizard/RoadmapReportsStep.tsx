@@ -7,6 +7,7 @@ import { RoadmapReportsTable } from './RoadmapReportsTable';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import type { RoadmapWizardStep } from '../../hooks/useRoadmapWizardFlow';
 
 interface RoadmapReportsStepProps {
   reports: InterviewHistoryItem[];
@@ -17,6 +18,8 @@ interface RoadmapReportsStepProps {
   onUnselectAll: () => void;
   onBack: () => void;
   onNext: () => void;
+  goToStep: (step: RoadmapWizardStep) => void;
+  selectedDomainId?: string;
   loadError?: boolean;
   reportCounts?: Record<string, number>;
 }
@@ -30,6 +33,8 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
   onUnselectAll,
   onBack,
   onNext,
+  goToStep,
+  selectedDomainId = '',
   loadError = false,
   reportCounts = {},
 }) => {
@@ -53,7 +58,7 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
           <p className="text-sm text-error">{t('practice.roadmapWizard.reports.loadFailed')}</p>
           <div className="flex flex-wrap gap-3">
             <Button type="button" className="btn-primary" onClick={() => navigate('/practice')}>{t('practice.roadmapWizard.reports.practiceCta')}</Button>
-            <Button type="button" variant="outline" onClick={onBack}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
+            <Button type="button" variant="outline" onClick={() => goToStep('domain')}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
           </div>
         </div>
       ) : reports.length === 0 ? (
@@ -61,9 +66,9 @@ export const RoadmapReportsStep: React.FC<RoadmapReportsStepProps> = ({
           <p className="text-sm text-muted-foreground" role="status">{t('practice.roadmapWizard.reports.emptyOptional')}</p>
           <div className="flex flex-wrap gap-3">
             <Button type="button" className="btn-primary" onClick={() => navigate('/practice')}>{t('practice.roadmapWizard.reports.practiceCta')}</Button>
-            <Button type="button" variant="outline" onClick={onBack}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
+            <Button type="button" variant="outline" onClick={() => goToStep('domain')}>{t('practice.roadmapWizard.reports.changeDomainCta')}</Button>
           </div>
-          <p className="text-xs text-muted-foreground">{t('practice.roadmapWizard.reports.countBadge').replace('{count}', String(reportCounts.__selectedDomain ?? 0))}</p>
+          <p className="text-xs text-muted-foreground">{t('practice.roadmapWizard.reports.countBadge').replace('{count}', String(reportCounts[selectedDomainId] ?? 0))}</p>
         </div>
       ) : (
         <RoadmapReportsTable

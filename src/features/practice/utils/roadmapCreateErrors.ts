@@ -1,18 +1,21 @@
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { getApiErrorMessage } from '@/shared/api/apiError';
 
-export type CreateRoadmapErrorCode =
-  | 'invalid_input'
-  | 'sessions_required'
-  | 'too_many_sessions'
-  | 'no_weakness'
-  | 'no_content_mistakes'
-  | 'language_mismatch'
-  | 'unsupported_level'
-  | 'forbidden'
-  | 'cv_not_found'
-  | 'ai_failed'
-  | 'generic';
+export const CREATE_ROADMAP_ERROR_CODES = [
+  'invalid_input',
+  'sessions_required',
+  'too_many_sessions',
+  'no_weakness',
+  'no_content_mistakes',
+  'language_mismatch',
+  'unsupported_level',
+  'forbidden',
+  'cv_not_found',
+  'ai_failed',
+  'generic',
+] as const;
+
+export type CreateRoadmapErrorCode = typeof CREATE_ROADMAP_ERROR_CODES[number];
 
 export class CreateRoadmapError extends Error {
   readonly code: CreateRoadmapErrorCode;
