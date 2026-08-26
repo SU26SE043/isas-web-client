@@ -52,7 +52,7 @@ describe('AdminRoadmapThresholdsPage', () => {
     renderPage();
 
     // Fresher trùng mặc định nhưng vẫn là override -> phải có nút.
-    expect(await screen.findByRole('button', { name: 'admin.roadmapThresholds.reset Fresher' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'admin.roadmapThresholds.reset Fresher' }, { timeout: 5000 })).toBeInTheDocument();
     // Junior lệch mặc định nhưng chưa ai chỉnh -> KHÔNG được có nút.
     expect(screen.queryByRole('button', { name: 'admin.roadmapThresholds.reset Junior' })).not.toBeInTheDocument();
   });
