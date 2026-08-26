@@ -11,10 +11,7 @@ import { useLanguage } from '@/shared/languages';
 export const ROADMAP_WIZARD_STEP_LABEL_KEYS: Record<RoadmapWizardStep, string> = {
   domain: 'practice.roadmapWizard.steps.domain',
   nameFocus: 'practice.roadmapWizard.steps.nameFocus',
-  cv: 'practice.roadmapWizard.steps.cv',
-  currentLevel: 'practice.roadmapWizard.steps.currentLevel',
   reports: 'practice.roadmapWizard.steps.reports',
-  priorRoadmap: 'practice.roadmapWizard.steps.priorRoadmap',
   confirm: 'practice.roadmapWizard.steps.confirm',
 };
 

@@ -3,118 +3,29 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
-import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
-import type { CvAnalysisResult } from '@/features/cv-analysis/types/cvAnalysis.types';
-import { domainToJobCategoryEnum, type JobDomainId } from '@/shared/domain/jobDomains';
 import { useLanguage } from '@/shared/languages';
 import { invalidateLearningRoadmaps, learningLessonQueryKey } from './useLearningRoadmaps';
 import { fetchInterviewHistory } from '../services/history.service';
 import { learningService } from '../services/learning.service';
-import { learningPathService } from '../services/learningPath.service';
 import { roadmapService } from '../services/roadmap.service';
-import type { LearningRoadmapCard } from '../types/learningPath.types';
 import type { InterviewHistoryItem } from '../types/history.types';
 import type { PracticeDomain } from '../types/practiceSetup.types';
-import {
-  ROADMAP_DOMAINS,
-  ROADMAP_TARGET_LEVELS,
-  type RoadmapTargetLevel,
-} from '../mocks/practiceSetup.fixtures';
+import { ROADMAP_DOMAINS } from '../mocks/practiceSetup.fixtures';
 
 export type RoadmapWizardStep =
   | 'domain'
   | 'nameFocus'
-  | 'cv'
-  | 'currentLevel'
   | 'reports'
-  | 'priorRoadmap'
   | 'confirm';
 
-/**
- * Thứ tự bước khai ở ĐÚNG MỘT chỗ. `steps` lọc từ đây, và chỗ cứu bước mồ côi cũng đọc từ đây —
- * hai nơi khai thứ tự riêng thì chúng trôi khỏi nhau mà không có lỗi nào nổ.
- */
+/** Thứ tự wizard được khai báo tập trung để stepper và điều hướng luôn đồng bộ. */
 export const ROADMAP_WIZARD_STEP_ORDER: readonly RoadmapWizardStep[] = [
   'domain',
   'nameFocus',
-  'cv',
-  'currentLevel',
-  // Trình độ hiện tại được hỏi trước báo cáo để điều chỉnh độ khó; nội dung lộ trình vẫn lấy từ
-  // các điểm hụt trong những buổi luyện đã chọn.
   'reports',
-  'priorRoadmap',
   'confirm',
 ];
 
-/**
- * `steps` là mảng ĐỘNG (hai bước tuỳ chọn tự ẩn khi không có dữ liệu). Khi bước đang đứng rơi
- * khỏi `steps`, page vẫn render nhánh đó còn stepper `indexOf` trả `-1` ⇒ `Math.max(-1, 0)` sáng
- * đèn bước 1: người dùng đứng trên một bước KHÔNG còn tồn tại, thanh tiến trình chỉ sai chỗ.
- *
- * Chọn bước hợp lệ GẦN NHẤT VỀ TRƯỚC (không nhảy tới), để không vô tình đưa người dùng vượt qua
- * một bước họ chưa xem. Không còn bước nào phía trước ⇒ về bước đầu.
- */
-export function resolveOrphanStepFallback(
-  step: RoadmapWizardStep,
-  steps: readonly RoadmapWizardStep[],
-): RoadmapWizardStep | null {
-  if (steps.length === 0 || steps.includes(step)) return null;
-  const current = ROADMAP_WIZARD_STEP_ORDER.indexOf(step);
-  for (let i = steps.length - 1; i >= 0; i -= 1) {
-    if (ROADMAP_WIZARD_STEP_ORDER.indexOf(steps[i]) < current) return steps[i];
-  }
-  return steps[0];
-}
-
-/**
- * Bản phân tích CV thuộc ĐÚNG lĩnh vực đang chọn.
- *
- * 🔴 Ca thật (22/08): tạo lộ trình Backend nhưng ô "Bản phân tích CV" hiện `BA · 22/8/2026`.
- * `listAnalyses()` trả TẤT CẢ bản phân tích của người dùng, không ai lọc. Chọn phải nó thì
- * tóm tắt CV Business Analyst đi thẳng vào prompt sinh lộ trình Backend — không lỗi, không
- * cảnh báo, chỉ ra nội dung sai ngành.
- */
-export function analysesForDomain(analyses: CvAnalysisResult[], domainId: string) {
-  if (!domainId) return [];
-  const wanted = domainToJobCategoryEnum(domainId as JobDomainId);
-  return analyses.filter((a) => (a.jobCategory ?? '').trim().toUpperCase() === wanted);
-}
-
-/**
- * Trình độ hiện tại suy từ bản phân tích CV — nguồn để điền mặc định bước "Trình độ hiện tại".
- *
- * CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào lộ trình
- * Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập môn người học đã
- * nắm) nên hỏng âm thầm — không lỗi nào nổ.
- *
- * 🔑 Tập hợp lệ lấy TỪ `ROADMAP_TARGET_LEVELS`, không khai lại bằng tay. Danh sách viết tay trước
- * đây còn `'intern'`/`'lead'` — hai giá trị mà cả backend (`RoadmapLevel`) lẫn ô chọn của bước
- * này đều KHÔNG có. Rơi vào đó thì `<select value="lead">` không khớp option nào nên trình duyệt
- * sáng đèn option ĐẦU TIÊN ("Mới tốt nghiệp"), trong khi `resolveApiRoadmapLevel` lại nén `lead`
- * thành `Senior` lúc gửi: người dùng thấy Fresher, hệ thống gửi Senior, không cảnh báo nào.
- * Buộc hai danh sách là MỘT thì cái lệch đó không dựng lại được.
- *
- * `null` = không suy ra được (CV không đủ căn cứ, hoặc chưa phân tích CV nào cho lĩnh vực này) ⇒
- * nơi gọi rơi về `fresher` và nói rõ đó là mặc định, không phải suy từ CV.
- */
-export function inferCurrentLevelFromAnalyses(
-  analyses: CvAnalysisResult[],
-  domainId: string,
-): RoadmapTargetLevel | null {
-  for (const analysis of analysesForDomain(analyses, domainId)) {
-    const level = analysis.currentLevel?.trim().toLowerCase();
-    if (level && (ROADMAP_TARGET_LEVELS as readonly string[]).includes(level)) {
-      return level as RoadmapTargetLevel;
-    }
-  }
-  return null;
-}
-
-/** Temporary compatibility: older list responses have no hasFinalReport yet. */
-export function filterCompletedRoadmapsForWizard(roadmaps: LearningRoadmapCard[]) {
-  return roadmaps.filter((roadmap) => roadmap.status === 'completed' && roadmap.hasFinalReport !== false);
-}
 import {
   CreateRoadmapError,
   type CreateRoadmapErrorCode,
@@ -130,17 +41,10 @@ export function useRoadmapWizardFlow() {
   const [domainId, setDomainId] = useState('');
   const [rawReports, setRawReports] = useState<InterviewHistoryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [manualLevel, setManualLevel] = useState<RoadmapTargetLevel | null>(null);
   const [name, setName] = useState('');
   // Mặc định Quick: 4 bài = 4 credit. Standard là 12 bài, mà suất dùng thử chỉ 3 —
   // để mặc định ở bản lớn thì người mới gần như chắc chắn chạm 402 giữa chừng.
   const [scope, setScope] = useState<RoadmapScope>('Quick');
-  const [cvId, setCvId] = useState<string | undefined>();
-  const [cvFiles, setCvFiles] = useState<UploadedCvFile[]>([]);
-  const [rawCvAnalyses, setRawCvAnalyses] = useState<CvAnalysisResult[]>([]);
-  const [completedRoadmaps, setCompletedRoadmaps] = useState<LearningRoadmapCard[]>([]);
-  const [cvAnalysisId, setCvAnalysisId] = useState<string | undefined>();
-  const [priorRoadmapId, setPriorRoadmapId] = useState<string | undefined>();
   const [focus, setFocus] = useState('');
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
@@ -154,53 +58,20 @@ export function useRoadmapWizardFlow() {
     setLoadingReports(true);
     setReportsError(false);
     try {
-      // ⚠ CẢ BỐN lời gọi phải có `.catch` riêng. Trước đây `fetchInterviewHistory` là cái DUY NHẤT
-      // không có: nó hỏng thì `Promise.all` reject ⇒ thân `try` dừng giữa chừng ⇒ **vứt luôn cả ba
-      // kết quả kia** (file CV, bản phân tích, roadmap đã hoàn tất) dù chúng đã về thành công, và
-      // vì chỗ gọi là `void loadReportsForDomain(...)` nên lỗi thoát ra thành unhandled rejection —
-      // người dùng chỉ thấy mọi ô hiện "Bỏ qua", không lỗi, không cảnh báo. Đã tái hiện được.
-      const results = await Promise.allSettled([
-        fetchInterviewHistory({
-          page: 1,
-          pageSize: 100,
-          includeDeleted: false,
-          status: 'Scored',
-          excludeCampaign: true,
-        }),
-        cvAnalysisService.listUploadedCvs().catch(() => []),
-        cvAnalysisService.listAnalyses().catch(() => []),
-        // `enrichCurrentPointers: false` — wizard chỉ cần id/tên/trạng thái; bật thì mỗi thẻ thiếu
-        // con trỏ tốn thêm một `GET /roadmaps/{id}`, kéo dài đúng cửa sổ mà bước "Roadmap đã hoàn
-        // tất" hiện ra với dropdown rỗng.
-        learningPathService
-          .listRoadmaps({ status: 'completed' }, { enrichCurrentPointers: false })
-          .catch(() => []),
-      ]);
+      const results = await Promise.allSettled([fetchInterviewHistory({
+        page: 1,
+        pageSize: 100,
+        includeDeleted: false,
+        status: 'Scored',
+        excludeCampaign: true,
+      })]);
       const history = results[0].status === 'fulfilled' ? results[0].value : { interviews: [] as InterviewHistoryItem[] };
-      const cvs = results[1].status === 'fulfilled' ? results[1].value : [];
-      const analyses = results[2].status === 'fulfilled' ? results[2].value : [];
-      const roadmaps = results[3].status === 'fulfilled' ? results[3].value : [];
       if (results[0].status === 'rejected') setReportsError(true);
-      // Lưu THÔ, lọc theo lĩnh vực ở tầng dẫn xuất (`allReports`/`cvAnalyses` bên dưới).
-      // Lọc tại đây bằng `nextDomainId` là SAI khi người dùng quay lại đổi lĩnh vực:
-      // `handleSelectDomain` KHÔNG nạp lại (goToStep chỉ nạp khi mọi danh sách đều rỗng),
-      // nên dữ liệu của lĩnh vực cũ nằm lại và hiện ra dưới lĩnh vực mới.
       const sorted = history.interviews
         .filter((item) => item.status === 'completed')
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setRawReports(sorted);
       setSelectedIds([]);
-      setCvFiles(cvs);
-      setRawCvAnalyses(analyses);
-      // TODO: remove the status fallback once backend always exposes hasFinalReport.
-      setCompletedRoadmaps(filterCompletedRoadmapsForWizard(roadmaps));
-      setCvId(cvs[0]?.id);
-      setCvAnalysisId(undefined);
-      // CHỈ lấy từ bản phân tích CÙNG lĩnh vực: điền trình độ suy từ CV Business Analyst vào
-      // lộ trình Backend là sai nền, mà giá trị đó đi thẳng vào prompt làm SÀN (bỏ phần nhập
-      // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
-      setManualLevel(null);
-      setPriorRoadmapId(undefined);
       setLoadedDomainId(nextDomainId);
     } catch {
       setReportsError(true);
@@ -216,16 +87,6 @@ export function useRoadmapWizardFlow() {
     () => (domainId ? rawReports.filter((item) => item.domainId === domainId) : []),
     [rawReports, domainId],
   );
-  const cvAnalyses = useMemo(
-    () => analysesForDomain(rawCvAnalyses, domainId),
-    [rawCvAnalyses, domainId],
-  );
-  const inferredLevel = useMemo(
-    () => inferCurrentLevelFromAnalyses(rawCvAnalyses, domainId),
-    [rawCvAnalyses, domainId],
-  );
-  const currentLevel = manualLevel ?? inferredLevel ?? 'fresher';
-  const currentLevelSource: 'cv' | 'default' | 'manual' = manualLevel ? 'manual' : inferredLevel ? 'cv' : 'default';
   const reportCounts = useMemo(() => rawReports.reduce<Record<string, number>>((counts, report) => {
     counts[report.domainId] = (counts[report.domainId] ?? 0) + 1;
     return counts;
@@ -237,48 +98,16 @@ export function useRoadmapWizardFlow() {
     }
   }, [domainId, loadedDomainId, loadReportsForDomain, loadingReports]);
 
-  // Lựa chọn TREO: đổi lĩnh vực xong, id đã chọn của lĩnh vực cũ vẫn nằm trong state và vẫn
-  // được gửi lên — nhưng không còn hiện trên màn hình nào. Dọn ngay khi nó rời khỏi tập hợp lệ.
-  //
-  // ⚠ Gác bằng `raw*.length > 0`, KHÔNG bằng danh sách đã lọc: danh sách lọc rỗng có HAI nghĩa
-  // — "chưa tải xong" và "đã tải, ngành này không có cái nào". Chỉ ca thứ hai mới được dọn;
-  // dọn ở ca thứ nhất là xoá mất lựa chọn hợp lệ do người dùng (hoặc test) đặt trước khi tải.
-  useEffect(() => {
-    if (rawCvAnalyses.length === 0) return;
-    if (cvAnalysisId && !cvAnalyses.some((a) => a.id === cvAnalysisId)) setCvAnalysisId(undefined);
-  }, [rawCvAnalyses.length, cvAnalyses, cvAnalysisId]);
   useEffect(() => {
     if (rawReports.length === 0) return;
     setSelectedIds((prev) => prev.filter((id) => allReports.some((item) => item.id === id)));
   }, [rawReports.length, allReports]);
 
-  const steps = useMemo<RoadmapWizardStep[]>(() => {
-    // Chế độ lộ trình (LevelUp/Reinforce) KHÔNG còn tồn tại ở tầng giao diện: mỗi lộ trình nay là
-    // một BẢN TRỘN (sửa điểm yếu đo được và điều chỉnh độ khó theo trình độ hiện tại). Bước chọn chế độ đã gỡ ở
-    // `4d53085`, và vòng này gỡ nốt phần hiển thị + phần GỬI. Không state `mode`, không field
-    // `mode` trong payload ⇒ backend nhận `null` và tự hiểu là "LevelUp" (`CreateRoadmapRequest`
-    // khai `string? Mode = null`), đúng hành vi trước khi có bước đó.
-    const showPrior = loadingReports || completedRoadmaps.length > 0;
-    return ROADMAP_WIZARD_STEP_ORDER.filter((item) => {
-      if (item === 'priorRoadmap') return showPrior;
-      return true;
-    });
-  }, [allReports.length, completedRoadmaps.length, loadingReports]);
-
-  // Bước MỒ CÔI: đang đứng ở một bước tuỳ chọn thì dữ liệu về rỗng ⇒ `steps` bỏ bước đó, nhưng
-  // `step` vẫn giữ giá trị cũ. Đưa về bước hợp lệ gần nhất.
-  //
-  // ⚠ Dùng thẳng `setStep`, KHÔNG qua `goToStep`: chỗ này chỉ chạy NGAY SAU khi mẻ dữ liệu vừa
-  // về, mà `goToStep` lại có nhánh nạp dữ liệu khi mọi danh sách đều rỗng ⇒ đi qua nó là gọi lại
-  // API vừa chạy xong.
-  useEffect(() => {
-    const fallback = resolveOrphanStepFallback(step, steps);
-    if (fallback) setStep(fallback);
-  }, [step, steps]);
+  const steps = useMemo<RoadmapWizardStep[]>(() => [...ROADMAP_WIZARD_STEP_ORDER], []);
 
   const goToStep = useCallback(
     (nextStep: RoadmapWizardStep) => {
-      if ((nextStep === 'cv' || nextStep === 'reports') && domainId && !loadingReports && allReports.length === 0 && cvFiles.length === 0 && cvAnalyses.length === 0) {
+      if (nextStep === 'reports' && domainId && !loadingReports && allReports.length === 0) {
         // `.catch` ở đây là lưới cuối: `loadReportsForDomain` đã bọc từng lời gọi, nhưng chỗ gọi
         // dạng fire-and-forget mà để lọt một reject nào thì nó thành unhandled rejection — lỗi
         // duy nhất người dùng thấy là mọi ô im lặng rỗng.
@@ -286,17 +115,9 @@ export function useRoadmapWizardFlow() {
       }
       setStep(nextStep);
     },
-    [allReports.length, cvAnalyses.length, cvFiles.length, domainId, loadReportsForDomain, loadingReports],
+    [allReports.length, domainId, loadReportsForDomain, loadingReports],
   );
 
-  // Điều hướng DẪN XUẤT từ `steps`, thay cho next/back ghi cứng ở từng bước.
-  // Ghi cứng là cách lỗi thứ-tự-bước ở trên sinh ra: một lần đổi thứ tự phải sửa đúng 8 chỗ,
-  // sót một chỗ thì wizard nhảy sai mà không có lỗi nào nổ. Ở đây thứ tự chỉ khai MỘT nơi.
-  //
-  // ⚠ PHẢI đi qua `goToStep`, KHÔNG gọi thẳng `setStep`: chỗ nạp dữ liệu (danh sách buổi luyện,
-  // CV, bản phân tích, roadmap cũ) nằm trong `goToStep`. Gọi tắt thì vào bước CV/Báo cáo mà
-  // không tải gì — mọi ô hiện "Bỏ qua", hai bước tuỳ chọn không bao giờ xuất hiện, và không có
-  // lỗi nào nổ. Tôi đã tự gây đúng lỗi này ở lượt đầu khi thay next/back ghi cứng.
   const goNext = useCallback(() => {
     const i = steps.indexOf(step);
     if (i >= 0 && i < steps.length - 1) goToStep(steps[i + 1]);
@@ -305,11 +126,9 @@ export function useRoadmapWizardFlow() {
     const i = steps.indexOf(step);
     if (i > 0) goToStep(steps[i - 1]);
   }, [goToStep, step, steps]);
-  const hasStep = useCallback((s: RoadmapWizardStep) => steps.includes(s), [steps]);
 
   const handleSelectDomain = (id: string) => {
     setDomainId(id);
-    setManualLevel(null);
     setSelectedIds([]);
   };
 
@@ -328,7 +147,7 @@ export function useRoadmapWizardFlow() {
   };
 
   const handleCreate = async () => {
-    if (!domainId || !currentLevel || isSubmitting) return;
+    if (!domainId || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitErrorMessage(null);
@@ -338,14 +157,9 @@ export function useRoadmapWizardFlow() {
       );
       const created = await learningService.createRoadmap({
         domainId,
-        targetLevel: currentLevel,
-        currentLevel,
         name,
         reportIds: uniqueSessionIds,
         sessionIds: uniqueSessionIds,
-        cvId,
-        cvAnalysisId,
-        priorRoadmapId,
         focus,
         scope,
       });
@@ -390,15 +204,7 @@ export function useRoadmapWizardFlow() {
     domainId,
     allReports,
     selectedIds,
-    currentLevel,
-    currentLevelSource,
     name,
-    cvId,
-    cvFiles,
-    cvAnalyses,
-    completedRoadmaps,
-    cvAnalysisId,
-    priorRoadmapId,
     focus,
     loadingDomains,
     loadingReports,
@@ -410,13 +216,8 @@ export function useRoadmapWizardFlow() {
     selectedDomain,
     selectedReports,
     handleSelectDomain,
-    setCurrentLevel: (value: RoadmapTargetLevel) => setManualLevel(value),
-    setCurrentLevelSource: () => {},
     setName,
-    setCvId,
     setFocus,
-    setCvAnalysisId,
-    setPriorRoadmapId,
     scope,
     setScope,
     toggleReport,
@@ -425,7 +226,6 @@ export function useRoadmapWizardFlow() {
     goToStep,
     goNext,
     goBack,
-    hasStep,
     steps,
     handleCreate,
   };
