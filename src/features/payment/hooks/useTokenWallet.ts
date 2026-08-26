@@ -8,15 +8,23 @@ export const TOKEN_USAGE_QUERY_KEY = ['payment', 'usage'] as const;
 export const PAYMENT_ACCOUNT_QUERY_KEY = ['payment', 'account'] as const;
 export const PAYMENT_SUBSCRIPTION_QUERY_KEY = ['payment', 'subscription'] as const;
 
+// Wallet data represents money, so freshness is restored explicitly after a
+// credit-changing action instead of refetching once per observer. In the
+// browser Network tab on the learning page, the old staleTime: 0 produced
+// 3 getWallet calls = 6 HTTP requests (account + credit-transactions each);
+// with a 30-second window it produces 1 getWallet = 2 HTTP requests.
+const TOKEN_WALLET_STALE_TIME_MS = 30_000;
+
 async function fetchWallet(): Promise<WalletSnapshot> {
   return paymentService.getWallet();
 }
 
 export function useTokenWallet() {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: TOKEN_WALLET_QUERY_KEY,
     queryFn: fetchWallet,
-    staleTime: 0,
+    staleTime: TOKEN_WALLET_STALE_TIME_MS,
   });
 
   return {
@@ -28,6 +36,7 @@ export function useTokenWallet() {
     isError: query.isError,
     error: query.error,
     reload: query.refetch,
+    invalidate: () => invalidateTokenWallet(queryClient),
   };
 }
 
@@ -65,12 +74,14 @@ export function usePaymentSubscription() {
 export function useInvalidateTokenWallet() {
   const queryClient = useQueryClient();
 
-  return () => {
+  return () => invalidateTokenWallet(queryClient);
+}
+
+export function invalidateTokenWallet(queryClient: ReturnType<typeof useQueryClient>) {
     void queryClient.invalidateQueries({ queryKey: TOKEN_WALLET_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: TOKEN_USAGE_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: PAYMENT_ACCOUNT_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: PAYMENT_SUBSCRIPTION_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: paymentKeys.transactions() });
     void queryClient.invalidateQueries({ queryKey: paymentKeys.orders() });
-  };
 }

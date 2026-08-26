@@ -6,6 +6,7 @@ export type LessonRetryErrorCode = 'insufficient_credits' | 'generic';
 interface UseLessonRetryInput {
   roadmapId: string;
   onStarted: (sessionId: string, lessonId: string) => void;
+  onCreditConsumed?: () => void;
 }
 
 /**
@@ -14,7 +15,7 @@ interface UseLessonRetryInput {
  * Bất biến: `ask()` chỉ MỞ hộp thoại, không bao giờ gọi API — thao tác này tiêu
  * credit thật nên phải có một lần xác nhận của người dùng chen vào giữa.
  */
-export function useLessonRetry({ roadmapId, onStarted }: UseLessonRetryInput) {
+export function useLessonRetry({ roadmapId, onStarted, onCreditConsumed }: UseLessonRetryInput) {
   const [target, setTarget] = useState<{ lessonId: string; title: string } | null>(null);
   const [pendingLessonId, setPendingLessonId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<LessonRetryErrorCode | null>(null);
@@ -42,6 +43,7 @@ export function useLessonRetry({ roadmapId, onStarted }: UseLessonRetryInput) {
         roadmapId,
         lessonId: current.lessonId,
         title: current.title,
+        onCreditConsumed,
       });
       if (!result.ok) {
         setPendingLessonId(null);
@@ -57,7 +59,7 @@ export function useLessonRetry({ roadmapId, onStarted }: UseLessonRetryInput) {
       setTarget(null);
       setErrorCode('generic');
     }
-  }, [onStarted, pendingLessonId, roadmapId, target]);
+  }, [onCreditConsumed, onStarted, pendingLessonId, roadmapId, target]);
 
   return {
     /** Bài đang chờ server tạo buổi — dùng để khoá đúng nút đó trong danh sách. */

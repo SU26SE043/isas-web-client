@@ -83,6 +83,8 @@ export async function startLearningLessonPractice(input: {
   title: string;
   /** 'retry' = luyện lại bài đã hoàn thành (POST .../retry). */
   mode?: 'start' | 'retry';
+  /** Refresh the money query after the backend accepts a credit-consuming action. */
+  onCreditConsumed?: () => void;
 }): Promise<StartLessonResult> {
   const mode = input.mode ?? 'start';
   // Khoá gồm cả mode: start và retry tạo hai buổi khác nhau, gộp chung khoá thì
@@ -96,6 +98,8 @@ export async function startLearningLessonPractice(input: {
       ? await roadmapPracticeService.retryLesson(input.roadmapId, input.lessonId)
       : await roadmapPracticeService.startLesson(input.roadmapId, input.lessonId);
     if (!result.ok) return result;
+
+    input.onCreditConsumed?.();
 
     registerFromPracticeSessionResponse({
       roadmapId: input.roadmapId,
@@ -142,6 +146,7 @@ export async function retryLearningLessonPractice(input: {
   roadmapId: string;
   lessonId: string;
   title: string;
+  onCreditConsumed?: () => void;
 }): Promise<StartLessonResult> {
   return startLearningLessonPractice({ ...input, mode: 'retry' });
 }
