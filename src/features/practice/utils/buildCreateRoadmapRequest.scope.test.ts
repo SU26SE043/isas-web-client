@@ -9,7 +9,7 @@ describe('buildCreateRoadmapRequest — quy mô lộ trình', () => {
   // Standard (12 bài = 12 credit) trong khi suất dùng thử chỉ có 3. Người mới tạo
   // lộ trình xong sẽ chạm 402 ở bài thứ tư mà không hiểu vì sao.
   it('gửi scope khi người dùng chọn bản rút gọn', () => {
-    const r = buildCreateRoadmapRequest('BE', 'Junior', { ...base, scope: 'Quick' });
+    const r = buildCreateRoadmapRequest('BE', { ...base, scope: 'Quick' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.body.scope).toBe('Quick');
   });
@@ -17,13 +17,13 @@ describe('buildCreateRoadmapRequest — quy mô lộ trình', () => {
   // Backend coi vắng mặt là Standard. Gửi thừa không sai, nhưng làm payload nói
   // nhiều hơn ý định của người dùng — và che mất việc họ có chủ động chọn hay không.
   it('KHÔNG gửi scope khi là mặc định Standard', () => {
-    const r = buildCreateRoadmapRequest('BE', 'Junior', { ...base, scope: 'Standard' });
+    const r = buildCreateRoadmapRequest('BE', { ...base, scope: 'Standard' });
     expect(r.ok).toBe(true);
     if (r.ok) expect('scope' in r.body).toBe(false);
   });
 
   it('không truyền gì thì cũng không gửi scope', () => {
-    const r = buildCreateRoadmapRequest('BE', 'Junior', base);
+    const r = buildCreateRoadmapRequest('BE', base);
     expect(r.ok).toBe(true);
     if (r.ok) expect('scope' in r.body).toBe(false);
   });

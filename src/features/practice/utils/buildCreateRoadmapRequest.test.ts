@@ -3,16 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { buildCreateRoadmapRequest } from './buildCreateRoadmapRequest';
 
 describe('buildCreateRoadmapRequest', () => {
-  it('builds minimal payload with jobCategory and level only', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', { sessionIds: ['s1'] });
+  it('builds minimal payload without client-derived context', () => {
+    const result = buildCreateRoadmapRequest('FE', { sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
+      body: { jobCategory: 'FE', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
-  it('includes only non-empty optional fields and dedupes sessionIds', () => {
-    const result = buildCreateRoadmapRequest('BE', 'Senior', {
+  it('includes supported fields and dedupes sessionIds', () => {
+    const result = buildCreateRoadmapRequest('BE', {
       cvId: 'cv-1',
       sessionIds: ['s1', 's1', '', 's2'],
       cvAnalysisId: 'analysis-1',
@@ -23,22 +23,23 @@ describe('buildCreateRoadmapRequest', () => {
       ok: true,
       body: {
         jobCategory: 'BE',
-        level: 'Senior',
         language: 'vi',
-        cvId: 'cv-1',
         sessionIds: ['s1', 's2'],
-        cvAnalysisId: 'analysis-1',
-        priorRoadmapId: 'roadmap-old',
         focus: 'Improve system design',
       },
     });
+    // Tiền đề backend đã đổi có chủ đích: server tự suy level và bỏ qua toàn bộ
+    // context CV/lộ trình cũ, nên payload phải không chứa các khoá legacy này.
+    if (result.ok) {
+      expect(Object.keys(result.body).sort()).toEqual(['focus', 'jobCategory', 'language', 'sessionIds']);
+    }
   });
 
   it('omits name when the optional input is blank', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '   ', sessionIds: ['s1'] });
+    const result = buildCreateRoadmapRequest('FE', { name: '   ', sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
+      body: { jobCategory: 'FE', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
@@ -54,39 +55,39 @@ describe('buildCreateRoadmapRequest', () => {
   // object lúc CHẠY (payload dựng động, JSON parse, `...spread` từ nguồn cũ) thì builder vẫn KHÔNG
   // đưa nó vào body.
   it('KHÔNG gửi mode — chế độ lộ trình không còn là lựa chọn của người dùng', () => {
-    const result = buildCreateRoadmapRequest('BE', 'Junior', {
+    const result = buildCreateRoadmapRequest('BE', {
       mode: 'Reinforce', sessionIds: ['s1'],
-    } as unknown as Parameters<typeof buildCreateRoadmapRequest>[2]);
+    } as unknown as Parameters<typeof buildCreateRoadmapRequest>[1]);
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'BE', level: 'Junior', language: 'vi', sessionIds: ['s1'] },
+      body: { jobCategory: 'BE', language: 'vi', sessionIds: ['s1'] },
     });
   });
 
   it('trims and includes a non-empty roadmap name', () => {
-    const result = buildCreateRoadmapRequest('FE', 'Junior', { name: '  My path  ', sessionIds: ['s1'] });
+    const result = buildCreateRoadmapRequest('FE', { name: '  My path  ', sessionIds: ['s1'] });
     expect(result).toEqual({
       ok: true,
-      body: { jobCategory: 'FE', level: 'Junior', language: 'vi', sessionIds: ['s1'], name: 'My path' },
+      body: { jobCategory: 'FE', language: 'vi', sessionIds: ['s1'], name: 'My path' },
     });
   });
 
   it('rejects focus longer than 2000 characters', () => {
-    const result = buildCreateRoadmapRequest('BA', 'Fresher', {
+    const result = buildCreateRoadmapRequest('BA', {
       focus: 'x'.repeat(2001),
     });
     expect(result).toEqual({ ok: false, reason: 'focus_too_long' });
   });
 
-  it('rejects missing jobCategory or level', () => {
-    expect(buildCreateRoadmapRequest('', 'Junior', {})).toEqual({
+  it('rejects missing jobCategory', () => {
+    expect(buildCreateRoadmapRequest('', {})).toEqual({
       ok: false,
       reason: 'invalid_input',
     });
   });
 
   it('rejects an empty session selection after field validation', () => {
-    expect(buildCreateRoadmapRequest('FE', 'Junior', {})).toEqual({
+    expect(buildCreateRoadmapRequest('FE', {})).toEqual({
       ok: false,
       reason: 'sessions_required',
     });

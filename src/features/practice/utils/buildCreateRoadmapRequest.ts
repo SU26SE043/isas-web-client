@@ -25,13 +25,12 @@ function uniqueNonEmptyIds(ids: string[] | undefined): string[] {
 /** Build POST /roadmaps body — only include optional fields with valid values. */
 export function buildCreateRoadmapRequest(
   jobCategory: string,
-  level: string,
   input: Pick<
     CreateRoadmapInput,
     'name' | 'currentLevel' | 'cvId' | 'sessionIds' | 'reportIds' | 'cvAnalysisId' | 'priorRoadmapId' | 'focus' | 'language' | 'scope'
   >,
 ): BuildCreateRoadmapPayloadResult {
-  if (!jobCategory.trim() || !level.trim()) {
+  if (!jobCategory.trim()) {
     return { ok: false, reason: 'invalid_input' };
   }
 
@@ -49,19 +48,13 @@ export function buildCreateRoadmapRequest(
   if (sessionIds.length === 0) return { ok: false, reason: 'sessions_required' };
   const body: CreateRoadmapApiRequest = {
     jobCategory: jobCategory.trim(),
-    level,
     language: input.language ?? 'vi',
+    sessionIds,
   };
-
-  if (input.currentLevel?.trim()) body.currentLevel = input.currentLevel.trim();
 
   // Chỉ gửi khi khác mặc định — backend coi vắng mặt là "Standard", nên gửi thừa
   // không sai nhưng làm payload nói nhiều hơn ý định của người dùng.
   if (input.scope && input.scope !== 'Standard') body.scope = input.scope;
-  if (input.cvId?.trim()) body.cvId = input.cvId.trim();
-  body.sessionIds = sessionIds;
-  if (input.cvAnalysisId?.trim()) body.cvAnalysisId = input.cvAnalysisId.trim();
-  if (input.priorRoadmapId?.trim()) body.priorRoadmapId = input.priorRoadmapId.trim();
   if (focus) body.focus = focus;
   if (name) body.name = name;
 

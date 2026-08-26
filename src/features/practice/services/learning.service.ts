@@ -158,14 +158,12 @@ export const learningService = {
    * Mock / Playwright: in-app fixture so E2E can finish without a gateway.
    */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
-    if (!input.domainId || !input.currentLevel) {
+    if (!input.domainId) {
       throw new CreateRoadmapError('invalid_input');
     }
 
-    const level = resolveApiRoadmapLevel(input.currentLevel);
-    const currentLevel = input.currentLevel ? resolveApiRoadmapLevel(input.currentLevel) : undefined;
     const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
-    const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
+    const payload = buildCreateRoadmapRequest(jobCategory, input);
     if (!payload.ok) {
       throw new CreateRoadmapError(
         payload.reason === 'sessions_required' ? 'sessions_required' : 'invalid_input',
@@ -180,13 +178,12 @@ export const learningService = {
           regenerateCount: 0,
           regenerateLimit: MOCK_ROADMAP.regenerateLimit,
         },
-        { ...input, targetLevel: level },
+        input,
       );
       latestCreatedRoadmap = created;
       roadmapRegenerateCount = created.regenerateCount;
       await learningPathService.registerCreatedRoadmap({
         ...input,
-        targetLevel: level,
         roadmapId: created.id ?? `roadmap-mock`,
         reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });
@@ -200,16 +197,12 @@ export const learningService = {
         { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
       );
 
-      const created = normalizeCreateRoadmapResponse(response.data, {
-        ...input,
-        targetLevel: level,
-      });
+      const created = normalizeCreateRoadmapResponse(response.data, input);
 
       latestCreatedRoadmap = created;
       roadmapRegenerateCount = created.regenerateCount;
       await learningPathService.registerCreatedRoadmap({
         ...input,
-        targetLevel: level,
         roadmapId: created.id,
         reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });

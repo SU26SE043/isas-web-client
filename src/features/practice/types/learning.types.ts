@@ -90,7 +90,7 @@ export interface RoadmapApiMilestone {
 
 /**
  * Wizard input for creating a roadmap.
- * Live API accepts jobCategory + level (+ optional context fields).
+ * Live API accepts jobCategory + selected practice sessions (+ optional context fields).
  */
 export interface CreateRoadmapInput {
   domainId: string;
@@ -125,16 +125,11 @@ export const ROADMAP_SCOPE_LESSONS: Record<RoadmapScope, number> = { Quick: 4, S
 
 export type RoadmapLevel = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 
-/** Request body for POST /api/v1/interview/practice/roadmaps */
+/** Request body for POST /api/v1/interview/practice/roadmaps. The server infers level from sessionIds. */
 export interface CreateRoadmapApiRequest {
   jobCategory: string;
-  currentLevel?: string;
-  level: RoadmapLevel | string;
   name?: string;
-  cvId?: string;
-  sessionIds?: string[];
-  cvAnalysisId?: string;
-  priorRoadmapId?: string;
+  sessionIds: string[];
   focus?: string;
   language?: 'vi' | 'en';
   scope?: RoadmapScope;
