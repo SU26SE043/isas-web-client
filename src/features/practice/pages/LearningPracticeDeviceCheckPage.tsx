@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { learningPathService } from '../services/learningPath.service';
 import {
   learningInterviewPreparePath,
@@ -18,6 +19,7 @@ export function LearningPracticeDeviceCheckPage() {
   const { language, t } = useLanguage();
   const [error, setError] = useState(false);
   const startedRef = useRef(false);
+  const { invalidate: invalidateWallet } = useTokenWallet();
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -35,6 +37,7 @@ export function LearningPracticeDeviceCheckPage() {
           roadmapId,
           lessonId,
           title,
+          onCreditConsumed: invalidateWallet,
         });
         if (!active) return;
         if (!result.ok) {
@@ -49,7 +52,7 @@ export function LearningPracticeDeviceCheckPage() {
     return () => {
       active = false;
     };
-  }, [language, lessonId, navigate, roadmapId]);
+  }, [invalidateWallet, language, lessonId, navigate, roadmapId]);
 
   if (error) {
     return (
