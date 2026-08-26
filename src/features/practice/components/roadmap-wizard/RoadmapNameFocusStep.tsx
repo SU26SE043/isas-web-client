@@ -85,7 +85,7 @@ export const RoadmapNameFocusStep: React.FC<RoadmapNameFocusStepProps> = ({
         </span>
       </label>
 
-      {/* Xem chú thích cùng vấn đề ở RoadmapTargetLevelStep: FlowWizardNav không tự có margin trên. */}
+      {/* FlowWizardNav không tự có margin trên nên bước này đặt khoảng cách tại đây. */}
       <div className="mt-8">
         <RoadmapWizardNav onBack={onBack} onNext={onNext} nextDisabled={nameTooLong || focusTooLong} />
       </div>

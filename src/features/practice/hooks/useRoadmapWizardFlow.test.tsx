@@ -7,12 +7,17 @@ const { navigateMock, createRoadmapMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
-vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({}) }));
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({ prefetchQuery: vi.fn().mockResolvedValue(undefined) }),
+}));
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key }) }));
 vi.mock('../services/learning.service', () => ({ learningService: { createRoadmap: createRoadmapMock } }));
 vi.mock('../services/history.service', () => ({ fetchInterviewHistory: vi.fn().mockResolvedValue({ interviews: [] }) }));
 vi.mock('../services/roadmap.service', () => ({ roadmapService: { getLesson: vi.fn() } }));
-vi.mock('./useLearningRoadmaps', () => ({ invalidateLearningRoadmaps: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('./useLearningRoadmaps', () => ({
+  invalidateLearningRoadmaps: vi.fn().mockResolvedValue(undefined),
+  learningLessonQueryKey: vi.fn(() => ['learning-lesson']),
+}));
 
 import { useRoadmapWizardFlow } from './useRoadmapWizardFlow';
 
@@ -42,5 +47,41 @@ describe('useRoadmapWizardFlow', () => {
     expect(createRoadmapMock.mock.calls[0][0]).not.toHaveProperty('currentLevel');
     expect(createRoadmapMock.mock.calls[0][0]).not.toHaveProperty('cvId');
     expect(createRoadmapMock.mock.calls[0][0]).not.toHaveProperty('priorRoadmapId');
+  });
+
+  it('đánh dấu fewerLessons khi số bài thấp hơn cap của scope', async () => {
+    createRoadmapMock.mockResolvedValueOnce({
+      id: 'created-roadmap',
+      milestones: [{ lessons: [{ id: 'lesson-1' }, { id: 'lesson-2' }] }],
+    });
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('frontend'));
+    await waitFor(() => expect(result.current.domainId).toBe('frontend'));
+
+    await act(async () => { await result.current.handleCreate(); });
+
+    expect(navigateMock).toHaveBeenCalledWith('/candidate/learning', {
+      replace: true,
+      state: { fewerLessons: true },
+    });
+  });
+
+  it('không đánh dấu fewerLessons khi số bài đúng bằng cap của scope', async () => {
+    createRoadmapMock.mockResolvedValueOnce({
+      id: 'created-roadmap',
+      milestones: [{ lessons: [
+        { id: 'lesson-1' }, { id: 'lesson-2' }, { id: 'lesson-3' }, { id: 'lesson-4' },
+      ] }],
+    });
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('frontend'));
+    await waitFor(() => expect(result.current.domainId).toBe('frontend'));
+
+    await act(async () => { await result.current.handleCreate(); });
+
+    expect(navigateMock).toHaveBeenCalledWith('/candidate/learning', {
+      replace: true,
+      state: { fewerLessons: false },
+    });
   });
 });

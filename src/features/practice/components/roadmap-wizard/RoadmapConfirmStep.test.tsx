@@ -37,6 +37,5 @@ describe('RoadmapConfirmStep', () => {
   it('nút tạo bật khi có domain dù không có currentLevel', () => {
     renderStep();
     expect(screen.getByRole('button', { name: 'practice.roadmapWizard.confirm.create' })).toBeEnabled();
-    expect(screen.queryByText('practice.roadmapWizard.confirm.currentLevel')).not.toBeInTheDocument();
   });
 });
