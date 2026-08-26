@@ -49,7 +49,11 @@ function MistakeItem({ mistake, index }: { mistake: ApiLessonMistake; index: num
   const [sampleExpanded, setSampleExpanded] = useState(false);
   const criterion = mistake.criterionName || t('practice.learningPath.mistakes.untitled');
   const answerIsLong = Boolean(mistake.answer && mistake.answer.length > ANSWER_PREVIEW_LIMIT);
-  const displayedAnswer = answerExpanded ? mistake.answer : truncateAtWordBoundary(mistake.answer);
+  const displayedAnswer = mistake.answer
+    ? answerExpanded
+      ? mistake.answer
+      : truncateAtWordBoundary(mistake.answer)
+    : undefined;
 
   return (
     <article className="overflow-hidden rounded-xl border border-satin bg-surface-raised">

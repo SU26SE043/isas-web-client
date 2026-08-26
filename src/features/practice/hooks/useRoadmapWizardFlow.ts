@@ -145,12 +145,11 @@ export function useRoadmapWizardFlow() {
   const [loadingDomains] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
   const [reportsError, setReportsError] = useState(false);
-  const [loadedDomainId, setLoadedDomainId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<CreateRoadmapErrorCode | null>(null);
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
-  const loadReportsForDomain = useCallback(async (nextDomainId: string) => {
+  const loadReportsForDomain = useCallback(async (_nextDomainId: string) => {
     setLoadingReports(true);
     setReportsError(false);
     try {
@@ -201,15 +200,19 @@ export function useRoadmapWizardFlow() {
       // môn người học đã nắm) nên hỏng âm thầm — không lỗi nào nổ.
       setManualLevel(null);
       setPriorRoadmapId(undefined);
-      setLoadedDomainId(nextDomainId);
     } catch {
       setReportsError(true);
       setRawReports([]);
-      setLoadedDomainId(nextDomainId);
     } finally {
       setLoadingReports(false);
     }
   }, []);
+
+  // Nạp toàn bộ lịch sử ngay khi wizard mở để lưới domain hiển thị đúng số buổi trước khi
+  // người dùng chọn domain. `allReports` vẫn lọc theo domain ở tầng dẫn xuất bên dưới.
+  useEffect(() => {
+    void loadReportsForDomain('').catch(() => {});
+  }, [loadReportsForDomain]);
 
   // Lọc theo lĩnh vực ở tầng DẪN XUẤT ⇒ đổi lĩnh vực là danh sách đúng ngay, không cần nạp lại.
   const allReports = useMemo(
@@ -230,12 +233,6 @@ export function useRoadmapWizardFlow() {
     counts[report.domainId] = (counts[report.domainId] ?? 0) + 1;
     return counts;
   }, {}), [rawReports]);
-
-  useEffect(() => {
-    if (domainId && domainId !== loadedDomainId && !loadingReports) {
-      void loadReportsForDomain(domainId).catch(() => {});
-    }
-  }, [domainId, loadedDomainId, loadReportsForDomain, loadingReports]);
 
   // Lựa chọn TREO: đổi lĩnh vực xong, id đã chọn của lĩnh vực cũ vẫn nằm trong state và vẫn
   // được gửi lên — nhưng không còn hiện trên màn hình nào. Dọn ngay khi nó rời khỏi tập hợp lệ.

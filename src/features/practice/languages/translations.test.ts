@@ -6,6 +6,7 @@ import {
   PRACTICE_HISTORY_STATUS_GROUP_LABEL_KEYS,
   PRACTICE_SESSION_STATUS_LABEL_KEYS,
 } from '../utils/practiceSessionHistoryActions';
+import { CREATE_ROADMAP_ERROR_CODES } from '../utils/roadmapCreateErrors';
 
 /**
  * Repo KHÔNG có sẵn test này (brief giả định là có — xem báo cáo).
@@ -146,6 +147,31 @@ describe('practiceTranslations', () => {
       expect(practiceTranslations.vi[key], `thiếu vi: ${key}`).toBeTruthy();
       expect(practiceTranslations.en[key], `thiếu en: ${key}`).toBeTruthy();
     }
+  });
+
+  it('mọi mã lỗi tạo roadmap đều có chuỗi dịch ở CẢ vi lẫn en', () => {
+    expect(CREATE_ROADMAP_ERROR_CODES).toHaveLength(11);
+    for (const code of CREATE_ROADMAP_ERROR_CODES) {
+      const key = `practice.roadmapWizard.errors.${code}`;
+      expect(practiceTranslations.vi[key], `vi thiếu ${key}`).toBeTruthy();
+      expect(practiceTranslations.en[key], `en thiếu ${key}`).toBeTruthy();
+    }
+  });
+
+  it('danh sách mã lỗi giữ đủ các lỗi HTTP và lỗi nghiệp vụ đã chốt', () => {
+    expect(CREATE_ROADMAP_ERROR_CODES).toEqual([
+      'invalid_input',
+      'sessions_required',
+      'too_many_sessions',
+      'no_weakness',
+      'no_content_mistakes',
+      'language_mismatch',
+      'unsupported_level',
+      'forbidden',
+      'cv_not_found',
+      'ai_failed',
+      'generic',
+    ]);
   });
 
   // Cùng lý do: `check:i18n` chỉ so CÂN BẰNG vi/en, nên khoá thiếu ở CẢ HAI ngôn ngữ vẫn xanh.
