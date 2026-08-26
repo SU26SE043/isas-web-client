@@ -246,4 +246,11 @@ describe('practiceTranslations', () => {
       expect(stepTitle.toLowerCase()).toContain(stepLabel.toLowerCase());
     }
   });
+
+  it('bước trình độ hiện tại không còn hứa đo khoảng cách tới mục tiêu/cấp độ đích', () => {
+    expect(practiceTranslations.vi['practice.roadmapWizard.currentLevel.description'])
+      .not.toContain('mục tiêu');
+    expect(practiceTranslations.en['practice.roadmapWizard.currentLevel.description'].toLowerCase())
+      .not.toContain('target');
+  });
 });
