@@ -393,6 +393,8 @@ export type CampaignResultFlag = {
   type: string;
   count: number;
   note?: string | null;
+  firstAt?: string | null;
+  lastAt?: string | null;
 };
 
 export type CampaignScoredResult = {
