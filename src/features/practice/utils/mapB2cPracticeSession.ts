@@ -773,9 +773,8 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
               topic.cvLevel === 'Weak'
                 ? topic.cvLevel
                 : null,
-            cvEvidence: Array.isArray(topic.cvEvidence)
-              ? topic.cvEvidence.filter((item): item is string => typeof item === 'string')
-              : null,
+            // Backend gửi MỘT chuỗi (`CvRequirementMatch.Evidence`), không phải mảng.
+            cvEvidence: pickString(topic.cvEvidence) || null,
           };
         })
         .filter((topic): topic is PracticeSessionTopic => topic != null)

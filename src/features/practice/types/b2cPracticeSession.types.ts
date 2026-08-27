@@ -150,7 +150,16 @@ export interface PracticeSessionTopic {
   label: string;
   source: PracticeSessionTopicSource;
   cvLevel: PracticeSessionTopicCvLevel | null;
-  cvEvidence: string[] | null;
+  /**
+   * MỘT câu trích từ CV giải thích vì sao đề tài này được xếp `cvLevel` đó —
+   * nguồn là `CvRequirementMatch.Evidence` (`string`), hoặc hằng
+   * "Không thấy bằng chứng". KHÔNG phải mảng.
+   *
+   * ⚠ Đừng đổi sang `string[]` cho "giống" {@link PracticeCvVsAnswerGap.cvEvidence}:
+   * cái đó là BC8 ("CV mạnh nhưng trả lời yếu"), tính năng khác, ở đó bằng chứng
+   * đúng là DANH SÁCH kỹ năng CV khớp một tiêu chí. Trùng tên field, khác bản chất.
+   */
+  cvEvidence: string | null;
 }
 
 export interface PracticeCvVsAnswerGap {

@@ -76,7 +76,8 @@ describe('PracticeSessionTopics', () => {
     const weakTopic = {
       ...MOCK_SESSION_TOPICS_EIGHT[0],
       cvLevel: 'Weak' as const,
-      cvEvidence: ['private evidence that must stay hidden'],
+      // MỘT chuỗi — khớp `CvRequirementMatch.Evidence` bên backend, không phải mảng.
+      cvEvidence: 'private evidence that must stay hidden',
     };
     const { container } = render(
       <PracticeSessionTopics topics={[weakTopic]} seniority="Senior" variant="full" />,

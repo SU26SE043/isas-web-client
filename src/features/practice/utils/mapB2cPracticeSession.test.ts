@@ -58,6 +58,45 @@ describe('mapPracticeSessionResponse', () => {
     });
   });
 
+  it('giữ nguyên cvEvidence dạng CHUỖI của đề tài suy từ CV', () => {
+    // Backend gửi MỘT chuỗi (`CvRequirementMatch.Evidence`). Bản trước dùng
+    // `Array.isArray(...) ? ... : null` nên chuỗi rơi im lặng thành null —
+    // không crash, không lỗi, chỉ mất hẳn bằng chứng trên màn hình.
+    const mapped = mapPracticeSessionResponse({
+      topics: [
+        {
+          key: 'be.senior.caching',
+          label: 'Chiến lược cache',
+          source: 'CvRequirement',
+          cvLevel: 'Strong',
+          cvEvidence: 'Đã tối ưu hệ thống chịu 10k req/s',
+        },
+      ],
+      questions: [],
+    });
+
+    expect(mapped.topics?.[0]).toMatchObject({
+      source: 'CvRequirement',
+      cvLevel: 'Strong',
+      cvEvidence: 'Đã tối ưu hệ thống chịu 10k req/s',
+    });
+  });
+
+  it('cvEvidence vắng / rỗng / sai kiểu đều về null', () => {
+    const topic = (cvEvidence: unknown) => ({
+      key: 'k',
+      label: 'l',
+      source: 'CvRequirement',
+      cvLevel: 'Weak',
+      cvEvidence,
+    });
+
+    for (const value of [undefined, null, '', '   ', 42, ['a']]) {
+      const mapped = mapPracticeSessionResponse({ topics: [topic(value)], questions: [] });
+      expect(mapped.topics?.[0]?.cvEvidence).toBeNull();
+    }
+  });
+
   it('preserves v8 evidence, RAG citations, language, seniority, and metrics version', () => {
     const mapped = mapPracticeSessionResponse({
       id: 'session-v8',
