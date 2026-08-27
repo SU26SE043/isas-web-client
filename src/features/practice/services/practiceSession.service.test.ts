@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPracticeSession } from './b2cPracticeSession.service';
 import { practiceSessionService } from './practiceSession.service';
+import { MOCK_SESSION_TOPICS_EIGHT } from '../mocks/sessionTopics.fixtures';
 
 vi.mock('@/shared/mock', () => ({
   mockDelay: vi.fn(),
@@ -50,6 +51,25 @@ describe('practiceSessionService.getSession', () => {
     });
     expect(getPracticeSession).toHaveBeenCalledOnce();
     expect(getPracticeSession).toHaveBeenCalledWith('session-1');
+  });
+
+  it('preserves topics and seniority for the waiting room', async () => {
+    vi.mocked(getPracticeSession).mockResolvedValue({
+      id: 'session-topics',
+      status: 'GeneratingQuestions',
+      jobCategory: 'BE',
+      seniority: 'Middle',
+      topics: MOCK_SESSION_TOPICS_EIGHT,
+      questions: [],
+      answers: [],
+      result: null,
+    });
+
+    await expect(practiceSessionService.getSession('session-topics')).resolves.toMatchObject({
+      jobCategory: 'BE',
+      seniority: 'Middle',
+      topics: MOCK_SESSION_TOPICS_EIGHT,
+    });
   });
 
   it.each(['', '   ', 'undefined', 'null'])(

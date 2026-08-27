@@ -10,6 +10,7 @@ import type {
   PracticeSeniority,
 } from '../../types/b2cPracticeSession.types';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
+import { PracticeSessionTopics } from '../PracticeSessionTopics';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
@@ -32,7 +33,7 @@ const SENIORITY_LABEL: Record<PracticeSeniority, string> = {
   Senior: 'practice.wizard.level.senior',
 };
 
-interface PracticeSetupSummaryStepProps {
+export interface PracticeSetupSummaryStepProps {
   jobCategory: PracticeJobCategory | null;
   cvFile: UploadedCvFile | null;
   jdFile: FileRecord | null;
@@ -231,6 +232,16 @@ export function PracticeSetupSummaryStep({
             </li>
           ))}
         </ul>
+        {jobCategory ? (
+          <div className="mt-3 border-t border-info/15 pt-3">
+            <PracticeSessionTopics
+              topics={null}
+              jobCategory={jobCategory}
+              seniority={seniority}
+              variant="compact"
+            />
+          </div>
+        ) : null}
       </section>
     </PracticeWizardStepCard>
   );

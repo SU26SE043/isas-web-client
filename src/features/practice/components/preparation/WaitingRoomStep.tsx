@@ -17,6 +17,7 @@ import {
 } from '../../utils/launchLearningInterviewPractice';
 import type { PracticeSession } from '../../mocks/session.fixtures';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import { PracticeSessionTopics } from '../PracticeSessionTopics';
 
 type StartErrorUi = 'forbidden' | 'not_found' | 'ai_failed' | 'generic' | null;
 
@@ -141,6 +142,16 @@ export function WaitingRoomStep({ sessionId, session, onBack, learningContext }:
           <dd className="mt-1 font-semibold text-foreground">{questionCount}</dd>
         </div>
       </dl>
+
+      {session.topics?.length ? (
+        <div className="mb-6 text-left">
+          <PracticeSessionTopics
+            topics={session.topics}
+            seniority={session.seniority}
+            variant="full"
+          />
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-satin bg-white/[0.03] p-6 text-center">
         {isLearning ? (

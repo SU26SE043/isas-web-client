@@ -3,6 +3,11 @@ import {
   mapPracticeSessionResponse,
   mapSubmitPracticeAnswerResponse,
 } from './mapB2cPracticeSession';
+import {
+  MOCK_SESSION_TOPICS_EIGHT,
+  MOCK_SESSION_TOPICS_EMPTY,
+  MOCK_SESSION_TOPICS_NULL,
+} from '../mocks/sessionTopics.fixtures';
 
 describe('mapPracticeSessionResponse', () => {
   it('maps session id, questions, and result fields', () => {
@@ -27,6 +32,30 @@ describe('mapPracticeSessionResponse', () => {
     expect(mapped.result?.overallScore).toBe(82);
     expect(mapped.result?.criteriaScores[0]?.name).toBe('Comm');
     expect(mapped.result?.cvVsAnswer?.summary).toBe('Aligned');
+  });
+
+  it('maps nullable session topics and filters malformed topic records', () => {
+    expect(mapPracticeSessionResponse({ topics: MOCK_SESSION_TOPICS_NULL, questions: [] }).topics).toBeNull();
+    expect(mapPracticeSessionResponse({ topics: MOCK_SESSION_TOPICS_EMPTY, questions: [] }).topics).toEqual([]);
+
+    const mapped = mapPracticeSessionResponse({
+      topics: [
+        ...MOCK_SESSION_TOPICS_EIGHT,
+        { key: '', label: 'Invalid', source: 'Catalog' },
+        { key: 'invalid-source', label: 'Invalid', source: 'Other' },
+      ],
+      questions: [],
+    });
+
+    expect(mapped.topics).toEqual(MOCK_SESSION_TOPICS_EIGHT);
+    expect(mapped.topics).toHaveLength(8);
+    expect(mapped.topics?.[0]).toMatchObject({
+      key: 'be.middle.db_schema_design',
+      label: 'Thiết kế schema database cho một module',
+      source: 'Catalog',
+      cvLevel: null,
+      cvEvidence: null,
+    });
   });
 
   it('preserves v8 evidence, RAG citations, language, seniority, and metrics version', () => {

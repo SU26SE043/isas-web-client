@@ -120,6 +120,8 @@ export const practiceSessionService = {
         title: '',
         description: '',
         jobCategory: detail.jobCategory ? String(detail.jobCategory) : undefined,
+        ...(detail.seniority !== undefined ? { seniority: detail.seniority } : {}),
+        ...(detail.topics !== undefined ? { topics: detail.topics } : {}),
         status: toLegacySessionStatus(detail.status, detail.questions.length > 0),
         questions: detail.questions.map((question) => ({
           id: question.id,

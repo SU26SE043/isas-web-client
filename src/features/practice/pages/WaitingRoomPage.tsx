@@ -16,6 +16,8 @@ import { LearningWaitingStartPanel } from '../components/flow/LearningWaitingSta
 import { learningRoadmapDetailQueryKey } from '../hooks/useLearningRoadmaps';
 import { requestInterviewFullscreen } from '../hooks/useInterviewFullscreen';
 import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
+import { PracticeSessionTopics } from '../components/PracticeSessionTopics';
 import {
   getLearningSessionRouteContext,
   learningInterviewRoomPath,
@@ -28,6 +30,7 @@ export const WaitingRoomPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
+  const session = useB2cPracticeInterviewStore((state) => state.session);
   const queryClient = useQueryClient();
   useInterviewFlowSession(sessionId);
   const { deviceCheckPassed, identityVerified } = useInterviewFlowStore();
@@ -125,6 +128,15 @@ export const WaitingRoomPage: React.FC = () => {
       isCampaignSession={isCampaign}
     >
       <div className="rounded-xl border border-subtle bg-surface-raised p-8 text-center">
+        {session?.topics?.length ? (
+          <div className="mb-6 text-left">
+            <PracticeSessionTopics
+              topics={session.topics}
+              seniority={session.seniority}
+              variant="full"
+            />
+          </div>
+        ) : null}
         {isLearning ? (
           <LearningWaitingStartPanel
             questionCount={questionCount}

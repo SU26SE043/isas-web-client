@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MOCK_SESSION_TOPICS_EIGHT } from '../../mocks/sessionTopics.fixtures';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
 import { PracticeLiveResultReport } from './PracticeLiveResultReport';
 
@@ -56,10 +57,13 @@ const session: PracticeSessionResponse = {
   },
 };
 
-function renderReport(url = '/practice/result?sessionId=session-1') {
+function renderReport(
+  reportSession: PracticeSessionResponse = session,
+  url = '/practice/result?sessionId=session-1',
+) {
   return render(
     <MemoryRouter initialEntries={[url]}>
-      <PracticeLiveResultReport session={session} />
+      <PracticeLiveResultReport session={reportSession} />
     </MemoryRouter>,
   );
 }
@@ -92,6 +96,32 @@ describe('PracticeLiveResultReport tabs', () => {
     expect(screen.getByText('radar-chart')).toBeInTheDocument();
     expect(screen.queryByText('practice.result.summary')).not.toBeInTheDocument();
     expect(screen.queryByText('practice.result.jumpToQuestion')).not.toBeInTheDocument();
+  });
+
+  it('places the full topic catalog beside criteria scores when GET detail includes topics', async () => {
+    const user = userEvent.setup();
+    renderReport({ ...session, seniority: 'Middle', topics: MOCK_SESSION_TOPICS_EIGHT });
+
+    await user.click(screen.getByRole('tab', { name: 'practice.result.quickCriteria' }));
+
+    expect(screen.getByRole('heading', { name: 'practice.result.criteriaScores' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'practice.topics.title' })).toBeInTheDocument();
+    const topicsSection = screen.getByRole('heading', { name: 'practice.topics.title' }).closest('section');
+    expect(topicsSection).not.toBeNull();
+    expect(within(topicsSection as HTMLElement).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByText('practice.topics.level')).toBeInTheDocument();
+    expect(screen.queryByText(/cvEvidence|private evidence/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the result layout unchanged when the detail has no topics', async () => {
+    const user = userEvent.setup();
+    renderReport({ ...session, topics: null });
+
+    await user.click(screen.getByRole('tab', { name: 'practice.result.quickCriteria' }));
+
+    expect(screen.getByText('practice.result.criteriaScores')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'practice.topics.title' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('practice-session-topics-compact')).not.toBeInTheDocument();
   });
 
   it('shows question picker only on questions tab and switches detail', async () => {
