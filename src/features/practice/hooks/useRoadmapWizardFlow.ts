@@ -92,6 +92,13 @@ export function useRoadmapWizardFlow() {
     return counts;
   }, {}), [rawReports]);
 
+  // F6 (giữ qua merge REC1): nạp lịch sử NGAY khi wizard mở để lưới ngành hiện đúng số buổi
+  // TRƯỚC khi người dùng chọn ngành. Lời gọi này không lọc theo ngành ở server — `allReports`
+  // và `reportCounts` lọc ở tầng dẫn xuất — nên nạp sớm là đủ và không tốn thêm vòng nào.
+  useEffect(() => {
+    void loadReportsForDomain('').catch(() => {});
+  }, [loadReportsForDomain]);
+
   useEffect(() => {
     if (domainId && domainId !== loadedDomainId && !loadingReports) {
       void loadReportsForDomain(domainId).catch(() => {});

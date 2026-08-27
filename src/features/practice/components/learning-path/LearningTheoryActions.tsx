@@ -32,7 +32,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   const [creditOpen, setCreditOpen] = useState(false);
   const [startError, setStartError] = useState(false);
   const [creditRejected, setCreditRejected] = useState(false);
-  const { available: creditsRemaining } = useTokenWallet();
+  const { available: creditsRemaining, invalidate: invalidateWallet } = useTokenWallet();
 
   // Luyện LẠI bài đã xong. Nút nằm ở ĐÂY (trang chi tiết bài) chứ không ở danh sách
   // chặng: ngoài danh sách mỗi bài đã có sẵn hai nút, thêm nút thứ ba làm hàng nút
@@ -40,6 +40,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
   // đọc lại trước khi quyết định.
   const retry = useLessonRetry({
     roadmapId: roadmap.id,
+    onCreditConsumed: invalidateWallet,
     onStarted: (sessionId, lessonId) =>
       navigate(learningInterviewPreparePath(sessionId, { roadmapId: roadmap.id, lessonId })),
   });
@@ -74,6 +75,7 @@ export function LearningTheoryActions({ roadmap, opened }: LearningTheoryActions
         roadmapId: roadmap.id,
         lessonId: opened.id,
         title,
+        onCreditConsumed: invalidateWallet,
       });
       if (!result.ok) {
         if (result.code === 'insufficient_credits') {

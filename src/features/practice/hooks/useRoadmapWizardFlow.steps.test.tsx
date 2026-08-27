@@ -57,3 +57,16 @@ describe('thứ tự bước của wizard lộ trình', () => {
     expect(result.current.step).toBe('nameFocus');
   });
 });
+
+describe('badge số buổi trên lưới domain', () => {
+  // `beforeEach` chung trả danh sách RỖNG (đủ cho các test thứ-tự-bước). Test này cần dữ liệu
+  // thật vì nó khoá hành vi F6: lưới ngành phải có số buổi TRƯỚC khi người dùng chọn ngành.
+  const beReport = { id: 's1', status: 'completed', domainId: 'backend', date: '2026-08-20T07:32:00Z' };
+
+  it('có số buổi trước khi người dùng chọn domain', async () => {
+    fetchHistoryMock.mockResolvedValue({ interviews: [beReport] });
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    await waitFor(() => expect(result.current.loadingReports).toBe(false));
+    expect(result.current.reportCounts.backend).toBe(1);
+  });
+});

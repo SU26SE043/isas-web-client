@@ -64,4 +64,25 @@ describe('LessonMistakeReview', () => {
     render(<LessonMistakeReview mistakes={[mistake]} />);
     expect(screen.queryByText('practice.learningPath.mistakes.question')).toBeNull();
   });
+
+  it('renders the older backend payload without throwing', () => {
+    expect(() => render(<LessonMistakeReview mistakes={[{
+      id: 'm1',
+      whatWentWrong: 'Thiếu giải thích.',
+      howToFixIt: 'Nêu rõ trade-off.',
+    }]} />)).not.toThrow();
+    expect(screen.getByText('Thiếu giải thích.')).toBeInTheDocument();
+  });
+
+  it('omits the answer section when answer is undefined', () => {
+    render(<LessonMistakeReview mistakes={[{
+      id: 'm1',
+      criterionName: 'Tư duy hệ thống',
+      question: 'Bạn xử lý lỗi thế nào?',
+      whatWentWrong: 'Chưa nêu cách kiểm tra.',
+    }]} />);
+    expect(screen.getByText('practice.learningPath.mistakes.question')).toBeInTheDocument();
+    expect(screen.getByText('practice.learningPath.mistakes.whatWentWrong')).toBeInTheDocument();
+    expect(screen.queryByText('practice.learningPath.mistakes.answer')).toBeNull();
+  });
 });

@@ -59,13 +59,13 @@ export type ApiRoadmapMilestone = {
 
 export type ApiLessonMistake = {
   id: string;
-  criterionName: string;
-  scorePct: number;
-  question: string;
-  answer: string;
-  whatWentWrong: string;
-  howToFixIt: string;
-  sampleAnswer: string;
+  criterionName?: string;
+  scorePct?: number;
+  question?: string;
+  answer?: string;
+  whatWentWrong?: string | null;
+  howToFixIt?: string | null;
+  sampleAnswer?: string | null;
 };
 
 export type ApiRoadmapResolvedSession = string | {
