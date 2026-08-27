@@ -10,6 +10,7 @@ import { CampaignViolationDialog } from '../components/CampaignViolationDialog';
 import { useCampaignAntiCheat } from '../hooks/useCampaignAntiCheat';
 import { useCampaignFaceCheck } from '../hooks/useCampaignFaceCheck';
 import { useCampaignFullscreen } from '../hooks/useCampaignFullscreen';
+import { useCampaignProctoringLifecycle } from '../hooks/useCampaignProctoringLifecycle';
 import { useCampaignViolationQueue } from '../hooks/useCampaignViolationQueue';
 import { readCampaignInterviewSession } from '../utils/campaignInterviewSession';
 
@@ -28,20 +29,13 @@ export function CampaignInterviewPage() {
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [media, setMedia] = useState<B2cRoomMediaContext | null>(null);
   const [violationPaused, setViolationPaused] = useState(false);
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [completed, setCompleted] = useState(false);
   const [answerUploadInFlight, setAnswerUploadInFlight] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
-
-  const handlePhaseChange = useCallback((phase: string) => {
-    if (phase === 'countdown' || phase === 'reading' || phase === 'answering') {
-      setSessionStarted(true);
-    }
-  }, []);
+  const proctoring = useCampaignProctoringLifecycle(antiCheatEnabled);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
   const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
@@ -55,11 +49,13 @@ export function CampaignInterviewPage() {
     enabled: Boolean(sessionId),
     onExit: antiCheatEnabled ? handleFullscreenExit : undefined,
   });
-  const proctoringActive = antiCheatEnabled && sessionStarted && !completed;
+  // KHÔNG AND thêm điều kiện nào vào `proctoring.proctoringActive` ở đây —
+  // `!currentViolation` và `isFullscreen` là hai lỗ AC1 vừa vá, và
+  // `CampaignInterviewPage.test.tsx` khoá lại đúng hai vế đó.
   const antiCheat = useCampaignAntiCheat({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: proctoringActive,
+    enabled: proctoring.proctoringActive,
     recoveryActive: Boolean(violations.currentViolation),
     stream: media?.stream,
     onPause: handleViolationPause,
@@ -71,7 +67,7 @@ export function CampaignInterviewPage() {
   useCampaignFaceCheck({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: proctoringActive,
+    enabled: proctoring.proctoringActive,
     videoEl,
     uploadInFlight: answerUploadInFlight,
     onSignal: handleFaceSignal,
@@ -174,8 +170,8 @@ export function CampaignInterviewPage() {
         violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
-        onPhaseChange={handlePhaseChange}
-        onSessionSubmitting={() => setCompleted(true)}
+        onPhaseChange={proctoring.handlePhaseChange}
+        onSessionSubmitting={proctoring.markCompleted}
         onAnswerUploadStateChange={setAnswerUploadInFlight}
       />
     </div>
