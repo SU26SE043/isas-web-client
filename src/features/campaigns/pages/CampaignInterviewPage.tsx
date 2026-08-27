@@ -60,6 +60,7 @@ export function CampaignInterviewPage() {
     campaignId: resolvedCampaignId,
     sessionId,
     enabled: proctoringActive,
+    recoveryActive: Boolean(violations.currentViolation),
     stream: media?.stream,
     onPause: handleViolationPause,
     onViolation: violations.enqueue,

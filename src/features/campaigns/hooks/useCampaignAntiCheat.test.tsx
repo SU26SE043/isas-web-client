@@ -70,7 +70,7 @@ describe('useCampaignAntiCheat', () => {
     });
   });
 
-  it('does not pause on window blur and reveals one behavior signal on focus', () => {
+  it('reports focus_lost without pausing when the window loses focus', () => {
     const onPause = vi.fn();
     const onViolation = vi.fn();
     const onBehaviorSignal = vi.fn();
@@ -84,15 +84,32 @@ describe('useCampaignAntiCheat', () => {
 
     act(() => vi.advanceTimersByTime(250));
     expect(createFlag).toHaveBeenCalledWith('campaign-1', 'session-1', {
-      signalType: 'tab_switch',
-      note: 'Candidate left the interview window using Alt+Tab or window switching.',
+      signalType: 'focus_lost',
+      note: 'Candidate lost focus from the interview window.',
     });
 
     act(() => window.dispatchEvent(new Event('focus')));
     expect(onViolation).not.toHaveBeenCalled();
-    expect(onBehaviorSignal).toHaveBeenCalledOnce();
-    expect(onBehaviorSignal).toHaveBeenCalledWith('tab_switch');
+    expect(onBehaviorSignal).toHaveBeenCalledTimes(1);
+    expect(onBehaviorSignal).toHaveBeenCalledWith('focus_lost');
     expect(createFlag).toHaveBeenCalledOnce();
+  });
+
+  it('adds the recovery note to behavior flags while a violation dialog is open', () => {
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      recoveryActive: true,
+      onViolation: vi.fn(),
+    }));
+
+    act(() => document.dispatchEvent(new Event('paste')));
+
+    expect(createFlag).toHaveBeenCalledWith('campaign-1', 'session-1', {
+      signalType: 'paste',
+      note: 'Candidate attempted to paste content during the interview. (đang khắc phục thiết bị)',
+    });
   });
 
   it('maps fullscreen exit to tab_switch with the API v10 note', () => {

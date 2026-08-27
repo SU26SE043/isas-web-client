@@ -18,6 +18,7 @@ interface UseCampaignAntiCheatOptions {
   campaignId: string;
   sessionId: string;
   enabled: boolean;
+  recoveryActive?: boolean;
   /** Live camera stream from the interview room. Watched for camera loss. */
   stream?: MediaStream | null;
   onPause?: () => void;
@@ -42,6 +43,7 @@ export function useCampaignAntiCheat({
   campaignId,
   sessionId,
   enabled,
+  recoveryActive = false,
   stream,
   onPause,
   onViolation,
@@ -55,6 +57,9 @@ export function useCampaignAntiCheat({
   const cameraWasLive = useRef(false);
   const lastLeaveAt = useRef(0);
   const leaveTimer = useRef<number | null>(null);
+  const focusTimer = useRef<number | null>(null);
+  const recoveryActiveRef = useRef(recoveryActive);
+  recoveryActiveRef.current = recoveryActive;
 
   const sendFlag = useCallback((
     signalType: AllowedFrontendSignalType,
@@ -131,7 +136,10 @@ export function useCampaignAntiCheat({
   ) => {
     if (!enabled || aborted.current) return;
     onBehaviorSignal?.(kind);
-    sendFlag(signalType, note);
+    const recoveryNote = recoveryActiveRef.current
+      ? `${note} (đang khắc phục thiết bị)`
+      : note;
+    sendFlag(signalType, recoveryNote);
   }, [enabled, onBehaviorSignal, sendFlag]);
 
   const reportFullscreenExit = useCallback(() => {
@@ -158,6 +166,10 @@ export function useCampaignAntiCheat({
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         documentHidden.current = true;
+        if (focusTimer.current != null) {
+          window.clearTimeout(focusTimer.current);
+          focusTimer.current = null;
+        }
         beginPendingLeaveRef.current({
           kind: 'tab_switch',
           source: 'tab_switch',
@@ -171,15 +183,33 @@ export function useCampaignAntiCheat({
     };
     const onBlur = () => {
       windowBlurred.current = true;
-      beginPendingLeaveRef.current({
-        kind: 'tab_switch',
-        source: 'window_blur',
-        note: 'Candidate left the interview window using Alt+Tab or window switching.',
-        reported: false,
-      });
+      if (document.visibilityState === 'hidden') {
+        beginPendingLeaveRef.current({
+          kind: 'tab_switch',
+          source: 'window_blur',
+          note: 'Candidate left the interview window using Alt+Tab or window switching.',
+          reported: false,
+        });
+        return;
+      }
+      if (focusTimer.current != null) window.clearTimeout(focusTimer.current);
+      focusTimer.current = window.setTimeout(() => {
+        focusTimer.current = null;
+        if (windowBlurred.current && !documentHidden.current) {
+          reportBehaviorRef.current(
+            'focus_lost',
+            'focus_lost',
+            'Candidate lost focus from the interview window.',
+          );
+        }
+      }, LEAVE_CORRELATION_MS);
     };
     const onFocus = () => {
       windowBlurred.current = false;
+      if (focusTimer.current != null) {
+        window.clearTimeout(focusTimer.current);
+        focusTimer.current = null;
+      }
       if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
     };
     const onPaste = () => {
@@ -200,6 +230,10 @@ export function useCampaignAntiCheat({
       if (leaveTimer.current != null) {
         window.clearTimeout(leaveTimer.current);
         leaveTimer.current = null;
+      }
+      if (focusTimer.current != null) {
+        window.clearTimeout(focusTimer.current);
+        focusTimer.current = null;
       }
     };
   }, []);
