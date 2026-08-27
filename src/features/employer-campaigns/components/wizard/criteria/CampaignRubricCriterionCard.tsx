@@ -40,8 +40,12 @@ export function CampaignRubricCriterionCard({
   const indexLabel = String(index + 1).padStart(2, '0');
   const weight = Number(criterion.weight) || 0;
   const clamped = Math.max(0, Math.min(100, weight));
+  // `maxScore` bên backend là Int32 (campaign_criteria.max_score) — số thập phân
+  // bị từ chối bằng 400 `System.Int32`, tức lỗi chỉ lộ ra SAU khi employer bấm
+  // lưu. Chặn ngay tại đây, và giữ `step={1}` ở ô nhập bên dưới.
+  // `weight` thì ngược lại: numeric bên DB nên `step={0.1}` là đúng.
   const maxScoreValid =
-    Number.isFinite(criterion.maxScore) && criterion.maxScore >= 1 && criterion.maxScore <= 10;
+    Number.isInteger(criterion.maxScore) && criterion.maxScore >= 1 && criterion.maxScore <= 10;
 
   return (
     <article className="frame-satin rounded-xl border border-satin bg-surface-raised/60 px-3 py-3 sm:px-4 sm:py-4">
@@ -121,7 +125,7 @@ export function CampaignRubricCriterionCard({
             type="number"
             min={1}
             max={10}
-            step={0.1}
+            step={1}
             disabled={disabled}
             value={criterion.maxScore}
             aria-invalid={!maxScoreValid}
