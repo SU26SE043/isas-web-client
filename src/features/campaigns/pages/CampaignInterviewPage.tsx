@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   B2cPracticeInterviewRoom,
   type B2cRoomMediaContext,
@@ -21,7 +22,6 @@ function hasLiveCamera(stream: MediaStream | null | undefined) {
 export function CampaignInterviewPage() {
   const { campaignId = '', sessionId = '' } = useParams();
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const stored = readCampaignInterviewSession(sessionId);
   const resolvedCampaignId = campaignId || stored?.campaignId || '';
   const antiCheatEnabled = stored?.antiCheatEnabled === true;
@@ -32,6 +32,7 @@ export function CampaignInterviewPage() {
   const [completed, setCompleted] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
 
@@ -42,6 +43,12 @@ export function CampaignInterviewPage() {
   }, []);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
+  const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
+    if (behaviorToastTypes.current.has(kind)) return;
+    behaviorToastTypes.current.add(kind);
+    toast.success(t('campaigns.violation.behaviorRecorded'), { duration: 5000 });
+  }, [t]);
+  const handleFaceSignal = useCallback(() => undefined, []);
   const handleFullscreenExit = useCallback(() => fullscreenExitRef.current(), []);
   const fullscreen = useCampaignFullscreen({
     enabled: Boolean(sessionId),
@@ -55,15 +62,16 @@ export function CampaignInterviewPage() {
     stream: media?.stream,
     onPause: handleViolationPause,
     onViolation: violations.enqueue,
+    onBehaviorSignal: handleBehaviorSignal,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;
 
-  const faceCheck = useCampaignFaceCheck({
+  useCampaignFaceCheck({
     campaignId: resolvedCampaignId,
     sessionId,
     enabled: proctoringActive,
     videoEl,
-    onSignal: violations.enqueue,
+    onSignal: handleFaceSignal,
   });
 
   const handleMediaContext = useCallback((context: B2cRoomMediaContext) => {
@@ -84,13 +92,6 @@ export function CampaignInterviewPage() {
     setRecovering(true);
     setRecoveryError(null);
     try {
-      if (violation.kind === 'identity_unverified') {
-        navigate(
-          `/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/face-enroll/${encodeURIComponent(sessionId)}?retry=1`,
-          { replace: true },
-        );
-        return;
-      }
       if (!fullscreen.isFullscreen) {
         const restored = await fullscreen.enterFullscreen();
         if (!restored) {
@@ -105,32 +106,14 @@ export function CampaignInterviewPage() {
           return;
         }
       }
-      if (
-        violation.kind === 'no_face'
-        || violation.kind === 'multiple_faces'
-        || violation.kind === 'face_mismatch'
-      ) {
-        if (!(await restoreCamera())) {
-          setRecoveryError('campaigns.violation.cameraRecovery');
-          return;
-        }
-        const result = await faceCheck.checkNow();
-        if (!result?.safe) {
-          setRecoveryError('campaigns.violation.faceRecovery');
-          return;
-        }
-      }
       violations.resolveCurrent();
       setViolationPaused(false);
     } finally {
       setRecovering(false);
     }
   }, [
-    faceCheck,
     fullscreen,
-    navigate,
     recovering,
-    resolvedCampaignId,
     restoreCamera,
     sessionId,
     violations,

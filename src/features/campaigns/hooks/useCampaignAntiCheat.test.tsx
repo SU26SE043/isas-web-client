@@ -51,32 +51,35 @@ describe('useCampaignAntiCheat', () => {
   it('reports a tab switch only after the candidate returns to the tab', async () => {
     const onViolation = vi.fn();
     const onPause = vi.fn();
+    const onBehaviorSignal = vi.fn();
     renderHook(() => useCampaignAntiCheat({
-      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation,
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation, onBehaviorSignal,
     }));
 
     act(() => setVisibility('hidden'));
-    expect(onPause).toHaveBeenCalledOnce();
+    expect(onPause).not.toHaveBeenCalled();
     expect(onViolation).not.toHaveBeenCalled();
     expect(createFlag).toHaveBeenCalledOnce();
 
     act(() => setVisibility('visible'));
-    expect(onViolation).toHaveBeenCalledOnce();
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(onBehaviorSignal).toHaveBeenCalledExactlyOnceWith('tab_switch');
     expect(createFlag).toHaveBeenCalledWith('campaign-1', 'session-1', {
       signalType: 'tab_switch',
       note: 'Candidate switched away from the interview tab.',
     });
   });
 
-  it('pauses on window blur and reveals one tab_switch violation on focus', () => {
+  it('does not pause on window blur and reveals one behavior signal on focus', () => {
     const onPause = vi.fn();
     const onViolation = vi.fn();
+    const onBehaviorSignal = vi.fn();
     renderHook(() => useCampaignAntiCheat({
-      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation,
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onPause, onViolation, onBehaviorSignal,
     }));
 
     act(() => window.dispatchEvent(new Event('blur')));
-    expect(onPause).toHaveBeenCalledOnce();
+    expect(onPause).not.toHaveBeenCalled();
     expect(onViolation).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(250));
@@ -86,8 +89,9 @@ describe('useCampaignAntiCheat', () => {
     });
 
     act(() => window.dispatchEvent(new Event('focus')));
-    expect(onViolation).toHaveBeenCalledOnce();
-    expect(onViolation).toHaveBeenCalledWith('tab_switch');
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(onBehaviorSignal).toHaveBeenCalledOnce();
+    expect(onBehaviorSignal).toHaveBeenCalledWith('tab_switch');
     expect(createFlag).toHaveBeenCalledOnce();
   });
 
@@ -130,8 +134,9 @@ describe('useCampaignAntiCheat', () => {
 
   it('deduplicates blur, visibility, and fullscreen events from one Alt+Tab', () => {
     const onViolation = vi.fn();
+    const onBehaviorSignal = vi.fn();
     const { result } = renderHook(() => useCampaignAntiCheat({
-      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation,
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, onViolation, onBehaviorSignal,
     }));
 
     act(() => {
@@ -148,7 +153,8 @@ describe('useCampaignAntiCheat', () => {
       window.dispatchEvent(new Event('focus'));
     });
     expect(createFlag).toHaveBeenCalledOnce();
-    expect(onViolation).toHaveBeenCalledOnce();
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(onBehaviorSignal).toHaveBeenCalledOnce();
   });
 
   it('does not report a fullscreen violation on initial render', () => {
@@ -260,5 +266,29 @@ describe('useCampaignAntiCheat', () => {
 
     act(() => document.dispatchEvent(new Event('paste')));
     expect(createFlag).not.toHaveBeenCalled();
+  });
+
+  it('sends every paste flag without pausing and reports every behavior event', () => {
+    const onPause = vi.fn();
+    const onViolation = vi.fn();
+    const onBehaviorSignal = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: true,
+      onPause,
+      onViolation,
+      onBehaviorSignal,
+    }));
+
+    act(() => {
+      document.dispatchEvent(new Event('paste'));
+      document.dispatchEvent(new Event('paste'));
+    });
+
+    expect(onPause).not.toHaveBeenCalled();
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(onBehaviorSignal).toHaveBeenCalledTimes(2);
+    expect(createFlag).toHaveBeenCalledTimes(2);
   });
 });

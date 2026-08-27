@@ -22,6 +22,7 @@ interface UseCampaignAntiCheatOptions {
   stream?: MediaStream | null;
   onPause?: () => void;
   onViolation: (kind: CampaignViolationKind) => void;
+  onBehaviorSignal?: (kind: Extract<CampaignViolationKind, 'tab_switch' | 'paste' | 'focus_lost'>) => void;
 }
 
 /**
@@ -44,6 +45,7 @@ export function useCampaignAntiCheat({
   stream,
   onPause,
   onViolation,
+  onBehaviorSignal,
 }: UseCampaignAntiCheatOptions) {
   const aborted = useRef(false);
   const pendingLeave = useRef<PendingLeaveViolation | null>(null);
@@ -52,7 +54,6 @@ export function useCampaignAntiCheat({
   const cameraBlocked = useRef(false);
   const cameraWasLive = useRef(false);
   const lastLeaveAt = useRef(0);
-  const inFlight = useRef(new Set<string>());
   const leaveTimer = useRef<number | null>(null);
 
   const sendFlag = useCallback((
@@ -60,13 +61,9 @@ export function useCampaignAntiCheat({
     note: string,
   ) => {
     if (!enabled || aborted.current || !campaignId || !sessionId) return;
-    const key = `${signalType}:${note}`;
-    if (inFlight.current.has(key)) return;
-    inFlight.current.add(key);
     void campaignCandidateService
       .createCampaignFlag(campaignId, sessionId, { signalType, note })
-      .catch(() => undefined)
-      .finally(() => inFlight.current.delete(key));
+      .catch(() => undefined);
   }, [campaignId, enabled, sessionId]);
 
   const flushPendingLeave = useCallback(() => {
@@ -86,8 +83,9 @@ export function useCampaignAntiCheat({
       window.clearTimeout(leaveTimer.current);
       leaveTimer.current = null;
     }
-    onViolation(pending.kind);
-  }, [flushPendingLeave, onViolation]);
+    if (pending.kind === 'tab_switch') onBehaviorSignal?.('tab_switch');
+    else onViolation(pending.kind);
+  }, [flushPendingLeave, onBehaviorSignal, onViolation]);
 
   const beginPendingLeave = useCallback((next: PendingLeaveViolation) => {
     if (!enabled || aborted.current) return;
@@ -101,7 +99,7 @@ export function useCampaignAntiCheat({
     if (Date.now() - lastLeaveAt.current < LEAVE_DEDUP_MS) return;
 
     pendingLeave.current = next;
-    onPause?.();
+    if (next.source === 'fullscreen_exit') onPause?.();
     if (next.source === 'tab_switch') {
       flushPendingLeave();
       return;
@@ -126,6 +124,16 @@ export function useCampaignAntiCheat({
     sendFlag(signalType, note);
   }, [enabled, onPause, onViolation, sendFlag]);
 
+  const reportBehavior = useCallback((
+    kind: Extract<CampaignViolationKind, 'tab_switch' | 'paste' | 'focus_lost'>,
+    signalType: Extract<AllowedFrontendSignalType, 'paste' | 'focus_lost' | 'tab_switch'>,
+    note: string,
+  ) => {
+    if (!enabled || aborted.current) return;
+    onBehaviorSignal?.(kind);
+    sendFlag(signalType, note);
+  }, [enabled, onBehaviorSignal, sendFlag]);
+
   const reportFullscreenExit = useCallback(() => {
     beginPendingLeave({
       kind: 'fullscreen_exit',
@@ -137,9 +145,11 @@ export function useCampaignAntiCheat({
 
   const beginPendingLeaveRef = useRef(beginPendingLeave);
   const reportImmediateRef = useRef(reportImmediate);
+  const reportBehaviorRef = useRef(reportBehavior);
   const revealPendingLeaveRef = useRef(revealPendingLeave);
   beginPendingLeaveRef.current = beginPendingLeave;
   reportImmediateRef.current = reportImmediate;
+  reportBehaviorRef.current = reportBehavior;
   revealPendingLeaveRef.current = revealPendingLeave;
 
   useEffect(() => {
@@ -173,7 +183,7 @@ export function useCampaignAntiCheat({
       if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
     };
     const onPaste = () => {
-      reportImmediateRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
+      reportBehaviorRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
     };
 
     document.addEventListener('visibilitychange', onVisibility);
