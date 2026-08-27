@@ -50,7 +50,8 @@ export function useCampaignFaceCheck({
 
   const checkNow = useCallback(async () => {
     if (
-      aborted.current
+      !enabled
+      || aborted.current
       || inFlight.current
       || completed
       || document.visibilityState === 'hidden'
@@ -58,10 +59,21 @@ export function useCampaignFaceCheck({
     ) return null;
     inFlight.current = true;
     try {
-      const file = await captureVideoFrameAsJpegFile(
+      let file = await captureVideoFrameAsJpegFile(
         videoEl,
         `face-check-${sessionId}-${Date.now()}.jpg`,
       );
+      if (!file) {
+        const freshVideoEl = document.querySelector<HTMLVideoElement>(
+          '[data-campaign-interview] video',
+        );
+        if (freshVideoEl && freshVideoEl !== videoEl) {
+          file = await captureVideoFrameAsJpegFile(
+            freshVideoEl,
+            `face-check-${sessionId}-${Date.now()}.jpg`,
+          );
+        }
+      }
       if (!file || aborted.current) return null;
       const result = await campaignCandidateService.checkCampaignFace(
         campaignId,

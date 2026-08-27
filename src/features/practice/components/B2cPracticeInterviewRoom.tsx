@@ -18,7 +18,7 @@ import { mapModalToCardStatus, resolveAnswerCardStatus } from '../utils/resolveA
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
 export type { B2cRoomMediaContext } from '../types/b2cPracticeRoom.types';
-export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused = false, cameraAlwaysOn = false, onMediaContextChange, onPhaseChange }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused = false, cameraAlwaysOn = false, onMediaContextChange, onPhaseChange, onSessionSubmitting }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [autoSubmitRequestId, setAutoSubmitRequestId] = useState(0);
@@ -56,6 +56,9 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   useEffect(() => {
     onPhaseChange?.(room.phase);
   }, [onPhaseChange, room.phase]);
+  useEffect(() => {
+    if (room.isSubmittingSession) onSessionSubmitting?.();
+  }, [onSessionSubmitting, room.isSubmittingSession]);
   if (room.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">

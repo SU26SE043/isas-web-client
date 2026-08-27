@@ -28,21 +28,17 @@ export function CampaignInterviewPage() {
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [media, setMedia] = useState<B2cRoomMediaContext | null>(null);
   const [violationPaused, setViolationPaused] = useState(false);
-  const [interviewActive, setInterviewActive] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const fullscreenExitRef = useRef<() => void>(() => undefined);
-  const countdownStartedRef = useRef(false);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
 
-  // Interview is ACTIVE from the moment the start countdown finishes. That
-  // includes the "reading" phase (TTS) and every later question hand-off, so
-  // monitoring must not drop out between questions.
   const handlePhaseChange = useCallback((phase: string) => {
-    if (phase === 'countdown') countdownStartedRef.current = true;
-    setInterviewActive(
-      countdownStartedRef.current && (phase === 'reading' || phase === 'answering'),
-    );
+    if (phase === 'countdown' || phase === 'reading' || phase === 'answering') {
+      setSessionStarted(true);
+    }
   }, []);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
@@ -51,14 +47,11 @@ export function CampaignInterviewPage() {
     enabled: Boolean(sessionId),
     onExit: antiCheatEnabled ? handleFullscreenExit : undefined,
   });
-  const monitoringActive = antiCheatEnabled
-    && interviewActive
-    && fullscreen.isFullscreen
-    && !violations.currentViolation;
+  const proctoringActive = antiCheatEnabled && sessionStarted && !completed;
   const antiCheat = useCampaignAntiCheat({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: monitoringActive,
+    enabled: proctoringActive,
     stream: media?.stream,
     onPause: handleViolationPause,
     onViolation: violations.enqueue,
@@ -68,7 +61,7 @@ export function CampaignInterviewPage() {
   const faceCheck = useCampaignFaceCheck({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: monitoringActive,
+    enabled: proctoringActive,
     videoEl,
     onSignal: violations.enqueue,
   });
@@ -196,6 +189,7 @@ export function CampaignInterviewPage() {
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
         onPhaseChange={handlePhaseChange}
+        onSessionSubmitting={() => setCompleted(true)}
       />
     </div>
   );
