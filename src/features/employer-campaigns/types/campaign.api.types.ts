@@ -8,6 +8,7 @@ export type CampaignLanguage = 'vi' | 'en';
 export type CampaignSeniority = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
 export type CampaignQuestionSource = 'AiGenerated' | 'CustomHr';
 export type CampaignCriterionSource = 'AiSuggested' | 'HrEdited';
+import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
 export type JobNeedCategory = 'Technical' | 'WorkStyle' | 'Communication' | 'Growth';
 export type NeedLevel = 'Strong' | 'Partial' | 'Weak';
 export type VerificationRisk = 'Low' | 'Medium' | 'High';
@@ -27,6 +28,7 @@ export type CampaignRubricCriterionResponse = {
   description?: string | null;
   maxScore?: number | null;
   source?: CampaignCriterionSource | string | null;
+  levels?: RubricLevel[] | null;
 };
 
 export type CampaignQuestionResponse = {
@@ -109,6 +111,8 @@ export type CampaignCreateCriterionRequest = {
   /** Decimal 0 < weight <= 1 */
   weight: number;
   maxScore: number;
+  /** Existing server-authored anchors must be echoed on replace-all updates. */
+  levels?: RubricLevel[];
 };
 
 export type CampaignCreateQuestionRequest = {
@@ -134,7 +138,6 @@ export type CampaignCreateRequest = {
   domain: string;
   language?: CampaignLanguage;
   seniority?: CampaignSeniority;
-  location: string;
   maxCandidates?: number | null;
   timeLimitMinutes: number;
   /** 0..100; null = HR decides */
@@ -177,7 +180,6 @@ export type CampaignUpdateRequest = {
   domain?: string;
   language?: CampaignLanguage;
   seniority?: CampaignSeniority;
-  location?: string;
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
   antiCheatEnabled?: boolean;

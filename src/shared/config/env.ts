@@ -53,10 +53,14 @@ export const env = parseEnv();
  * Gateway origin only (no path). Endpoint modules already include `/api/v1/...`.
  * Strips accidental trailing `/api` or `/api/v1` so URLs never become `/api/api/v1/...`.
  */
-export function getApiBaseUrl(): string {
-  const raw = env.VITE_API_BASE_URL.trim().replace(/\/+$/, '');
+export function normalizeApiBaseUrl(value: string | undefined | null): string {
+  const raw = (value ?? '').trim().replace(/\/+$/, '');
   if (!raw) return '';
   return raw.replace(/\/api(?:\/v1)?$/i, '');
+}
+
+export function getApiBaseUrl(): string {
+  return normalizeApiBaseUrl(env.VITE_API_BASE_URL);
 }
 
 export function isDevEnvironment(): boolean {

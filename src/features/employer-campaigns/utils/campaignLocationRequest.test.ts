@@ -76,20 +76,20 @@ function persisted(location: string): CampaignWizardPersistedState {
 }
 
 describe('campaign location request contract', () => {
-  it('trims location in create payload and excludes transient coordinates', () => {
+  it('does not send unsupported location fields in the create payload', () => {
     const request = buildCampaignCreateRequest(snapshot());
-    expect(request.location).toBe('2 Hải Triều, Quận 1');
+    expect(request).not.toHaveProperty('location');
     expect(request).not.toHaveProperty('locationCoordinates');
   });
 
-  it('includes only a changed location in a dirty update', () => {
+  it('does not send location changes in a dirty update', () => {
     const dirty = buildDirtyUpdateRequest(snapshot('Old address'), snapshot('New address'));
-    expect(dirty).toEqual({ location: 'New address' });
+    expect(dirty).toEqual({});
   });
 
-  it('requires a non-blank campaign location', () => {
+  it('allows a blank campaign location because the API does not persist it', () => {
     expect(validateCampaignWizardStep(persisted('  '), 0)).toBe(
-      'employer.campaigns.wizard.locationRequired',
+      null,
     );
   });
 });

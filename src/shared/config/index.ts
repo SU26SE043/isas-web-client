@@ -1,1 +1,1 @@
-export { env, getApiBaseUrl, isDevEnvironment } from './env';
+export { env, getApiBaseUrl, isDevEnvironment, normalizeApiBaseUrl } from './env';

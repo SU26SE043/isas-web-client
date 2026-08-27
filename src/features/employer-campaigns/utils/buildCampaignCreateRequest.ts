@@ -47,12 +47,13 @@ export function mapRubricToCreateCriteria(
     .filter((item) => item.name.trim())
     .map((item) => {
       const rawWeight = Number(item.weight);
-      const weight = rawWeight > 1 ? Number((rawWeight / 100).toFixed(4)) : rawWeight;
+      const weight = Number((rawWeight / 100).toFixed(4));
       return {
         name: item.name.trim(),
         description: item.description.trim() || null,
         weight,
-        maxScore: Math.max(1, Math.round(Number(item.maxScore) || 1)),
+        maxScore: Number(item.maxScore) || 1,
+        ...(item.levels?.length ? { levels: item.levels } : {}),
       };
     });
 }
@@ -84,6 +85,7 @@ function criteriaRequestToRubric(
     description: item.description?.trim() || '',
     weight: item.weight,
     maxScore: item.maxScore,
+    levels: item.levels ?? undefined,
   }));
 }
 
@@ -112,7 +114,6 @@ export function mergeCampaignWriteResult(
     jdText?: string | null;
     title?: string;
     domain?: string;
-    location?: string;
     maxCandidates?: number | null;
     timeLimitMinutes?: number;
     startsAt?: string;
@@ -136,7 +137,6 @@ export function mergeCampaignWriteResult(
     next.domain = input.domain.trim();
     next.company = input.domain.trim();
   }
-  if (input.location?.trim()) next.location = input.location.trim();
   if (input.maxCandidates && input.maxCandidates > 0) next.capacity = input.maxCandidates;
   if (input.timeLimitMinutes && input.timeLimitMinutes > 0) {
     next.durationMinutes = input.timeLimitMinutes;
@@ -148,13 +148,11 @@ export function mergeCampaignWriteResult(
 }
 
 function resolveJdTextForCreate(jd: JobDescriptionState): string | null {
-  if (jd.inputMethod !== 'text') return null;
   const text = jd.jdText.trim();
   return text || null;
 }
 
 function resolveJdTextForUpdate(jd: JobDescriptionState): string | undefined {
-  if (jd.inputMethod !== 'text') return undefined;
   const text = jd.jdText.trim();
   return text || undefined;
 }
@@ -169,8 +167,8 @@ export type CampaignWizardSubmitSnapshot = {
 
 /**
  * Build POST /api/v1/campaign body from the full wizard (all 6 steps).
- * File-based JD is omitted (jdText: null) — the file itself is uploaded once,
- * right after this create call succeeds (see useCampaignWizard.handleCreateCampaign).
+ * Preserve any JD text already entered when the user switches to file mode. The
+ * file is still uploaded separately after the draft is created.
  */
 export function buildCampaignCreateRequest(
   snapshot: CampaignWizardSubmitSnapshot,
@@ -188,7 +186,6 @@ export function buildCampaignCreateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
-    location: info.location.trim(),
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
@@ -224,7 +221,6 @@ export function buildCampaignUpdateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
-    location: info.location.trim(),
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,

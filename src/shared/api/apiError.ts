@@ -9,17 +9,35 @@ type ApiErrorBody = Pick<ApiError, 'message' | 'error'>;
 const DEFAULT_FALLBACK = 'Request failed';
 
 const getValidationMessages = (data: unknown): string | undefined => {
-  if (!Array.isArray(data)) return undefined;
-  const messages = data.flatMap((item) => {
-    if (typeof item === 'string' && item.trim()) return [item.trim()];
-    if (item && typeof item === 'object') {
-      const body = item as ApiErrorBody;
-      const message = body.message ?? body.error;
-      return typeof message === 'string' && message.trim() ? [message.trim()] : [];
+  const messages: string[] = [];
+
+  const collect = (value: unknown, field?: string) => {
+    if (typeof value === 'string' && value.trim()) {
+      messages.push(field ? `${field}: ${value.trim()}` : value.trim());
+      return;
     }
-    return [];
-  });
-  return messages.length ? messages.join('. ') : undefined;
+    if (Array.isArray(value)) {
+      value.forEach((item) => collect(item, field));
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+
+    const record = value as Record<string, unknown>;
+    const errors = record.errors;
+    if (errors && typeof errors === 'object' && !Array.isArray(errors)) {
+      Object.entries(errors).forEach(([errorField, fieldErrors]) => {
+        collect(fieldErrors, errorField);
+      });
+    }
+    if (!errors) {
+      const message = record.message ?? record.error;
+      if (typeof message === 'string') collect(message, field);
+    }
+  };
+
+  collect(data);
+  const uniqueMessages = Array.from(new Set(messages));
+  return uniqueMessages.length ? uniqueMessages.join('. ') : undefined;
 };
 
 export const getApiErrorMessage = (error: unknown, fallback = DEFAULT_FALLBACK) => {
@@ -45,9 +63,9 @@ export const getApiErrorMessage = (error: unknown, fallback = DEFAULT_FALLBACK) 
   }
   if (responseData && typeof responseData === 'object') {
     const body = responseData as ApiErrorBody;
-    return body.message ?? body.error ?? error.message ?? resolvedFallback;
+    return body.message ?? body.error ?? resolvedFallback;
   }
-  return error.message ?? resolvedFallback;
+  return resolvedFallback;
 };
 
 export const getApiStatusCode = (error: unknown) => {
@@ -72,6 +90,11 @@ export const toApiError = (error: unknown, fallback = DEFAULT_FALLBACK): ApiErro
   const responseData: unknown = error.response?.data;
   let message: string | undefined;
   let errorField: string | undefined;
+
+  if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+    const body = responseData as ApiErrorBody;
+    errorField = body.error;
+  }
 
   const validationMessage = getValidationMessages(responseData);
   if (validationMessage) {

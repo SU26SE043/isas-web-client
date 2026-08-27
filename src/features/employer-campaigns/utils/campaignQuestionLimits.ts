@@ -65,3 +65,15 @@ export function hasWizardJd(jd: {
   }
   return jd.serverUploaded || jd.fileStatus === 'uploaded';
 }
+
+/** Remove only the draft placeholder used while creating a campaign. */
+export function removePlaceholderQuestion<T extends { prompt: string }>(
+  questions: T[],
+  placeholderPrompt: string,
+): { questions: T[]; removedCount: number } {
+  const normalizedPlaceholder = placeholderPrompt.trim();
+  const filtered = questions.filter(
+    (question) => question.prompt.trim() !== normalizedPlaceholder,
+  );
+  return { questions: filtered, removedCount: questions.length - filtered.length };
+}

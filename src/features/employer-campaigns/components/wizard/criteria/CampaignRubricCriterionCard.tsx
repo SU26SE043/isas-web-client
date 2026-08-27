@@ -62,6 +62,7 @@ export function CampaignRubricCriterionCard({
             <Input
               id={`campaign-rubric-name-${criterion.id}`}
               value={criterion.name}
+              maxLength={255}
               disabled={disabled}
               onChange={(event) => onChange({ name: event.target.value })}
               className="h-9 border-satin bg-surface-overlay/70 text-sm font-semibold"
@@ -93,7 +94,7 @@ export function CampaignRubricCriterionCard({
             type="number"
             min={0}
             max={100}
-            step={1}
+            step={0.1}
             disabled={disabled}
             value={criterion.weight}
             onChange={(event) => onChange({ weight: Number(event.target.value) })}
@@ -120,7 +121,7 @@ export function CampaignRubricCriterionCard({
             type="number"
             min={1}
             max={10}
-            step={1}
+            step={0.1}
             disabled={disabled}
             value={criterion.maxScore}
             aria-invalid={!maxScoreValid}

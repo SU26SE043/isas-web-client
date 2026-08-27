@@ -50,6 +50,7 @@ import {
   defaultGenerateCount,
   effectiveMaxQuestions,
   hasWizardJd,
+  removePlaceholderQuestion,
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 
@@ -84,6 +85,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
       return next;
     })();
 
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   return {
     title: campaign?.title ?? '',
     domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
@@ -94,7 +96,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
     passScorePct: campaign?.passScorePct ?? null,
     startsAt: toDatetimeLocalValue(start),
     expiresAt: toDatetimeLocalValue(end),
-    timezone: 'Asia/Ho_Chi_Minh',
+    timezone,
   };
 }
 
@@ -162,6 +164,37 @@ function clearError(errorSteps: number[], step: number) {
   return errorSteps.filter((item) => item !== step);
 }
 
+export function resolveCampaignErrorStep(
+  message: string,
+  kind: 'create' | 'update' | 'questions',
+): number | null {
+  const lower = message.toLowerCase();
+  if (lower.includes('maxquestions') || lower.includes('maxfollowups')) return 4;
+  if (lower.includes('question') || lower.includes('câu hỏi') || kind === 'questions') return 3;
+  if (
+    lower.includes('criteria') ||
+    lower.includes('weight') ||
+    lower.includes('maxscore') ||
+    lower.includes('tiêu chí')
+  ) {
+    return 2;
+  }
+  if (lower.includes('jd') || lower.includes('job description')) return 1;
+  if (
+    lower.includes('date') ||
+    lower.includes('start') ||
+    lower.includes('expir') ||
+    lower.includes('past') ||
+    lower.includes('title') ||
+    lower.includes('domain') ||
+    lower.includes('location') ||
+    lower.includes('passscore')
+  ) {
+    return 0;
+  }
+  return null;
+}
+
 function mapSubmitError(
   error: unknown,
   t: (key: string) => string,
@@ -169,13 +202,15 @@ function mapSubmitError(
 ): { message: string; step: number | null } {
   const status = getApiStatusCode(error);
   const message = getApiErrorMessage(error, '');
-  const lower = message.toLowerCase();
 
   // Prefer the backend plain-text / message body when present.
   const preferApiMessage = Boolean(message.trim());
 
   if (status === 401) return { message: t('employer.campaigns.wizard.sessionExpired'), step: null };
   if (status === 403) {
+    if (message && /(max.?candidates?|quota|package|plan|limit|cap)/i.test(message)) {
+      return { message, step: 0 };
+    }
     return {
       message:
         kind === 'create'
@@ -190,38 +225,19 @@ function mapSubmitError(
   if (status === 409) {
     return { message: t('employer.campaigns.wizard.notDraftEditable'), step: null };
   }
-  if (
-    status === 400 &&
-    (lower.includes('question') || lower.includes('câu hỏi') || kind === 'questions')
-  ) {
-    return {
-      message: preferApiMessage ? message : t('employer.campaigns.wizard.questionsRequired'),
-      step: 3,
-    };
-  }
-  if (
-    status === 400 &&
-    (lower.includes('date') ||
-      lower.includes('start') ||
-      lower.includes('expir') ||
-      lower.includes('past'))
-  ) {
-    return {
-      message: preferApiMessage ? message : t('employer.campaigns.wizard.dateRangeInvalid'),
-      step: 0,
-    };
-  }
-  if (
-    status === 400 &&
-    (lower.includes('criteria') ||
-      lower.includes('weight') ||
-      lower.includes('maxscore') ||
-      lower.includes('tiêu chí'))
-  ) {
-    return {
-      message: preferApiMessage ? message : t('employer.campaigns.wizard.criteriaInvalid'),
-      step: 2,
-    };
+  if (status === 400) {
+    const step = resolveCampaignErrorStep(message, kind);
+    if (step !== null) {
+      const fallbackKey =
+        step === 3
+          ? 'employer.campaigns.wizard.questionsRequired'
+          : step === 2
+            ? 'employer.campaigns.wizard.criteriaInvalid'
+            : step === 1
+              ? 'employer.campaigns.wizard.jdTextRequired'
+              : 'employer.campaigns.wizard.dateRangeInvalid';
+      return { message: preferApiMessage ? message : t(fallbackKey), step };
+    }
   }
   if (status === 500 || status === 502 || status === 503) {
     return { message: t('employer.campaigns.wizard.saveFailedRetry'), step: null };
@@ -445,10 +461,14 @@ export function useCampaignWizard({
           campaignId: id,
           count,
         });
+        const generated = removePlaceholderQuestion(
+          updated.questions,
+          t('employer.campaigns.wizard.placeholderQuestion'),
+        );
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
-          questions: updated.questions,
+          questions: generated.questions,
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
@@ -461,8 +481,13 @@ export function useCampaignWizard({
           },
         }));
         setQuestionsSaved(true);
-        const received = updated.questions.length;
-        if (received < count) {
+        const received = generated.questions.length;
+        if (generated.removedCount > 0) {
+          toast(
+            t('employer.campaigns.campaignQuestions.success.generatedPlaceholderRemoved')
+              .replace('{{count}}', String(received)),
+          );
+        } else if (received < count) {
           toast(
             t('employer.campaigns.campaignQuestions.success.generatedLimited')
               .replace('{{requested}}', String(count))
