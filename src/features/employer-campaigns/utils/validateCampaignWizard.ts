@@ -5,8 +5,13 @@ const LAST_STEP_INDEX = 6;
 const MAX_QUESTIONS_LIMIT = 20;
 export const MAX_CAMPAIGN_TITLE_LENGTH = 255;
 export const MAX_CRITERION_NAME_LENGTH = 255;
+// Backend áp CÙNG MỘT trần cho cả jdText lẫn criteriaText —
+// `Isas.Shared.Validation.TextInputLimits.JdTextMaxChars` (CAMP-5), gọi qua
+// `NormalizeText` ở cả create lẫn update. Nên hai hằng dưới đây phải bằng nhau;
+// tách rời từng số thì FE trôi khỏi hợp đồng mà không gì báo (đã xảy ra: trần
+// tiêu chí từng là 2.000, tức nghiêm hơn backend 10 lần và chặn nhầm input hợp lệ).
 export const MAX_JD_TEXT_LENGTH = 20_000;
-export const MAX_CRITERIA_TEXT_LENGTH = 2_000;
+export const MAX_CRITERIA_TEXT_LENGTH = MAX_JD_TEXT_LENGTH;
 export const MAX_FOLLOW_UPS_LIMIT = 20;
 
 export type WizardValidationError = {

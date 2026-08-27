@@ -920,7 +920,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleTooLong': 'Tên chiến dịch không được vượt quá 255 ký tự.',
     'employer.campaigns.form.integerRequired': 'Giá trị phải là số nguyên.',
     'employer.campaigns.wizard.jdTextTooLong': 'Mô tả công việc không được vượt quá 20.000 ký tự.',
-    'employer.campaigns.wizard.criteriaTextTooLong': 'Ghi chú tiêu chí không được vượt quá 2.000 ký tự.',
+    'employer.campaigns.wizard.criteriaTextTooLong': 'Ghi chú tiêu chí không được vượt quá 20.000 ký tự.',
     'employer.campaigns.wizard.jdUploadFailed': 'Không thể tải tệp JD lên',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'Cần tải file JD thành công trước khi xuất bản chiến dịch.',
@@ -2158,7 +2158,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleTooLong': 'Campaign title must not exceed 255 characters.',
     'employer.campaigns.form.integerRequired': 'This value must be an integer.',
     'employer.campaigns.wizard.jdTextTooLong': 'Job description must not exceed 20,000 characters.',
-    'employer.campaigns.wizard.criteriaTextTooLong': 'Criteria notes must not exceed 2,000 characters.',
+    'employer.campaigns.wizard.criteriaTextTooLong': 'Criteria notes must not exceed 20,000 characters.',
     'employer.campaigns.wizard.jdUploadFailed': 'Could not upload the JD file',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'The JD file must upload successfully before publishing the campaign.',
