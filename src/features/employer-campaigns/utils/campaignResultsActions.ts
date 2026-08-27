@@ -57,6 +57,16 @@ export function formatResultDateTime(value: string | null | undefined, locale: s
   }).format(date);
 }
 
+export function formatResultTime(value: string | null | undefined, locale: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export function downloadResultBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

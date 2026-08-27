@@ -234,6 +234,8 @@ function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
       type,
       count,
       note: pickString(flagRecord, 'note', 'Note') ?? null,
+      firstAt: pickString(flagRecord, 'firstAt', 'FirstAt') ?? null,
+      lastAt: pickString(flagRecord, 'lastAt', 'LastAt') ?? null,
     });
   }
   return flags;

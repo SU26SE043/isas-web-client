@@ -7,7 +7,7 @@ export type CampaignFaceSignal =
   | 'identity_unverified';
 
 export type CampaignViolationKind =
-  | AllowedFrontendSignalType
+  | Exclude<AllowedFrontendSignalType, 'monitoring_gap'>
   | 'fullscreen_exit'
   | CampaignFaceSignal;
 

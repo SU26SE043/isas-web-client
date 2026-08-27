@@ -68,7 +68,13 @@ describe('campaignCandidatesApi', () => {
           aiScore: 88,
           result: 'Pass',
           scoredAt: '2026-07-25T09:30:00Z',
-          flags: [{ type: 'TabSwitch', count: 1, note: 'Switched once' }],
+          flags: [{
+            type: 'TabSwitch',
+            count: 1,
+            note: 'Switched once',
+            firstAt: '2026-08-27T10:01:57Z',
+            lastAt: '2026-08-27T10:22:36Z',
+          }],
         },
       ],
       unscoredFlagged: [
@@ -77,7 +83,12 @@ describe('campaignCandidatesApi', () => {
           sessionId: 's2',
           fullName: null,
           email: null,
-          flags: [{ type: 'FaceMissing', count: 2 }],
+          flags: [{
+            type: 'FaceMissing',
+            count: 2,
+            FirstAt: '2026-08-27T09:00:00Z',
+            LastAt: '2026-08-27T09:30:00Z',
+          }],
         },
       ],
     });
@@ -85,9 +96,13 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.results).toHaveLength(1);
     expect(parsed.results[0]?.totalScore).toBe(91.5);
     expect(parsed.results[0]?.flags[0]?.note).toBe('Switched once');
+    expect(parsed.results[0]?.flags[0]?.firstAt).toBe('2026-08-27T10:01:57Z');
+    expect(parsed.results[0]?.flags[0]?.lastAt).toBe('2026-08-27T10:22:36Z');
     expect(parsed.unscoredFlagged).toHaveLength(1);
     expect(parsed.unscoredFlagged[0]?.fullName).toBeNull();
     expect(parsed.unscoredFlagged[0]?.email).toBeNull();
+    expect(parsed.unscoredFlagged[0]?.flags[0]?.firstAt).toBe('2026-08-27T09:00:00Z');
+    expect(parsed.unscoredFlagged[0]?.flags[0]?.lastAt).toBe('2026-08-27T09:30:00Z');
   });
 
   it('defaults unscoredFlagged to [] when backend omits the field', () => {

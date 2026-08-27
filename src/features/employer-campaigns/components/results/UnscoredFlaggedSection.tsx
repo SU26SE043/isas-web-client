@@ -9,6 +9,8 @@ import {
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
+import { formatResultTime } from '../../utils/campaignResultsActions';
+import { getReviewPriority, REVIEW_PRIORITY_CLASS } from '../../utils/proctoringFlagPriority';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
 
 export function UnscoredFlaggedSection({
@@ -16,7 +18,7 @@ export function UnscoredFlaggedSection({
 }: {
   items: CampaignUnscoredFlaggedResult[];
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const list = items ?? [];
 
   return (
@@ -68,16 +70,23 @@ export function UnscoredFlaggedSection({
                         {t('employer.campaigns.results.flags.none')}
                       </span>
                     ) : (
-                      <ul className="space-y-1 text-xs text-warning">
+                      <ul className="space-y-1 text-xs">
                         {item.flags.map((flag) => (
-                          <li key={`${flag.type}-${flag.count}-${flag.note ?? ''}`}>
-                            <span className="font-medium">
+                          <li key={`${flag.type}-${flag.count}-${flag.note ?? ''}`} className={`rounded-lg border px-3 py-2 ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}>
+                            <p className="font-medium">
                               {flag.type}: {flag.count}
-                            </span>
+                            </p>
                             {flag.note?.trim() ? (
-                              <span className="mt-0.5 block text-muted-foreground">
+                              <p className="mt-0.5 text-current/80">
                                 {flag.note.trim()}
-                              </span>
+                              </p>
+                            ) : null}
+                            {formatResultTime(flag.firstAt, language) || formatResultTime(flag.lastAt, language) ? (
+                              <p className="mt-0.5 text-current/80">
+                                {formatResultTime(flag.firstAt, language) ? `${t('employer.campaigns.results.proctoring.firstAt')} ${formatResultTime(flag.firstAt, language)}` : null}
+                                {formatResultTime(flag.firstAt, language) && formatResultTime(flag.lastAt, language) ? ' · ' : null}
+                                {formatResultTime(flag.lastAt, language) ? `${t('employer.campaigns.results.proctoring.lastAt')} ${formatResultTime(flag.lastAt, language)}` : null}
+                              </p>
                             ) : null}
                           </li>
                         ))}

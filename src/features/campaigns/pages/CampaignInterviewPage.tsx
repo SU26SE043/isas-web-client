@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   B2cPracticeInterviewRoom,
   type B2cRoomMediaContext,
@@ -21,56 +22,59 @@ function hasLiveCamera(stream: MediaStream | null | undefined) {
 export function CampaignInterviewPage() {
   const { campaignId = '', sessionId = '' } = useParams();
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const stored = readCampaignInterviewSession(sessionId);
   const resolvedCampaignId = campaignId || stored?.campaignId || '';
   const antiCheatEnabled = stored?.antiCheatEnabled === true;
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [media, setMedia] = useState<B2cRoomMediaContext | null>(null);
   const [violationPaused, setViolationPaused] = useState(false);
-  const [interviewActive, setInterviewActive] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [answerUploadInFlight, setAnswerUploadInFlight] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
-  const countdownStartedRef = useRef(false);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
 
-  // Interview is ACTIVE from the moment the start countdown finishes. That
-  // includes the "reading" phase (TTS) and every later question hand-off, so
-  // monitoring must not drop out between questions.
   const handlePhaseChange = useCallback((phase: string) => {
-    if (phase === 'countdown') countdownStartedRef.current = true;
-    setInterviewActive(
-      countdownStartedRef.current && (phase === 'reading' || phase === 'answering'),
-    );
+    if (phase === 'countdown' || phase === 'reading' || phase === 'answering') {
+      setSessionStarted(true);
+    }
   }, []);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
+  const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
+    if (behaviorToastTypes.current.has(kind)) return;
+    behaviorToastTypes.current.add(kind);
+    toast.success(t('campaigns.violation.behaviorRecorded'), { duration: 5000 });
+  }, [t]);
+  const handleFaceSignal = useCallback(() => undefined, []);
   const handleFullscreenExit = useCallback(() => fullscreenExitRef.current(), []);
   const fullscreen = useCampaignFullscreen({
     enabled: Boolean(sessionId),
     onExit: antiCheatEnabled ? handleFullscreenExit : undefined,
   });
-  const monitoringActive = antiCheatEnabled
-    && interviewActive
-    && fullscreen.isFullscreen
-    && !violations.currentViolation;
+  const proctoringActive = antiCheatEnabled && sessionStarted && !completed;
   const antiCheat = useCampaignAntiCheat({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: monitoringActive,
+    enabled: proctoringActive,
+    recoveryActive: Boolean(violations.currentViolation),
     stream: media?.stream,
     onPause: handleViolationPause,
     onViolation: violations.enqueue,
+    onBehaviorSignal: handleBehaviorSignal,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;
 
-  const faceCheck = useCampaignFaceCheck({
+  useCampaignFaceCheck({
     campaignId: resolvedCampaignId,
     sessionId,
-    enabled: monitoringActive,
+    enabled: proctoringActive,
     videoEl,
-    onSignal: violations.enqueue,
+    uploadInFlight: answerUploadInFlight,
+    onSignal: handleFaceSignal,
   });
 
   const handleMediaContext = useCallback((context: B2cRoomMediaContext) => {
@@ -91,13 +95,6 @@ export function CampaignInterviewPage() {
     setRecovering(true);
     setRecoveryError(null);
     try {
-      if (violation.kind === 'identity_unverified') {
-        navigate(
-          `/candidate/campaigns/${encodeURIComponent(resolvedCampaignId)}/face-enroll/${encodeURIComponent(sessionId)}?retry=1`,
-          { replace: true },
-        );
-        return;
-      }
       if (!fullscreen.isFullscreen) {
         const restored = await fullscreen.enterFullscreen();
         if (!restored) {
@@ -112,32 +109,14 @@ export function CampaignInterviewPage() {
           return;
         }
       }
-      if (
-        violation.kind === 'no_face'
-        || violation.kind === 'multiple_faces'
-        || violation.kind === 'face_mismatch'
-      ) {
-        if (!(await restoreCamera())) {
-          setRecoveryError('campaigns.violation.cameraRecovery');
-          return;
-        }
-        const result = await faceCheck.checkNow();
-        if (!result?.safe) {
-          setRecoveryError('campaigns.violation.faceRecovery');
-          return;
-        }
-      }
       violations.resolveCurrent();
       setViolationPaused(false);
     } finally {
       setRecovering(false);
     }
   }, [
-    faceCheck,
     fullscreen,
-    navigate,
     recovering,
-    resolvedCampaignId,
     restoreCamera,
     sessionId,
     violations,
@@ -196,6 +175,8 @@ export function CampaignInterviewPage() {
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
         onPhaseChange={handlePhaseChange}
+        onSessionSubmitting={() => setCompleted(true)}
+        onAnswerUploadStateChange={setAnswerUploadInFlight}
       />
     </div>
   );

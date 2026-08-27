@@ -18,10 +18,12 @@ interface UseCampaignAntiCheatOptions {
   campaignId: string;
   sessionId: string;
   enabled: boolean;
+  recoveryActive?: boolean;
   /** Live camera stream from the interview room. Watched for camera loss. */
   stream?: MediaStream | null;
   onPause?: () => void;
   onViolation: (kind: CampaignViolationKind) => void;
+  onBehaviorSignal?: (kind: Extract<CampaignViolationKind, 'tab_switch' | 'paste' | 'focus_lost'>) => void;
 }
 
 /**
@@ -41,9 +43,11 @@ export function useCampaignAntiCheat({
   campaignId,
   sessionId,
   enabled,
+  recoveryActive = false,
   stream,
   onPause,
   onViolation,
+  onBehaviorSignal,
 }: UseCampaignAntiCheatOptions) {
   const aborted = useRef(false);
   const pendingLeave = useRef<PendingLeaveViolation | null>(null);
@@ -52,21 +56,19 @@ export function useCampaignAntiCheat({
   const cameraBlocked = useRef(false);
   const cameraWasLive = useRef(false);
   const lastLeaveAt = useRef(0);
-  const inFlight = useRef(new Set<string>());
   const leaveTimer = useRef<number | null>(null);
+  const focusTimer = useRef<number | null>(null);
+  const recoveryActiveRef = useRef(recoveryActive);
+  recoveryActiveRef.current = recoveryActive;
 
   const sendFlag = useCallback((
     signalType: AllowedFrontendSignalType,
     note: string,
   ) => {
     if (!enabled || aborted.current || !campaignId || !sessionId) return;
-    const key = `${signalType}:${note}`;
-    if (inFlight.current.has(key)) return;
-    inFlight.current.add(key);
     void campaignCandidateService
       .createCampaignFlag(campaignId, sessionId, { signalType, note })
-      .catch(() => undefined)
-      .finally(() => inFlight.current.delete(key));
+      .catch(() => undefined);
   }, [campaignId, enabled, sessionId]);
 
   const flushPendingLeave = useCallback(() => {
@@ -86,8 +88,9 @@ export function useCampaignAntiCheat({
       window.clearTimeout(leaveTimer.current);
       leaveTimer.current = null;
     }
-    onViolation(pending.kind);
-  }, [flushPendingLeave, onViolation]);
+    if (pending.kind === 'tab_switch') onBehaviorSignal?.('tab_switch');
+    else onViolation(pending.kind);
+  }, [flushPendingLeave, onBehaviorSignal, onViolation]);
 
   const beginPendingLeave = useCallback((next: PendingLeaveViolation) => {
     if (!enabled || aborted.current) return;
@@ -101,7 +104,7 @@ export function useCampaignAntiCheat({
     if (Date.now() - lastLeaveAt.current < LEAVE_DEDUP_MS) return;
 
     pendingLeave.current = next;
-    onPause?.();
+    if (next.source === 'fullscreen_exit') onPause?.();
     if (next.source === 'tab_switch') {
       flushPendingLeave();
       return;
@@ -126,6 +129,19 @@ export function useCampaignAntiCheat({
     sendFlag(signalType, note);
   }, [enabled, onPause, onViolation, sendFlag]);
 
+  const reportBehavior = useCallback((
+    kind: Extract<CampaignViolationKind, 'tab_switch' | 'paste' | 'focus_lost'>,
+    signalType: Extract<AllowedFrontendSignalType, 'paste' | 'focus_lost' | 'tab_switch'>,
+    note: string,
+  ) => {
+    if (!enabled || aborted.current) return;
+    onBehaviorSignal?.(kind);
+    const recoveryNote = recoveryActiveRef.current
+      ? `${note} (đang khắc phục thiết bị)`
+      : note;
+    sendFlag(signalType, recoveryNote);
+  }, [enabled, onBehaviorSignal, sendFlag]);
+
   const reportFullscreenExit = useCallback(() => {
     beginPendingLeave({
       kind: 'fullscreen_exit',
@@ -137,9 +153,11 @@ export function useCampaignAntiCheat({
 
   const beginPendingLeaveRef = useRef(beginPendingLeave);
   const reportImmediateRef = useRef(reportImmediate);
+  const reportBehaviorRef = useRef(reportBehavior);
   const revealPendingLeaveRef = useRef(revealPendingLeave);
   beginPendingLeaveRef.current = beginPendingLeave;
   reportImmediateRef.current = reportImmediate;
+  reportBehaviorRef.current = reportBehavior;
   revealPendingLeaveRef.current = revealPendingLeave;
 
   useEffect(() => {
@@ -148,6 +166,10 @@ export function useCampaignAntiCheat({
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         documentHidden.current = true;
+        if (focusTimer.current != null) {
+          window.clearTimeout(focusTimer.current);
+          focusTimer.current = null;
+        }
         beginPendingLeaveRef.current({
           kind: 'tab_switch',
           source: 'tab_switch',
@@ -161,19 +183,37 @@ export function useCampaignAntiCheat({
     };
     const onBlur = () => {
       windowBlurred.current = true;
-      beginPendingLeaveRef.current({
-        kind: 'tab_switch',
-        source: 'window_blur',
-        note: 'Candidate left the interview window using Alt+Tab or window switching.',
-        reported: false,
-      });
+      if (document.visibilityState === 'hidden') {
+        beginPendingLeaveRef.current({
+          kind: 'tab_switch',
+          source: 'window_blur',
+          note: 'Candidate left the interview window using Alt+Tab or window switching.',
+          reported: false,
+        });
+        return;
+      }
+      if (focusTimer.current != null) window.clearTimeout(focusTimer.current);
+      focusTimer.current = window.setTimeout(() => {
+        focusTimer.current = null;
+        if (windowBlurred.current && !documentHidden.current) {
+          reportBehaviorRef.current(
+            'focus_lost',
+            'focus_lost',
+            'Candidate lost focus from the interview window.',
+          );
+        }
+      }, LEAVE_CORRELATION_MS);
     };
     const onFocus = () => {
       windowBlurred.current = false;
+      if (focusTimer.current != null) {
+        window.clearTimeout(focusTimer.current);
+        focusTimer.current = null;
+      }
       if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
     };
     const onPaste = () => {
-      reportImmediateRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
+      reportBehaviorRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
     };
 
     document.addEventListener('visibilitychange', onVisibility);
@@ -190,6 +230,10 @@ export function useCampaignAntiCheat({
       if (leaveTimer.current != null) {
         window.clearTimeout(leaveTimer.current);
         leaveTimer.current = null;
+      }
+      if (focusTimer.current != null) {
+        window.clearTimeout(focusTimer.current);
+        focusTimer.current = null;
       }
     };
   }, []);
