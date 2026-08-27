@@ -30,6 +30,7 @@ export function CampaignInterviewPage() {
   const [violationPaused, setViolationPaused] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [answerUploadInFlight, setAnswerUploadInFlight] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
@@ -71,6 +72,7 @@ export function CampaignInterviewPage() {
     sessionId,
     enabled: proctoringActive,
     videoEl,
+    uploadInFlight: answerUploadInFlight,
     onSignal: handleFaceSignal,
   });
 
@@ -173,6 +175,7 @@ export function CampaignInterviewPage() {
         onMediaContextChange={handleMediaContext}
         onPhaseChange={handlePhaseChange}
         onSessionSubmitting={() => setCompleted(true)}
+        onAnswerUploadStateChange={setAnswerUploadInFlight}
       />
     </div>
   );

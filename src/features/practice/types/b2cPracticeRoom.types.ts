@@ -15,4 +15,5 @@ export interface B2cPracticeInterviewRoomProps {
   onMediaContextChange?: (context: B2cRoomMediaContext) => void;
   onPhaseChange?: (phase: string) => void;
   onSessionSubmitting?: () => void;
+  onAnswerUploadStateChange?: (inFlight: boolean) => void;
 }

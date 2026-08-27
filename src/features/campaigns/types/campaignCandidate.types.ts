@@ -79,7 +79,7 @@ export interface FaceCheckResponse {
   signals: string[];
 }
 
-export type AllowedFrontendSignalType = 'tab_switch' | 'paste' | 'focus_lost' | 'camera_blocked';
+export type AllowedFrontendSignalType = 'tab_switch' | 'paste' | 'focus_lost' | 'camera_blocked' | 'monitoring_gap';
 
 export interface CreateCampaignFlagRequest {
   signalType: AllowedFrontendSignalType;
