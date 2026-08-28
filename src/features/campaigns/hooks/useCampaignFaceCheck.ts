@@ -3,6 +3,7 @@ import { campaignCandidateService } from '../services/campaignCandidate.service'
 import type { FaceCheckResponse } from '../types/campaignCandidate.types';
 import type { CampaignFaceSignal } from '../types/campaignViolation.types';
 import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
+import { enqueueCampaignFlag } from '../utils/campaignFlagQueue';
 
 export const FACE_CHECK_INTERVAL_MS = 30_000;
 export const FACE_CHECK_ALERT_INTERVAL_MS = 10_000;
@@ -59,9 +60,7 @@ export function useCampaignFaceCheck({
 
   const sendFlag = useCallback((signalType: 'monitoring_gap', note: string) => {
     if (!enabled || aborted.current || !campaignId || !sessionId) return;
-    void campaignCandidateService
-      .createCampaignFlag(campaignId, sessionId, { signalType, note })
-      .catch(() => undefined);
+    enqueueCampaignFlag(campaignId, sessionId, signalType, note);
   }, [campaignId, enabled, sessionId]);
 
   const runCheck = useCallback(async (scheduledIntervalMs?: number) => {

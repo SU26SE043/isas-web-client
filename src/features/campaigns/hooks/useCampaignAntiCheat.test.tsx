@@ -285,7 +285,10 @@ describe('useCampaignAntiCheat', () => {
     expect(createFlag).not.toHaveBeenCalled();
   });
 
-  it('sends every paste flag without pausing and reports every behavior event', () => {
+  // Tiền đề đổi có chủ đích: cờ nay đi qua HÀNG ĐỢI BỀN (ghi localStorage trước, gửi sau) nên
+  // việc giao là bất đồng bộ và nối tiếp. Ứng xử với người dùng không đổi — mọi cờ vẫn được gửi,
+  // vẫn không tạm dừng bài — nhưng phép đo phải chờ hàng đợi lắng thay vì đọc ngay.
+  it('sends every paste flag without pausing and reports every behavior event', async () => {
     const onPause = vi.fn();
     const onViolation = vi.fn();
     const onBehaviorSignal = vi.fn();
@@ -306,6 +309,6 @@ describe('useCampaignAntiCheat', () => {
     expect(onPause).not.toHaveBeenCalled();
     expect(onViolation).not.toHaveBeenCalled();
     expect(onBehaviorSignal).toHaveBeenCalledTimes(2);
-    expect(createFlag).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(createFlag).toHaveBeenCalledTimes(2));
   });
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { campaignCandidateService } from '../services/campaignCandidate.service';
+import { enqueueCampaignFlag, flushCampaignFlagQueue } from '../utils/campaignFlagQueue';
 import type { AllowedFrontendSignalType } from '../types/campaignCandidate.types';
 import type { CampaignViolationKind } from '../types/campaignViolation.types';
 
@@ -66,10 +66,16 @@ export function useCampaignAntiCheat({
     note: string,
   ) => {
     if (!enabled || aborted.current || !campaignId || !sessionId) return;
-    void campaignCandidateService
-      .createCampaignFlag(campaignId, sessionId, { signalType, note })
-      .catch(() => undefined);
+    // Ghi vào hàng đợi bền rồi mới gửi — mất mạng / đóng tab giữa chừng không còn làm mất cờ.
+    enqueueCampaignFlag(campaignId, sessionId, signalType, note);
   }, [campaignId, enabled, sessionId]);
+
+  // Đẩy nốt cờ còn tồn từ lần vào trước (tab bị đóng giữa request, mạng rớt lúc cuối buổi).
+  // KHÔNG gác theo `enabled`: cờ đã ghi là bằng chứng đã xảy ra, việc giao nó không phụ thuộc
+  // buổi hiện tại còn đang giám sát hay không.
+  useEffect(() => {
+    void flushCampaignFlagQueue();
+  }, []);
 
   const flushPendingLeave = useCallback(() => {
     const pending = pendingLeave.current;
