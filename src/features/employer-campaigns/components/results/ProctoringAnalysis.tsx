@@ -6,6 +6,7 @@ import {
   getReviewPriority,
   REVIEW_PRIORITY_CLASS,
 } from '../../utils/proctoringFlagPriority';
+import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
@@ -33,6 +34,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
   // event name that the frontend has not seen yet.
   const windowViolations = Math.max(0, totalViolations - timeViolations);
   const hasViolations = totalViolations > 0;
+  const hasServerFlags = flags.some((flag) => flag.source === 'Server');
 
   return (
     <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
@@ -49,6 +51,12 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
           </p>
         </div>
       </div>
+
+      {hasServerFlags ? (
+        <p className="mt-3 rounded-lg border border-satin bg-surface-overlay p-3 text-xs leading-relaxed text-muted-foreground">
+          {t('employer.campaigns.results.proctoring.sourceExplanation')}
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <ProctoringMetric
@@ -84,7 +92,10 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
                 key={`${flag.type}-${flag.count}-${flag.note ?? ''}`}
                 className={`rounded-lg border px-3 py-2 text-xs ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}
               >
-                <p className="font-medium">{flag.type}: {flag.count}</p>
+                <p className="font-medium">
+                  {flag.type}: {flag.count}
+                  <ResultFlagSourceLabel flag={flag} />
+                </p>
                 {flag.note?.trim() ? <p className="mt-1 text-current/80">{flag.note.trim()}</p> : null}
                 {firstAt || lastAt ? (
                   <p className="mt-1 text-current/80">

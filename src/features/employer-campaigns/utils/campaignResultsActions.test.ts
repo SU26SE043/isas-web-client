@@ -36,11 +36,11 @@ describe('campaignResultsActions', () => {
   it('counts warning events rather than flag categories', () => {
     expect(
       getResultFlagCount([
-        { type: 'TabSwitch', count: 1 },
-        { type: 'FocusLoss', count: 1 },
+        { type: 'TabSwitch', count: 1, source: 'Client' },
+        { type: 'FocusLoss', count: 1, source: 'Client' },
       ]),
     ).toBe(2);
-    expect(getResultFlagCount([{ type: 'TabSwitch', count: -1 }])).toBe(0);
+    expect(getResultFlagCount([{ type: 'TabSwitch', count: -1, source: 'Client' }])).toBe(0);
   });
 
   it('filters and sorts results', () => {
@@ -50,7 +50,7 @@ describe('campaignResultsActions', () => {
         rank: 1,
         sessionId: 's1',
         totalScore: 90,
-        flags: [{ type: 'TabSwitch', count: 1 }],
+        flags: [{ type: 'TabSwitch', count: 1, source: 'Client' }],
       }),
     ];
     const filtered = filterAndSortResults(rows, {

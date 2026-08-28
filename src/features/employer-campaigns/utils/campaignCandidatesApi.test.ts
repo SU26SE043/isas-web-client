@@ -72,6 +72,7 @@ describe('campaignCandidatesApi', () => {
             type: 'TabSwitch',
             count: 1,
             note: 'Switched once',
+            source: 'Server',
             firstAt: '2026-08-27T10:01:57Z',
             lastAt: '2026-08-27T10:22:36Z',
           }],
@@ -103,6 +104,31 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.unscoredFlagged[0]?.email).toBeNull();
     expect(parsed.unscoredFlagged[0]?.flags[0]?.firstAt).toBe('2026-08-27T09:00:00Z');
     expect(parsed.unscoredFlagged[0]?.flags[0]?.lastAt).toBe('2026-08-27T09:30:00Z');
+    expect(parsed.results[0]?.flags[0]?.source).toBe('Server');
+    expect(parsed.unscoredFlagged[0]?.flags[0]?.source).toBe('Client');
+  });
+
+  it('accepts Source casing and safely defaults missing or unknown source to Client', () => {
+    const parsed = parseCampaignResultsResponse({
+      results: [
+        {
+          candidateId: 'c1',
+          sessionId: 's1',
+          scoredAt: '2026-07-25T09:30:00Z',
+          flags: [
+            { type: 'ServerPascal', count: 1, Source: 'Server' },
+            { type: 'Missing', count: 1 },
+            { type: 'Unknown', count: 1, source: 'Operator' },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.results[0]?.flags.map((flag) => flag.source)).toEqual([
+      'Server',
+      'Client',
+      'Client',
+    ]);
   });
 
   it('defaults unscoredFlagged to [] when backend omits the field', () => {

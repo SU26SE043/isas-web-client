@@ -7,6 +7,7 @@ import {
   getResultFlagCount,
   hasResultOverride,
 } from '../../utils/campaignResultsActions';
+import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) {
   const { t } = useLanguage();
@@ -64,6 +65,7 @@ export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
     .filter((flag) => flag.note?.trim())
     .map((flag) => `${flag.type}: ${flag.note}`)
     .join('\n');
+  const serverFlag = item.flags.find((flag) => flag.source === 'Server');
   return (
     <span
       className="text-xs text-warning"
@@ -73,6 +75,7 @@ export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
         '{{count}}',
         String(flagCount),
       )}
+      {serverFlag ? <ResultFlagSourceLabel flag={serverFlag} /> : null}
     </span>
   );
 }

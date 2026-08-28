@@ -391,12 +391,15 @@ export type InviteCampaignCandidatesResponse = {
 /** GET /api/v1/campaign/{id}/results — scored ranking + unscored flagged candidates. */
 export type CampaignResultStatus = 'Pass' | 'Fail' | null;
 
+export type CampaignResultFlagSource = 'Client' | 'Server';
+
 export type CampaignResultFlag = {
   type: string;
   count: number;
   note?: string | null;
   firstAt?: string | null;
   lastAt?: string | null;
+  source: CampaignResultFlagSource;
 };
 
 export type CampaignScoredResult = {
