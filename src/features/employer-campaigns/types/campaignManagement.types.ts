@@ -69,6 +69,9 @@ export interface EmployerCampaign {
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
   jobNeeds: import('./campaign.api.types').CampaignJobNeed[];
+  requiredSkills?: string[];
+  keywordsAny?: string[];
+  minYearsExperience?: number | null;
   invitedEmails: string[];
   candidates: CampaignCandidateRow[];
   proctoring: CampaignProctoringConfig;

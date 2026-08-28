@@ -29,6 +29,7 @@ import {
 import {
   createDefaultSettingsState,
   createEmptyCriteriaFileState,
+  createEmptyHardFiltersState,
   createEmptyJdState,
   decimalWeightsToPercent,
 } from '../types/campaignWizard.types';
@@ -36,6 +37,7 @@ import type {
   CampaignInfoState,
   CampaignSettingsState,
   CampaignWizardPersistedState,
+  CampaignHardFiltersState,
   CriteriaFileState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
@@ -132,6 +134,12 @@ function buildInitialState(
           }
         : {}),
     },
+    hardFilters: {
+      ...createEmptyHardFiltersState(),
+      requiredSkills: campaign?.requiredSkills ?? [],
+      keywordsAny: campaign?.keywordsAny ?? [],
+      minYearsExperience: campaign?.minYearsExperience ?? null,
+    },
     criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
     questions: campaign?.questions?.length ? campaign.questions : [],
@@ -150,6 +158,7 @@ function toSnapshot(state: CampaignWizardPersistedState): CampaignWizardSubmitSn
   return {
     info: state.info,
     jd: state.jd,
+    hardFilters: state.hardFilters,
     rubric: state.rubric,
     questions: state.questions,
     settings: state.settings,
@@ -339,6 +348,14 @@ export function useCampaignWizard({
 
   const patchJd = useCallback((patch: Partial<JobDescriptionState>) => {
     setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'dirty' }));
+  }, []);
+
+  const patchHardFilters = useCallback((patch: Partial<CampaignHardFiltersState>) => {
+    setState((prev) => ({
+      ...prev,
+      hardFilters: { ...prev.hardFilters, ...patch },
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const patchCriteria = useCallback((patch: Partial<CriteriaFileState>) => {
@@ -951,6 +968,7 @@ export function useCampaignWizard({
     domainLabel,
     patchInfo,
     patchJd,
+    patchHardFilters,
     patchCriteria,
     patchSettings,
     selectJdFile: fileActions.selectJdFile,

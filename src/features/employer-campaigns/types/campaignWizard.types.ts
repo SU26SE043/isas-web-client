@@ -40,6 +40,15 @@ export type JobDescriptionState = {
   isDownloading: boolean;
 };
 
+export type CampaignHardFiltersState = {
+  requiredSkills: string[];
+  keywordsAny: string[];
+  minYearsExperience: number | null;
+  requiredSkillsTouched: boolean;
+  keywordsAnyTouched: boolean;
+  minYearsExperienceTouched: boolean;
+};
+
 /** @deprecated Alias kept for gradual rename. */
 export type JdAnalysisState = JobDescriptionState;
 
@@ -80,6 +89,7 @@ export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
 export type CampaignWizardPersistedState = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
+  hardFilters: CampaignHardFiltersState;
   criteria: CriteriaFileState;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
@@ -142,6 +152,17 @@ export function createEmptyJdState(): JobDescriptionState {
     uploadProgress: null,
     serverUploaded: false,
     isDownloading: false,
+  };
+}
+
+export function createEmptyHardFiltersState(): CampaignHardFiltersState {
+  return {
+    requiredSkills: [],
+    keywordsAny: [],
+    minYearsExperience: null,
+    requiredSkillsTouched: false,
+    keywordsAnyTouched: false,
+    minYearsExperienceTouched: false,
   };
 }
 

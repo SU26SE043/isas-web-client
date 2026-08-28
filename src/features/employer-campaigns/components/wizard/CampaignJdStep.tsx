@@ -11,19 +11,27 @@ import {
 } from '@/components/ui/dialog';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { JobDescriptionState, JobDescriptionMethod } from '../../types/campaignWizard.types';
+import type {
+  CampaignHardFiltersState,
+  JobDescriptionState,
+  JobDescriptionMethod,
+} from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
+import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignFilePanel } from './jd/CampaignFilePanel';
 import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
   jd: JobDescriptionState;
+  hardFilters: CampaignHardFiltersState;
+  isDraft: boolean;
   error?: string | null;
   canReplace?: boolean;
   onChange: (patch: Partial<JobDescriptionState>) => void;
+  onHardFiltersChange: (patch: Partial<CampaignHardFiltersState>) => void;
   onSelectFile: (file: File | null) => void;
   onRetryUpload?: () => void;
   onDownload?: () => void;
@@ -34,9 +42,12 @@ interface CampaignJdStepProps {
 
 export function CampaignJdStep({
   jd,
+  hardFilters,
+  isDraft,
   error,
   canReplace = true,
   onChange,
+  onHardFiltersChange,
   onSelectFile,
   onRetryUpload,
   onDownload,
@@ -150,6 +161,9 @@ export function CampaignJdStep({
           value={jd.criteriaText}
           onChange={(criteriaText) => onChange({ criteriaText })}
         />
+        {isDraft ? (
+          <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
+        ) : null}
       </div>
 
       <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>
