@@ -15,6 +15,7 @@ import type {
   PipelineFilters,
   PipelineStatus,
 } from '../types/employerAnalytics.types';
+import { median, summarizeAnalyticsScores } from '../utils/analyticsScoreUtils';
 
 const STATUS_ORDER: PipelineStatus[] = [
   'invite_pending',
@@ -181,30 +182,50 @@ export const employerAnalyticsService = {
   },
 
   async getAnalytics(campaignId: string, filters: AnalyticsFilters): Promise<AnalyticsSnapshot> {
-    const { candidates } = await loadCampaign(campaignId);
+    const { items, results, candidates } = await loadCampaign(campaignId);
     const completed = candidates.filter((candidate) => candidate.status === 'completed');
     const scoped = filters.status === 'all' ? candidates : candidates.filter((candidate) => candidate.status === filters.status);
-    const averageScore = completed.length ? Math.round(completed.reduce((sum, item) => sum + item.score, 0) / completed.length) : 0;
+    const resultByCandidate = new Map(results.results.map((result) => [result.candidateId, result]));
+    const scopedIds = new Set(scoped.map((candidate) => candidate.id));
+    const scoreSummary = summarizeAnalyticsScores(
+      items
+        .filter((item) => scopedIds.has(item.id))
+        .map((item) => ({
+          interviewScore: resultByCandidate.get(item.id)?.totalScore,
+          screeningScore: item.overallMatchScore,
+        })),
+    );
+    const interviewScores = items
+      .filter((item) => scopedIds.has(item.id))
+      .map((item) => resultByCandidate.get(item.id)?.totalScore)
+      .filter((score): score is number => score != null);
     const counts = STATUS_ORDER.map((status) => ({ status, count: scoped.filter((item) => item.status === status).length }));
     const bands = [
-      { band: '0-69', count: scoped.filter((item) => item.score > 0 && item.score < 70).length },
-      { band: '70-84', count: scoped.filter((item) => item.score >= 70 && item.score < 85).length },
-      { band: '85-100', count: scoped.filter((item) => item.score >= 85).length },
+      { band: '0-69', count: interviewScores.filter((score) => score < 70).length },
+      { band: '70-84', count: interviewScores.filter((score) => score >= 70 && score < 85).length },
+      { band: '85-100', count: interviewScores.filter((score) => score >= 85).length },
     ];
-    const skillMap = new Map<string, { demand: number; total: number }>();
-    scoped.forEach((candidate) => candidate.skills.forEach((skill) => {
-      const current = skillMap.get(skill) ?? { demand: 0, total: 0 };
-      skillMap.set(skill, { demand: current.demand + 1, total: current.total + candidate.score });
-    }));
+    const skillMap = new Map<string, { demand: number; scores: number[] }>();
+    scoped.forEach((candidate) => {
+      const interviewScore = resultByCandidate.get(candidate.id)?.totalScore;
+      candidate.skills.forEach((skill) => {
+        const current = skillMap.get(skill) ?? { demand: 0, scores: [] };
+        current.demand += 1;
+        if (interviewScore != null) current.scores.push(interviewScore);
+        skillMap.set(skill, current);
+      });
+    });
     return {
       totalCandidates: scoped.length,
       completionRate: candidates.length ? Math.round((completed.length / candidates.length) * 100) : 0,
-      averageScore,
+      interviewMedianScore: scoreSummary.interviewMedianScore,
+      screeningMedianScore: scoreSummary.screeningMedianScore,
+      pendingScoreCount: scoreSummary.pendingScoreCount,
       timeToHireDays: 0,
       exportableRows: scoped.length,
       funnel: counts,
       scoreDistribution: bands,
-      topSkills: [...skillMap.entries()].sort((a, b) => b[1].demand - a[1].demand).slice(0, 5).map(([skill, value]) => ({ skill, demand: value.demand, averageScore: value.demand ? Math.round(value.total / value.demand) : 0 })),
+      topSkills: [...skillMap.entries()].sort((a, b) => b[1].demand - a[1].demand).slice(0, 5).map(([skill, value]) => ({ skill, demand: value.demand, medianScore: median(value.scores) })),
       weeklyTrend: [],
     };
   },

@@ -63,10 +63,12 @@ export function EmployerAnalyticsPage() {
           <Skeleton className="h-96 w-full" />
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
               <Metric label={t('employerAnalytics.analytics.totalCandidates')} value={analytics.totalCandidates} hint={`${analytics.exportableRows} ${t('employerAnalytics.analytics.rows')}`} />
               <Metric label={t('employerAnalytics.analytics.completionRate')} value={`${analytics.completionRate}%`} hint={t('employerAnalytics.analytics.weeklyTrend')} />
-              <Metric label={t('employerAnalytics.analytics.averageScore')} value={analytics.averageScore} hint={t('employerAnalytics.analytics.scoreDistribution')} />
+              <Metric label={t('employerAnalytics.analytics.interviewMedianScore')} value={analytics.interviewMedianScore ?? '—'} hint={t('employerAnalytics.analytics.interviewScoreHint')} />
+              <Metric label={t('employerAnalytics.analytics.screeningMedianScore')} value={analytics.screeningMedianScore ?? '—'} hint={t('employerAnalytics.analytics.screeningScoreHint')} />
+              <Metric label={t('employerAnalytics.analytics.pendingScoreCount')} value={analytics.pendingScoreCount} hint={t('employerAnalytics.analytics.pendingScoreHint')} />
               <Metric label={t('employerAnalytics.analytics.timeToHire')} value={analytics.timeToHireDays} hint={t('employerAnalytics.analytics.dateRange.30d')} />
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
