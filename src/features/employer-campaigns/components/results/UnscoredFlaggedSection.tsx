@@ -12,6 +12,7 @@ import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.typ
 import { formatResultTime } from '../../utils/campaignResultsActions';
 import { getReviewPriority, REVIEW_PRIORITY_CLASS } from '../../utils/proctoringFlagPriority';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
+import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 export function UnscoredFlaggedSection({
   items,
@@ -76,6 +77,7 @@ export function UnscoredFlaggedSection({
                             <p className="font-medium">
                               {flag.type}: {flag.count}
                             </p>
+                            <ResultFlagSourceLabel flag={flag} />
                             {flag.note?.trim() ? (
                               <p className="mt-0.5 text-current/80">
                                 {flag.note.trim()}
