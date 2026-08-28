@@ -216,12 +216,12 @@ export const learningPathService = {
     const id = input.roadmapId ?? `roadmap-${input.domainId}-${Date.now()}`;
     const created: LearningRoadmapDetail = {
       id,
-      name: `${domain?.name ?? input.domainId} path to ${input.targetLevel}`,
-      nameVi: `Lộ trình ${domain?.nameVi ?? input.domainId} tới ${input.targetLevel}`,
+      name: `${domain?.name ?? input.domainId} learning path`,
+      nameVi: `Lộ trình ${domain?.nameVi ?? input.domainId}`,
       domainId: input.domainId,
       domainLabel: domain?.name ?? input.domainId,
       domainLabelVi: domain?.nameVi ?? input.domainId,
-      targetLevel: input.targetLevel,
+      targetLevel: input.currentLevel ?? input.targetLevel ?? 'fresher',
       status: 'not_started',
       progressPercent: 0,
       currentMilestoneId: 'ms-start',

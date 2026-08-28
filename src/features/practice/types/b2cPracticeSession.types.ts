@@ -3,6 +3,8 @@
 export type PracticeJobCategory = 'BA' | 'BE' | 'FE';
 export type PracticeLanguage = 'vi' | 'en';
 export type PracticeSeniority = 'Fresher' | 'Junior' | 'Middle' | 'Senior';
+export type PracticeSessionTopicSource = 'Catalog' | 'CvRequirement';
+export type PracticeSessionTopicCvLevel = 'Strong' | 'Partial' | 'Weak';
 
 export type PracticeTimeLimitSec = 60 | 120 | 240;
 
@@ -143,6 +145,23 @@ export interface PracticeRubricCriterionRef {
   description?: string | null;
 }
 
+export interface PracticeSessionTopic {
+  key: string;
+  label: string;
+  source: PracticeSessionTopicSource;
+  cvLevel: PracticeSessionTopicCvLevel | null;
+  /**
+   * MỘT câu trích từ CV giải thích vì sao đề tài này được xếp `cvLevel` đó —
+   * nguồn là `CvRequirementMatch.Evidence` (`string`), hoặc hằng
+   * "Không thấy bằng chứng". KHÔNG phải mảng.
+   *
+   * ⚠ Đừng đổi sang `string[]` cho "giống" {@link PracticeCvVsAnswerGap.cvEvidence}:
+   * cái đó là BC8 ("CV mạnh nhưng trả lời yếu"), tính năng khác, ở đó bằng chứng
+   * đúng là DANH SÁCH kỹ năng CV khớp một tiêu chí. Trùng tên field, khác bản chất.
+   */
+  cvEvidence: string | null;
+}
+
 export interface PracticeCvVsAnswerGap {
   criterionId: string;
   criterionName: string;
@@ -270,6 +289,8 @@ export interface PracticeSessionResponse {
   completedAt?: string | null;
   /** Rubric catalog used to resolve criterionId → name on scores. */
   rubric?: PracticeRubricCriterionRef[] | null;
+  /** Optional session topic catalog. `null`, `[]`, and an array are valid API states. */
+  topics?: PracticeSessionTopic[] | null;
   questions: PracticeQuestionResponse[];
   result?: PracticeSessionResult | null;
   answers?: PracticeAnswerReview[] | null;

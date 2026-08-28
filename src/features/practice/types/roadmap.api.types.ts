@@ -52,9 +52,20 @@ export type ApiRoadmapMilestone = {
   titleVi?: string;
   status?: string;
   progressPercent?: number;
-  focusCriteria?: string[];
+  mistakeCount?: number;
   improvement?: Array<{ criterionName: string; deltaPct: number }> | null;
   lessons?: ApiRoadmapLesson[];
+};
+
+export type ApiLessonMistake = {
+  id: string;
+  criterionName?: string;
+  scorePct?: number;
+  question?: string;
+  answer?: string;
+  whatWentWrong?: string | null;
+  howToFixIt?: string | null;
+  sampleAnswer?: string | null;
 };
 
 export type ApiRoadmapResolvedSession = string | {
@@ -119,6 +130,7 @@ export type ApiRoadmapLessonDetail = {
   status: ApiLessonStatus;
   resources?: LearningResource[] | null;
   citations?: LearningCitation[] | null;
+  mistakes?: ApiLessonMistake[] | null;
 };
 
 /** Spec alias — same shape as ApiRoadmapLessonDetail. */

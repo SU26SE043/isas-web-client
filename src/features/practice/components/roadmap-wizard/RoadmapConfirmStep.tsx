@@ -7,31 +7,15 @@ import {
 } from '../../types/learning.types';
 import type { InterviewHistoryItem } from '../../types/history.types';
 import type { PracticeDomain } from '../../types/practiceSetup.types';
-import type { CvAnalysisResult, UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
-import type { LearningRoadmapCard } from '../../types/learningPath.types';
-import type { RoadmapTargetLevel } from '../../mocks/practiceSetup.fixtures';
 import { RoadmapWizardNav } from './RoadmapWizardNav';
-import { RoadmapConfirmSources } from './RoadmapConfirmSources';
 import { formatPracticeSessionStamp, practiceReportTitle } from '../../utils/practiceReportLabel';
 
 interface RoadmapConfirmStepProps {
   scope: RoadmapScope;
   onScopeChange: (scope: RoadmapScope) => void;
   domain?: PracticeDomain;
-  targetLevel: RoadmapTargetLevel | '';
-  currentLevel: RoadmapTargetLevel;
   name: string;
   selectedReports: InterviewHistoryItem[];
-  cvId?: string;
-  cvFiles: UploadedCvFile[];
-  onCvChange: (value: string | undefined) => void;
-  cvAnalyses: CvAnalysisResult[];
-  cvAnalysisId?: string;
-  completedRoadmaps: LearningRoadmapCard[];
-  priorRoadmapId?: string;
-  /** Dẫn ngược về bước sở hữu giá trị. Vắng ⇒ bước đó không có trong `steps` ⇒ không vẽ nút Sửa. */
-  onEditCvAnalysis?: () => void;
-  onEditPriorRoadmap?: () => void;
   focus: string;
   isSubmitting: boolean;
   onBack: () => void;
@@ -40,18 +24,10 @@ interface RoadmapConfirmStepProps {
 
 export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
   domain,
-  targetLevel,
-  currentLevel,
   name,
   selectedReports,
   scope,
   onScopeChange,
-  cvAnalyses,
-  cvAnalysisId,
-  completedRoadmaps,
-  priorRoadmapId,
-  onEditCvAnalysis,
-  onEditPriorRoadmap,
   focus,
   isSubmitting,
   onBack,
@@ -92,23 +68,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
           <dd className="font-medium text-foreground">{domainLabel}</dd>
         </div>
         {/*
-          F6 — lộ trình sinh ra từ KHOẢNG CÁCH giữa trình độ hiện tại và cấp độ mục tiêu. Trước đây
-          bản tóm tắt chỉ hiện vế mục tiêu ⇒ giấu mất một nửa dữ kiện quyết định nội dung, và người
-          dùng không rà lại được giá trị mình vừa đặt ở bước trước.
-        */}
-        <div className="flex justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.currentLevel')}</dt>
-          <dd className="font-medium text-foreground">
-            {t(`practice.roadmapWizard.level.${currentLevel}`)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4 border-b border-subtle py-2">
-          <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.level')}</dt>
-          <dd className="font-medium text-foreground">
-            {targetLevel ? t(`practice.roadmapWizard.level.${targetLevel}`) : '—'}
-          </dd>
-        </div>
-        {/*
           Quy mô quyết định SỐ BÀI, mà mỗi bài tiêu 1 credit — nên nó phải nằm ở đúng
           chỗ người dùng đang quyết "có tạo không", kèm giá. Trước khi có hàng này, mọi
           lộ trình tạo qua giao diện đều là Standard (12 bài) trong khi suất dùng thử
@@ -146,14 +105,6 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
             </span>
           </dd>
         </div>
-        <RoadmapConfirmSources
-          cvAnalyses={cvAnalyses}
-          cvAnalysisId={cvAnalysisId}
-          completedRoadmaps={completedRoadmaps}
-          priorRoadmapId={priorRoadmapId}
-          onEditCvAnalysis={onEditCvAnalysis}
-          onEditPriorRoadmap={onEditPriorRoadmap}
-        />
         <div className="flex justify-between gap-4 border-b border-subtle py-2">
           <dt className="text-muted-foreground">{t('practice.roadmapWizard.confirm.count')}</dt>
           <dd className="font-medium text-foreground">{selectedReports.length}</dd>
@@ -201,7 +152,7 @@ export const RoadmapConfirmStep: React.FC<RoadmapConfirmStepProps> = ({
         onNext={onConfirm}
         nextLabel={t('practice.roadmapWizard.confirm.create')}
         isLoading={isSubmitting}
-        nextDisabled={!domain || !targetLevel || isSubmitting}
+        nextDisabled={!domain || isSubmitting}
       />
     </section>
   );

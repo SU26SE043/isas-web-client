@@ -11,6 +11,7 @@ import type {
   PracticeRubricCriterionRef,
   PracticeSpeakingMetrics,
   PracticeSessionResponse,
+  PracticeSessionTopic,
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
 } from '../types/b2cPracticeSession.types';
@@ -752,6 +753,35 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
 
   const result = mapResult(resultRaw, catalog);
 
+  const topics = Array.isArray(data.topics)
+    ? data.topics
+        .map((rawTopic): PracticeSessionTopic | null => {
+          const topic = asRecord(rawTopic);
+          const key = pickString(topic.key);
+          const label = pickString(topic.label);
+          const source = pickString(topic.source);
+          if (!key || !label || (source !== 'Catalog' && source !== 'CvRequirement')) {
+            return null;
+          }
+          return {
+            key,
+            label,
+            source,
+            cvLevel:
+              topic.cvLevel === 'Strong' ||
+              topic.cvLevel === 'Partial' ||
+              topic.cvLevel === 'Weak'
+                ? topic.cvLevel
+                : null,
+            // Backend gửi MỘT chuỗi (`CvRequirementMatch.Evidence`), không phải mảng.
+            cvEvidence: pickString(topic.cvEvidence) || null,
+          };
+        })
+        .filter((topic): topic is PracticeSessionTopic => topic != null)
+    : data.topics === null
+      ? null
+      : undefined;
+
   // If overall criteria empty, aggregate from answers for radar.
   if (result && result.criteriaScores.length === 0 && enrichedAnswers?.length) {
     const byName = new Map<string, PracticeCriteriaScore>();
@@ -791,6 +821,7 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     seniority: pickString(data.seniority) as PracticeSessionResponse['seniority'],
     criterionEvidence: mapCriterionEvidence(data.criterionEvidence),
     rubric,
+    topics,
     questions,
     result,
     answers: enrichedAnswers,

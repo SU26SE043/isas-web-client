@@ -100,6 +100,7 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
     const name = pickString(record, 'name', 'Name');
     const weight = pickNumber(record, 'weight', 'Weight');
     if (!name || weight == null) return;
+    const levels = parseRubricLevels(record.levels ?? record.Levels);
     result.push({
       id: pickString(record, 'id', 'Id') ?? `criterion-${index}`,
       orderNo: pickNumber(record, 'orderNo', 'OrderNo') ?? index + 1,
@@ -108,9 +109,22 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       description: pickString(record, 'description', 'Description') ?? null,
       maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
       source: pickString(record, 'source', 'Source') ?? null,
+      levels,
     });
   });
   return result;
+}
+
+function parseRubricLevels(raw: unknown): CampaignRubricCriterionResponse['levels'] {
+  if (!Array.isArray(raw)) return null;
+  const levels = raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const score = pickNumber(record, 'score', 'Score');
+    const descriptor = pickString(record, 'descriptor', 'Descriptor');
+    return score != null && descriptor ? [{ score, descriptor }] : [];
+  });
+  return levels;
 }
 
 function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
@@ -303,6 +317,7 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     weight: item.weight,
     description: item.description?.trim() || '',
     maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
+    levels: item.levels?.length ? item.levels : undefined,
   }));
 }
 

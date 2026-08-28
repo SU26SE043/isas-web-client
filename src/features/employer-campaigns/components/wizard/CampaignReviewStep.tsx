@@ -83,7 +83,6 @@ export function CampaignReviewStep({
             {domainLabel} · {t('employer.campaigns.form.maxCandidates')}:{' '}
             {info.maxCandidates ?? t('employer.campaigns.form.unlimited')}
           </p>
-          <p>{t('employer.campaigns.form.location')}: {info.location}</p>
           <p>
             {t('employer.campaigns.form.timeLimitMinutes')}: {info.timeLimitMinutes} ·{' '}
             {t('employer.campaigns.form.passScorePct')}:{' '}

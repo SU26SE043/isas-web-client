@@ -101,7 +101,21 @@ export function CandidateCampaignDetailPage() {
   const canContinue = data.started && Boolean(data.sessionId) && data.interviewStatus !== 'Completed';
   const isCompleted = data.interviewStatus === 'Completed';
 
-  const handleStartConfirm = async () => {
+  /**
+   * Vào phòng thi — dùng chung cho "Bắt đầu" LẪN "Tiếp tục".
+   *
+   * Vì sao resume cũng phải gọi `start`: bộ chuyển hướng B2B/B2C
+   * (`CampaignInterviewPreparationPage`) nhận ra phiên campaign bằng marker trong
+   * `sessionStorage` — mà `sessionStorage` MẤT khi đóng tab. Trước đây "Tiếp tục" chỉ là một
+   * `<Link>` nên resume ở tab mới không có marker ⇒ ứng viên rơi vào phòng LUYỆN TẬP B2C:
+   * không face-verify, và `createCampaignFlag` không tồn tại ở đó ⇒ **không cờ nào tới HR**,
+   * không lỗi, không cảnh báo. Gọi lại `start` dựng lại marker.
+   *
+   * An toàn về tiền: endpoint là create-or-get idempotent — gọi lại trên phiên đang chạy trả
+   * đúng phiên cũ và KHÔNG tạo reservation thứ hai (đã đối chiếu `credit_reservations` trên dev:
+   * phiên gọi start hai lần vẫn chỉ có 1 dòng).
+   */
+  const enterInterviewRoom = async () => {
     setIsStarting(true);
     setStartError(null);
     try {
@@ -154,7 +168,7 @@ export function CandidateCampaignDetailPage() {
               <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li></ul>
               <div className="mt-5">
                 {isCompleted ? <p className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-success/35 bg-success/10 px-4 py-3 text-sm font-semibold text-success-light"><BadgeCheck className="size-4" aria-hidden />{t('campaigns.my.interview.completed')}</p> : null}
-                {!isCompleted && canContinue ? <Link to={`/interview/${encodeURIComponent(data.sessionId!)}/prepare`} className="btn-primary inline-flex w-full justify-center gap-2"><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</Link> : null}
+                {!isCompleted && canContinue ? <button type="button" disabled={isStarting} className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => void enterInterviewRoom()}><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</button> : null}
                 {!isCompleted && !canContinue ? <button type="button" className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
               </div>
             </section>
@@ -169,7 +183,7 @@ export function CandidateCampaignDetailPage() {
       <StartCampaignConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        onConfirm={() => void handleStartConfirm()}
+        onConfirm={() => void enterInterviewRoom()}
         isSubmitting={isStarting}
         errorMessage={startError}
       />

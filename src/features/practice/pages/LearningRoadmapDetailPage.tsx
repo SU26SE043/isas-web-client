@@ -29,7 +29,7 @@ export function LearningRoadmapDetailPage() {
   const [isSavingName, setIsSavingName] = useState(false);
   const [renameError, setRenameError] = useState<string | null>(null);
   const [pendingPractice, setPendingPractice] = useState<{ lessonId: string; title: string } | null>(null);
-  const { available: creditsRemaining } = useTokenWallet();
+  const { available: creditsRemaining, invalidate: invalidateWallet } = useTokenWallet();
 
   const { data: roadmap, isLoading, isError, error, refetch, isFetching } =
     useLearningRoadmapDetail(roadmapId);
@@ -112,6 +112,7 @@ export function LearningRoadmapDetailPage() {
         roadmapId: roadmap.id,
         lessonId,
         title: lessonTitle,
+        onCreditConsumed: invalidateWallet,
       });
       if (!result.ok) {
         setLaunchingLessonId(null);

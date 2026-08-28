@@ -63,7 +63,7 @@ describe('RoadmapReportsTable — hai buổi cùng ngành phải phân biệt đ
       />,
     );
 
-    expect(screen.getByRole('checkbox', { name: 'BE' })).toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox', { name: 'BE' })[0]).toBeInTheDocument();
     expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
   });
 });
@@ -81,8 +81,8 @@ describe('RoadmapReportsTable — cột Tiêu đề nói đúng buổi nào là 
       />,
     );
 
-    expect(screen.getByText('Truy vấn SQL nâng cao (JOIN, GROUP BY)')).toBeInTheDocument();
-    expect(screen.getByText('Thiết kế API cho tính năng CRUD')).toBeInTheDocument();
+    expect(screen.getAllByText('Truy vấn SQL nâng cao (JOIN, GROUP BY)')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Thiết kế API cho tính năng CRUD')[0]).toBeInTheDocument();
     // Ô tick cũng phải đọc ra tên bài — người dùng màn hình đọc nếu chỉ nghe "BE" thì vẫn mù.
     const rows = screen.getAllByRole('row').slice(1);
     expect(within(rows[0]).getByRole('checkbox').getAttribute('aria-label')).toContain('Truy vấn SQL');
@@ -99,7 +99,7 @@ describe('RoadmapReportsTable — cột Tiêu đề nói đúng buổi nào là 
       />,
     );
 
-    const label = screen.getByText(/practice\.roadmapWizard\.reports\.freePractice/);
+    const label = screen.getAllByText(/practice\.roadmapWizard\.reports\.freePractice/)[0];
     expect(label).toBeInTheDocument();
     expect(label.className).toContain('italic');
     expect(container.textContent).toContain('BE');

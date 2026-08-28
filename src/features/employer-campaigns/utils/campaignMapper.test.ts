@@ -132,4 +132,21 @@ describe('campaignMapper', () => {
     expect(campaign.questions[0]?.prompt).toBe('Explain Virtual DOM.');
     expect(campaign.rubric[0]?.name).toBe('Tech');
   });
+
+  it('keeps server-authored rubric levels through the campaign mapper', () => {
+    const parsed = parseCampaignResponse({
+      id: 'c-levels',
+      title: 'With Levels',
+      status: 'Draft',
+      criteria: [{
+        name: 'Tech',
+        weight: 1,
+        maxScore: 5,
+        levels: [{ score: 0, descriptor: 'No evidence' }],
+      }],
+    });
+    const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
+
+    expect(campaign.rubric[0]?.levels).toEqual([{ score: 0, descriptor: 'No evidence' }]);
+  });
 });

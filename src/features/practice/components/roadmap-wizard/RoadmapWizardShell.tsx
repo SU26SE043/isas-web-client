@@ -4,18 +4,14 @@ import { FlowWizardShell } from '@/components/patterns/flow-wizard/FlowWizardShe
 import { useLanguage } from '@/shared/languages';
 
 // 🔑 Record ĐẦY ĐỦ theo `RoadmapWizardStep`, KHÔNG ghép chuỗi `steps.${step}` như trước.
-// Ghép động làm TypeScript không kiểm được gì: id bước `targetLevel` mà chuỗi dịch khai
-// `steps.level` ⇒ stepper hiện thẳng khoá `practice.roadmapWizard.steps.targetLevel` cho người
+// Ghép động làm TypeScript không kiểm được gì: id bước mà chuỗi dịch khai sai ⇒ stepper hiện
+// thẳng khoá dịch cho người
 // dùng, và `check:i18n` không kêu vì nó chỉ so CÂN BẰNG VI/EN chứ không kiểm khoá có tồn tại.
 // Với Record này, thêm một bước mà quên chuỗi dịch là LỖI BIÊN DỊCH, không phải lỗi lúc chạy.
 export const ROADMAP_WIZARD_STEP_LABEL_KEYS: Record<RoadmapWizardStep, string> = {
   domain: 'practice.roadmapWizard.steps.domain',
   nameFocus: 'practice.roadmapWizard.steps.nameFocus',
-  cv: 'practice.roadmapWizard.steps.cv',
-  currentLevel: 'practice.roadmapWizard.steps.currentLevel',
-  targetLevel: 'practice.roadmapWizard.steps.targetLevel',
   reports: 'practice.roadmapWizard.steps.reports',
-  priorRoadmap: 'practice.roadmapWizard.steps.priorRoadmap',
   confirm: 'practice.roadmapWizard.steps.confirm',
 };
 

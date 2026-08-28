@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import {
+  MOCK_LESSON_MISTAKES,
+  MOCK_LESSON_MISTAKES_EMPTY,
+  MOCK_LESSON_MISTAKES_NULL,
+} from '../mocks/learningPath.fixtures';
 import { mapApiRoadmapDetail, mapApiRoadmapLessonDetail } from './roadmapMapper';
 
 describe('mapApiRoadmapLessonDetail resources', () => {
@@ -45,6 +50,21 @@ describe('mapApiRoadmapLessonDetail resources', () => {
     });
     expect(mapped.resources).toEqual([]);
   });
+
+  it.each([
+    ['null', MOCK_LESSON_MISTAKES_NULL, null],
+    ['empty', MOCK_LESSON_MISTAKES_EMPTY, []],
+    ['rich', MOCK_LESSON_MISTAKES, MOCK_LESSON_MISTAKES.mistakes],
+  ])('preserves the API mistakes state for %s', (_name, fixture, expected) => {
+    const mapped = mapApiRoadmapLessonDetail(fixture);
+    expect(mapped.mistakes).toEqual(expected);
+  });
+
+  it('keeps learner text as data instead of interpreting markdown-like characters', () => {
+    const mapped = mapApiRoadmapLessonDetail(MOCK_LESSON_MISTAKES);
+    expect(mapped.mistakes?.[0]?.answer).toContain('# phần này');
+    expect(mapped.mistakes?.[0]?.answer).toContain('<strong>không phải HTML</strong>');
+  });
 });
 
 describe('mapApiRoadmapDetail provenance', () => {
@@ -75,5 +95,23 @@ describe('mapApiRoadmapDetail provenance', () => {
 
   it('keeps provenance absent when the backend omits resolvedFrom', () => {
     expect(mapApiRoadmapDetail({ id: 'roadmap-2', milestones: [] }).resolvedFrom).toBeNull();
+  });
+
+  it('maps milestone mistakeCount from the roadmap detail API', () => {
+    const mapped = mapApiRoadmapDetail({
+      id: 'roadmap-mistakes',
+      milestones: [
+        {
+          id: 'milestone-1',
+          orderNo: 1,
+          title: 'Technical depth',
+          status: 'InProgress',
+          mistakeCount: 3,
+          lessons: [],
+        },
+      ],
+    });
+
+    expect(mapped.milestones[0]?.mistakeCount).toBe(3);
   });
 });

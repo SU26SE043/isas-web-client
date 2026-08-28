@@ -105,10 +105,8 @@ function normalizeCreateRoadmapResponse(
           id: String(item.id ?? `milestone-${milestoneIndex + 1}`),
           orderNo: Number(item.orderNo ?? milestoneIndex + 1),
           title: String(item.title ?? ''),
-          focusCriteria: Array.isArray(item.focusCriteria)
-            ? item.focusCriteria.filter((value): value is string => typeof value === 'string')
-            : [],
           status: String(item.status ?? 'Pending'),
+          mistakeCount: typeof item.mistakeCount === 'number' ? item.mistakeCount : undefined,
           improvement: Array.isArray(item.improvement) ? item.improvement as Array<{ criterionName: string; deltaPct: number }> : null,
           lessons: Array.isArray(item.lessons) ? item.lessons as RoadmapApiMilestone['lessons'] : [],
         };
@@ -120,13 +118,13 @@ function normalizeCreateRoadmapResponse(
     regenerateCount: Number(payload.regenerateCount ?? 0),
     regenerateLimit: Number(payload.regenerateLimit ?? MOCK_ROADMAP.regenerateLimit),
     domainId: input.domainId,
-    targetLevel: input.targetLevel,
+    targetLevel: input.currentLevel ?? input.targetLevel,
     name: typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim() : input.name?.trim() || undefined,
     // Keep selected scored sessions available to the wizard/history UI as well.
     sourceReportIds: input.reportIds ? [...input.reportIds] : [],
     jobCategory: typeof payload.jobCategory === 'string' ? payload.jobCategory : undefined,
     language: typeof payload.language === 'string' ? payload.language : input.language ?? 'vi',
-    level: typeof payload.level === 'string' ? payload.level : input.targetLevel,
+    level: typeof payload.level === 'string' ? payload.level : input.currentLevel ?? input.targetLevel,
     mode: payload.mode === 'Reinforce' ? 'Reinforce' : 'LevelUp',
     status: typeof payload.status === 'string' ? payload.status : 'Active',
     createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : undefined,
@@ -160,17 +158,15 @@ export const learningService = {
    * Mock / Playwright: in-app fixture so E2E can finish without a gateway.
    */
   async createRoadmap(input: CreateRoadmapInput): Promise<RoadmapResponse> {
-    if (!input.domainId || !input.targetLevel) {
+    if (!input.domainId) {
       throw new CreateRoadmapError('invalid_input');
     }
 
-    const level = resolveApiRoadmapLevel(input.targetLevel);
-    const currentLevel = input.currentLevel ? resolveApiRoadmapLevel(input.currentLevel) : undefined;
     const jobCategory = resolveJobCategoryFromDomainId(input.domainId);
-    const payload = buildCreateRoadmapRequest(jobCategory, level, { ...input, currentLevel });
+    const payload = buildCreateRoadmapRequest(jobCategory, input);
     if (!payload.ok) {
       throw new CreateRoadmapError(
-        payload.reason === 'focus_too_long' ? 'invalid_input' : 'invalid_input',
+        payload.reason === 'sessions_required' ? 'sessions_required' : 'invalid_input',
       );
     }
 
@@ -182,13 +178,12 @@ export const learningService = {
           regenerateCount: 0,
           regenerateLimit: MOCK_ROADMAP.regenerateLimit,
         },
-        { ...input, targetLevel: level },
+        input,
       );
       latestCreatedRoadmap = created;
       roadmapRegenerateCount = created.regenerateCount;
       await learningPathService.registerCreatedRoadmap({
         ...input,
-        targetLevel: level,
         roadmapId: created.id ?? `roadmap-mock`,
         reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });
@@ -202,16 +197,12 @@ export const learningService = {
         { validateStatus: (status) => status === 201 || (status >= 200 && status < 300) },
       );
 
-      const created = normalizeCreateRoadmapResponse(response.data, {
-        ...input,
-        targetLevel: level,
-      });
+      const created = normalizeCreateRoadmapResponse(response.data, input);
 
       latestCreatedRoadmap = created;
       roadmapRegenerateCount = created.regenerateCount;
       await learningPathService.registerCreatedRoadmap({
         ...input,
-        targetLevel: level,
         roadmapId: created.id,
         reportIds: payload.body.sessionIds ?? input.reportIds ?? [],
       });

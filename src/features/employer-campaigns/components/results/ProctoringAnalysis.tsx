@@ -1,7 +1,11 @@
 import { AppWindow, Clock3, TriangleAlert } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
-import { getResultFlagCount } from '../../utils/campaignResultsActions';
+import { formatResultTime, getResultFlagCount } from '../../utils/campaignResultsActions';
+import {
+  getReviewPriority,
+  REVIEW_PRIORITY_CLASS,
+} from '../../utils/proctoringFlagPriority';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
@@ -19,7 +23,7 @@ function normalizedFlagType(type: string) {
 }
 
 export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const totalViolations = getResultFlagCount(flags);
   const timeViolations = getResultFlagCount(
     flags.filter((flag) => TIME_FLAG_TYPES.has(normalizedFlagType(flag.type))),
@@ -68,6 +72,31 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
         <p className="mt-3 text-sm text-success">
           {t('employer.campaigns.results.proctoring.none')}
         </p>
+      ) : null}
+
+      {flags.length > 0 ? (
+        <ul className="mt-4 space-y-2">
+          {flags.map((flag) => {
+            const firstAt = formatResultTime(flag.firstAt, language);
+            const lastAt = formatResultTime(flag.lastAt, language);
+            return (
+              <li
+                key={`${flag.type}-${flag.count}-${flag.note ?? ''}`}
+                className={`rounded-lg border px-3 py-2 text-xs ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}
+              >
+                <p className="font-medium">{flag.type}: {flag.count}</p>
+                {flag.note?.trim() ? <p className="mt-1 text-current/80">{flag.note.trim()}</p> : null}
+                {firstAt || lastAt ? (
+                  <p className="mt-1 text-current/80">
+                    {firstAt ? `${t('employer.campaigns.results.proctoring.firstAt')} ${firstAt}` : null}
+                    {firstAt && lastAt ? ' · ' : null}
+                    {lastAt ? `${t('employer.campaigns.results.proctoring.lastAt')} ${lastAt}` : null}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
       ) : null}
     </section>
   );

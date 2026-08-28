@@ -25,6 +25,7 @@ import { resolveJobDomainFromCategory } from '@/shared/domain/jobDomains';
 import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
 import type { PracticeRubricCriterionRef } from '../types/b2cPracticeSession.types';
 import { isValidPracticeSessionId } from '../utils/practiceSessionId';
+import { MOCK_SESSION_TOPICS_EIGHT } from '../mocks/sessionTopics.fixtures';
 
 const mockSessions = new Map<string, PracticeSessionResponse>();
 const mockScoringPollCounts = new Map<string, number>();
@@ -76,6 +77,8 @@ function buildMockSession(payload: CreatePracticeSessionRequest): PracticeSessio
     questionCount: count,
     cvId: payload.cvId ?? null,
     jdId: payload.jdId ?? null,
+    seniority: payload.seniority ?? 'Junior',
+    topics: payload.jobCategory === 'BE' ? structuredClone(MOCK_SESSION_TOPICS_EIGHT) : null,
     questions,
     result: null,
     answers: [],

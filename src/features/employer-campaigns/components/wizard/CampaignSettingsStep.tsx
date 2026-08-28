@@ -105,6 +105,8 @@ export function CampaignSettingsStep({
                 id="settings-max-follow-ups"
                 type="number"
                 min={0}
+                max={20}
+                step={1}
                 disabled={isSaving}
                 value={settings.maxFollowUps}
                 onChange={(e) =>
@@ -119,6 +121,7 @@ export function CampaignSettingsStep({
                 type="number"
                 min={0}
                 max={20}
+                step={1}
                 disabled={isSaving}
                 value={settings.maxQuestions}
                 onChange={(e) =>
@@ -137,6 +140,7 @@ export function CampaignSettingsStep({
               type="number"
               min={0}
               max={20}
+              step={1}
               disabled={isSaving}
               value={settings.maxQuestions}
               onChange={(e) =>

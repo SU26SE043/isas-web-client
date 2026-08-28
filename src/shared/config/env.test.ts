@@ -37,13 +37,11 @@ describe('env schema', () => {
   });
 
   it('strips accidental /api suffix when resolving base URL', async () => {
-    const { getApiBaseUrl } = await import('./env');
-    // getApiBaseUrl uses import.meta.env at module load — verify pure helper logic here.
-    const normalize = (raw: string) =>
-      raw.trim().replace(/\/+$/, '').replace(/\/api(?:\/v1)?$/i, '');
-    expect(normalize('http://localhost:5050/api')).toBe('http://localhost:5050');
-    expect(normalize('http://localhost:5050/api/v1')).toBe('http://localhost:5050');
-    expect(normalize('http://localhost:5050')).toBe('http://localhost:5050');
+    const { getApiBaseUrl, normalizeApiBaseUrl } = await import('./env');
+    expect(normalizeApiBaseUrl('  http://localhost:5050/  ')).toBe('http://localhost:5050');
+    expect(normalizeApiBaseUrl('http://localhost:5050/api')).toBe('http://localhost:5050');
+    expect(normalizeApiBaseUrl('http://localhost:5050/api/v1/')).toBe('http://localhost:5050');
+    expect(normalizeApiBaseUrl('')).toBe('');
     expect(getApiBaseUrl()).toBeTypeOf('string');
   });
 
