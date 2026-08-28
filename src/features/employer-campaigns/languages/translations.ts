@@ -318,6 +318,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.proctoring.title': 'Phân tích giám sát',
     'employer.campaigns.results.proctoring.description':
       'Tổng hợp các vi phạm được ghi nhận trong phiên làm bài của ứng viên.',
+    'employer.campaigns.results.proctoring.sourceExplanation':
+      "Cờ 'Hệ thống ghi nhận' do máy chủ tự đối chiếu nhịp kiểm khuôn mặt, ứng viên không tác động được. Cờ còn lại do trình duyệt của ứng viên báo về.",
     'employer.campaigns.results.proctoring.windowViolations': 'Vi phạm cửa sổ',
     'employer.campaigns.results.proctoring.windowViolationsHint': 'Lần chuyển tab hoặc rời cửa sổ',
     'employer.campaigns.results.proctoring.timeViolations': 'Vi phạm thời gian',
@@ -1546,6 +1548,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.proctoring.title': 'Proctoring analysis',
     'employer.campaigns.results.proctoring.description':
       'Summary of violations recorded during the candidate assessment session.',
+    'employer.campaigns.results.proctoring.sourceExplanation':
+      "The 'Recorded by system' flag is based on the server independently checking the face-check cadence, which the candidate cannot influence. The remaining flags are reported by the candidate's browser.",
     'employer.campaigns.results.proctoring.windowViolations': 'Window violations',
     'employer.campaigns.results.proctoring.windowViolationsHint': 'Tab switches or window focus loss',
     'employer.campaigns.results.proctoring.timeViolations': 'Time violations',

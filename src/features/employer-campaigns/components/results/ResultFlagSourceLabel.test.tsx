@@ -31,6 +31,13 @@ describe('ResultFlagSourceLabel', () => {
 
     expect(screen.getByText('Hệ thống ghi nhận')).toBeTruthy();
     expect(screen.getByText('monitoring_gap: 1')).toBeTruthy();
+    expect(screen.getByText(/Cờ 'Hệ thống ghi nhận' do máy chủ/)).toBeTruthy();
+  });
+
+  it('does not show the source explanation when all flags are Client flags', () => {
+    renderWithLanguage(<ProctoringAnalysis flags={[clientFlag]} />);
+
+    expect(screen.queryByText(/Cờ 'Hệ thống ghi nhận' do máy chủ/)).toBeNull();
   });
 
   it('shows the system label in the scored results flag cell', () => {
