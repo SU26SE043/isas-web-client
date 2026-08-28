@@ -37,8 +37,9 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
           : t('employer.campaigns.results.summary.passScoreUnset'),
     },
     {
-      label: t('employer.campaigns.results.summary.needsReview'),
+      label: t('employer.campaigns.results.summary.flagged'),
       value: String(needsReviewCount),
+      title: t('employer.campaigns.results.summary.flaggedHint'),
     },
   ];
 
@@ -49,7 +50,9 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
           key={card.label}
           className="rounded-xl border border-satin bg-surface-overlay px-3 py-3"
         >
-          <p className="text-xs text-muted-foreground">{card.label}</p>
+          <p className="text-xs text-muted-foreground" title={card.title}>
+            {card.label}
+          </p>
           <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">{card.value}</p>
         </div>
       ))}
