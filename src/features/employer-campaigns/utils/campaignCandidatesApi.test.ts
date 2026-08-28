@@ -68,7 +68,7 @@ describe('campaignCandidatesApi', () => {
           aiScore: 88,
           result: 'Pass',
           scoredAt: '2026-07-25T09:30:00Z',
-          flags: [{ type: 'TabSwitch', count: 1, note: 'Switched once' }],
+          flags: [{ type: 'TabSwitch', count: 1, note: 'Switched once', source: 'Server' }],
         },
       ],
       unscoredFlagged: [
@@ -85,9 +85,34 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.results).toHaveLength(1);
     expect(parsed.results[0]?.totalScore).toBe(91.5);
     expect(parsed.results[0]?.flags[0]?.note).toBe('Switched once');
+    expect(parsed.results[0]?.flags[0]?.source).toBe('Server');
     expect(parsed.unscoredFlagged).toHaveLength(1);
     expect(parsed.unscoredFlagged[0]?.fullName).toBeNull();
     expect(parsed.unscoredFlagged[0]?.email).toBeNull();
+    expect(parsed.unscoredFlagged[0]?.flags[0]?.source).toBe('Client');
+  });
+
+  it('accepts Source casing and safely defaults missing or unknown source to Client', () => {
+    const parsed = parseCampaignResultsResponse({
+      results: [
+        {
+          candidateId: 'c1',
+          sessionId: 's1',
+          scoredAt: '2026-07-25T09:30:00Z',
+          flags: [
+            { type: 'ServerPascal', count: 1, Source: 'Server' },
+            { type: 'Missing', count: 1 },
+            { type: 'Unknown', count: 1, source: 'Operator' },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.results[0]?.flags.map((flag) => flag.source)).toEqual([
+      'Server',
+      'Client',
+      'Client',
+    ]);
   });
 
   it('defaults unscoredFlagged to [] when backend omits the field', () => {

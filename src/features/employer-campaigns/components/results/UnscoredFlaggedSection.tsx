@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
+import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 export function UnscoredFlaggedSection({
   items,
@@ -74,6 +75,7 @@ export function UnscoredFlaggedSection({
                             <span className="font-medium">
                               {flag.type}: {flag.count}
                             </span>
+                            <ResultFlagSourceLabel flag={flag} />
                             {flag.note?.trim() ? (
                               <span className="mt-0.5 block text-muted-foreground">
                                 {flag.note.trim()}

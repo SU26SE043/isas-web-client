@@ -2,6 +2,7 @@ import { AppWindow, Clock3, TriangleAlert } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
 import { getResultFlagCount } from '../../utils/campaignResultsActions';
+import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
@@ -63,6 +64,24 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
           hasViolation={timeViolations > 0}
         />
       </div>
+
+      {flags.length > 0 ? (
+        <ul className="mt-4 space-y-2 text-sm text-warning">
+          {flags.map((flag) => (
+            <li key={`${flag.type}-${flag.count}-${flag.note ?? ''}`}>
+              <span className="font-medium">
+                {flag.type}: {flag.count}
+              </span>
+              <ResultFlagSourceLabel flag={flag} />
+              {flag.note?.trim() ? (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {flag.note.trim()}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {!hasViolations ? (
         <p className="mt-3 text-sm text-success">

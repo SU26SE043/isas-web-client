@@ -230,10 +230,12 @@ function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
     const type = pickString(flagRecord, 'type', 'Type');
     const count = pickNumber(flagRecord, 'count', 'Count') ?? 0;
     if (!type) continue;
+    const source = pickString(flagRecord, 'source', 'Source');
     flags.push({
       type,
       count,
       note: pickString(flagRecord, 'note', 'Note') ?? null,
+      source: source === 'Server' ? 'Server' : 'Client',
     });
   }
   return flags;
