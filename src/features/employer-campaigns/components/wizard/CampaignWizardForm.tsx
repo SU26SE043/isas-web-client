@@ -133,9 +133,12 @@ export function CampaignWizardForm({
       {step === 1 ? (
         <CampaignJdStep
           jd={state.jd}
+          hardFilters={state.hardFilters}
+          isDraft={wizard.isDraftEditable}
           error={wizard.stepError}
           canReplace={wizard.canReplaceFiles}
           onChange={wizard.patchJd}
+          onHardFiltersChange={wizard.patchHardFilters}
           onSelectFile={wizard.selectJdFile}
           onRetryUpload={wizard.retryJdUpload}
           onDownload={wizard.downloadJdFile}

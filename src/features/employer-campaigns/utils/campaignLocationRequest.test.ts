@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
+import { createEmptyHardFiltersState } from '../types/campaignWizard.types';
 import {
   buildCampaignCreateRequest,
   buildDirtyUpdateRequest,
@@ -34,6 +35,7 @@ function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSub
       serverUploaded: false,
       isDownloading: false,
     },
+    hardFilters: createEmptyHardFiltersState(),
     rubric: [{ id: 'r1', name: 'React', description: '', weight: 100, maxScore: 10 }],
     questions: [{
       id: 'client-q1',
@@ -57,6 +59,7 @@ function persisted(location: string): CampaignWizardPersistedState {
   const base = snapshot(location);
   return {
     ...base,
+    hardFilters: base.hardFilters ?? createEmptyHardFiltersState(),
     criteria: {
       criteriaFile: null,
       fileName: null,

@@ -60,12 +60,14 @@ export interface AnalyticsFilters {
 export interface AnalyticsSnapshot {
   totalCandidates: number;
   completionRate: number;
-  averageScore: number;
+  interviewMedianScore: number | null;
+  screeningMedianScore: number | null;
+  pendingScoreCount: number;
   timeToHireDays: number;
   exportableRows: number;
   funnel: Array<{ status: PipelineStatus; count: number }>;
   scoreDistribution: Array<{ band: string; count: number }>;
-  topSkills: Array<{ skill: string; demand: number; averageScore: number }>;
+  topSkills: Array<{ skill: string; demand: number; medianScore: number | null }>;
   weeklyTrend: Array<{ week: string; completed: number; shortlisted: number }>;
 }
 

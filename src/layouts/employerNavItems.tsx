@@ -12,7 +12,6 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
-import { PHASE11_CAMPAIGN_ID } from '@/features/employer-analytics/mocks/employerAnalytics.fixtures';
 import { UserRole, type UserRoleType } from '@/features/auth/types/auth.types';
 
 export type EmployerNavItem = {
@@ -48,11 +47,6 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       to: '/employer/campaigns',
       label: t('employer.campaigns.nav.campaigns'),
       icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
-    },
-    {
-      to: `/employer/campaigns/${PHASE11_CAMPAIGN_ID}/candidates`,
-      label: t('employer.nav.pipeline'),
-      icon: <Users className="h-4 w-4 shrink-0" aria-hidden />,
     },
     {
       to: '/employer/analytics',

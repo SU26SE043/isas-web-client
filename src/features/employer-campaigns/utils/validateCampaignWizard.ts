@@ -80,6 +80,10 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 1) {
+    const minYears = state.hardFilters?.minYearsExperience;
+    if (minYears != null && (!Number.isInteger(minYears) || minYears < 0)) {
+      return 'employer.campaigns.wizard.hardFilters.minYearsInvalid';
+    }
     if ((jd.criteriaText ?? '').trim().length > MAX_CRITERIA_TEXT_LENGTH) {
       return 'employer.campaigns.wizard.criteriaTextTooLong';
     }

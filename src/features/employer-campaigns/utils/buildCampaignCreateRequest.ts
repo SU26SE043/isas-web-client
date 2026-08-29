@@ -7,9 +7,11 @@ import type {
 import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type {
   CampaignInfoState,
+  CampaignHardFiltersState,
   CampaignSettingsState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
+import { createEmptyHardFiltersState } from '../types/campaignWizard.types';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
 import { isServerQuestionId } from './campaignQuestionLimits';
 
@@ -160,10 +162,22 @@ function resolveJdTextForUpdate(jd: JobDescriptionState): string | undefined {
 export type CampaignWizardSubmitSnapshot = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
+  hardFilters?: CampaignHardFiltersState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
   settings: CampaignSettingsState;
 };
+
+function hardFiltersPayload(hardFilters?: CampaignHardFiltersState) {
+  const values = hardFilters ?? createEmptyHardFiltersState();
+  return {
+    ...(values.requiredSkillsTouched ? { requiredSkills: values.requiredSkills } : {}),
+    ...(values.keywordsAnyTouched ? { keywordsAny: values.keywordsAny } : {}),
+    ...(values.minYearsExperienceTouched
+      ? { minYearsExperience: values.minYearsExperience ?? 0 }
+      : {}),
+  };
+}
 
 /**
  * Build POST /api/v1/campaign body from the full wizard (all 6 steps).
@@ -199,6 +213,7 @@ export function buildCampaignCreateRequest(
     maxDeepPerQuestion: null,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
+    ...hardFiltersPayload(snapshot.hardFilters),
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),
@@ -235,6 +250,7 @@ export function buildCampaignUpdateRequest(
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || undefined,
+    ...hardFiltersPayload(snapshot.hardFilters),
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),

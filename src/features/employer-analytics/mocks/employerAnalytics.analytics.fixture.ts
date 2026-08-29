@@ -3,7 +3,9 @@ import type { AnalyticsSnapshot } from '../types/employerAnalytics.types';
 export const MOCK_ANALYTICS: AnalyticsSnapshot = {
   totalCandidates: 128,
   completionRate: 82,
-  averageScore: 78,
+  interviewMedianScore: 78,
+  screeningMedianScore: null,
+  pendingScoreCount: 0,
   timeToHireDays: 18,
   exportableRows: 128,
   funnel: [
@@ -22,10 +24,10 @@ export const MOCK_ANALYTICS: AnalyticsSnapshot = {
     { band: '<60', count: 17 },
   ],
   topSkills: [
-    { skill: 'React', demand: 92, averageScore: 81 },
-    { skill: 'TypeScript', demand: 84, averageScore: 79 },
-    { skill: 'Testing', demand: 67, averageScore: 76 },
-    { skill: 'Accessibility', demand: 48, averageScore: 83 },
+    { skill: 'React', demand: 92, medianScore: 81 },
+    { skill: 'TypeScript', demand: 84, medianScore: 79 },
+    { skill: 'Testing', demand: 67, medianScore: 76 },
+    { skill: 'Accessibility', demand: 48, medianScore: 83 },
   ],
   weeklyTrend: [
     { week: 'W27', completed: 18, shortlisted: 3 },

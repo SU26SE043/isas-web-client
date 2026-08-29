@@ -41,6 +41,11 @@ function asNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
 function pickString(record: Record<string, unknown>, ...keys: string[]): string | undefined {
   for (const key of keys) {
     const value = asString(record[key]);
@@ -236,6 +241,9 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     jobDescription: pickString(record, 'jobDescription', 'JobDescription', 'jdText', 'JdText') ?? null,
     jdText: pickString(record, 'jdText', 'JdText') ?? null,
     criteriaText: pickString(record, 'criteriaText', 'CriteriaText') ?? null,
+    requiredSkills: asStringArray(record.requiredSkills ?? record.RequiredSkills),
+    keywordsAny: asStringArray(record.keywordsAny ?? record.KeywordsAny),
+    minYearsExperience: pickNumber(record, 'minYearsExperience', 'MinYearsExperience') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
     applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
     applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
@@ -397,6 +405,9 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
     jobNeeds: item.jobNeeds ?? [],
+    requiredSkills: item.requiredSkills ?? [],
+    keywordsAny: item.keywordsAny ?? [],
+    minYearsExperience: item.minYearsExperience ?? null,
     invitedEmails,
     candidates,
     proctoring: mapProctoring(item.proctoring),

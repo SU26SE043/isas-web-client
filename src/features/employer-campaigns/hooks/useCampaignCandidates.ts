@@ -5,6 +5,7 @@ import type {
   InviteCampaignCandidatesRequest,
   UpdateCampaignCandidatePayload,
 } from '../types/campaign.api.types';
+import { getCampaignCandidatesRefetchInterval } from '../utils/campaignCandidatesPolling';
 
 export {
   campaignResultKeys,
@@ -49,6 +50,8 @@ export function useCampaignCandidates(
     queryKey: campaignCandidatesQueryKey(campaignId ?? '', query),
     queryFn: () => campaignManagementService.getCampaignCandidates(campaignId!, query),
     enabled: Boolean(campaignId) && (options?.enabled ?? true),
+    refetchInterval: (query) => getCampaignCandidatesRefetchInterval(query.state.data),
+    refetchIntervalInBackground: false,
   });
 }
 

@@ -93,11 +93,11 @@ export function CandidateDetailDrawer({
               />
               <Info
                 label={t('employer.campaigns.screening.detail.screeningVersion')}
-                value={detail.screeningVersion != null ? String(detail.screeningVersion) : 'â€”'}
+                value={detail.screeningVersion != null ? String(detail.screeningVersion) : '—'}
               />
               <Info
                 label={t('employer.campaigns.screening.detail.verificationRisk')}
-                value={detail.verificationRisk ?? 'â€”'}
+                value={detail.verificationRisk ?? '—'}
               />
             </div>
 

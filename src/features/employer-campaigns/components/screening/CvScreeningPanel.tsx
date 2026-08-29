@@ -9,6 +9,7 @@ import { CandidateRankingTable } from './CandidateRankingTable';
 import { CandidateUploadSummary } from './CandidateUploadSummary';
 import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
+import { JobNeedsRescueEditor } from './JobNeedsRescueEditor';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
 
 interface CvScreeningPanelProps {
@@ -46,6 +47,9 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds }: CvScreen
         <Alert variant="error">
           <AlertDescription>{state.analyzeError}</AlertDescription>
         </Alert>
+      ) : null}
+      {!hasJobNeeds ? (
+        <JobNeedsRescueEditor campaignId={campaignId} />
       ) : null}
       {!hasJobNeeds ? (
         <Alert variant="warning">

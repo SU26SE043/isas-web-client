@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
+import { candidateScreeningStatusLabelKey } from '../../utils/candidateScreeningStatus';
 import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
 
 interface CandidateRankingTableProps {
@@ -131,7 +132,7 @@ export function CandidateRankingTable({
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
                 </TableCell>
                 <TableCell className="text-foreground">
-                  <div>{item.status}</div>
+                  <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
                   {item.verificationRisk ? (
                     <div className="text-xs text-warning-foreground">
                       {t('employer.campaigns.screening.ranking.verificationRisk')}: {item.verificationRisk}

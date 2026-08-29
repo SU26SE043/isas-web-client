@@ -97,6 +97,9 @@ export type CampaignResponse = {
   criteria?: CampaignRubricCriterionResponse[] | null;
   jobNeeds?: CampaignJobNeed[] | null;
   criteriaText?: string | null;
+  requiredSkills?: string[] | null;
+  keywordsAny?: string[] | null;
+  minYearsExperience?: number | null;
   jdText?: string | null;
   questions?: CampaignQuestionResponse[] | null;
   candidates?: CampaignCandidateResponse[] | null;
@@ -154,6 +157,12 @@ export type CampaignCreateRequest = {
   maxDeepPerQuestion?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
+  /** CV must contain every listed skill. Omit when unchanged. */
+  requiredSkills?: string[] | null;
+  /** CV must contain at least one listed keyword. Omit when unchanged. */
+  keywordsAny?: string[] | null;
+  /** 0 clears the rule; omit when unchanged. */
+  minYearsExperience?: number | null;
   criteria?: CampaignCreateCriterionRequest[] | null;
   startsAt: string;
   expiresAt: string;

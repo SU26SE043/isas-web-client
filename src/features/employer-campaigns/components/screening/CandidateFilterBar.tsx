@@ -31,6 +31,10 @@ export function CandidateFilterBar({ filters, onChange, onClear }: CandidateFilt
           <option value="">{t('employer.campaigns.screening.filters.all')}</option>
           <option value="Filtered">{t('employer.campaigns.screening.filters.filtered')}</option>
           <option value="Rejected">{t('employer.campaigns.screening.filters.rejected')}</option>
+          <option value="Pending">{t('employer.campaigns.screening.status.Pending')}</option>
+          <option value="Analyzing">{t('employer.campaigns.screening.status.Analyzing')}</option>
+          <option value="Analyzed">{t('employer.campaigns.screening.status.Analyzed')}</option>
+          <option value="AnalysisFailed">{t('employer.campaigns.screening.status.AnalysisFailed')}</option>
           <option value="Invited">{t('employer.campaigns.screening.filters.invited')}</option>
         </select>
       </div>
