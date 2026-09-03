@@ -90,9 +90,14 @@ body,
   color: var(--foreground);
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
 }
 
 body::before {
@@ -393,6 +398,10 @@ select {
   .glass-well:hover {
     border-color: var(--satin-border-hover);
     background: rgb(0 0 0 / 0.035);
+  }
+
+  @media (max-width: 639px) {
+    header .sm\:inline-flex { display: none !important; }
   }
 
   /* Light-theme compatibility for legacy translucent-white utility classes. */
