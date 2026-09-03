@@ -166,6 +166,7 @@ export type CampaignWizardSubmitSnapshot = {
   jd: JobDescriptionState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  questionsPerSession?: number | null;
   settings: CampaignSettingsState;
 };
 
@@ -199,8 +200,9 @@ export function buildCampaignCreateRequest(
     adaptiveEnabled: settings.adaptiveEnabled,
     groundingEnabled: false,
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
+    questionsPerSession: snapshot.questionsPerSession,
     maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
-    maxDeepPerQuestion: null,
+    maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
     criteria: mapRubricToCreateCriteria(snapshot.rubric),
@@ -234,8 +236,9 @@ export function buildCampaignUpdateRequest(
     groundingEnabled: false,
     // v10 treats null for these limits as "keep existing" on PUT; omit when UI has no limit.
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
+    questionsPerSession: snapshot.questionsPerSession,
     maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
-    maxDeepPerQuestion: null,
+    maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || undefined,

@@ -160,6 +160,7 @@ export type CampaignCreateRequest = {
   maxFollowUps?: number | null;
   /** Cap on total questions (0–20). Independent of adaptive interview. */
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
@@ -198,6 +199,7 @@ export type CampaignUpdateRequest = {
   maxConcurrentInterviews?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   passScorePct?: number | null;
   jdText?: string;

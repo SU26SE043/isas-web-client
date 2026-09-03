@@ -19,14 +19,17 @@ interface CampaignQuestionsStepProps {
   hasJd: boolean;
   questions: CampaignQuestion[];
   questionCount: number;
+  questionsPerSession: number | null;
   maxQuestions: number | null;
   error?: string | null;
   onQuestionCount: (count: number) => void;
+  onQuestionsPerSession: (count: number | null) => void;
   onGenerateAi: (opts?: { useDefaultCount?: boolean }) => void;
   onSaveQuestions: () => void;
   onAddManual: () => void;
   onChangePrompt: (id: string, prompt: string) => void;
   onToggleRequired: (id: string, isRequired: boolean) => void;
+  onChangeGroup: (id: string, group: string) => void;
   onMoveQuestion: (id: string, direction: 'up' | 'down') => void;
   onRemoveQuestion: (id: string) => void;
   onBack: () => void;
@@ -42,14 +45,17 @@ export function CampaignQuestionsStep({
   hasJd,
   questions,
   questionCount,
+  questionsPerSession,
   maxQuestions,
   error,
   onQuestionCount,
+  onQuestionsPerSession,
   onGenerateAi,
   onSaveQuestions,
   onAddManual,
   onChangePrompt,
   onToggleRequired,
+  onChangeGroup,
   onMoveQuestion,
   onRemoveQuestion,
   onBack,
@@ -112,6 +118,7 @@ export function CampaignQuestionsStep({
     >
       <div className="space-y-5">
         {error ? <FieldError message={error} /> : null}
+        <div className="rounded-lg border border-satin bg-surface-overlay p-4"><label className="text-sm font-medium text-foreground" htmlFor="questions-per-session">{t('employer.campaigns.campaignQuestions.bank.perCandidate')}</label><input id="questions-per-session" type="number" min={1} max={20} value={questionsPerSession ?? ''} onChange={(event) => onQuestionsPerSession(event.target.value === '' ? null : Math.max(1, Math.min(20, Number(event.target.value))))} className="mt-2 h-9 w-32 rounded-md border border-satin bg-surface-base px-3 text-sm" /><p className="mt-1 text-xs text-muted-foreground">{t('employer.campaigns.campaignQuestions.bank.perCandidateHelp')}</p></div>
 
         <QuestionsSummaryCard
           campaignTitle={campaignTitle}
@@ -121,6 +128,9 @@ export function CampaignQuestionsStep({
           questionCount={questions.length}
           maxQuestions={maxQuestions}
         />
+        <datalist id="campaign-question-groups">
+          {Array.from(new Set(questions.map((question) => question.questionGroup?.trim()).filter(Boolean))).map((group) => <option key={group} value={group} />)}
+        </datalist>
 
         <AiGenerateCard
           isDraft={isDraft}
@@ -167,6 +177,7 @@ export function CampaignQuestionsStep({
                 disabled={!isDraft || busy}
                 onChangePrompt={(prompt) => onChangePrompt(question.id, prompt)}
                 onToggleRequired={(isRequired) => onToggleRequired(question.id, isRequired)}
+                onChangeGroup={(group) => onChangeGroup(question.id, group)}
                 onMoveUp={() => onMoveQuestion(question.id, 'up')}
                 onMoveDown={() => onMoveQuestion(question.id, 'down')}
                 onRemove={() => onRemoveQuestion(question.id)}

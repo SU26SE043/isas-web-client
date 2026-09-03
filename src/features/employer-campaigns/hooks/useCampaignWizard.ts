@@ -109,6 +109,7 @@ function defaultSettings(campaign?: EmployerCampaign | null): CampaignSettingsSt
     adaptiveEnabled: campaign.adaptiveEnabled ?? base.adaptiveEnabled,
     maxFollowUps: campaign.maxFollowUps ?? base.maxFollowUps,
     maxQuestions: campaign.maxQuestions ?? base.maxQuestions,
+    maxDeepPerQuestion: campaign.maxDeepPerQuestion ?? base.maxDeepPerQuestion,
   };
 }
 
@@ -136,6 +137,7 @@ function buildInitialState(
     rubric: initialRubric,
     questions: campaign?.questions?.length ? campaign.questions : [],
     questionCount: 5,
+    questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
     currentStep: 0,
     completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6] : [],
@@ -152,6 +154,7 @@ function toSnapshot(state: CampaignWizardPersistedState): CampaignWizardSubmitSn
     jd: state.jd,
     rubric: state.rubric,
     questions: state.questions,
+    questionsPerSession: state.questionsPerSession,
     settings: state.settings,
   };
 }
@@ -391,6 +394,10 @@ export function useCampaignWizard({
 
   const setQuestionCount = useCallback((questionCount: number) => {
     setState((prev) => ({ ...prev, questionCount }));
+  }, []);
+
+  const setQuestionsPerSession = useCallback((value: number | null) => {
+    setState((prev) => ({ ...prev, questionsPerSession: value, autosaveStatus: 'dirty' }));
   }, []);
 
   const setQuestions = useCallback((questions: CampaignQuestion[]) => {
@@ -963,6 +970,7 @@ export function useCampaignWizard({
     setRubric,
     resetRubric,
     setQuestionCount,
+    setQuestionsPerSession,
     setQuestions,
     generateQuestionsWithAi,
     saveQuestionsNow,
