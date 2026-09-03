@@ -100,7 +100,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <CampaignManagementStatusBadge status={campaign.status} />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">{campaign.summary}</p>
-            <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-white/8 py-3 text-xs">
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-subtle py-3 text-xs">
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.deadline')}</dt>
                 <dd className="mt-1 font-medium text-foreground">{formatDate(campaign.deadline, language)}</dd>

@@ -60,7 +60,7 @@ export const EmployerSection: React.FC = () => {
   const { openAuthModal } = useMarketingAuthModal();
 
   return (
-    <section id="enterprise" className="relative mt-10 bg-transparent pt-32 pb-24 text-white">
+    <section id="enterprise" className="relative mt-10 bg-transparent pt-32 pb-24 text-foreground">
       {/* Wave Divider */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none transform -translate-y-[99%]">
         <svg 
@@ -92,17 +92,17 @@ export const EmployerSection: React.FC = () => {
             <h2 className="text-4xl heading-primary mb-8 leading-tight">
               {t('employer.titleLine1')} <br /> {t('employer.titleLine2')}
             </h2>
-            <p className="text-xl text-white/80 mb-12 leading-relaxed">
+            <p className="text-xl text-foreground/80 mb-12 leading-relaxed">
               {t('employer.description')}
             </p>
             <div className="grid grid-cols-2 gap-10 mb-12">
               <div>
                 <h4 className="text-2xl font-bold text-foreground mb-3">{t('employer.jdTitle')}</h4>
-                <p className="text-lg text-white/70">{t('employer.jdDescription')}</p>
+                <p className="text-lg text-foreground/70">{t('employer.jdDescription')}</p>
               </div>
               <div>
                 <h4 className="text-2xl font-bold text-foreground mb-3">{t('employer.reportTitle')}</h4>
-                <p className="text-lg text-white/70">{t('employer.reportDescription')}</p>
+                <p className="text-lg text-foreground/70">{t('employer.reportDescription')}</p>
               </div>
             </div>
             <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary px-10 py-5 text-lg transition-all">
@@ -134,7 +134,7 @@ export const EmployerSection: React.FC = () => {
                 <div className="text-6xl font-extrabold text-foreground mb-3">
                   <AnimatedNumber end={stat.end} suffix={stat.suffix} />
                 </div>
-                <div className="text-base text-white/70 font-bold uppercase tracking-wide">{t(stat.labelKey)}</div>
+                <div className="text-base text-foreground/70 font-bold uppercase tracking-wide">{t(stat.labelKey)}</div>
               </motion.div>
             ))}
           </motion.div>

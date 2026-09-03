@@ -56,8 +56,8 @@ export function CampaignFilters({ value, onChange }: CampaignFiltersProps) {
             className={cn(
               'inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
               value.status === filter.value
-                ? 'border-white/20 bg-white text-black'
-                : 'border-white/8 bg-white/[0.03] text-muted-foreground hover:bg-white/[0.07] hover:text-foreground',
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border bg-surface-overlay text-muted-foreground hover:bg-surface-highlight hover:text-foreground',
             )}
           >
             {filter.value === 'all' ? <LayoutGrid className="size-3.5" aria-hidden /> : null}
