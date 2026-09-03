@@ -117,6 +117,10 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     skills,
     verificationRisk: (pickString(record, 'verificationRisk', 'VerificationRisk') as CampaignCandidateListItem['verificationRisk']) ?? null,
     screeningVersion: pickNumber(record, 'screeningVersion', 'ScreeningVersion') ?? null,
+    eligible: typeof (record.eligible ?? record.Eligible) === 'boolean' ? Boolean(record.eligible ?? record.Eligible) : null,
+    missingMustHave: Array.isArray(record.missingMustHave ?? record.MissingMustHave) ? (record.missingMustHave ?? record.MissingMustHave) as string[] : null,
+    mustHaveMet: pickNumber(record, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(record, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 

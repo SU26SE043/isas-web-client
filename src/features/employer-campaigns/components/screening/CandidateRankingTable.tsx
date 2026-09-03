@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
+import { Badge } from '@/components/ui/badge';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
 
@@ -123,6 +124,8 @@ export function CandidateRankingTable({
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
+                  {item.eligible === false ? <Badge variant="warning" title={item.missingMustHave?.join(', ')}>{t('employer.campaigns.screening.ranking.ineligible')}</Badge> : null}
+                  {item.mustHaveTotal ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.screening.ranking.mustHaveCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal))}</p> : null}
                 </TableCell>
                 <TableCell className="font-semibold text-foreground">
                   {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}

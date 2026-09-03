@@ -335,6 +335,10 @@ export type CampaignCandidateListItem = {
   skills?: string[] | null;
   verificationRisk?: VerificationRisk | null;
   screeningVersion?: number | null;
+  eligible?: boolean | null;
+  missingMustHave?: string[] | null;
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PUT /api/v1/campaign/{id}/job-needs — replace-all, Draft only. */
