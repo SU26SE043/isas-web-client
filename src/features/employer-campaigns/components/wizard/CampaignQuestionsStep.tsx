@@ -19,7 +19,7 @@ interface CampaignQuestionsStepProps {
   hasJd: boolean;
   questions: CampaignQuestion[];
   questionCount: number;
-  questionsPerSession: number | null;
+  questionsPerSession?: number | null;
   maxQuestions: number | null;
   error?: string | null;
   onQuestionCount: (count: number) => void;
