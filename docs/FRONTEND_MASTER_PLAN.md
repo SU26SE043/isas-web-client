@@ -1311,6 +1311,7 @@ flowchart TB
 | FS-148 | Invite candidates + email lookup | P10 | M05 | F-CAMP-E-006 | HR | EMP-056 | P0 | FS-147 | M | BR-B2B-06–11 | Immediate list row |
 | FS-149 | Candidate selection upload step | P10 | M04 | F-CAMP-E-007 | HR | EMP-056 | P0 | FS-142 | L | `product-scope` §4.5 | Screening UI |
 | FS-149b | Invitation email preview | P10 | M04 | F-CAMP-E-005 | HR | EMP-056 | P1 | FS-147 | S | §4.6 publish | Preview before send |
+| FS-149c | RNK1 ranking controls and campaign policy visibility | P10 | M04/M05 | F-CAMP-E-003 | HR | EMP-056–057 | P0 | FS-149 | L | RNK1 F0–F6 | Evidence-first scores, question bank, must-have needs |
 
 ### 9.12 Phase 11 — Employer Analytics (FS-150–154)
 

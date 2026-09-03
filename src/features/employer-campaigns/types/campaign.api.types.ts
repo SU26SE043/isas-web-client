@@ -91,6 +91,8 @@ export type CampaignResponse = {
   skipPenalty?: boolean | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
+  questionBankSummary?: { total?: number | null } | null;
   locale?: string | null;
   organizationId?: string | null;
   welcomeMessage?: string | null;

@@ -1,4 +1,3 @@
-/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 */
 import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
@@ -191,7 +190,7 @@ export function CampaignDetailView({
             {campaign.rubric.map((item) => (
               <div key={item.id} className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
                 <p className="text-sm font-medium text-foreground">
-                  {item.name} ·{' '}
+                  {item.name} · {item.levels?.length ? `${item.levels.length} ${t('employer.campaigns.detail.rubricLevels')}` : t('employer.campaigns.detail.rubricNoLevels')} · {item.minPct != null ? `${t('employer.campaigns.detail.rubricFloor')} ${item.minPct}%` : t('employer.campaigns.detail.rubricNoFloor')} ·{' '}
                   {Number(item.weight) <= 1
                     ? `${Math.round(Number(item.weight) * 100)}%`
                     : `${item.weight}%`}
@@ -207,7 +206,8 @@ export function CampaignDetailView({
           className="frame-satin bg-chart-cat-6/[0.025]"
         >
           <div className="space-y-2">
-            {campaign.questions.map((item, index) => (
+              <p className="mb-2 text-xs text-muted-foreground">{t('employer.campaigns.detail.questionBankSummary').replace('{{k}}', String(campaign.questionsPerSession ?? campaign.questions.length)).replace('{{total}}', String(campaign.questionBankSummary?.total ?? campaign.questions.length)).replace('{{always}}', String(campaign.questions.filter((item) => item.isRequired).length)).replace('{{groups}}', String(new Set(campaign.questions.map((item) => item.questionGroup || 'Chung')).size))}</p>
+              {campaign.questions.map((item, index) => (
               <p key={item.id} className="text-sm text-foreground">
                 {index + 1}. {item.prompt}
               </p>
