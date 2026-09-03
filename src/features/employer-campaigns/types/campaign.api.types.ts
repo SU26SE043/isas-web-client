@@ -375,6 +375,10 @@ export type CampaignCandidateDetail = {
   bonusSignals: string[];
   verificationRisk?: VerificationRisk | null;
   verifyQuestions: string[];
+  eligible?: boolean | null;
+  missingMustHave?: string[];
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */
@@ -386,6 +390,7 @@ export type UpdateCampaignCandidatePayload = {
 /** POST /api/v1/campaign/{id}/candidates/invite */
 export type InviteCampaignCandidatesRequest = {
   candidateIds: string[];
+  includeIneligible?: boolean;
 };
 
 export type InvitedCandidateResult = {

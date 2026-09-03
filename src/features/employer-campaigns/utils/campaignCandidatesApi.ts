@@ -181,6 +181,10 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
     bonusSignals: parseStringArray(body.bonusSignals ?? body.BonusSignals),
     verificationRisk: (pickString(body, 'verificationRisk', 'VerificationRisk') as CampaignCandidateDetail['verificationRisk']) ?? null,
     verifyQuestions: parseStringArray(body.verifyQuestions ?? body.VerifyQuestions),
+    eligible: typeof (body.eligible ?? body.Eligible) === 'boolean' ? Boolean(body.eligible ?? body.Eligible) : null,
+    missingMustHave: Array.isArray(body.missingMustHave ?? body.MissingMustHave) ? (body.missingMustHave ?? body.MissingMustHave) as string[] : [],
+    mustHaveMet: pickNumber(body, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(body, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 

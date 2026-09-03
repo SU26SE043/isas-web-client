@@ -11,6 +11,7 @@ export function CandidateEvidenceSection({ detail }: { detail: CampaignCandidate
           <p className="mt-1 text-sm text-muted-foreground">{detail.fitSummary}</p>
         </section>
       ) : null}
+      {detail.eligible === false || detail.mustHaveTotal ? <section className="rounded-lg border border-warning/30 bg-warning-bg/10 p-3"><h4 className="text-sm font-medium text-foreground">{t('employer.campaigns.screening.detail.eliminationConditions')}</h4><p className="mt-1 text-sm text-muted-foreground">{detail.mustHaveMet ?? 0}/{detail.mustHaveTotal ?? 0}</p>{detail.missingMustHave?.length ? <p className="mt-1 text-sm text-warning">{t('employer.campaigns.screening.detail.missingConditions')}: {detail.missingMustHave.join(', ')}</p> : null}</section> : null}
       <EvidenceGroup title={t('employer.campaigns.screening.detail.strengths')} items={detail.strengths} />
       <EvidenceGroup title={t('employer.campaigns.screening.detail.gaps')} items={detail.gaps} />
       {detail.bonusSignals.length > 0 ? (

@@ -901,7 +901,7 @@ export const campaignManagementService = {
     }
     const response = await apiClient.post<unknown>(
       campaignManagementEndpoints.inviteCandidates(id),
-      { candidateIds } satisfies InviteCampaignCandidatesRequest,
+      { candidateIds, ...(payload.includeIneligible ? { includeIneligible: true } : {}) } satisfies InviteCampaignCandidatesRequest,
     );
     return parseInviteByCandidateIdsResponse(response.data);
   },
