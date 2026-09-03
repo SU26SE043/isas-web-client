@@ -21,6 +21,7 @@ import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
+import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -178,6 +179,8 @@ export function CampaignDetailView({
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
+        <CampaignJobNeedsCard campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={isDraft} />
+
         <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.rubric')}
@@ -220,8 +223,7 @@ export function CampaignDetailView({
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="page-container page-section mx-auto max-w-[1440px]">{content}</div>
     </div>
-  );
-}
+  ); }
 
 function IconTitle({
   children,

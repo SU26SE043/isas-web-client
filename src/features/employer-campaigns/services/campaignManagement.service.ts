@@ -853,6 +853,7 @@ export const campaignManagementService = {
         ...(item.needId?.trim() ? { needId: item.needId.trim() } : {}),
         category: item.category,
         text: item.text.trim(),
+        isMustHave: Boolean(item.isMustHave),
       }))
       .filter((item) => item.text.length > 0);
     const response = await apiClient.put<unknown>(campaignManagementEndpoints.jobNeeds(id), body);

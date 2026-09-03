@@ -211,6 +211,7 @@ function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
       needId,
       category: pickString(record, 'category', 'Category') ?? 'Technical',
       text,
+      isMustHave: pickBoolean(record, 'isMustHave', 'IsMustHave') ?? false,
       source: pickString(record, 'source', 'Source') ?? null,
     }];
   });

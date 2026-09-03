@@ -17,6 +17,7 @@ export type CampaignJobNeed = {
   needId: string;
   category: JobNeedCategory | string;
   text: string;
+  isMustHave?: boolean;
   source?: 'AiSuggested' | 'HrEdited' | string | null;
 };
 
@@ -337,6 +338,7 @@ export type UpdateCampaignJobNeedsRequest = {
   needId?: string;
   category: JobNeedCategory;
   text: string;
+  isMustHave?: boolean;
 };
 
 export type CandidateEvidence = {
