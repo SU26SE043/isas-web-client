@@ -40,6 +40,7 @@ export type CampaignQuestionResponse = {
   difficulty?: string | null;
   source?: CampaignQuestionSource | string | null;
   isRequired?: boolean | null;
+  questionGroup?: string | null;
   hrEditedAt?: string | null;
 };
 
@@ -125,6 +126,7 @@ export type CampaignCreateQuestionRequest = {
   questionText: string;
   source?: CampaignQuestionSource;
   isRequired: boolean;
+  questionGroup?: string | null;
 };
 
 /** PUT /api/v1/campaign/{id}/questions — full replace array body. */

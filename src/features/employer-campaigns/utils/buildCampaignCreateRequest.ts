@@ -70,6 +70,7 @@ export function mapQuestionsToApiRequest(
       const payload: CampaignCreateQuestionRequest = {
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
+        ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
       };
       if (isServerQuestionId(item.id)) {
         payload.id = item.id.trim();

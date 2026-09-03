@@ -39,6 +39,7 @@ export interface CampaignQuestion {
   /** UI-level source; maps to API `AiGenerated` | `CustomHr`. */
   source: CampaignQuestionSource;
   isRequired: boolean;
+  questionGroup?: string | null;
 }
 
 export interface EmployerCampaign {

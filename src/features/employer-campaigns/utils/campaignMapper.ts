@@ -159,6 +159,7 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
           : typeof record.IsRequired === 'boolean'
             ? record.IsRequired
             : null,
+      questionGroup: pickString(record, 'questionGroup', 'QuestionGroup') ?? null,
       hrEditedAt: pickString(record, 'hrEditedAt', 'HrEditedAt') ?? null,
     });
   });
@@ -336,6 +337,7 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
     difficulty: mapDifficulty(item.difficulty),
     source: mapQuestionSource(item.source),
     isRequired: item.isRequired ?? true,
+    questionGroup: item.questionGroup ?? null,
   }));
 }
 

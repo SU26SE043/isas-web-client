@@ -7,6 +7,12 @@ import type { CampaignSettingsState } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
+const ADAPTIVE_PRESETS = [
+  { key: 'light', followUps: 1, questions: 5 },
+  { key: 'balanced', followUps: 3, questions: 10 },
+  { key: 'deep', followUps: 5, questions: 20 },
+] as const;
+
 interface CampaignSettingsStepProps {
   settings: CampaignSettingsState;
   error?: string | null;
@@ -99,6 +105,16 @@ export function CampaignSettingsStep({
 
         {settings.adaptiveEnabled ? (
           <section className="grid gap-4 rounded-xl border border-satin bg-surface-overlay p-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.adaptivePreset')}</p>
+              <div className="flex flex-wrap gap-2">
+                {ADAPTIVE_PRESETS.map((preset) => (
+                  <button key={preset.key} type="button" disabled={isSaving} className="btn-secondary text-xs" onClick={() => onChange({ maxFollowUps: preset.followUps, maxQuestions: preset.questions })}>
+                    {t(`employer.campaigns.form.adaptivePreset.${preset.key}`)} · {preset.questions}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="settings-max-follow-ups">{t('employer.campaigns.form.maxFollowUps')}</Label>
               <Input

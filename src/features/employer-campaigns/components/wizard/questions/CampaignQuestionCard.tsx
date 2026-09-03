@@ -38,6 +38,7 @@ export function CampaignQuestionCard({
           <span className="frame-satin-soft flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {String(index + 1).padStart(2, '0')}
           </span>
+          {question.questionGroup ? <span className="rounded-md border border-satin px-2 py-0.5 text-xs text-muted-foreground">{question.questionGroup}</span> : null}
           <span
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium',
