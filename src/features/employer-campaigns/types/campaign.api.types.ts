@@ -85,6 +85,7 @@ export type CampaignResponse = {
   groundingEnabled?: boolean | null;
   maxConcurrentInterviews?: number | null;
   maxDeepPerQuestion?: number | null;
+  skipPenalty?: boolean | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   locale?: string | null;

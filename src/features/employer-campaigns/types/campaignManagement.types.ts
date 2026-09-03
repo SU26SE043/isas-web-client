@@ -66,6 +66,7 @@ export interface EmployerCampaign {
   maxDeepPerQuestion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  skipPenalty?: boolean | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];

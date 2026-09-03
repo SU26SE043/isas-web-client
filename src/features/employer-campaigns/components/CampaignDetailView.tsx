@@ -20,6 +20,7 @@ import { CampaignSlotsPanel } from './slots/CampaignSlotsPanel';
 import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
+import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -177,6 +178,7 @@ export function CampaignDetailView({
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
+        <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.rubric')}
           icon={Trophy}

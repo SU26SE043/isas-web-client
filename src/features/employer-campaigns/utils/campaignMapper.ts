@@ -256,6 +256,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
+    skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
@@ -383,6 +384,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
     passScorePct: item.passScorePct ?? null,
+    skipPenalty: item.skipPenalty ?? null,
     antiCheatEnabled:
       item.antiCheatEnabled ??
       (mapProctoring(item.proctoring).maxViolations > 0),
