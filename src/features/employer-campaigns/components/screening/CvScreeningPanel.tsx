@@ -10,14 +10,17 @@ import { CandidateUploadSummary } from './CandidateUploadSummary';
 import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
+import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
+import type { CampaignJobNeed } from '../../types/campaign.api.types';
 
 interface CvScreeningPanelProps {
   campaignId: string;
   isActive: boolean;
   hasJobNeeds: boolean;
+  jobNeeds?: CampaignJobNeed[];
 }
 
-export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds }: CvScreeningPanelProps) {
+export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds = [] }: CvScreeningPanelProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const setInvitationCandidates = useCampaignInvitationStore(
@@ -52,6 +55,7 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds }: CvScreen
           <AlertDescription>{t('employer.campaigns.screening.errors.jobNeedsRequired')}</AlertDescription>
         </Alert>
       ) : null}
+      <CampaignJobNeedsCard campaignId={campaignId} initialNeeds={jobNeeds} editable={false} />
 
       <CvUploadZone
         files={state.pendingFiles}
