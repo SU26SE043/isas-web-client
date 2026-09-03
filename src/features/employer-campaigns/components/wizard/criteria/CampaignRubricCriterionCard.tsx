@@ -49,7 +49,7 @@ export function CampaignRubricCriterionCard({
 
   return (
     <article className="frame-satin rounded-xl border border-satin bg-surface-raised/60 px-3 py-3 sm:px-4 sm:py-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] lg:items-start">
+      <div className="grid gap-3 lg:grid-cols-[minmax(14rem,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] lg:items-start">
         <div className="flex min-w-0 items-start gap-3">
           <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {indexLabel}
@@ -90,6 +90,9 @@ export function CampaignRubricCriterionCard({
         </div>
 
         <div className="w-full lg:w-auto">
+          <p className="mb-1 text-xs font-medium text-muted-foreground lg:hidden">
+            {t('employer.campaigns.wizard.rubric.weight')}
+          </p>
           <label className="sr-only" htmlFor={`campaign-rubric-weight-${criterion.id}`}>
             {t('employer.campaigns.wizard.rubric.weight')}
           </label>
@@ -117,6 +120,9 @@ export function CampaignRubricCriterionCard({
         </div>
 
         <div className="w-full lg:w-auto">
+          <p className="mb-1 text-xs font-medium text-muted-foreground lg:hidden">
+            {t('employer.campaigns.wizard.rubric.maxScore')}
+          </p>
           <label className="sr-only" htmlFor={`campaign-rubric-max-${criterion.id}`}>
             {t('employer.campaigns.wizard.rubric.maxScore')}
           </label>
