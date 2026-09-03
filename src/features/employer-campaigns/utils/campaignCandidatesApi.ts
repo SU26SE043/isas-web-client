@@ -3,6 +3,7 @@ import type {
   CampaignCandidateListItem,
   CandidateEvidence,
   CampaignResultFlag,
+  CampaignResultBelowCutoff,
   CampaignResultStatus,
   CampaignResultsResponse,
   CampaignScoredResult,
@@ -241,6 +242,26 @@ function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
   return flags;
 }
 
+function parseBelowCutoff(raw: unknown): CampaignResultBelowCutoff[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const name = pickString(record, 'name', 'Name');
+    const pct = pickNumber(record, 'pct', 'Pct');
+    const minPct = pickNumber(record, 'minPct', 'MinPct');
+    if (!name || pct == null || minPct == null) return [];
+    const matchedBy = pickString(record, 'matchedBy', 'MatchedBy');
+    return [{
+      criterionId: pickString(record, 'criterionId', 'CriterionId') ?? null,
+      name,
+      pct,
+      minPct,
+      matchedBy: matchedBy === 'name' ? 'name' : 'id',
+    }];
+  });
+}
+
 function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -294,6 +315,22 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
         result,
         scoredAt,
         flags: parseCampaignResultFlags(record.flags ?? record.Flags),
+        answered: pickNumber(record, 'answered', 'Answered') ?? null,
+        totalQuestions: pickNumber(record, 'totalQuestions', 'TotalQuestions') ?? null,
+        seedAnswered: pickNumber(record, 'seedAnswered', 'SeedAnswered') ?? null,
+        seedTotal: pickNumber(record, 'seedTotal', 'SeedTotal') ?? null,
+        skipPenalty: typeof (record.skipPenalty ?? record.SkipPenalty) === 'boolean'
+          ? Boolean(record.skipPenalty ?? record.SkipPenalty)
+          : null,
+        cvMatchScore: pickNumber(record, 'cvMatchScore', 'CvMatchScore') ?? null,
+        cvVerificationRisk: pickString(record, 'cvVerificationRisk', 'CvVerificationRisk') ?? null,
+        cvScreeningVersion: pickNumber(record, 'cvScreeningVersion', 'CvScreeningVersion') ?? null,
+        belowCutoff: parseBelowCutoff(record.belowCutoff ?? record.BelowCutoff),
+        policyName: pickString(record, 'policyName', 'PolicyName') ?? null,
+        policyVersion: pickNumber(record, 'policyVersion', 'PolicyVersion') ?? null,
+        scoreFallback: typeof (record.scoreFallback ?? record.ScoreFallback) === 'boolean'
+          ? Boolean(record.scoreFallback ?? record.ScoreFallback)
+          : null,
       };
     })
     .filter((item): item is CampaignScoredResult => item != null);
@@ -311,6 +348,9 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
     unscoredFlagged,
+    questionsPerSession: pickNumber(body, 'questionsPerSession', 'QuestionsPerSession') ?? null,
+    questionBankTotal: pickNumber(body, 'questionBankTotal', 'QuestionBankTotal') ?? undefined,
+    currentRubricVersion: pickNumber(body, 'currentRubricVersion', 'CurrentRubricVersion') ?? null,
   };
 }
 

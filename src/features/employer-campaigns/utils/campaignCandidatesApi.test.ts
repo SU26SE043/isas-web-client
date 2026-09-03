@@ -125,6 +125,33 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.unscoredFlagged).toEqual([]);
   });
 
+  it('preserves RNK1 result context fields without inventing legacy values', () => {
+    const parsed = parseCampaignResultsResponse({
+      campaignId: 'camp-rnk1',
+      questionsPerSession: 5,
+      questionBankTotal: 20,
+      currentRubricVersion: 3,
+      results: [{
+        candidateId: 'c1', sessionId: 's1', scoredAt: '2026-09-02T10:00:00Z',
+        totalScore: 72, aiScore: 70, answered: 4, totalQuestions: 8,
+        seedAnswered: 4, seedTotal: 5, skipPenalty: true,
+        cvMatchScore: 81, cvVerificationRisk: 'High', cvScreeningVersion: 1,
+        belowCutoff: [{ criterionId: 'r1', name: 'Frontend', pct: 42, minPct: 50, matchedBy: 'id' }],
+        policyName: 'weighted_avg_pct', policyVersion: 2, scoreFallback: true,
+      }],
+    });
+    expect(parsed).toMatchObject({ questionsPerSession: 5, questionBankTotal: 20, currentRubricVersion: 3 });
+    expect(parsed.results[0]).toMatchObject({
+      answered: 4, totalQuestions: 8, seedAnswered: 4, seedTotal: 5,
+      skipPenalty: true, cvMatchScore: 81, cvVerificationRisk: 'High',
+      cvScreeningVersion: 1, policyName: 'weighted_avg_pct', policyVersion: 2, scoreFallback: true,
+    });
+    expect(parsed.results[0]?.belowCutoff).toEqual([
+      { criterionId: 'r1', name: 'Frontend', pct: 42, minPct: 50, matchedBy: 'id' },
+    ]);
+    expect(parsed.results[0]?.answered).not.toBeNull();
+  });
+
   it('parses the latest CV screening ranking fields', () => {
     const item = parseCandidateListItem({
       id: 'c1',

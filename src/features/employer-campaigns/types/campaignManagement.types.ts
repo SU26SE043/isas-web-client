@@ -24,6 +24,7 @@ export interface RubricCriterion {
   weight: number;
   description: string;
   maxScore: number;
+  minPct?: number | null;
   /** Server-authored score anchors; keep them when renaming or editing a criterion. */
   levels?: RubricLevel[];
 }

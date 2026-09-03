@@ -399,6 +399,14 @@ export type CampaignResultFlag = {
   lastAt?: string | null;
 };
 
+export type CampaignResultBelowCutoff = {
+  criterionId: string | null;
+  name: string;
+  pct: number;
+  minPct: number;
+  matchedBy: 'id' | 'name';
+};
+
 export type CampaignScoredResult = {
   rank: number;
   candidateId: string;
@@ -416,6 +424,18 @@ export type CampaignScoredResult = {
   result: CampaignResultStatus;
   scoredAt: string;
   flags: CampaignResultFlag[];
+  answered?: number | null;
+  totalQuestions?: number | null;
+  seedAnswered?: number | null;
+  seedTotal?: number | null;
+  skipPenalty?: boolean | null;
+  cvMatchScore?: number | null;
+  cvVerificationRisk?: string | null;
+  cvScreeningVersion?: number | null;
+  belowCutoff?: CampaignResultBelowCutoff[];
+  policyName?: string | null;
+  policyVersion?: number | null;
+  scoreFallback?: boolean | null;
 };
 
 /** Spec alias — same shape as CampaignScoredResult. */
@@ -437,6 +457,9 @@ export type CampaignResultsResponse = {
   results: CampaignScoredResult[];
   /** v5: flagged candidates without scored ranking rows. */
   unscoredFlagged: CampaignUnscoredFlaggedResult[];
+  questionsPerSession?: number | null;
+  questionBankTotal?: number;
+  currentRubricVersion?: number | null;
 };
 
 export type CampaignResultExportFormat = 'csv' | 'pdf';

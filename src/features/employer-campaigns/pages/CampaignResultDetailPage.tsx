@@ -11,6 +11,7 @@ import {
 } from '../utils/campaignResultsActions';
 import { candidateDisplayEmail, candidateDisplayName, ResultStatusBadge } from '../components/results/ResultBadges';
 import { ProctoringAnalysis } from '../components/results/ProctoringAnalysis';
+import { ResultsContextStrip, ResultsFallbackAlert } from '../components/results/ResultsContextStrip';
 
 export function CampaignResultDetailPage() {
   const { id: campaignId = '', sessionId = '' } = useParams();
@@ -48,8 +49,17 @@ export function CampaignResultDetailPage() {
           <p className="mt-2 font-medium text-foreground">{candidateDisplayName(item, t)}</p>
           <p className="text-sm text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
         </header>
+        <ResultsContextStrip
+          items={resultsQuery.data?.results ?? []}
+          passScorePct={resultsQuery.data?.passScorePct}
+          questionsPerSession={resultsQuery.data?.questionsPerSession}
+          questionBankTotal={resultsQuery.data?.questionBankTotal}
+          currentRubricVersion={resultsQuery.data?.currentRubricVersion}
+        />
+        <ResultsFallbackAlert items={[item]} />
         <div className="grid gap-3 rounded-xl border border-satin bg-surface-overlay p-4 text-sm sm:grid-cols-3">
           <Metric label={t('employer.campaigns.results.columns.totalScore')} value={formatResultScore(item.totalScore)} />
+          <Metric label={t('employer.campaigns.results.context.seedQuestions')} value={item.seedAnswered != null && item.seedTotal != null ? `${item.seedAnswered}/${item.seedTotal}` : '—'} />
           <Metric label={t('employer.campaigns.results.columns.aiScore')} value={formatResultScore(item.aiScore)} />
           <div><p className="text-xs text-muted-foreground">{t('employer.campaigns.results.columns.result')}</p><div className="mt-1"><ResultStatusBadge result={item.result} /></div></div>
         </div>

@@ -20,6 +20,8 @@ import {
   ResultStatusBadge,
   candidateDisplayEmail,
   candidateDisplayName,
+  ResultCandidateMeta,
+  ResultScoreCells,
 } from './ResultBadges';
 import { ResultsActionsMenu } from './ResultsActionsMenu';
 
@@ -77,9 +79,10 @@ export function ResultsRankingTable({
                 <TableCell>
                   <p className="font-medium text-foreground">{candidateDisplayName(item, t)}</p>
                   <p className="text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
+                  <ResultCandidateMeta item={item} />
                 </TableCell>
                 <TableCell className="text-base font-semibold tabular-nums text-foreground">
-                  {formatResultScore(item.totalScore)}
+                  <ResultScoreCells item={item} />
                 </TableCell>
                 <TableCell className="hidden tabular-nums text-muted-foreground lg:table-cell">
                   {formatResultScore(item.aiScore)}
@@ -141,6 +144,7 @@ export function ResultsRankingTable({
                   {scoreHeader}
                 </dt>
                 <dd className="font-semibold tabular-nums">{formatResultScore(item.totalScore)}</dd>
+                <ResultCandidateMeta item={item} />
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">
