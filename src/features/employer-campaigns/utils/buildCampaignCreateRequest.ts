@@ -187,6 +187,9 @@ export function buildCampaignCreateRequest(
   if (questions.length === 0) {
     throw new Error('QUESTIONS_REQUIRED');
   }
+  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
+  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
+  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
 
   return {
     title: info.title.trim(),
@@ -201,7 +204,7 @@ export function buildCampaignCreateRequest(
     groundingEnabled: false,
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
     questionsPerSession: snapshot.questionsPerSession,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
+    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
@@ -223,6 +226,9 @@ export function buildCampaignUpdateRequest(
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
+  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
+  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
+  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
 
   return {
     title: info.title.trim(),
@@ -237,7 +243,7 @@ export function buildCampaignUpdateRequest(
     // v10 treats null for these limits as "keep existing" on PUT; omit when UI has no limit.
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
     questionsPerSession: snapshot.questionsPerSession,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
+    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
