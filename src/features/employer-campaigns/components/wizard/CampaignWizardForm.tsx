@@ -148,16 +148,11 @@ export function CampaignWizardForm({
       {step === 2 ? (
         <CampaignCriteriaStepV2
           rubric={state.rubric}
-          criteria={state.criteria}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
           }
           error={wizard.stepError}
-          canReplace={wizard.canReplaceFiles}
           onChangeRubric={wizard.setRubric}
-          onSelectFile={wizard.selectCriteriaFile}
-          onRetryUpload={wizard.retryCriteriaUpload}
-          onDownload={wizard.downloadCriteriaFile}
           onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}

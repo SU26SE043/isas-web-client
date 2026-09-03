@@ -108,6 +108,7 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       weight,
       description: pickString(record, 'description', 'Description') ?? null,
       maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
+      minPct: pickNumber(record, 'minPct', 'MinPct', 'minimumPct', 'MinimumPct'),
       source: pickString(record, 'source', 'Source') ?? null,
       levels,
     });
@@ -318,6 +319,7 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     weight: item.weight,
     description: item.description?.trim() || '',
     maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
+    minPct: item.minPct ?? null,
     levels: item.levels?.length ? item.levels : undefined,
   }));
 }

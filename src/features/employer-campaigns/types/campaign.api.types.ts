@@ -27,6 +27,7 @@ export type CampaignRubricCriterionResponse = {
   weight: number;
   description?: string | null;
   maxScore?: number | null;
+  minPct?: number | null;
   source?: CampaignCriterionSource | string | null;
   levels?: RubricLevel[] | null;
 };
@@ -107,11 +108,13 @@ export type CampaignResponse = {
 
 /** Shared criterion DTO for create/update. */
 export type CampaignCreateCriterionRequest = {
+  id?: string;
   name: string;
   description?: string | null;
   /** Decimal 0 < weight <= 1 */
   weight: number;
   maxScore: number;
+  minPct?: number | null;
   /** Existing server-authored anchors must be echoed on replace-all updates. */
   levels?: RubricLevel[];
 };

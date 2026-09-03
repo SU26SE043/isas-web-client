@@ -49,10 +49,12 @@ export function mapRubricToCreateCriteria(
       const rawWeight = Number(item.weight);
       const weight = Number((rawWeight / 100).toFixed(4));
       return {
+        ...(item.id && !item.id.startsWith('criterion-') ? { id: item.id } : {}),
         name: item.name.trim(),
         description: item.description.trim() || null,
         weight,
         maxScore: Number(item.maxScore) || 1,
+        minPct: item.minPct ?? null,
         ...(item.levels?.length ? { levels: item.levels } : {}),
       };
     });
@@ -80,11 +82,12 @@ function criteriaRequestToRubric(
   criteria: CampaignCreateCriterionRequest[] | null | undefined,
 ): RubricCriterion[] {
   return (criteria ?? []).map((item, index) => ({
-    id: `criterion-${index}`,
+    id: item.id?.trim() || `criterion-${index}`,
     name: item.name,
     description: item.description?.trim() || '',
     weight: item.weight,
     maxScore: item.maxScore,
+    minPct: item.minPct ?? null,
     levels: item.levels ?? undefined,
   }));
 }
