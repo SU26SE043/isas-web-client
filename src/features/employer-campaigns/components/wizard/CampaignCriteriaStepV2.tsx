@@ -5,6 +5,7 @@ import { AppModal } from '@/components/ui/app-modal';
 import { Button } from '@/components/ui/button';
 import { SelectionOption } from '@/components/ui/selection-option';
 import { SectionPanel } from '@/components/ui/section-panel';
+import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useLanguage } from '@/shared/languages';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
 import { campaignCriteriaService, type CampaignCriteriaPreview } from '../../services/campaignCriteria.service';
@@ -23,18 +24,23 @@ export function CampaignCriteriaStepV2({ rubric, contextLabel, error, onChangeRu
   const [preview, setPreview] = React.useState<CampaignCriteriaPreview | null>(null);
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
   const totalMaxScore = rubric.reduce((sum, item) => sum + Number(item.maxScore || 0), 0);
   const weightValid = Math.round(totalWeight * 10) / 10 === 100;
   const maxScoreValid = rubric.every((item) => Number.isInteger(item.maxScore) && item.maxScore >= 1 && item.maxScore <= 10);
   const hasEmptyName = rubric.some((item) => !item.name.trim());
   const canNext = weightValid && maxScoreValid && rubric.length > 0 && !hasEmptyName && !isSaving;
-  const openSystemPreview = async () => { setSource('system'); setLoading(true); try { setPreview(await campaignCriteriaService.preview(contextLabel, language)); setPreviewOpen(true); } finally { setLoading(false); } };
-  const usePreview = () => { if (preview) onChangeRubric(previewToRubric(preview)); setPreviewOpen(false); };
+  const openSystemPreview = async () => { setSource('system'); setLoading(true); setLocalError(null); try { setPreview(await campaignCriteriaService.preview(contextLabel, language)); setPreviewOpen(true); } catch { setLocalError(t('employer.campaigns.wizard.criteriaPreview.error')); } finally { setLoading(false); } };
+  const applyPreview = () => { if (preview) onChangeRubric(previewToRubric(preview)); setConfirmOpen(false); setPreviewOpen(false); };
+  const usePreview = () => { if (rubric.length > 0) setConfirmOpen(true); else applyPreview(); };
 
   return <SectionPanel icon={<ClipboardList className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.steps.criteria')} headerAside={<CampaignRubricTotalWeight totalWeight={totalWeight} totalMaxScore={totalMaxScore} weightValid={weightValid} maxScoreValid={maxScoreValid} resetDisabled={Boolean(isSaving)} onReset={onReset} />} footer={<CampaignWizardNav onBack={onBack} onNext={onNext} isSaving={isSaving} nextDisabled={!canNext} />}>
     <div className="space-y-6">
       {error ? <FieldError message={error} /> : null}
+      {localError ? <Alert variant="error"><AlertDescription>{localError}</AlertDescription></Alert> : null}
+      <div className="rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-xs text-muted-foreground">{t('employer.campaigns.wizard.rubric.summary').replace('{{anchors}}', String(rubric.filter((item) => item.levels?.length).length)).replace('{{total}}', String(rubric.length)).replace('{{floors}}', String(rubric.filter((item) => item.minPct != null).length))}</div>
       <div className="grid gap-3 md:grid-cols-2">
         <SelectionOption title={t('employer.campaigns.wizard.criteriaSource.manual')} description={t('employer.campaigns.wizard.criteriaSource.manualDesc')} selected={source === 'manual'} onClick={() => setSource('manual')} showChevron={false} />
         <SelectionOption title={t('employer.campaigns.wizard.criteriaSource.system')} description={t('employer.campaigns.wizard.criteriaSource.systemDesc')} selected={source === 'system'} onClick={() => void openSystemPreview()} showChevron={false} disabled={loading} icon={loading ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />} />
@@ -47,5 +53,6 @@ export function CampaignCriteriaStepV2({ rubric, contextLabel, error, onChangeRu
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPreviewOpen(false)}>{t('ds.common.cancel')}</Button><Button onClick={usePreview} disabled={!preview?.criteria.length}>{t('employer.campaigns.wizard.criteriaPreview.use')}</Button></div>
       </div>
     </AppModal>
+    <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('employer.campaigns.wizard.criteriaPreview.replaceTitle')} description={t('employer.campaigns.wizard.criteriaPreview.replaceDescription').replace('{{count}}', String(rubric.length))} confirmLabel={t('employer.campaigns.wizard.criteriaPreview.replace')} cancelLabel={t('ds.common.cancel')} destructive onConfirm={applyPreview} />
   </SectionPanel>;
 }
