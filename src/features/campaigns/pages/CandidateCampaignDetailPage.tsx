@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, BadgeCheck, BriefcaseBusiness, CalendarClock, CheckCircle2, Code2, FileText, Info, Loader2, MessageCircle, Play, Star, Video } from 'lucide-react';
@@ -27,13 +27,22 @@ function startErrorMessage(error: unknown, t: (key: string) => string): string {
   if (error.code === 'unauthorized') return t('campaigns.detail.startUnauthorized');
   if (error.code === 'paymentRequired') return t('campaigns.detail.startPaymentRequired');
   if (error.code === 'forbidden') return t('campaigns.detail.startForbidden');
-  if (error.code === 'outsideSlotWindow') return t('campaigns.detail.startOutsideSlotWindow');
+  if (error.code === 'outsideSlotWindow') return startErrorWithOpeningTime(error, t, t('campaigns.detail.startOutsideSlotWindow'));
   if (error.code === 'concurrentLimit') return t('campaigns.detail.startConcurrentLimit');
-  if (error.code === 'conflict') return error.message || t('campaigns.detail.startConflict');
+  if (error.code === 'conflict') return startErrorWithOpeningTime(error, t, error.message || t('campaigns.detail.startConflict'));
   if (error.code === 'identityError' || error.code === 'serverError') {
     return t('campaigns.detail.startServerError');
   }
   return error.message || t('campaigns.detail.startUnknown');
+}
+
+function startErrorWithOpeningTime(error: CampaignCandidateError, t: (key: string) => string, message: string) {
+  if (!error.slotStartsAt) return message;
+  const openingTime = new Date(error.slotStartsAt).toLocaleString('vi-VN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  return `${message} ${t('campaigns.detail.startOpeningTime').replace('{time}', openingTime)}`;
 }
 
 export function CandidateCampaignDetailPage() {
@@ -46,11 +55,20 @@ export function CandidateCampaignDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const detailPath = useMemo(
     () => `/candidate/campaigns/${encodeURIComponent(id)}`,
     [id],
   );
+  const startsInSeconds = data?.startsAt
+    ? Math.max(0, Math.ceil((new Date(data.startsAt).getTime() - now) / 1000))
+    : 0;
+  useEffect(() => {
+    if (!data?.startsAt || startsInSeconds <= 0) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [data?.startsAt, startsInSeconds]);
 
   if (!user || user.role !== UserRole.CANDIDATE) {
     return <Navigate to="/login" replace state={{ from: { pathname: detailPath } }} />;
@@ -100,6 +118,10 @@ export function CandidateCampaignDetailPage() {
 
   const canContinue = data.started && Boolean(data.sessionId) && data.interviewStatus !== 'Completed';
   const isCompleted = data.interviewStatus === 'Completed';
+  const isBeforeStart = startsInSeconds > 0;
+  const formattedStart = data.startsAt
+    ? new Date(data.startsAt).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
 
   /**
    * Vào phòng thi — dùng chung cho "Bắt đầu" LẪN "Tiếp tục".
@@ -167,9 +189,10 @@ export function CandidateCampaignDetailPage() {
               <SectionHeading icon={Info} title={t('campaigns.detail.examInfo')} iconClassName="text-info" />
               <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li></ul>
               <div className="mt-5">
+                {isBeforeStart ? <p className="mb-3 rounded-xl border border-warning/35 bg-warning/10 px-4 py-3 text-sm text-warning-light">{t('campaigns.detail.startOpensIn').replace('{time}', formatCountdown(startsInSeconds)).replace('{date}', formattedStart ?? '')}</p> : null}
                 {isCompleted ? <p className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-success/35 bg-success/10 px-4 py-3 text-sm font-semibold text-success-light"><BadgeCheck className="size-4" aria-hidden />{t('campaigns.my.interview.completed')}</p> : null}
-                {!isCompleted && canContinue ? <button type="button" disabled={isStarting} className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => void enterInterviewRoom()}><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</button> : null}
-                {!isCompleted && !canContinue ? <button type="button" className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
+                {!isCompleted && canContinue ? <button type="button" disabled={isStarting || isBeforeStart} className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => void enterInterviewRoom()}><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</button> : null}
+                {!isCompleted && !canContinue ? <button type="button" disabled={isBeforeStart} className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
               </div>
             </section>
           </div>
@@ -193,4 +216,11 @@ export function CandidateCampaignDetailPage() {
 
 function SectionHeading({ icon: Icon, title, iconClassName = 'text-violet-300' }: { icon: typeof FileText; title: string; iconClassName?: string }) {
   return <div className="flex items-center gap-3 border-b border-satin pb-4"><span className={`grid size-9 place-items-center rounded-full border border-violet-400/30 bg-violet-500/10 ${iconClassName}`}><Icon className="size-5" aria-hidden /></span><h2 className="text-lg font-semibold text-foreground">{title}</h2></div>;
+}
+
+function formatCountdown(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
 }

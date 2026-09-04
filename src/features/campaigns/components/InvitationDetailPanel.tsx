@@ -42,12 +42,6 @@ export function InvitationDetailPanel({
           <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
             {t('campaigns.invite.badge')}
           </span>
-          {invitation.orgName ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/50 px-3 py-1 text-xs text-zinc-400">
-              <Building2 className="size-3.5" aria-hidden />
-              {invitation.orgName}
-            </span>
-          ) : null}
         </div>
 
         <div className="space-y-2">
@@ -56,6 +50,12 @@ export function InvitationDetailPanel({
             <p className="inline-flex items-center gap-2 text-sm text-zinc-400">
               <Briefcase className="size-4 shrink-0" aria-hidden />
               {invitation.jobTitle}
+            </p>
+          ) : null}
+          {invitation.orgName ? (
+            <p className="inline-flex items-center gap-2 text-sm text-zinc-400">
+              <Building2 className="size-4 shrink-0" aria-hidden />
+              {invitation.orgName}
             </p>
           ) : null}
         </div>
