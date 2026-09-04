@@ -992,7 +992,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleTooLong': 'Tên chiến dịch không được vượt quá 255 ký tự.',
     'employer.campaigns.form.integerRequired': 'Giá trị phải là số nguyên.',
     'employer.campaigns.wizard.jdTextTooLong': 'Mô tả công việc không được vượt quá 20.000 ký tự.',
-    'employer.campaigns.wizard.criteriaTextTooLong': 'Ghi chú tiêu chí không được vượt quá 20.000 ký tự.',
     'employer.campaigns.wizard.jdUploadFailed': 'Không thể tải tệp JD lên',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'Cần tải file JD thành công trước khi xuất bản chiến dịch.',
@@ -1026,11 +1025,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.files.errors.replaceFailed': 'Không thể thay tệp.',
     'employer.campaigns.files.errors.downloadFailed': 'Không thể tải tệp xuống.',
     'employer.campaigns.files.errors.draftOnly': 'Chỉ có thể thay tệp khi chiến dịch ở trạng thái bản nháp.',
-    'employer.campaigns.wizard.criteriaTextLabel': 'Ghi chú tiêu chí đánh giá (tùy chọn)',
-    'employer.campaigns.wizard.criteriaTextPlaceholder':
-      'Ví dụ: ưu tiên ứng viên có kinh nghiệm React, đánh giá cao khả năng trình bày...',
-    'employer.campaigns.wizard.criteriaTextHelp':
-      'Ghi chú tự do để AI tham khảo khi sinh câu hỏi và chấm điểm; không thay thế rubric ở bước sau.',
     'employer.campaigns.wizard.hardFilters.title': 'Bộ lọc cứng CV',
     'employer.campaigns.wizard.hardFilters.description':
       'Chỉ CV đáp ứng các luật này mới được đưa vào sàng lọc AI.',
@@ -1211,6 +1205,10 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.ineligibleWarning': 'Thiếu điều kiện bắt buộc: {{missing}}. Bạn vẫn mời được — hệ thống chỉ đánh dấu, không chặn.',
     'employer.campaigns.screening.ranking.unknownMissing': 'chưa xác định',
     'employer.campaigns.screening.ranking.mustHaveCount': 'Đủ {{met}}/{{total}} điều kiện',
+    'employer.campaigns.screening.ranking.missingEvidence': 'Thiếu {{missing}}/{{total}} — {{names}}',
+    'employer.campaigns.screening.risk.low': 'Thấp',
+    'employer.campaigns.screening.risk.medium': 'Trung bình',
+    'employer.campaigns.screening.risk.high': 'Cao',
     'employer.campaigns.screening.detail.eliminationConditions': 'Điều kiện loại',
     'employer.campaigns.screening.detail.missingConditions': 'Thiếu',
     'employer.campaigns.campaignQuestions.bank.perCandidate': 'Mỗi ứng viên thi K câu',
@@ -2371,7 +2369,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleTooLong': 'Campaign title must not exceed 255 characters.',
     'employer.campaigns.form.integerRequired': 'This value must be an integer.',
     'employer.campaigns.wizard.jdTextTooLong': 'Job description must not exceed 20,000 characters.',
-    'employer.campaigns.wizard.criteriaTextTooLong': 'Criteria notes must not exceed 20,000 characters.',
     'employer.campaigns.wizard.jdUploadFailed': 'Could not upload the JD file',
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'The JD file must upload successfully before publishing the campaign.',
@@ -2405,11 +2402,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.files.errors.replaceFailed': 'Could not replace the file.',
     'employer.campaigns.files.errors.downloadFailed': 'Could not download the file.',
     'employer.campaigns.files.errors.draftOnly': 'Only Draft campaigns can replace files.',
-    'employer.campaigns.wizard.criteriaTextLabel': 'Evaluation criteria notes (optional)',
-    'employer.campaigns.wizard.criteriaTextPlaceholder':
-      'e.g. prioritize candidates with React experience, value clear communication...',
-    'employer.campaigns.wizard.criteriaTextHelp':
-      'Freeform notes for the AI to reference when generating questions and scoring; does not replace the rubric in the next step.',
     'employer.campaigns.wizard.hardFilters.title': 'CV hard filters',
     'employer.campaigns.wizard.hardFilters.description':
       'Only CVs matching these rules will enter AI screening.',
@@ -2590,6 +2582,10 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.ineligibleWarning': 'Missing required conditions: {{missing}}. You can still invite this candidate — the system marks it but does not block.',
     'employer.campaigns.screening.ranking.unknownMissing': 'not specified',
     'employer.campaigns.screening.ranking.mustHaveCount': '{{met}}/{{total}} conditions met',
+    'employer.campaigns.screening.ranking.missingEvidence': 'Missing {{missing}}/{{total}} — {{names}}',
+    'employer.campaigns.screening.risk.low': 'Low',
+    'employer.campaigns.screening.risk.medium': 'Medium',
+    'employer.campaigns.screening.risk.high': 'High',
     'employer.campaigns.screening.detail.eliminationConditions': 'Elimination conditions',
     'employer.campaigns.screening.detail.missingConditions': 'Missing',
     'employer.campaigns.campaignQuestions.bank.perCandidate': 'Questions per candidate (K)',

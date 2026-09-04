@@ -95,7 +95,7 @@ export type CampaignResponse = {
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   questionsPerSession?: number | null;
-  questionBankSummary?: { total?: number | null } | null;
+  questionBankSummary?: { total?: number | null; warnings?: string[] | null } | null;
   locale?: string | null;
   organizationId?: string | null;
   welcomeMessage?: string | null;

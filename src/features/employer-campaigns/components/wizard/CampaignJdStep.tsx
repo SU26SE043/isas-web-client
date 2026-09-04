@@ -14,7 +14,6 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignHardFiltersState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
-import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
 import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignFilePanel } from './jd/CampaignFilePanel';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
@@ -127,10 +126,6 @@ export function CampaignJdStep({
           {jd.fileName ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.jdFileProvenance').replace('{file}', jd.fileName)}</p> : null}
         </div>
 
-        <CampaignCriteriaTextField
-          value={jd.criteriaText}
-          onChange={(criteriaText) => onChange({ criteriaText })}
-        />
         {isDraft ? (
           <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
         ) : null}

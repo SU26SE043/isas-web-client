@@ -72,7 +72,7 @@ export interface EmployerCampaign {
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   questionsPerSession?: number | null;
-  questionBankSummary?: { total?: number | null } | null;
+  questionBankSummary?: { total?: number | null; warnings?: string[] | null } | null;
   skipPenalty?: boolean | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
@@ -102,7 +102,6 @@ export type CampaignDraftInput = Omit<
 
 export interface PublishResult {
   campaign: EmployerCampaign;
-  warnings: string[];
 }
 
 export interface InviteRejectedEmail {

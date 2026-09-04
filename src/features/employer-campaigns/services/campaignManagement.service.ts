@@ -459,7 +459,7 @@ export const campaignManagementService = {
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
-    return { campaign: mapped, warnings: [] };
+    return { campaign: mapped };
   },
 
   /**

@@ -106,9 +106,6 @@ export function CampaignReviewStep({
               ? jd.fileName || t('employer.campaigns.wizard.jdFileRequired')
               : jd.jdText.trim().slice(0, 160) || t('employer.campaigns.wizard.jdTextRequired')}
           </p>
-          {jd.criteriaText.trim() ? (
-            <p className="line-clamp-2">{jd.criteriaText.trim().slice(0, 160)}</p>
-          ) : null}
         </CampaignReviewSection>
 
         <CampaignReviewSection title={t('employer.campaigns.wizard.check.criteria')} onEdit={() => onGoToStep(2)}>

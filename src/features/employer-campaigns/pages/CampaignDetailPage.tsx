@@ -21,7 +21,6 @@ export function CampaignDetailPage() {
   const { t } = useLanguage();
   const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
     useEmployerCampaign(id);
-  const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
   const tab = searchParams.get('tab') ?? 'details';
 
@@ -32,16 +31,12 @@ export function CampaignDetailPage() {
   const handlePublish = async () => {
     if (!campaign) return;
     try {
-      const result = await publish(campaign.id);
-      setWarnings(result.warnings);
-      setPublished(result.warnings.length === 0);
-      if (result.warnings.length === 0) {
-        toast.success(t('employer.campaigns.detail.publishSuccess'));
-        reload();
-      }
+      await publish(campaign.id);
+      setPublished(true);
+      toast.success(t('employer.campaigns.detail.publishSuccess'));
+      reload();
     } catch {
       setPublished(false);
-      setWarnings([]);
       toast.error(t('employer.campaigns.wizard.publishFailed'));
       throw new Error('PUBLISH_FAILED');
     }
@@ -167,7 +162,7 @@ export function CampaignDetailPage() {
             <CampaignDetailView
               campaign={campaign}
               published={published}
-              warnings={warnings}
+              warnings={campaign.questionBankSummary?.warnings ?? []}
               onPublish={handlePublish}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}

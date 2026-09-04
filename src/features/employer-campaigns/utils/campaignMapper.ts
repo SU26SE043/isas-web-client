@@ -271,7 +271,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
     questionsPerSession: pickNumber(record, 'questionsPerSession', 'QuestionsPerSession') ?? null,
-    questionBankSummary: (() => { const summary = asRecord(record.questionBankSummary ?? record.QuestionBankSummary); return summary ? { total: pickNumber(summary, 'total', 'Total') } : null; })(),
+    questionBankSummary: (() => { const summary = asRecord(record.questionBankSummary ?? record.QuestionBankSummary); return summary ? { total: pickNumber(summary, 'total', 'Total'), warnings: asStringArray(summary.warnings ?? summary.Warnings) } : null; })(),
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
     skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
