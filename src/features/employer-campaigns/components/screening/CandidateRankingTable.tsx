@@ -93,7 +93,7 @@ export function CandidateRankingTable({
       <Table className="min-w-[820px]">
         <TableHeader>
           <TableRow>
-            <TableHead>{t('employer.campaigns.screening.ranking.selectAll')}</TableHead>
+            <TableHead aria-label={t('employer.campaigns.screening.ranking.selectAll')} />
             <TableHead>{t('employer.campaigns.screening.ranking.candidate')}</TableHead>
             <TableHead>{t('employer.campaigns.screening.ranking.matchScore')}</TableHead>
             <TableHead>{t('employer.campaigns.screening.ranking.skills')}</TableHead>
@@ -119,15 +119,14 @@ export function CandidateRankingTable({
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
-                  {item.eligible === false ? (
+                  {item.eligible === false && item.mustHaveTotal ? (
                     <p className="mt-1 text-xs text-warning">
-                      {t('employer.campaigns.screening.ranking.ineligibleWarning').replace(
-                        '{{missing}}',
-                        item.missingMustHave?.join(', ') || t('employer.campaigns.screening.ranking.unknownMissing'),
-                      )}
+                      {t('employer.campaigns.screening.ranking.missingEvidence')
+                        .replace('{{missing}}', String(item.mustHaveTotal - (item.mustHaveMet ?? 0)))
+                        .replace('{{total}}', String(item.mustHaveTotal))
+                        .replace('{{names}}', item.missingMustHave?.join(', ') || t('employer.campaigns.screening.ranking.unknownMissing'))}
                     </p>
                   ) : null}
-                  {item.mustHaveTotal ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.screening.ranking.mustHaveCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal))}</p> : null}
                 </TableCell>
                 <TableCell>
                   <div className="h-2 w-28 overflow-hidden rounded-full bg-surface-highlight" aria-label={`${item.mustHaveMet ?? 0}/${item.mustHaveTotal ?? 0}`}>
@@ -144,7 +143,7 @@ export function CandidateRankingTable({
                   <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
                   {item.verificationRisk ? (
                     <div className="text-xs text-warning-foreground">
-                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {item.verificationRisk}
+                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {t(`employer.campaigns.screening.risk.${item.verificationRisk.toLowerCase()}`)}
                     </div>
                   ) : null}
                 </TableCell>
