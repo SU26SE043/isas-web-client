@@ -11,14 +11,14 @@ export function CampaignJobNeedsCard({ campaignId, initialNeeds, editable }: { c
   const { t } = useLanguage();
   const [needs, setNeeds] = useState(initialNeeds);
   const [text, setText] = useState('');
-  const [mustHave, setMustHave] = useState(true);
+  const [mustHave, setMustHave] = useState(false);
   const [category, setCategory] = useState<JobNeedCategory>('Technical');
   const [locked, setLocked] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const save = async (next: CampaignJobNeed[]) => { setSaving(true); setError(null); try { const updated = await campaignManagementService.updateCampaignJobNeeds(campaignId, next.map((item) => ({ needId: item.needId, category: (item.category || 'Technical') as JobNeedCategory, text: item.text, isMustHave: item.isMustHave }))); setNeeds(updated.jobNeeds); } catch (error) { if (campaignManagementService.getErrorStatus(error) === 409) setLocked(true); else setError(t('employer.campaigns.jobNeeds.saveError')); } finally { setSaving(false); } };
   const add = () => { const value = text.trim(); if (!value) return; const next = [...needs, { needId: `client-${crypto.randomUUID()}`, category, text: value, isMustHave: mustHave }]; setText(''); void save(next); };
-  const remove = (id: string) => { const next = needs.filter((item) => item.needId !== id); setNeeds(next); void save(next); };
+  const remove = (id: string) => { if (!window.confirm(t('employer.campaigns.jobNeeds.removeConfirm'))) return; const next = needs.filter((item) => item.needId !== id); setNeeds(next); void save(next); };
   const grouped = ['Technical', 'WorkStyle', 'Communication', 'Growth'].map((group) => ({ group, items: needs.filter((need) => need.category === group) }));
   return <section className="rounded-xl border border-satin bg-surface-overlay p-4">
     <div className="mb-3 flex items-center gap-2"><Target className="size-4 text-info" aria-hidden /><h3 className="font-semibold text-foreground">{t('employer.campaigns.jobNeeds.title')}</h3></div>

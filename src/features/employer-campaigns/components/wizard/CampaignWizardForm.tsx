@@ -229,6 +229,7 @@ export function CampaignWizardForm({
           submittingLabel={finalLoadingLabel}
           isSubmitting={wizard.isSubmitting}
           submitDisabled={!wizard.isDraftEditable}
+          jobNeeds={campaign?.jobNeeds ?? []}
         />
       ) : null}
     </CampaignWizardShell>

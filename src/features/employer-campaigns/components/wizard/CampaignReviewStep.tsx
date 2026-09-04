@@ -12,6 +12,7 @@ import { FieldError } from './FieldError';
 import { CampaignReviewSection } from './review/CampaignReviewSection';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
+import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState;
@@ -30,6 +31,7 @@ interface CampaignReviewStepProps {
   isSubmitting?: boolean;
   submitDisabled?: boolean;
   skipPenalty?: boolean | null;
+  jobNeeds?: import('../../types/campaign.api.types').CampaignJobNeed[];
 }
 
 function formatDateTime(value: string): string {
@@ -54,6 +56,7 @@ export function CampaignReviewStep({
   isSubmitting = false,
   submitDisabled = false,
   skipPenalty = true,
+  jobNeeds = [],
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
@@ -174,6 +177,8 @@ export function CampaignReviewStep({
             </p>
           ))}
         </CampaignReviewSection>
+
+        {campaignId ? <CampaignJobNeedsCard campaignId={campaignId} initialNeeds={jobNeeds} editable /> : null}
       </div>
     </SectionPanel>
   );
