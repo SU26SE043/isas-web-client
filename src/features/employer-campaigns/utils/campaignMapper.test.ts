@@ -16,7 +16,7 @@ describe('campaignMapper', () => {
         location: 'HCM',
         mode: 'Remote',
         capacity: 10,
-        applicants: 3,
+        cvCount: 3,
         deadline: '2026-08-01',
         updatedAt: '2026-07-01T00:00:00.000Z',
       },
@@ -68,7 +68,7 @@ describe('campaignMapper', () => {
       company: 'Acme',
       location: 'HN',
       capacity: 5,
-      applicantCount: 1,
+      cvCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });
@@ -82,7 +82,7 @@ describe('campaignMapper', () => {
       company: 'Acme',
       location: 'HN',
       capacity: 5,
-      applicantCount: 1,
+      cvCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });

@@ -249,8 +249,6 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     keywordsAny: asStringArray(record.keywordsAny ?? record.KeywordsAny),
     minYearsExperience: pickNumber(record, 'minYearsExperience', 'MinYearsExperience') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
-    applicants: null,
-    applicantCount: null,
     cvCount: pickNumber(record, 'cvCount', 'CvCount', 'CVCount') ?? null,
     invitedCount: pickNumber(record, 'invitedCount', 'InvitedCount') ?? null,
     completedCount: pickNumber(record, 'completedCount', 'CompletedCount') ?? null,
@@ -380,7 +378,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
   const now = new Date().toISOString();
   const capacity = item.capacity ?? item.maxCandidates ?? 0;
   const candidates = mapCandidates(item.candidates);
-  const applicants = item.applicants ?? 0;
+  const applicants = item.cvCount ?? 0;
   const cvCount = item.cvCount ?? 0;
   const invitedCount = item.invitedCount ?? 0;
   const completedCount = item.completedCount ?? 0;
