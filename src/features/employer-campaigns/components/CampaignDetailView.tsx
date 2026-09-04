@@ -44,6 +44,7 @@ export function CampaignDetailView({
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
   const isDraft = campaign.status === 'draft';
+  const canEditJobNeeds = isDraft || (campaign.status === 'active' && campaign.candidates.length === 0);
   const hasDetailActions =
     campaign.status === 'draft' ||
     campaign.status === 'closed' ||
@@ -175,10 +176,9 @@ export function CampaignDetailView({
         </div>
 
         <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} />
-
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
-        <CampaignJobNeedsCard campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={isDraft} />
+        <CampaignJobNeedsCard campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={canEditJobNeeds} />
 
         <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
