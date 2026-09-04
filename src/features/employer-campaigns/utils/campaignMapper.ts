@@ -388,7 +388,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     id: item.id,
     title: item.title,
     domain: item.domain?.trim() || undefined,
-    company: item.company?.trim() || item.domain?.trim() || '—',
+    company: item.company?.trim() || '—',
     location: item.location?.trim() || '—',
     mode: mapMode(item.mode),
     status: mapStatus(item.status),

@@ -43,7 +43,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                 <TableCell>
                   <p className="max-w-[320px] truncate font-semibold text-foreground">{campaign.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {campaign.location} · {t(`employer.campaigns.mode.${campaign.mode}`)}
+                    {t(`employer.campaigns.mode.${campaign.mode}`)}
                   </p>
                 </TableCell>
                 <TableCell>
@@ -95,7 +95,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-semibold text-foreground">{campaign.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{campaign.location}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t(`employer.campaigns.mode.${campaign.mode}`)}</p>
               </div>
               <CampaignManagementStatusBadge status={campaign.status} />
             </div>

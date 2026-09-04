@@ -9,7 +9,6 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import { CampaignFilters } from '../components/CampaignFilters';
 import { CampaignManagementTable } from '../components/CampaignManagementTable';
-import { CampaignSummaryCards } from '../components/CampaignSummaryCards';
 import { useEmployerCampaigns } from '../hooks/useEmployerCampaigns';
 import type { CampaignFilters as CampaignFiltersValue } from '../types/campaignManagement.types';
 
@@ -21,8 +20,6 @@ export function CampaignListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const stableFilters = useMemo(() => filters, [filters]);
-  const summaryFilters = useMemo(() => DEFAULT_FILTERS, []);
-  const summaryQuery = useEmployerCampaigns(summaryFilters);
   const { campaigns, isLoading, isError, errorStatus, reload } = useEmployerCampaigns(stableFilters);
 
   const isForbidden = isError && errorStatus === 403;
@@ -66,11 +63,6 @@ export function CampaignListPage() {
             {t('employer.campaigns.list.create')}
           </Button>
         </header>
-
-        {summaryQuery.isLoading ? <Skeleton className="h-24 w-full" /> : null}
-        {!summaryQuery.isLoading && !summaryQuery.isError ? (
-          <CampaignSummaryCards campaigns={summaryQuery.campaigns} />
-        ) : null}
 
         <CampaignFilters value={filters} onChange={handleFiltersChange} />
 
