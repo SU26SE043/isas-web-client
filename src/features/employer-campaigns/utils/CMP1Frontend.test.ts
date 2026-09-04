@@ -14,7 +14,6 @@ import { validateCampaignPdf, parseContentDispositionFilename } from './campaign
 import { parseCampaignResponse, mapCampaignResponseToEmployerCampaign } from './campaignMapper';
 import {
   countInvitationsByStatus,
-  filterAndSortInvitations,
   mergeInvitationsById,
   parseCampaignInvitation,
   parseCampaignInvitationsPage,
@@ -78,7 +77,7 @@ describe('F4 — editable job needs and draft validation', () => {
     expect(buildJobNeedsRescuePayload('   ')).toEqual([]);
   });
   it('keeps the requested rescue category', () => {
-    expect(buildJobNeedsRescuePayload('English', 'Language')).toEqual([{ category: 'Language', text: 'English' }]);
+    expect(buildJobNeedsRescuePayload('English', 'Communication')).toEqual([{ category: 'Communication', text: 'English' }]);
   });
   it('maps all supported screening statuses', () => {
     expect(candidateScreeningStatusLabelKey('Pending')).toContain('status.Pending');
@@ -129,7 +128,7 @@ describe('F5 — evidence-first candidate screening', () => {
     expect(buildCandidateListParams({ search: '  react ', limit: 999 })).toEqual({ search: 'react', limit: 500 });
   });
   it('omits empty candidate query params', () => {
-    expect(buildCandidateListParams({ search: ' ', status: ' ', limit: null })).toBeUndefined();
+    expect(buildCandidateListParams({ search: ' ', status: ' ', limit: undefined })).toBeUndefined();
   });
 });
 

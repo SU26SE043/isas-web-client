@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import toast from 'react-hot-toast';
 import { useCampaignFileActions } from './useCampaignFileActions';
+import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
 
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 
@@ -71,7 +72,7 @@ function createState(overrides: Record<string, unknown> = {}) {
     autosaveStatus: 'idle',
     draftId: 'draft-1',
     ...overrides,
-  } as never;
+  } as unknown as CampaignWizardPersistedState;
 }
 
 function renderActions(state = createState()) {
