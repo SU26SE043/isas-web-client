@@ -7,6 +7,8 @@ import type {
   FailedCampaignInvitation,
 } from '../../types/campaign.api.types';
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
+import type { SelectedInvitationCandidate } from '../../stores/campaignInvitationStore';
+import { useInviteCampaignCandidates } from '../../hooks/useCampaignCandidates';
 import {
   getCampaignInvitationError,
   getCampaignInvitationErrorKey,
@@ -23,12 +25,17 @@ import { campaignSlotCapacity } from '../../utils/campaignSlots';
 
 export type EmailInviteStep = 'form' | 'result';
 
-export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails: string[] = []) {
+export function useEmailInvitationFlow(
+  campaign: EmployerCampaign,
+  initialEmails: string[] = [],
+  selectedCandidates: SelectedInvitationCandidate[] = [],
+) {
   const { t } = useLanguage();
   const inviteMutation = useCreateCampaignInvitations(campaign.id);
+  const candidateInviteMutation = useInviteCampaignCandidates(campaign.id);
   const slotsQuery = useCampaignSlots(campaign.id);
   const isActive = campaign.status === 'active';
-  const isSending = inviteMutation.isPending;
+  const isSending = inviteMutation.isPending || candidateInviteMutation.isPending;
   const initialEmailsKey = initialEmails.join('|');
 
   const [step, setStep] = useState<EmailInviteStep>('form');
@@ -56,6 +63,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     setCreated([]);
     setFailed([]);
     inviteMutation.reset();
+    candidateInviteMutation.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on campaign change
   }, [campaign.id, initialEmailsKey]);
 
@@ -156,7 +164,18 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     if (!isActive || emails.length === 0 || isSending) return;
 
     try {
-      const response = await inviteMutation.mutateAsync({ emails });
+      const selectedByEmail = new Map(selectedCandidates.map((candidate) => [normalizeEmail(candidate.email), candidate]));
+      const isUneditedCandidateSelection = selectedCandidates.length > 0 &&
+        selectedCandidates.every((candidate) => candidate.id && normalizeEmail(candidate.email) === emails.find((email) => normalizeEmail(email) === normalizeEmail(candidate.email)));
+      const response = isUneditedCandidateSelection
+        ? await candidateInviteMutation.mutateAsync({
+            candidateIds: selectedCandidates.flatMap((candidate) => candidate.id ? [candidate.id] : []),
+            ...(selectedCandidates.some((candidate) => candidate.eligible === false) ? { includeIneligible: true } : {}),
+          }).then((result) => ({
+            created: result.invited.map((item) => ({ id: item.invitationId, email: item.email, expiresAt: '' })),
+            failed: result.failed.map((item) => ({ email: selectedByEmail.get(item.candidateId)?.email ?? item.candidateId, reason: item.reason })),
+          }))
+        : await inviteMutation.mutateAsync({ emails });
       if (retryMode) {
         const retrySet = new Set(emails);
         const keptFailed = failed.filter((item) => !retrySet.has(normalizeEmail(item.email)));
@@ -194,6 +213,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     setFailed([]);
     setFormError(null);
     inviteMutation.reset();
+    candidateInviteMutation.reset();
   };
 
   return {

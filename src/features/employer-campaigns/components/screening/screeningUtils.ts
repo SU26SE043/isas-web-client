@@ -6,8 +6,11 @@ export function canSelectCandidate(item: CampaignCandidateListItem): boolean {
   const status = item.status.toLowerCase();
   if (status === 'rejected') return false;
   if (status.includes('invit')) return false;
-  if (item.eligible === false) return false;
   return true;
+}
+
+export function shouldIncludeIneligible(candidates: CampaignCandidateListItem[]): boolean {
+  return candidates.some((candidate) => candidate.eligible === false);
 }
 
 /**

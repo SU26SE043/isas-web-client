@@ -38,7 +38,7 @@ export function EmailInvitationFlow({
 }: EmailInvitationFlowProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const flow = useEmailInvitationFlow(campaign, initialEmails);
+  const flow = useEmailInvitationFlow(campaign, initialEmails, selectedCandidates);
   const [tab, setTab] = useState<InviteTab>('send');
   const activeView = view === 'combined' ? tab : view;
 
