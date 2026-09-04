@@ -32,9 +32,9 @@ Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
 1. Campaign information — title, domain, required workplace `location`, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt. The location field offers debounced Photon suggestions and an OpenStreetMap preview; manual entry remains available when lookup fails.
 2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
-3. Evaluation criteria — manual rubric only (name, description, weight %, maxScore); weights shown as % summing to 100, converted to 0–1 decimals on submit
-4. Questions — AI-generated or HR-authored, each with `prompt`, `source` (`AiGenerated`/`CustomHr`), `isRequired`; add/edit/delete/reorder, tracked against `maxQuestions` when adaptive is on
-5. Settings — `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; when adaptive is on, `maxFollowUps` (>=0) and `maxQuestions` (0–20)
+3. Evaluation criteria — HR may write criteria or preview the system default set by domain/language; criteria preserve `id`, `levels`, and optional `minPct` floor (0–100). Weights are shown as % and converted to 0–1 decimals on submit.
+4. Questions — AI-generated or HR-authored, each with `prompt`, `source`, `questionGroup`, `isRequired` (“Luôn hỏi”); the question bank shows K questions per candidate and group counts.
+5. Settings — `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion`, `maxQuestions = min(20, K×(1+d))`, and `maxFollowUps`.
 6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
@@ -87,6 +87,12 @@ Legacy `/selection` redirects to `/invite`.
 | Upload JD PDF (edit mode, on file select) | `POST /api/v1/campaign/{id}/files` (multipart) |
 | Replace JD PDF (edit mode) | `PUT /api/v1/campaign/{id}/files` (multipart, Draft only) |
 | Save job needs (Draft only) | `PUT /api/v1/campaign/{id}/job-needs` (replace-all array; echo existing `needId`) |
+| Preview system criteria | `GET /api/v1/campaign/criteria/system-default/preview?jobCategory&language` |
+| Apply system criteria (Draft only) | `POST /api/v1/campaign/{id}/criteria/from-system-default` |
+| Criteria contract | `criteria[].id`, `minPct`, `levels` are preserved through mapper and replace-all writes |
+| Questions contract | `questionsPerSession`, `questionGroup`, `isRequired`, `questionBankSummary` |
+| Adaptive validation | `maxDeepPerQuestion`, `maxQuestions`; surface `ADAPTIVE_BUDGET_TOO_SMALL` and `QUESTION_BANK_INVALID` |
+| Job-needs contract | `isMustHave`, `eligible`, `missingMustHave`; invitation may send `includeIneligible` |
 | CV screening ranking | `GET /api/v1/campaign/{id}/candidates` — `overallMatchScore` remains the sort score; `verificationRisk` and `screeningVersion` are separate flags |
 | CV screening detail | `GET /api/v1/campaign/{id}/candidates/{candidateId}` — `strengths`/`gaps` include CV evidence; legacy `criterionScores` is not rendered |
 | Interview results ranking | `GET /api/v1/campaign/{id}/results` — independent from CV screening ranking |

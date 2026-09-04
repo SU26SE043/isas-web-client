@@ -151,16 +151,11 @@ export function CampaignWizardForm({
       {step === 2 ? (
         <CampaignCriteriaStepV2
           rubric={state.rubric}
-          criteria={state.criteria}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
           }
           error={wizard.stepError}
-          canReplace={wizard.canReplaceFiles}
           onChangeRubric={wizard.setRubric}
-          onSelectFile={wizard.selectCriteriaFile}
-          onRetryUpload={wizard.retryCriteriaUpload}
-          onDownload={wizard.downloadCriteriaFile}
           onReset={wizard.resetRubric}
           onBack={wizard.goBack}
           onNext={wizard.goNext}
@@ -176,16 +171,19 @@ export function CampaignWizardForm({
           hasJd={hasWizardJd(state.jd) || Boolean(campaign?.jobDescription?.trim())}
           questions={state.questions}
           questionCount={state.questionCount}
+          questionsPerSession={state.questionsPerSession}
           maxQuestions={
             state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null
           }
           error={wizard.stepError}
           onQuestionCount={wizard.setQuestionCount}
+          onQuestionsPerSession={wizard.setQuestionsPerSession}
           onGenerateAi={(opts) => void wizard.generateQuestionsWithAi(opts)}
           onSaveQuestions={() => void wizard.saveQuestionsNow()}
           onAddManual={wizard.addManualQuestion}
           onChangePrompt={(id, prompt) => wizard.updateQuestion(id, { prompt })}
           onToggleRequired={(id, isRequired) => wizard.updateQuestion(id, { isRequired })}
+          onChangeGroup={(id, questionGroup) => wizard.updateQuestion(id, { questionGroup })}
           onMoveQuestion={wizard.moveQuestion}
           onRemoveQuestion={wizard.removeQuestion}
           onBack={wizard.goBack}

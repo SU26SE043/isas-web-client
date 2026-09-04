@@ -33,7 +33,7 @@ export function ResultsToolbar({
   const { t } = useLanguage();
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
+    <div className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
       <Input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
@@ -41,7 +41,7 @@ export function ResultsToolbar({
         aria-label={t('employer.campaigns.results.searchPlaceholder')}
       />
       <select
-        className={selectClass}
+        className={`${selectClass} max-md:min-w-[12rem]`}
         value={outcome}
         onChange={(event) => onOutcomeChange(event.target.value as ResultsOutcomeFilter)}
         aria-label={t('employer.campaigns.results.filters.outcome')}
@@ -52,7 +52,7 @@ export function ResultsToolbar({
         <option value="undetermined">{t('employer.campaigns.results.undetermined')}</option>
       </select>
       <select
-        className={selectClass}
+        className={`${selectClass} max-md:min-w-[12rem]`}
         value={review}
         onChange={(event) => onReviewChange(event.target.value as ResultsReviewFilter)}
         aria-label={t('employer.campaigns.results.filters.review')}
@@ -64,7 +64,7 @@ export function ResultsToolbar({
         <option value="notFlagged">{t('employer.campaigns.results.filters.notFlagged')}</option>
       </select>
       <select
-        className={selectClass}
+        className={`${selectClass} max-md:min-w-[12rem]`}
         value={sort}
         onChange={(event) => onSortChange(event.target.value as ResultsSort)}
         aria-label={t('employer.campaigns.results.filters.sort')}

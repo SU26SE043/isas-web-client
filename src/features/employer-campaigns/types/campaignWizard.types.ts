@@ -82,6 +82,7 @@ export type CampaignSettingsState = {
   maxFollowUps: number;
   /** 0..20; only sent to API when adaptiveEnabled. */
   maxQuestions: number;
+  maxDeepPerQuestion?: number;
 };
 
 export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
@@ -96,6 +97,7 @@ export type CampaignWizardPersistedState = {
   questions: CampaignQuestion[];
   /** Count used by the "generate with AI" action on the Questions step. */
   questionCount: number;
+  questionsPerSession?: number | null;
   settings: CampaignSettingsState;
   currentStep: number;
   completedSteps: number[];
@@ -186,6 +188,7 @@ export function createDefaultSettingsState(): CampaignSettingsState {
     adaptiveEnabled: false,
     maxFollowUps: 2,
     maxQuestions: 5,
+    maxDeepPerQuestion: 0,
   };
 }
 

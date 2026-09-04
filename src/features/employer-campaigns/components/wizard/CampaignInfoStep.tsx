@@ -104,48 +104,25 @@ export function CampaignInfoStep({
 
             <div className="space-y-2">
               <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
-              <div className="flex flex-wrap gap-4 text-sm text-foreground">
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="pass-score-mode"
-                    className="size-4 border-satin"
-                    checked={info.passScorePct != null}
-                    onChange={() => onChange({ passScorePct: info.passScorePct ?? 70 })}
-                  />
-                  {t('employer.campaigns.form.passScoreSystem')}
-                </label>
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="pass-score-mode"
-                    className="size-4 border-satin"
-                    checked={info.passScorePct == null}
-                    onChange={() => onChange({ passScorePct: null })}
-                  />
-                  {t('employer.campaigns.form.passScoreHrDecide')}
-                </label>
-              </div>
-              {info.passScorePct != null ? (
-                <Input
-                  id="campaign-pass-score"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={info.passScorePct}
-                  placeholder={t('employer.campaigns.form.passScorePlaceholder')}
-                  onChange={(e) => {
-                    onChange({
-                      passScorePct: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
-                    });
-                  }}
-                />
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t('employer.campaigns.form.passScoreHrDecideHelp')}
-                </p>
-              )}
+              <Input
+                id="campaign-pass-score"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={info.passScorePct ?? ''}
+                placeholder={t('employer.campaigns.form.passScorePlaceholder')}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  onChange({
+                    passScorePct:
+                      raw === '' ? null : Math.min(100, Math.max(0, Number(raw) || 0)),
+                  });
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.passScoreHelp')}
+              </p>
             </div>
 
             <div className="space-y-2">

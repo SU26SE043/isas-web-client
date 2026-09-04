@@ -17,6 +17,7 @@ export type CampaignJobNeed = {
   needId: string;
   category: JobNeedCategory | string;
   text: string;
+  isMustHave?: boolean;
   source?: 'AiSuggested' | 'HrEdited' | string | null;
 };
 
@@ -27,6 +28,7 @@ export type CampaignRubricCriterionResponse = {
   weight: number;
   description?: string | null;
   maxScore?: number | null;
+  minPct?: number | null;
   source?: CampaignCriterionSource | string | null;
   levels?: RubricLevel[] | null;
 };
@@ -39,6 +41,7 @@ export type CampaignQuestionResponse = {
   difficulty?: string | null;
   source?: CampaignQuestionSource | string | null;
   isRequired?: boolean | null;
+  questionGroup?: string | null;
   hrEditedAt?: string | null;
 };
 
@@ -85,8 +88,11 @@ export type CampaignResponse = {
   groundingEnabled?: boolean | null;
   maxConcurrentInterviews?: number | null;
   maxDeepPerQuestion?: number | null;
+  skipPenalty?: boolean | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
+  questionBankSummary?: { total?: number | null } | null;
   locale?: string | null;
   organizationId?: string | null;
   welcomeMessage?: string | null;
@@ -109,11 +115,13 @@ export type CampaignResponse = {
 
 /** Shared criterion DTO for create/update. */
 export type CampaignCreateCriterionRequest = {
+  id?: string;
   name: string;
   description?: string | null;
   /** Decimal 0 < weight <= 1 */
   weight: number;
   maxScore: number;
+  minPct?: number | null;
   /** Existing server-authored anchors must be echoed on replace-all updates. */
   levels?: RubricLevel[];
 };
@@ -124,6 +132,7 @@ export type CampaignCreateQuestionRequest = {
   questionText: string;
   source?: CampaignQuestionSource;
   isRequired: boolean;
+  questionGroup?: string | null;
 };
 
 /** PUT /api/v1/campaign/{id}/questions — full replace array body. */
@@ -154,6 +163,7 @@ export type CampaignCreateRequest = {
   maxFollowUps?: number | null;
   /** Cap on total questions (0–20). Independent of adaptive interview. */
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
@@ -198,6 +208,7 @@ export type CampaignUpdateRequest = {
   maxConcurrentInterviews?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   passScorePct?: number | null;
   jdText?: string;
@@ -333,6 +344,10 @@ export type CampaignCandidateListItem = {
   skills?: string[] | null;
   verificationRisk?: VerificationRisk | null;
   screeningVersion?: number | null;
+  eligible?: boolean | null;
+  missingMustHave?: string[] | null;
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PUT /api/v1/campaign/{id}/job-needs — replace-all, Draft only. */
@@ -340,6 +355,7 @@ export type UpdateCampaignJobNeedsRequest = {
   needId?: string;
   category: JobNeedCategory;
   text: string;
+  isMustHave?: boolean;
 };
 
 export type CandidateEvidence = {
@@ -368,6 +384,10 @@ export type CampaignCandidateDetail = {
   bonusSignals: string[];
   verificationRisk?: VerificationRisk | null;
   verifyQuestions: string[];
+  eligible?: boolean | null;
+  missingMustHave?: string[];
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */
@@ -379,6 +399,7 @@ export type UpdateCampaignCandidatePayload = {
 /** POST /api/v1/campaign/{id}/candidates/invite */
 export type InviteCampaignCandidatesRequest = {
   candidateIds: string[];
+  includeIneligible?: boolean;
 };
 
 export type InvitedCandidateResult = {
@@ -411,6 +432,14 @@ export type CampaignResultFlag = {
   source: CampaignResultFlagSource;
 };
 
+export type CampaignResultBelowCutoff = {
+  criterionId: string | null;
+  name: string;
+  pct: number;
+  minPct: number;
+  matchedBy: 'id' | 'name';
+};
+
 export type CampaignScoredResult = {
   rank: number;
   candidateId: string;
@@ -428,6 +457,18 @@ export type CampaignScoredResult = {
   result: CampaignResultStatus;
   scoredAt: string;
   flags: CampaignResultFlag[];
+  answered?: number | null;
+  totalQuestions?: number | null;
+  seedAnswered?: number | null;
+  seedTotal?: number | null;
+  skipPenalty?: boolean | null;
+  cvMatchScore?: number | null;
+  cvVerificationRisk?: string | null;
+  cvScreeningVersion?: number | null;
+  belowCutoff?: CampaignResultBelowCutoff[];
+  policyName?: string | null;
+  policyVersion?: number | null;
+  scoreFallback?: boolean | null;
 };
 
 /** Spec alias — same shape as CampaignScoredResult. */
@@ -449,6 +490,9 @@ export type CampaignResultsResponse = {
   results: CampaignScoredResult[];
   /** v5: flagged candidates without scored ranking rows. */
   unscoredFlagged: CampaignUnscoredFlaggedResult[];
+  questionsPerSession?: number | null;
+  questionBankTotal?: number;
+  currentRubricVersion?: number | null;
 };
 
 export type CampaignResultExportFormat = 'csv' | 'pdf';

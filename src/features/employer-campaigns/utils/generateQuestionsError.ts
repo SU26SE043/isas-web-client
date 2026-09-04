@@ -29,6 +29,12 @@ export function getGenerateQuestionsErrorKey(error: unknown): string {
           : error instanceof Error
             ? error.message
             : '';
+    if (/ADAPTIVE_BUDGET_TOO_SMALL/i.test(text)) {
+      return 'employer.campaigns.campaignQuestions.errors.adaptiveBudgetTooSmall';
+    }
+    if (/QUESTION_BANK_INVALID/i.test(text)) {
+      return 'employer.campaigns.campaignQuestions.errors.questionBankInvalid';
+    }
     if (/jd|job description|mô tả công việc/i.test(text)) {
       return 'employer.campaigns.campaignQuestions.errors.jdRequired';
     }

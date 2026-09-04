@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Sparkles, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { CampaignQuestion } from '../../../types/campaignManagement.types';
@@ -12,6 +13,7 @@ interface CampaignQuestionCardProps {
   disabled?: boolean;
   onChangePrompt: (prompt: string) => void;
   onToggleRequired: (isRequired: boolean) => void;
+  onChangeGroup: (group: string) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -24,6 +26,7 @@ export function CampaignQuestionCard({
   disabled = false,
   onChangePrompt,
   onToggleRequired,
+  onChangeGroup,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -38,6 +41,7 @@ export function CampaignQuestionCard({
           <span className="frame-satin-soft flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {String(index + 1).padStart(2, '0')}
           </span>
+          <span className="rounded-md border border-satin px-2 py-0.5 text-xs text-muted-foreground">{question.questionGroup || t('employer.campaigns.campaignQuestions.question.commonGroup')}</span>
           <span
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium',
@@ -103,6 +107,7 @@ export function CampaignQuestionCard({
         />
       </div>
 
+      <div className="space-y-1"><Label htmlFor={`q-group-${question.id}`}>{t('employer.campaigns.campaignQuestions.question.group')}</Label><Input id={`q-group-${question.id}`} list="campaign-question-groups" value={question.questionGroup ?? ''} disabled={disabled} placeholder={t('employer.campaigns.campaignQuestions.question.commonGroup')} onChange={(event) => onChangeGroup(event.target.value)} /></div>
       <label className="flex w-fit items-center gap-2 text-xs text-muted-foreground">
         <input
           type="checkbox"
@@ -112,7 +117,7 @@ export function CampaignQuestionCard({
           onChange={(e) => onToggleRequired(e.target.checked)}
         />
         {question.isRequired
-          ? t('employer.campaigns.campaignQuestions.question.required')
+          ? t('employer.campaigns.campaignQuestions.question.alwaysAsked')
           : t('employer.campaigns.campaignQuestions.question.optional')}
       </label>
     </li>

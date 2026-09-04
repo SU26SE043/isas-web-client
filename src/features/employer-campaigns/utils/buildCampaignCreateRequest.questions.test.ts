@@ -45,8 +45,8 @@ describe('mapRubricToCreateCriteria', () => {
         { id: 'r2', name: 'Technical', description: '', weight: 99, maxScore: 10 },
       ]),
     ).toEqual([
-      { name: 'Communication', description: null, weight: 0.01, maxScore: 10 },
-      { name: 'Technical', description: null, weight: 0.99, maxScore: 10 },
+      { id: 'r1', name: 'Communication', description: null, weight: 0.01, maxScore: 10, minPct: null },
+      { id: 'r2', name: 'Technical', description: null, weight: 0.99, maxScore: 10, minPct: null },
     ]);
   });
 
@@ -55,7 +55,7 @@ describe('mapRubricToCreateCriteria', () => {
       mapRubricToCreateCriteria([
         { id: 'r1', name: 'Depth', description: '', weight: 100, maxScore: 2.5 },
       ]),
-    ).toEqual([{ name: 'Depth', description: null, weight: 1, maxScore: 2.5 }]);
+    ).toEqual([{ id: 'r1', name: 'Depth', description: null, weight: 1, maxScore: 2.5, minPct: null }]);
   });
 
   it('echoes existing score levels when a criterion is renamed', () => {
@@ -68,7 +68,7 @@ describe('mapRubricToCreateCriteria', () => {
       mapRubricToCreateCriteria([
         { id: 'r1', name: 'Renamed', description: '', weight: 100, maxScore: 5, levels },
       ]),
-    ).toEqual([{ name: 'Renamed', description: null, weight: 1, maxScore: 5, levels }]);
+    ).toEqual([{ id: 'r1', name: 'Renamed', description: null, weight: 1, maxScore: 5, minPct: null, levels }]);
   });
 
   it('does not send an empty levels array for a new criterion', () => {
@@ -76,6 +76,6 @@ describe('mapRubricToCreateCriteria', () => {
       mapRubricToCreateCriteria([
         { id: 'r1', name: 'New', description: '', weight: 100, maxScore: 5, levels: [] },
       ]),
-    ).toEqual([{ name: 'New', description: null, weight: 1, maxScore: 5 }]);
+    ).toEqual([{ id: 'r1', name: 'New', description: null, weight: 1, maxScore: 5, minPct: null }]);
   });
 });

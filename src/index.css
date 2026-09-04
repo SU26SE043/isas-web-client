@@ -73,8 +73,8 @@
 }
 
 html {
-  color-scheme: dark;
-  background-color: #000000;
+  color-scheme: light;
+  background-color: #ffffff;
   background-image: var(--app-background-image);
   background-size: cover;
   background-position: center;
@@ -90,9 +90,14 @@ body,
   color: var(--foreground);
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
 }
 
 body::before {
@@ -100,7 +105,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--app-background-scrim);
+  background: transparent;
   pointer-events: none;
 }
 
@@ -250,30 +255,30 @@ select {
     isolation: isolate;
     overflow: hidden;
     border-radius: var(--glass-table-radius);
-    background-color: rgb(18 18 20 / 0.58);
+    background-color: rgb(255 255 255 / 0.94);
     background-image:
       /* diagonal specular wash (top-left → bottom-right feel) */
       linear-gradient(
         118deg,
-        rgb(255 255 255 / 0.09) 0%,
-        rgb(255 255 255 / 0.035) 18%,
-        rgb(255 255 255 / 0) 36%,
-        rgb(255 255 255 / 0) 62%,
-        rgb(255 255 255 / 0.025) 100%
+        rgb(0 0 0 / 0.035) 0%,
+        rgb(0 0 0 / 0.015) 18%,
+        rgb(0 0 0 / 0) 36%,
+        rgb(0 0 0 / 0) 62%,
+        rgb(0 0 0 / 0.012) 100%
       ),
       linear-gradient(
         180deg,
-        rgb(255 255 255 / 0.04) 0%,
-        rgb(255 255 255 / 0) 42%
+        rgb(0 0 0 / 0.02) 0%,
+        rgb(0 0 0 / 0) 42%
       );
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     /* faint silhouette + soft outer lift */
     box-shadow:
-      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 0 0 1px rgb(0 0 0 / 0.08),
       var(--shadow-md),
-      inset 0 1px 0 rgb(255 255 255 / 0.06),
-      inset 0 -1px 0 rgb(255 255 255 / 0.03);
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      inset 0 -1px 0 rgb(0 0 0 / 0.04);
   }
 
   .glass-table-container::before {
@@ -287,28 +292,28 @@ select {
       /* top edge streak — bright center, soft tips */
       radial-gradient(
         72% 140% at 50% -8%,
-        rgb(255 255 255 / 0.92) 0%,
-        rgb(255 255 255 / 0.35) 28%,
+        rgb(0 0 0 / 0.16) 0%,
+        rgb(0 0 0 / 0.05) 28%,
         transparent 58%
       ),
       /* bottom edge streak */
       radial-gradient(
         68% 120% at 50% 108%,
-        rgb(255 255 255 / 0.55) 0%,
-        rgb(255 255 255 / 0.18) 32%,
+        rgb(0 0 0 / 0.1) 0%,
+        rgb(0 0 0 / 0.035) 32%,
         transparent 60%
       ),
       /* left edge flare (upper half) — stronger catch at rim */
       radial-gradient(
         140% 60% at -2% 28%,
-        rgb(255 255 255 / 0.95) 0%,
-        rgb(255 255 255 / 0.4) 22%,
+        rgb(0 0 0 / 0.12) 0%,
+        rgb(0 0 0 / 0.035) 22%,
         transparent 52%
       ),
       /* faint continuous lip */
       linear-gradient(
-        rgb(255 255 255 / 0.14),
-        rgb(255 255 255 / 0.14)
+        rgb(0 0 0 / 0.06),
+        rgb(0 0 0 / 0.06)
       );
     background-repeat: no-repeat;
     background-size:
@@ -341,10 +346,10 @@ select {
     border-radius: inherit;
     /* soft bloom behind bright edge catches */
     background:
-      radial-gradient(55% 18% at 50% 0%, rgb(255 255 255 / 0.16), transparent 70%),
-      radial-gradient(50% 16% at 50% 100%, rgb(255 255 255 / 0.1), transparent 70%),
-      radial-gradient(18% 40% at 0% 34%, rgb(255 255 255 / 0.12), transparent 72%);
-    mix-blend-mode: screen;
+      radial-gradient(55% 18% at 50% 0%, rgb(0 0 0 / 0.05), transparent 70%),
+      radial-gradient(50% 16% at 50% 100%, rgb(0 0 0 / 0.035), transparent 70%),
+      radial-gradient(18% 40% at 0% 34%, rgb(0 0 0 / 0.04), transparent 72%);
+    mix-blend-mode: multiply;
     opacity: 0.9;
   }
 
@@ -368,12 +373,12 @@ select {
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+    border-bottom: 1px solid rgb(0 0 0 / 0.1);
   }
 
   .glass-table-container tbody td {
     background: transparent;
-    border-bottom: 1px solid rgb(255 255 255 / 0.05);
+    border-bottom: 1px solid rgb(0 0 0 / 0.06);
   }
 
   .glass-table-container tbody tr:last-child td {
@@ -381,19 +386,31 @@ select {
   }
 
   .glass-table-container tbody tr:hover td {
-    background: rgb(255 255 255 / 0.03);
+    background: rgb(0 0 0 / 0.035);
   }
 
   .glass-well {
-    background: rgb(0 0 0 / 0.22);
+    background: rgb(255 255 255 / 0.72);
     border: 1px dashed var(--satin-border);
     box-shadow: var(--satin-inset);
   }
 
   .glass-well:hover {
     border-color: var(--satin-border-hover);
-    background: rgb(255 255 255 / 0.03);
+    background: rgb(0 0 0 / 0.035);
   }
+
+  @media (max-width: 639px) {
+    header .sm\:inline-flex { display: none !important; }
+  }
+
+  /* Light-theme compatibility for legacy translucent-white utility classes. */
+  .bg-white\/\[0\.03\] { background-color: rgb(0 0 0 / 0.03) !important; }
+  .bg-white\/\[0\.04\] { background-color: rgb(0 0 0 / 0.04) !important; }
+  .bg-white\/\[0\.05\] { background-color: rgb(0 0 0 / 0.05) !important; }
+  .bg-white\/\[0\.06\] { background-color: rgb(0 0 0 / 0.06) !important; }
+  .bg-white\/\[0\.08\] { background-color: rgb(0 0 0 / 0.08) !important; }
+  .bg-white\/10 { background-color: rgb(0 0 0 / 0.1) !important; }
 
   .glass-sidebar {
     background: color-mix(in srgb, var(--surface-sunken) 94%, transparent);

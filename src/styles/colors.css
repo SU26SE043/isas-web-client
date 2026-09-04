@@ -1,7 +1,7 @@
-/* ISAS Premium Dark Monochrome — bright-black base + satin silver frames */
+/* ISAS Monochrome Light — white surfaces + black typography */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* === MONOCHROME PALETTE === */
   --isas-white: #ffffff;
@@ -27,38 +27,37 @@
   --isas-silver-400: #9aa5b4;
 
   /* === SURFACE ELEVATION — bright black (not pure #000) === */
-  --surface-base: #141416;
-  --surface-sunken: #101012;
-  --surface-raised: #1c1c20;
-  --surface-overlay: #222228;
-  --surface-elevated: #2a2a30;
-  --surface-highlight: #34343c;
+  --surface-base: #ffffff;
+  --surface-sunken: #f7f7f8;
+  --surface-raised: #ffffff;
+  --surface-overlay: #f4f4f5;
+  --surface-elevated: #ffffff;
+  --surface-highlight: #e4e4e7;
 
   /* === GLOBAL APP BACKGROUND === */
   --app-background-image: none;
-  --app-background-scrim: color-mix(in srgb, var(--surface-base) 42%, transparent);
+  --app-background-scrim: transparent;
 
   /* Glass overlays — soft translucent charcoal (screenshot glass cards) */
-  --glass-bg: rgb(36 36 40 / 0.55);
-  --glass-bg-strong: rgb(40 40 46 / 0.72);
-  --glass-border: color-mix(in srgb, var(--isas-silver-200) 22%, transparent);
-  --glass-highlight: rgb(255 255 255 / 0.05);
+  --glass-bg: rgb(255 255 255 / 0.92);
+  --glass-bg-strong: rgb(255 255 255 / 0.98);
+  --glass-border: color-mix(in srgb, var(--isas-gray-900) 18%, transparent);
+  --glass-highlight: rgb(0 0 0 / 0.04);
   --blur-sm: 8px;
   --blur-md: 16px;
   --blur-lg: 24px;
 
   /* === SATIN SILVER BORDERS (brushed aluminum — low contrast, not chrome) === */
-  --border-subtle: color-mix(in srgb, var(--isas-silver-200) 16%, transparent);
-  --border-default: color-mix(in srgb, var(--isas-silver-200) 26%, transparent);
-  --border-strong: color-mix(in srgb, var(--isas-silver-100) 34%, transparent);
-  --border-focus: color-mix(in srgb, var(--isas-silver-50) 48%, transparent);
+  --border-subtle: color-mix(in srgb, var(--isas-gray-900) 12%, transparent);
+  --border-default: color-mix(in srgb, var(--isas-gray-900) 20%, transparent);
+  --border-strong: color-mix(in srgb, var(--isas-gray-900) 34%, transparent);
+  --border-focus: color-mix(in srgb, var(--isas-gray-900) 55%, transparent);
 
   /* Metallic edge: soft top highlight + quiet depth (no glossy bloom) */
-  --satin-border: color-mix(in srgb, var(--isas-silver-200) 28%, transparent);
-  --satin-border-hover: color-mix(in srgb, var(--isas-silver-100) 36%, transparent);
-  --satin-glow: 0 0 0 1px color-mix(in srgb, var(--isas-silver-300) 10%, transparent);
-  --satin-inset: inset 0 1px 0 color-mix(in srgb, var(--isas-silver-50) 14%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--isas-black) 45%, transparent);
+  --satin-border: color-mix(in srgb, var(--isas-gray-900) 20%, transparent);
+  --satin-border-hover: color-mix(in srgb, var(--isas-gray-900) 38%, transparent);
+  --satin-glow: 0 1px 2px rgb(0 0 0 / 0.06);
+  --satin-inset: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(0 0 0 / 0.04);
   --satin-reflection: linear-gradient(
     135deg,
     color-mix(in srgb, var(--isas-silver-50) 34%, transparent) 0%,
@@ -88,14 +87,14 @@
   /* === ACTION / TEXT SCALE (Elegant Monochrome+) ===
      Primary stays white — no brand hue. Structural UI remains monochrome.
      For a white CTA, "light" = soft near-white hover (not brighter than white). */
-  --primary-light: #f4f4f5;
-  --primary-main: #ffffff;
-  --primary-dark: #e4e4e7;
+  --primary-light: #27272a;
+  --primary-main: #18181b;
+  --primary-dark: #000000;
   --secondary-main: var(--isas-silver-200);
 
-  --text-primary: var(--isas-gray-50);
-  --text-secondary: var(--isas-gray-400);
-  --text-disabled: var(--isas-gray-600);
+  --text-primary: var(--isas-gray-900);
+  --text-secondary: var(--isas-gray-600);
+  --text-disabled: var(--isas-gray-400);
 
   /* === CHART / DATA VIZ (semantic exception — not structural chrome) ===
      Colorblind-aware categorical order: indigo → teal → amber → rose → cyan → violet → lime
@@ -131,13 +130,13 @@
   --popover: var(--surface-elevated);
   --popover-foreground: var(--text-primary);
   --primary: var(--primary-main);
-  --primary-foreground: var(--isas-black);
+  --primary-foreground: var(--isas-white);
   --secondary: var(--surface-overlay);
-  --secondary-foreground: var(--isas-gray-200);
+  --secondary-foreground: var(--isas-gray-900);
   --muted: var(--surface-overlay);
   --muted-foreground: var(--text-secondary);
   --accent: var(--surface-elevated);
-  --accent-foreground: var(--isas-gray-100);
+  --accent-foreground: var(--isas-gray-900);
   --destructive: var(--isas-error);
   --destructive-foreground: var(--isas-white);
   --border: var(--border-default);
@@ -187,11 +186,11 @@
   --radius-full: 9999px;
 
   /* === ELEVATION === */
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.34), var(--satin-glow);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.38), var(--satin-glow);
-  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.44), var(--satin-glow);
-  --shadow-xl: 0 28px 56px rgb(0 0 0 / 0.5), var(--satin-glow);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.08);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.1), var(--satin-glow);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.12), var(--satin-glow);
+  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.14), var(--satin-glow);
+  --shadow-xl: 0 28px 56px rgb(0 0 0 / 0.16), var(--satin-glow);
 
   /* === MOTION === */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

@@ -53,7 +53,7 @@ export const HeroSection: React.FC = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <div className="bg-surface-raised rounded-xl p-6 shadow-md relative overflow-hidden">
-              <div className="aspect-video bg-black rounded-lg border border-default relative flex items-center justify-center mb-6 overflow-hidden group">
+              <div className="aspect-video bg-surface-sunken rounded-lg border border-default relative flex items-center justify-center mb-6 overflow-hidden group">
                 <img
                   src="https://i.pinimg.com/736x/cf/4b/ed/cf4bedb4376dc73d1d1978f74dd642af.jpg"
                   alt="AI Interview Simulation"
@@ -63,9 +63,9 @@ export const HeroSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-base/90 via-surface-base/30 to-surface-base/10"></div>
 
                 {/* REC Indicator */}
-                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-black/40 px-2.5 py-1 rounded-md backdrop-blur-sm">
+                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-surface-elevated/90 px-2.5 py-1 rounded-md backdrop-blur-sm">
                   <div className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgb(239_68_68/0.8)]"></div>
-                  <span className="text-[10px] text-white font-mono font-bold tracking-wider">REC 00:04:23</span>
+                  <span className="text-[10px] text-foreground font-mono font-bold tracking-wider">REC 00:04:23</span>
                 </div>
 
                 {/* AI Facial Recognition Overlay (Fake UI) */}
@@ -83,10 +83,10 @@ export const HeroSection: React.FC = () => {
                 {/* Metrics Bottom Bar */}
                 <div className="absolute bottom-4 left-4 right-4 z-10">
                   <div className="flex justify-between mb-2">
-                    <span className="text-[10px] md:text-xs text-white font-medium bg-surface-raised/60 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.confidence')}: 85%</span>
-                    <span className="text-[10px] md:text-xs text-white font-medium bg-surface-raised/60 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.pronunciation')}: 92%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.confidence')}: 85%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.pronunciation')}: 92%</span>
                   </div>
-                  <div className="h-1.5 bg-black/80 rounded-full w-full overflow-hidden backdrop-blur-sm border border-default">
+                  <div className="h-1.5 bg-surface-highlight rounded-full w-full overflow-hidden backdrop-blur-sm border border-default">
                     <div className="h-full bg-surface-overlay w-[85%] relative">
                       <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-surface-base/50"></div>
                     </div>
@@ -96,12 +96,12 @@ export const HeroSection: React.FC = () => {
 
               <div className="space-y-4">
                 <div className="w-10 h-10 bg-surface-overlay rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                   </svg>
                 </div>
-                <h3 className="text-white text-lg font-bold">{t('hero.cardTitle')}</h3>
-                <p className="text-white/80 text-sm body-text">
+                <h3 className="text-foreground text-lg font-bold">{t('hero.cardTitle')}</h3>
+                <p className="text-foreground/80 text-sm body-text">
                   {t('hero.cardDescription')}
                 </p>
                 <ul className="space-y-2">

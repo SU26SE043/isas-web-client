@@ -42,7 +42,7 @@ export function SelectionOption({
         'group flex min-h-[112px] items-center gap-5 rounded-2xl px-6 py-5 text-left transition-[background-color,border-color,box-shadow,opacity,transform] duration-200 ease-out hover:-translate-y-0.5',
         selected
           ? 'border-info/70 bg-info/10 shadow-[0_0_28px_-16px_rgba(59,130,246,0.9),var(--satin-inset)]'
-          : 'frame-satin-interactive bg-black/20 hover:border-info/35 hover:bg-info/[0.06]',
+          : 'frame-satin-interactive bg-surface-overlay hover:border-info/35 hover:bg-info/[0.06]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}

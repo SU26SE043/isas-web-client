@@ -21,11 +21,14 @@ import { ResultsRankingTable } from './ResultsRankingTable';
 import { ResultsSummaryCards, ResultsSummarySkeleton } from './ResultsSummaryCards';
 import { ResultsToolbar } from './ResultsToolbar';
 import { UnscoredFlaggedSection } from './UnscoredFlaggedSection';
+import { ResultsContextStrip, ResultsFallbackAlert } from './ResultsContextStrip';
+import type { RubricCriterion } from '../../types/campaignManagement.types';
 
 interface CampaignResultsPanelProps {
   campaignId: string;
   enabled?: boolean;
   passScorePct?: number | null;
+  rubric?: RubricCriterion[];
   showPageHeader?: boolean;
 }
 
@@ -33,6 +36,7 @@ export function CampaignResultsPanel({
   campaignId,
   enabled = true,
   passScorePct,
+  rubric,
   showPageHeader = true,
 }: CampaignResultsPanelProps) {
   const { t } = useLanguage();
@@ -150,6 +154,15 @@ export function CampaignResultsPanel({
       {resultsQuery.data && resultsQuery.data.results.length > 0 ? (
         <>
           <ResultsSummaryCards data={resultsQuery.data} fallbackPassScorePct={passScorePct} />
+          <ResultsContextStrip
+            items={resultsQuery.data.results}
+            passScorePct={resultsQuery.data.passScorePct ?? passScorePct}
+            rubric={rubric}
+            questionsPerSession={resultsQuery.data.questionsPerSession}
+            questionBankTotal={resultsQuery.data.questionBankTotal}
+            currentRubricVersion={resultsQuery.data.currentRubricVersion}
+          />
+          <ResultsFallbackAlert items={resultsQuery.data.results} />
           <ResultsToolbar
             search={search}
             outcome={outcome}

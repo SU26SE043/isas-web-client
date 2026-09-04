@@ -113,6 +113,7 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       weight,
       description: pickString(record, 'description', 'Description') ?? null,
       maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
+      minPct: pickNumber(record, 'minPct', 'MinPct', 'minimumPct', 'MinimumPct'),
       source: pickString(record, 'source', 'Source') ?? null,
       levels,
     });
@@ -163,6 +164,7 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
           : typeof record.IsRequired === 'boolean'
             ? record.IsRequired
             : null,
+      questionGroup: pickString(record, 'questionGroup', 'QuestionGroup') ?? null,
       hrEditedAt: pickString(record, 'hrEditedAt', 'HrEditedAt') ?? null,
     });
   });
@@ -214,6 +216,7 @@ function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
       needId,
       category: pickString(record, 'category', 'Category') ?? 'Technical',
       text,
+      isMustHave: pickBoolean(record, 'isMustHave', 'IsMustHave') ?? false,
       source: pickString(record, 'source', 'Source') ?? null,
     }];
   });
@@ -263,7 +266,10 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     maxConcurrentInterviews: pickNumber(record, 'maxConcurrentInterviews', 'MaxConcurrentInterviews') ?? null,
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
+    questionsPerSession: pickNumber(record, 'questionsPerSession', 'QuestionsPerSession') ?? null,
+    questionBankSummary: (() => { const summary = asRecord(record.questionBankSummary ?? record.QuestionBankSummary); return summary ? { total: pickNumber(summary, 'total', 'Total') } : null; })(),
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
+    skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
     locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
@@ -325,6 +331,7 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     weight: item.weight,
     description: item.description?.trim() || '',
     maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
+    minPct: item.minPct ?? null,
     levels: item.levels?.length ? item.levels : undefined,
   }));
 }
@@ -341,6 +348,7 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
     difficulty: mapDifficulty(item.difficulty),
     source: mapQuestionSource(item.source),
     isRequired: item.isRequired ?? true,
+    questionGroup: item.questionGroup ?? null,
   }));
 }
 
@@ -391,6 +399,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
     passScorePct: item.passScorePct ?? null,
+    skipPenalty: item.skipPenalty ?? null,
     antiCheatEnabled:
       item.antiCheatEnabled ??
       (mapProctoring(item.proctoring).maxViolations > 0),
@@ -401,6 +410,8 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     maxDeepPerQuestion: item.maxDeepPerQuestion ?? null,
     maxFollowUps: item.maxFollowUps ?? null,
     maxQuestions: item.maxQuestions ?? null,
+    questionsPerSession: item.questionsPerSession ?? null,
+    questionBankSummary: item.questionBankSummary ?? null,
     locale: mapLocale(item.locale),
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),

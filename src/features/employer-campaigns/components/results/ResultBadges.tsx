@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultItem, CampaignResultStatus } from '../../types/campaign.api.types';
@@ -8,6 +9,7 @@ import {
   hasResultOverride,
 } from '../../utils/campaignResultsActions';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
+import { ResultsCriterionCutoff } from './ResultsContextStrip';
 
 export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) {
   const { t } = useLanguage();
@@ -89,6 +91,9 @@ export function ResultScoreCells({ item }: { item: CampaignResultItem }) {
         {formatResultScore(item.totalScore)}
       </span>
       <div className="space-y-0.5 text-xs text-muted-foreground">
+        {item.seedAnswered != null && item.seedTotal != null ? (
+          <p>{item.seedAnswered}/{item.seedTotal} {t('employer.campaigns.results.context.seedQuestions')}</p>
+        ) : null}
         <p>
           {t('employer.campaigns.results.aiScore')}: {formatResultScore(item.aiScore)}
         </p>
@@ -97,6 +102,27 @@ export function ResultScoreCells({ item }: { item: CampaignResultItem }) {
         ) : null}
       </div>
     </>
+  );
+}
+
+export function ResultCandidateMeta({ item }: { item: CampaignResultItem }) {
+  const { t } = useLanguage();
+  return (
+    <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+      {item.cvMatchScore != null ? (
+        <p title={t('employer.campaigns.results.context.cvHint')}>
+          CV {formatResultScore(item.cvMatchScore)} · {t('employer.campaigns.results.context.cvRisk')} {item.cvVerificationRisk ?? '—'}
+          {item.cvScreeningVersion === 1 ? ` ${t('employer.campaigns.results.context.legacyScale')}` : ''}
+        </p>
+      ) : null}
+      {item.scoreFallback === true ? (
+        <p className="flex items-center gap-1 text-warning">
+          <TriangleAlert className="size-3.5" aria-hidden />
+          {t('employer.campaigns.results.context.fallback')}
+        </p>
+      ) : null}
+      <ResultsCriterionCutoff item={item} />
+    </div>
   );
 }
 

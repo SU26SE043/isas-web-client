@@ -51,10 +51,12 @@ export function mapRubricToCreateCriteria(
       const rawWeight = Number(item.weight);
       const weight = Number((rawWeight / 100).toFixed(4));
       return {
+        ...(item.id && !item.id.startsWith('criterion-') ? { id: item.id } : {}),
         name: item.name.trim(),
         description: item.description.trim() || null,
         weight,
         maxScore: Number(item.maxScore) || 1,
+        minPct: item.minPct ?? null,
         ...(item.levels?.length ? { levels: item.levels } : {}),
       };
     });
@@ -70,6 +72,7 @@ export function mapQuestionsToApiRequest(
       const payload: CampaignCreateQuestionRequest = {
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
+        ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
       };
       if (isServerQuestionId(item.id)) {
         payload.id = item.id.trim();
@@ -82,11 +85,12 @@ function criteriaRequestToRubric(
   criteria: CampaignCreateCriterionRequest[] | null | undefined,
 ): RubricCriterion[] {
   return (criteria ?? []).map((item, index) => ({
-    id: `criterion-${index}`,
+    id: item.id?.trim() || `criterion-${index}`,
     name: item.name,
     description: item.description?.trim() || '',
     weight: item.weight,
     maxScore: item.maxScore,
+    minPct: item.minPct ?? null,
     levels: item.levels ?? undefined,
   }));
 }
@@ -165,6 +169,7 @@ export type CampaignWizardSubmitSnapshot = {
   hardFilters?: CampaignHardFiltersState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  questionsPerSession?: number | null;
   settings: CampaignSettingsState;
 };
 
@@ -196,6 +201,9 @@ export function buildCampaignCreateRequest(
   if (questions.length === 0) {
     throw new Error('QUESTIONS_REQUIRED');
   }
+  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
+  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
+  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
 
   return {
     title: info.title.trim(),
@@ -209,8 +217,9 @@ export function buildCampaignCreateRequest(
     adaptiveEnabled: settings.adaptiveEnabled,
     groundingEnabled: false,
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
-    maxDeepPerQuestion: null,
+    questionsPerSession: snapshot.questionsPerSession,
+    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
+    maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
     ...hardFiltersPayload(snapshot.hardFilters),
@@ -232,6 +241,9 @@ export function buildCampaignUpdateRequest(
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
+  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
+  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
+  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
 
   return {
     title: info.title.trim(),
@@ -245,8 +257,9 @@ export function buildCampaignUpdateRequest(
     groundingEnabled: false,
     // v10 treats null for these limits as "keep existing" on PUT; omit when UI has no limit.
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
-    maxQuestions: settings.maxQuestions > 0 ? settings.maxQuestions : undefined,
-    maxDeepPerQuestion: null,
+    questionsPerSession: snapshot.questionsPerSession,
+    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
+    maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || undefined,

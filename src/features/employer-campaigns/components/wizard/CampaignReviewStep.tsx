@@ -29,6 +29,7 @@ interface CampaignReviewStepProps {
   submittingLabel: string;
   isSubmitting?: boolean;
   submitDisabled?: boolean;
+  skipPenalty?: boolean | null;
 }
 
 function formatDateTime(value: string): string {
@@ -52,6 +53,7 @@ export function CampaignReviewStep({
   submittingLabel,
   isSubmitting = false,
   submitDisabled = false,
+  skipPenalty = true,
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0);
@@ -145,6 +147,17 @@ export function CampaignReviewStep({
               ? ` · ${t('employer.campaigns.form.maxFollowUps')}: ${settings.maxFollowUps}`
               : null}
             {` · ${t('employer.campaigns.form.maxQuestionsSetting')}: ${settings.maxQuestions}`}
+          </p>
+        </CampaignReviewSection>
+
+        <CampaignReviewSection title={t('employer.campaigns.wizard.review.scoringRules')} onEdit={() => onGoToStep(0)}>
+          <p>
+            {t('employer.campaigns.wizard.review.scoringRulesLine')
+              .replace('{{penalty}}', skipPenalty === false
+                ? t('employer.campaigns.wizard.review.noBlankPenalty')
+                : t('employer.campaigns.wizard.review.blankIsZero'))
+              .replace('{{threshold}}', info.passScorePct != null ? `${info.passScorePct}%` : t('employer.campaigns.form.passScoreHrDecide'))
+              .replace('{{cutoffs}}', String(rubric.filter((item) => item.minPct != null).length))}
           </p>
         </CampaignReviewSection>
 

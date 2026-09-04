@@ -178,6 +178,7 @@ export function CampaignDetailPage() {
             <CampaignResultsPanel
               campaignId={campaign.id}
               passScorePct={campaign.passScorePct}
+              rubric={campaign.rubric}
               enabled
             />
           </div>

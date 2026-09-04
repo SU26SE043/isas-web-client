@@ -24,6 +24,7 @@ export interface RubricCriterion {
   weight: number;
   description: string;
   maxScore: number;
+  minPct?: number | null;
   /** Server-authored score anchors; keep them when renaming or editing a criterion. */
   levels?: RubricLevel[];
 }
@@ -38,6 +39,7 @@ export interface CampaignQuestion {
   /** UI-level source; maps to API `AiGenerated` | `CustomHr`. */
   source: CampaignQuestionSource;
   isRequired: boolean;
+  questionGroup?: string | null;
 }
 
 export interface EmployerCampaign {
@@ -65,6 +67,9 @@ export interface EmployerCampaign {
   maxDeepPerQuestion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
+  questionBankSummary?: { total?: number | null } | null;
+  skipPenalty?: boolean | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];

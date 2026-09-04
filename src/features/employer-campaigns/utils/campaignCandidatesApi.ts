@@ -3,6 +3,7 @@ import type {
   CampaignCandidateListItem,
   CandidateEvidence,
   CampaignResultFlag,
+  CampaignResultBelowCutoff,
   CampaignResultStatus,
   CampaignResultsResponse,
   CampaignScoredResult,
@@ -116,6 +117,10 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     skills,
     verificationRisk: (pickString(record, 'verificationRisk', 'VerificationRisk') as CampaignCandidateListItem['verificationRisk']) ?? null,
     screeningVersion: pickNumber(record, 'screeningVersion', 'ScreeningVersion') ?? null,
+    eligible: typeof (record.eligible ?? record.Eligible) === 'boolean' ? Boolean(record.eligible ?? record.Eligible) : null,
+    missingMustHave: Array.isArray(record.missingMustHave ?? record.MissingMustHave) ? (record.missingMustHave ?? record.MissingMustHave) as string[] : null,
+    mustHaveMet: pickNumber(record, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(record, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 
@@ -176,6 +181,10 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
     bonusSignals: parseStringArray(body.bonusSignals ?? body.BonusSignals),
     verificationRisk: (pickString(body, 'verificationRisk', 'VerificationRisk') as CampaignCandidateDetail['verificationRisk']) ?? null,
     verifyQuestions: parseStringArray(body.verifyQuestions ?? body.VerifyQuestions),
+    eligible: typeof (body.eligible ?? body.Eligible) === 'boolean' ? Boolean(body.eligible ?? body.Eligible) : null,
+    missingMustHave: Array.isArray(body.missingMustHave ?? body.MissingMustHave) ? (body.missingMustHave ?? body.MissingMustHave) as string[] : [],
+    mustHaveMet: pickNumber(body, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(body, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 
@@ -243,6 +252,26 @@ function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
   return flags;
 }
 
+function parseBelowCutoff(raw: unknown): CampaignResultBelowCutoff[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const name = pickString(record, 'name', 'Name');
+    const pct = pickNumber(record, 'pct', 'Pct');
+    const minPct = pickNumber(record, 'minPct', 'MinPct');
+    if (!name || pct == null || minPct == null) return [];
+    const matchedBy = pickString(record, 'matchedBy', 'MatchedBy');
+    return [{
+      criterionId: pickString(record, 'criterionId', 'CriterionId') ?? null,
+      name,
+      pct,
+      minPct,
+      matchedBy: matchedBy === 'name' ? 'name' : 'id',
+    }];
+  });
+}
+
 function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -296,6 +325,22 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
         result,
         scoredAt,
         flags: parseCampaignResultFlags(record.flags ?? record.Flags),
+        answered: pickNumber(record, 'answered', 'Answered') ?? null,
+        totalQuestions: pickNumber(record, 'totalQuestions', 'TotalQuestions') ?? null,
+        seedAnswered: pickNumber(record, 'seedAnswered', 'SeedAnswered') ?? null,
+        seedTotal: pickNumber(record, 'seedTotal', 'SeedTotal') ?? null,
+        skipPenalty: typeof (record.skipPenalty ?? record.SkipPenalty) === 'boolean'
+          ? Boolean(record.skipPenalty ?? record.SkipPenalty)
+          : null,
+        cvMatchScore: pickNumber(record, 'cvMatchScore', 'CvMatchScore') ?? null,
+        cvVerificationRisk: pickString(record, 'cvVerificationRisk', 'CvVerificationRisk') ?? null,
+        cvScreeningVersion: pickNumber(record, 'cvScreeningVersion', 'CvScreeningVersion') ?? null,
+        belowCutoff: parseBelowCutoff(record.belowCutoff ?? record.BelowCutoff),
+        policyName: pickString(record, 'policyName', 'PolicyName') ?? null,
+        policyVersion: pickNumber(record, 'policyVersion', 'PolicyVersion') ?? null,
+        scoreFallback: typeof (record.scoreFallback ?? record.ScoreFallback) === 'boolean'
+          ? Boolean(record.scoreFallback ?? record.ScoreFallback)
+          : null,
       };
     })
     .filter((item): item is CampaignScoredResult => item != null);
@@ -313,6 +358,9 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
     unscoredFlagged,
+    questionsPerSession: pickNumber(body, 'questionsPerSession', 'QuestionsPerSession') ?? null,
+    questionBankTotal: pickNumber(body, 'questionBankTotal', 'QuestionBankTotal') ?? undefined,
+    currentRubricVersion: pickNumber(body, 'currentRubricVersion', 'CurrentRubricVersion') ?? null,
   };
 }
 

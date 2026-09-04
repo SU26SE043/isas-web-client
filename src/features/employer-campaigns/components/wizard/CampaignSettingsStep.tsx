@@ -1,4 +1,5 @@
 import { Settings } from 'lucide-react';
+import { SelectionOption } from '@/components/ui/selection-option';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
@@ -6,6 +7,12 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignSettingsState } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
+
+const ADAPTIVE_PRESETS = [
+  { key: 'off', followUps: 0, questions: 5 },
+  { key: 'light', followUps: 1, questions: 10 },
+  { key: 'deep', followUps: 5, questions: 20 },
+] as const;
 
 interface CampaignSettingsStepProps {
   settings: CampaignSettingsState;
@@ -99,6 +106,7 @@ export function CampaignSettingsStep({
 
         {settings.adaptiveEnabled ? (
           <section className="grid gap-4 rounded-xl border border-satin bg-surface-overlay p-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2"><p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.adaptiveDepth')}</p><div className="grid gap-2 sm:grid-cols-3">{ADAPTIVE_PRESETS.map((preset) => <SelectionOption key={preset.key} title={t(`employer.campaigns.form.adaptivePreset.${preset.key}`)} description={`d=${preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0}`} selected={settings.maxDeepPerQuestion === (preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0)} disabled={isSaving} onClick={() => onChange({ maxDeepPerQuestion: preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0, maxFollowUps: preset.key === 'deep' ? 0 : preset.followUps })} showChevron={false} />)}</div></div>
             <div className="space-y-2">
               <Label htmlFor="settings-max-follow-ups">{t('employer.campaigns.form.maxFollowUps')}</Label>
               <Input
