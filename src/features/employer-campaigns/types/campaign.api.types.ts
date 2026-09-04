@@ -348,6 +348,8 @@ export type CampaignCandidateListItem = {
   missingMustHave?: string[] | null;
   mustHaveMet?: number | null;
   mustHaveTotal?: number | null;
+  /** Optional CV text exposed by candidate detail/list contracts for email verification. */
+  cvText?: string | null;
 };
 
 /** PUT /api/v1/campaign/{id}/job-needs — replace-all, Draft only. */
@@ -388,6 +390,8 @@ export type CampaignCandidateDetail = {
   missingMustHave?: string[];
   mustHaveMet?: number | null;
   mustHaveTotal?: number | null;
+  /** Optional extracted CV text; absent when the API only exposes the PDF key. */
+  cvText?: string | null;
 };
 
 /** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */

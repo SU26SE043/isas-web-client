@@ -6,6 +6,8 @@ import {
   parseEmailBatch,
   tokenizeEmailList,
   uniqueNormalizedEmails,
+  emailAppearsInCv,
+  hasValidUniqueEmailSet,
 } from './emailInvitationUtils';
 
 describe('emailInvitationUtils', () => {
@@ -58,5 +60,37 @@ describe('emailInvitationUtils', () => {
       'a@x.com',
       'b@x.com',
     ]);
+  });
+
+  it('detects an exact normalized email in CV text', () => {
+    expect(emailAppearsInCv('Candidate@Example.COM', 'Email: candidate@example.com')).toBe(true);
+  });
+
+  it('does not flag an email absent from CV text', () => {
+    expect(emailAppearsInCv('candidate@example.com', 'Email: other@example.com')).toBe(false);
+  });
+
+  it('does not flag when CV text is unavailable', () => {
+    expect(emailAppearsInCv('candidate@example.com', null)).toBe(false);
+  });
+
+  it('accepts a complete unique email set', () => {
+    expect(hasValidUniqueEmailSet(['a@example.com', 'b@example.com'])).toBe(true);
+  });
+
+  it('rejects an empty email set', () => {
+    expect(hasValidUniqueEmailSet([])).toBe(false);
+  });
+
+  it('rejects a missing email row', () => {
+    expect(hasValidUniqueEmailSet(['a@example.com', ''])).toBe(false);
+  });
+
+  it('rejects malformed email rows', () => {
+    expect(hasValidUniqueEmailSet(['a@example.com', 'not-an-email'])).toBe(false);
+  });
+
+  it('rejects duplicate email rows case-insensitively', () => {
+    expect(hasValidUniqueEmailSet(['a@example.com', 'A@EXAMPLE.COM'])).toBe(false);
   });
 });

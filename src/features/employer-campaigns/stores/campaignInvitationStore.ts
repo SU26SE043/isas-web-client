@@ -6,6 +6,9 @@ export interface SelectedInvitationCandidate {
   id?: string;
   fullName?: string;
   email: string;
+  cvText?: string | null;
+  eligible?: boolean | null;
+  missingMustHave?: string[] | null;
   matchScore?: number;
   source: InvitationCandidateSource;
 }

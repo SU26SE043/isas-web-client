@@ -25,6 +25,16 @@ export function isValidEmail(value: string): boolean {
   return EMAIL_REGEX.test(normalized);
 }
 
+export function emailAppearsInCv(email: string, cvText?: string | null): boolean {
+  const normalizedEmail = normalizeEmail(email);
+  return Boolean(normalizedEmail && cvText?.toLowerCase().includes(normalizedEmail));
+}
+
+export function hasValidUniqueEmailSet(emails: string[]): boolean {
+  const normalized = emails.map(normalizeEmail);
+  return normalized.length > 0 && normalized.every(isValidEmail) && new Set(normalized).size === normalized.length;
+}
+
 /** Split bulk text on commas, semicolons, newlines, or whitespace. */
 export function tokenizeEmailList(raw: string): string[] {
   return raw

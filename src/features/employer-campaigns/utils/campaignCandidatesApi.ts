@@ -121,6 +121,7 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     missingMustHave: Array.isArray(record.missingMustHave ?? record.MissingMustHave) ? (record.missingMustHave ?? record.MissingMustHave) as string[] : null,
     mustHaveMet: pickNumber(record, 'mustHaveMet', 'MustHaveMet') ?? null,
     mustHaveTotal: pickNumber(record, 'mustHaveTotal', 'MustHaveTotal') ?? null,
+    cvText: pickString(record, 'cvText', 'CvText', 'cvContent', 'CvContent', 'resumeText', 'ResumeText') ?? null,
   };
 }
 
@@ -185,6 +186,7 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
     missingMustHave: Array.isArray(body.missingMustHave ?? body.MissingMustHave) ? (body.missingMustHave ?? body.MissingMustHave) as string[] : [],
     mustHaveMet: pickNumber(body, 'mustHaveMet', 'MustHaveMet') ?? null,
     mustHaveTotal: pickNumber(body, 'mustHaveTotal', 'MustHaveTotal') ?? null,
+    cvText: pickString(body, 'cvText', 'CvText', 'cvContent', 'CvContent', 'resumeText', 'ResumeText') ?? null,
   };
 }
 

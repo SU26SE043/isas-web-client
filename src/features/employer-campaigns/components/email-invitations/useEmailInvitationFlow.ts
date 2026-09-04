@@ -145,8 +145,14 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
     setFormError(null);
   };
 
-  const sendInvitations = async () => {
-    const emails = uniqueNormalizedEmails(retryMode ? retryEmails : validEmails);
+  const replaceEmails = (emails: string[]) => {
+    setValidEmails(uniqueNormalizedEmails(emails).filter(isValidEmail));
+    setInvalidEmails([]);
+    setDuplicateEmails([]);
+  };
+
+  const sendInvitations = async (overrideEmails?: string[]) => {
+    const emails = uniqueNormalizedEmails(overrideEmails ?? (retryMode ? retryEmails : validEmails));
     if (!isActive || emails.length === 0 || isSending) return;
 
     try {
@@ -218,6 +224,7 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
       setDuplicateEmails([]);
     },
     openConfirm,
+    replaceEmails,
     sendInvitations,
     inviteMore,
     closeConfirm: () => setConfirmOpen(false),

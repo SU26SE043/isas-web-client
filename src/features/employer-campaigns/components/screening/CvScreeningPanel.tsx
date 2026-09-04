@@ -166,6 +166,9 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
                         id: candidate.id,
                         fullName: candidate.fullName ?? undefined,
                         email: candidate.email,
+                        cvText: candidate.cvText,
+                        eligible: candidate.eligible,
+                        missingMustHave: candidate.missingMustHave,
                         matchScore: candidate.overallMatchScore ?? undefined,
                         source: 'cv-screening' as const,
                       }));

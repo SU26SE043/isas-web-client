@@ -13,6 +13,7 @@ import { EmailInviteListPanel } from './EmailInviteListPanel';
 import { EmailInviteResultPanel } from './EmailInviteResultPanel';
 import { InvitationHistoryPanel } from './InvitationHistoryPanel';
 import { SelectedScreeningCandidates } from './SelectedScreeningCandidates';
+import { SelectedCandidatesConfirmModal } from './SelectedCandidatesConfirmModal';
 import { useEmailInvitationFlow } from './useEmailInvitationFlow';
 import type { SelectedInvitationCandidate } from '../../stores/campaignInvitationStore';
 
@@ -75,6 +76,15 @@ export function EmailInvitationFlow({
       onConfirm={() => void flow.sendInvitations()}
     />
   );
+  const selectedConfirmModal = selectedCandidates.length > 0 ? (
+    <SelectedCandidatesConfirmModal
+      open={flow.confirmOpen}
+      candidates={selectedCandidates}
+      isSending={flow.isSending}
+      onCancel={flow.closeConfirm}
+      onConfirm={(emails) => void flow.sendInvitations(emails)}
+    />
+  ) : null;
 
   const tabs = (
     <div
@@ -224,7 +234,7 @@ export function EmailInvitationFlow({
             />
           </div>
 
-          {confirmModal}
+          {selectedConfirmModal ?? confirmModal}
         </>
       )}
     </div>
