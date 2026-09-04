@@ -531,7 +531,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.description':
       'Danh sách CV đã được phân tích và xếp hạng theo mức độ phù hợp với chiến dịch.',
     'employer.campaigns.screening.ranking.count': '{count} ứng viên',
-    'employer.campaigns.screening.ranking.matchScore': 'Điểm phù hợp',
+    'employer.campaigns.screening.ranking.matchScore': 'Đối chiếu nhu cầu',
     'employer.campaigns.screening.ranking.evidenceCount': '{{met}}/{{total}} có bằng chứng',
     'employer.campaigns.screening.ranking.skills': 'Kỹ năng',
     'employer.campaigns.screening.ranking.status': 'Trạng thái',
@@ -1907,7 +1907,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.description':
       'CVs analyzed and ranked by their fit for this campaign.',
     'employer.campaigns.screening.ranking.count': '{count} candidates',
-    'employer.campaigns.screening.ranking.matchScore': 'Match score',
+    'employer.campaigns.screening.ranking.matchScore': 'Needs alignment',
     'employer.campaigns.screening.ranking.evidenceCount': '{{met}}/{{total}} with evidence',
     'employer.campaigns.screening.ranking.skills': 'Skills',
     'employer.campaigns.screening.ranking.status': 'Status',
