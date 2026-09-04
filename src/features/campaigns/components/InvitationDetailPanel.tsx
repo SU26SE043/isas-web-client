@@ -1,4 +1,4 @@
-import { Building2, CalendarClock, Briefcase } from 'lucide-react';
+import { Building2, CalendarClock, Briefcase, Camera, Clock3, ListChecks } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInvitationResponse } from '../types/campaignCandidate.types';
 
@@ -8,6 +8,7 @@ interface InvitationDetailPanelProps {
   isJoining?: boolean;
   joinDisabled?: boolean;
   joinError?: string | null;
+  startsInSeconds?: number | null;
 }
 
 function formatDeadline(iso: string, language: 'vi' | 'en') {
@@ -26,10 +27,13 @@ export function InvitationDetailPanel({
   isJoining = false,
   joinDisabled = false,
   joinError = null,
+  startsInSeconds = null,
 }: InvitationDetailPanelProps) {
   const { language, t } = useLanguage();
   const totalWeight = invitation.criteria.reduce((sum, item) => sum + (item.weight ?? 0), 0);
   const hasWeight = invitation.criteria.some((item) => item.weight != null);
+  const isBeforeStart = startsInSeconds != null && startsInSeconds > 0;
+  const startLabel = invitation.startsAt ? formatDeadline(invitation.startsAt, language) : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -60,6 +64,12 @@ export function InvitationDetailPanel({
           <p className="inline-flex items-center gap-2 text-sm text-amber-400">
             <CalendarClock className="size-4 shrink-0" aria-hidden />
             {t('campaigns.invite.deadline')}: {formatDeadline(invitation.deadline, language)}
+          </p>
+        ) : null}
+        {startLabel ? (
+          <p className="inline-flex items-center gap-2 text-sm text-zinc-400">
+            <CalendarClock className="size-4 shrink-0" aria-hidden />
+            {t('campaigns.invite.startsAt')}: {startLabel}
           </p>
         ) : null}
       </header>
@@ -122,6 +132,16 @@ export function InvitationDetailPanel({
         {t('campaigns.invite.processNote')}
       </section>
 
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5" aria-labelledby="invitation-preparation-title">
+        <h2 id="invitation-preparation-title" className="text-sm font-semibold text-zinc-100">{t('campaigns.invite.preparationTitle')}</h2>
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-400">
+          {invitation.durationMinutes != null ? <span className="inline-flex items-center gap-2"><Clock3 className="size-4" aria-hidden />{t('campaigns.invite.duration').replace('{minutes}', String(invitation.durationMinutes))}</span> : null}
+          {invitation.questionCount != null ? <span className="inline-flex items-center gap-2"><ListChecks className="size-4" aria-hidden />{t('campaigns.invite.questions').replace('{count}', String(invitation.questionCount))}</span> : null}
+          {invitation.faceVerifyEnabled ? <span className="inline-flex items-center gap-2"><Camera className="size-4" aria-hidden />{t('campaigns.invite.cameraRequired')}</span> : null}
+        </div>
+        {isBeforeStart ? <p className="mt-3 text-sm text-amber-300">{t('campaigns.invite.startsIn').replace('{time}', formatCountdown(startsInSeconds))}</p> : null}
+      </section>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
@@ -140,4 +160,11 @@ export function InvitationDetailPanel({
       ) : null}
     </div>
   );
+}
+
+function formatCountdown(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
 }

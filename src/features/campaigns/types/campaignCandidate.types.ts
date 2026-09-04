@@ -18,6 +18,10 @@ export interface CampaignInvitationResponse {
   jobTitle?: string | null;
   description?: string | null;
   deadline?: string | null;
+  startsAt?: string | null;
+  durationMinutes?: number | null;
+  questionCount?: number | null;
+  faceVerifyEnabled?: boolean | null;
   criteria: CampaignCriterion[];
 }
 
@@ -36,6 +40,7 @@ export interface CandidateCampaignListItem {
   company?: string | null;
   jobTitle?: string | null;
   deadline?: string | null;
+  startsAt?: string | null;
   membershipStatus: string;
   interviewStatus: CampaignInterviewStatus;
 }
@@ -51,6 +56,7 @@ export interface CandidateCampaignDetailResponse {
   jobTitle?: string | null;
   description?: string | null;
   deadline?: string | null;
+  startsAt?: string | null;
   criteria: CampaignCriterion[];
   membershipStatus: string;
   interviewStatus: CampaignInterviewStatus;

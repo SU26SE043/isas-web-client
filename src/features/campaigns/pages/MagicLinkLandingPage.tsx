@@ -34,7 +34,6 @@ type InviteLoadState =
   | { status: 'notFound' }
   | { status: 'gone' }
   | { status: 'error'; message: string };
-
 function joinErrorMessage(error: unknown, t: (key: string) => string): string {
   if (error instanceof CampaignCandidateError) {
     if (error.code === 'notFound') return t('campaigns.invite.joinNotFound');
@@ -45,7 +44,6 @@ function joinErrorMessage(error: unknown, t: (key: string) => string): string {
   }
   return t('campaigns.invite.joinUnknown');
 }
-
 function LiveMagicLinkLandingPage() {
   const { token = '' } = useParams();
   const { t } = useLanguage();
@@ -62,12 +60,11 @@ function LiveMagicLinkLandingPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [hasEmailMismatch, setHasEmailMismatch] = useState(false);
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const joinStartedRef = useRef(false);
   const autoJoinAttemptedRef = useRef(false);
-
   const invitePath = invitationPath(token);
   const canJoin = isAuthenticated && user?.role === UserRole.CANDIDATE;
-
   useEffect(() => {
     return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
   }, []);
@@ -106,7 +103,11 @@ function LiveMagicLinkLandingPage() {
       active = false;
     };
   }, [token, t]);
-
+  useEffect(() => {
+    if (loadState.status !== 'ready' || !loadState.invitation.startsAt) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [loadState]);
   const performJoin = useCallback(async () => {
     if (!token.trim() || joinStartedRef.current) return;
     joinStartedRef.current = true;
@@ -181,6 +182,9 @@ function LiveMagicLinkLandingPage() {
   }, [invitePath, isSwitchingAccount, logout, navigate, token]);
 
   const isBootstrapping = !authHydrated || authLoading;
+  const startsInSeconds = loadState.status === 'ready' && loadState.invitation.startsAt
+    ? Math.max(0, Math.ceil((new Date(loadState.invitation.startsAt).getTime() - now) / 1000))
+    : null;
 
   if (isBootstrapping || loadState.status === 'loading') {
     return (
@@ -219,6 +223,7 @@ function LiveMagicLinkLandingPage() {
         isJoining={isJoining}
         joinDisabled={isJoining}
         joinError={joinError}
+        startsInSeconds={startsInSeconds}
       />
 
       {!canJoin ? (

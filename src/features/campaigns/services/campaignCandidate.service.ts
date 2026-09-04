@@ -140,6 +140,12 @@ function asOptionalString(value: unknown): string | null {
   return String(value);
 }
 
+function asFiniteNumber(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const number = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 function parseCriterion(raw: unknown): CampaignCriterion | null {
   if (!raw || typeof raw !== 'object') return null;
   const item = raw as Record<string, unknown>;
@@ -191,6 +197,12 @@ function parseInvitation(raw: unknown): CampaignInvitationResponse {
     jobTitle: asOptionalString(data.jobTitle),
     description: asOptionalString(data.description),
     deadline: asOptionalString(data.deadline),
+    startsAt: asOptionalString(data.startsAt),
+    durationMinutes: asFiniteNumber(data.durationMinutes ?? data.timeLimitMinutes),
+    questionCount: asFiniteNumber(data.questionCount ?? data.questionsPerSession ?? data.maxQuestions),
+    faceVerifyEnabled: typeof data.faceVerifyEnabled === 'boolean'
+      ? data.faceVerifyEnabled
+      : typeof data.faceEnrollRequired === 'boolean' ? data.faceEnrollRequired : null,
     criteria,
   };
 }
@@ -281,6 +293,7 @@ function parseDetail(raw: unknown): CandidateCampaignDetailResponse {
     jobTitle: asOptionalString(data.jobTitle),
     description: asOptionalString(data.description),
     deadline: asOptionalString(data.deadline),
+    startsAt: asOptionalString(data.startsAt),
     criteria,
     membershipStatus: String(data.membershipStatus ?? ''),
     interviewStatus: parseInterviewStatus(data.interviewStatus),
