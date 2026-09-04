@@ -1,4 +1,5 @@
 import { Label } from '@/components/ui/label';
+import { MAX_JD_TEXT_LENGTH } from '../../../utils/validateCampaignWizard';
 
 interface JobDescriptionTextEditorProps {
   value: string;
@@ -41,7 +42,7 @@ export function JobDescriptionTextEditor({
         <textarea
           id="campaign-jd-text"
           value={value}
-          maxLength={20000}
+          maxLength={MAX_JD_TEXT_LENGTH}
           disabled={disabled}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
@@ -58,7 +59,7 @@ export function JobDescriptionTextEditor({
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <p>
-          {charsLabel.replace('{count}', String(chars))} / 20,000
+          {charsLabel.replace('{count}', String(chars))} / {MAX_JD_TEXT_LENGTH.toLocaleString('en-US')}
           {' · '}
           {wordsLabel.replace('{count}', String(words))}
         </p>
