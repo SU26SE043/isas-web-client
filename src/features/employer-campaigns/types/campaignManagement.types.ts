@@ -53,6 +53,7 @@ export interface EmployerCampaign {
   status: EmployerCampaignStatus;
   summary: string;
   jobDescription: string;
+  jdFileUrl?: string | null;
   capacity: number;
   applicants: number;
   deadline: string;

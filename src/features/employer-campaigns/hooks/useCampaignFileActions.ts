@@ -142,18 +142,21 @@ export function useCampaignFileActions({
       });
       try {
         const id = await ensureDraftId();
+        let uploaded: EmployerCampaign;
         if (replace) {
-          await onReplaceFiles(id, { jdFile: file });
-          toast.success(t('employer.campaigns.files.replaceSuccess'));
+          uploaded = await onReplaceFiles(id, { jdFile: file });
         } else {
-          await onUploadFiles(id, { jdFile: file });
-          toast.success(t('employer.campaigns.files.uploadSuccess'));
+          uploaded = await onUploadFiles(id, { jdFile: file });
         }
+        if (!uploaded.jdFileUrl) throw new Error('JD_FILE_NOT_PERSISTED');
+        toast.success(t(replace ? 'employer.campaigns.files.replaceSuccess' : 'employer.campaigns.files.uploadSuccess'));
         patchJd({
           fileStatus: 'uploaded',
           fileError: null,
           uploadProgress: 100,
           serverUploaded: true,
+          inputMethod: 'text',
+          jdText: uploaded.jobDescription,
         });
         setStepError(null);
       } catch (error) {

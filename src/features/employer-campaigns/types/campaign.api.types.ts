@@ -107,6 +107,7 @@ export type CampaignResponse = {
   keywordsAny?: string[] | null;
   minYearsExperience?: number | null;
   jdText?: string | null;
+  jdFileUrl?: string | null;
   questions?: CampaignQuestionResponse[] | null;
   candidates?: CampaignCandidateResponse[] | null;
   invitedEmails?: string[] | null;

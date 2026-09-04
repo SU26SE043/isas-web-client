@@ -11,17 +11,12 @@ import {
 } from '@/components/ui/dialog';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type {
-  CampaignHardFiltersState,
-  JobDescriptionState,
-  JobDescriptionMethod,
-} from '../../types/campaignWizard.types';
+import type { CampaignHardFiltersState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
 import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignFilePanel } from './jd/CampaignFilePanel';
-import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
@@ -56,7 +51,7 @@ export function CampaignJdStep({
   isSaving,
 }: CampaignJdStepProps) {
   const { t } = useLanguage();
-  const [pendingMethod, setPendingMethod] = useState<JobDescriptionMethod | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const fileBusy = jd.fileStatus === 'uploading' || jd.fileStatus === 'replacing';
   const localError =
@@ -64,21 +59,9 @@ export function CampaignJdStep({
       ? t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
       : null;
 
-  const requestMethodChange = (next: JobDescriptionMethod) => {
-    if (next === jd.inputMethod) return;
-    const hasFile = Boolean(jd.jdFile || jd.fileName);
-    const hasText = Boolean(jd.jdText.trim());
-    if ((jd.inputMethod === 'file' && hasFile) || (jd.inputMethod === 'text' && hasText)) {
-      setPendingMethod(next);
-      return;
-    }
-    onChange({ inputMethod: next });
-  };
-
-  const confirmMethodChange = () => {
-    if (!pendingMethod) return;
-    onChange({ inputMethod: pendingMethod });
-    setPendingMethod(null);
+  const selectFile = (file: File | null) => {
+    if (file && jd.jdText.trim()) setPendingFile(file);
+    else onSelectFile(file);
   };
 
   return (
@@ -98,21 +81,22 @@ export function CampaignJdStep({
       <div className="mx-auto w-full max-w-[960px] space-y-5">
         {error ? <FieldError message={error} /> : null}
 
-        <JobDescriptionMethodTabs
-          active={jd.inputMethod}
-          fileLabel={t('employer.campaigns.wizard.jdTab.file')}
-          textLabel={t('employer.campaigns.wizard.jdTab.text')}
-          listLabel={t('employer.campaigns.wizard.jdTab.list')}
-          onChange={requestMethodChange}
-          disabled={fileBusy}
+        <JobDescriptionTextEditor
+          value={jd.jdText}
+          onChange={(jdText) => onChange({ jdText, inputMethod: 'text' })}
+          label={t('employer.campaigns.wizard.jdTextLabel')}
+          placeholder={t('employer.campaigns.wizard.jdTextPlaceholder')}
+          clearLabel={t('employer.campaigns.wizard.jdTextClear')}
+          charsLabel={t('employer.campaigns.wizard.jdCharCount')}
+          wordsLabel={t('employer.campaigns.wizard.jdWordCount')}
+          onClear={() => {
+            if (jd.jdText.trim()) setClearConfirmOpen(true);
+            else onChange({ jdText: '' });
+          }}
         />
-
-        {jd.inputMethod === 'file' ? (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-foreground">
-              {t('employer.campaigns.files.jd.title')}
-            </h3>
-            <CampaignFilePanel
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-foreground">{t('employer.campaigns.files.jd.title')}</h3>
+          <CampaignFilePanel
               file={jd.jdFile}
               fileName={jd.fileName}
               fileSize={jd.fileSize}
@@ -135,27 +119,13 @@ export function CampaignJdStep({
               retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
               chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
               supportLabel={t('employer.campaigns.wizard.jdFormats')}
-              onFileSelect={onSelectFile}
+              onFileSelect={selectFile}
               onRetry={onRetryUpload}
               onDownload={onDownload}
               disabled={fileBusy}
-            />
-          </div>
-        ) : (
-          <JobDescriptionTextEditor
-            value={jd.jdText}
-            onChange={(jdText) => onChange({ jdText, inputMethod: 'text' })}
-            label={t('employer.campaigns.wizard.jdTextLabel')}
-            placeholder={t('employer.campaigns.wizard.jdTextPlaceholder')}
-            clearLabel={t('employer.campaigns.wizard.jdTextClear')}
-            charsLabel={t('employer.campaigns.wizard.jdCharCount')}
-            wordsLabel={t('employer.campaigns.wizard.jdWordCount')}
-            onClear={() => {
-              if (jd.jdText.trim()) setClearConfirmOpen(true);
-              else onChange({ jdText: '' });
-            }}
           />
-        )}
+          {jd.fileName ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.jdFileProvenance').replace('{file}', jd.fileName)}</p> : null}
+        </div>
 
         <CampaignCriteriaTextField
           value={jd.criteriaText}
@@ -166,24 +136,18 @@ export function CampaignJdStep({
         ) : null}
       </div>
 
-      <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>
+      <Dialog open={pendingFile != null} onOpenChange={(open) => !open && setPendingFile(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('employer.campaigns.wizard.jdSwitchTitle')}</DialogTitle>
-            <DialogDescription>
-              {pendingMethod === 'text'
-                ? t('employer.campaigns.wizard.jdSwitchToText')
-                : t('employer.campaigns.wizard.jdSwitchToFile')}
-            </DialogDescription>
+            <DialogTitle>{t('employer.campaigns.wizard.jdReplaceTitle')}</DialogTitle>
+            <DialogDescription>{t('employer.campaigns.wizard.jdReplaceDescription').replace('{file}', pendingFile?.name ?? '')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setPendingMethod(null)}>
+            <Button type="button" variant="outline" onClick={() => setPendingFile(null)}>
               {t('employer.campaigns.wizard.jdSwitchCancel')}
             </Button>
-            <Button type="button" onClick={confirmMethodChange}>
-              {pendingMethod === 'text'
-                ? t('employer.campaigns.wizard.jdSwitchConfirmText')
-                : t('employer.campaigns.wizard.jdSwitchConfirmFile')}
+            <Button type="button" onClick={() => { if (pendingFile) onSelectFile(pendingFile); setPendingFile(null); }}>
+              {t('employer.campaigns.wizard.jdReplaceConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
