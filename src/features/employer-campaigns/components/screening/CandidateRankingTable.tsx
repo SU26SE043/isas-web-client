@@ -13,7 +13,7 @@ import {
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { candidateScreeningStatusLabelKey } from '../../utils/candidateScreeningStatus';
-import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
+import { canSelectCandidate } from './screeningUtils';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -44,7 +44,6 @@ export function CandidateRankingTable({
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
   const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
-  const candidateRanks = getCandidateRanks(candidates);
 
   useEffect(() => {
     setPage(1);
@@ -95,7 +94,6 @@ export function CandidateRankingTable({
         <TableHeader>
           <TableRow>
             <TableHead>{t('employer.campaigns.screening.ranking.selectAll')}</TableHead>
-            <TableHead>{t('employer.campaigns.screening.ranking.rank')}</TableHead>
             <TableHead>{t('employer.campaigns.screening.ranking.candidate')}</TableHead>
             <TableHead>{t('employer.campaigns.screening.ranking.matchScore')}</TableHead>
             <TableHead>{t('employer.campaigns.screening.ranking.skills')}</TableHead>
@@ -118,9 +116,6 @@ export function CandidateRankingTable({
                     aria-label={item.fullName ?? item.email ?? item.id}
                   />
                 </TableCell>
-                <TableCell className="font-semibold text-foreground">
-                  {candidateRanks.get(item.id) ?? '—'}
-                </TableCell>
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
@@ -134,8 +129,13 @@ export function CandidateRankingTable({
                   ) : null}
                   {item.mustHaveTotal ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.screening.ranking.mustHaveCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal))}</p> : null}
                 </TableCell>
-                <TableCell className="font-semibold text-foreground">
-                  {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
+                <TableCell>
+                  <div className="h-2 w-28 overflow-hidden rounded-full bg-surface-highlight" aria-label={`${item.mustHaveMet ?? 0}/${item.mustHaveTotal ?? 0}`}>
+                    <div className="h-full rounded-full bg-foreground" style={{ width: `${item.mustHaveTotal ? Math.min(100, ((item.mustHaveMet ?? 0) / item.mustHaveTotal) * 100) : 0}%` }} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('employer.campaigns.screening.ranking.evidenceCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal ?? 0))}
+                  </p>
                 </TableCell>
                 <TableCell>
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
