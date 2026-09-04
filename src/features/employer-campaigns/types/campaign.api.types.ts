@@ -74,6 +74,9 @@ export type CampaignResponse = {
   capacity?: number | null;
   applicants?: number | null;
   applicantCount?: number | null;
+  cvCount?: number | null;
+  invitedCount?: number | null;
+  completedCount?: number | null;
   maxCandidates?: number | null;
   deadline?: string | null;
   endDate?: string | null;

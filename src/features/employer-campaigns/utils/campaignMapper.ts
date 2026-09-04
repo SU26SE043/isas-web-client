@@ -251,6 +251,9 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
     applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
     applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
+    cvCount: pickNumber(record, 'cvCount', 'CvCount', 'CVCount') ?? null,
+    invitedCount: pickNumber(record, 'invitedCount', 'InvitedCount') ?? null,
+    completedCount: pickNumber(record, 'completedCount', 'CompletedCount') ?? null,
     maxCandidates: pickNumber(record, 'maxCandidates', 'MaxCandidates') ?? null,
     deadline: pickString(record, 'deadline', 'Deadline', 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
     endDate: pickString(record, 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
@@ -378,6 +381,9 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
   const capacity = item.capacity ?? item.maxCandidates ?? 0;
   const candidates = mapCandidates(item.candidates);
   const applicants = item.applicants ?? item.applicantCount ?? candidates.length;
+  const cvCount = item.cvCount ?? 0;
+  const invitedCount = item.invitedCount ?? 0;
+  const completedCount = item.completedCount ?? 0;
   const deadline = item.deadline ?? item.endDate ?? now;
   const invitedEmails =
     item.invitedEmails && item.invitedEmails.length > 0
@@ -397,6 +403,9 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     jdFileUrl: item.jdFileUrl?.trim() || null,
     capacity,
     applicants,
+    cvCount,
+    invitedCount,
+    completedCount,
     deadline,
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,

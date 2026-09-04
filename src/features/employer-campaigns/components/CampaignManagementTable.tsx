@@ -32,7 +32,9 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <TableHead>{t('employer.campaigns.list.campaign')}</TableHead>
               <TableHead>{t('employer.campaigns.list.status')}</TableHead>
               <TableHead>{t('employer.campaigns.list.deadline')}</TableHead>
-              <TableHead>{t('employer.campaigns.list.capacity')}</TableHead>
+              <TableHead>{t('employer.campaigns.list.cvCount')}</TableHead>
+              <TableHead>{t('employer.campaigns.list.invitedCount')}</TableHead>
+              <TableHead>{t('employer.campaigns.list.completedCount')}</TableHead>
               <TableHead>{t('employer.campaigns.list.updated')}</TableHead>
               <TableHead>{t('employer.campaigns.list.actions')}</TableHead>
             </TableRow>
@@ -50,9 +52,9 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                   <CampaignManagementStatusBadge status={campaign.status} />
                 </TableCell>
                 <TableCell>{formatDate(campaign.deadline, language)}</TableCell>
-                <TableCell>
-                  {campaign.applicants}/{campaign.capacity}
-                </TableCell>
+                <TableCell>{campaign.capacity > 0 ? `${campaign.cvCount ?? 0} / ${campaign.capacity}` : campaign.cvCount ?? 0}</TableCell>
+                <TableCell>{campaign.invitedCount ?? 0}</TableCell>
+                <TableCell>{campaign.completedCount ?? 0}</TableCell>
                 <TableCell>{formatDate(campaign.updatedAt, language)}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-2">
@@ -105,12 +107,9 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.deadline')}</dt>
                 <dd className="mt-1 font-medium text-foreground">{formatDate(campaign.deadline, language)}</dd>
               </div>
-              <div>
-                <dt className="text-muted-foreground">{t('employer.campaigns.list.capacity')}</dt>
-                <dd className="mt-1 font-medium text-foreground">
-                  {campaign.applicants}/{campaign.capacity}
-                </dd>
-              </div>
+              <div><dt className="text-muted-foreground">{t('employer.campaigns.list.cvCount')}</dt><dd className="mt-1 font-medium text-foreground">{campaign.capacity > 0 ? `${campaign.cvCount ?? 0} / ${campaign.capacity}` : campaign.cvCount ?? 0}</dd></div>
+              <div><dt className="text-muted-foreground">{t('employer.campaigns.list.invitedCount')}</dt><dd className="mt-1 font-medium text-foreground">{campaign.invitedCount ?? 0}</dd></div>
+              <div><dt className="text-muted-foreground">{t('employer.campaigns.list.completedCount')}</dt><dd className="mt-1 font-medium text-foreground">{campaign.completedCount ?? 0}</dd></div>
             </dl>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link

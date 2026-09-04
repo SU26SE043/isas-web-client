@@ -56,6 +56,9 @@ export interface EmployerCampaign {
   jdFileUrl?: string | null;
   capacity: number;
   applicants: number;
+  cvCount?: number;
+  invitedCount?: number;
+  completedCount?: number;
   deadline: string;
   startsAt?: string;
   durationMinutes: number;
