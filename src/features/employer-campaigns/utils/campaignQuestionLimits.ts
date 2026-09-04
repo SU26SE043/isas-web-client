@@ -46,8 +46,16 @@ export function validateGenerateCount(
   return { ok: true, count: num };
 }
 
-/** True when the id looks like a server-issued GUID (safe to echo on PUT). */
-export function isServerQuestionId(id: string | undefined | null): boolean {
+/**
+ * True when the id looks like a server-issued GUID (an toàn để echo lên PUT).
+ *
+ * Dùng cho CẢ câu hỏi LẪN tiêu chí. Client tự đúc id theo nhiều kiểu
+ * (`criterion-N`, `system-N`, `new-xxxxxxxx`, `technical-depth`…) và gửi kiểu nào
+ * lên cũng làm server ném lỗi parse Guid ⇒ hỏng CẢ lượt tạo chiến dịch.
+ * Nhận diện bằng HÌNH DẠNG GUID, KHÔNG bằng danh sách tiền tố cấm — danh sách
+ * cấm luôn thiếu kiểu mới (đã hỏng đúng vì thế).
+ */
+export function isServerEntityId(id: string | undefined | null): boolean {
   if (!id?.trim()) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     id.trim(),

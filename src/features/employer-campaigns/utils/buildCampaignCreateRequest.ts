@@ -13,7 +13,7 @@ import type {
 } from '../types/campaignWizard.types';
 import { createEmptyHardFiltersState } from '../types/campaignWizard.types';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
-import { isServerQuestionId } from './campaignQuestionLimits';
+import { isServerEntityId } from './campaignQuestionLimits';
 
 const DOMAIN_API_LABEL: Record<CampaignDomainOption, string> = {
   frontend: 'Frontend',
@@ -51,7 +51,10 @@ export function mapRubricToCreateCriteria(
       const rawWeight = Number(item.weight);
       const weight = Number((rawWeight / 100).toFixed(4));
       return {
-        ...(item.id && !item.id.startsWith('criterion-') ? { id: item.id } : {}),
+        // Chỉ echo id do SERVER cấp. Trước đây lọc bằng tiền tố `criterion-`, nhưng client
+        // còn đúc `system-N`, `new-xxxxxxxx` và bộ mặc định dùng `technical-depth`… ⇒ chúng lọt
+        // lên server và làm hỏng CẢ lượt tạo (400: không parse được `$.criteria[0].id` sang Guid).
+        ...(isServerEntityId(item.id) ? { id: item.id.trim() } : {}),
         name: item.name.trim(),
         description: item.description.trim() || null,
         weight,
@@ -74,7 +77,7 @@ export function mapQuestionsToApiRequest(
         isRequired: item.isRequired,
         ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
       };
-      if (isServerQuestionId(item.id)) {
+      if (isServerEntityId(item.id)) {
         payload.id = item.id.trim();
       }
       return payload;

@@ -3,7 +3,7 @@ import {
   defaultGenerateCount,
   effectiveMaxQuestions,
   hasWizardJd,
-  isServerQuestionId,
+  isServerEntityId,
   removePlaceholderQuestion,
   validateGenerateCount,
 } from './campaignQuestionLimits';
@@ -38,9 +38,9 @@ describe('campaignQuestionLimits', () => {
   });
 
   it('detects server question GUIDs', () => {
-    expect(isServerQuestionId('3fa85f64-5717-4562-b3fc-2c963f66afa6')).toBe(true);
-    expect(isServerQuestionId('manual-abc')).toBe(false);
-    expect(isServerQuestionId('ai-q-0-xyz')).toBe(false);
+    expect(isServerEntityId('3fa85f64-5717-4562-b3fc-2c963f66afa6')).toBe(true);
+    expect(isServerEntityId('manual-abc')).toBe(false);
+    expect(isServerEntityId('ai-q-0-xyz')).toBe(false);
   });
 
   it('detects JD availability', () => {
