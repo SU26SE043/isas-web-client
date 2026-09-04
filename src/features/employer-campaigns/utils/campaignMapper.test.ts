@@ -44,14 +44,18 @@ describe('campaignMapper', () => {
       company: 'Acme',
       location: 'HN',
       capacity: 5,
-      applicantCount: 2,
+      cvCount: 2,
+      invitedCount: 1,
+      completedCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });
 
     expect(campaign.status).toBe('paused');
     expect(campaign.mode).toBe('hybrid');
-    expect(campaign.applicants).toBe(2);
+    expect(campaign.cvCount).toBe(2);
+    expect(campaign.invitedCount).toBe(1);
+    expect(campaign.completedCount).toBe(1);
     expect(campaign.deadline).toBe('2026-09-01');
   });
 

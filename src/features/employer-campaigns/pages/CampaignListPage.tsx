@@ -64,7 +64,7 @@ export function CampaignListPage() {
           </Button>
         </header>
 
-        <CampaignFilters value={filters} onChange={handleFiltersChange} />
+        <CampaignFilters campaigns={campaigns} value={filters} onChange={handleFiltersChange} />
 
         {isLoading ? (
           <div className="space-y-3" aria-busy="true">

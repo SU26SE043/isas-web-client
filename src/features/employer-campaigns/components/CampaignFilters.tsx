@@ -3,13 +3,15 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignFilters as CampaignFiltersValue } from '../types/campaignManagement.types';
+import type { EmployerCampaign } from '../types/campaignManagement.types';
 
 interface CampaignFiltersProps {
   value: CampaignFiltersValue;
   onChange: (value: CampaignFiltersValue) => void;
+  campaigns: EmployerCampaign[];
 }
 
-export function CampaignFilters({ value, onChange }: CampaignFiltersProps) {
+export function CampaignFilters({ value, onChange, campaigns }: CampaignFiltersProps) {
   const { t } = useLanguage();
   const quickFilters: Array<{ value: CampaignFiltersValue['status']; label: string }> = [
     { value: 'all', label: t('employer.campaigns.list.allStatuses') },
@@ -19,6 +21,8 @@ export function CampaignFilters({ value, onChange }: CampaignFiltersProps) {
     { value: 'closed', label: t('employer.campaigns.status.closed') },
     { value: 'archived', label: t('employer.campaigns.status.archived') },
   ];
+  const countByStatus = (status: CampaignFiltersValue['status']) =>
+    status === 'all' ? campaigns.length : campaigns.filter((campaign) => campaign.status === status).length;
 
   return (
     <section className="frame-satin grid gap-3 rounded-xl bg-surface-raised p-3.5 lg:grid-cols-[minmax(240px,1fr)_auto] lg:items-end">
@@ -48,7 +52,7 @@ export function CampaignFilters({ value, onChange }: CampaignFiltersProps) {
             )}
           >
             {filter.value === 'all' ? <LayoutGrid className="size-3.5" aria-hidden /> : null}
-            {filter.label}
+            {filter.label} <span className="tabular-nums opacity-75">{countByStatus(filter.value)}</span>
           </button>
         ))}
       </div>
