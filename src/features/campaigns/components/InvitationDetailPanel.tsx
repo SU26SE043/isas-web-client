@@ -9,6 +9,10 @@ interface InvitationDetailPanelProps {
   joinDisabled?: boolean;
   joinError?: string | null;
   startsInSeconds?: number | null;
+  onStart?: () => void;
+  startDisabled?: boolean;
+  isStarting?: boolean;
+  startError?: string | null;
 }
 
 function formatDeadline(iso: string, language: 'vi' | 'en') {
@@ -28,6 +32,10 @@ export function InvitationDetailPanel({
   joinDisabled = false,
   joinError = null,
   startsInSeconds = null,
+  onStart,
+  startDisabled = false,
+  isStarting = false,
+  startError = null,
 }: InvitationDetailPanelProps) {
   const { language, t } = useLanguage();
   const totalWeight = invitation.criteria.reduce((sum, item) => sum + (item.weight ?? 0), 0);
@@ -151,6 +159,17 @@ export function InvitationDetailPanel({
         >
           {isJoining ? t('campaigns.invite.joining') : t('campaigns.invite.join')}
         </button>
+        {onStart ? (
+          <button
+            type="button"
+            className="btn-secondary inline-flex justify-center"
+            onClick={onStart}
+            disabled={startDisabled || isStarting}
+            title={isBeforeStart ? t('campaigns.detail.startOpensIn').replace('{time}', formatCountdown(startsInSeconds ?? 0)).replace('{date}', startLabel ?? '') : undefined}
+          >
+            {isStarting ? t('campaigns.detail.starting') : t('campaigns.detail.start')}
+          </button>
+        ) : null}
       </div>
 
       {joinError ? (
@@ -158,6 +177,7 @@ export function InvitationDetailPanel({
           {joinError}
         </p>
       ) : null}
+      {startError ? <p className="text-sm text-rose-400" role="alert">{startError}</p> : null}
     </div>
   );
 }

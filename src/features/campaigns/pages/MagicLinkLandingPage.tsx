@@ -27,7 +27,7 @@ import {
   savePendingInviteToken,
 } from '../utils/inviteContinuation';
 import { LegacyMagicLinkLandingPage } from './LegacyMagicLinkLandingPage';
-
+import { useInvitationStart } from '../hooks/useInvitationStart';
 type InviteLoadState =
   | { status: 'loading' }
   | { status: 'ready'; invitation: CampaignInvitationResponse }
@@ -65,10 +65,11 @@ function LiveMagicLinkLandingPage() {
   const autoJoinAttemptedRef = useRef(false);
   const invitePath = invitationPath(token);
   const canJoin = isAuthenticated && user?.role === UserRole.CANDIDATE;
+  const invitationCampaignId = loadState.status === 'ready' ? loadState.invitation.campaignId : '';
+  const { isStarting, startError, start: handleStart } = useInvitationStart(invitationCampaignId, canJoin);
   useEffect(() => {
     return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
   }, []);
-
   useEffect(() => {
     let active = true;
     setLoadState({ status: 'loading' });
@@ -76,7 +77,6 @@ function LiveMagicLinkLandingPage() {
     setHasEmailMismatch(false);
     joinStartedRef.current = false;
     autoJoinAttemptedRef.current = false;
-
     void campaignCandidateService
       .getInvitationByToken(token)
       .then((invitation) => {
@@ -98,7 +98,6 @@ function LiveMagicLinkLandingPage() {
         }
         setLoadState({ status: 'error', message: t('campaigns.invite.loadError') });
       });
-
     return () => {
       active = false;
     };
@@ -115,7 +114,6 @@ function LiveMagicLinkLandingPage() {
     setJoinError(null);
     setHasEmailMismatch(false);
     savePendingInviteToken(token);
-
     try {
       const result = await campaignCandidateService.joinCampaignByToken(token);
       authTokenStorage.setAccessToken(result.accessToken);
@@ -169,7 +167,6 @@ function LiveMagicLinkLandingPage() {
     autoJoinAttemptedRef.current = true;
     void performJoin();
   }, [canJoin, hasEmailMismatch, isJoining, loadState.status, performJoin, token]);
-
   const handleSwitchAccount = useCallback(async () => {
     if (!token.trim() || isSwitchingAccount) return;
     setIsSwitchingAccount(true);
@@ -224,6 +221,10 @@ function LiveMagicLinkLandingPage() {
         joinDisabled={isJoining}
         joinError={joinError}
         startsInSeconds={startsInSeconds}
+        onStart={() => void handleStart()}
+        startDisabled={!canJoin || (startsInSeconds != null && startsInSeconds > 0)}
+        isStarting={isStarting}
+        startError={startError}
       />
 
       {!canJoin ? (
@@ -243,7 +244,6 @@ function LiveMagicLinkLandingPage() {
     </div>
   );
 }
-
 export function MagicLinkLandingPage() {
   return isPlaywrightRuntime() ? <LegacyMagicLinkLandingPage /> : <LiveMagicLinkLandingPage />;
 }
