@@ -34,14 +34,22 @@ function number(value: unknown, fallback = 0): number {
 export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPreview {
   const root = record(data);
   const payload = record(root?.data) ?? root ?? {};
-  const rawCriteria = Array.isArray(payload.criteria) ? payload.criteria : [];
+  const rawCriteria = Array.isArray(payload.criteria)
+    ? payload.criteria
+    : Array.isArray(payload.Criteria)
+      ? payload.Criteria
+      : [];
   return {
     jobCategory: text(payload.jobCategory ?? payload.JobCategory),
     language: text(payload.language ?? payload.Language, 'vi') === 'en' ? 'en' : 'vi',
     criteria: rawCriteria.flatMap((item, index) => {
       const row = record(item);
       if (!row) return [];
-      const rawLevels = Array.isArray(row.levels) ? row.levels : [];
+       const rawLevels = Array.isArray(row.levels)
+         ? row.levels
+         : Array.isArray(row.Levels)
+           ? row.Levels
+           : [];
       const levels = rawLevels.flatMap((level) => {
         const parsed = record(level);
         const descriptor = text(parsed?.descriptor ?? parsed?.Descriptor);
