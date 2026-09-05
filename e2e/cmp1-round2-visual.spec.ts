@@ -22,29 +22,36 @@ async function employerSetup(page: import('@playwright/test').Page) {
   await page.route('**/api/v1/campaign?*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([campaign]) }));
   await page.route(`**/api/v1/campaign/${campaignId}/candidates**`, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([candidate]) }));
   await page.route(`**/api/v1/campaign/${campaignId}/slots**`, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }));
+  await page.route('**/api/v1/auth/me', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'e2e-org-admin', fullName: 'E2E Org Admin', email: 'orgadmin@isas.dev', role: 'OrgAdmin' }) }));
+  await page.route('**/api/v1/auth/login', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ accessToken: 'visual-access', refreshToken: 'visual-refresh', expiresAt: '2099-12-31T23:59:59Z' }) }));
+  await page.goto('/login');
+  await page.getByRole('dialog').getByLabel(/e-mail/i).fill('orgadmin@isas.dev');
+  await page.getByRole('dialog').getByLabel(/mật khẩu|password/i).fill('Password123!');
+  await page.getByRole('dialog').getByRole('button', { name: /đăng nhập|sign in/i }).click();
+  await page.waitForURL(/\/employer\/dashboard/);
 }
 
 test('F3/F4/F5 employer screenshots at mobile and desktop', async ({ page }) => {
   await employerSetup(page);
   await page.goto('/employer/campaigns/new');
   await expect(page.getByRole('heading', { name: /Thông tin chiến dịch|Campaign information/i }).first()).toBeVisible();
-  await page.screenshot({ path: 'artifacts/cmp1-f3-desktop.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f3-desktop.png' });
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.screenshot({ path: 'artifacts/cmp1-f3-375.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f3-375.png' });
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`/employer/campaigns/${campaignId}/overview?tab=details`);
   await expect(page.getByText('React', { exact: true })).toBeVisible();
-  await page.screenshot({ path: 'artifacts/cmp1-f4-desktop.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f4-desktop.png' });
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.screenshot({ path: 'artifacts/cmp1-f4-375.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f4-375.png' });
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`/employer/campaigns/${campaignId}/invitations?tab=cv-screening`);
   await expect(page.getByText(/Nguyễn An|1\/2/).first()).toBeVisible();
-  await page.screenshot({ path: 'artifacts/cmp1-f5-desktop.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f5-desktop.png' });
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.screenshot({ path: 'artifacts/cmp1-f5-375.png', fullPage: true });
+  await page.waitForTimeout(500); await page.screenshot({ path: 'artifacts/cmp1-f5-375.png' });
 });
 
 test('F7 invitation screenshots at mobile and desktop', async ({ page }) => {
