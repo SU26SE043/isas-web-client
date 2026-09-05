@@ -1,0 +1,23 @@
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { afterEach, expect, it, vi } from 'vitest';
+import { CampaignListPage } from './CampaignListPage';
+import { campaignManagementService } from '../services/campaignManagement.service';
+import { mapCampaignResponseToEmployerCampaign } from '../utils/campaignMapper';
+import { employerCampaignTranslations } from '../languages/translations';
+vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ language: 'vi', t }) }));
+const t = (key: string) => employerCampaignTranslations.vi[key] ?? key;
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+it('F8 loads the list exactly once through the real query hook, including after rerender', async () => {
+  const list = vi.spyOn(campaignManagementService, 'listCampaigns').mockResolvedValue([mapCampaignResponseToEmployerCampaign({ id: 'c8', title: 'Frontend list', status: 'Active', cvCount: 3, invitedCount: 2, completedCount: 1 })]);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const page = <QueryClientProvider client={client}><MemoryRouter><CampaignListPage /></MemoryRouter></QueryClientProvider>;
+  const { rerender } = render(page);
+  await screen.findAllByText('Frontend list');
+  rerender(<QueryClientProvider client={client}><MemoryRouter><CampaignListPage /></MemoryRouter></QueryClientProvider>);
+  await waitFor(() => expect(list).toHaveBeenCalledExactlyOnceWith({ query: '', status: 'all' }));
+  expect(screen.getByRole('table')).toBeInTheDocument();
+  client.clear();
+});
