@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import { DEFAULT_RUBRIC } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignQuestion,
   EmployerCampaign,
@@ -120,9 +119,7 @@ function buildInitialState(
   mode: CampaignFormMode = 'create',
 ): CampaignWizardPersistedState {
   const hasJdText = Boolean(campaign?.jobDescription?.trim());
-  const initialRubric = decimalWeightsToPercent(
-    campaign?.rubric?.length ? campaign.rubric : DEFAULT_RUBRIC,
-  );
+  const initialRubric = decimalWeightsToPercent(campaign?.rubric?.length ? campaign.rubric : []);
   return {
     info: defaultInfo(campaign),
     jd: {
@@ -341,6 +338,13 @@ export function useCampaignWizard({
     return t(`employer.campaigns.form.domain.${state.info.domain}`);
   }, [state.info.domain, t]);
 
+  const jobCategory = useMemo(() => {
+    if (state.info.domain === 'backend') return 'BE';
+    if (state.info.domain === 'frontend') return 'FE';
+    if (state.info.domain === 'business-analyst') return 'BA';
+    return null;
+  }, [state.info.domain]);
+
   const campaignId = state.draftId ?? campaign?.id ?? null;
   const campaignStatus = campaign?.status ?? null;
   const isDraftEditable = mode === 'create' || campaignStatus === 'draft';
@@ -403,7 +407,7 @@ export function useCampaignWizard({
   const resetRubric = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      rubric: decimalWeightsToPercent(DEFAULT_RUBRIC),
+      rubric: [],
       autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 2),
     }));
@@ -973,6 +977,7 @@ export function useCampaignWizard({
     isDraftEditable,
     totalWeight,
     domainLabel,
+    jobCategory,
     patchInfo,
     patchJd,
     patchHardFilters,
