@@ -152,7 +152,6 @@ export function CampaignWizardForm({
         <CampaignCriteriaStepV2
           rubric={state.rubric}
           campaignId={state.draftId ?? campaign?.id ?? null}
-          isDraftEditable={wizard.isDraftEditable}
           jobCategory={wizard.jobCategory}
           contextLabel={
             wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
