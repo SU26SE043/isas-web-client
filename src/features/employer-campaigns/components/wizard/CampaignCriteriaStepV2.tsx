@@ -18,7 +18,7 @@ import { CampaignRubricTotalWeight } from './criteria/CampaignRubricTotalWeight'
 
 interface Props { rubric: RubricCriterion[]; campaignId: string | null; isDraftEditable: boolean; jobCategory: string | null; contextLabel: string; error?: string | null; onChangeRubric: (rubric: RubricCriterion[]) => void; onReset: () => void; onBack: () => void; onNext: () => void; isSaving?: boolean; }
 
-function previewToRubric(preview: CampaignCriteriaPreview): RubricCriterion[] { return preview.criteria.map((item, index) => ({ id: item.id || `system-${index + 1}`, name: item.name, description: item.description, weight: item.weight <= 1 ? item.weight * 100 : item.weight, maxScore: item.maxScore, minPct: null, levels: item.levels.length ? item.levels : undefined })); }
+export function previewToRubric(preview: CampaignCriteriaPreview): RubricCriterion[] { return preview.criteria.map((item, index) => ({ id: item.id || `system-${index + 1}`, name: item.name, description: item.description, weight: item.weight <= 1 ? item.weight * 100 : item.weight, maxScore: item.maxScore, minPct: null, levels: item.levels.length ? item.levels : undefined })); }
 function visibleLevels(levels: CampaignCriteriaPreview['criteria'][number]['levels']) { return levels.length <= 3 ? levels : [levels[0], levels[Math.floor(levels.length / 2)], levels[levels.length - 1]].filter((level, index, values) => values.findIndex((item) => item.score === level.score) === index); }
 
 export function CampaignCriteriaStepV2({ rubric, campaignId, isDraftEditable, jobCategory: initialJobCategory, contextLabel, error, onChangeRubric, onReset, onBack, onNext, isSaving }: Props) {
