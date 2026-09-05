@@ -1,4 +1,4 @@
-export const DEFAULT_PAGE_SIZE = 5;
+export const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const;
 
 interface AppPaginationBaseProps {
