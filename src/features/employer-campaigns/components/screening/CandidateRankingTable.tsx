@@ -182,5 +182,5 @@ export function CandidateRankingTable({
 
 export function isUnreadable(item: CampaignCandidateListItem): boolean {
   const status = item.status.toLowerCase();
-  return status.includes('analyz') || status.includes('fail') || status.includes('filter') || item.overallMatchScore == null;
+  return status === 'analyzing' || status === 'failed' || status === 'filtered' || item.overallMatchScore == null;
 }
