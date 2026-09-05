@@ -58,7 +58,7 @@ function LiveCandidateCampaignsPage() {
         ) : null}
 
         {isError ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-10 text-center">
+          <div className="rounded-xl border border-satin bg-surface-raised px-5 py-10 text-center">
             <p className="text-sm text-rose-400">{t('campaigns.my.loadError')}</p>
             <Button
               type="button"
@@ -74,11 +74,11 @@ function LiveCandidateCampaignsPage() {
         ) : null}
 
         {!isLoading && !isError && sortedCampaigns.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 px-6 py-12 text-center">
-            <BriefcaseBusiness className="size-10 text-zinc-500" aria-hidden />
-            <h2 className="heading-secondary text-lg text-zinc-100">{t('campaigns.my.emptyTitle')}</h2>
-            <p className="max-w-md text-sm text-zinc-400">{t('campaigns.my.emptyDescription')}</p>
-            <p className="text-sm text-zinc-500">{t('campaigns.my.emptyHint')}</p>
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-satin bg-surface-raised px-6 py-12 text-center">
+            <BriefcaseBusiness className="size-10 text-muted-foreground" aria-hidden />
+            <h2 className="heading-secondary text-lg text-foreground">{t('campaigns.my.emptyTitle')}</h2>
+            <p className="max-w-md text-sm text-muted-foreground">{t('campaigns.my.emptyDescription')}</p>
+            <p className="text-sm text-muted-foreground">{t('campaigns.my.emptyHint')}</p>
           </div>
         ) : null}
 

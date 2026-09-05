@@ -1,4 +1,4 @@
-# UI Guide — Premium Dark Monochrome Design System
+# UI Guide — Premium Light Monochrome Design System
 
 **Bắt buộc đọc file này trước khi generate hoặc chỉnh sửa giao diện.**
 
@@ -6,30 +6,34 @@
 
 ## Nguyên tắc
 
-- **Dark mode only** — không light mode, không theme switcher
+- **Light monochrome only** — nền trắng, không dark mode, không theme switcher
 - **Monochrome** — White, Black, Gray + **satin silver** cho khung (structural chrome)
-- **Bright black base** — nền page không dùng pure `#000`; dùng charcoal sáng (#141416)
+- **White base** — nền page dùng `surface-base`; màu thật luôn lấy từ `src/styles/colors.css`
 - **Satin silver frames** — mọi table/card/panel/input dùng viền brushed aluminum (low contrast), **không** glossy chrome, **không** accent hue
 - **Depth** qua surface layers + glass + satin edge highlight
 - **Inspiration:** Linear, Vercel Dashboard, GitHub Dark, Stripe (spacing/hierarchy) + industrial satin metal edges
 - **Semantic colors** chỉ cho trạng thái (success/error/warning/info)
 
-## Surface elevation (bright black)
+## Surface elevation (light monochrome)
 
 | Token / Class | Hex | Dùng cho |
 |---------------|-----|----------|
-| `surface-base` / `bg-surface-base` | `#141416` | Page background (bright black) |
-| `surface-sunken` | `#101012` | Sidebar base |
-| `surface-raised` | `#1c1c20` | Cards, panels |
-| `surface-overlay` | `#222228` | Inputs, hover, nested |
-| `surface-elevated` | `#2a2a30` | Modals, dropdowns, active nav |
-| `surface-highlight` | `#34343c` | Strong hover |
+| `surface-base` / `bg-surface-base` | source token | Page background |
+| `surface-sunken` | source token | Recessed groups |
+| `surface-raised` | source token | Cards and panels |
+| `surface-overlay` | source token | Inputs, hover, nested groups |
+| `surface-elevated` | source token | Modals and dropdowns |
+| `surface-highlight` | source token | Skeleton and strong highlight |
 | `glass-panel` | glass + satin edge | Elevated glass cards |
 | `glass-table-container` / `GlassTableContainer` | specular edge glow + diagonal shine | **Preferred** wrapper for data tables |
 | `glass-sidebar` | sunken + blur | Dashboard sidebars |
 | `glass-topbar` | base + blur | Sticky engagement / top chrome |
 
-Không flat pure black cho page chrome. Auth frozen surfaces vẫn inherit token — **không** đổi layout auth (decision 0009).
+Không dùng hardcoded surface hex. Auth frozen surfaces vẫn inherit token — **không** đổi layout auth (decision 0009).
+
+Màu thật và alias nằm ở `src/styles/colors.css`; tài liệu này chỉ mô tả vai trò của token.
+
+Lịch sử: 03/09/2026 chuyển từ dark sang light monochrome; nếu bạn đọc thấy hướng dẫn nào nói dark mode, nó lạc hậu.
 
 ## Satin silver borders (bắt buộc cho khung)
 

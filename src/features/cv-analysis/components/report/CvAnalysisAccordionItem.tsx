@@ -50,7 +50,7 @@ export function CvAnalysisAccordionItem({
         : null;
 
   return (
-    <article className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70 transition-colors hover:bg-zinc-900">
+    <article className="overflow-hidden rounded-xl border border-satin bg-surface-raised transition-colors hover:bg-surface-overlay">
       <h3 className="m-0">
         <button
           type="button"
@@ -61,11 +61,11 @@ export function CvAnalysisAccordionItem({
           className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
         >
           <span className="min-w-0 space-y-1">
-            <span className="block text-sm font-semibold text-zinc-100">{category}</span>
+            <span className="block text-sm font-semibold text-foreground">{category}</span>
             {/* Falls back to the JD label alone when the CV file was deleted —
                 the raw cvId is never surfaced. Stacks on narrow screens so a
                 long file name cannot hide the JD label behind an ellipsis. */}
-            <span className="flex flex-col text-xs text-zinc-400 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5">
+            <span className="flex flex-col text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5">
               {cvFileName ? (
                 <span className="min-w-0 max-w-full truncate" title={cvFileName}>
                   {cvFileName}
@@ -80,12 +80,12 @@ export function CvAnalysisAccordionItem({
                 {jdLabel}
               </span>
             </span>
-            <span className="block text-xs text-zinc-500">{formatDate(item.createdAt, language)}</span>
-            <span className="block text-xs font-medium text-zinc-400">{t('cv.report.viewDetail')}</span>
+            <span className="block text-xs text-muted-foreground">{formatDate(item.createdAt, language)}</span>
+            <span className="block text-xs font-medium text-muted-foreground">{t('cv.report.viewDetail')}</span>
           </span>
           <ChevronDown
             className={cn(
-              'mt-0.5 size-4 shrink-0 text-zinc-400 transition-transform motion-reduce:transition-none',
+              'mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none',
               isOpen && 'rotate-180',
             )}
             aria-hidden
@@ -97,7 +97,7 @@ export function CvAnalysisAccordionItem({
         <div id={panelId} role="region" aria-labelledby={headerId}>
           {detailQuery.isLoading ? <CvAnalysisDetailSkeleton /> : null}
           {detailError ? (
-            <div className="space-y-3 border-t border-zinc-800 px-5 py-5">
+            <div className="space-y-3 border-t border-satin px-5 py-5">
               <p className="text-sm text-rose-400" role="alert">
                 {detailError}
               </p>

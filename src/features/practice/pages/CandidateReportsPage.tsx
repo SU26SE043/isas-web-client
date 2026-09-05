@@ -55,9 +55,9 @@ export function CandidateReportsPage() {
         <CvAnalysisReportsSection />
 
         {isHubLoading ? (
-          <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-4">
-            <Loader2 className="size-5 animate-spin text-zinc-400" aria-hidden />
-            <span className="text-sm text-zinc-400">{t('practice.reports.loading')}</span>
+          <div className="flex items-center gap-3 rounded-xl border border-satin bg-surface-raised px-5 py-4">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden />
+            <span className="text-sm text-muted-foreground">{t('practice.reports.loading')}</span>
           </div>
         ) : hasError ? (
           <div
@@ -98,7 +98,7 @@ export function CandidateReportsPage() {
                   ))}
                   <Link
                     to="/candidate/practice/history"
-                    className="inline-flex pt-1 text-sm font-medium text-zinc-100 underline-offset-4 hover:underline"
+                    className="inline-flex pt-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {t('practice.reports.viewHistory')}
                   </Link>
@@ -145,8 +145,8 @@ function EmptyCategory({
   cta: string;
 }) {
   return (
-    <div className="space-y-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/40 px-4 py-5 text-center">
-      <p className="text-sm text-zinc-400">{message}</p>
+    <div className="space-y-3 rounded-lg border border-dashed border-satin bg-surface-overlay px-4 py-5 text-center">
+      <p className="text-sm text-muted-foreground">{message}</p>
       <Link to={href} className="btn-secondary inline-flex text-sm">
         {cta}
       </Link>

@@ -44,8 +44,8 @@ export function JobDescriptionMethodTabs({
             className={cn(
               'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out',
               isActive
-                ? 'bg-white/[0.08] text-foreground shadow-[var(--satin-inset)]'
-                : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                ? 'bg-foreground text-background shadow-[var(--satin-inset)]'
+                : 'text-muted-foreground hover:bg-surface-overlay hover:text-foreground',
               disabled && 'cursor-not-allowed opacity-60',
             )}
           >

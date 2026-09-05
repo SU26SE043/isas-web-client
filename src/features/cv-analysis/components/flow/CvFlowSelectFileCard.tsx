@@ -38,13 +38,13 @@ export function CvFlowSelectFileCard({
       aria-pressed={isSelected}
       className={cn(
         'flex h-full w-full flex-col rounded-lg border border-satin bg-surface-overlay p-4 text-left transition-[border-color,background-color] duration-200 ease-out',
-        'hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03]',
-        isSelected ? 'border-[var(--satin-border-hover)] bg-white/[0.05]' : null,
+        'hover:border-[var(--satin-border-hover)] hover:bg-surface-overlay',
+        isSelected ? 'border-foreground bg-foreground text-background' : null,
         disabled && 'cursor-not-allowed opacity-60',
       )}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-foreground">
+        <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-overlay text-foreground">
           <FileText className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1 space-y-2">

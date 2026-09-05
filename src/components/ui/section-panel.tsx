@@ -53,7 +53,7 @@ export function SectionPanel({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className={icon ? 'flex items-start gap-4' : undefined}>
             {icon ? (
-              <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
+              <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-foreground">
                 {icon}
               </span>
             ) : null}

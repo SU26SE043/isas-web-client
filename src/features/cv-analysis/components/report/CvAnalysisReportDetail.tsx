@@ -30,32 +30,32 @@ export function CvAnalysisReportDetail({ analysis }: CvAnalysisReportDetailProps
   const hasJd = Boolean(analysis.jdId) || analysis.jdMatch != null;
 
   return (
-    <div className="space-y-5 border-t border-zinc-800 px-5 py-5 motion-safe:animate-in motion-safe:fade-in motion-reduce:animate-none">
+    <div className="space-y-5 border-t border-satin px-5 py-5 motion-safe:animate-in motion-safe:fade-in motion-reduce:animate-none">
       {analysis.jdMatch ? (
         <JDMatchCard jdMatch={analysis.jdMatch} />
       ) : (
-        <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-sm text-zinc-400">
+        <p className="rounded-xl border border-satin bg-surface-raised px-4 py-4 text-sm text-muted-foreground">
           {t('cv.report.noJdMatchNote')}
         </p>
       )}
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-        <h3 className="text-sm font-medium text-zinc-100">{t('cv.report.summary')}</h3>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400 whitespace-normal [overflow-wrap:anywhere]">
+      <section className="rounded-xl border border-satin bg-surface-raised p-5">
+        <h3 className="text-sm font-medium text-foreground">{t('cv.report.summary')}</h3>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground whitespace-normal [overflow-wrap:anywhere]">
           {analysis.summary || t('cv.report.emptyList')}
         </p>
         <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-zinc-500">{t('cv.report.jobCategory')}</dt>
-            <dd className="font-medium text-zinc-100">{category}</dd>
+            <dt className="text-muted-foreground">{t('cv.report.jobCategory')}</dt>
+            <dd className="font-medium text-foreground">{category}</dd>
           </div>
           <div>
-            <dt className="text-zinc-500">{t('cv.report.analyzedAt')}</dt>
-            <dd className="font-medium text-zinc-100">{analyzedAt}</dd>
+            <dt className="text-muted-foreground">{t('cv.report.analyzedAt')}</dt>
+            <dd className="font-medium text-foreground">{analyzedAt}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-zinc-500">{t('cv.report.jdUsage')}</dt>
-            <dd className="font-medium text-zinc-100">
+            <dt className="text-muted-foreground">{t('cv.report.jdUsage')}</dt>
+            <dd className="font-medium text-foreground">
               {hasJd ? t('cv.report.withJd') : t('cv.report.withoutJd')}
             </dd>
           </div>

@@ -32,7 +32,7 @@ export function CvAnalysisReportsSection() {
       {isLoading ? <CvAnalysisListSkeleton /> : null}
 
       {isError ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-5 py-8 text-center">
+        <div className="rounded-xl border border-satin bg-surface-overlay px-5 py-8 text-center">
           <p className="text-sm text-rose-400">{t('cv.report.errorList')}</p>
           <Button
             type="button"
@@ -48,9 +48,9 @@ export function CvAnalysisReportsSection() {
       ) : null}
 
       {!isLoading && !isError && analyses.length === 0 ? (
-        <div className="space-y-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/40 px-4 py-5 text-center">
-          <p className="text-sm font-medium text-zinc-100">{t('cv.report.emptyTitle')}</p>
-          <p className="text-sm text-zinc-400">{t('cv.report.emptyDescription')}</p>
+        <div className="space-y-3 rounded-lg border border-dashed border-satin bg-surface-overlay px-4 py-5 text-center">
+          <p className="text-sm font-medium text-foreground">{t('cv.report.emptyTitle')}</p>
+          <p className="text-sm text-muted-foreground">{t('cv.report.emptyDescription')}</p>
           <Link to="/candidate/cv/analysis" className="btn-primary inline-flex text-sm">
             {t('cv.report.emptyCta')}
           </Link>
