@@ -7,10 +7,14 @@ import { useLanguage } from '@/shared/languages';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type { CampaignJobNeed, JobNeedCategory } from '../types/campaign.api.types';
 
+export function displayedCampaignJobNeeds(initialNeeds: CampaignJobNeed[], editable: boolean, localNeeds: CampaignJobNeed[]) {
+  return editable ? localNeeds : initialNeeds;
+}
+
 export function CampaignJobNeedsCard({ campaignId, initialNeeds, editable }: { campaignId: string; initialNeeds: CampaignJobNeed[]; editable: boolean }) {
   const { t } = useLanguage();
   const [localNeeds, setLocalNeeds] = useState(initialNeeds);
-  const needs = editable ? localNeeds : initialNeeds;
+  const needs = displayedCampaignJobNeeds(initialNeeds, editable, localNeeds);
   const [text, setText] = useState('');
   const [mustHave, setMustHave] = useState(true);
   const [category, setCategory] = useState<JobNeedCategory>('Technical');
