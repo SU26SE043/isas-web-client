@@ -62,7 +62,7 @@ export function CampaignCriteriaManualList({
         type="button"
         disabled={Boolean(disabled)}
         onClick={() => onChangeRubric([...rubric, createEmptyCriterion()])}
-        className="mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin bg-transparent px-4 py-5 text-center transition-[background-color,border-color] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin bg-transparent px-4 py-5 text-center transition-[background-color,border-color] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
           <Plus className="size-4" aria-hidden />

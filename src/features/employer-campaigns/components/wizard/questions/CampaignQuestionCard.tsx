@@ -46,7 +46,7 @@ export function CampaignQuestionCard({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium',
               isAi
-                ? 'border-satin bg-white/[0.06] text-foreground'
+                ? 'border-foreground bg-foreground text-background'
                 : 'border-satin bg-surface-base text-muted-foreground',
             )}
           >

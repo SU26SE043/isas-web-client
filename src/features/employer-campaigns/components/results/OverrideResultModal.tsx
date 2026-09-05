@@ -157,8 +157,8 @@ export function OverrideResultModal({
                     onClick={() => setResultChoice(value)}
                     className={
                       resultChoice === value
-                        ? 'rounded-lg border border-satin bg-white/[0.08] px-3 py-2 text-sm text-foreground'
-                        : 'rounded-lg border border-subtle px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.04]'
+                        ? 'rounded-lg border border-foreground bg-foreground px-3 py-2 text-sm text-background'
+                        : 'rounded-lg border border-subtle px-3 py-2 text-sm text-muted-foreground hover:bg-surface-overlay'
                     }
                   >
                     {t(key)}

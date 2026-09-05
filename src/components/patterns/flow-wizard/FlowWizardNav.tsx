@@ -41,7 +41,7 @@ export function FlowWizardNav({
         className={cn(
           'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-[background-color,border-color,opacity] duration-200 ease-out sm:min-w-[7.5rem]',
           nextDisabled || isLoading
-            ? 'frame-satin cursor-not-allowed bg-white/[0.04] text-muted-foreground opacity-70'
+            ? 'frame-satin cursor-not-allowed bg-surface-overlay text-muted-foreground opacity-70'
             : 'btn-primary',
         )}
         disabled={nextDisabled || isLoading}
