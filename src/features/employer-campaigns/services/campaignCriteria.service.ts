@@ -4,7 +4,9 @@ import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
 export type CampaignCriteriaPreviewCriterion = {
   id: string;
   name: string;
+  description: string;
   weight: number;
+  maxScore: number;
   levelCount: number;
   levels: RubricLevel[];
 };
@@ -48,7 +50,9 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
       return [{
         id: text(row.id ?? row.Id, `system-${index + 1}`),
         name: text(row.name ?? row.Name),
+        description: text(row.description ?? row.Description),
         weight: number(row.weight ?? row.Weight),
+        maxScore: number(row.maxScore ?? row.MaxScore, 10),
         levelCount: number(row.levelCount ?? row.LevelCount, levels.length),
         levels,
       }];
