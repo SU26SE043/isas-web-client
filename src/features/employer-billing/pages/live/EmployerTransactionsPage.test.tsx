@@ -153,7 +153,7 @@ describe('EmployerTransactionsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Trang trước' }));
     await screen.findByText('Trang 1 · 1 giao dịch');
     await waitFor(() =>
-      expect(request).toHaveBeenLastCalledWith({ cursor: null, limit: 5 }),
+      expect(request).toHaveBeenLastCalledWith({ cursor: null, limit: 20 }),
     );
 
     await user.selectOptions(
