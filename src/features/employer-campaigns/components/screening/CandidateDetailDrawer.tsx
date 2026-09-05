@@ -97,7 +97,7 @@ export function CandidateDetailDrawer({
               />
               <Info
                 label={t('employer.campaigns.screening.detail.verificationRisk')}
-                value={detail.verificationRisk ?? '—'}
+                value={detail.verificationRisk ? t(`employer.campaigns.screening.verificationRisk.${detail.verificationRisk}`) : '—'}
               />
             </div>
 

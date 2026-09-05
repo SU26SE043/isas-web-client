@@ -9,16 +9,17 @@ import type { CampaignJobNeed, JobNeedCategory } from '../types/campaign.api.typ
 
 export function CampaignJobNeedsCard({ campaignId, initialNeeds, editable }: { campaignId: string; initialNeeds: CampaignJobNeed[]; editable: boolean }) {
   const { t } = useLanguage();
-  const [needs, setNeeds] = useState(initialNeeds);
+  const [localNeeds, setLocalNeeds] = useState(initialNeeds);
+  const needs = editable ? localNeeds : initialNeeds;
   const [text, setText] = useState('');
   const [mustHave, setMustHave] = useState(true);
   const [category, setCategory] = useState<JobNeedCategory>('Technical');
   const [locked, setLocked] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const save = async (next: CampaignJobNeed[]) => { setSaving(true); setError(null); try { const updated = await campaignManagementService.updateCampaignJobNeeds(campaignId, next.map((item) => ({ needId: item.needId, category: (item.category || 'Technical') as JobNeedCategory, text: item.text, isMustHave: item.isMustHave }))); setNeeds(updated.jobNeeds); } catch (error) { if (campaignManagementService.getErrorStatus(error) === 409) setLocked(true); else setError(t('employer.campaigns.jobNeeds.saveError')); } finally { setSaving(false); } };
+  const save = async (next: CampaignJobNeed[]) => { setSaving(true); setError(null); try { const updated = await campaignManagementService.updateCampaignJobNeeds(campaignId, next.map((item) => ({ needId: item.needId, category: (item.category || 'Technical') as JobNeedCategory, text: item.text, isMustHave: item.isMustHave }))); setLocalNeeds(updated.jobNeeds); } catch (error) { if (campaignManagementService.getErrorStatus(error) === 409) setLocked(true); else setError(t('employer.campaigns.jobNeeds.saveError')); } finally { setSaving(false); } };
   const add = () => { const value = text.trim(); if (!value) return; const next = [...needs, { needId: `client-${crypto.randomUUID()}`, category, text: value, isMustHave: mustHave }]; setText(''); void save(next); };
-  const remove = (id: string) => { const next = needs.filter((item) => item.needId !== id); setNeeds(next); void save(next); };
+  const remove = (id: string) => { const next = needs.filter((item) => item.needId !== id); setLocalNeeds(next); void save(next); };
   const grouped = ['Technical', 'WorkStyle', 'Communication', 'Growth'].map((group) => ({ group, items: needs.filter((need) => need.category === group) }));
   return <section className="rounded-xl border border-satin bg-surface-overlay p-4">
     <div className="mb-3 flex items-center gap-2"><Target className="size-4 text-info" aria-hidden /><h3 className="font-semibold text-foreground">{t('employer.campaigns.jobNeeds.title')}</h3></div>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import {
   Table,
@@ -44,8 +44,15 @@ export function CandidateRankingTable({
   const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
-  const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
   const candidateRanks = getCandidateRanks(candidates);
+  const hasMustHave = candidates.some((item) => (item.mustHaveTotal ?? 0) > 0);
+  const groupedCandidates = hasMustHave
+    ? [
+        { key: 'eligible', title: t('employer.campaigns.screening.ranking.group.eligible'), items: candidates.filter((item) => item.eligible !== false && !isUnreadable(item)) },
+        { key: 'ineligible', title: t('employer.campaigns.screening.ranking.group.ineligible'), items: candidates.filter((item) => item.eligible === false) },
+        { key: 'unreadable', title: t('employer.campaigns.screening.ranking.group.unreadable'), items: candidates.filter((item) => item.eligible !== false && isUnreadable(item)) },
+      ].filter((group) => group.items.length > 0)
+    : [{ key: 'all', title: '', items: candidates }];
 
   useEffect(() => {
     setPage(1);
@@ -105,10 +112,12 @@ export function CandidateRankingTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageItems.map((item) => {
+          {groupedCandidates.flatMap((group) => group.items).slice((page - 1) * pageSize, page * pageSize).map((item, index) => {
             const selectable = canSelectCandidate(item);
             return (
-              <TableRow key={item.id}>
+              <Fragment key={item.id}>
+                {groupedCandidates.length > 1 && index === groupedCandidates.slice(0, groupedCandidates.findIndex((entry) => entry.items.some((candidate) => candidate.id === item.id))).reduce((sum, entry) => sum + entry.items.length, 0) ? <TableRow><TableCell colSpan={7} className="bg-surface-elevated font-semibold text-foreground">{groupedCandidates.find((entry) => entry.items.some((candidate) => candidate.id === item.id))?.title}</TableCell></TableRow> : null}
+              <TableRow>
                 <TableCell>
                   <input
                     type="checkbox"
@@ -125,8 +134,9 @@ export function CandidateRankingTable({
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
                   <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
-                  {item.eligible === false ? <Badge variant="warning" title={item.missingMustHave?.join(', ')}>{t('employer.campaigns.screening.ranking.ineligible')}</Badge> : null}
+                  {item.eligible === false ? <Badge variant="warning">{t('employer.campaigns.screening.ranking.ineligible')}</Badge> : null}
                   {item.mustHaveTotal ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.screening.ranking.mustHaveCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal))}</p> : null}
+                  {item.missingMustHave?.length ? <p className="text-xs text-warning">{t('employer.campaigns.screening.ranking.missingMustHave')}: {item.missingMustHave.join(', ')}</p> : null}
                 </TableCell>
                 <TableCell className="font-semibold text-foreground">
                   {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
@@ -138,7 +148,7 @@ export function CandidateRankingTable({
                   <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
                   {item.verificationRisk ? (
                     <div className="text-xs text-warning-foreground">
-                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {item.verificationRisk}
+                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {t(`employer.campaigns.screening.verificationRisk.${item.verificationRisk}`)}
                     </div>
                   ) : null}
                 </TableCell>
@@ -153,6 +163,7 @@ export function CandidateRankingTable({
                   </Button>
                 </TableCell>
               </TableRow>
+              </Fragment>
             );
           })}
         </TableBody>
@@ -167,4 +178,9 @@ export function CandidateRankingTable({
       />
     </div>
   );
+}
+
+function isUnreadable(item: CampaignCandidateListItem): boolean {
+  const status = item.status.toLowerCase();
+  return status.includes('analyz') || status.includes('fail') || status.includes('filter') || item.overallMatchScore == null;
 }

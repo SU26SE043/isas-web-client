@@ -48,6 +48,7 @@ export function CampaignHardFilterSection({ value, onChange }: CampaignHardFilte
           <p className="text-xs text-muted-foreground">
             {t('employer.campaigns.wizard.hardFilters.requiredSkillsHint')}
           </p>
+          <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.hardFilters.role')}</p>
         </div>
 
         <div className="space-y-1">
@@ -65,6 +66,7 @@ export function CampaignHardFilterSection({ value, onChange }: CampaignHardFilte
           <p className="text-xs text-muted-foreground">
             {t('employer.campaigns.wizard.hardFilters.keywordsAnyHint')}
           </p>
+          <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.hardFilters.role')}</p>
         </div>
 
         <div className="space-y-1">
@@ -89,6 +91,7 @@ export function CampaignHardFilterSection({ value, onChange }: CampaignHardFilte
           <p className="text-xs text-muted-foreground">
             {t('employer.campaigns.wizard.hardFilters.minYearsHint')}
           </p>
+          <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.hardFilters.role')}</p>
         </div>
       </div>
     </section>

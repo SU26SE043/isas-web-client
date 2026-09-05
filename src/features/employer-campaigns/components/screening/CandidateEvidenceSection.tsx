@@ -41,8 +41,8 @@ function EvidenceGroup({ title, items }: { title: string; items: CandidateEviden
       <h4 className="text-sm font-medium text-foreground">{title}</h4>
       {items.map((item) => (
         <div key={`${item.needId}-${item.area}`} className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
-          <p className="text-sm font-medium text-foreground">{item.area} · {item.level}</p>
-          <p className="mt-1 text-sm italic text-muted-foreground">“{item.evidence}”</p>
+          <div className="flex items-start gap-2"><p className="min-w-0 flex-1 border-l-2 border-satin pl-3 text-sm text-foreground">“{item.evidence}”</p><span className="shrink-0 rounded-full border border-satin px-2 py-0.5 text-xs text-muted-foreground">{item.level}</span></div>
+          <p className="mt-2 text-xs text-muted-foreground">{item.area}</p>
         </div>
       ))}
     </section>
