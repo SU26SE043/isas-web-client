@@ -24,7 +24,7 @@ describe('fetchInterviewHistory live API adapter', () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       '/api/v1/interview/practice/sessions/history',
-      { params: { limit: 5 } },
+      { params: { limit: 20 } },
     );
   });
 
@@ -33,7 +33,7 @@ describe('fetchInterviewHistory live API adapter', () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       '/api/v1/interview/practice/sessions/history',
-      { params: { limit: 5, status: 'Scored', excludeCampaign: true } },
+      { params: { limit: 20, status: 'Scored', excludeCampaign: true } },
     );
   });
 });
