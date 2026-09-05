@@ -180,7 +180,7 @@ export function CandidateRankingTable({
   );
 }
 
-function isUnreadable(item: CampaignCandidateListItem): boolean {
+export function isUnreadable(item: CampaignCandidateListItem): boolean {
   const status = item.status.toLowerCase();
   return status.includes('analyz') || status.includes('fail') || status.includes('filter') || item.overallMatchScore == null;
 }
