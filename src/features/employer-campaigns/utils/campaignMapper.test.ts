@@ -7,6 +7,22 @@ import {
 } from './campaignMapper';
 
 describe('campaignMapper', () => {
+  it('F6 maps question bank warnings without a second warning source', () => {
+    const parsed = parseCampaignResponse({ id: 'c1', title: 'Campaign', questionBankSummary: { warnings: ['Missing skill'] } });
+    expect(mapCampaignResponseToEmployerCampaign(parsed!).questionBankSummary?.warnings).toEqual(['Missing skill']);
+  });
+  it('F6 never substitutes domain for missing company', () => {
+    const parsed = parseCampaignResponse({ id: 'c1', title: 'Campaign', domain: 'Frontend' });
+    expect(mapCampaignResponseToEmployerCampaign(parsed!).company).toBe('—');
+  });
+  it('F8 preserves independent invited and completed counts', () => {
+    const parsed = parseCampaignResponse({ id: 'c1', title: 'Campaign', cvCount: 3, invitedCount: 2, completedCount: 1 });
+    expect(mapCampaignResponseToEmployerCampaign(parsed!)).toMatchObject({ cvCount: 3, invitedCount: 2, completedCount: 1 });
+  });
+  it('F8 does not use legacy applicantCount for CV count', () => {
+    const parsed = parseCampaignResponse({ id: 'c1', title: 'Campaign', applicantCount: 99 });
+    expect(mapCampaignResponseToEmployerCampaign(parsed!).cvCount).toBe(0);
+  });
   it('parses a bare CampaignResponse array', () => {
     const items = parseCampaignResponseList([
       {
