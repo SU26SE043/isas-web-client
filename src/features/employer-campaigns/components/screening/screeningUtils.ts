@@ -56,6 +56,10 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+export function verificationRiskTranslationKey(risk: string): string {
+  return `employer.campaigns.screening.verificationRisk.${risk}`;
+}
+
 export type PendingCvFile = {
   file: File;
   errorKey?: string;

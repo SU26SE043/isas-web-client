@@ -13,6 +13,7 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateDetail } from '../../types/campaign.api.types';
 import { canEditCandidate } from '../../utils/campaignCandidateActions';
 import { CandidateEvidenceSection } from './CandidateEvidenceSection';
+import { verificationRiskTranslationKey } from './screeningUtils';
 
 interface CandidateDetailDrawerProps {
   open: boolean;
@@ -97,7 +98,7 @@ export function CandidateDetailDrawer({
               />
               <Info
                 label={t('employer.campaigns.screening.detail.verificationRisk')}
-                value={detail.verificationRisk ? t(`employer.campaigns.screening.verificationRisk.${detail.verificationRisk}`) : '—'}
+                value={detail.verificationRisk ? t(verificationRiskTranslationKey(detail.verificationRisk)) : '—'}
               />
             </div>
 

@@ -14,7 +14,7 @@ import { useLanguage } from '@/shared/languages';
 import { Badge } from '@/components/ui/badge';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import { candidateScreeningStatusLabelKey } from '../../utils/candidateScreeningStatus';
-import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
+import { canSelectCandidate, getCandidateRanks, verificationRiskTranslationKey } from './screeningUtils';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -148,7 +148,7 @@ export function CandidateRankingTable({
                   <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
                   {item.verificationRisk ? (
                     <div className="text-xs text-warning-foreground">
-                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {t(`employer.campaigns.screening.verificationRisk.${item.verificationRisk}`)}
+                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {t(verificationRiskTranslationKey(item.verificationRisk))}
                     </div>
                   ) : null}
                 </TableCell>
