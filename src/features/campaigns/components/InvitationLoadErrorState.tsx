@@ -14,7 +14,7 @@ export function InvitationLoadErrorState({ message }: InvitationLoadErrorStatePr
       <button type="button" className="btn-secondary" onClick={() => window.location.reload()}>
         {t('campaigns.invite.retryLoad')}
       </button>
-      <Link to="/" className="text-sm text-zinc-400 underline-offset-4 hover:underline">
+      <Link to="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
         {t('campaigns.invite.home')}
       </Link>
     </div>

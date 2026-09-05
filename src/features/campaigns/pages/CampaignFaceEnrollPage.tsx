@@ -85,7 +85,7 @@ export function CampaignFaceEnrollPage() {
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-satin bg-surface-highlight">
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
@@ -93,15 +93,15 @@ export function CampaignFaceEnrollPage() {
             muted
             aria-label={t('campaigns.faceEnroll.liveLabel')}
           />
-          <div className="pointer-events-none absolute inset-8 rounded-full border border-white/30" />
+          <div className="pointer-events-none absolute inset-8 rounded-full border border-foreground/25" />
         </div>
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-zinc-300">{t('campaigns.faceEnroll.captureLabel')}</p>
-          <div className="flex-1 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+          <p className="text-sm font-medium text-foreground">{t('campaigns.faceEnroll.captureLabel')}</p>
+          <div className="flex-1 overflow-hidden rounded-xl border border-satin bg-surface-highlight">
             {preview ? (
               <img src={preview} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center text-sm text-zinc-500">
+              <div className="flex min-h-[220px] items-center justify-center text-sm text-muted-foreground">
                 {t('campaigns.faceEnroll.empty')}
               </div>
             )}
@@ -109,7 +109,7 @@ export function CampaignFaceEnrollPage() {
         </div>
       </div>
 
-      <ul className="space-y-1 text-sm text-zinc-400">
+      <ul className="space-y-1 text-sm text-muted-foreground">
         <li>{t('campaigns.faceEnroll.guide1')}</li>
         <li>{t('campaigns.faceEnroll.guide2')}</li>
         <li>{t('campaigns.faceEnroll.guide3')}</li>
