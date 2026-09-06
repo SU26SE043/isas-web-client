@@ -59,7 +59,7 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
           <AlertDescription>{t('employer.campaigns.screening.errors.jobNeedsRequired')}</AlertDescription>
         </Alert>
       ) : null}
-      <CampaignJobNeedsCard campaignId={campaignId} initialNeeds={jobNeeds} editable={false} />
+      <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable={false} />
 
       <CvUploadZone
         files={state.pendingFiles}

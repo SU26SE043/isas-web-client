@@ -178,7 +178,7 @@ export function CampaignDetailView({
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
-        <CampaignJobNeedsCard campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={isDraft} />
+        <CampaignJobNeedsCard key={campaign.id} campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={isDraft} />
 
         <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
