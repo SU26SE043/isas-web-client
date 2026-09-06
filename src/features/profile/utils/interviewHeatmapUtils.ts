@@ -120,7 +120,7 @@ export function computeInterviewActivityStats(interviews: InterviewHistoryItem[]
 
 export const ACTIVITY_LEVEL_CLASS: Record<ActivityLevel, string> = {
   0: 'bg-surface-overlay',
-  1: 'bg-emerald-950/80 ring-1 ring-emerald-900/50',
-  2: 'bg-emerald-700/80',
-  3: 'bg-emerald-500',
+  1: 'bg-success/20',
+  2: 'bg-success/45',
+  3: 'bg-success/75',
 };

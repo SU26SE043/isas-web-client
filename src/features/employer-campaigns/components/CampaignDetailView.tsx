@@ -193,7 +193,7 @@ export function CampaignDetailView({
                   {item.name} · {item.levels?.length ? `${item.levels.length} ${t('employer.campaigns.detail.rubricLevels')}` : t('employer.campaigns.detail.rubricNoLevels')} · {item.minPct != null ? `${t('employer.campaigns.detail.rubricFloor')} ${item.minPct}%` : t('employer.campaigns.detail.rubricNoFloor')} ·{' '}
                   {Number(item.weight) <= 1
                     ? `${Math.round(Number(item.weight) * 100)}%`
-                    : `${item.weight}%`}
+                    : `${Math.round(Number(item.weight) * 100) / 100}%`}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               </div>

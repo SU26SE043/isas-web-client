@@ -48,11 +48,11 @@ const SkillGapCard = memo(function SkillGapCard({
           </div>
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{t('practice.gap.target')}</span>
-            <span className="font-semibold text-[#A97D00]">{item.targetLevel}%</span>
+            <span className="font-semibold text-warning">{item.targetLevel}%</span>
           </div>
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{t('practice.gap.gap')}</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-white">
+            <span className="inline-flex items-center gap-1 font-semibold text-foreground">
               <ArrowUpRight className="h-4 w-4 text-foreground" />
               {gap}%
             </span>
