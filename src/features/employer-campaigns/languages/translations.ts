@@ -990,8 +990,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'File sẽ được tải lên máy chủ ngay sau khi bạn chọn (tạo Draft nếu chưa có).',
     'employer.campaigns.wizard.jdEditUploadHint':
       'File sẽ được tải lên máy chủ ngay khi bạn chọn.',
-    'employer.campaigns.wizard.placeholderQuestion':
-      'Câu hỏi tạm — hãy thay bằng câu hỏi thật trước khi xuất bản.',
     'employer.campaigns.files.jd.title': 'Tệp mô tả công việc',
     'employer.campaigns.files.jd.select': 'Chọn tệp JD',
     'employer.campaigns.files.jd.replace': 'Thay tệp',
@@ -2365,8 +2363,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'The file uploads to the server as soon as you select it (creates a Draft if needed).',
     'employer.campaigns.wizard.jdEditUploadHint':
       'The file uploads to the server as soon as you select it.',
-    'employer.campaigns.wizard.placeholderQuestion':
-      'Temporary question — replace with a real question before publishing.',
     'employer.campaigns.files.jd.title': 'Job description file',
     'employer.campaigns.files.jd.select': 'Choose JD file',
     'employer.campaigns.files.jd.replace': 'Replace file',

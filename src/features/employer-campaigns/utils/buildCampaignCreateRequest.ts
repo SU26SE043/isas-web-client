@@ -201,9 +201,6 @@ export function buildCampaignCreateRequest(
   }
 
   const questions = mapQuestionsToApiRequest(snapshot.questions);
-  if (questions.length === 0) {
-    throw new Error('QUESTIONS_REQUIRED');
-  }
   const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
   const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
   const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;

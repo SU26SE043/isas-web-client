@@ -4,7 +4,6 @@ import {
   effectiveMaxQuestions,
   hasWizardJd,
   isServerEntityId,
-  removePlaceholderQuestion,
   validateGenerateCount,
 } from './campaignQuestionLimits';
 
@@ -70,18 +69,4 @@ describe('campaignQuestionLimits', () => {
     ).toBe(false);
   });
 
-  it('removes only the temporary question returned after AI generation', () => {
-    const result = removePlaceholderQuestion(
-      [
-        { prompt: 'Temporary question' },
-        { prompt: 'What is your React experience?' },
-      ],
-      'Temporary question',
-    );
-
-    expect(result).toEqual({
-      questions: [{ prompt: 'What is your React experience?' }],
-      removedCount: 1,
-    });
-  });
 });
