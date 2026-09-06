@@ -85,7 +85,7 @@ export const CheckoutPage: React.FC = () => {
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">{t('payment.checkout.total')}</span>
                 <span className="text-lg font-semibold text-foreground">
-                  {formatVnd(order.priceVnd ?? 0)}
+                  {formatVnd(order.amountVnd ?? 0)}
                 </span>
               </div>
             </div>

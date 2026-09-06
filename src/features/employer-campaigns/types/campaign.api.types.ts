@@ -63,17 +63,21 @@ export type CampaignResponse = {
   orgId?: string | null;
   title: string;
   domain?: string | null;
+  /** Legacy fixture-only field; live mapper intentionally ignores it. */
   company?: string | null;
   location?: string | null;
-  mode?: string | null;
   status: CampaignStatus | string;
   language?: CampaignLanguage | string | null;
+  /** Legacy fixture-only fields; live mapper intentionally ignores them. */
+  mode?: string | null;
+  candidates?: CampaignCandidateResponse[] | null;
   seniority?: CampaignSeniority | string | null;
-  summary?: string | null;
   jobDescription?: string | null;
   capacity?: number | null;
-  applicants?: number | null;
-  applicantCount?: number | null;
+  questionBank?: { total?: number | null; alwaysAsked?: number | null; questionsPerSession?: number | null; groups?: Array<{ name: string; count: number }>; warnings?: string[] } | null;
+  cvCount?: number | null;
+  invitedCount?: number | null;
+  completedCount?: number | null;
   maxCandidates?: number | null;
   deadline?: string | null;
   endDate?: string | null;
@@ -92,11 +96,7 @@ export type CampaignResponse = {
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   questionsPerSession?: number | null;
-  questionBankSummary?: { total?: number | null } | null;
-  locale?: string | null;
   organizationId?: string | null;
-  welcomeMessage?: string | null;
-  completionMessage?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   rubric?: CampaignRubricCriterionResponse[] | null;
@@ -108,9 +108,6 @@ export type CampaignResponse = {
   minYearsExperience?: number | null;
   jdText?: string | null;
   questions?: CampaignQuestionResponse[] | null;
-  candidates?: CampaignCandidateResponse[] | null;
-  invitedEmails?: string[] | null;
-  proctoring?: CampaignProctoringResponse | null;
 };
 
 /** Shared criterion DTO for create/update. */

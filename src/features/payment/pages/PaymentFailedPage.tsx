@@ -27,7 +27,13 @@ export function PaymentFailedPage() {
   const retryPath = order?.packageId
     ? `/candidate/payment?packageId=${encodeURIComponent(order.packageId)}`
     : '/candidate/subscription';
-  const failureReason = order?.failureReason?.trim() || null;
+  const failureReasonKey = order?.status?.toLowerCase() === 'expired'
+    ? 'payment.result.failureExpired'
+    : order?.status?.toLowerCase() === 'cancelled' || order?.status?.toLowerCase() === 'canceled'
+      ? 'payment.result.failureCancelled'
+      : order?.status?.toLowerCase() === 'failed'
+        ? 'payment.result.failureFailed'
+        : null;
 
   return (
     <PaymentOrderQueryStates
@@ -44,9 +50,9 @@ export function PaymentFailedPage() {
           title={t('payment.result.failedTitle')}
           description={t('payment.result.failedDescription')}
         >
-          {failureReason ? (
+          {failureReasonKey ? (
             <p className="rounded-xl border border-error/25 bg-error-bg px-4 py-3 text-sm text-error frame-satin-soft">
-              {failureReason}
+              {t(failureReasonKey)}
             </p>
           ) : null}
           <PaymentOrderDetailCard order={order} variant="failed" />

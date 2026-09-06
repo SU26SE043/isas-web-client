@@ -140,6 +140,9 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.cancelledDescription':
       'Bạn đã hủy giao dịch hoặc giao dịch chưa được xử lý thành công.',
     'payment.result.failureReason': 'Lý do thất bại',
+    'payment.result.failureExpired': 'Đơn hàng đã hết hạn.',
+    'payment.result.failureCancelled': 'Đơn hàng đã bị huỷ.',
+    'payment.result.failureFailed': 'Cổng thanh toán đã từ chối giao dịch.',
     'payment.result.viewOrder': 'Xem đơn hàng',
     'payment.result.backToDashboard': 'Về bảng điều khiển',
     'payment.result.retryPayment': 'Thanh toán lại',
@@ -366,6 +369,9 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.cancelledDescription':
       'You cancelled the payment or the transaction was not completed successfully.',
     'payment.result.failureReason': 'Failure reason',
+    'payment.result.failureExpired': 'The order expired.',
+    'payment.result.failureCancelled': 'The order was cancelled.',
+    'payment.result.failureFailed': 'The payment gateway rejected the transaction.',
     'payment.result.viewOrder': 'View order',
     'payment.result.backToDashboard': 'Back to dashboard',
     'payment.result.retryPayment': 'Pay again',

@@ -57,7 +57,7 @@ export function PaymentOrderDetailDialog({
   const { t, language } = useLanguage();
   const locale = language === 'vi' ? 'vi' : 'en';
   const status = normalizeLivePaymentStatus(
-    statusResult?.status ?? order?.paymentStatus ?? order?.status ?? '',
+    statusResult?.status ?? order?.status ?? '',
   );
   const canPay = isLivePendingStatus(status) && Boolean(order?.packageId);
   const canCancel = isLivePendingStatus(status);

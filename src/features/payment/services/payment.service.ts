@@ -404,7 +404,7 @@ export const paymentService = {
         packageNameVi: detail.packageName ?? detail.packageId,
         tokens: detail.interviewCredits ?? 0,
         amountUsd: 0,
-        priceVnd: detail.priceVnd,
+        priceVnd: detail.amountVnd,
         status: normalizeOrderStatus(detail.status),
         checkoutUrl: null,
         createdAt: detail.createdAt ?? new Date().toISOString(),
@@ -449,7 +449,7 @@ export const paymentService = {
     if (usesMockData('payment')) {
       const order = mockOrders.get(orderId);
       if (!order) throw new Error('PAYMENT_ORDER_NOT_FOUND');
-      return { orderId: order.orderId, packageId: order.packageId, packageName: order.packageName, status: order.status === 'paid' ? 'Paid' : 'Pending', priceVnd: order.priceVnd, interviewCredits: order.tokens, createdAt: order.createdAt, paidAt: order.status === 'paid' ? new Date().toISOString() : undefined };
+      return { orderId: order.orderId, packageId: order.packageId, packageName: order.packageName, status: order.status === 'paid' ? 'Paid' : 'Pending', amountVnd: order.priceVnd, interviewCredits: order.tokens, createdAt: order.createdAt, paidAt: order.status === 'paid' ? new Date().toISOString() : undefined };
     }
     try {
       const response = await apiClient.get<unknown>(paymentEndpoints.getOrder(orderId));

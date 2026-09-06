@@ -1,19 +1,13 @@
 import type {
-  CampaignCandidateResponse,
-  CampaignProctoringResponse,
   CampaignQuestionResponse,
   CampaignResponse,
   CampaignRubricCriterionResponse,
   CampaignJobNeed,
 } from '../types/campaign.api.types';
 import type {
-  CampaignCandidateRow,
-  CampaignCandidateStatus,
-  CampaignLocale,
   CampaignProctoringConfig,
   CampaignQuestion,
   EmployerCampaign,
-  EmployerCampaignMode,
   EmployerCampaignStatus,
   RubricCriterion,
 } from '../types/campaignManagement.types';
@@ -155,8 +149,8 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
       id: pickString(record, 'id', 'Id') ?? `question-${index}`,
       questionText: prompt,
       prompt,
-      skill: pickString(record, 'skill', 'Skill') ?? null,
-      difficulty: pickString(record, 'difficulty', 'Difficulty') ?? null,
+      skill: null,
+      difficulty: null,
       source: pickString(record, 'source', 'Source') ?? null,
       isRequired:
         typeof record.isRequired === 'boolean'
@@ -169,39 +163,6 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
     });
   });
   return result;
-}
-
-function parseCandidates(raw: unknown): CampaignCandidateResponse[] {
-  if (!Array.isArray(raw)) return [];
-  const result: CampaignCandidateResponse[] = [];
-  for (const item of raw) {
-    const record = asRecord(item);
-    if (!record) continue;
-    const email = pickString(record, 'email', 'Email');
-    if (!email) continue;
-    result.push({
-      email,
-      displayName: pickString(record, 'displayName', 'DisplayName', 'fullName', 'FullName') ?? null,
-      candidateId: pickString(record, 'candidateId', 'CandidateId') ?? null,
-      status: pickString(record, 'status', 'Status') ?? null,
-    });
-  }
-  return result;
-}
-
-function parseInvitedEmails(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item) => asString(item)).filter((item): item is string => Boolean(item));
-}
-
-function parseProctoring(raw: unknown): CampaignProctoringResponse | null {
-  const record = asRecord(raw);
-  if (!record) return null;
-  return {
-    faceCaptureIntervalSeconds: pickNumber(record, 'faceCaptureIntervalSeconds', 'FaceCaptureIntervalSeconds') ?? null,
-    faceSimilarityThreshold: pickNumber(record, 'faceSimilarityThreshold', 'FaceSimilarityThreshold') ?? null,
-    maxViolations: pickNumber(record, 'maxViolations', 'MaxViolations') ?? null,
-  };
 }
 
 function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
@@ -234,13 +195,9 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     title,
     domain: pickString(record, 'domain', 'Domain') ?? null,
     orgId: pickString(record, 'orgId', 'OrgId', 'organizationId', 'OrganizationId') ?? null,
-    company: pickString(record, 'company', 'Company') ?? null,
-    location: pickString(record, 'location', 'Location') ?? null,
-    mode: pickString(record, 'mode', 'Mode', 'workingMode', 'WorkingMode') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'draft',
     language: pickString(record, 'language', 'Language') ?? null,
     seniority: pickString(record, 'seniority', 'Seniority') ?? null,
-    summary: pickString(record, 'summary', 'Summary', 'description', 'Description') ?? null,
     jobDescription: pickString(record, 'jobDescription', 'JobDescription', 'jdText', 'JdText') ?? null,
     jdText: pickString(record, 'jdText', 'JdText') ?? null,
     criteriaText: pickString(record, 'criteriaText', 'CriteriaText') ?? null,
@@ -248,8 +205,10 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     keywordsAny: asStringArray(record.keywordsAny ?? record.KeywordsAny),
     minYearsExperience: pickNumber(record, 'minYearsExperience', 'MinYearsExperience') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
-    applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
-    applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
+    questionBank: (() => { const bank = asRecord(record.questionBank ?? record.QuestionBank); return bank ? { total: pickNumber(bank, 'total', 'Total'), alwaysAsked: pickNumber(bank, 'alwaysAsked', 'AlwaysAsked'), questionsPerSession: pickNumber(bank, 'questionsPerSession', 'QuestionsPerSession'), groups: Array.isArray(bank.groups) ? bank.groups as Array<{ name: string; count: number }> : [], warnings: Array.isArray(bank.warnings) ? asStringArray(bank.warnings) : [] } : null; })(),
+    cvCount: pickNumber(record, 'cvCount', 'CvCount') ?? null,
+    invitedCount: pickNumber(record, 'invitedCount', 'InvitedCount') ?? null,
+    completedCount: pickNumber(record, 'completedCount', 'CompletedCount') ?? null,
     maxCandidates: pickNumber(record, 'maxCandidates', 'MaxCandidates') ?? null,
     deadline: pickString(record, 'deadline', 'Deadline', 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
     endDate: pickString(record, 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
@@ -267,21 +226,14 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
     questionsPerSession: pickNumber(record, 'questionsPerSession', 'QuestionsPerSession') ?? null,
-    questionBankSummary: (() => { const summary = asRecord(record.questionBankSummary ?? record.QuestionBankSummary); return summary ? { total: pickNumber(summary, 'total', 'Total') } : null; })(),
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
     skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
-    locale: pickString(record, 'locale', 'Locale') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
-    welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
-    completionMessage: pickString(record, 'completionMessage', 'CompletionMessage') ?? null,
     createdAt: pickString(record, 'createdAt', 'CreatedAt') ?? null,
     updatedAt: pickString(record, 'updatedAt', 'UpdatedAt') ?? null,
     rubric: parseRubric(record.criteria ?? record.Criteria ?? record.rubric ?? record.Rubric),
     jobNeeds: parseJobNeeds(record.jobNeeds ?? record.JobNeeds),
     questions: parseQuestions(record.questions ?? record.Questions),
-    candidates: parseCandidates(record.candidates ?? record.Candidates),
-    invitedEmails: parseInvitedEmails(record.invitedEmails ?? record.InvitedEmails),
-    proctoring: parseProctoring(record.proctoring ?? record.Proctoring),
   };
 }
 
@@ -298,30 +250,6 @@ function mapStatus(value: string): EmployerCampaignStatus {
   if (normalized === 'archived') return 'archived';
   if (normalized === 'closed' || normalized === 'ended') return 'closed';
   return 'draft';
-}
-
-function mapMode(value: string | null | undefined): EmployerCampaignMode {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'hybrid') return 'hybrid';
-  if (normalized === 'onsite' || normalized === 'on-site' || normalized === 'on_site') return 'onsite';
-  return 'remote';
-}
-
-function mapLocale(value: string | null | undefined): CampaignLocale {
-  return value?.trim().toLowerCase() === 'en' ? 'en' : 'vi';
-}
-
-function mapDifficulty(value: string | null | undefined): CampaignQuestion['difficulty'] {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'senior') return 'senior';
-  if (normalized === 'junior') return 'junior';
-  return 'middle';
-}
-
-function mapCandidateStatus(value: string | null | undefined): CampaignCandidateStatus {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'invited' || normalized === 'linked') return 'invited';
-  return 'invite_pending';
 }
 
 function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined): RubricCriterion[] {
@@ -344,30 +272,21 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
   return (items ?? []).map((item, index) => ({
     id: item.id?.trim() || `question-${index}`,
     prompt: item.questionText?.trim() || item.prompt?.trim() || '',
-    skill: item.skill?.trim() || '',
-    difficulty: mapDifficulty(item.difficulty),
+    skill: '',
+    difficulty: 'middle',
     source: mapQuestionSource(item.source),
     isRequired: item.isRequired ?? true,
     questionGroup: item.questionGroup ?? null,
   }));
 }
 
-function mapCandidates(items: CampaignCandidateResponse[] | null | undefined): CampaignCandidateRow[] {
-  return (items ?? []).map((item) => ({
-    email: item.email,
-    displayName: item.displayName?.trim() || undefined,
-    candidateId: item.candidateId?.trim() || undefined,
-    status: mapCandidateStatus(item.status),
-  }));
-}
-
-function mapProctoring(value: CampaignProctoringResponse | null | undefined): CampaignProctoringConfig {
+function mapProctoring(): CampaignProctoringConfig {
   return {
     faceCaptureIntervalSeconds:
-      value?.faceCaptureIntervalSeconds ?? LIST_DEFAULT_PROCTORING.faceCaptureIntervalSeconds,
+      LIST_DEFAULT_PROCTORING.faceCaptureIntervalSeconds,
     faceSimilarityThreshold:
-      value?.faceSimilarityThreshold ?? LIST_DEFAULT_PROCTORING.faceSimilarityThreshold,
-    maxViolations: value?.maxViolations ?? LIST_DEFAULT_PROCTORING.maxViolations,
+      LIST_DEFAULT_PROCTORING.faceSimilarityThreshold,
+    maxViolations: LIST_DEFAULT_PROCTORING.maxViolations,
   };
 }
 
@@ -375,26 +294,20 @@ function mapProctoring(value: CampaignProctoringResponse | null | undefined): Ca
 export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): EmployerCampaign {
   const now = new Date().toISOString();
   const capacity = item.capacity ?? item.maxCandidates ?? 0;
-  const candidates = mapCandidates(item.candidates);
-  const applicants = item.applicants ?? item.applicantCount ?? candidates.length;
   const deadline = item.deadline ?? item.endDate ?? now;
-  const invitedEmails =
-    item.invitedEmails && item.invitedEmails.length > 0
-      ? item.invitedEmails
-      : candidates.map((row) => row.email);
 
   return {
     id: item.id,
     title: item.title,
     domain: item.domain?.trim() || undefined,
-    company: item.company?.trim() || item.domain?.trim() || '—',
-    location: item.location?.trim() || '—',
-    mode: mapMode(item.mode),
+    company: item.domain?.trim() || '—',
+    location: '—',
+    mode: 'remote',
     status: mapStatus(item.status),
-    summary: item.summary?.trim() || '',
+    summary: '',
     jobDescription: item.jobDescription?.trim() || '',
     capacity,
-    applicants,
+    applicants: item.cvCount ?? 0,
     deadline,
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
@@ -402,7 +315,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     skipPenalty: item.skipPenalty ?? null,
     antiCheatEnabled:
       item.antiCheatEnabled ??
-      (mapProctoring(item.proctoring).maxViolations > 0),
+      LIST_DEFAULT_PROCTORING.maxViolations > 0,
     faceVerifyEnabled: item.faceVerifyEnabled ?? false,
     adaptiveEnabled: item.adaptiveEnabled ?? false,
     groundingEnabled: item.groundingEnabled ?? false,
@@ -411,19 +324,19 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     maxFollowUps: item.maxFollowUps ?? null,
     maxQuestions: item.maxQuestions ?? null,
     questionsPerSession: item.questionsPerSession ?? null,
-    questionBankSummary: item.questionBankSummary ?? null,
-    locale: mapLocale(item.locale),
+    questionBankSummary: item.questionBank ? { total: item.questionBank.total } : null,
+    locale: item.language?.trim().toLowerCase() === 'en' ? 'en' : 'vi',
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
     jobNeeds: item.jobNeeds ?? [],
     requiredSkills: item.requiredSkills ?? [],
     keywordsAny: item.keywordsAny ?? [],
     minYearsExperience: item.minYearsExperience ?? null,
-    invitedEmails,
-    candidates,
-    proctoring: mapProctoring(item.proctoring),
-    welcomeMessage: item.welcomeMessage?.trim() || '',
-    completionMessage: item.completionMessage?.trim() || '',
+    invitedEmails: [],
+    candidates: [],
+    proctoring: mapProctoring(),
+    welcomeMessage: '',
+    completionMessage: '',
     createdAt: item.createdAt ?? now,
     updatedAt: item.updatedAt ?? item.createdAt ?? now,
   };
