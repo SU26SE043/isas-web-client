@@ -159,13 +159,13 @@ export const WaitingRoomPage: React.FC = () => {
           </>
         ) : null}
         {!isLearning && status === 'ready' ? (
-          <p className="text-sm text-emerald-400">
+          <p className="text-sm text-success">
             {t('practice.flow.waiting.ready').replace('{count}', String(questionCount))}
           </p>
         ) : null}
         {!isLearning && status === 'error' ? (
           <div>
-            <p className="text-sm text-red-400">{t('practice.flow.waiting.error')}</p>
+          <p className="text-sm text-error">{t('practice.flow.waiting.error')}</p>
             <button
               type="button"
               className="btn-primary mt-4"

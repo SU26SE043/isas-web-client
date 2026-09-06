@@ -59,7 +59,7 @@ function LiveCandidateCampaignsPage() {
 
         {isError ? (
           <div className="rounded-xl border border-satin bg-surface-raised px-5 py-10 text-center">
-            <p className="text-sm text-rose-400">{t('campaigns.my.loadError')}</p>
+            <p className="text-sm text-error">{t('campaigns.my.loadError')}</p>
             <Button
               type="button"
               className="mt-4"

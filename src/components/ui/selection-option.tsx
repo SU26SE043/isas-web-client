@@ -41,8 +41,8 @@ export function SelectionOption({
       className={cn(
         'group flex min-h-[112px] items-center gap-5 rounded-2xl px-6 py-5 text-left transition-[background-color,border-color,box-shadow,opacity,transform] duration-200 ease-out hover:-translate-y-0.5',
         selected
-          ? 'border-info/70 bg-info/10 shadow-[0_0_28px_-16px_rgba(59,130,246,0.9),var(--satin-inset)]'
-          : 'frame-satin-interactive bg-surface-overlay hover:border-info/35 hover:bg-info/[0.06]',
+          ? 'border-foreground/50 bg-foreground/[0.04] shadow-[var(--satin-inset)]'
+          : 'frame-satin-interactive bg-surface-overlay hover:border-foreground/35 hover:bg-foreground/[0.03]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}
@@ -53,8 +53,8 @@ export function SelectionOption({
           className={cn(
             'flex size-14 shrink-0 items-center justify-center rounded-2xl border transition-colors',
             selected
-              ? 'border-violet-400/60 bg-violet-500/10 text-violet-300 shadow-[0_0_24px_-12px_rgba(167,139,250,0.95)]'
-              : 'border-info/35 bg-info/[0.06] text-info',
+              ? 'border-foreground/50 bg-foreground/[0.04] text-foreground'
+              : 'border-satin bg-surface-overlay text-foreground',
           )}
         >
           {icon}
@@ -82,7 +82,7 @@ export function SelectionOption({
       </span>
       {showChevron ? (
         <ChevronRight
-          className="size-5 shrink-0 text-info transition-colors group-hover:text-violet-300"
+          className="size-5 shrink-0 text-foreground transition-colors group-hover:text-foreground"
           aria-hidden
         />
       ) : null}

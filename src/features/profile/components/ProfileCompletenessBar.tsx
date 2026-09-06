@@ -33,12 +33,12 @@ export const ProfileCompletenessBar: React.FC<ProfileCompletenessBarProps> = ({
         aria-label={t('profile.completeness.label')}
       >
         <div
-          className={`h-full rounded-full transition-all duration-500 ${meetsGate ? 'bg-emerald-500' : 'bg-foreground'}`}
+          className={`h-full rounded-full transition-all duration-500 ${meetsGate ? 'bg-success' : 'bg-foreground'}`}
           style={{ width: `${clamped}%` }}
         />
       </div>
       {showGateHint ? (
-        <p className={`mt-2 text-caption ${meetsGate ? 'text-emerald-400' : 'text-muted-foreground'}`}>
+        <p className={`mt-2 text-caption ${meetsGate ? 'text-success' : 'text-muted-foreground'}`}>
           {meetsGate ? t('profile.completeness.gateMet') : t('profile.completeness.gateHint')}
         </p>
       ) : null}

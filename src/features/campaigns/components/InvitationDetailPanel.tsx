@@ -57,7 +57,7 @@ export function InvitationDetailPanel({
         </div>
 
         {invitation.deadline ? (
-          <p className="inline-flex items-center gap-2 text-sm text-amber-400">
+          <p className="inline-flex items-center gap-2 text-sm text-warning">
             <CalendarClock className="size-4 shrink-0" aria-hidden />
             {t('campaigns.invite.deadline')}: {formatDeadline(invitation.deadline, language)}
           </p>
@@ -134,7 +134,7 @@ export function InvitationDetailPanel({
       </div>
 
       {joinError ? (
-        <p className="text-sm text-rose-400" role="alert">
+          <p className="text-sm text-error" role="alert">
           {joinError}
         </p>
       ) : null}
