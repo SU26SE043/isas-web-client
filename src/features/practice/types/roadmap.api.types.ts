@@ -105,6 +105,8 @@ export type ApiRoadmapListItem = {
   updatedAt?: string;
   createdAt?: string;
   completedAt?: string | null;
+  milestoneCount?: number;
+  milestoneDoneCount?: number;
   readOnly?: boolean;
   hasFinalReport?: boolean;
   milestones?: ApiRoadmapMilestone[];

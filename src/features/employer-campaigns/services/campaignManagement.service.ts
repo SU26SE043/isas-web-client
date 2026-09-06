@@ -90,8 +90,8 @@ function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
   const query = filters.query.trim().toLowerCase();
   const matchesQuery =
     !query ||
-    [campaign.title, campaign.company, campaign.location, campaign.summary].some((value) =>
-      value.toLowerCase().includes(query),
+    [campaign.title, campaign.domain, campaign.jobDescription].some((value) =>
+      value?.toLowerCase().includes(query),
     );
   const matchesStatus = filters.status === 'all' || campaign.status === filters.status;
   return matchesQuery && matchesStatus;

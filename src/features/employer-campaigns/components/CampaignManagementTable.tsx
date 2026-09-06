@@ -42,16 +42,13 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <TableRow key={campaign.id} className="group">
                 <TableCell>
                   <p className="max-w-[320px] truncate font-semibold text-foreground">{campaign.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {campaign.location} · {t(`employer.campaigns.mode.${campaign.mode}`)}
-                  </p>
                 </TableCell>
                 <TableCell>
                   <CampaignManagementStatusBadge status={campaign.status} />
                 </TableCell>
                 <TableCell>{formatDate(campaign.deadline, language)}</TableCell>
                 <TableCell>
-                  {campaign.applicants}/{campaign.capacity}
+                  {campaign.cvCount ?? 0}/{campaign.capacity}
                 </TableCell>
                 <TableCell>{formatDate(campaign.updatedAt, language)}</TableCell>
                 <TableCell>
@@ -95,11 +92,9 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-semibold text-foreground">{campaign.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{campaign.location}</p>
               </div>
               <CampaignManagementStatusBadge status={campaign.status} />
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">{campaign.summary}</p>
             <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-subtle py-3 text-xs">
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.deadline')}</dt>
@@ -108,7 +103,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.capacity')}</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {campaign.applicants}/{campaign.capacity}
+                  {campaign.cvCount ?? 0}/{campaign.capacity}
                 </dd>
               </div>
             </dl>

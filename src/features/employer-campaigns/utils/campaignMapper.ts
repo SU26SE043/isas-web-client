@@ -280,16 +280,6 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
   }));
 }
 
-function mapProctoring(): CampaignProctoringConfig {
-  return {
-    faceCaptureIntervalSeconds:
-      LIST_DEFAULT_PROCTORING.faceCaptureIntervalSeconds,
-    faceSimilarityThreshold:
-      LIST_DEFAULT_PROCTORING.faceSimilarityThreshold,
-    maxViolations: LIST_DEFAULT_PROCTORING.maxViolations,
-  };
-}
-
 /** Map API campaign → UI model used by list / detail screens. */
 export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): EmployerCampaign {
   const now = new Date().toISOString();
@@ -300,14 +290,12 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     id: item.id,
     title: item.title,
     domain: item.domain?.trim() || undefined,
-    company: item.domain?.trim() || '—',
-    location: '—',
-    mode: 'remote',
     status: mapStatus(item.status),
-    summary: '',
     jobDescription: item.jobDescription?.trim() || '',
     capacity,
-    applicants: item.cvCount ?? 0,
+    cvCount: item.cvCount ?? null,
+    invitedCount: item.invitedCount ?? null,
+    completedCount: item.completedCount ?? null,
     deadline,
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
@@ -324,21 +312,15 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     maxFollowUps: item.maxFollowUps ?? null,
     maxQuestions: item.maxQuestions ?? null,
     questionsPerSession: item.questionsPerSession ?? null,
-    questionBankSummary: item.questionBank ? { total: item.questionBank.total } : null,
+    questionBank: item.questionBank,
     questionBankWarnings: item.questionBank?.warnings ?? [],
-    locale: item.language?.trim().toLowerCase() === 'en' ? 'en' : 'vi',
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
     jobNeeds: item.jobNeeds ?? [],
     requiredSkills: item.requiredSkills ?? [],
     keywordsAny: item.keywordsAny ?? [],
     minYearsExperience: item.minYearsExperience ?? null,
-    invitedEmails: [],
-    candidates: [],
-    proctoring: mapProctoring(),
-    welcomeMessage: '',
-    completionMessage: '',
     createdAt: item.createdAt ?? now,
-    updatedAt: item.updatedAt ?? item.createdAt ?? now,
-  };
+    updatedAt: item.createdAt ?? now,
+  } as EmployerCampaign;
 }

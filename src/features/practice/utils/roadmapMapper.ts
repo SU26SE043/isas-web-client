@@ -158,11 +158,11 @@ function mapTargetLevel(level: string | undefined): string {
 function mapLessonFromApi(lesson: ApiRoadmapLesson, index: number): LearningLesson {
   const apiStatus = normalizeApiLessonStatus(lesson.status);
   const parts = mapLessonParts(lesson.status);
-  const title = pickString(lesson.title, lesson.titleVi) || `Lesson ${index + 1}`;
+  const title = pickString(lesson.title) || `Lesson ${index + 1}`;
   return {
     id: pickString(lesson.id) || `lesson-${index + 1}`,
     title,
-    titleVi: pickString(lesson.titleVi, lesson.title) || title,
+    titleVi: title,
     order: pickNumber(lesson.orderNo, lesson.order, index + 1),
     theoryStatus: parts.theoryStatus,
     practiceStatus: parts.practiceStatus,
@@ -175,7 +175,7 @@ function mapLessonFromApi(lesson: ApiRoadmapLesson, index: number): LearningLess
     status: parts.pathStatus,
     apiStatus,
     sessionId: pickString(lesson.sessionId) || null,
-    practiceReportId: pickString(lesson.practiceReportId) || undefined,
+    practiceReportId: undefined,
     attemptCount: pickNumber(lesson.attemptCount),
     // Đọc THẲNG từ server. Không suy từ `apiStatus === 'Done'`: điều kiện thật
     // của backend còn gồm ví credit và quyền sở hữu, suy ở FE là hai bên lệch
@@ -192,7 +192,7 @@ function mapMilestoneFromApi(
   const lessons = asArray<ApiRoadmapLesson>(milestone.lessons)
     .map((lesson, lessonIndex) => mapLessonFromApi(lesson, lessonIndex))
     .sort((a, b) => a.order - b.order);
-  const title = pickString(milestone.title, milestone.titleVi) || `Milestone ${index + 1}`;
+  const title = pickString(milestone.title) || `Milestone ${index + 1}`;
   const gate = mapMilestoneGate(milestone.status, index, hasCurrentAlready);
   const completedParts = lessons.reduce(
     (sum, lesson) =>
@@ -205,7 +205,7 @@ function mapMilestoneFromApi(
   return {
     id: pickString(milestone.id) || `milestone-${index + 1}`,
     title,
-    titleVi: pickString(milestone.titleVi, milestone.title) || title,
+    titleVi: title,
     order: pickNumber(milestone.orderNo, milestone.order, index + 1),
     status: gate,
     progressPercent: pickNumber(milestone.progressPercent, Math.round((completedParts / totalParts) * 100)),
@@ -229,34 +229,38 @@ function deriveCurrentPointers(milestones: LearningMilestone[]) {
 export function mapApiRoadmapListItem(raw: unknown): LearningRoadmapCard {
   const item = asRecord(raw) as ApiRoadmapListItem;
   const domain = mapDomain(pickString(item.jobCategory, item.domainId));
-  const progressPercent = Math.max(0, Math.min(100, pickNumber(item.progressPercent)));
+  const milestoneCount = pickNumber(item.milestoneCount);
+  const milestoneDoneCount = pickNumber(item.milestoneDoneCount);
+  const progressPercent = milestoneCount > 0
+    ? Math.round((Math.min(milestoneDoneCount, milestoneCount) / milestoneCount) * 100)
+    : 0;
   const status = mapRoadmapPathStatus(item.status, progressPercent);
-  const name = pickString(item.name, item.nameVi, item.title) || 'Roadmap';
-  const targetLevel = mapTargetLevel(pickString(item.level, item.targetLevel));
+  const name = pickString(item.name) || 'Roadmap';
+  const targetLevel = mapTargetLevel(pickString(item.level));
   return {
     id: pickString(item.id),
     name,
-    nameVi: pickString(item.nameVi, item.name, item.title) || name,
+    nameVi: name,
     domainId: domain.domainId,
     domainLabel: domain.domainLabel,
     domainLabelVi: domain.domainLabelVi,
     targetLevel,
     status,
     progressPercent,
-    currentMilestoneId: pickString(item.currentMilestoneId),
-    currentMilestoneTitle: pickString(item.currentMilestoneTitle, item.currentMilestoneTitleVi),
-    currentMilestoneTitleVi: pickString(item.currentMilestoneTitleVi, item.currentMilestoneTitle),
-    currentLessonId: pickString(item.currentLessonId),
-    currentLessonTitle: pickString(item.currentLessonTitle, item.currentLessonTitleVi),
-    currentLessonTitleVi: pickString(item.currentLessonTitleVi, item.currentLessonTitle),
-    estimatedRemainingHours: pickNumber(item.estimatedRemainingHours),
+    currentMilestoneId: '',
+    currentMilestoneTitle: '',
+    currentMilestoneTitleVi: '',
+    currentLessonId: '',
+    currentLessonTitle: '',
+    currentLessonTitleVi: '',
+    estimatedRemainingHours: 0,
     updatedAt: pickString(item.createdAt) || '',
-    readOnly: Boolean(item.readOnly) || status === 'completed',
+    readOnly: status === 'completed',
     hasFinalReport: typeof item.hasFinalReport === 'boolean' ? item.hasFinalReport : undefined,
     jobCategory: pickString(item.jobCategory),
     language: pickString(item.language) || undefined,
-    level: pickString(item.level, item.targetLevel) || undefined,
-    mode: pickString(item.mode) || undefined,
+    level: pickString(item.level) || undefined,
+    mode: undefined,
     apiStatus: pickString(item.status) || undefined,
     createdAt: pickString(item.createdAt) || undefined,
     completedAt: typeof item.completedAt === 'string' ? item.completedAt : null,
@@ -347,14 +351,14 @@ export function mapApiRoadmapLessonDetail(raw: unknown): OpenedLearningLesson {
   const item = asRecord(raw) as ApiRoadmapLessonDetail;
   const apiStatus = normalizeApiLessonStatus(item.status);
   const parts = mapLessonParts(apiStatus);
-  const title = pickString(item.title, item.titleVi) || 'Lesson';
+  const title = pickString(item.title) || 'Lesson';
   const theoryContent = pickString(item.theoryContent, item.content);
-  const theoryContentVi = pickString(item.theoryContentVi, item.contentVi);
+  const theoryContentVi = '';
   return {
     id: pickString(item.id),
     orderNo: pickNumber(item.orderNo, 1),
     title,
-    titleVi: pickString(item.titleVi, item.title) || title,
+    titleVi: title,
     theoryContent,
     theoryContentVi,
     sessionId: pickString(item.sessionId) || null,

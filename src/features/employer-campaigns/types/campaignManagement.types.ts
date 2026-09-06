@@ -68,8 +68,17 @@ export interface EmployerCampaign {
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   questionsPerSession?: number | null;
-  questionBankSummary?: { total?: number | null } | null;
+  questionBank?: {
+    total?: number | null;
+    alwaysAsked?: number | null;
+    questionsPerSession?: number | null;
+    groups?: Array<{ name: string; count: number }>;
+    warnings?: string[];
+  } | null;
   questionBankWarnings?: string[];
+  cvCount?: number | null;
+  invitedCount?: number | null;
+  completedCount?: number | null;
   skipPenalty?: boolean | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
