@@ -43,7 +43,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.pipeline.viewReport': 'Báo cáo',
     'employerAnalytics.pipeline.emptyTitle': 'Chưa có ứng viên phù hợp',
     'employerAnalytics.pipeline.emptyDescription': 'Thử đổi bộ lọc hoặc mời thêm ứng viên từ chiến dịch.',
-    'employerAnalytics.pipeline.blindHint': 'Blind-hiring đang bật: tên và email được che theo BRL-064.',
+    'employerAnalytics.pipeline.blindHint': 'Blind-hiring đang bật: tên và email được che theo the documented rule.',
     'employerAnalytics.pipeline.blindOffHint': 'Blind-hiring đang tắt: thông tin nhận dạng hiển thị cho HR đã xem xét.',
     'employerAnalytics.pipeline.blindToggle': 'Bật blind-hiring (che PII)',
 
@@ -78,7 +78,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.report.overrideSubmit': 'Lưu ghi đè',
     'employerAnalytics.report.overrideSaved': 'Đã lưu ghi đè điểm.',
     'employerAnalytics.report.noteTooShort': 'Ghi chú phải có ít nhất 20 ký tự.',
-    'employerAnalytics.report.locked': 'Báo cáo đã được xem xét; điểm đã khóa theo BRL-054.',
+    'employerAnalytics.report.locked': 'Báo cáo đã được xem xét; điểm đã khóa theo the documented rule.',
 
     'employerAnalytics.analytics.eyebrow': 'Phân tích',
     'employerAnalytics.analytics.title': 'Phân tích tuyển dụng',
@@ -105,8 +105,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.analytics.exportPdf': 'Xuất PDF',
     'employerAnalytics.analytics.rows': 'dòng',
 
-    'employerAnalytics.export.csvReady': 'CSV đã sẵn sàng. Dữ liệu PII được che theo BRL-015.',
-    'employerAnalytics.export.pdfReady': 'PDF đã sẵn sàng. Dữ liệu PII được che theo BRL-015.',
+    'employerAnalytics.export.csvReady': 'CSV đã sẵn sàng. Dữ liệu PII được che theo the documented rule.',
+    'employerAnalytics.export.pdfReady': 'PDF đã sẵn sàng. Dữ liệu PII được che theo the documented rule.',
     'employerAnalytics.export.tooLarge': 'Export vượt 10.000 dòng. Hệ thống sẽ xử lý bất đồng bộ và gửi email khi hoàn tất.',
   },
   en: {
@@ -151,7 +151,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.pipeline.viewReport': 'Report',
     'employerAnalytics.pipeline.emptyTitle': 'No matching candidates',
     'employerAnalytics.pipeline.emptyDescription': 'Try different filters or invite more candidates from the campaign.',
-    'employerAnalytics.pipeline.blindHint': 'Blind hiring is enabled: names and emails are masked by BRL-064.',
+    'employerAnalytics.pipeline.blindHint': 'Blind hiring is enabled: names and emails are masked by the documented rule.',
     'employerAnalytics.pipeline.blindOffHint': 'Blind hiring is off: identifying information is visible for reviewed HR access.',
     'employerAnalytics.pipeline.blindToggle': 'Enable blind hiring (mask PII)',
 
@@ -186,7 +186,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.report.overrideSubmit': 'Save override',
     'employerAnalytics.report.overrideSaved': 'Score override saved.',
     'employerAnalytics.report.noteTooShort': 'Note must be at least 20 characters.',
-    'employerAnalytics.report.locked': 'This report has been reviewed; score is locked by BRL-054.',
+    'employerAnalytics.report.locked': 'This report has been reviewed; score is locked by the documented rule.',
 
     'employerAnalytics.analytics.eyebrow': 'Analytics',
     'employerAnalytics.analytics.title': 'Hiring analytics',
@@ -213,8 +213,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.analytics.exportPdf': 'Export PDF',
     'employerAnalytics.analytics.rows': 'rows',
 
-    'employerAnalytics.export.csvReady': 'CSV is ready. PII is masked under BRL-015.',
-    'employerAnalytics.export.pdfReady': 'PDF is ready. PII is masked under BRL-015.',
+    'employerAnalytics.export.csvReady': 'CSV is ready. PII is masked under the documented rule.',
+    'employerAnalytics.export.pdfReady': 'PDF is ready. PII is masked under the documented rule.',
     'employerAnalytics.export.tooLarge': 'Export exceeds 10,000 rows. The system will process it asynchronously and email you when it is ready.',
   },
 };

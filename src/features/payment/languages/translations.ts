@@ -20,7 +20,7 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientReserve': 'Cần ít nhất {amount} token khả dụng để tạo phiên luyện tập.',
 
     'payment.plans.title': 'Gói token & đăng ký',
-    'payment.plans.subtitle': 'Chọn gói phù hợp. Giá hiển thị bằng USD (BRL-003).',
+    'payment.plans.subtitle': 'Chọn gói phù hợp. Giá hiển thị bằng USD (the documented rule).',
     'payment.plans.sectionSubtitle': 'Chọn gói và thanh toán ngay trên trang này.',
     'payment.plans.oneTime': 'Gói credit',
     'payment.plans.subscription': 'Đăng ký hàng tháng',
@@ -249,7 +249,7 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientReserve': 'You need at least {amount} available tokens to start a practice session.',
 
     'payment.plans.title': 'Token packages & subscription',
-    'payment.plans.subtitle': 'Choose a plan. Prices are shown in USD (BRL-003).',
+    'payment.plans.subtitle': 'Choose a plan. Prices are shown in USD (the documented rule).',
     'payment.plans.sectionSubtitle': 'Choose a package and pay directly on this page.',
     'payment.plans.oneTime': 'Credit packages',
     'payment.plans.subscription': 'Monthly subscription',

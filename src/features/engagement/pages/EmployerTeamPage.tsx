@@ -24,7 +24,7 @@ export function EmployerTeamPage() {
   };
 
   return (
-    <EngagementPageShell eyebrow="SCR-EMP-068" title={t('engagement.team.title')} description={t('engagement.team.description')}>
+    <EngagementPageShell title={t('engagement.team.title')} description={t('engagement.team.description')}>
       <div className="space-y-5">
         <InviteTeamMemberForm isSubmitting={isMutating} onInvite={invite} />
         {errorKey ? (

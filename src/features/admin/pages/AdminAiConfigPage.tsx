@@ -24,7 +24,7 @@ export function AdminAiConfigPage() {
   };
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-078" title={t('admin.ai.title')} description={t('admin.ai.description')}>
+    <AdminPageShell title={t('admin.ai.title')} description={t('admin.ai.description')}>
       <Alert variant="warning"><AlertDescription>{t('admin.ai.biasGuard')}</AlertDescription></Alert>
       {saved || snapshot?.aiConfig.pendingDualSign ? <Alert variant="info"><AlertDescription>{t('admin.ai.dualSign')}</AlertDescription></Alert> : null}
       <section className="grid gap-5 rounded-xl border border-subtle bg-surface-raised p-5 md:grid-cols-2">

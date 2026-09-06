@@ -9,7 +9,7 @@ export function AdminHealthPage() {
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-085" title={t('admin.health.title')} description={t('admin.health.description')}>
+    <AdminPageShell title={t('admin.health.title')} description={t('admin.health.description')}>
       <section className="space-y-3">
         {(snapshot?.health ?? []).map((item) => (
           <div key={item.id} className="grid gap-3 rounded-xl border border-subtle bg-surface-raised p-4 md:grid-cols-[1fr_120px_180px] md:items-center">

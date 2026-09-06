@@ -53,7 +53,6 @@ export function AdminDashboardPage() {
 
   return (
     <AdminPageShell
-      eyebrow="SCR-ADM-069"
       title={t('admin.dashboard.title')}
       description={t('admin.dashboard.description')}
       actions={(

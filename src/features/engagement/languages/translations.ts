@@ -28,14 +28,14 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notification.live.body': 'Thông báo mô phỏng đã được phát vào trung tâm thông báo trong cửa sổ thời gian thực.',
 
     'engagement.settings.title': 'Cài đặt thông báo',
-    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và tùy chọn nhận nội dung tiếp thị theo BRL-040.',
+    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và tùy chọn nhận nội dung tiếp thị theo the documented rule.',
     'engagement.settings.email': 'Email',
     'engagement.settings.inApp': 'Trong ứng dụng',
     'engagement.settings.marketing': 'Tiếp thị',
     'engagement.settings.quietHours': 'Bật giờ yên lặng',
     'engagement.settings.quietStart': 'Bắt đầu yên lặng',
     'engagement.settings.quietEnd': 'Kết thúc yên lặng',
-    'engagement.settings.marketingRule': 'BRL-040: người dùng có thể từ chối nội dung tiếp thị nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
+    'engagement.settings.marketingRule': 'the documented rule: người dùng có thể từ chối nội dung tiếp thị nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
     'engagement.settings.save': 'Lưu cài đặt',
     'engagement.settings.saved': 'Đã lưu cài đặt thông báo.',
 
@@ -126,7 +126,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.roleRule': 'Chỉ quản trị viên tổ chức mới thêm hoặc đổi vai trò thành viên.',
 
     'engagement.webhook.title': 'Webhook của tổ chức',
-    'engagement.webhook.description': 'Cấu hình webhook được ký theo BRL-069 để nhận sự kiện chiến dịch, thanh toán và kết quả AI.',
+    'engagement.webhook.description': 'Cấu hình webhook được ký theo the documented rule để nhận sự kiện chiến dịch, thanh toán và kết quả AI.',
     'engagement.webhook.rule': 'Chỉ quản trị viên tổ chức được cập nhật endpoint và secret; nhân sự chỉ xem trạng thái gửi.',
   },
   en: {
@@ -156,14 +156,14 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notification.live.body': 'A mock notification was delivered into the notification center in the realtime window.',
 
     'engagement.settings.title': 'Notification settings',
-    'engagement.settings.description': 'Manage notification channels, quiet hours, and marketing opt-out under BRL-040.',
+    'engagement.settings.description': 'Manage notification channels, quiet hours, and marketing opt-out under the documented rule.',
     'engagement.settings.email': 'Email',
     'engagement.settings.inApp': 'In-app',
     'engagement.settings.marketing': 'Marketing',
     'engagement.settings.quietHours': 'Enable quiet hours',
     'engagement.settings.quietStart': 'Quiet start',
     'engagement.settings.quietEnd': 'Quiet end',
-    'engagement.settings.marketingRule': 'BRL-040: users may opt out of marketing while still receiving required security and operations messages.',
+    'engagement.settings.marketingRule': 'the documented rule: users may opt out of marketing while still receiving required security and operations messages.',
     'engagement.settings.save': 'Save settings',
     'engagement.settings.saved': 'Notification settings saved.',
 
@@ -254,7 +254,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.roleRule': 'Only organization administrators may add members or change their roles.',
 
     'engagement.webhook.title': 'Organization webhooks',
-    'engagement.webhook.description': 'Signed webhook configuration under BRL-069 receives campaign, billing, and AI result events.',
+    'engagement.webhook.description': 'Signed webhook configuration under the documented rule receives campaign, billing, and AI result events.',
     'engagement.webhook.rule': 'Only organization administrators may update endpoints and secrets; HR staff can view delivery status only.',
   },
 };

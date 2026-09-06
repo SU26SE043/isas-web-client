@@ -95,7 +95,6 @@ export function AdminCampaignsPage() {
 
   return (
     <AdminPageShell
-      eyebrow="SCR-ADM-075"
       title={t('admin.campaignsManage.title')}
       description={t('admin.campaignsManage.description')}
       actions={

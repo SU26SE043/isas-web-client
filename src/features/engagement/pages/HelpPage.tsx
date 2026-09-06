@@ -14,7 +14,7 @@ export function HelpPage({ scope }: { scope: EngagementScope }) {
   }, [scope]);
 
   return (
-    <EngagementPageShell eyebrow="SCR-CAN-050" title={t('engagement.help.title')} description={t('engagement.help.description')}>
+    <EngagementPageShell title={t('engagement.help.title')} description={t('engagement.help.description')}>
       <HelpCenter articles={articles} />
     </EngagementPageShell>
   );

@@ -9,7 +9,7 @@ export function AdminRolesPage() {
   const { snapshot } = useAdminPlatform();
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-071" title={t('admin.roles.title')} description={t('admin.roles.description')}>
+    <AdminPageShell title={t('admin.roles.title')} description={t('admin.roles.description')}>
       <section className="grid gap-4 lg:grid-cols-3">
         {(snapshot?.roles ?? []).map((role) => (
           <Card key={role.id} className="border border-subtle bg-surface-raised">
