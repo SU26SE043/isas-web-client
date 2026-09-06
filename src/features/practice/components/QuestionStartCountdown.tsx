@@ -34,7 +34,7 @@ export function QuestionStartCountdown({ visible, value }: QuestionStartCountdow
                   style={{ '--countdown-angle': `${angle}deg` } as CSSProperties}
                 >
                   <span
-                    className="countdown-dot-visual block rounded-full bg-sky-400"
+                    className="countdown-dot-visual block rounded-full bg-info-400"
                     style={{ animationDelay: `${index * -0.05}s` }}
                   />
                 </span>
@@ -60,3 +60,4 @@ export function QuestionStartCountdown({ visible, value }: QuestionStartCountdow
     </div>
   );
 }
+

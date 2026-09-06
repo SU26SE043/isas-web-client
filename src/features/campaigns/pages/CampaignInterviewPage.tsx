@@ -136,8 +136,8 @@ export function CampaignInterviewPage() {
           would be covered by it and left unreachable. */}
       {!fullscreen.isFullscreen && !violations.currentViolation ? (
         <div className="fixed inset-0 z-[110] grid place-items-center bg-black/90 px-4 backdrop-blur-sm">
-          <section className="frame-satin w-full max-w-md rounded-2xl bg-surface-raised p-6 text-center shadow-2xl" role="alertdialog" aria-modal="true" aria-labelledby="fullscreen-required-title">
-            <h1 id="fullscreen-required-title" className="text-xl font-semibold text-foreground">
+          <section className="frame-satin w-full max-w-md rounded-2xl bg-surface-raised p-6 text-center shadow-2xl" role="alertdialog" aria-modal="true" aria-labelledby="fullscreen-requierror-title">
+            <h1 id="fullscreen-requierror-title" className="text-xl font-semibold text-foreground">
               {t('campaigns.fullscreen.title')}
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -177,3 +177,4 @@ export function CampaignInterviewPage() {
     </div>
   );
 }
+

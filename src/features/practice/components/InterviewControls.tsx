@@ -55,7 +55,7 @@ function ControlIconButton({
       <span
         className={cn(
           'flex size-11 items-center justify-center rounded-full border border-satin bg-surface-overlay/80',
-          pressed === false && 'border-red-500/40 bg-red-500/15 text-red-300',
+          pressed === false && 'border-error-500/40 bg-error-500/15 text-error-300',
         )}
       >
         {children}
@@ -197,11 +197,11 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
           {!learningMode ? (
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-transparent px-4 py-2.5 text-sm font-medium text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/10"
+              className="inline-flex items-center gap-2 rounded-full border border-error-500/40 bg-transparent px-4 py-2.5 text-sm font-medium text-error-300 transition-colors hover:border-error-400/60 hover:bg-error-500/10"
               onClick={() => navigate(finishHref)}
             >
               {t('practice.room.end')}
-              <kbd className="hidden rounded border border-red-500/30 px-1.5 py-0.5 text-[10px] text-red-300/80 sm:inline">
+              <kbd className="hidden rounded border border-error-500/30 px-1.5 py-0.5 text-[10px] text-error-300/80 sm:inline">
                 Esc
               </kbd>
             </button>
@@ -211,3 +211,4 @@ export const InterviewControls: React.FC<InterviewControlsProps> = ({
     </div>
   );
 };
+

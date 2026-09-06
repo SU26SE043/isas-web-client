@@ -154,7 +154,7 @@ export function LearningRoadmapDetailPage() {
         {t('practice.learningPath.backToDashboard')}
       </Link>
 
-      <header className="relative mt-5 space-y-4 overflow-hidden rounded-2xl border border-info/45 bg-surface-raised/70 p-6 shadow-[0_20px_60px_-40px_rgba(59,130,246,0.85)] sm:p-8">
+      <header className="relative mt-5 space-y-4 overflow-hidden rounded-2xl border border-info/45 bg-surface-raised/70 p-6 shadow-none sm:p-8">
         <div className="absolute -right-12 -top-16 size-52 rounded-full border border-info/20" aria-hidden />
         <div className="relative flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl border border-info/45 bg-info/10 text-info"><Code2 className="size-6" aria-hidden /></span><p className="text-sm font-medium text-muted-foreground">{language === 'vi' ? roadmap.domainLabelVi : roadmap.domainLabel} · {t(`practice.roadmapWizard.level.${roadmap.targetLevel}`)} · {t(`practice.learningPath.status.${roadmap.status}`)}</p></div>
         <RoadmapNameEditor
@@ -175,7 +175,7 @@ export function LearningRoadmapDetailPage() {
             <span>{roadmap.progressPercent}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-surface-overlay">
-            <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500" style={{ width: `${roadmap.progressPercent}%` }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-info-500 to-info-500" style={{ width: `${roadmap.progressPercent}%` }} />
           </div>
         </div>
         <LearningRoadmapCreditSummary remainingLessons={remainingLessons} balance={creditsRemaining ?? 0} />
@@ -227,3 +227,4 @@ export function LearningRoadmapDetailPage() {
     </div>
   );
 }
+

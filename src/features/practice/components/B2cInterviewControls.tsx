@@ -67,7 +67,7 @@ export function B2cInterviewControls({
           <button
             type="button"
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10',
+              'inline-flex items-center gap-2 rounded-full border border-error-500/40 px-4 py-2.5 text-sm font-medium text-error-300 hover:bg-error-500/10',
               'btn-primary border-transparent text-black',
             )}
             disabled={disabled}
@@ -80,3 +80,4 @@ export function B2cInterviewControls({
     </div>
   );
 }
+

@@ -34,8 +34,8 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
 
       <div className="flex shrink-0 items-center gap-3 sm:gap-4">
         {isRecording ? (
-          <div className="flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-red-300">
-            <span className="size-2 animate-pulse rounded-full bg-red-500" aria-hidden />
+          <div className="flex items-center gap-2 rounded-full border border-error-500/40 bg-error-500/15 px-3 py-1.5 text-error-300">
+            <span className="size-2 animate-pulse rounded-full bg-error-500" aria-hidden />
             <span className="text-xs font-medium sm:text-sm">{t('practice.recording')}</span>
           </div>
         ) : null}
@@ -50,3 +50,4 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
     </header>
   );
 };
+

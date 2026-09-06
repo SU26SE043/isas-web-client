@@ -109,7 +109,7 @@ export function CampaignWizardShell({
                     <FlowStepMarker
                       status={status}
                       stepNumber={index + 1}
-                      className={status === 'current' ? 'border-info bg-info/10 text-info shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_24px_-8px_rgba(59,130,246,0.95)]' : undefined}
+                      className={status === 'current' ? 'border-info bg-info/10 text-info shadow-none' : undefined}
                     />
                     {!isLast ? (
                       <FlowStepConnector
@@ -155,3 +155,4 @@ export function CampaignWizardShell({
     </div>
   );
 }
+

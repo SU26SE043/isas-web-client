@@ -35,7 +35,7 @@ export const ViolationPauseOverlay: React.FC<ViolationPauseOverlayProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="violation-pause-title"
-        className="max-w-md rounded-xl border border-orange-500/40 bg-surface-elevated p-6 text-center"
+        className="max-w-md rounded-xl border border-warning-500/40 bg-surface-elevated p-6 text-center"
       >
         <h2 id="violation-pause-title" className="heading-secondary text-lg text-foreground">
           {t('practice.room.violationPauseTitle')}
@@ -53,3 +53,4 @@ export const ViolationPauseOverlay: React.FC<ViolationPauseOverlayProps> = ({
     </div>
   );
 };
+

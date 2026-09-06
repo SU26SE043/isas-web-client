@@ -23,9 +23,9 @@ export function UnscoredFlaggedSection({
   const list = items ?? [];
 
   return (
-    <section className="space-y-3" aria-labelledby="unscored-flagged-heading">
+    <section className="space-y-3" aria-labelledby="unscoerror-flagged-heading">
       <div>
-        <h3 id="unscored-flagged-heading" className="text-lg font-semibold text-foreground">
+        <h3 id="unscoerror-flagged-heading" className="text-lg font-semibold text-foreground">
           {t('employer.campaigns.results.unscoredFlagged.title')}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -104,3 +104,4 @@ export function UnscoredFlaggedSection({
     </section>
   );
 }
+

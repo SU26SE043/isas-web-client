@@ -60,7 +60,7 @@ export function CampaignListPage() {
           <Button
             size="lg"
             render={<Link to="/employer/campaigns/new" />}
-            className="w-fit bg-white px-5 font-semibold text-black shadow-[0_12px_32px_rgba(255,255,255,0.12)] hover:bg-white/90 focus-visible:ring-white/40"
+            className="w-fit bg-white px-5 font-semibold text-black shadow-none hover:bg-white/90 focus-visible:ring-white/40"
           >
             <Plus className="size-4" aria-hidden />
             {t('employer.campaigns.list.create')}
@@ -135,3 +135,4 @@ export function CampaignListPage() {
     </div>
   );
 }
+

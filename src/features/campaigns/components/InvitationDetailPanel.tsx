@@ -35,7 +35,7 @@ export function InvitationDetailPanel({
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-4 rounded-2xl border border-satin bg-surface-raised p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
+          <span className="rounded-full border border-info-500/30 bg-info-500/10 px-3 py-1 text-xs font-medium text-info-300">
             {t('campaigns.invite.badge')}
           </span>
           {invitation.orgName ? (
@@ -141,3 +141,4 @@ export function InvitationDetailPanel({
     </div>
   );
 }
+

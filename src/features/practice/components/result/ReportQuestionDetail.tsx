@@ -57,7 +57,7 @@ export function ReportQuestionDetail({
                     'shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors duration-150',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
                     isActive
-                      ? 'border-info/70 bg-gradient-to-r from-info/20 to-violet-500/20 text-info-light shadow-[0_0_14px_-8px_var(--color-info)]'
+                      ? 'border-info/70 bg-gradient-to-r from-info/20 to-info-500/20 text-info-light shadow-[0_0_14px_-8px_var(--color-info)]'
                       : group === 'graded' || group === 'answered'
                         ? 'border-success/40 bg-success/10 text-success-light hover:bg-success/15'
                         : 'border-satin bg-surface-overlay/30 text-muted-foreground hover:border-info/40 hover:bg-info/10 hover:text-info-light',
@@ -81,3 +81,4 @@ export function ReportQuestionDetail({
     </section>
   );
 }
+
