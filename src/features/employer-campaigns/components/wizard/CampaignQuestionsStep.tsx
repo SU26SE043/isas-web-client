@@ -21,6 +21,7 @@ interface CampaignQuestionsStepProps {
   questionCount: number;
   questionsPerSession?: number | null;
   maxQuestions: number | null;
+  questionBankWarnings?: string[];
   error?: string | null;
   onQuestionCount: (count: number) => void;
   onQuestionsPerSession: (count: number | null) => void;
@@ -47,6 +48,7 @@ export function CampaignQuestionsStep({
   questionCount,
   questionsPerSession,
   maxQuestions,
+  questionBankWarnings = [],
   error,
   onQuestionCount,
   onQuestionsPerSession,
@@ -118,6 +120,14 @@ export function CampaignQuestionsStep({
     >
       <div className="space-y-5">
         {error ? <FieldError message={error} /> : null}
+        {questionBankWarnings.length > 0 ? (
+          <div role="status" className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
+            <p className="font-medium">{t('employer.campaigns.campaignQuestions.bank.warnings')}</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {questionBankWarnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}
+            </ul>
+          </div>
+        ) : null}
         <div className="rounded-lg border border-satin bg-surface-overlay p-4"><label className="text-sm font-medium text-foreground" htmlFor="questions-per-session">{t('employer.campaigns.campaignQuestions.bank.perCandidate')}</label><input id="questions-per-session" type="number" min={1} value={questionsPerSession ?? ''} onChange={(event) => onQuestionsPerSession(event.target.value === '' ? null : Number(event.target.value))} className="mt-2 h-9 w-32 rounded-md border border-satin bg-surface-base px-3 text-sm" /><p className="mt-1 text-xs text-muted-foreground">{t('employer.campaigns.campaignQuestions.bank.perCandidateHelp')}</p></div>
 
         <QuestionsSummaryCard

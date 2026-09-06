@@ -234,6 +234,11 @@ function mapSubmitError(
     return { message: t('employer.campaigns.wizard.notDraftEditable'), step: null };
   }
   if (status === 400) {
+    if (/ADAPTIVE_BUDGET_TOO_SMALL/i.test(message)) {
+      const need = message.match(/(?:need|required|cần)\D*(\d+)/i)?.[1] ?? '?';
+      const have = message.match(/(?:have|available|hiện có)\D*(\d+)/i)?.[1] ?? '?';
+      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{need}', need).replace('{have}', have), step: 3 };
+    }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {
       const fallbackKey =

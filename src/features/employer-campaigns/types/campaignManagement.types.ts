@@ -69,6 +69,7 @@ export interface EmployerCampaign {
   maxQuestions?: number | null;
   questionsPerSession?: number | null;
   questionBankSummary?: { total?: number | null } | null;
+  questionBankWarnings?: string[];
   skipPenalty?: boolean | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];

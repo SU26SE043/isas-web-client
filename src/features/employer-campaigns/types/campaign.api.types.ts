@@ -78,6 +78,8 @@ export type CampaignResponse = {
   cvCount?: number | null;
   invitedCount?: number | null;
   completedCount?: number | null;
+  /** Legacy fixture-only alias; live contract uses cvCount. */
+  applicantCount?: number | null;
   maxCandidates?: number | null;
   deadline?: string | null;
   endDate?: string | null;

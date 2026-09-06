@@ -939,6 +939,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'Chiến dịch phải có ít nhất một câu hỏi.',
     'employer.campaigns.wizard.questionsRequired': 'Chiến dịch phải có ít nhất một câu hỏi.',
+    'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'Cần {need} câu hỏi hợp lệ nhưng hiện chỉ có {have}. Hãy giảm độ sâu thích ứng hoặc thêm câu hỏi rồi thử xuất bản lại.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Tiêu chí đánh giá không hợp lệ. Vui lòng kiểm tra trọng số và điểm tối đa.',
     'employer.campaigns.wizard.criteriaRequired': 'Vui lòng thêm ít nhất một tiêu chí đánh giá.',
@@ -1188,6 +1189,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.rubric.summary': 'Mốc điểm: {{anchors}}/{{total}} tiêu chí · Sàn: {{floors}} tiêu chí',
     'employer.campaigns.form.adaptivePreset': 'Mức độ phỏng vấn thích ứng',
     'employer.campaigns.form.adaptiveDepth': 'Độ sâu đào sâu',
+    'employer.campaigns.form.adaptiveBudgetWarning': 'Độ sâu này chỉ hỗ trợ tối đa {max} câu hỏi; hãy giảm K hoặc giảm độ sâu trước khi xuất bản.',
     'employer.campaigns.form.adaptivePreset.light': 'Gọn',
     'employer.campaigns.form.adaptivePreset.off': 'Tắt',
     'employer.campaigns.form.adaptivePreset.balanced': 'Cân bằng',
@@ -1209,6 +1211,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.missingConditions': 'Thiếu',
     'employer.campaigns.campaignQuestions.bank.perCandidate': 'Mỗi ứng viên thi K câu',
     'employer.campaigns.campaignQuestions.bank.perCandidateHelp': 'Để trống để dùng toàn bộ ngân hàng câu hỏi.',
+    'employer.campaigns.campaignQuestions.bank.warnings': 'Cảnh báo ngân hàng câu hỏi',
     'employer.campaigns.campaignQuestions.errors.adaptiveBudgetTooSmall': 'Ngân sách câu hỏi đào sâu quá nhỏ; hãy giảm độ sâu hoặc tăng K.',
     'employer.campaigns.campaignQuestions.errors.questionBankInvalid': 'Ngân hàng câu hỏi không đủ điều kiện cho cấu hình này.',
     'employer.campaigns.campaignQuestions.question.group': 'Nhóm',
@@ -2312,6 +2315,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'The campaign must include at least one question.',
     'employer.campaigns.wizard.questionsRequired': 'The campaign must include at least one question.',
+    'employer.campaigns.wizard.adaptiveBudgetTooSmall': '{need} valid questions are required, but only {have} are available. Reduce adaptive depth or add questions, then publish again.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Evaluation criteria are invalid. Please check weights and max scores.',
     'employer.campaigns.wizard.criteriaRequired': 'Add at least one evaluation criterion.',
@@ -2561,6 +2565,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.rubric.summary': 'Anchors: {{anchors}}/{{total}} criteria · Floors: {{floors}} criteria',
     'employer.campaigns.form.adaptivePreset': 'Adaptive interview depth',
     'employer.campaigns.form.adaptiveDepth': 'Follow-up depth',
+    'employer.campaigns.form.adaptiveBudgetWarning': 'This depth supports at most {max} questions; reduce K or lower the depth before publishing.',
     'employer.campaigns.form.adaptivePreset.light': 'Light',
     'employer.campaigns.form.adaptivePreset.off': 'Off',
     'employer.campaigns.form.adaptivePreset.balanced': 'Balanced',
@@ -2582,6 +2587,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.detail.missingConditions': 'Missing',
     'employer.campaigns.campaignQuestions.bank.perCandidate': 'Questions per candidate (K)',
     'employer.campaigns.campaignQuestions.bank.perCandidateHelp': 'Leave empty to use the full question bank.',
+    'employer.campaigns.campaignQuestions.bank.warnings': 'Question bank warnings',
     'employer.campaigns.campaignQuestions.errors.adaptiveBudgetTooSmall': 'The adaptive question budget is too small; reduce depth or increase K.',
     'employer.campaigns.campaignQuestions.errors.questionBankInvalid': 'The question bank is invalid for this configuration.',
     'employer.campaigns.campaignQuestions.question.group': 'Group',

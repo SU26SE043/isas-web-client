@@ -203,6 +203,7 @@ export function CampaignWizardForm({
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
+          questionCount={state.questions.length}
         />
       ) : null}
 

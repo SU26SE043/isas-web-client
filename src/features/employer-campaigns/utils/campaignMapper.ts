@@ -325,6 +325,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     maxQuestions: item.maxQuestions ?? null,
     questionsPerSession: item.questionsPerSession ?? null,
     questionBankSummary: item.questionBank ? { total: item.questionBank.total } : null,
+    questionBankWarnings: item.questionBank?.warnings ?? [],
     locale: item.language?.trim().toLowerCase() === 'en' ? 'en' : 'vi',
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),

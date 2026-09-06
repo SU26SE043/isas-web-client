@@ -21,6 +21,7 @@ interface CampaignSettingsStepProps {
   onBack: () => void;
   onNext: () => void;
   isSaving?: boolean;
+  questionCount?: number;
 }
 
 function ToggleRow({
@@ -60,6 +61,7 @@ export function CampaignSettingsStep({
   onBack,
   onNext,
   isSaving,
+  questionCount = 0,
 }: CampaignSettingsStepProps) {
   const { t } = useLanguage();
 
@@ -106,7 +108,7 @@ export function CampaignSettingsStep({
 
         {settings.adaptiveEnabled ? (
           <section className="grid gap-4 rounded-xl border border-satin bg-surface-overlay p-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2"><p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.adaptiveDepth')}</p><div className="grid gap-2 sm:grid-cols-3">{ADAPTIVE_PRESETS.map((preset) => <SelectionOption key={preset.key} title={t(`employer.campaigns.form.adaptivePreset.${preset.key}`)} description={`d=${preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0}`} selected={settings.maxDeepPerQuestion === (preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0)} disabled={isSaving} onClick={() => onChange({ maxDeepPerQuestion: preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0, maxFollowUps: preset.key === 'deep' ? 0 : preset.followUps })} showChevron={false} />)}</div></div>
+            <div className="space-y-2 md:col-span-2"><p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.adaptiveDepth')}</p><div className="grid gap-2 sm:grid-cols-3">{ADAPTIVE_PRESETS.map((preset) => <SelectionOption key={preset.key} title={t(`employer.campaigns.form.adaptivePreset.${preset.key}`)} description={`d=${preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0}`} selected={settings.maxDeepPerQuestion === (preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0)} disabled={isSaving} onClick={() => onChange({ maxDeepPerQuestion: preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0, maxFollowUps: preset.followUps })} showChevron={false} />)}</div>{settings.maxDeepPerQuestion && settings.maxDeepPerQuestion > 0 && questionCount > 0 && Math.floor(20 / (1 + settings.maxDeepPerQuestion)) < questionCount ? <p role="alert" className="text-sm text-warning">{t('employer.campaigns.form.adaptiveBudgetWarning').replace('{max}', String(Math.floor(20 / (1 + settings.maxDeepPerQuestion))))}</p> : null}</div>
             <div className="space-y-2">
               <Label htmlFor="settings-max-follow-ups">{t('employer.campaigns.form.maxFollowUps')}</Label>
               <Input
