@@ -250,7 +250,7 @@ export function mapApiRoadmapListItem(raw: unknown): LearningRoadmapCard {
     currentLessonTitle: pickString(item.currentLessonTitle, item.currentLessonTitleVi),
     currentLessonTitleVi: pickString(item.currentLessonTitleVi, item.currentLessonTitle),
     estimatedRemainingHours: pickNumber(item.estimatedRemainingHours),
-    updatedAt: pickString(item.updatedAt) || new Date().toISOString(),
+    updatedAt: pickString(item.createdAt) || '',
     readOnly: Boolean(item.readOnly) || status === 'completed',
     hasFinalReport: typeof item.hasFinalReport === 'boolean' ? item.hasFinalReport : undefined,
     jobCategory: pickString(item.jobCategory),

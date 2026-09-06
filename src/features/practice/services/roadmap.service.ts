@@ -59,7 +59,7 @@ function filterAndSortCards(
   if (query.sort === 'progress') {
     return next.slice().sort((a, b) => b.progressPercent - a.progressPercent);
   }
-  return next.slice().sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  return next.slice().sort((a, b) => +new Date(b.createdAt ?? 0) - +new Date(a.createdAt ?? 0));
 }
 
 /**
