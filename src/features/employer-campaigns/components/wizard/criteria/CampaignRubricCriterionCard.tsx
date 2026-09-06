@@ -120,7 +120,6 @@ export function CampaignRubricCriterionCard({
               style={{ width: `${clamped}%` }}
             />
           </div>
-          <p className="mt-1 text-right text-xs text-muted-foreground">{clamped}%</p>
         </div>
 
         <div className="w-full lg:w-auto">
