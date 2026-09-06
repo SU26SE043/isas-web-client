@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion } from '../../types/campaignManagement.types';
-import { effectiveMaxQuestions } from '../../utils/campaignQuestionLimits';
+import { CAMPAIGN_QUESTION_HARD_MAX } from '../../utils/campaignQuestionLimits';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { AiGenerateCard } from './questions/AiGenerateCard';
@@ -68,14 +68,14 @@ export function CampaignQuestionsStep({
   const [useDefaultCount, setUseDefaultCount] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const busy = isGenerating || isSaving;
-  const max = effectiveMaxQuestions(maxQuestions);
+  const max = CAMPAIGN_QUESTION_HARD_MAX;
   const canSave =
     isDraft &&
     questions.length > 0 &&
     questions.every((item) => item.prompt.trim().length > 0) &&
     questions.length <= max &&
     !busy;
-  const canContinue = canSave && !busy;
+  const canContinue = !busy;
 
   const requestGenerate = () => {
     if (!isDraft || busy) return;
@@ -118,7 +118,7 @@ export function CampaignQuestionsStep({
     >
       <div className="space-y-5">
         {error ? <FieldError message={error} /> : null}
-        <div className="rounded-lg border border-satin bg-surface-overlay p-4"><label className="text-sm font-medium text-foreground" htmlFor="questions-per-session">{t('employer.campaigns.campaignQuestions.bank.perCandidate')}</label><input id="questions-per-session" type="number" min={1} max={20} value={questionsPerSession ?? ''} onChange={(event) => onQuestionsPerSession(event.target.value === '' ? null : Math.max(1, Math.min(20, Number(event.target.value))))} className="mt-2 h-9 w-32 rounded-md border border-satin bg-surface-base px-3 text-sm" /><p className="mt-1 text-xs text-muted-foreground">{t('employer.campaigns.campaignQuestions.bank.perCandidateHelp')}</p></div>
+        <div className="rounded-lg border border-satin bg-surface-overlay p-4"><label className="text-sm font-medium text-foreground" htmlFor="questions-per-session">{t('employer.campaigns.campaignQuestions.bank.perCandidate')}</label><input id="questions-per-session" type="number" min={1} value={questionsPerSession ?? ''} onChange={(event) => onQuestionsPerSession(event.target.value === '' ? null : Number(event.target.value))} className="mt-2 h-9 w-32 rounded-md border border-satin bg-surface-base px-3 text-sm" /><p className="mt-1 text-xs text-muted-foreground">{t('employer.campaigns.campaignQuestions.bank.perCandidateHelp')}</p></div>
 
         <QuestionsSummaryCard
           campaignTitle={campaignTitle}

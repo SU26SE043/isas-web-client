@@ -134,7 +134,7 @@ export function CampaignSettingsStep({
                 value={settings.maxQuestions}
                 onChange={(e) =>
                   onChange({
-                    maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                    maxQuestions: Number(e.target.value) || 0,
                   })
                 }
               />
@@ -153,7 +153,7 @@ export function CampaignSettingsStep({
               value={settings.maxQuestions}
               onChange={(e) =>
                 onChange({
-                  maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                  maxQuestions: Number(e.target.value) || 0,
                 })
               }
             />

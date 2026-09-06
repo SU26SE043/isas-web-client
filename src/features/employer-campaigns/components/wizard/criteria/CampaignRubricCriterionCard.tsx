@@ -167,7 +167,7 @@ export function CampaignRubricCriterionCard({
       </button>
       {expanded ? <div className="mt-3 grid gap-3 border-t border-satin pt-3 sm:grid-cols-[1fr_8rem]">
         <div className="space-y-1">{criterion.levels?.map((level) => <p key={`${criterion.id}-${level.score}`} className="text-xs text-muted-foreground"><strong className="text-foreground">{level.score}</strong> · {level.descriptor}</p>)}</div>
-        <div><label className="text-xs font-medium text-muted-foreground" htmlFor={`campaign-rubric-floor-${criterion.id}`}>{t('employer.campaigns.wizard.rubric.minPct')}</label><Input id={`campaign-rubric-floor-${criterion.id}`} type="number" min={0} max={100} value={criterion.minPct ?? ''} disabled={disabled} onChange={(event) => { const value = event.target.value.trim(); onChange({ minPct: value === '' ? null : Math.max(0, Math.min(100, Number(value))) }); }} className="mt-1 h-9 border-satin bg-surface-overlay/70 text-sm" /><p className="mt-1 text-[11px] text-muted-foreground">{t('employer.campaigns.wizard.rubric.minPctHelp')}</p></div>
+        <div><label className="text-xs font-medium text-muted-foreground" htmlFor={`campaign-rubric-floor-${criterion.id}`}>{t('employer.campaigns.wizard.rubric.minPct')}</label><Input id={`campaign-rubric-floor-${criterion.id}`} type="number" min={0} value={criterion.minPct ?? ''} disabled={disabled} onChange={(event) => { const value = event.target.value.trim(); onChange({ minPct: value === '' ? null : Number(value) }); }} className="mt-1 h-9 border-satin bg-surface-overlay/70 text-sm" /><p className="mt-1 text-[11px] text-muted-foreground">{t('employer.campaigns.wizard.rubric.minPctHelp')}</p></div>
       </div> : null}
     </article>
   );

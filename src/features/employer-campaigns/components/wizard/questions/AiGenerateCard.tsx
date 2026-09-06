@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
-import { effectiveMaxQuestions } from '../../../utils/campaignQuestionLimits';
 
 interface AiGenerateCardProps {
   isDraft: boolean;
@@ -23,7 +22,7 @@ export function AiGenerateCard({
   isDraft,
   hasJd,
   questionCount,
-  maxQuestions,
+  maxQuestions: _maxQuestions,
   useDefaultCount,
   currentQuestionCount,
   disabled,
@@ -33,7 +32,6 @@ export function AiGenerateCard({
   onGenerate,
 }: AiGenerateCardProps) {
   const { t } = useLanguage();
-  const max = effectiveMaxQuestions(maxQuestions);
   const canGenerate = isDraft && hasJd && !disabled && !isGenerating;
 
   return (
@@ -87,13 +85,12 @@ export function AiGenerateCard({
           id="ai-question-count"
           type="number"
           min={1}
-          max={max}
           className="w-36"
           disabled={disabled || isGenerating || useDefaultCount || !isDraft}
           placeholder={t('employer.campaigns.campaignQuestions.generator.countPlaceholder')}
           value={questionCount}
           onChange={(e) =>
-            onQuestionCount(Math.max(1, Math.min(max, Number(e.target.value) || 1)))
+            onQuestionCount(Number(e.target.value) || 0)
           }
         />
       </div>
