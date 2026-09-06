@@ -858,7 +858,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.invite.linked': 'Đã liên kết {count} ứng viên đã đăng ký.',
     'employer.campaigns.invite.pending': '{count} email chờ đăng ký qua liên kết đăng nhập.',
     'employer.campaigns.invite.rejectedTitle': 'Một số email không được thêm',
-    'employer.campaigns.invite.rejected.EMPLOYER_EMAIL': 'Email thuộc tài khoản HR/Organize/Admin',
+    'employer.campaigns.invite.rejected.EMPLOYER_EMAIL': 'Email thuộc tài khoản nhân sự hoặc quản trị viên',
     'employer.campaigns.invite.rejected.INVALID_EMAIL': 'Email không hợp lệ',
 
     'employer.campaigns.selection.title': 'Tuyển chọn ứng viên',
@@ -2231,7 +2231,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.invite.linked': 'Linked {count} registered candidate(s).',
     'employer.campaigns.invite.pending': '{count} email(s) pending registration via magic link.',
     'employer.campaigns.invite.rejectedTitle': 'Some emails were not added',
-    'employer.campaigns.invite.rejected.EMPLOYER_EMAIL': 'Email belongs to an HR/Organize/Admin account',
+    'employer.campaigns.invite.rejected.EMPLOYER_EMAIL': 'Email belongs to an HR or administrator account',
     'employer.campaigns.invite.rejected.INVALID_EMAIL': 'Invalid email address',
 
     'employer.campaigns.selection.title': 'Candidate selection',
