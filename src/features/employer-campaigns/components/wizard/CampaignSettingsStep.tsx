@@ -9,9 +9,9 @@ import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
 const ADAPTIVE_PRESETS = [
-  { key: 'off', followUps: 0, questions: 5 },
-  { key: 'light', followUps: 1, questions: 10 },
-  { key: 'deep', followUps: 5, questions: 20 },
+  { key: 'off', followUps: 0 },
+  { key: 'light', followUps: 1 },
+  { key: 'deep', followUps: 5 },
 ] as const;
 
 interface CampaignSettingsStepProps {

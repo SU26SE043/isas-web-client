@@ -203,6 +203,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.campaignQuestions.validation.countInteger': 'Số lượng câu hỏi phải là số nguyên.',
     'employer.campaigns.campaignQuestions.validation.countMaximum': 'Số lượng câu hỏi không được vượt quá {{max}}.',
     'employer.campaigns.campaignQuestions.validation.countCampaignMax': 'Chiến dịch này chỉ cho phép tối đa {{maxQuestions}} câu hỏi.',
+    'employer.campaigns.campaignQuestions.validation.openSettings': 'Mở cấu hình giới hạn câu hỏi',
     'employer.campaigns.campaignQuestions.validation.questionRequired': 'Nội dung câu hỏi không được để trống.',
     'employer.campaigns.campaignQuestions.validation.listRequired': 'Chiến dịch phải có ít nhất một câu hỏi.',
     'employer.campaigns.campaignQuestions.validation.questionLimit': 'Danh sách không được vượt quá {{max}} câu hỏi.',
@@ -938,7 +939,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'Chiến dịch phải có ít nhất một câu hỏi.',
     'employer.campaigns.wizard.questionsRequired': 'Chiến dịch phải có ít nhất một câu hỏi.',
-    'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'Cần {need} câu hỏi hợp lệ nhưng hiện chỉ có {have}. Hãy giảm độ sâu thích ứng hoặc thêm câu hỏi rồi thử xuất bản lại.',
+    'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'Cấu hình hiện có {questions} câu hỏi ở độ sâu {deep}: cần {need}, đang có {have}, trong khi trần hệ thống là 20 và cấu hình này chỉ cho phép tối đa {maxQuestions} câu. Hãy giảm còn {maxQuestions} câu hoặc chọn độ sâu không quá {maxDepth}.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Tiêu chí đánh giá không hợp lệ. Vui lòng kiểm tra trọng số và điểm tối đa.',
     'employer.campaigns.wizard.criteriaRequired': 'Vui lòng thêm ít nhất một tiêu chí đánh giá.',
@@ -1577,6 +1578,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.campaignQuestions.validation.countInteger': 'Question count must be an integer.',
     'employer.campaigns.campaignQuestions.validation.countMaximum': 'Question count cannot exceed {{max}}.',
     'employer.campaigns.campaignQuestions.validation.countCampaignMax': 'This campaign allows at most {{maxQuestions}} questions.',
+    'employer.campaigns.campaignQuestions.validation.openSettings': 'Open question limit settings',
     'employer.campaigns.campaignQuestions.validation.questionRequired': 'Question text cannot be empty.',
     'employer.campaigns.campaignQuestions.validation.listRequired': 'The campaign must have at least one question.',
     'employer.campaigns.campaignQuestions.validation.questionLimit': 'The list cannot exceed {{max}} questions.',
@@ -2313,7 +2315,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'The campaign must include at least one question.',
     'employer.campaigns.wizard.questionsRequired': 'The campaign must include at least one question.',
-    'employer.campaigns.wizard.adaptiveBudgetTooSmall': '{need} valid questions are required, but only {have} are available. Reduce adaptive depth or add questions, then publish again.',
+    'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'The current configuration has {questions} questions at depth {deep}: it needs {need}, has {have}, and the system cap is 20, so this configuration allows at most {maxQuestions} questions. Reduce to {maxQuestions} questions or choose a depth no greater than {maxDepth}.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Evaluation criteria are invalid. Please check weights and max scores.',
     'employer.campaigns.wizard.criteriaRequired': 'Add at least one evaluation criterion.',

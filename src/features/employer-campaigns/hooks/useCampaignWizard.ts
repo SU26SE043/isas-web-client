@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
@@ -235,9 +236,25 @@ function mapSubmitError(
   }
   if (status === 400) {
     if (/ADAPTIVE_BUDGET_TOO_SMALL/i.test(message)) {
-      const need = message.match(/(?:need|required|cần)\D*(\d+)/i)?.[1] ?? '?';
-      const have = message.match(/(?:have|available|hiện có)\D*(\d+)/i)?.[1] ?? '?';
-      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{need}', need).replace('{have}', have), step: 3 };
+      const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
+      const body = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+      const nested = body.data && typeof body.data === 'object' ? (body.data as Record<string, unknown>) : body;
+      const numberFrom = (key: string, pattern: RegExp) => {
+        const value = nested[key];
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        return Number(message.match(pattern)?.[1] ?? NaN);
+      };
+      const need = numberFrom('need', /(?:need|required|cần)\D*(\d+)/i);
+      const have = numberFrom('have', /(?:have|available|hiện có)\D*(\d+)/i);
+      const questions = numberFrom('questions', /(?:questions|câu hỏi)\D*(\d+)/i);
+      const deep = numberFrom('deep', /(?:deep|depth|độ sâu)\D*(\d+)/i);
+      const safeNeed = Number.isFinite(need) ? need : 0;
+      const safeHave = Number.isFinite(have) ? have : questions;
+      const safeQuestions = Number.isFinite(questions) ? questions : safeHave;
+      const safeDeep = Number.isFinite(deep) ? deep : 0;
+      const maxQuestions = Math.floor(20 / (1 + safeDeep));
+      const maxDepth = safeQuestions > 0 ? Math.max(0, Math.floor(20 / safeQuestions) - 1) : 0;
+      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(maxQuestions)).replace('{maxDepth}', String(maxDepth)), step: 3 };
     }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {

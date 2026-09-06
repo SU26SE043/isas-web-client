@@ -37,6 +37,7 @@ interface CampaignQuestionsStepProps {
   onNext: () => void;
   isGenerating?: boolean;
   isSaving?: boolean;
+  onOpenSettings?: () => void;
 }
 
 export function CampaignQuestionsStep({
@@ -64,6 +65,7 @@ export function CampaignQuestionsStep({
   onNext,
   isGenerating = false,
   isSaving = false,
+  onOpenSettings,
 }: CampaignQuestionsStepProps) {
   const { t } = useLanguage();
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -119,7 +121,7 @@ export function CampaignQuestionsStep({
       }
     >
       <div className="space-y-5">
-        {error ? <FieldError message={error} /> : null}
+        {error ? <><FieldError message={error} />{/(tối đa|at most)/i.test(error) && onOpenSettings ? <button type="button" className="text-xs text-info underline underline-offset-2" onClick={onOpenSettings}>{t('employer.campaigns.campaignQuestions.validation.openSettings')}</button> : null}</> : null}
         {questionBankWarnings.length > 0 ? (
           <div role="status" className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
             <p className="font-medium">{t('employer.campaigns.campaignQuestions.bank.warnings')}</p>
