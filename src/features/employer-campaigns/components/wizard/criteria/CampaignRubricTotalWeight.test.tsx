@@ -63,7 +63,6 @@ describe('CampaignRubricTotalWeight — empty and invalid states', () => {
     render(
       <CampaignCriteriaManualList
         rubric={[]}
-        contextLabel="Backend"
         onChangeRubric={() => undefined}
       />,
     );

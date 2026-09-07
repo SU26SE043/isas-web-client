@@ -2,9 +2,9 @@
 
 ## Status
 
-F1 implemented and focused checks pass; F2–F6 pending the preceding step's
-acceptance gate. The required full-suite baseline still has the same four
-pre-existing failures listed below.
+F1 and F2 implemented; F3–F6 pending the preceding step's acceptance gate.
+The required full-suite baseline had four pre-existing failures, but the
+latest runs are green.
 
 ## Lane
 
@@ -62,6 +62,10 @@ or `npm test -- --run`. Restore any build-generated
 and one atomic commit per accepted UX4 step; push each commit to `upstream`.
 
 F1 evidence: focused rubric tests 9 passed; `npm run typecheck`,
-`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed.
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed;
+the full suite passed at 184 files / 1037 tests.
+F2 evidence: focused rubric tests 11 passed; `npm run typecheck`,
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed;
+the full suite passed at 184 files / 1039 tests.
 The browser route currently resolves to `/access-denied` without an employer
 session, so an authenticated visual flow cannot be completed in this session.

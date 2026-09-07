@@ -153,9 +153,6 @@ export function CampaignWizardForm({
           rubric={state.rubric}
           campaignId={state.draftId ?? campaign?.id ?? null}
           jobCategory={wizard.jobCategory}
-          contextLabel={
-            wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
-          }
           error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
           onReset={wizard.resetRubric}

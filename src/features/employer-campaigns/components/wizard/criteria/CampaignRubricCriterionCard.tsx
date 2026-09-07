@@ -25,7 +25,6 @@ const CRITERION_ICONS = [
 interface CampaignRubricCriterionCardProps {
   criterion: RubricCriterion;
   index: number;
-  contextLabel: string;
   disabled?: boolean;
   onChange: (patch: Partial<RubricCriterion>) => void;
   onRemove: () => void;
@@ -34,7 +33,6 @@ interface CampaignRubricCriterionCardProps {
 export function CampaignRubricCriterionCard({
   criterion,
   index,
-  contextLabel,
   disabled = false,
   onChange,
   onRemove,
@@ -53,7 +51,7 @@ export function CampaignRubricCriterionCard({
 
   return (
     <article className="frame-satin rounded-xl border border-satin bg-surface-raised/60 px-3 py-3 sm:px-4 sm:py-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(14rem,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] lg:items-start">
+      <div className="grid gap-3 lg:grid-cols-[minmax(18rem,1.15fr)_minmax(0,1.45fr)_7.5rem_7rem_auto] lg:items-start">
         <div className="flex min-w-0 items-start gap-3">
           <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {indexLabel}
@@ -67,15 +65,15 @@ export function CampaignRubricCriterionCard({
             <label className="sr-only" htmlFor={`campaign-rubric-name-${criterion.id}`}>
               {t('employer.campaigns.wizard.rubric.name')}
             </label>
-            <Input
+            <textarea
               id={`campaign-rubric-name-${criterion.id}`}
               value={criterion.name}
               maxLength={255}
+              rows={2}
               disabled={disabled}
               onChange={(event) => onChange({ name: event.target.value })}
-              className="h-9 border-satin bg-surface-overlay/70 text-sm font-semibold"
+              className="min-h-[72px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm font-semibold leading-relaxed whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
             />
-            <p className="truncate text-xs text-muted-foreground">{contextLabel}</p>
           </div>
         </div>
 
@@ -85,11 +83,11 @@ export function CampaignRubricCriterionCard({
           </label>
           <textarea
             id={`campaign-rubric-desc-${criterion.id}`}
-            rows={2}
+            rows={4}
             value={criterion.description}
             disabled={disabled}
             onChange={(event) => onChange({ description: event.target.value })}
-            className="min-h-[72px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[112px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 

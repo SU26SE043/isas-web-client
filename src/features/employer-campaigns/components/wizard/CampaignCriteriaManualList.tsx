@@ -5,7 +5,6 @@ import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionC
 
 interface CampaignCriteriaManualListProps {
   rubric: RubricCriterion[];
-  contextLabel: string;
   disabled?: boolean;
   onChangeRubric: (rubric: RubricCriterion[]) => void;
 }
@@ -22,7 +21,6 @@ function createEmptyCriterion(): RubricCriterion {
 
 export function CampaignCriteriaManualList({
   rubric,
-  contextLabel,
   disabled,
   onChangeRubric,
 }: CampaignCriteriaManualListProps) {
@@ -63,7 +61,6 @@ export function CampaignCriteriaManualList({
             key={criterion.id}
             criterion={criterion}
             index={index}
-            contextLabel={contextLabel}
             disabled={Boolean(disabled)}
             onChange={(patch) => updateCriterion(index, patch)}
             onRemove={() => onChangeRubric(rubric.filter((item) => item.id !== criterion.id))}
