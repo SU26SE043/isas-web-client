@@ -7,8 +7,6 @@ const snapshot = (hardFilters = createEmptyHardFiltersState()): CampaignWizardSu
   info: {
     title: 'Frontend engineer',
     domain: 'frontend',
-    location: 'Remote',
-    locationCoordinates: null,
     maxCandidates: null,
     timeLimitMinutes: 30,
     passScorePct: null,

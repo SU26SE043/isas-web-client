@@ -2,9 +2,9 @@
 
 ## Status
 
-F1–F4 implemented; F5–F6 pending the preceding step's acceptance gate.
-The required full-suite baseline had four pre-existing failures, but the
-latest runs are green.
+F1–F5 implemented; F6 remains pending the preceding step's acceptance gate.
+The required full-suite baseline had four pre-existing failures; the latest
+run still has four failures outside the UX4 scope.
 
 ## Lane
 
@@ -20,11 +20,10 @@ Relevant contracts: `docs/product/campaign-management.md`,
 `docs/product/product-scope.md`, `docs/product/module-scope.md`, and the
 campaign-management section of `docs/FRONTEND_MASTER_PLAN.md`.
 
-Known reconciliation point: UX4-F5 asks to remove the unused location UI and
-provider, while `docs/product/campaign-management.md` still describes
-`location` as a required campaign field and documents the provider boundary.
-That deletion must be reconciled before F5; it is not silently treated as a
-pure cleanup.
+F5 reconciliation: the user confirmed that the UX4 brief takes precedence for
+the wizard cleanup. `docs/product/campaign-management.md` now records that
+location remains read-only in list/detail responses but is not collected or
+persisted by the create/edit wizard.
 
 ## Baseline
 
@@ -46,9 +45,8 @@ change directly affects them.
    vocabulary.
 4. F4: review shows `maxDeepPerQuestion`, the shared adaptive-budget result,
    an actionable overflow warning, and a clear publish affordance state.
-5. F5: only after contract reconciliation, remove confirmed dead location code
-   and meet the specified touch-target audit without shrinking text or adding
-   non-token chrome.
+5. F5: remove confirmed dead location code and meet the specified touch-target
+   audit without shrinking text or adding non-token chrome.
 6. F6: complete the employer flow manually in the real UI, record every issue,
    and separate UX4 fixes from follow-up backlog items.
 
@@ -75,5 +73,13 @@ F4 evidence: adaptive-budget/review tests 8 passed; `npm run typecheck`,
 The full suite finished at 183 passed files / 4 failed files and 1049 passed /
 8 failed tests; all failures are outside F4 in the existing AuthModal,
 EndCampaignDialog, AudioRecorderModal, and RoadmapNameEditor tests.
-The browser route currently resolves to `/access-denied` without an employer
-session, so an authenticated visual flow cannot be completed in this session.
+F5 evidence: removed the unused location wizard component/provider, provider
+environment setting, wizard location state/hydration, location i18n keys, and
+obsolete location tests; retained response-only location data for list/detail.
+Focused post-cleanup campaign tests passed 11/11; `npm run typecheck`,
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed.
+The required full suite finished at 182 passed files / 3 failed files and
+1048 passed / 4 failed tests; failures are outside F5 in AuthModal,
+EndCampaignDialog, and EmployerInvoicesPage. The browser route resolves to
+`/access-denied` without an employer session; the visible screenshot confirms
+the guard page, so the authenticated wizard flow remains unverified here.

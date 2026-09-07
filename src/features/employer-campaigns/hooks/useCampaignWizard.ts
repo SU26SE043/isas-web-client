@@ -92,9 +92,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   return {
     title: campaign?.title ?? '',
-    domain: resolveDomainOption(campaign?.domain),
-    location: '',
-    locationCoordinates: null,
+    domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
     passScorePct: campaign?.passScorePct ?? null,

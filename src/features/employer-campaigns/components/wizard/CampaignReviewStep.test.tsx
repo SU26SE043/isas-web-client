@@ -32,8 +32,6 @@ const baseProps = {
   info: {
     title: 'Frontend campaign',
     domain: 'frontend',
-    location: '',
-    locationCoordinates: null,
     maxCandidates: 10,
     timeLimitMinutes: 60,
     passScorePct: 70,

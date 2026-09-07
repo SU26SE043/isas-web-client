@@ -4,7 +4,7 @@ Date: 2026-08-03
 
 ## Status
 
-Accepted
+Superseded by UX4-F5
 
 ## Context
 
@@ -14,7 +14,7 @@ location string and has no documented geocoding proxy or coordinate fields.
 
 ## Decision
 
-Use Photon's public forward-search endpoint for bounded, debounced browser
+Historical decision: use Photon's public forward-search endpoint for bounded, debounced browser
 lookups and OpenStreetMap's embeddable map for the selected marker. Keep the
 Photon base URL configurable through `VITE_PHOTON_API_URL`. Store coordinates
 only in browser memory and send only `location` to CampaignService. Manual entry
@@ -45,3 +45,7 @@ Tradeoffs:
 
 - Move `VITE_PHOTON_API_URL` to an organization-controlled proxy/self-hosted
   Photon deployment before sustained production traffic.
+
+This decision is no longer active. UX4-F5 removed the wizard location field and
+its provider integration because the current CampaignService create/update
+contract does not persist location.
