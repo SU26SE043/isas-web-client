@@ -43,7 +43,13 @@ const overlayDebt: Record<string, string> = {
   'src/features/practice/components/learning-path/LearningSidebar.tsx': 'static learning navigation chrome; deferred flat surface',
 };
 
-const sourceFiles = import.meta.glob('/src/**/*.tsx', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+// UX3 — glob PHẢI phủ cả `.ts`, không chỉ `.tsx`. Class màu không sống riêng trong JSX: chúng nằm
+// cả trong bảng tra và hàm helper — `interviewHeatmapUtils.ts` (thang biểu đồ nhiệt),
+// `questionTimer.ts` (màu đếm ngược), `flowWizardAccent.ts` (accent wizard) đều từng chứa bậc pallet
+// thô. Với glob chỉ-`.tsx`, cắm `text-violet-300` vào một file `.ts` chạy qua lưới này KHÔNG một
+// dòng đỏ (đã thử: 1031/1031 xanh). Mở rộng sang `.ts` không thêm vi phạm nào ở thời điểm sửa —
+// tức phần nợ đã sạch, chỉ là lưới chưa giữ được.
+const sourceFiles = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 
 describe('light theme regression guard', () => {
   it('reports every legacy dark class with its file and line', () => {
