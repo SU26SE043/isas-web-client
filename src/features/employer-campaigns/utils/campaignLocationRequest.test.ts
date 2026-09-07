@@ -84,7 +84,22 @@ describe('campaign wizard request contract', () => {
 
   it('does not send deprecated location changes in a dirty update', () => {
     const dirty = buildDirtyUpdateRequest(snapshot(), snapshot());
-    expect(dirty).toEqual({});
+    expect(dirty).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+    });
+    expect(dirty).not.toHaveProperty('location');
+  });
+
+  it('echoes live endpoint identity fields for partial metadata updates', () => {
+    const current = snapshot();
+    current.info.passScorePct = 75;
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      passScorePct: 75,
+    });
   });
 
   it('does not require a location in the campaign information step', () => {

@@ -290,5 +290,12 @@ export function buildDirtyUpdateRequest(
     }
   });
 
+  // The live v10 update endpoint validates the campaign identity fields even
+  // when the rest of the request is a partial update. Keep the business
+  // payload dirty-only, but echo those required fields so a change such as
+  // passScorePct does not fail with "Title field is required".
+  if (currentPayload.title) dirty.title = currentPayload.title;
+  if (currentPayload.domain) dirty.domain = currentPayload.domain;
+
   return dirty;
 }
