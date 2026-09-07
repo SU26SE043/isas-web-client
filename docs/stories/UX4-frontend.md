@@ -82,4 +82,17 @@ The required full suite finished at 182 passed files / 3 failed files and
 1048 passed / 4 failed tests; failures are outside F5 in AuthModal,
 EndCampaignDialog, and EmployerInvoicesPage. The browser route resolves to
 `/access-denied` without an employer session; the visible screenshot confirms
-the guard page, so the authenticated wizard flow remains unverified here.
+the guard page. Opening `/login` shows the shared login modal, but no employer
+credential/session is available in this task, so the authenticated wizard flow
+remains unverified.
+
+F6 verification: the manual real-employer flow could not proceed past the auth
+gate. The fallback `npm run test:e2e -- e2e/specs/b2b/campaign-slots.spec.ts
+--project=chromium` finished 3/3 failed after retry: page-load/selector
+timeouts occurred before the slots, invitation-capacity, and edit/jump checks
+could run. No application code was changed during this verification.
+
+F6 issue log and follow-ups (not UX4 fixes): provision an employer test session
+or approved credentials for the real manual journey; then stabilize the
+campaign-slots Playwright fixture and align its expected detail/wizard state
+with the current application before rerunning the full employer checklist.
