@@ -2,7 +2,7 @@
 
 ## Status
 
-F1–F3 implemented; F4–F6 pending the preceding step's acceptance gate.
+F1–F4 implemented; F5–F6 pending the preceding step's acceptance gate.
 The required full-suite baseline had four pre-existing failures, but the
 latest runs are green.
 
@@ -70,5 +70,10 @@ the full suite passed at 184 files / 1039 tests.
 F3 evidence: focused wizard/rubric tests 21 passed; `npm run typecheck`,
 `npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed;
 the full suite passed at 185 files / 1049 tests.
+F4 evidence: adaptive-budget/review tests 8 passed; `npm run typecheck`,
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed.
+The full suite finished at 183 passed files / 4 failed files and 1049 passed /
+8 failed tests; all failures are outside F4 in the existing AuthModal,
+EndCampaignDialog, AudioRecorderModal, and RoadmapNameEditor tests.
 The browser route currently resolves to `/access-denied` without an employer
 session, so an authenticated visual flow cannot be completed in this session.

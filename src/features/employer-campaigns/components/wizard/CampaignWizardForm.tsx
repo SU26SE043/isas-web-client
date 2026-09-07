@@ -221,6 +221,7 @@ export function CampaignWizardForm({
           jd={state.jd}
           rubric={state.rubric}
           questions={state.questions}
+          questionsPerSession={state.questionsPerSession}
           settings={state.settings}
           campaignId={state.draftId}
           domainLabel={wizard.domainLabel}

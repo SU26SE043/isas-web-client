@@ -1,4 +1,5 @@
 import { ListChecks } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
@@ -12,12 +13,17 @@ import { FieldError } from './FieldError';
 import { CampaignReviewSection } from './review/CampaignReviewSection';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
+import {
+  calculateAdaptiveQuestionBudget,
+  CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+} from '../../utils/campaignAdaptiveBudget';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState;
   jd: JobDescriptionState;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  questionsPerSession?: number | null;
   settings: CampaignSettingsState;
   campaignId?: string;
   domainLabel: string;
@@ -42,6 +48,7 @@ export function CampaignReviewStep({
   jd,
   rubric,
   questions,
+  questionsPerSession,
   settings,
   campaignId,
   domainLabel,
@@ -60,6 +67,11 @@ export function CampaignReviewStep({
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
   const slots = slotsQuery.data ?? [];
   const slotCapacity = campaignSlotCapacity(slots);
+  const adaptiveBudget = calculateAdaptiveQuestionBudget(
+    questionsPerSession ?? settings.maxQuestions,
+    settings.maxDeepPerQuestion,
+    settings.adaptiveEnabled,
+  );
 
   return (
     <SectionPanel
@@ -70,7 +82,7 @@ export function CampaignReviewStep({
           onBack={onBack}
           onNext={onSubmit}
           nextLabel={isSubmitting ? submittingLabel : submitLabel}
-          nextDisabled={submitDisabled || isSubmitting}
+          nextDisabled={submitDisabled || isSubmitting || adaptiveBudget.exceedsLimit}
           isSaving={isSubmitting}
           backDisabled={isSubmitting}
         />
@@ -146,8 +158,14 @@ export function CampaignReviewStep({
             {settings.adaptiveEnabled
               ? ` · ${t('employer.campaigns.form.maxFollowUps')}: ${settings.maxFollowUps}`
               : null}
+            {` · ${t('employer.campaigns.form.maxDeepPerQuestion')}: ${settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0}`}
             {` · ${t('employer.campaigns.form.maxQuestionsSetting')}: ${settings.maxQuestions}`}
           </p>
+          {settings.adaptiveEnabled ? <div className="mt-3 space-y-2 rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm">
+            <p className="font-medium text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</p>
+            {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetFormula').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{total}}', String(adaptiveBudget.requestedTotal))}</p> : null}
+            {adaptiveBudget.exceedsLimit ? <Alert variant="error"><AlertDescription>{t('employer.campaigns.wizard.review.adaptiveBudgetExceeded').replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT))}</AlertDescription></Alert> : null}
+          </div> : null}
         </CampaignReviewSection>
 
         <CampaignReviewSection title={t('employer.campaigns.wizard.review.scoringRules')} onEdit={() => onGoToStep(0)}>
