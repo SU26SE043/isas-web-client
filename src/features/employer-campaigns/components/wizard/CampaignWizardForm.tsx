@@ -94,6 +94,8 @@ export function CampaignWizardForm({
       isEditing={mode === 'edit'}
       autosaveStatus={state.autosaveStatus}
       lastSavedAt={state.lastSavedAt}
+      completedSteps={wizard.completedSteps}
+      onStepChange={wizard.goToStep}
     >
       {wizard.actionError ? (
         <Alert variant="error" className="mb-4">

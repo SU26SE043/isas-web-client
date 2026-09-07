@@ -2,7 +2,7 @@
 
 ## Status
 
-F1 and F2 implemented; F3–F6 pending the preceding step's acceptance gate.
+F1–F3 implemented; F4–F6 pending the preceding step's acceptance gate.
 The required full-suite baseline had four pre-existing failures, but the
 latest runs are green.
 
@@ -67,5 +67,8 @@ the full suite passed at 184 files / 1037 tests.
 F2 evidence: focused rubric tests 11 passed; `npm run typecheck`,
 `npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed;
 the full suite passed at 184 files / 1039 tests.
+F3 evidence: focused wizard/rubric tests 21 passed; `npm run typecheck`,
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed;
+the full suite passed at 185 files / 1049 tests.
 The browser route currently resolves to `/access-denied` without an employer
 session, so an authenticated visual flow cannot be completed in this session.

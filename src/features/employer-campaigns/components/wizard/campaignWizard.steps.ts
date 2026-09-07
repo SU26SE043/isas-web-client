@@ -48,6 +48,18 @@ export type CampaignWizardStepIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export const CAMPAIGN_WIZARD_STEP_KEYS = CAMPAIGN_WIZARD_STEPS.map((step) => step.titleKey);
 
+export function canNavigateToWizardStep(
+  step: number,
+  currentStep: number,
+  completedSteps: readonly number[],
+): boolean {
+  return (
+    step >= 0 &&
+    step < CAMPAIGN_WIZARD_STEP_COUNT &&
+    (step === currentStep || completedSteps.includes(step))
+  );
+}
+
 /** Campaign domains shown in create wizard. */
 export const CAMPAIGN_DOMAIN_OPTIONS = [
   'frontend',

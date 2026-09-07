@@ -41,7 +41,10 @@ import type {
   CriteriaFileState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
+import {
+  CAMPAIGN_WIZARD_STEP_COUNT,
+  canNavigateToWizardStep,
+} from '../components/wizard/campaignWizard.steps';
 import { useCampaignFileActions } from './useCampaignFileActions';
 import type { BlobDownloadResult, CampaignFileType } from '../utils/campaignFiles';
 import {
@@ -684,12 +687,13 @@ export function useCampaignWizard({
   }, []);
 
   const goToStep = useCallback((step: number) => {
+    if (!canNavigateToWizardStep(step, state.currentStep, state.completedSteps)) return;
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, step)),
     }));
     setStepError(null);
-  }, []);
+  }, [state.completedSteps, state.currentStep]);
 
   const goNext = useCallback(async () => {
     if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions || isEnsuringDraft) return;
