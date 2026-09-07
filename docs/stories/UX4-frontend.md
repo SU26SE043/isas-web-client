@@ -1,0 +1,67 @@
+# UX4 Frontend usability pass
+
+## Status
+
+F1 implemented and focused checks pass; F2–F6 pending the preceding step's
+acceptance gate. The required full-suite baseline still has the same four
+pre-existing failures listed below.
+
+## Lane
+
+Normal. This is a bounded frontend change request from `UX4Frontend.docx`:
+layout, copy, navigation affordances, shared calculation display, dead-code
+cleanup, and touch-target review. The brief explicitly forbids API contract,
+mapper, migration, and backend changes.
+
+## Product contract
+
+Source brief: `C:/Users/HP/Downloads/UX4Frontend.docx` supplied by the user.
+Relevant contracts: `docs/product/campaign-management.md`,
+`docs/product/product-scope.md`, `docs/product/module-scope.md`, and the
+campaign-management section of `docs/FRONTEND_MASTER_PLAN.md`.
+
+Known reconciliation point: UX4-F5 asks to remove the unused location UI and
+provider, while `docs/product/campaign-management.md` still describes
+`location` as a required campaign field and documents the provider boundary.
+That deletion must be reconciled before F5; it is not silently treated as a
+pure cleanup.
+
+## Baseline
+
+Measured on the new branch from local `upstream/dev` on 2026-09-07 with the
+required command `npm test -- --watch=false`: 183 test files, 1032 tests, 4
+failed. Existing failures are in `AuthModal`, `EndCampaignDialog`, and
+`usePracticeSetupFlow`; UX4 work must not claim or repair them unless a UX4
+change directly affects them.
+
+## Acceptance criteria
+
+1. F1: an empty criteria step is neutral and inviting; no premature error,
+   summary strip, or table header is shown, and the standard/manual paths are
+   clear in both Vietnamese and English.
+2. F2: criterion names wrap instead of truncating, descriptions have usable
+   space, and the repeated context label is removed.
+3. F3: completed wizard steps are keyboard-accessible buttons with visible
+   focus and `aria-current` on the current step; save status uses one three-state
+   vocabulary.
+4. F4: review shows `maxDeepPerQuestion`, the shared adaptive-budget result,
+   an actionable overflow warning, and a clear publish affordance state.
+5. F5: only after contract reconciliation, remove confirmed dead location code
+   and meet the specified touch-target audit without shrinking text or adding
+   non-token chrome.
+6. F6: complete the employer flow manually in the real UI, record every issue,
+   and separate UX4 fixes from follow-up backlog items.
+
+## Validation
+
+After each accepted step: required unit suite, typecheck, i18n parity,
+UI-size, build, relevant E2E/manual checks, and before/after screenshots for
+UI changes. Use `npm test -- --watch=false`; do not substitute `npx vitest run`
+or `npm test -- --run`. Restore any build-generated
+`src/environments/environment.prod.ts` change before committing. One branch/PR
+and one atomic commit per accepted UX4 step; push each commit to `upstream`.
+
+F1 evidence: focused rubric tests 9 passed; `npm run typecheck`,
+`npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed.
+The browser route currently resolves to `/access-denied` without an employer
+session, so an authenticated visual flow cannot be completed in this session.
