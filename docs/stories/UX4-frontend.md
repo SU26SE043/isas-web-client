@@ -2,9 +2,11 @@
 
 ## Status
 
-F1–F5 implemented; F6 remains pending the preceding step's acceptance gate.
-The required full-suite baseline had four pre-existing failures; the latest
-run still has four failures outside the UX4 scope.
+F1–F5 implemented; F6 live API wiring and the authenticated create/edit
+journey are verified. Publish and invitation actions remain gated on explicit
+user confirmation during manual verification.
+The required full-suite baseline has pre-existing failures outside the UX4
+scope.
 
 ## Lane
 
@@ -80,19 +82,22 @@ Focused post-cleanup campaign tests passed 11/11; `npm run typecheck`,
 `npm run check:i18n`, `npm run check:ui-size`, and `npm run build` passed.
 The required full suite finished at 182 passed files / 3 failed files and
 1048 passed / 4 failed tests; failures are outside F5 in AuthModal,
-EndCampaignDialog, and EmployerInvoicesPage. The browser route resolves to
-`/access-denied` without an employer session; the visible screenshot confirms
-the guard page. Opening `/login` shows the shared login modal, but no employer
-credential/session is available in this task, so the authenticated wizard flow
-remains unverified.
+EndCampaignDialog, and EmployerInvoicesPage. The unauthenticated browser
+guard was also verified before the live Employer session was supplied.
 
-F6 verification: the manual real-employer flow could not proceed past the auth
-gate. The fallback `npm run test:e2e -- e2e/specs/b2b/campaign-slots.spec.ts
---project=chromium` finished 3/3 failed after retry: page-load/selector
-timeouts occurred before the slots, invitation-capacity, and edit/jump checks
-could run. No application code was changed during this verification.
+F6 verification: the Employer session now reaches the real dev gateway through
+the local Vite `/api` proxy. The authenticated UI verified campaign list/detail
+GET, the seven-step create flow with live campaign POST, rubric/questions/
+settings payloads, AI question generation, interview-slot GET/POST, and draft
+edit with live metadata PUT plus questions PUT. The first edit attempt exposed
+that the gateway requires `title` and `domain` even for a partial metadata
+update; the request builder now echoes those identity fields while retaining
+dirty-field behavior. The live detail confirmed the updated pass score.
 
-F6 issue log and follow-ups (not UX4 fixes): provision an employer test session
-or approved credentials for the real manual journey; then stabilize the
-campaign-slots Playwright fixture and align its expected detail/wizard state
-with the current application before rerunning the full employer checklist.
+F6 issue log and follow-ups (not UX4 fixes): Publish and Send Invitations are
+representational actions and were intentionally not clicked without an
+action-time confirmation. The fallback
+`npm run test:e2e -- e2e/specs/b2b/campaign-slots.spec.ts --project=chromium`
+still needs a separate run against the authenticated fixture; its previous
+attempt failed at page-load/selector timeouts before the slots, invitation-
+capacity, and edit/jump checks could run.
