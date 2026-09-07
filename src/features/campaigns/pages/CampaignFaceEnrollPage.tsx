@@ -116,10 +116,10 @@ export function CampaignFaceEnrollPage() {
       </ul>
 
       {state !== 'ready' ? (
-        <p className="text-sm text-amber-400">{t('campaigns.faceEnroll.cameraIssue')}</p>
+        <p className="text-sm text-warning">{t('campaigns.faceEnroll.cameraIssue')}</p>
       ) : null}
       {error ? (
-        <p className="text-sm text-rose-400" role="alert">
+        <p className="text-sm text-error" role="alert">
           {error}
         </p>
       ) : null}

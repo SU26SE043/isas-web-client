@@ -13,10 +13,7 @@ describe('campaignMapper', () => {
         id: 'c1',
         title: 'Frontend Screen',
         status: 'Active',
-        location: 'HCM',
-        mode: 'Remote',
         capacity: 10,
-        applicants: 3,
         deadline: '2026-08-01',
         updatedAt: '2026-07-01T00:00:00.000Z',
       },
@@ -35,23 +32,23 @@ describe('campaignMapper', () => {
     expect(items[0]?.title).toBe('BA');
   });
 
-  it('maps API status/mode onto EmployerCampaign list fields', () => {
+  it('maps API status and campaign counts onto EmployerCampaign list fields', () => {
     const campaign = mapCampaignResponseToEmployerCampaign({
       id: 'c3',
       title: 'Backend',
       status: 'Paused',
-      mode: 'Hybrid',
-      company: 'Acme',
-      location: 'HN',
       capacity: 5,
-      applicantCount: 2,
+      cvCount: 2,
+      invitedCount: 3,
+      completedCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });
 
     expect(campaign.status).toBe('paused');
-    expect(campaign.mode).toBe('hybrid');
-    expect(campaign.applicants).toBe(2);
+    expect(campaign.cvCount).toBe(2);
+    expect(campaign.invitedCount).toBe(3);
+    expect(campaign.completedCount).toBe(1);
     expect(campaign.deadline).toBe('2026-09-01');
   });
 
@@ -60,11 +57,7 @@ describe('campaignMapper', () => {
       id: 'c-arch',
       title: 'Archived campaign',
       status: 'Archived',
-      mode: 'Remote',
-      company: 'Acme',
-      location: 'HN',
       capacity: 5,
-      applicantCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });
@@ -74,11 +67,7 @@ describe('campaignMapper', () => {
       id: 'c-closed',
       title: 'Closed campaign',
       status: 'Closed',
-      mode: 'Remote',
-      company: 'Acme',
-      location: 'HN',
       capacity: 5,
-      applicantCount: 1,
       endDate: '2026-09-01',
       updatedAt: '2026-07-10T00:00:00.000Z',
     });
@@ -93,20 +82,17 @@ describe('campaignMapper', () => {
         status: 'draft',
         rubric: [{ name: 'Tech', weight: 100, description: 'Depth' }],
         questions: [{ prompt: 'Explain React state' }],
-        candidates: [{ email: 'a@example.com', status: 'invited' }],
       },
     });
     const parsed = parseCampaignResponse(payload);
     expect(parsed?.id).toBe('c4');
     expect(parsed?.rubric).toHaveLength(1);
     expect(parsed?.questions).toHaveLength(1);
-    expect(parsed?.candidates).toHaveLength(1);
 
     const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
     expect(campaign.rubric[0]?.name).toBe('Tech');
     expect(campaign.rubric[0]?.maxScore).toBe(10);
     expect(campaign.questions[0]?.prompt).toBe('Explain React state');
-    expect(campaign.candidates[0]?.status).toBe('invited');
   });
 
   it('parses questionText from Campaign API question DTOs', () => {

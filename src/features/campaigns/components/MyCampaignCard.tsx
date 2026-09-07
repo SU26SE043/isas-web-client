@@ -52,7 +52,7 @@ export function MyCampaignCard({ campaign, highlighted = false }: MyCampaignCard
     <article
       data-campaign-id={campaign.campaignId}
       className={cn(
-        'group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised p-5 shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-info/45 hover:shadow-[0_24px_55px_-28px_rgba(59,130,246,0.28)] sm:p-7',
+        'group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-satin bg-surface-raised p-5 shadow-none transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-info/45 hover:shadow-none sm:p-7',
         highlighted && 'border-info/60 ring-2 ring-info/20',
       )}
     >
@@ -132,3 +132,4 @@ export function MyCampaignCard({ campaign, highlighted = false }: MyCampaignCard
     </article>
   );
 }
+

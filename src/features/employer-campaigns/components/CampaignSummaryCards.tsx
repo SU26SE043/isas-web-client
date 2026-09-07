@@ -14,9 +14,9 @@ export function CampaignSummaryCards({ campaigns }: CampaignSummaryCardsProps) {
   const closed = campaigns.filter(
     (item) => item.status === 'closed' || item.status === 'paused' || item.status === 'archived',
   ).length;
-  const invited = campaigns.reduce((sum, item) => sum + (item.invitedEmails?.length || item.applicants || 0), 0);
+  const invited = campaigns.reduce((sum, item) => sum + (item.invitedCount ?? 0), 0);
   const completed = campaigns.reduce(
-    (sum, item) => sum + Math.min(item.applicants || 0, item.capacity || 0),
+    (sum, item) => sum + (item.completedCount ?? 0),
     0,
   );
 

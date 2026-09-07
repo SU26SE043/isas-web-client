@@ -23,7 +23,7 @@ export function AdminPromptsPage() {
   const forbidden = getApiStatusCode(query.list.error) === 403;
   const selectPrompt = (key: string) => setSelectedKey(key);
   const error = query.list.error;
-  return <AdminPageShell eyebrow="SCR-ADM-PROMPTS" title={t('admin.prompts.title')} description={t('admin.prompts.description')}>
+  return <AdminPageShell title={t('admin.prompts.title')} description={t('admin.prompts.description')}>
     {query.list.isLoading ? <div aria-live="polite" className="rounded-xl border border-satin bg-surface-raised p-6 text-sm text-muted-foreground">{t('admin.prompts.loading')}</div> : null}
     {query.list.isError ? <div className="space-y-3"><Alert variant="error"><AlertDescription>{forbidden ? t('admin.prompts.forbidden') : getApiErrorMessage(error, t('admin.prompts.error'))}</AlertDescription></Alert>{!forbidden ? <Button type="button" variant="outline" onClick={() => void query.list.refetch()}>{t('admin.prompts.retry')}</Button> : null}</div> : null}
     {query.list.data && query.list.data.length === 0 ? <EmptyState title={t('admin.prompts.emptyTitle')} description={t('admin.prompts.emptyDescription')} /> : null}

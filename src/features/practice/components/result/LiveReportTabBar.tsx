@@ -33,7 +33,7 @@ export function LiveReportTabBar({ activeTab, onChange }: LiveReportTabBarProps)
               'shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold tracking-wide transition-colors duration-150',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]',
               isActive
-                ? 'border-info/70 bg-gradient-to-r from-info/20 to-violet-500/20 text-foreground shadow-[0_0_18px_-8px_var(--color-info)]'
+                ? 'border-info/70 bg-gradient-to-r from-info/20 to-info-500/20 text-foreground shadow-[0_0_18px_-8px_var(--color-info)]'
                 : 'border-satin bg-surface-overlay/30 text-foreground/90 hover:border-info/40 hover:bg-info/10 hover:text-foreground',
             )}
           >
@@ -44,3 +44,4 @@ export function LiveReportTabBar({ activeTab, onChange }: LiveReportTabBarProps)
     </div>
   );
 }
+

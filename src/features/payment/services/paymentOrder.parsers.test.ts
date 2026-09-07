@@ -13,7 +13,6 @@ describe('paymentOrder parsers', () => {
       status: 'Pending',
       checkoutUrl: 'https://pay.payos.vn/web/abc',
       interviewCredits: 5,
-      priceVnd: 2000,
     });
 
     expect(dto).toMatchObject({
@@ -29,25 +28,25 @@ describe('paymentOrder parsers', () => {
     expect(parseOrderStatus({ status: 2 })).toBe('2');
   });
 
-  it('parses extended order detail fields', () => {
+  it('parses supported order detail fields', () => {
     const dto = parseOrderResponse({
       id: '11111111-1111-1111-1111-111111111111',
       packageId: '22222222-2222-2222-2222-222222222222',
       status: 'Paid',
       checkoutUrl: null,
       packageName: 'Starter',
-      priceVnd: 99000,
-      paymentStatus: 'Paid',
-      orderStatus: 'Completed',
       paidAt: '2026-07-16T08:00:00Z',
-      paymentMethod: 'PayOS',
-      transactionId: 'txn-123',
+      amountVnd: 99000,
+      interviewCredits: 5,
     });
 
     expect(toPaymentOrderDetail(dto!)).toMatchObject({
       orderId: '11111111-1111-1111-1111-111111111111',
-      paymentMethod: 'PayOS',
-      transactionId: 'txn-123',
+      amountVnd: 99000,
+      status: 'Paid',
+      packageName: 'Starter',
+      paidAt: '2026-07-16T08:00:00Z',
+      interviewCredits: 5,
     });
   });
 

@@ -9,7 +9,7 @@ export function AdminPermissionsPage() {
   const { snapshot } = useAdminPlatform();
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-072" title={t('admin.permissions.title')} description={t('admin.permissions.description')}>
+    <AdminPageShell title={t('admin.permissions.title')} description={t('admin.permissions.description')}>
       <section className="grid gap-4 lg:grid-cols-3">
         {(snapshot?.permissionGroups ?? []).map((group) => (
           <Card key={group.id} className="border border-subtle bg-surface-raised">

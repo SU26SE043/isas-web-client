@@ -47,7 +47,7 @@ export function FeatureCvIllustration() {
           className="absolute left-[-15%] right-[-15%] h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent border-y border-default transform -translate-y-1/2 flex items-center justify-center z-20 pointer-events-none"
           style={{ animation: 'scan 3s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate' }}
         >
-          <div className="absolute w-full h-[2px] bg-surface-overlay shadow-[0_0_15px_4px_rgba(209,213,219,0.8)]" />
+          <div className="absolute w-full h-[2px] bg-surface-overlay shadow-none" />
           <div className="absolute right-4 -top-8 bg-surface-overlay/90 backdrop-blur-md text-foreground font-bold text-[10px] font-mono px-3 py-1 rounded border border-default flex items-center space-x-1">
             <div className="w-1.5 h-1.5 bg-surface-raised rounded-full animate-ping" />
             <span>{t('features.scanning')}</span>
@@ -69,3 +69,4 @@ export function FeatureCvIllustration() {
     </div>
   );
 }
+

@@ -142,11 +142,11 @@ export function CandidateCampaignDetailPage() {
       <div className="page-container page-section mx-auto max-w-6xl space-y-5 py-6">
         <Link to="/candidate/campaigns" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />{t('campaigns.my.backToList')}</Link>
 
-        <header className="relative overflow-hidden rounded-2xl border border-info/60 bg-[radial-gradient(circle_at_80%_40%,rgba(37,99,235,0.2),transparent_38%),radial-gradient(circle_at_65%_100%,rgba(124,58,237,0.14),transparent_34%)] bg-surface-raised p-6 shadow-[0_20px_60px_-32px_rgba(59,130,246,0.7)] sm:p-8">
+        <header className="relative overflow-hidden rounded-2xl border border-info/60 bg-[radial-gradient(circle_at_80%_40%,rgba(37,99,235,0.2),transparent_38%),radial-gradient(circle_at_65%_100%,rgba(124,58,237,0.14),transparent_34%)] bg-surface-raised p-6 shadow-none sm:p-8">
           <div className="absolute -right-8 -top-12 size-48 rounded-full border border-info/20" aria-hidden />
           <div className="relative space-y-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/15 px-3 py-1.5 text-xs font-medium text-violet-200"><BriefcaseBusiness className="size-4" aria-hidden />{t('campaigns.detail.badge')}</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-info-400/30 bg-info-500/15 px-3 py-1.5 text-xs font-medium text-info-200"><BriefcaseBusiness className="size-4" aria-hidden />{t('campaigns.detail.badge')}</span>
               <span className="inline-flex items-center gap-2 rounded-full border border-success/35 bg-success/10 px-3 py-1.5 text-xs font-medium text-success-light"><BadgeCheck className="size-4" aria-hidden />{t(interviewStatusLabelKey(data.interviewStatus))}</span>
             </div>
             <h1 className="heading-primary break-words text-3xl text-foreground sm:text-4xl">{data.title}</h1>
@@ -174,8 +174,8 @@ export function CandidateCampaignDetailPage() {
             </section>
           </div>
           <section className="frame-satin rounded-2xl bg-surface-raised p-5 sm:p-6">
-            <SectionHeading icon={Star} title={t('campaigns.invite.criteria')} iconClassName="text-violet-300" />
-            {data.criteria.length === 0 ? <p className="mt-5 rounded-xl border border-dashed border-satin p-5 text-sm text-muted-foreground">{t('campaigns.invite.noCriteria')}</p> : <div className="mt-5 space-y-3">{data.criteria.map((criterion, index) => <article key={criterion.id ?? `${criterion.name}-${index}`} className="flex gap-4 rounded-xl border border-violet-400/35 bg-surface-overlay/70 p-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]"><span className="grid size-11 shrink-0 place-items-center rounded-full border border-info/40 bg-info/10 text-info">{index % 2 === 0 ? <Code2 className="size-5" aria-hidden /> : <MessageCircle className="size-5" aria-hidden />}</span><div className="min-w-0"><h2 className="font-semibold text-foreground">{index + 1}. {criterion.name}</h2>{criterion.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{criterion.description}</p> : null}</div></article>)}</div>}
+            <SectionHeading icon={Star} title={t('campaigns.invite.criteria')} iconClassName="text-info-300" />
+            {data.criteria.length === 0 ? <p className="mt-5 rounded-xl border border-dashed border-satin p-5 text-sm text-muted-foreground">{t('campaigns.invite.noCriteria')}</p> : <div className="mt-5 space-y-3">{data.criteria.map((criterion, index) => <article key={criterion.id ?? `${criterion.name}-${index}`} className="flex gap-4 rounded-xl border border-info-400/35 bg-surface-overlay/70 p-4 shadow-none"><span className="grid size-11 shrink-0 place-items-center rounded-full border border-info/40 bg-info/10 text-info">{index % 2 === 0 ? <Code2 className="size-5" aria-hidden /> : <MessageCircle className="size-5" aria-hidden />}</span><div className="min-w-0"><h2 className="font-semibold text-foreground">{index + 1}. {criterion.name}</h2>{criterion.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{criterion.description}</p> : null}</div></article>)}</div>}
           </section>
         </div>
       </div>
@@ -191,6 +191,7 @@ export function CandidateCampaignDetailPage() {
   );
 }
 
-function SectionHeading({ icon: Icon, title, iconClassName = 'text-violet-300' }: { icon: typeof FileText; title: string; iconClassName?: string }) {
-  return <div className="flex items-center gap-3 border-b border-satin pb-4"><span className={`grid size-9 place-items-center rounded-full border border-violet-400/30 bg-violet-500/10 ${iconClassName}`}><Icon className="size-5" aria-hidden /></span><h2 className="text-lg font-semibold text-foreground">{title}</h2></div>;
+function SectionHeading({ icon: Icon, title, iconClassName = 'text-info-300' }: { icon: typeof FileText; title: string; iconClassName?: string }) {
+  return <div className="flex items-center gap-3 border-b border-satin pb-4"><span className={`grid size-9 place-items-center rounded-full border border-info-400/30 bg-info-500/10 ${iconClassName}`}><Icon className="size-5" aria-hidden /></span><h2 className="text-lg font-semibold text-foreground">{title}</h2></div>;
 }
+

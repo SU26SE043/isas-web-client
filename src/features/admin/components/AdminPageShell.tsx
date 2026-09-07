@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 interface AdminPageShellProps {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
   actions?: ReactNode;
@@ -14,7 +14,7 @@ export function AdminPageShell({ eyebrow, title, description, actions, children 
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{eyebrow}</p>
+            {eyebrow ? <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{eyebrow}</p> : null}
             <h1 className="mt-2 text-3xl font-semibold text-foreground">{title}</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</p>
           </div>

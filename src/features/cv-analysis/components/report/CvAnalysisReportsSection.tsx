@@ -33,7 +33,7 @@ export function CvAnalysisReportsSection() {
 
       {isError ? (
         <div className="rounded-xl border border-satin bg-surface-overlay px-5 py-8 text-center">
-          <p className="text-sm text-rose-400">{t('cv.report.errorList')}</p>
+          <p className="text-sm text-error">{t('cv.report.errorList')}</p>
           <Button
             type="button"
             className="mt-4"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-const legacyColor = /(?:bg|text|border)-(?:neutral|zinc|gray|slate)-\d+/g;
+const legacyColor = /(?:text|bg|border|ring|from|to|via|shadow)-(?:neutral|zinc|gray|slate|violet|purple|blue|indigo|sky|cyan|emerald|green|amber|orange|red|rose|pink|teal|lime|fuchsia)-\d+/g;
 const overlay = /bg-white\/\[[0-9.]+\]/g;
 // UX2-F4 allowlist: these are known flat-surface debt, recorded while the
 // state-bearing overlays were migrated. This debt is being paid down gradually;

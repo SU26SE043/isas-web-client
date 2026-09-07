@@ -20,7 +20,7 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientReserve': 'Cần ít nhất {amount} token khả dụng để tạo phiên luyện tập.',
 
     'payment.plans.title': 'Gói token & đăng ký',
-    'payment.plans.subtitle': 'Chọn gói phù hợp. Giá hiển thị bằng USD (BRL-003).',
+    'payment.plans.subtitle': 'Chọn gói phù hợp. Giá hiển thị bằng USD (the documented rule).',
     'payment.plans.sectionSubtitle': 'Chọn gói và thanh toán ngay trên trang này.',
     'payment.plans.oneTime': 'Gói credit',
     'payment.plans.subscription': 'Đăng ký hàng tháng',
@@ -140,6 +140,9 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.cancelledDescription':
       'Bạn đã hủy giao dịch hoặc giao dịch chưa được xử lý thành công.',
     'payment.result.failureReason': 'Lý do thất bại',
+    'payment.result.failureExpired': 'Đơn hàng đã hết hạn.',
+    'payment.result.failureCancelled': 'Đơn hàng đã bị huỷ.',
+    'payment.result.failureFailed': 'Cổng thanh toán đã từ chối giao dịch.',
     'payment.result.viewOrder': 'Xem đơn hàng',
     'payment.result.backToDashboard': 'Về bảng điều khiển',
     'payment.result.retryPayment': 'Thanh toán lại',
@@ -246,7 +249,7 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientReserve': 'You need at least {amount} available tokens to start a practice session.',
 
     'payment.plans.title': 'Token packages & subscription',
-    'payment.plans.subtitle': 'Choose a plan. Prices are shown in USD (BRL-003).',
+    'payment.plans.subtitle': 'Choose a plan. Prices are shown in USD (the documented rule).',
     'payment.plans.sectionSubtitle': 'Choose a package and pay directly on this page.',
     'payment.plans.oneTime': 'Credit packages',
     'payment.plans.subscription': 'Monthly subscription',
@@ -366,6 +369,9 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.result.cancelledDescription':
       'You cancelled the payment or the transaction was not completed successfully.',
     'payment.result.failureReason': 'Failure reason',
+    'payment.result.failureExpired': 'The order expired.',
+    'payment.result.failureCancelled': 'The order was cancelled.',
+    'payment.result.failureFailed': 'The payment gateway rejected the transaction.',
     'payment.result.viewOrder': 'View order',
     'payment.result.backToDashboard': 'Back to dashboard',
     'payment.result.retryPayment': 'Pay again',

@@ -51,7 +51,6 @@ export function AdminRoadmapThresholdsPage() {
 
   return (
     <AdminPageShell
-      eyebrow="SCR-ADM-ROADMAP-THRESHOLDS"
       title={t('admin.roadmapThresholds.title')}
       description={t('admin.roadmapThresholds.description')}
       actions={

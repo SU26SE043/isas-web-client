@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react';
+import { ArrowLeft, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
@@ -53,7 +53,7 @@ export function CampaignContextHeader({
               {campaign.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {campaign.domain || campaign.summary}
+              {campaign.domain}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -65,12 +65,6 @@ export function CampaignContextHeader({
         </div>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{campaign.domain}</span>
-          {campaign.location ? (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-4" aria-hidden />
-              {campaign.location}
-            </span>
-          ) : null}
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-4" aria-hidden />
             {remainingLabel} · {deadline}

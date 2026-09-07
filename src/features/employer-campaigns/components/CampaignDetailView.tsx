@@ -110,7 +110,7 @@ export function CampaignDetailView({
                 <CampaignDetailMetric
                   icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
-                  value={`${campaign.applicants}/${campaign.capacity}`}
+                  value={`${campaign.cvCount ?? 0}/${campaign.capacity}`}
                 />
                 <CampaignDetailMetric
                   icon={Clock3}
@@ -145,8 +145,6 @@ export function CampaignDetailView({
               </p>
               <p className="flex items-center gap-2">
                 <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
-                <span>{t('employer.campaigns.form.company')}:</span>
-                <strong className="font-semibold text-foreground">{campaign.company}</strong>
               </p>
               <p className="text-muted-foreground">
                 {t('employer.campaigns.form.passScorePct')}:{' '}
@@ -193,7 +191,7 @@ export function CampaignDetailView({
                   {item.name} · {item.levels?.length ? `${item.levels.length} ${t('employer.campaigns.detail.rubricLevels')}` : t('employer.campaigns.detail.rubricNoLevels')} · {item.minPct != null ? `${t('employer.campaigns.detail.rubricFloor')} ${item.minPct}%` : t('employer.campaigns.detail.rubricNoFloor')} ·{' '}
                   {Number(item.weight) <= 1
                     ? `${Math.round(Number(item.weight) * 100)}%`
-                    : `${item.weight}%`}
+                    : `${Math.round(Number(item.weight) * 100) / 100}%`}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               </div>
@@ -206,7 +204,7 @@ export function CampaignDetailView({
           className="frame-satin bg-chart-cat-6/[0.025]"
         >
           <div className="space-y-2">
-              <p className="mb-2 text-xs text-muted-foreground">{t('employer.campaigns.detail.questionBankSummary').replace('{{k}}', String(campaign.questionsPerSession ?? campaign.questions.length)).replace('{{total}}', String(campaign.questionBankSummary?.total ?? campaign.questions.length)).replace('{{always}}', String(campaign.questions.filter((item) => item.isRequired).length)).replace('{{groups}}', String(new Set(campaign.questions.map((item) => item.questionGroup || 'Chung')).size))}</p>
+              <p className="mb-2 text-xs text-muted-foreground">{t('employer.campaigns.detail.questionBank').replace('{{k}}', String(campaign.questionBank?.questionsPerSession ?? campaign.questionsPerSession ?? campaign.questions.length)).replace('{{total}}', String(campaign.questionBank?.total ?? campaign.questions.length)).replace('{{always}}', String(campaign.questionBank?.alwaysAsked ?? campaign.questions.filter((item) => item.isRequired).length)).replace('{{groups}}', String(campaign.questionBank?.groups?.length ?? new Set(campaign.questions.map((item) => item.questionGroup || 'Chung')).size))}</p>
               {campaign.questions.map((item, index) => (
               <p key={item.id} className="text-sm text-foreground">
                 {index + 1}. {item.prompt}

@@ -46,7 +46,7 @@ export const marketingTranslations: TranslationDictionary = {
       'PIpraint cung cấp nền tảng luyện phỏng vấn AI cho ứng viên cá nhân (B2C) và công cụ đánh giá cho nhà tuyển dụng (B2B). Ứng viên B2B chỉ tham gia qua magic link — không có trang khám phá chiến dịch công khai.',
     'legal.terms.section2.title': '2. Tài khoản và bảo mật',
     'legal.terms.section2.body':
-      'Bạn chịu trách nhiệm bảo mật thông tin đăng nhập. Một email chỉ được gắn một vai trò (Candidate, OrgAdmin, HrMember hoặc Admin). PIpraint không chịu trách nhiệm cho thiệt hại phát sinh từ việc lộ mật khẩu do lỗi của người dùng.',
+      'Bạn chịu trách nhiệm bảo mật thông tin đăng nhập. Một email chỉ được gắn một vai trò (Ứng viên, Quản trị viên tổ chức, Nhân sự hoặc Quản trị hệ thống). PIpraint không chịu trách nhiệm cho thiệt hại phát sinh từ việc lộ mật khẩu do lỗi của người dùng.',
     'legal.terms.section3.title': '3. Thanh toán và token',
     'legal.terms.section3.body':
       'B2C: số dư ví prepaid được cộng sau khi giao dịch PayOS xác minh; mỗi phiên luyện tập reserve token ước tính và settle token thực tế sau báo cáo. B2B: usage token tích lũy theo tháng và được lập hóa đơn đầu tháng kế tiếp.',
@@ -109,7 +109,7 @@ export const marketingTranslations: TranslationDictionary = {
       'PIpraint provides an AI interview practice platform for individual candidates (B2C) and assessment tools for employers (B2B). B2B candidates join only via magic link — there is no public campaign browse.',
     'legal.terms.section2.title': '2. Account and security',
     'legal.terms.section2.body':
-      'You are responsible for keeping login credentials secure. One email maps to one role (Candidate, OrgAdmin, HrMember, or Admin). PIpraint is not liable for damages caused by user-side password disclosure.',
+      'You are responsible for keeping login credentials secure. One email maps to one role (Candidate, Organization Administrator, HR staff, or System Administrator). PIpraint is not liable for damages caused by user-side password disclosure.',
     'legal.terms.section3.title': '3. Payments and tokens',
     'legal.terms.section3.body':
       'B2C: prepaid wallet balance is credited after verified PayOS transactions; each practice session reserves estimated tokens and settles actual usage after the report. B2B: token usage accrues monthly and is invoiced at the start of the next month.',

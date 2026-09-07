@@ -36,9 +36,9 @@ export function AnswerRecorderCard({
   const alreadySubmitted = status === 'submitted';
 
   return (
-    <section className="frame-satin relative flex h-full min-h-[12rem] flex-col justify-between gap-5 overflow-hidden rounded-2xl border border-info/60 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.2),transparent_34%),radial-gradient(circle_at_90%_100%,rgba(124,58,237,0.16),transparent_42%)] bg-surface-raised p-5 shadow-[0_20px_60px_-34px_rgba(99,102,241,0.8)] sm:p-6">
+    <section className="frame-satin relative flex h-full min-h-[12rem] flex-col justify-between gap-5 overflow-hidden rounded-2xl border border-info/60 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.2),transparent_34%),radial-gradient(circle_at_90%_100%,rgba(124,58,237,0.16),transparent_42%)] bg-surface-raised p-5 shadow-none sm:p-6">
       <div className="relative flex min-w-0 flex-col gap-4">
-        <div className="grid size-14 shrink-0 place-items-center rounded-full border border-info/60 bg-gradient-to-br from-info/25 to-violet-500/25 text-info-light shadow-[0_0_24px_-8px_var(--color-info)]">
+        <div className="grid size-14 shrink-0 place-items-center rounded-full border border-info/60 bg-gradient-to-br from-info/25 to-info-500/25 text-info-light shadow-[0_0_24px_-8px_var(--color-info)]">
           <Mic className="size-7" aria-hidden />
         </div>
         <div className="min-w-0 space-y-2">
@@ -81,3 +81,4 @@ export function AnswerRecorderCard({
     </section>
   );
 }
+

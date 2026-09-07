@@ -148,13 +148,13 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
       {antiCheatEnabled ? <ProctoringAlertBanner violationCount={session.tabViolationCount} /> : null}
 
       {antiCheatEnabled && session.isAutoSubmitted ? (
-        <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
+        <div role="alert" className="border-b border-error-500/30 bg-error-500/10 px-6 py-2 text-sm text-error-300">
           {t('practice.room.autoSubmitted')}
         </div>
       ) : null}
 
       {recording.recorderError ? (
-        <div role="alert" className="border-b border-red-500/30 bg-red-500/10 px-6 py-2 text-sm text-red-300">
+        <div role="alert" className="border-b border-error-500/30 bg-error-500/10 px-6 py-2 text-sm text-error-300">
           {t('practice.room.recordingError')}
         </div>
       ) : null}
@@ -230,3 +230,4 @@ function LegacyInterviewRoom({ sessionId }: { sessionId: string }) {
     </div>
   );
 }
+

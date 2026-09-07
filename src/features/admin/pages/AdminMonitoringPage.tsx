@@ -7,7 +7,7 @@ export function AdminMonitoringPage() {
   const { t } = useLanguage();
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-084" title={t('admin.monitoring.title')} description={t('admin.monitoring.description')}>
+    <AdminPageShell title={t('admin.monitoring.title')} description={t('admin.monitoring.description')}>
       <section className="grid gap-4 md:grid-cols-3">
         <AdminMetricCard label={t('admin.monitoring.requests')} value="2.4M" hint={t('admin.monitoring.requestsHint')} status="healthy" icon={<Activity className="h-5 w-5" aria-hidden />} />
         <AdminMetricCard label={t('admin.monitoring.errorRate')} value="0.08%" hint={t('admin.monitoring.errorRateHint')} status="healthy" icon={<Activity className="h-5 w-5" aria-hidden />} />

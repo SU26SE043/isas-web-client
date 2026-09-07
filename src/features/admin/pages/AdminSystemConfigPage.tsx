@@ -9,7 +9,7 @@ export function AdminSystemConfigPage() {
   const { t } = useLanguage();
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-082" title={t('admin.systemConfig.title')} description={t('admin.systemConfig.description')}>
+    <AdminPageShell title={t('admin.systemConfig.title')} description={t('admin.systemConfig.description')}>
       <Alert variant="warning"><AlertDescription>{t('admin.systemConfig.dualSign')}</AlertDescription></Alert>
       <section className="grid gap-5 rounded-xl border border-subtle bg-surface-raised p-5 md:grid-cols-2">
         <div className="space-y-2">

@@ -9,7 +9,7 @@ export function AdminFeatureFlagsPage() {
   const { snapshot } = useAdminPlatform();
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-083" title={t('admin.flags.title')} description={t('admin.flags.description')}>
+    <AdminPageShell title={t('admin.flags.title')} description={t('admin.flags.description')}>
       <section className="grid gap-4 lg:grid-cols-2">
         {(snapshot?.flags ?? []).map((flag) => (
           <Card key={flag.id} className="border border-subtle bg-surface-raised">

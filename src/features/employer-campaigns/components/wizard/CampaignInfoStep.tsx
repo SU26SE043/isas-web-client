@@ -116,7 +116,7 @@ export function CampaignInfoStep({
                   const raw = e.target.value;
                   onChange({
                     passScorePct:
-                      raw === '' ? null : Math.min(100, Math.max(0, Number(raw) || 0)),
+                      raw === '' ? null : Number(raw),
                   });
                 }}
               />

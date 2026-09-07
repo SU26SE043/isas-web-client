@@ -43,7 +43,7 @@ export function InviteTeamMemberForm({
       noValidate
     >
       <div>
-        <label className="sr-only" htmlFor="team-member-name">
+        <label className="text-sm font-medium text-foreground" htmlFor="team-member-name">
           {t('engagement.team.fullName')}
         </label>
         <Input
@@ -62,7 +62,7 @@ export function InviteTeamMemberForm({
       </div>
 
       <div>
-        <label className="sr-only" htmlFor="team-member-email">
+        <label className="text-sm font-medium text-foreground" htmlFor="team-member-email">
           {t('engagement.team.email')}
         </label>
         <Input

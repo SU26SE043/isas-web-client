@@ -34,11 +34,11 @@ export function CampaignHardFilterSection({ value, onChange }: CampaignHardFilte
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-1">
-          <Label htmlFor="campaign-required-skills">
+          <Label htmlFor="campaign-requierror-skills">
             {t('employer.campaigns.wizard.hardFilters.requiredSkills')}
           </Label>
           <Input
-            id="campaign-required-skills"
+            id="campaign-requierror-skills"
             value={value.requiredSkills.join(', ')}
             placeholder={t('employer.campaigns.wizard.hardFilters.listPlaceholder')}
             onChange={(event) =>
@@ -97,3 +97,4 @@ export function CampaignHardFilterSection({ value, onChange }: CampaignHardFilte
     </section>
   );
 }
+

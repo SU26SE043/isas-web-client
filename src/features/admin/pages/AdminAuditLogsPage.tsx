@@ -12,7 +12,7 @@ export function AdminAuditLogsPage() {
   const locale = language === 'vi' ? 'vi-VN' : 'en-US';
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-081" title={t('admin.audit.title')} description={t('admin.audit.description')}>
+    <AdminPageShell title={t('admin.audit.title')} description={t('admin.audit.description')}>
       <Alert variant="warning"><LockKeyhole aria-hidden /><AlertDescription>{t('admin.audit.immutable')}</AlertDescription></Alert>
       <Table>
         <TableHeader>

@@ -19,7 +19,7 @@ export function AdminMaintenancePage() {
   };
 
   return (
-    <AdminPageShell eyebrow="SCR-ADM-087" title={t('admin.maintenance.title')} description={t('admin.maintenance.description')}>
+    <AdminPageShell title={t('admin.maintenance.title')} description={t('admin.maintenance.description')}>
       <Alert variant="warning"><AlertDescription>{t('admin.maintenance.rule')}</AlertDescription></Alert>
       {saved ? <Alert variant="success"><AlertDescription>{t('admin.maintenance.saved')}</AlertDescription></Alert> : null}
       <div className="flex max-w-xl gap-2 rounded-xl border border-subtle bg-surface-raised p-3">

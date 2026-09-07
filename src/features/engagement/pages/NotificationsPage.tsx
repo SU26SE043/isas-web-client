@@ -7,9 +7,9 @@ import { useEngagement } from '../hooks/useEngagement';
 import type { EngagementScope } from '../types/engagement.types';
 
 const screenByScope: Record<EngagementScope, string> = {
-  candidate: 'SCR-CAN-047',
-  employer: 'SCR-EMP-066',
-  admin: 'SCR-SHR-095',
+  candidate: '',
+  employer: '',
+  admin: '',
 };
 
 export function NotificationsPage({ scope }: { scope: EngagementScope }) {

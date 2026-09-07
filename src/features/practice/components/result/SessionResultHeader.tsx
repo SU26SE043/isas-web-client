@@ -52,7 +52,7 @@ export function SessionResultHeader({ view }: { view: PracticeSessionResultViewM
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
-          <h1 className="heading-primary bg-gradient-to-r from-foreground via-info-light to-violet-300 bg-clip-text text-2xl text-transparent sm:text-3xl">
+          <h1 className="heading-primary bg-gradient-to-r from-foreground via-info-light to-info-300 bg-clip-text text-2xl text-transparent sm:text-3xl">
             {t('practice.result.session')}
             {view.jobCategory ? ` · ${view.jobCategory}` : ''}
           </h1>
@@ -88,3 +88,4 @@ export function SessionResultHeader({ view }: { view: PracticeSessionResultViewM
     </header>
   );
 }
+

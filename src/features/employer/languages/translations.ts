@@ -19,7 +19,7 @@ export const employerTranslations: TranslationDictionary = {
 
     'employer.dashboard.eyebrow': 'Giai đoạn 9 - Thiết lập tổ chức',
     'employer.dashboard.title': 'Không gian nhà tuyển dụng',
-    'employer.dashboard.subtitle': 'Kích hoạt tenant B2B trước khi tạo chiến dịch và mời ứng viên.',
+    'employer.dashboard.subtitle': 'Kích hoạt tổ chức B2B trước khi tạo chiến dịch và mời ứng viên.',
     'employer.dashboard.completeProfile': 'Hoàn thiện hồ sơ',
     'employer.dashboard.submitVerification': 'Gửi xác minh',
     'employer.dashboard.profileCompleteness': 'Độ hoàn thiện hồ sơ',
@@ -38,9 +38,9 @@ export const employerTranslations: TranslationDictionary = {
     'employer.dashboard.stepVerify': 'Tải tài liệu đăng ký doanh nghiệp để chờ duyệt.',
     'employer.dashboard.stepCampaign': 'Sau khi xác minh, tạo chiến dịch tuyển dụng đầu tiên.',
 
-    'employer.company.eyebrow': 'SCR-EMP-053',
+    'employer.company.eyebrow': 'Hồ sơ công ty',
     'employer.company.title': 'Hồ sơ công ty',
-    'employer.company.subtitle': 'Thông tin này định danh tenant và xuất hiện trong lời mời chiến dịch.',
+    'employer.company.subtitle': 'Thông tin này định danh tổ chức và xuất hiện trong lời mời chiến dịch.',
     'employer.company.save': 'Lưu hồ sơ',
     'employer.company.saving': 'Đang lưu',
     'employer.company.saved': 'Đã lưu hồ sơ công ty.',
@@ -60,7 +60,7 @@ export const employerTranslations: TranslationDictionary = {
     'employer.company.helper.domain': 'Ví dụ: company.com. Không nhập @ hoặc địa chỉ email đầy đủ.',
     'employer.company.helper.website': 'Bắt buộc dùng HTTPS theo VAL-032.',
 
-    'employer.verify.eyebrow': 'SCR-EMP-054',
+    'employer.verify.eyebrow': 'Xác minh',
     'employer.verify.title': 'Xác minh công ty',
     'employer.verify.subtitle': 'Gửi giấy tờ doanh nghiệp để ISAS xác nhận workspace hợp lệ.',
     'employer.verify.currentStatus': 'Trạng thái hiện tại',
@@ -108,7 +108,7 @@ export const employerTranslations: TranslationDictionary = {
 
     'employer.dashboard.eyebrow': 'Phase 9 - Organization onboarding',
     'employer.dashboard.title': 'Employer workspace',
-    'employer.dashboard.subtitle': 'Activate the B2B tenant before creating campaigns and inviting candidates.',
+    'employer.dashboard.subtitle': 'Activate the B2B organization before creating campaigns and inviting candidates.',
     'employer.dashboard.completeProfile': 'Complete profile',
     'employer.dashboard.submitVerification': 'Submit verification',
     'employer.dashboard.profileCompleteness': 'Profile completeness',
@@ -127,9 +127,9 @@ export const employerTranslations: TranslationDictionary = {
     'employer.dashboard.stepVerify': 'Upload business registration documents for review.',
     'employer.dashboard.stepCampaign': 'After verification, create the first hiring campaign.',
 
-    'employer.company.eyebrow': 'SCR-EMP-053',
+    'employer.company.eyebrow': 'Company profile',
     'employer.company.title': 'Company profile',
-    'employer.company.subtitle': 'This information identifies the tenant and appears in campaign invitations.',
+    'employer.company.subtitle': 'This information identifies the organization and appears in campaign invitations.',
     'employer.company.save': 'Save profile',
     'employer.company.saving': 'Saving',
     'employer.company.saved': 'Company profile saved.',
@@ -149,7 +149,7 @@ export const employerTranslations: TranslationDictionary = {
     'employer.company.helper.domain': 'Example: company.com. Do not enter @ or a full email address.',
     'employer.company.helper.website': 'HTTPS is required by VAL-032.',
 
-    'employer.verify.eyebrow': 'SCR-EMP-054',
+    'employer.verify.eyebrow': 'Verification',
     'employer.verify.title': 'Company verification',
     'employer.verify.subtitle': 'Submit business documents so ISAS can verify the workspace.',
     'employer.verify.currentStatus': 'Current status',

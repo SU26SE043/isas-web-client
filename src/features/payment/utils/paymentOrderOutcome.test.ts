@@ -7,10 +7,9 @@ import {
 } from './paymentOrderOutcome';
 
 describe('paymentOrderOutcome', () => {
-  it('prefers paymentStatus over status', () => {
-    expect(
-      getOrderPaymentStatus({ paymentStatus: 'Paid', status: 'Pending' }),
-    ).toBe('Paid');
+  it('reads payment status from status only', () => {
+    // paymentStatus is not part of the backend OrderResponse; status is the sole source of truth.
+    expect(getOrderPaymentStatus({ paymentStatus: 'Pending', status: 'Paid' })).toBe('Paid');
   });
 
   it('resolves success statuses', () => {

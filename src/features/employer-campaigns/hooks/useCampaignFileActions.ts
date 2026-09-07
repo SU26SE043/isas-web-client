@@ -94,19 +94,7 @@ export function useCampaignFileActions({
         if (infoError) throw new Error(infoError);
 
         const base = snapshot();
-        const questions =
-          base.questions.length > 0
-            ? base.questions
-            : [
-                {
-                  id: 'placeholder',
-                  prompt: t('employer.campaigns.wizard.placeholderQuestion'),
-                  skill: '',
-                  difficulty: 'middle' as const,
-                  source: 'manual' as const,
-                  isRequired: true,
-                },
-              ];
+        const questions = base.questions;
         const created = await onCreateCampaign(
           buildCampaignCreateRequest({ ...base, questions }),
         );

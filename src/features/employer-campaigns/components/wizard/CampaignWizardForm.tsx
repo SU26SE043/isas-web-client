@@ -192,6 +192,7 @@ export function CampaignWizardForm({
           onNext={wizard.goNext}
           isGenerating={wizard.isGeneratingQuestions}
           isSaving={wizard.isSavingQuestions || wizard.isSavingStep}
+          onOpenSettings={() => wizard.goToStep(4)}
         />
       ) : null}
 
@@ -203,6 +204,7 @@ export function CampaignWizardForm({
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
+          questionCount={state.questions.length}
         />
       ) : null}
 

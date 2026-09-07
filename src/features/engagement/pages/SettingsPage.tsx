@@ -9,8 +9,8 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 
 const screenByScope: Record<EngagementScope, string> = {
-  candidate: 'SCR-CAN-049',
-  employer: 'SCR-EMP-067',
+  candidate: '',
+  employer: '',
   admin: 'F-NOTIF-003',
 };
 

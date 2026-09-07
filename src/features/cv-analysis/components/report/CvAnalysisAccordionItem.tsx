@@ -98,7 +98,7 @@ export function CvAnalysisAccordionItem({
           {detailQuery.isLoading ? <CvAnalysisDetailSkeleton /> : null}
           {detailError ? (
             <div className="space-y-3 border-t border-satin px-5 py-5">
-              <p className="text-sm text-rose-400" role="alert">
+              <p className="text-sm text-error" role="alert">
                 {detailError}
               </p>
               <button

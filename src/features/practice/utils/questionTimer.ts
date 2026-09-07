@@ -12,9 +12,9 @@ export function getTimerSeverity(remainingSeconds: number): TimerSeverity {
 export function getTimerColorClass(severity: TimerSeverity): string {
   switch (severity) {
     case 'critical':
-      return 'text-red-400';
+      return 'text-error';
     case 'warning':
-      return 'text-orange-400';
+      return 'text-warning';
     default:
       return 'text-foreground';
   }

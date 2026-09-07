@@ -6,7 +6,7 @@ import type { CampaignInvitationStatus } from '../../types/campaign.api.types';
 const STATUS_CLASS: Record<CampaignInvitationStatus, string> = {
   Queued: 'border-info/30 bg-info/10 text-info',
   Sent: 'border-success/30 bg-success/10 text-success',
-  Joined: 'border-violet-400/30 bg-violet-500/10 text-violet-300',
+  Joined: 'border-info-400/30 bg-info-500/10 text-info-300',
   Expired: 'border-warning/30 bg-warning/10 text-warning',
   Revoked: 'border-error/30 bg-error/10 text-error',
 };
@@ -47,3 +47,4 @@ export function invitationStatusDescriptionKey(status: CampaignInvitationStatus)
       return 'employer.campaigns.campaignInvitations.statusDescription.revoked';
   }
 }
+

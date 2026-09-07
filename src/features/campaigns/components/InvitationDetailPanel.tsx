@@ -35,7 +35,7 @@ export function InvitationDetailPanel({
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-4 rounded-2xl border border-satin bg-surface-raised p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
+          <span className="rounded-full border border-info-500/30 bg-info-500/10 px-3 py-1 text-xs font-medium text-info-300">
             {t('campaigns.invite.badge')}
           </span>
           {invitation.orgName ? (
@@ -57,7 +57,7 @@ export function InvitationDetailPanel({
         </div>
 
         {invitation.deadline ? (
-          <p className="inline-flex items-center gap-2 text-sm text-amber-400">
+          <p className="inline-flex items-center gap-2 text-sm text-warning">
             <CalendarClock className="size-4 shrink-0" aria-hidden />
             {t('campaigns.invite.deadline')}: {formatDeadline(invitation.deadline, language)}
           </p>
@@ -134,10 +134,11 @@ export function InvitationDetailPanel({
       </div>
 
       {joinError ? (
-        <p className="text-sm text-rose-400" role="alert">
+          <p className="text-sm text-error" role="alert">
           {joinError}
         </p>
       ) : null}
     </div>
   );
 }
+

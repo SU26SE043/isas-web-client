@@ -16,3 +16,4 @@ export function useHasScoredSession() {
     staleTime: 60_000,
   });
 }
+
