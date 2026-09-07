@@ -23,11 +23,19 @@ const sources = import.meta.glob('/src/features/employer-campaigns/**/*.{ts,tsx}
   eager: true,
 }) as Record<string, string>;
 
+/**
+ * Bỏ comment TRƯỚC khi quét. Bẫy đã dính ngay khi viết lưới này: chính câu giải thích
+ * "trước bản này dùng effectiveMaxQuestions(...)" trong mã production làm lưới đỏ oan.
+ * Tài liệu mô tả mẫu SAI sẽ bị lưới tính là vi phạm nếu không lọc.
+ */
+const stripComments = (source: string) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 const read = (suffix: string) => {
   const hit = Object.entries(sources).find(([path]) => path.endsWith(suffix));
   // Đối chứng: glob hụt thì lưới thành đồng hồ chết, phải nổ chứ không được lặng lẽ qua.
   expect(hit, `Không tìm thấy ${suffix} — glob sai, lưới này vô hiệu`).toBeDefined();
-  return hit![1];
+  return stripComments(hit![1]);
 };
 
 describe('UX3-F3 — trần ngân hàng đề', () => {
@@ -50,6 +58,29 @@ describe('UX3-F3 — trần ngân hàng đề', () => {
       'CampaignQuestionsStep KHÔNG được gọi effectiveMaxQuestions — đó chính là đường cũ\n' +
         'kéo settings.maxQuestions vào làm trần cho danh sách câu hỏi.',
     ).toBe(false);
+  });
+
+  it('khối Tóm tắt hiện ĐÚNG trần đang có hiệu lực, không tự tính trần riêng', () => {
+    const source = read('/wizard/questions/QuestionsSummaryCard.tsx');
+
+    // Đã xảy ra thật: bước Câu hỏi gỡ trần lên 20 nhưng khối tóm tắt vẫn tự tính
+    // effectiveMaxQuestions(settings.maxQuestions) = 5, nên bảng ghi "Giới hạn câu hỏi 5 ·
+    // Có thể thêm 5" trong khi người dùng THÊM ĐƯỢC tới 20. Hai nguồn sự thật, bên hiển thị
+    // đọc nhầm bên — người dùng tin bảng và dừng ở 5.
+    expect(
+      /effectiveMaxQuestions\s*\(/.test(source),
+      'QuestionsSummaryCard KHÔNG được tự tính trần từ settings.maxQuestions.\n' +
+        'Nó phải hiện đúng con số mà CampaignQuestionsStep đang dùng để chặn.',
+    ).toBe(false);
+
+    // Kiểm PHÉP GÁN, không kiểm sự có mặt của tên. Bản đầu chỉ hỏi "chuỗi
+    // CAMPAIGN_QUESTION_HARD_MAX có trong file không" — dòng import đã đủ thoả, nên đổi
+    // `const max = 5` vẫn XANH. Mutation bắt được đúng lỗ này.
+    expect(
+      /const max = CAMPAIGN_QUESTION_HARD_MAX;/.test(source),
+      'QuestionsSummaryCard phải GÁN trần bằng CAMPAIGN_QUESTION_HARD_MAX — cùng nguồn với chỗ chặn.\n' +
+        'Chỉ import hằng số mà gán số khác là bảng tóm tắt nói dối người dùng.',
+    ).toBe(true);
   });
 
   it('ô nhập số câu AI không kẹp cứng giá trị người dùng gõ', () => {

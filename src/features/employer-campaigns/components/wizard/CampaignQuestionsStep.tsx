@@ -138,7 +138,6 @@ export function CampaignQuestionsStep({
           isDraft={isDraft}
           hasJd={hasJd}
           questionCount={questions.length}
-          maxQuestions={maxQuestions}
         />
         <datalist id="campaign-question-groups">
           {Array.from(new Set(questions.map((question) => question.questionGroup?.trim()).filter(Boolean))).map((group) => <option key={group} value={group} />)}
