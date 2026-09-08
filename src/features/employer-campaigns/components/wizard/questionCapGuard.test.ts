@@ -38,6 +38,14 @@ const read = (suffix: string) => {
   return stripComments(hit![1]);
 };
 
+const callbackBody = (source: string, name: string) => {
+  const start = source.indexOf(`const ${name} = useCallback(`);
+  expect(start, `Không tìm thấy callback ${name}`).toBeGreaterThanOrEqual(0);
+  const end = source.indexOf('\n  },', start);
+  expect(end, `Callback ${name} không có điểm kết thúc`).toBeGreaterThan(start);
+  return source.slice(start, end);
+};
+
 describe('UX3-F3 — trần ngân hàng đề', () => {
   it('trần hệ thống là 20 câu', () => {
     expect(CAMPAIGN_QUESTION_HARD_MAX).toBe(20);
@@ -107,5 +115,37 @@ describe('UX3-F3 — trần ngân hàng đề', () => {
       /questionBankWarnings=\{campaign\?\.questionBankWarnings \?\? \[\]\}/.test(source),
       'CampaignWizardForm phải truyền nguyên questionBankWarnings đã được mapper đưa vào campaign state.',
     ).toBe(true);
+  });
+
+  it('hook Câu hỏi dùng trần ngân hàng đề, không kéo settings.maxQuestions vào chốt', () => {
+    const source = read('/hooks/useCampaignWizard.ts');
+
+    expect(
+      source.includes('effectiveMaxQuestions'),
+      'useCampaignWizard không được còn effectiveMaxQuestions — đây là đường kéo trần buổi vào ngân hàng đề.',
+    ).toBe(false);
+    expect(source).toMatch(/validateGenerateCount\(state\.questionCount\)/);
+    expect(source).not.toMatch(/validateGenerateCount\([^)]*,/);
+    expect(source).toMatch(/defaultGenerateCount\(\)/);
+    expect(source).not.toMatch(/defaultGenerateCount\([^)]*,/);
+    expect(callbackBody(source, 'saveQuestionsNow')).toContain(
+      'const max = CAMPAIGN_QUESTION_HARD_MAX;',
+    );
+    expect(callbackBody(source, 'saveQuestionsNow')).not.toContain('settings.maxQuestions');
+    expect(callbackBody(source, 'addManualQuestion')).toContain(
+      'const max = CAMPAIGN_QUESTION_HARD_MAX;',
+    );
+    expect(callbackBody(source, 'addManualQuestion')).not.toContain('settings.maxQuestions');
+    expect(
+      /const max = CAMPAIGN_QUESTION_HARD_MAX;/.test(source),
+      'useCampaignWizard phải dùng CAMPAIGN_QUESTION_HARD_MAX cho save và add-manual.',
+    ).toBe(true);
+  });
+
+  it('validator toàn wizard cũng dùng trần ngân hàng đề, không dùng trần mỗi buổi', () => {
+    const source = read('/utils/validateCampaignWizard.ts');
+
+    expect(source).toContain('if (questions.length > CAMPAIGN_QUESTION_HARD_MAX)');
+    expect(source).not.toMatch(/questions\.length\s*>\s*settings\.maxQuestions/);
   });
 });

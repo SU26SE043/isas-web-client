@@ -126,3 +126,27 @@ capacity, and edit/jump checks could run.
   `/employer/campaigns/new`; an authenticated session was unavailable in the
   local browser, so the two review screenshots and real publish confirmation
   remain pending rather than being claimed as complete.
+
+## F9 evidence — separate question-bank cap from per-session setting
+
+- Removed the four remaining `settings.maxQuestions` gates from
+  `useCampaignWizard`: explicit AI generation, system-default generation,
+  question-bank save, and manual question insertion now use the shared hard
+  cap of 20. The per-session setting remains unchanged at its default of 5.
+- Removed the same cross-field comparison from the wizard validator so a
+  20-question bank can continue to Review; `settings.maxQuestions` remains
+  reserved for the per-session/adaptive rule.
+- Removed the dead `effectiveMaxQuestions` helper, `countCampaignMax` branch,
+  and both unused validation translations. `questionLimit` remains and now
+  receives the hard cap value (20).
+- Added the hook source-guard with comment stripping and callback-level checks,
+  plus boundary tests for generation counts 20/21 and the default-generation
+  path.
+- Mutation evidence: M1 restored add-manual to `settings.maxQuestions` and the
+  guard went red; M2 changed the hard cap to 5 and the 20-question assertions
+  went red; M3 removed the hook guard and M1 went green again. Each restored
+  file matched its pre-mutation SHA256 and mtime.
+- Final full baseline after restoration: 188 files passed, 1069/1070 tests
+  passed; the remaining existing timeout is in `AuthModal`. The required
+  browser flow remains blocked at the shared login guard because no
+  authenticated session was supplied; no real publish success is claimed.

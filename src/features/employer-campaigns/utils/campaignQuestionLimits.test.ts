@@ -1,39 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultGenerateCount,
-  effectiveMaxQuestions,
   hasWizardJd,
   isServerEntityId,
   validateGenerateCount,
 } from './campaignQuestionLimits';
 
 describe('campaignQuestionLimits', () => {
-  it('caps effective max at 20', () => {
-    expect(effectiveMaxQuestions(null)).toBe(20);
-    expect(effectiveMaxQuestions(15)).toBe(15);
-    expect(effectiveMaxQuestions(50)).toBe(20);
-  });
-
-  it('defaults generate count to min(max, 10)', () => {
-    expect(defaultGenerateCount(null)).toBe(10);
-    expect(defaultGenerateCount(8)).toBe(8);
-    expect(defaultGenerateCount(5)).toBe(5);
+  it('defaults generation to 10 without reading the per-session setting', () => {
+    expect(defaultGenerateCount()).toBe(10);
   });
 
   it('validates generate count rules', () => {
-    expect(validateGenerateCount(0, null)).toEqual({ ok: false, code: 'countPositive' });
-    expect(validateGenerateCount(1.5, null)).toEqual({ ok: false, code: 'countInteger' });
-    expect(validateGenerateCount(21, null)).toEqual({
+    expect(validateGenerateCount(0)).toEqual({ ok: false, code: 'countPositive' });
+    expect(validateGenerateCount(1.5)).toEqual({ ok: false, code: 'countInteger' });
+    expect(validateGenerateCount(20)).toEqual({ ok: true, count: 20 });
+    expect(validateGenerateCount(21)).toEqual({
       ok: false,
       code: 'countMaximum',
       max: 20,
     });
-    expect(validateGenerateCount(12, 10)).toEqual({
-      ok: false,
-      code: 'countCampaignMax',
-      max: 10,
-    });
-    expect(validateGenerateCount(10, 15)).toEqual({ ok: true, count: 10 });
   });
 
   it('detects server question GUIDs', () => {

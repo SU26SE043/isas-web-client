@@ -52,8 +52,8 @@ import {
   getGenerateQuestionsErrorMessage,
 } from '../utils/generateQuestionsError';
 import {
+  CAMPAIGN_QUESTION_HARD_MAX,
   defaultGenerateCount,
-  effectiveMaxQuestions,
   hasWizardJd,
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
@@ -467,39 +467,27 @@ export function useCampaignWizard({
       const useDefaultCount = Boolean(options?.useDefaultCount);
       let count: number | undefined;
       if (!useDefaultCount) {
-        const validated = validateGenerateCount(
-          state.questionCount,
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        const validated = validateGenerateCount(state.questionCount);
         if (!validated.ok) {
           const key =
-            validated.code === 'countCampaignMax'
-              ? 'employer.campaigns.campaignQuestions.validation.countCampaignMax'
-              : validated.code === 'countMaximum'
-                ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
-                : validated.code === 'countPositive'
-                  ? 'employer.campaigns.campaignQuestions.validation.countPositive'
-                  : validated.code === 'countInteger'
-                    ? 'employer.campaigns.campaignQuestions.validation.countInteger'
-                    : 'employer.campaigns.campaignQuestions.validation.countRequired';
+            validated.code === 'countMaximum'
+              ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
+              : validated.code === 'countPositive'
+                ? 'employer.campaigns.campaignQuestions.validation.countPositive'
+                : validated.code === 'countInteger'
+                  ? 'employer.campaigns.campaignQuestions.validation.countInteger'
+                  : 'employer.campaigns.campaignQuestions.validation.countRequired';
           setStepError(
             t(key)
-              .replace('{{max}}', String(validated.max ?? effectiveMaxQuestions(null)))
-              .replace(
-                '{{maxQuestions}}',
-                String(validated.max ?? effectiveMaxQuestions(null)),
-              ),
+              .replace('{{max}}', String(validated.max ?? CAMPAIGN_QUESTION_HARD_MAX)),
           );
           return;
         }
         count = validated.count;
       } else {
-        // Keep the system-default path inside the campaign limit as well.
-        // The API's omitted-count default can otherwise return more questions
-        // than the wizard allows, which leaves both Save and Continue disabled.
-        count = defaultGenerateCount(
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        // The default generation count follows the question-bank cap, not the
+        // per-session interview setting stored in settings.maxQuestions.
+        count = defaultGenerateCount();
       }
 
       generateLockRef.current = true;
@@ -558,7 +546,6 @@ export function useCampaignWizard({
       onGenerateQuestions,
       state.jd,
       state.questionCount,
-      state.settings.maxQuestions,
       t,
     ],
   );
@@ -573,9 +560,7 @@ export function useCampaignWizard({
       setStepError(t('employer.campaigns.campaignQuestions.validation.questionRequired'));
       return;
     }
-    const max = effectiveMaxQuestions(
-      state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-    );
+    const max = CAMPAIGN_QUESTION_HARD_MAX;
     if (state.questions.length > max) {
       setStepError(
         t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
@@ -617,15 +602,12 @@ export function useCampaignWizard({
     isSavingQuestions,
     onUpdateQuestions,
     state.questions,
-    state.settings.maxQuestions,
     t,
   ]);
 
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
-      const max = effectiveMaxQuestions(
-        prev.settings.maxQuestions > 0 ? prev.settings.maxQuestions : null,
-      );
+      const max = CAMPAIGN_QUESTION_HARD_MAX;
       if (prev.questions.length >= max) {
         setStepError(
           t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(

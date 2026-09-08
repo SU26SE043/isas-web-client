@@ -1,5 +1,6 @@
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
 import { validateCampaignPdf } from './campaignFiles';
+import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
 
 const LAST_STEP_INDEX = 6;
 const MAX_QUESTIONS_LIMIT = 20;
@@ -140,7 +141,7 @@ export function validateCampaignWizardStep(
   if (step === 3) {
     if (questions.length === 0) return 'employer.campaigns.wizard.questionsRequired';
     if (questions.some((q) => !q.prompt.trim())) return 'employer.campaigns.form.required';
-    if (settings.maxQuestions > 0 && questions.length > settings.maxQuestions) {
+    if (questions.length > CAMPAIGN_QUESTION_HARD_MAX) {
       return 'employer.campaigns.wizard.questionsExceedMax';
     }
     return null;
