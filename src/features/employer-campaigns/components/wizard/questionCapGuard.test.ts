@@ -99,4 +99,13 @@ describe('UX3-F3 — trần ngân hàng đề', () => {
         'để validator hiện lỗi — mẫu đúng: PracticeJdStep.tsx (giới hạn + headroom).',
     ).toBe(false);
   });
+
+  it('truyền cảnh báo ngân hàng đề từ campaign state xuống bước Câu hỏi', () => {
+    const source = read('/wizard/CampaignWizardForm.tsx');
+
+    expect(
+      /questionBankWarnings=\{campaign\?\.questionBankWarnings \?\? \[\]\}/.test(source),
+      'CampaignWizardForm phải truyền nguyên questionBankWarnings đã được mapper đưa vào campaign state.',
+    ).toBe(true);
+  });
 });

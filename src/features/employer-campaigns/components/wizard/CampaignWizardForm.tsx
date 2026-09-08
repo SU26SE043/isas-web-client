@@ -173,6 +173,7 @@ export function CampaignWizardForm({
           questions={state.questions}
           questionCount={state.questionCount}
           questionsPerSession={state.questionsPerSession}
+          questionBankWarnings={campaign?.questionBankWarnings ?? []}
           maxQuestions={
             state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null
           }
@@ -203,7 +204,7 @@ export function CampaignWizardForm({
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
-          questionCount={state.questions.length}
+          questionCount={state.questionsPerSession ?? state.questions.length}
         />
       ) : null}
 

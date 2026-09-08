@@ -25,6 +25,21 @@ describe('calculateAdaptiveQuestionBudget', () => {
     });
   });
 
+  it('uses the full twenty-question bank when K is omitted', () => {
+    expect(calculateAdaptiveQuestionBudget(20, 3, true)).toMatchObject({
+      requestedTotal: 80,
+      maxBaseQuestionCount: 5,
+      exceedsLimit: true,
+    });
+  });
+
+  it('keeps five questions at depth three within the limit', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 3, true)).toMatchObject({
+      requestedTotal: 20,
+      exceedsLimit: false,
+    });
+  });
+
   it('shows only the number when adaptive depth is zero', () => {
     expect(calculateAdaptiveQuestionBudget(5, 0, true).requestedTotal).toBe(5);
   });

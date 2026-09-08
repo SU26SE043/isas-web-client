@@ -68,7 +68,7 @@ export function CampaignReviewStep({
   const slots = slotsQuery.data ?? [];
   const slotCapacity = campaignSlotCapacity(slots);
   const adaptiveBudget = calculateAdaptiveQuestionBudget(
-    questionsPerSession ?? settings.maxQuestions,
+    questionsPerSession ?? questions.length,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
   );
@@ -164,6 +164,16 @@ export function CampaignReviewStep({
           {settings.adaptiveEnabled ? <div className="mt-3 space-y-2 rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm">
             <p className="font-medium text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</p>
             {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetFormula').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{total}}', String(adaptiveBudget.requestedTotal))}</p> : null}
+            <p className={adaptiveBudget.exceedsLimit ? 'text-sm font-medium text-error' : 'text-sm text-success'}>
+              {t('employer.campaigns.wizard.review.adaptiveBudgetSummary')
+                .replace('{{base}}', String(adaptiveBudget.baseQuestionCount))
+                .replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion))
+                .replace('{{requested}}', String(adaptiveBudget.requestedTotal))
+                .replace('{{limit}}', String(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT))
+                .replace('{{status}}', t(adaptiveBudget.exceedsLimit
+                  ? 'employer.campaigns.wizard.review.adaptiveBudgetStatus.exceeded'
+                  : 'employer.campaigns.wizard.review.adaptiveBudgetStatus.ok'))}
+            </p>
             {adaptiveBudget.exceedsLimit ? <Alert variant="error"><AlertDescription>{t('employer.campaigns.wizard.review.adaptiveBudgetExceeded').replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT))}</AlertDescription></Alert> : null}
           </div> : null}
         </CampaignReviewSection>

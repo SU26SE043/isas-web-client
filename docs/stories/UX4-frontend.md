@@ -3,8 +3,10 @@
 ## Status
 
 F1–F5 implemented; F6 live API wiring and the authenticated create/edit
-journey are verified. Publish and invitation actions remain gated on explicit
-user confirmation during manual verification.
+journey are verified. F8 aligns adaptive-budget calculation with the backend
+question-bank fallback and wires server warnings into the Questions step.
+Publish and invitation actions remain gated on explicit user confirmation
+during manual verification.
 The required full-suite baseline has pre-existing failures outside the UX4
 scope.
 
@@ -101,3 +103,26 @@ action-time confirmation. The fallback
 still needs a separate run against the authenticated fixture; its previous
 attempt failed at page-load/selector timeouts before the slots, invitation-
 capacity, and edit/jump checks could run.
+
+## F8 evidence — backend-aligned adaptive budget and question-bank warnings
+
+- Rebased `codex/ux4-frontend` onto `upstream/dev` at `82979ef` and retained
+  both sides of the three requested conflicts: rubric input preservation and
+  the UX4 empty state; semantic stepper tokens and clickable navigation; UX3
+  adaptive 400-detail mapping/draft-bank behavior and UX4 location cleanup.
+- `calculateAdaptiveQuestionBudget` is now the single rule used by settings,
+  review, and the adaptive 400-message builder. When K is empty, review and
+  settings use `questions.length`; K=20/depth=3 yields 80 and blocks publish,
+  while K=5/depth=3 yields 20 and allows publish.
+- Server `questionBankWarnings` is passed from the mapped campaign through
+  `CampaignWizardForm` and rendered line-for-line by `CampaignQuestionsStep`.
+- Full baseline: 189 files / 1069 tests passed. Typecheck, i18n parity (16
+  files), UI-size, and build passed; `src/environments` remained clean.
+- Mutation results: M1 wrong settings base — red; M2 removed warning prop — red;
+  M3 removed `+1` — red; M4 removed `ADAPTIVE_BUDGET_TOO_SMALL` branch — red.
+  Each mutant was restored with matching SHA256 and mtime before the final
+  baseline run.
+- Visible browser verification reached the shared login guard at
+  `/employer/campaigns/new`; an authenticated session was unavailable in the
+  local browser, so the two review screenshots and real publish confirmation
+  remain pending rather than being claimed as complete.

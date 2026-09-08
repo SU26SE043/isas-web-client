@@ -90,7 +90,7 @@ Legacy `/selection` redirects to `/invite`.
 | Apply system criteria (Draft only) | `POST /api/v1/campaign/{id}/criteria/from-system-default` |
 | Criteria contract | `criteria[].id`, `minPct`, `levels` are preserved through mapper and replace-all writes |
 | Questions contract | `questionsPerSession`, `questionGroup`, `isRequired`, `questionBankSummary` |
-| Adaptive validation | `maxDeepPerQuestion`, `maxQuestions`; surface `ADAPTIVE_BUDGET_TOO_SMALL` and `QUESTION_BANK_INVALID` |
+| Adaptive validation | `maxDeepPerQuestion`, `maxQuestions`; surface `ADAPTIVE_BUDGET_TOO_SMALL` and `QUESTION_BANK_INVALID`. When `questionsPerSession` (K) is omitted, adaptive budget uses the full question-bank count (`questions.length`) — the same rule used by settings, review, and 400-error guidance. |
 | Job-needs contract | `isMustHave`, `eligible`, `missingMustHave`; invitation may send `includeIneligible` |
 | CV screening ranking | `GET /api/v1/campaign/{id}/candidates` — `overallMatchScore` remains the sort score; `verificationRisk` and `screeningVersion` are separate flags |
 | CV screening detail | `GET /api/v1/campaign/{id}/candidates/{candidateId}` — `strengths`/`gaps` include CV evidence; legacy `criterionScores` is not rendered |

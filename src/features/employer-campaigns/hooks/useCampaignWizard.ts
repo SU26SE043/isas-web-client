@@ -57,6 +57,7 @@ import {
   hasWizardJd,
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
+import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -205,7 +206,7 @@ export function resolveCampaignErrorStep(
   return null;
 }
 
-function mapSubmitError(
+export function mapSubmitError(
   error: unknown,
   t: (key: string) => string,
   kind: 'create' | 'update' | 'questions',
@@ -253,9 +254,8 @@ function mapSubmitError(
       const safeHave = Number.isFinite(have) ? have : questions;
       const safeQuestions = Number.isFinite(questions) ? questions : safeHave;
       const safeDeep = Number.isFinite(deep) ? deep : 0;
-      const maxQuestions = Math.floor(20 / (1 + safeDeep));
-      const maxDepth = safeQuestions > 0 ? Math.max(0, Math.floor(20 / safeQuestions) - 1) : 0;
-      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(maxQuestions)).replace('{maxDepth}', String(maxDepth)), step: 3 };
+      const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
+      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount)).replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed)), step: 3 };
     }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {
