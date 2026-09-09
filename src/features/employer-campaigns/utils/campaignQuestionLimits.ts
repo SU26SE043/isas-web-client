@@ -2,25 +2,18 @@
 
 export const CAMPAIGN_QUESTION_HARD_MAX = 20;
 
-export function effectiveMaxQuestions(maxQuestions: number | null | undefined): number {
-  if (maxQuestions == null || maxQuestions <= 0) return CAMPAIGN_QUESTION_HARD_MAX;
-  return Math.min(maxQuestions, CAMPAIGN_QUESTION_HARD_MAX);
-}
-
-export function defaultGenerateCount(maxQuestions: number | null | undefined): number {
-  return Math.min(effectiveMaxQuestions(maxQuestions), 10);
+export function defaultGenerateCount(): number {
+  return Math.min(CAMPAIGN_QUESTION_HARD_MAX, 10);
 }
 
 export type QuestionCountValidationCode =
   | 'countRequired'
   | 'countPositive'
   | 'countInteger'
-  | 'countMaximum'
-  | 'countCampaignMax';
+  | 'countMaximum';
 
 export function validateGenerateCount(
   raw: unknown,
-  maxQuestions: number | null | undefined,
 ): { ok: true; count: number } | { ok: false; code: QuestionCountValidationCode; max?: number } {
   if (raw === '' || raw == null) {
     return { ok: false, code: 'countRequired' };
@@ -38,10 +31,6 @@ export function validateGenerateCount(
   const hardMax = CAMPAIGN_QUESTION_HARD_MAX;
   if (num > hardMax) {
     return { ok: false, code: 'countMaximum', max: hardMax };
-  }
-  const campaignMax = effectiveMaxQuestions(maxQuestions);
-  if (num > campaignMax) {
-    return { ok: false, code: 'countCampaignMax', max: campaignMax };
   }
   return { ok: true, count: num };
 }

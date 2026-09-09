@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import {
-  FlowStepConnector,
   FlowStepMarker,
+  flowStepConnectorClass,
   flowStepLabelClass,
   resolveFlowStepStatus,
 } from '@/components/ui/flow-stepper';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { AutosaveStatus } from '../../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEPS } from './campaignWizard.steps';
+import { CAMPAIGN_WIZARD_STEPS, canNavigateToWizardStep } from './campaignWizard.steps';
 
 interface CampaignWizardShellProps {
   currentStep: number;
@@ -19,17 +19,17 @@ interface CampaignWizardShellProps {
   isEditing?: boolean;
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
+  onStepChange?: (step: number) => void;
+  completedSteps?: readonly number[];
   children: React.ReactNode;
 }
 
-function autosaveLabel(
+export function autosaveLabel(
   t: (key: string) => string,
   status: AutosaveStatus | undefined,
   lastSavedAt?: string,
-  isEditing?: boolean,
 ): string {
   if (status === 'saving') return t('employer.campaigns.wizard.autosave.saving');
-  if (status === 'failed') return t('employer.campaigns.wizard.autosave.failed');
   if (status === 'saved' && lastSavedAt) {
     const time = new Date(lastSavedAt).toLocaleTimeString([], {
       hour: '2-digit',
@@ -37,14 +37,8 @@ function autosaveLabel(
     });
     return t('employer.campaigns.wizard.autosave.savedAt').replace('{time}', time);
   }
-  if (status === 'dirty') {
-    return isEditing
-      ? t('employer.campaigns.wizard.autosave.dirty')
-      : t('employer.campaigns.wizard.autosave.localOnly');
-  }
-  return isEditing
-    ? t('employer.campaigns.wizard.autosave.idle')
-    : t('employer.campaigns.wizard.autosave.localOnly');
+  if (status === 'saved') return t('employer.campaigns.wizard.autosave.saved');
+  return t('employer.campaigns.wizard.autosave.dirty');
 }
 
 export function CampaignWizardShell({
@@ -55,6 +49,8 @@ export function CampaignWizardShell({
   isEditing = false,
   autosaveStatus = 'idle',
   lastSavedAt,
+  onStepChange,
+  completedSteps = [],
   children,
 }: CampaignWizardShellProps) {
   const { t } = useLanguage();
@@ -76,7 +72,7 @@ export function CampaignWizardShell({
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {autosaveLabel(t, autosaveStatus, lastSavedAt, isEditing)}
+              {autosaveLabel(t, autosaveStatus, lastSavedAt)}
               {' · '}
               {t('employer.campaigns.wizard.progress')
                 .replace('{percent}', String(Math.round(progressPercent)))
@@ -103,28 +99,30 @@ export function CampaignWizardShell({
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
               const status = resolveFlowStepStatus(index, currentStep, errorSteps);
               const isLast = index === CAMPAIGN_WIZARD_STEPS.length - 1;
+              const canNavigate = Boolean(onStepChange) && canNavigateToWizardStep(index, currentStep, completedSteps);
               return (
-                <li key={step.id} className="flex w-full items-stretch gap-3">
-                  <div className="flex flex-col items-center">
-                    <FlowStepMarker
-                      status={status}
-                      stepNumber={index + 1}
-                      className={status === 'current' ? 'border-info bg-info/10 text-info shadow-none' : undefined}
-                    />
-                    {!isLast ? (
-                      <FlowStepConnector
-                        status={
-                          status === 'complete' ? 'complete' : status === 'error' ? 'error' : 'pending'
-                        }
-                        className="mt-1 min-h-8"
+                <li key={step.id} className="w-full">
+                  <button
+                    type="button"
+                    disabled={!canNavigate}
+                    aria-current={index === currentStep ? 'step' : undefined}
+                    onClick={() => onStepChange?.(index)}
+                    className="group flex w-full items-start gap-3 text-left disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    <span className="flex flex-col items-center">
+                      <FlowStepMarker
+                        status={status}
+                        stepNumber={index + 1}
+                        className={status === 'current' ? 'border-info bg-info/10 text-info shadow-none' : undefined}
                       />
-                    ) : null}
-                  </div>
-                  <div className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
-                    <span className={cn('block text-sm font-medium leading-snug', flowStepLabelClass(status))}>
-                      {t(step.titleKey)}
+                      {!isLast ? <span aria-hidden className={cn('mt-1 min-h-8 w-px', flowStepConnectorClass(status === 'complete' ? 'complete' : status === 'error' ? 'error' : 'pending'))} /> : null}
                     </span>
-                  </div>
+                    <span className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
+                      <span className={cn('block text-sm font-medium leading-snug group-hover:text-foreground', flowStepLabelClass(status))}>
+                        {t(step.titleKey)}
+                      </span>
+                    </span>
+                  </button>
                 </li>
               );
             })}
@@ -138,12 +136,21 @@ export function CampaignWizardShell({
           >
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
               const status = resolveFlowStepStatus(index, currentStep, errorSteps);
+              const canNavigate = Boolean(onStepChange) && canNavigateToWizardStep(index, currentStep, completedSteps);
               return (
                 <li key={step.id} className="flex shrink-0 items-center gap-2">
-                  <FlowStepMarker status={status} stepNumber={index + 1} />
-                  <span className={cn('max-w-[7rem] truncate text-xs font-medium', flowStepLabelClass(status))}>
-                    {t(step.titleKey)}
-                  </span>
+                  <button
+                    type="button"
+                    disabled={!canNavigate}
+                    aria-current={index === currentStep ? 'step' : undefined}
+                    onClick={() => onStepChange?.(index)}
+                    className="group flex min-h-11 items-center gap-2 text-left disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    <FlowStepMarker status={status} stepNumber={index + 1} />
+                    <span className={cn('max-w-[7rem] truncate text-xs font-medium group-hover:text-foreground', flowStepLabelClass(status))}>
+                      {t(step.titleKey)}
+                    </span>
+                  </button>
                 </li>
               );
             })}

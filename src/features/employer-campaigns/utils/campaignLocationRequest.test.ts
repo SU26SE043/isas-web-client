@@ -8,13 +8,11 @@ import {
 } from './buildCampaignCreateRequest';
 import { validateCampaignWizardStep } from './validateCampaignWizard';
 
-function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSubmitSnapshot {
+function snapshot(): CampaignWizardSubmitSnapshot {
   return {
     info: {
       title: 'Frontend hiring',
       domain: 'frontend',
-      location,
-      locationCoordinates: { latitude: 10.7769, longitude: 106.7009 },
       maxCandidates: 20,
       timeLimitMinutes: 60,
       passScorePct: 70,
@@ -55,8 +53,8 @@ function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSub
   };
 }
 
-function persisted(location: string): CampaignWizardPersistedState {
-  const base = snapshot(location);
+function persisted(): CampaignWizardPersistedState {
+  const base = snapshot();
   return {
     ...base,
     hardFilters: base.hardFilters ?? createEmptyHardFiltersState(),
@@ -78,20 +76,34 @@ function persisted(location: string): CampaignWizardPersistedState {
   };
 }
 
-describe('campaign location request contract', () => {
-  it('does not send unsupported location fields in the create payload', () => {
+describe('campaign wizard request contract', () => {
+  it('does not send the deprecated location field in the create payload', () => {
     const request = buildCampaignCreateRequest(snapshot());
     expect(request).not.toHaveProperty('location');
-    expect(request).not.toHaveProperty('locationCoordinates');
   });
 
-  it('does not send location changes in a dirty update', () => {
-    const dirty = buildDirtyUpdateRequest(snapshot('Old address'), snapshot('New address'));
-    expect(dirty).toEqual({});
+  it('does not send deprecated location changes in a dirty update', () => {
+    const dirty = buildDirtyUpdateRequest(snapshot(), snapshot());
+    expect(dirty).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+    });
+    expect(dirty).not.toHaveProperty('location');
   });
 
-  it('allows a blank campaign location because the API does not persist it', () => {
-    expect(validateCampaignWizardStep(persisted('  '), 0)).toBe(
+  it('echoes live endpoint identity fields for partial metadata updates', () => {
+    const current = snapshot();
+    current.info.passScorePct = 75;
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      passScorePct: 75,
+    });
+  });
+
+  it('does not require a location in the campaign information step', () => {
+    expect(validateCampaignWizardStep(persisted(), 0)).toBe(
       null,
     );
   });

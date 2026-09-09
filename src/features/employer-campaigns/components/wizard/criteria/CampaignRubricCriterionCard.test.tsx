@@ -26,7 +26,6 @@ function renderCard(overrides: Partial<RubricCriterion> = {}) {
     <CampaignRubricCriterionCard
       criterion={criterion}
       index={0}
-      contextLabel="ctx"
       onChange={vi.fn()}
       onRemove={vi.fn()}
     />,
@@ -65,5 +64,22 @@ describe('CampaignRubricCriterionCard — kiểu số khớp backend', () => {
     const { weight } = renderCard();
 
     expect(weight).toHaveAttribute('step', '0.1');
+  });
+
+  it('cho phép tên tiêu chí dài xuống dòng thay vì cắt cụt', () => {
+    renderCard({ name: 'Kỹ năng giao tiếp với khách hàng và phối hợp liên phòng ban' });
+
+    const name = screen.getByLabelText('employer.campaigns.wizard.rubric.name');
+    expect(name.tagName).toBe('TEXTAREA');
+    expect(name).toHaveAttribute('rows', '2');
+    expect(name).not.toHaveClass('truncate');
+  });
+
+  it('mở rộng vùng mô tả để đọc và nhập hơn hai dòng', () => {
+    renderCard({ description: 'Mô tả dài cho tiêu chí cần có đủ không gian để đọc rõ.' });
+
+    const description = screen.getByLabelText('employer.campaigns.wizard.rubric.criterionDesc');
+    expect(description).toHaveAttribute('rows', '4');
+    expect(description).toHaveClass('min-h-[112px]');
   });
 });

@@ -41,7 +41,10 @@ import type {
   CriteriaFileState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
+import {
+  CAMPAIGN_WIZARD_STEP_COUNT,
+  canNavigateToWizardStep,
+} from '../components/wizard/campaignWizard.steps';
 import { useCampaignFileActions } from './useCampaignFileActions';
 import type { BlobDownloadResult, CampaignFileType } from '../utils/campaignFiles';
 import {
@@ -49,11 +52,12 @@ import {
   getGenerateQuestionsErrorMessage,
 } from '../utils/generateQuestionsError';
 import {
+  CAMPAIGN_QUESTION_HARD_MAX,
   defaultGenerateCount,
-  effectiveMaxQuestions,
   hasWizardJd,
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
+import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -89,9 +93,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   return {
     title: campaign?.title ?? '',
-    domain: resolveDomainOption(campaign?.domain),
-    location: '',
-    locationCoordinates: null,
+    domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
     passScorePct: campaign?.passScorePct ?? null,
@@ -204,7 +206,7 @@ export function resolveCampaignErrorStep(
   return null;
 }
 
-function mapSubmitError(
+export function mapSubmitError(
   error: unknown,
   t: (key: string) => string,
   kind: 'create' | 'update' | 'questions',
@@ -252,9 +254,8 @@ function mapSubmitError(
       const safeHave = Number.isFinite(have) ? have : questions;
       const safeQuestions = Number.isFinite(questions) ? questions : safeHave;
       const safeDeep = Number.isFinite(deep) ? deep : 0;
-      const maxQuestions = Math.floor(20 / (1 + safeDeep));
-      const maxDepth = safeQuestions > 0 ? Math.max(0, Math.floor(20 / safeQuestions) - 1) : 0;
-      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(maxQuestions)).replace('{maxDepth}', String(maxDepth)), step: 3 };
+      const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
+      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount)).replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed)), step: 3 };
     }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {
@@ -466,39 +467,27 @@ export function useCampaignWizard({
       const useDefaultCount = Boolean(options?.useDefaultCount);
       let count: number | undefined;
       if (!useDefaultCount) {
-        const validated = validateGenerateCount(
-          state.questionCount,
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        const validated = validateGenerateCount(state.questionCount);
         if (!validated.ok) {
           const key =
-            validated.code === 'countCampaignMax'
-              ? 'employer.campaigns.campaignQuestions.validation.countCampaignMax'
-              : validated.code === 'countMaximum'
-                ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
-                : validated.code === 'countPositive'
-                  ? 'employer.campaigns.campaignQuestions.validation.countPositive'
-                  : validated.code === 'countInteger'
-                    ? 'employer.campaigns.campaignQuestions.validation.countInteger'
-                    : 'employer.campaigns.campaignQuestions.validation.countRequired';
+            validated.code === 'countMaximum'
+              ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
+              : validated.code === 'countPositive'
+                ? 'employer.campaigns.campaignQuestions.validation.countPositive'
+                : validated.code === 'countInteger'
+                  ? 'employer.campaigns.campaignQuestions.validation.countInteger'
+                  : 'employer.campaigns.campaignQuestions.validation.countRequired';
           setStepError(
             t(key)
-              .replace('{{max}}', String(validated.max ?? effectiveMaxQuestions(null)))
-              .replace(
-                '{{maxQuestions}}',
-                String(validated.max ?? effectiveMaxQuestions(null)),
-              ),
+              .replace('{{max}}', String(validated.max ?? CAMPAIGN_QUESTION_HARD_MAX)),
           );
           return;
         }
         count = validated.count;
       } else {
-        // Keep the system-default path inside the campaign limit as well.
-        // The API's omitted-count default can otherwise return more questions
-        // than the wizard allows, which leaves both Save and Continue disabled.
-        count = defaultGenerateCount(
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        // The default generation count follows the question-bank cap, not the
+        // per-session interview setting stored in settings.maxQuestions.
+        count = defaultGenerateCount();
       }
 
       generateLockRef.current = true;
@@ -557,7 +546,6 @@ export function useCampaignWizard({
       onGenerateQuestions,
       state.jd,
       state.questionCount,
-      state.settings.maxQuestions,
       t,
     ],
   );
@@ -572,9 +560,7 @@ export function useCampaignWizard({
       setStepError(t('employer.campaigns.campaignQuestions.validation.questionRequired'));
       return;
     }
-    const max = effectiveMaxQuestions(
-      state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-    );
+    const max = CAMPAIGN_QUESTION_HARD_MAX;
     if (state.questions.length > max) {
       setStepError(
         t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
@@ -616,15 +602,12 @@ export function useCampaignWizard({
     isSavingQuestions,
     onUpdateQuestions,
     state.questions,
-    state.settings.maxQuestions,
     t,
   ]);
 
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
-      const max = effectiveMaxQuestions(
-        prev.settings.maxQuestions > 0 ? prev.settings.maxQuestions : null,
-      );
+      const max = CAMPAIGN_QUESTION_HARD_MAX;
       if (prev.questions.length >= max) {
         setStepError(
           t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
@@ -684,12 +667,13 @@ export function useCampaignWizard({
   }, []);
 
   const goToStep = useCallback((step: number) => {
+    if (!canNavigateToWizardStep(step, state.currentStep, state.completedSteps)) return;
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, step)),
     }));
     setStepError(null);
-  }, []);
+  }, [state.completedSteps, state.currentStep]);
 
   const goNext = useCallback(async () => {
     if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions || isEnsuringDraft) return;

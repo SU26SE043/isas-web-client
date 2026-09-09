@@ -1,5 +1,6 @@
+import axios from 'axios';
 import { describe, expect, it } from 'vitest';
-import { resolveCampaignErrorStep } from './useCampaignWizard';
+import { mapSubmitError, resolveCampaignErrorStep } from './useCampaignWizard';
 
 describe('campaign wizard API error step mapping', () => {
   it('maps validation fields to the affected wizard step', () => {
@@ -8,5 +9,32 @@ describe('campaign wizard API error step mapping', () => {
     expect(resolveCampaignErrorStep('request: questionText is required', 'questions')).toBe(3);
     expect(resolveCampaignErrorStep('request: startsAt must be in the future', 'create')).toBe(0);
     expect(resolveCampaignErrorStep('request: jdText is required', 'create')).toBe(1);
+  });
+
+  it('preserves the adaptive budget details from a 400 response', () => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 400,
+      statusText: 'Bad Request',
+      headers: {},
+      config: {} as never,
+      data: {
+        message: 'ADAPTIVE_BUDGET_TOO_SMALL',
+        data: { need: 80, have: 20, questions: 20, deep: 3 },
+      },
+    };
+
+    const mapped = mapSubmitError(
+      error,
+      (key) => (key === 'employer.campaigns.wizard.adaptiveBudgetTooSmall'
+        ? 'questions={questions}; deep={deep}; need={need}; have={have}; max={maxQuestions}; depth={maxDepth}'
+        : key),
+      'create',
+    );
+
+    expect(mapped).toEqual({
+      message: 'questions=20; deep=3; need=80; have=20; max=5; depth=0',
+      step: 3,
+    });
   });
 });

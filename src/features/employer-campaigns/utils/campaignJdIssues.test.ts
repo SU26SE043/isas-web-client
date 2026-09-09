@@ -18,8 +18,6 @@ const snapshot = (inputMethod: 'file' | 'text') => ({
   info: {
     title: 'Campaign',
     domain: 'frontend' as const,
-    location: 'Remote',
-    locationCoordinates: null,
     maxCandidates: null,
     timeLimitMinutes: 30,
     passScorePct: null,

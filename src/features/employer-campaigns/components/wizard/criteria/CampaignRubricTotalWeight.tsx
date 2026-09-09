@@ -8,6 +8,7 @@ interface CampaignRubricTotalWeightProps {
   totalMaxScore: number;
   weightValid: boolean;
   maxScoreValid: boolean;
+  hasCriteria: boolean;
   resetDisabled?: boolean;
   onReset: () => void;
 }
@@ -17,11 +18,14 @@ export function CampaignRubricTotalWeight({
   totalMaxScore,
   weightValid,
   maxScoreValid,
+  hasCriteria,
   resetDisabled = false,
   onReset,
 }: CampaignRubricTotalWeightProps) {
   const { t } = useLanguage();
   const weightDisplay = Math.round(totalWeight * 10) / 10;
+  const weightError = hasCriteria && !weightValid;
+  const maxScoreError = hasCriteria && !maxScoreValid;
 
   return (
     <div className="flex flex-wrap gap-3 sm:justify-end">
@@ -46,14 +50,14 @@ export function CampaignRubricTotalWeight({
           <p
             className={cn(
               'text-2xl font-semibold tracking-tight',
-              weightValid ? 'text-foreground' : 'text-error',
+              weightError ? 'text-error' : 'text-foreground',
             )}
           >
             {weightDisplay}%
           </p>
-          {weightValid ? <BadgeCheck className="size-5 text-success" aria-hidden /> : null}
+          {weightValid && hasCriteria ? <BadgeCheck className="size-5 text-success" aria-hidden /> : null}
         </div>
-        <p className={cn('mt-1 text-xs', weightValid ? 'text-muted-foreground' : 'text-error')}>
+        <p className={cn('mt-1 text-xs', weightError ? 'text-error' : 'text-muted-foreground')}>
           {t('employer.campaigns.wizard.rubric.mustEqual100')}
         </p>
       </div>
@@ -61,7 +65,7 @@ export function CampaignRubricTotalWeight({
       <div
         className={cn(
           'frame-satin min-w-[10rem] rounded-xl border bg-surface-raised/80 px-4 py-3',
-          maxScoreValid ? 'border-satin' : 'border-error/60',
+          maxScoreError ? 'border-error/60' : 'border-satin',
         )}
       >
         <p className="text-caption text-muted-foreground">
@@ -71,15 +75,15 @@ export function CampaignRubricTotalWeight({
           <p
             className={cn(
               'text-2xl font-semibold tracking-tight',
-              maxScoreValid ? 'text-foreground' : 'text-error',
+              maxScoreError ? 'text-error' : 'text-foreground',
             )}
           >
             {totalMaxScore}
           </p>
-          {maxScoreValid ? <BadgeCheck className="size-5 text-success" aria-hidden /> : null}
+          {maxScoreValid && hasCriteria ? <BadgeCheck className="size-5 text-success" aria-hidden /> : null}
         </div>
-        <p className={cn('mt-1 text-xs', maxScoreValid ? 'text-muted-foreground' : 'text-error')}>
-          {maxScoreValid
+        <p className={cn('mt-1 text-xs', maxScoreError ? 'text-error' : 'text-muted-foreground')}>
+          {maxScoreValid || !hasCriteria
             ? t('employer.campaigns.wizard.rubric.totalMaxScoreHint')
             : t('employer.campaigns.wizard.rubric.maxScoreRangeHint')}
         </p>

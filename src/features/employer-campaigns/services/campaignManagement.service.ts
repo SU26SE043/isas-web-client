@@ -1,7 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import { mockDelay } from '@/shared/mock';
-import { DEFAULT_PROCTORING, MOCK_CAMPAIGN_INVITATIONS, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_PROCTORING } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
@@ -32,7 +31,6 @@ import type {
 import { parseCampaignSlot, parseCampaignSlots } from '../utils/campaignSlots';
 import type {
   CampaignCandidateRow,
-  CampaignDraftInput,
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,
@@ -66,7 +64,7 @@ import {
 import { parseCampaignInvitationsPage, readNextCursorHeader } from '../utils/campaignInvitationsApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
 
-let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
+let campaigns: EmployerCampaign[] = [];
 
 /** Live Campaign API expects a Guid; mock/slug ids must not hit the network. */
 const CAMPAIGN_GUID_RE =
@@ -242,11 +240,6 @@ export const campaignManagementService = {
     return campaigns.find((item) => item.id === id);
   },
 
-  async listQuestions(): Promise<CampaignQuestion[]> {
-    await mockDelay(150);
-    return QUESTION_BANK;
-  },
-
   /**
    * Live: POST /api/v1/campaign (Bearer employer) → create Draft.
    * Body matches CampaignCreateRequest (title, domain, schedule, optional JD/criteria, questions).
@@ -304,25 +297,6 @@ export const campaignManagementService = {
 
   async deleteCampaignSlot(id: string, slotId: string): Promise<void> {
     await apiClient.delete(campaignManagementEndpoints.slot(id, slotId));
-  },
-
-  /**
-   * Mock update of an existing Draft only. New campaigns must use createCampaign (live POST)
-   * so the URL id is a real Guid — never a client-generated slug.
-   */
-  async saveDraft(input: CampaignDraftInput, id?: string): Promise<EmployerCampaign> {
-    if (!id) {
-      throw new CampaignRequestError(400, 'Use createCampaign for new drafts');
-    }
-    await mockDelay(500);
-    const now = new Date().toISOString();
-    const proctoring = input.proctoring ?? DEFAULT_PROCTORING;
-    const existing = campaigns.find((campaign) => campaign.id === id);
-    if (!existing) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (existing.status !== 'draft') throw new Error('ONLY_DRAFT_EDITABLE');
-    const updated = { ...existing, ...input, proctoring, updatedAt: now };
-    campaigns = campaigns.map((campaign) => (campaign.id === id ? updated : campaign));
-    return updated;
   },
 
   /**
@@ -523,8 +497,7 @@ export const campaignManagementService = {
     query?: GetCampaignInvitationsQuery,
   ): Promise<CampaignInvitationsPage> {
     if (!isLiveCampaignId(id)) {
-      await mockDelay(200);
-      return { items: MOCK_CAMPAIGN_INVITATIONS, nextCursor: null };
+      throw new CampaignRequestError(400, 'Invalid campaign id');
     }
 
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {

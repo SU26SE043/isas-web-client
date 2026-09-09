@@ -5,7 +5,7 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Plugin } from 'vite'
+import type { Plugin, ProxyOptions } from 'vite'
 import {
   DEV_AUTH_SEED_SCRIPT,
   handleInterviewMockRequest,
@@ -178,7 +178,27 @@ function createE2eApiMock(): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const apiProxyTarget = env.VITE_API_PROXY_TARGET || env.VITE_API_BASE_URL
   const authProxyTarget = env.VITE_AUTH_PROXY_TARGET || 'http://localhost:5174'
+
+  const proxy: Record<string, ProxyOptions> = apiProxyTarget
+    ? {
+        // Keep browser requests same-origin in local development. This lets
+        // the live Campaign APIs work without relying on gateway CORS headers.
+        '/api': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+          secure: false,
+        },
+      }
+    : {
+        // Gateway contract for a separately hosted Auth service.
+        '/api/v1/auth': {
+          target: authProxyTarget,
+          changeOrigin: true,
+          rewrite: (requestPath: string) => requestPath.replace(/^\/api\/v1\/auth/, '/auth'),
+        },
+      }
 
   return {
     resolve: {
@@ -187,14 +207,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      proxy: {
-        // Gateway contract: /api/v1/auth/* -> Auth service /auth/*
-        '/api/v1/auth': {
-          target: authProxyTarget,
-          changeOrigin: true,
-          rewrite: (requestPath) => requestPath.replace(/^\/api\/v1\/auth/, '/auth'),
-        },
-      },
+      proxy,
     },
     plugins: [
       ...(env.ISAS_E2E === '1' || process.env.ISAS_E2E === '1' ? [createE2eApiMock()] : []),

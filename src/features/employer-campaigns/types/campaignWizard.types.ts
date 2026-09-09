@@ -56,9 +56,6 @@ export type JdAnalysisState = JobDescriptionState;
 export type CampaignInfoState = {
   title: string;
   domain: CampaignDomainOption | '';
-  location: string;
-  /** Browser-only map marker; CampaignService persists only `location`. */
-  locationCoordinates: LocationCoordinates | null;
   maxCandidates: number | null;
   timeLimitMinutes: number;
   /** Optional 0–100; null = HR decides. */
@@ -66,11 +63,6 @@ export type CampaignInfoState = {
   startsAt: string;
   expiresAt: string;
   timezone: string;
-};
-
-export type LocationCoordinates = {
-  latitude: number;
-  longitude: number;
 };
 
 /** New step 4 — moved out of Info (antiCheat) and net-new proctoring/adaptive fields. */

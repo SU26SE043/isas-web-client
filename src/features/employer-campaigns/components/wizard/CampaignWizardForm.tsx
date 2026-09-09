@@ -94,6 +94,8 @@ export function CampaignWizardForm({
       isEditing={mode === 'edit'}
       autosaveStatus={state.autosaveStatus}
       lastSavedAt={state.lastSavedAt}
+      completedSteps={wizard.completedSteps}
+      onStepChange={wizard.goToStep}
     >
       {wizard.actionError ? (
         <Alert variant="error" className="mb-4">
@@ -153,9 +155,6 @@ export function CampaignWizardForm({
           rubric={state.rubric}
           campaignId={state.draftId ?? campaign?.id ?? null}
           jobCategory={wizard.jobCategory}
-          contextLabel={
-            wizard.domainLabel || state.info.title || t('employer.campaigns.wizard.steps.criteria')
-          }
           error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
           onReset={wizard.resetRubric}
@@ -174,6 +173,7 @@ export function CampaignWizardForm({
           questions={state.questions}
           questionCount={state.questionCount}
           questionsPerSession={state.questionsPerSession}
+          questionBankWarnings={campaign?.questionBankWarnings ?? []}
           maxQuestions={
             state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null
           }
@@ -204,7 +204,7 @@ export function CampaignWizardForm({
           onBack={wizard.goBack}
           onNext={wizard.goNext}
           isSaving={wizard.isSavingStep}
-          questionCount={state.questions.length}
+          questionCount={state.questionsPerSession ?? state.questions.length}
         />
       ) : null}
 
@@ -222,6 +222,7 @@ export function CampaignWizardForm({
           jd={state.jd}
           rubric={state.rubric}
           questions={state.questions}
+          questionsPerSession={state.questionsPerSession}
           settings={state.settings}
           campaignId={state.draftId}
           domainLabel={wizard.domainLabel}

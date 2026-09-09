@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { campaignManagementService } from '../services/campaignManagement.service';
 import type {
-  CampaignDraftInput,
   CampaignFilters,
-  CampaignQuestion,
   EmployerCampaign,
 } from '../types/campaignManagement.types';
 import type { CampaignCreateRequest } from '../types/campaign.api.types';
@@ -68,8 +66,6 @@ export function useEmployerCampaign(id: string | undefined) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const toastedRef = useRef<string | null>(null);
-  const [questions, setQuestions] = useState<CampaignQuestion[]>([]);
-
   const detailQuery = useQuery({
     queryKey: employerCampaignDetailQueryKey(id ?? ''),
     queryFn: async () => {
@@ -128,26 +124,6 @@ export function useEmployerCampaign(id: string | undefined) {
     toast.error(t('employer.campaigns.detail.errorToast'));
   }, [detailQuery.errorUpdatedAt, detailQuery.isError, errorStatus, t]);
 
-  useEffect(() => {
-    if (!id) {
-      setQuestions([]);
-      return;
-    }
-    let cancelled = false;
-    void campaignManagementService.listQuestions().then((next) => {
-      if (!cancelled) setQuestions(next);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  const saveDraft = useCallback(async (input: CampaignDraftInput, draftId?: string) => {
-    const next = await campaignManagementService.saveDraft(input, draftId);
-    queryClient.setQueryData(employerCampaignDetailQueryKey(next.id), next);
-    return next;
-  }, [queryClient]);
-
   const createCampaign = useCallback(
     async (input: CampaignCreateRequest) => {
       const next = await campaignManagementService.createCampaign(input);
@@ -176,15 +152,6 @@ export function useEmployerCampaign(id: string | undefined) {
       const next = await campaignManagementService.updateCampaignQuestions(campaignId, questions);
       queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
       void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
-      return next;
-    },
-    [queryClient],
-  );
-
-  const saveCampaignQuestions = useCallback(
-    async (campaignId: string, questions: CampaignQuestion[]) => {
-      const next = await campaignManagementService.saveCampaignQuestions(campaignId, questions);
-      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
       return next;
     },
     [queryClient],
@@ -274,18 +241,15 @@ export function useEmployerCampaign(id: string | undefined) {
 
   return {
     campaign: (detailQuery.data as EmployerCampaign | undefined) ?? null,
-    questions,
     isLoading: Boolean(id) && detailQuery.isLoading,
     isError: detailQuery.isError,
     errorStatus,
     reload: () => {
       void detailQuery.refetch();
     },
-    saveDraft,
     createCampaign,
     updateCampaign,
     updateCampaignQuestions,
-    saveCampaignQuestions,
     uploadJdFile,
     uploadFiles,
     replaceFiles,
