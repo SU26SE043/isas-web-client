@@ -206,6 +206,16 @@ export function useEmployerCampaign(id: string | undefined) {
     [queryClient],
   );
 
+  const startNow = useCallback(
+    async (campaignId: string) => {
+      const next = await campaignManagementService.startCampaignNow(campaignId);
+      queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), next);
+      void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+      return next;
+    },
+    [queryClient],
+  );
+
   const updateStatus = useCallback(
     async (
       campaignId: string,
@@ -255,6 +265,7 @@ export function useEmployerCampaign(id: string | undefined) {
     replaceFiles,
     downloadFile,
     publish,
+    startNow,
     updateStatus,
     deleteCampaign,
     invite,

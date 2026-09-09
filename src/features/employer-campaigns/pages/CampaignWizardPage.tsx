@@ -74,6 +74,14 @@ export function CampaignWizardPage() {
     return downloadFile(campaignId, fileType);
   };
 
+  const handleDeployCampaign = async (campaignId: string, emails: string[]) => {
+    return campaignManagementService.deployCampaign(campaignId, emails);
+  };
+
+  const handleSendInvitations = async (campaignId: string, emails: string[]) => {
+    return campaignManagementService.createCampaignInvitations(campaignId, { emails });
+  };
+
   const goToDetail = (campaignId: string) => {
     navigate(`/employer/campaigns/${campaignId}`, { replace: true });
   };
@@ -143,6 +151,8 @@ export function CampaignWizardPage() {
       onReplaceFiles={handleReplaceFiles}
       onDownloadFile={handleDownloadFile}
       onAfterSubmit={(next) => goToDetail(next.id)}
+      onDeployCampaign={handleDeployCampaign}
+      onSendInvitations={handleSendInvitations}
     />
   );
 }

@@ -59,6 +59,7 @@ import {
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { CampaignInvitationDeployError } from '../services/campaignManagement.service';
 import {
   importedItemToQuestion,
   limitImportedQuestions,
@@ -292,6 +293,25 @@ export function mapSubmitError(
   };
 }
 
+function mapDeployError(error: unknown, t: (key: string) => string): string {
+  const status = getApiStatusCode(error);
+  const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
+  const body = raw && typeof raw === 'object' ? raw as Record<string, unknown> : null;
+  const nested = body?.data && typeof body.data === 'object' ? body.data as Record<string, unknown> : body;
+  const code = typeof nested?.code === 'string' ? nested.code : '';
+  const warnings = Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
+  if (code === 'QUESTION_BANK_INVALID') {
+    return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings].join(' ');
+  }
+  if (code === 'ADAPTIVE_BUDGET_TOO_SMALL') {
+    return [t('employer.campaigns.wizard.deploy.warning.ADAPTIVE_BUDGET_TOO_SMALL'), ...warnings].join(' ');
+  }
+  if (status === 409 && typeof raw === 'string' && raw.trim()) return raw.trim();
+  return t('employer.campaigns.wizard.deploy.deployFailed');
+}
+
 interface UseCampaignWizardArgs {
   campaign?: EmployerCampaign | null;
   mode: CampaignFormMode;
@@ -316,6 +336,8 @@ interface UseCampaignWizardArgs {
     fileType: CampaignFileType,
   ) => Promise<BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
+  onDeployCampaign: (campaignId: string, emails: string[]) => Promise<import('../types/campaignManagement.types').CampaignDeployResult>;
+  onSendInvitations: (campaignId: string, emails: string[]) => Promise<import('../types/campaign.api.types').CreateCampaignInvitationsResponse>;
 }
 
 export function useCampaignWizard({
@@ -330,6 +352,8 @@ export function useCampaignWizard({
   onReplaceFiles,
   onDownloadFile,
   onAfterSubmit,
+  onDeployCampaign,
+  onSendInvitations,
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
   const [state, setState] = useState<CampaignWizardPersistedState>(() =>
@@ -341,6 +365,7 @@ export function useCampaignWizard({
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [partialDeploy, setPartialDeploy] = useState<{ campaignId: string; emails: string[]; campaign: EmployerCampaign } | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -800,8 +825,8 @@ export function useCampaignWizard({
   ]);
 
   /** POST create only when no Draft exists yet (file upload may have created one already). */
-  const handleCreateCampaign = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return;
+  const handleCreateCampaign = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return null;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
@@ -812,7 +837,7 @@ export function useCampaignWizard({
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -832,7 +857,8 @@ export function useCampaignWizard({
         completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
-      onAfterSubmit(created);
+      if (redirect) onAfterSubmit(created);
+      return created;
     } catch (error) {
       const mapped = mapSubmitError(error, t, 'create');
       setActionError(mapped.message);
@@ -843,6 +869,7 @@ export function useCampaignWizard({
           errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
         }));
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
@@ -850,16 +877,16 @@ export function useCampaignWizard({
   }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, snapshot, state, t]);
 
   /** Save Draft metadata + questions — used for edit mode and create-after-ensureDraft. */
-  const handleUpdateDraft = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting) return;
-    if (mode === 'create' && !state.draftId) return;
+  const handleUpdateDraft = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting) return null;
+    if (mode === 'create' && !state.draftId) return null;
     if (!campaignId) {
       setActionError(t('employer.campaigns.wizard.campaignNotFound'));
-      return;
+      return null;
     }
     if (!isDraftEditable) {
       setActionError(t('employer.campaigns.wizard.notDraftEditable'));
-      return;
+      return null;
     }
 
     const validation = validateAllCampaignWizardSteps(state, {
@@ -873,7 +900,7 @@ export function useCampaignWizard({
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -891,7 +918,7 @@ export function useCampaignWizard({
         currentStep: 3,
         errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
       }));
-      return;
+      return null;
     }
 
     let metadataOk = metadataSaved;
@@ -925,7 +952,8 @@ export function useCampaignWizard({
           ? t('employer.campaigns.wizard.createSuccess')
           : t('employer.campaigns.wizard.updateSuccess'),
       );
-      onAfterSubmit(updated);
+      if (redirect) onAfterSubmit(updated);
+      return updated;
     } catch (error) {
       if (metadataOk && !questionsSaved) {
         setMetadataSaved(true);
@@ -950,6 +978,7 @@ export function useCampaignWizard({
           }));
         }
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
@@ -997,13 +1026,50 @@ export function useCampaignWizard({
     }
   }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
 
-  const handleFinalSubmit = useCallback(() => {
-    if (mode === 'create' && !state.draftId) {
-      void handleCreateCampaign();
-      return;
+  const handleFinalSubmit = useCallback(async () => {
+    const saved = mode === 'create' && !state.draftId
+      ? await handleCreateCampaign(false)
+      : await handleUpdateDraft(false);
+    if (!saved) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      const deployed = await onDeployCampaign(saved.id, state.inviteEmails);
+      setPartialDeploy(null);
+      toast.success(t('employer.campaigns.wizard.deploy.deploySuccess'));
+      onAfterSubmit(deployed.campaign);
+    } catch (error) {
+      if (error instanceof CampaignInvitationDeployError) {
+        setPartialDeploy({ campaignId: saved.id, emails: error.emails, campaign: error.campaign });
+      }
+      const status = getApiStatusCode(error);
+      setActionError(error instanceof CampaignInvitationDeployError
+        ? t('employer.campaigns.wizard.deploy.invitationFailed')
+        : status === 409
+          ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
+            ? error.response.data.trim()
+            : t('employer.campaigns.wizard.deploy.deployConflict'))
+          : mapDeployError(error, t));
+    } finally {
+      setIsSubmitting(false);
     }
-    void handleUpdateDraft();
-  }, [handleCreateCampaign, handleUpdateDraft, mode, state.draftId]);
+  }, [handleCreateCampaign, handleUpdateDraft, mode, onAfterSubmit, onDeployCampaign, state.draftId, state.inviteEmails, t]);
+
+  const retryDeployInvitations = useCallback(async () => {
+    if (!partialDeploy || isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await onSendInvitations(partialDeploy.campaignId, partialDeploy.emails);
+      toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
+      onAfterSubmit(partialDeploy.campaign);
+      setPartialDeploy(null);
+    } catch {
+      setActionError(t('employer.campaigns.wizard.deploy.invitationFailed'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, t]);
 
   return {
     state,
@@ -1060,6 +1126,8 @@ export function useCampaignWizard({
     goToStep,
     handleFinalSubmit,
     retryQuestionsUpdate,
+    partialDeploy,
+    retryDeployInvitations,
   };
 }
 

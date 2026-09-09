@@ -20,6 +20,7 @@ type InviteTab = 'email' | 'cv';
 interface CampaignInvitesStepProps {
   campaignId: string | null;
   campaign?: EmployerCampaign | null;
+  timeLimitMinutes?: number;
   jdText: string;
   hardFilters: CampaignHardFiltersState;
   inviteEmails: string[];
@@ -38,6 +39,7 @@ function parseEmails(value: string): string[] {
 export function CampaignInvitesStep({
   campaignId,
   campaign,
+  timeLimitMinutes,
   jdText,
   hardFilters,
   inviteEmails,
@@ -124,6 +126,7 @@ export function CampaignInvitesStep({
               <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryInvalid')}</p><p className="mt-1 text-xl font-semibold text-foreground">{invalidCount}</p></div>
               <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryExpiry')}</p><p className="mt-1 text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.invites.summaryAtDeploy')}</p></div>
             </div>
+            <div className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm"><span className="text-muted-foreground">{t('employer.campaigns.wizard.invites.estimatedTestTime')}: </span><span className="font-medium text-foreground">{timeLimitMinutes ?? campaign?.durationMinutes ?? '—'} {t('employer.campaigns.wizard.invites.minutes')}</span></div>
           </div>
         ) : (
           <div className="space-y-4">

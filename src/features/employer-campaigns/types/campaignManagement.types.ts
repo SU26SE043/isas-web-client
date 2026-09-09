@@ -111,6 +111,10 @@ export interface PublishResult {
   warnings: string[];
 }
 
+export interface CampaignDeployResult extends PublishResult {
+  invitations: import('./campaign.api.types').CreateCampaignInvitationsResponse | null;
+}
+
 export interface InviteRejectedEmail {
   email: string;
   reason: string;

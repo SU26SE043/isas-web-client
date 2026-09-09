@@ -37,6 +37,7 @@ import type {
   EmployerCampaign,
   InviteResolution,
   PublishResult,
+  CampaignDeployResult,
 } from '../types/campaignManagement.types';
 import {
   mapCampaignResponseToEmployerCampaign,
@@ -83,6 +84,21 @@ export class CampaignRequestError extends Error {
     super(message);
     this.name = 'CampaignRequestError';
     this.status = status;
+  }
+}
+
+export class CampaignInvitationDeployError extends Error {
+  readonly campaign: EmployerCampaign;
+  readonly emails: string[];
+  constructor(
+    message: string,
+    campaign: EmployerCampaign,
+    emails: string[],
+  ) {
+    super(message);
+    this.name = 'CampaignInvitationDeployError';
+    this.campaign = campaign;
+    this.emails = emails;
   }
 }
 
@@ -458,6 +474,33 @@ export const campaignManagementService = {
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return { campaign: mapped, warnings: [] };
+  },
+
+  /** Publish first, then send the draft invitation list. Never sends before publish succeeds. */
+  async deployCampaign(id: string, emails: string[]): Promise<CampaignDeployResult> {
+    const published = await this.publishCampaign(id);
+    if (emails.length === 0) return { ...published, invitations: null };
+    let invitations: CreateCampaignInvitationsResponse;
+    try {
+      invitations = await this.createCampaignInvitations(id, { emails });
+    } catch (error) {
+      throw new CampaignInvitationDeployError(
+        error instanceof Error ? error.message : 'INVITATIONS_FAILED',
+        published.campaign,
+        emails,
+      );
+    }
+    return { ...published, invitations };
+  },
+
+  /** Live: POST /api/v1/campaign/{id}/start-now — open a future campaign immediately. */
+  async startCampaignNow(id: string): Promise<EmployerCampaign> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.startNow(id), undefined);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) throw new Error('Invalid start-now response');
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
   },
 
   /**
