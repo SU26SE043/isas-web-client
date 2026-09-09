@@ -155,6 +155,7 @@ export function CampaignWizardForm({
           rubric={state.rubric}
           campaignId={state.draftId ?? campaign?.id ?? null}
           jobCategory={wizard.jobCategory}
+          language={state.info.language === 'en' ? 'en' : 'vi'}
           error={wizard.stepError}
           onChangeRubric={wizard.setRubric}
           onReset={wizard.resetRubric}

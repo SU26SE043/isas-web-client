@@ -1,5 +1,6 @@
 import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
+import type { CampaignLanguage } from './campaign.api.types';
 
 export type JobDescriptionMethod = 'file' | 'text';
 
@@ -56,6 +57,8 @@ export type JdAnalysisState = JobDescriptionState;
 export type CampaignInfoState = {
   title: string;
   domain: CampaignDomainOption | '';
+  /** Interview language, independent from the user's UI language. */
+  language?: CampaignLanguage | '';
   maxCandidates: number | null;
   timeLimitMinutes: number;
   /** Optional 0–100; null = HR decides. */

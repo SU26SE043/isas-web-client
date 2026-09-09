@@ -10,20 +10,21 @@ import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
+import type { CampaignLanguage } from '../../types/campaign.api.types';
 import { campaignCriteriaService, type CampaignCriteriaPreview } from '../../services/campaignCriteria.service';
 import { CampaignCriteriaManualList } from './CampaignCriteriaManualList';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { CampaignRubricTotalWeight } from './criteria/CampaignRubricTotalWeight';
 
-interface Props { rubric: RubricCriterion[]; campaignId: string | null; jobCategory: string | null; error?: string | null; onChangeRubric: (rubric: RubricCriterion[]) => void; onReset: () => void; onBack: () => void; onNext: () => void; isSaving?: boolean; }
+interface Props { rubric: RubricCriterion[]; campaignId: string | null; jobCategory: string | null; language?: CampaignLanguage; error?: string | null; onChangeRubric: (rubric: RubricCriterion[]) => void; onReset: () => void; onBack: () => void; onNext: () => void; isSaving?: boolean; }
 
 export function previewToRubric(preview: CampaignCriteriaPreview): RubricCriterion[] { return preview.criteria.map((item, index) => ({ id: item.id || `system-${index + 1}`, name: item.name, description: item.description, weight: Math.round((item.weight <= 1 ? item.weight * 100 : item.weight) * 100) / 100, maxScore: item.maxScore, minPct: null, levels: item.levels.length ? item.levels : undefined })); }
 export function shouldShowRubricSummary(rubric: RubricCriterion[]): boolean { return rubric.length > 0; }
 function visibleLevels(levels: CampaignCriteriaPreview['criteria'][number]['levels']) { return levels.length <= 3 ? levels : [levels[0], levels[Math.floor(levels.length / 2)], levels[levels.length - 1]].filter((level, index, values) => values.findIndex((item) => item.score === level.score) === index); }
 
-export function CampaignCriteriaStepV2({ rubric, campaignId, jobCategory: initialJobCategory, error, onChangeRubric, onReset, onBack, onNext, isSaving }: Props) {
-  const { t, language } = useLanguage();
+export function CampaignCriteriaStepV2({ rubric, campaignId, jobCategory: initialJobCategory, language = 'vi', error, onChangeRubric, onReset, onBack, onNext, isSaving }: Props) {
+  const { t } = useLanguage();
   const [source, setSource] = React.useState<'manual' | 'system'>('manual');
   const [jobCategory, setJobCategory] = React.useState(initialJobCategory ?? '');
   const [previewOpen, setPreviewOpen] = React.useState(false);

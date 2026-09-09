@@ -13,6 +13,7 @@ function snapshot(): CampaignWizardSubmitSnapshot {
     info: {
       title: 'Frontend hiring',
       domain: 'frontend',
+      language: 'vi',
       maxCandidates: 20,
       timeLimitMinutes: 60,
       passScorePct: 70,
@@ -77,6 +78,36 @@ function persisted(): CampaignWizardPersistedState {
 }
 
 describe('campaign wizard request contract', () => {
+  it('sends the selected interview language while retaining the time limit', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildCampaignCreateRequest(current)).toMatchObject({
+      language: 'en',
+      timeLimitMinutes: 60,
+    });
+  });
+
+  it('sends interview language changes in a dirty update', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      language: 'en',
+    });
+  });
+
+  it('blocks the information step when interview language is missing', () => {
+    const current = persisted();
+    current.info.language = '';
+
+    expect(validateCampaignWizardStep(current, 0)).toBe(
+      'employer.campaigns.wizard.languageRequired',
+    );
+  });
+
   it('does not send the deprecated location field in the create payload', () => {
     const request = buildCampaignCreateRequest(snapshot());
     expect(request).not.toHaveProperty('location');

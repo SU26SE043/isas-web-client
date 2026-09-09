@@ -50,6 +50,7 @@ export function validateCampaignWizardStep(
       return 'employer.campaigns.wizard.titleTooLong';
     }
     if (!info.domain) return 'employer.campaigns.wizard.domainRequired';
+    if (!info.language) return 'employer.campaigns.wizard.languageRequired';
     if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
       return 'employer.campaigns.wizard.timeLimitRequired';
     }

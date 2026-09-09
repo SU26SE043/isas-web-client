@@ -52,6 +52,17 @@ describe('campaignMapper', () => {
     expect(campaign.deadline).toBe('2026-09-01');
   });
 
+  it('maps the campaign interview language to the wizard locale', () => {
+    const campaign = mapCampaignResponseToEmployerCampaign({
+      id: 'c-language',
+      title: 'English campaign',
+      status: 'Draft',
+      language: 'en',
+    });
+
+    expect(campaign.locale).toBe('en');
+  });
+
   it('maps Archived separately from Closed', () => {
     const archived = mapCampaignResponseToEmployerCampaign({
       id: 'c-arch',
