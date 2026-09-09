@@ -33,6 +33,8 @@ export type JobDescriptionState = {
   jdText: string;
   /** Freeform criteria notes captured alongside JD (step 1); maps to API `criteriaText`. */
   criteriaText: string;
+  /** First 200 characters extracted by the server after a PDF upload. */
+  extractedText?: string;
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
@@ -144,6 +146,7 @@ export function createEmptyJdState(): JobDescriptionState {
     fileSize: null,
     jdText: '',
     criteriaText: '',
+    extractedText: '',
     fileStatus: 'idle',
     fileError: null,
     uploadProgress: null,

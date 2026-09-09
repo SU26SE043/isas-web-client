@@ -132,6 +132,7 @@ function buildInitialState(
             inputMethod: 'text' as const,
             jdText: campaign?.jobDescription ?? '',
             fileStatus: 'uploaded' as const,
+            extractedText: campaign?.jobDescription?.trim().slice(0, 200) ?? '',
           }
         : {}),
     },

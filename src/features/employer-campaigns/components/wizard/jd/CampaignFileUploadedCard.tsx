@@ -18,6 +18,8 @@ type CampaignFileUploadedCardProps = {
   downloadingLabel: string;
   replacingLabel: string;
   successLabel: string;
+  previewText?: string;
+  previewLabel?: string;
   onDownload?: () => void;
   openPicker: () => void;
 };
@@ -41,6 +43,8 @@ export function CampaignFileUploadedCard({
   downloadingLabel,
   replacingLabel,
   successLabel,
+  previewText = '',
+  previewLabel,
   onDownload,
   openPicker,
 }: CampaignFileUploadedCardProps) {
@@ -57,6 +61,14 @@ export function CampaignFileUploadedCard({
           {displaySize != null ? formatSize(displaySize) : null}
           {displaySize != null && displaySize > CAMPAIGN_PDF_MAX_BYTES ? ' · > 10 MB' : null}
         </p>
+        {previewLabel && previewText.trim() ? (
+          <div className="mt-3 rounded-lg bg-surface-overlay px-3 py-2">
+            <p className="text-xs font-medium text-muted-foreground">{previewLabel}</p>
+            <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-sm text-foreground">
+              {previewText}
+            </p>
+          </div>
+        ) : null}
         {status === 'replacing' && progress != null ? (
           <div className="mt-2">
             <div
