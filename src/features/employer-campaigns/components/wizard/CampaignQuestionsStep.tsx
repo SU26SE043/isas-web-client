@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HelpCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
@@ -8,26 +8,24 @@ import { CAMPAIGN_QUESTION_HARD_MAX } from '../../utils/campaignQuestionLimits';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { AiGenerateCard } from './questions/AiGenerateCard';
-import { CampaignQuestionCard } from './questions/CampaignQuestionCard';
+import { CampaignQuestionSections } from './questions/CampaignQuestionSections';
 import { GenerateOverwriteModal } from './questions/GenerateOverwriteModal';
-import { QuestionsSummaryCard } from './questions/QuestionsSummaryCard';
+import { QuestionStartOptions } from './questions/QuestionStartOptions';
 
 interface CampaignQuestionsStepProps {
   campaignTitle: string;
-  domainLabel: string;
   isDraft: boolean;
   hasJd: boolean;
   questions: CampaignQuestion[];
   questionCount: number;
   questionsPerSession?: number | null;
-  maxQuestions: number | null;
   questionBankWarnings?: string[];
   error?: string | null;
   onQuestionCount: (count: number) => void;
   onQuestionsPerSession: (count: number | null) => void;
   onGenerateAi: (opts?: { useDefaultCount?: boolean }) => void;
-  onSaveQuestions: () => void;
   onAddManual: () => void;
+  onImportCsv?: () => void;
   onChangePrompt: (id: string, prompt: string) => void;
   onToggleRequired: (id: string, isRequired: boolean) => void;
   onChangeGroup: (id: string, group: string) => void;
@@ -37,25 +35,22 @@ interface CampaignQuestionsStepProps {
   onNext: () => void;
   isGenerating?: boolean;
   isSaving?: boolean;
-  onOpenSettings?: () => void;
 }
 
 export function CampaignQuestionsStep({
   campaignTitle,
-  domainLabel,
   isDraft,
   hasJd,
   questions,
   questionCount,
   questionsPerSession,
-  maxQuestions,
   questionBankWarnings = [],
   error,
   onQuestionCount,
   onQuestionsPerSession,
   onGenerateAi,
-  onSaveQuestions,
   onAddManual,
+  onImportCsv,
   onChangePrompt,
   onToggleRequired,
   onChangeGroup,
@@ -65,7 +60,6 @@ export function CampaignQuestionsStep({
   onNext,
   isGenerating = false,
   isSaving = false,
-  onOpenSettings,
 }: CampaignQuestionsStepProps) {
   const { t } = useLanguage();
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -73,13 +67,34 @@ export function CampaignQuestionsStep({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const busy = isGenerating || isSaving;
   const max = CAMPAIGN_QUESTION_HARD_MAX;
-  const canSave =
-    isDraft &&
-    questions.length > 0 &&
-    questions.every((item) => item.prompt.trim().length > 0) &&
-    questions.length <= max &&
-    !busy;
+  const drawMode = questionsPerSession != null;
+  const fixedCount = questions.filter((question) => question.isRequired).length;
+  const poolCount = questions.length - fixedCount;
+  const drawCount = Math.min(Math.max(questionsPerSession ?? 0, 0), poolCount);
+  const totalPerCandidate = drawMode ? fixedCount + drawCount : questions.length;
   const canContinue = !busy;
+
+  useEffect(() => {
+    if (!drawMode && poolCount > 0) {
+      questions.forEach((question) => {
+        if (!question.isRequired) onToggleRequired(question.id, true);
+      });
+    }
+    if (drawMode && questionsPerSession != null && questionsPerSession > poolCount) {
+      onQuestionsPerSession(poolCount);
+    }
+  }, [drawMode, onQuestionsPerSession, onToggleRequired, poolCount, questions, questionsPerSession]);
+
+  const selectMode = (nextDrawMode: boolean) => {
+    if (nextDrawMode) {
+      onQuestionsPerSession(Math.min(Math.max(questionsPerSession ?? poolCount, 0), poolCount));
+      return;
+    }
+    questions.forEach((question) => {
+      if (!question.isRequired) onToggleRequired(question.id, true);
+    });
+    onQuestionsPerSession(null);
+  };
 
   const requestGenerate = () => {
     if (!isDraft || busy) return;
@@ -94,34 +109,21 @@ export function CampaignQuestionsStep({
   return (
     <SectionPanel
       icon={<HelpCircle className="size-4" aria-hidden />}
-      title={t('employer.campaigns.campaignQuestions.title')}
+      title={`${t('employer.campaigns.campaignQuestions.title')} · ${questions.length} / ${max}`}
       footer={
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canSave}
-            loading={isSaving}
-            onClick={onSaveQuestions}
-          >
-            {isSaving
-              ? t('employer.campaigns.campaignQuestions.actions.saving')
-              : t('employer.campaigns.campaignQuestions.actions.save')}
-          </Button>
-          <CampaignWizardNav
-            onBack={onBack}
-            onNext={onNext}
-            isSaving={busy}
-            nextDisabled={!canContinue}
-            backDisabled={busy}
-            nextLabel={t('employer.campaigns.campaignQuestions.actions.continue')}
-            backLabel={t('employer.campaigns.campaignQuestions.actions.back')}
-          />
-        </div>
+        <CampaignWizardNav
+          onBack={onBack}
+          onNext={onNext}
+          isSaving={busy}
+          nextDisabled={!canContinue}
+          backDisabled={busy}
+          nextLabel={t('employer.campaigns.campaignQuestions.actions.continue')}
+          backLabel={t('employer.campaigns.campaignQuestions.actions.back')}
+        />
       }
     >
       <div className="space-y-5">
-        {error ? <><FieldError message={error} />{/(tối đa|at most)/i.test(error) && onOpenSettings ? <button type="button" className="text-xs text-info underline underline-offset-2" onClick={onOpenSettings}>{t('employer.campaigns.campaignQuestions.validation.openSettings')}</button> : null}</> : null}
+        {error ? <FieldError message={error} /> : null}
         {questionBankWarnings.length > 0 ? (
           <div role="status" className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
             <p className="font-medium">{t('employer.campaigns.campaignQuestions.bank.warnings')}</p>
@@ -130,71 +132,80 @@ export function CampaignQuestionsStep({
             </ul>
           </div>
         ) : null}
-        <div className="rounded-lg border border-satin bg-surface-overlay p-4"><label className="text-sm font-medium text-foreground" htmlFor="questions-per-session">{t('employer.campaigns.campaignQuestions.bank.perCandidate')}</label><input id="questions-per-session" type="number" min={1} value={questionsPerSession ?? ''} onChange={(event) => onQuestionsPerSession(event.target.value === '' ? null : Number(event.target.value))} className="mt-2 h-9 w-32 rounded-md border border-satin bg-surface-base px-3 text-sm" /><p className="mt-1 text-xs text-muted-foreground">{t('employer.campaigns.campaignQuestions.bank.perCandidateHelp')}</p></div>
-
-        <QuestionsSummaryCard
-          campaignTitle={campaignTitle}
-          domainLabel={domainLabel}
-          isDraft={isDraft}
-          hasJd={hasJd}
-          questionCount={questions.length}
-        />
-        <datalist id="campaign-question-groups">
-          {Array.from(new Set(questions.map((question) => question.questionGroup?.trim()).filter(Boolean))).map((group) => <option key={group} value={group} />)}
-        </datalist>
-
-        <AiGenerateCard
-          isDraft={isDraft}
-          hasJd={hasJd}
-          questionCount={questionCount}
-          maxQuestions={maxQuestions}
-          useDefaultCount={useDefaultCount}
-          currentQuestionCount={questions.length}
-          disabled={busy}
-          isGenerating={isGenerating}
-          onQuestionCount={onQuestionCount}
-          onUseDefaultCount={setUseDefaultCount}
-          onGenerate={requestGenerate}
-        />
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!isDraft || busy || questions.length >= max}
-            onClick={onAddManual}
-          >
-            <Plus className="size-4" aria-hidden />
-            {t('employer.campaigns.campaignQuestions.question.add')}
-          </Button>
-        </div>
 
         {questions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t('employer.campaigns.campaignQuestions.validation.listRequired')}
-          </p>
+          <QuestionStartOptions
+            hasJd={hasJd}
+            disabled={busy || !isDraft}
+            onGenerateAi={requestGenerate}
+            onImportCsv={onImportCsv}
+            onAddManual={onAddManual}
+          />
         ) : (
-          <ul
-            ref={listRef}
-            className={`space-y-3 ${isGenerating ? 'pointer-events-none opacity-60' : ''}`}
-          >
-            {questions.map((question, index) => (
-              <CampaignQuestionCard
-                key={question.id}
-                question={question}
-                index={index}
-                total={questions.length}
-                disabled={!isDraft || busy}
-                onChangePrompt={(prompt) => onChangePrompt(question.id, prompt)}
-                onToggleRequired={(isRequired) => onToggleRequired(question.id, isRequired)}
-                onChangeGroup={(group) => onChangeGroup(question.id, group)}
-                onMoveUp={() => onMoveQuestion(question.id, 'up')}
-                onMoveDown={() => onMoveQuestion(question.id, 'down')}
-                onRemove={() => onRemoveQuestion(question.id)}
-              />
-            ))}
-          </ul>
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-satin bg-surface-overlay px-4 py-3">
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input type="radio" name="campaign-question-mode" checked={!drawMode} disabled={busy} onChange={() => selectMode(false)} />
+                  {t('employer.campaigns.campaignQuestions.mode.all')}
+                </label>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input type="radio" name="campaign-question-mode" checked={drawMode} disabled={busy} onChange={() => selectMode(true)} />
+                  {t('employer.campaigns.campaignQuestions.mode.draw')}
+                </label>
+              </div>
+              {drawMode ? (
+                <label className="flex items-center gap-2 text-sm text-foreground" htmlFor="campaign-question-draw-count">
+                  {t('employer.campaigns.campaignQuestions.draw.countLabel')}
+                  <input
+                    id="campaign-question-draw-count"
+                    type="number"
+                    min={0}
+                    max={poolCount}
+                    value={drawCount}
+                    disabled={busy}
+                    onChange={(event) => onQuestionsPerSession(Math.min(Math.max(Number(event.target.value) || 0, 0), poolCount))}
+                    className="h-9 w-20 rounded-xl border border-satin bg-surface-base px-3 text-sm"
+                  />
+                </label>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                {drawMode
+                  ? t('employer.campaigns.campaignQuestions.draw.total').replace('{{fixed}}', String(fixedCount)).replace('{{draw}}', String(drawCount)).replace('{{total}}', String(totalPerCandidate))
+                  : t('employer.campaigns.campaignQuestions.mode.allHint')}
+              </p>
+            </div>
+
+            <AiGenerateCard
+              isDraft={isDraft}
+              hasJd={hasJd}
+              questionCount={questionCount}
+              maxQuestions={null}
+              useDefaultCount={useDefaultCount}
+              currentQuestionCount={questions.length}
+              disabled={busy}
+              isGenerating={isGenerating}
+              onQuestionCount={onQuestionCount}
+              onUseDefaultCount={setUseDefaultCount}
+              onGenerate={requestGenerate}
+            />
+            <CampaignQuestionSections
+              questions={questions}
+              isDraft={isDraft}
+              disabled={busy}
+              drawMode={drawMode}
+              listRef={listRef}
+              onChangePrompt={onChangePrompt}
+              onToggleRequired={onToggleRequired}
+              onChangeGroup={onChangeGroup}
+              onMoveQuestion={onMoveQuestion}
+              onRemoveQuestion={onRemoveQuestion}
+            />
+            <Button type="button" variant="outline" size="sm" disabled={!isDraft || busy || questions.length >= max} onClick={onAddManual}>
+              <Plus className="size-4" aria-hidden />
+              {t('employer.campaigns.campaignQuestions.question.add')}
+            </Button>
+          </>
         )}
       </div>
 
@@ -208,9 +219,7 @@ export function CampaignQuestionsStep({
         onConfirm={() => {
           setConfirmOpen(false);
           onGenerateAi({ useDefaultCount });
-          queueMicrotask(() =>
-            listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-          );
+          queueMicrotask(() => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
         }}
       />
     </SectionPanel>

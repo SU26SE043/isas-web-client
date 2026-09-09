@@ -88,6 +88,20 @@ describe('campaign wizard request contract', () => {
     });
   });
 
+  it('keeps all mode explicit with a null draw count', () => {
+    const current = snapshot();
+    current.questionsPerSession = null;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBeNull();
+  });
+
+  it('sends the computed draw count for pool mode', () => {
+    const current = snapshot();
+    current.questionsPerSession = 5;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBe(5);
+  });
+
   it('sends interview language changes in a dirty update', () => {
     const current = snapshot();
     current.info.language = 'en';

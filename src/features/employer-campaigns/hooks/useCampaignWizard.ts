@@ -501,10 +501,14 @@ export function useCampaignWizard({
           campaignId: id,
           count,
         });
+        const generatedQuestions = updated.questions.map((question) => ({
+          ...question,
+          isRequired: state.questionsPerSession == null,
+        }));
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
-          questions: updated.questions,
+          questions: generatedQuestions,
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
@@ -548,6 +552,7 @@ export function useCampaignWizard({
       onGenerateQuestions,
       state.jd,
       state.questionCount,
+      state.questionsPerSession,
       t,
     ],
   );
@@ -629,7 +634,7 @@ export function useCampaignWizard({
             skill: '',
             difficulty: 'middle' as const,
             source: 'manual' as const,
-            isRequired: true,
+            isRequired: prev.questionsPerSession == null,
           },
         ],
         autosaveStatus: 'dirty',

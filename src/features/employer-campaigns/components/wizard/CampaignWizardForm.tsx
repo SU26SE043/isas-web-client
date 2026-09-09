@@ -165,21 +165,16 @@ export function CampaignWizardForm({
       {step === 3 ? (
         <CampaignQuestionsStep
           campaignTitle={state.info.title}
-          domainLabel={wizard.domainLabel}
           isDraft={wizard.isDraftEditable}
           hasJd={hasWizardJd(state.jd) || Boolean(campaign?.jobDescription?.trim())}
           questions={state.questions}
           questionCount={state.questionCount}
           questionsPerSession={state.questionsPerSession}
           questionBankWarnings={campaign?.questionBankWarnings ?? []}
-          maxQuestions={
-            state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null
-          }
           error={wizard.stepError}
           onQuestionCount={wizard.setQuestionCount}
           onQuestionsPerSession={wizard.setQuestionsPerSession}
           onGenerateAi={(opts) => void wizard.generateQuestionsWithAi(opts)}
-          onSaveQuestions={() => void wizard.saveQuestionsNow()}
           onAddManual={wizard.addManualQuestion}
           onChangePrompt={(id, prompt) => wizard.updateQuestion(id, { prompt })}
           onToggleRequired={(id, isRequired) => wizard.updateQuestion(id, { isRequired })}
@@ -190,7 +185,6 @@ export function CampaignWizardForm({
           onNext={wizard.goNext}
           isGenerating={wizard.isGeneratingQuestions}
           isSaving={wizard.isSavingQuestions || wizard.isSavingStep}
-          onOpenSettings={() => wizard.goToStep(4)}
         />
       ) : null}
 

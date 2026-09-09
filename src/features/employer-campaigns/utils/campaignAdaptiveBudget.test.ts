@@ -25,7 +25,7 @@ describe('calculateAdaptiveQuestionBudget', () => {
     });
   });
 
-  it('uses the full twenty-question bank when K is omitted', () => {
+  it('uses the full twenty-question fixed set when all mode has no draw count', () => {
     expect(calculateAdaptiveQuestionBudget(20, 3, true)).toMatchObject({
       requestedTotal: 80,
       maxBaseQuestionCount: 5,
