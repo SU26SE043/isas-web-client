@@ -151,11 +151,12 @@ function buildInitialState(
     criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
     questions: campaign?.questions?.length ? campaign.questions : [],
+    inviteEmails: campaign?.invitedEmails ?? [],
     questionCount: 5,
     questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
     currentStep: 0,
-    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6] : [],
+    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6, 7] : [],
     errorSteps: [],
     draftId: campaign?.id,
     autosaveStatus: 'idle',
@@ -451,6 +452,14 @@ export function useCampaignWizard({
 
   const setQuestionsPerSession = useCallback((value: number | null) => {
     setState((prev) => ({ ...prev, questionsPerSession: value, autosaveStatus: 'dirty' }));
+  }, []);
+
+  const setInviteEmails = useCallback((emails: string[]) => {
+    setState((prev) => ({
+      ...prev,
+      inviteEmails: Array.from(new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))),
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const setQuestions = useCallback((questions: CampaignQuestion[]) => {
@@ -820,7 +829,7 @@ export function useCampaignWizard({
         draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
       onAfterSubmit(created);
@@ -909,7 +918,7 @@ export function useCampaignWizard({
         ...prev,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(
         mode === 'create'
@@ -1036,6 +1045,7 @@ export function useCampaignWizard({
     resetRubric,
     setQuestionCount,
     setQuestionsPerSession,
+    setInviteEmails,
     setQuestions,
     generateQuestionsWithAi,
     saveQuestionsNow,

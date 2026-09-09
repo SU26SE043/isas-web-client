@@ -39,4 +39,14 @@ describe('verification risk labels', () => {
   it('uses translated keys instead of raw API labels', () => {
     expect(verificationRiskTranslationKey('High')).toBe('employer.campaigns.screening.verificationRisk.High');
   });
+
+  it('keeps ineligible candidates below eligible candidates even with a higher score', () => {
+    const ranks = getCandidateRanks([
+      { ...candidate('ineligible', 99), eligible: false },
+      { ...candidate('eligible', 70), eligible: true },
+    ]);
+
+    expect(ranks.get('eligible')).toBe(1);
+    expect(ranks.get('ineligible')).toBe(2);
+  });
 });

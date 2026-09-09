@@ -859,6 +859,14 @@ export const campaignManagementService = {
     return mapCampaignResponseToEmployerCampaign(parsed);
   },
 
+  /** Live: POST /api/v1/campaign/{id}/job-needs/suggest — derive needs from the saved JD. */
+  async suggestCampaignJobNeeds(id: string): Promise<EmployerCampaign> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.jobNeedsSuggest(id));
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed) throw new Error('Invalid suggested job needs response');
+    return mapCampaignResponseToEmployerCampaign(parsed);
+  },
+
   /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */
   async rescreenCampaignCandidate(id: string, candidateId: string): Promise<void> {
     await apiClient.post(campaignManagementEndpoints.candidateRescreen(id, candidateId), undefined, {

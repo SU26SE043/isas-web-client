@@ -2,7 +2,7 @@ import type { CampaignWizardPersistedState } from '../types/campaignWizard.types
 import { validateCampaignPdf } from './campaignFiles';
 import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
 
-const LAST_STEP_INDEX = 6;
+const LAST_STEP_INDEX = 7;
 const MAX_QUESTIONS_LIMIT = 20;
 export const MAX_CAMPAIGN_TITLE_LENGTH = 255;
 export const MAX_CRITERION_NAME_LENGTH = 255;
@@ -169,7 +169,7 @@ export function validateCampaignWizardStep(
     return null;
   }
 
-  // Steps 5 (Slots) and 6 (Review) have no persisted wizard fields.
+  // Steps 5 (Slots), 6 (Invites), and 7 (Review) have no blocking draft fields.
   return null;
 }
 

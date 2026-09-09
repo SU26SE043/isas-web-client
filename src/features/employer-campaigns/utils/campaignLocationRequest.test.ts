@@ -70,6 +70,7 @@ function persisted(): CampaignWizardPersistedState {
       isDownloading: false,
     },
     questionCount: 5,
+    inviteEmails: [],
     currentStep: 0,
     completedSteps: [],
     errorSteps: [],

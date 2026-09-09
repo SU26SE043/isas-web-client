@@ -92,6 +92,8 @@ export type CampaignWizardPersistedState = {
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  /** Email list collected in step 7; invitations are sent only during deploy. */
+  inviteEmails: string[];
   /** Count used by the "generate with AI" action on the Questions step. */
   questionCount: number;
   questionsPerSession?: number | null;

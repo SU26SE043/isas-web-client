@@ -16,6 +16,7 @@ import { CampaignInfoStep } from './CampaignInfoStep';
 import { CampaignJdStep } from './CampaignJdStep';
 import { CampaignQuestionsStep } from './CampaignQuestionsStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
+import { CampaignInvitesStep } from './CampaignInvitesStep';
 import { CampaignSettingsStep } from './CampaignSettingsStep';
 import { CampaignSlotsStep } from './CampaignSlotsStep';
 import { CampaignWizardShell } from './CampaignWizardShell';
@@ -49,7 +50,6 @@ interface CampaignWizardFormProps {
   ) => Promise<import('../../utils/campaignFiles').BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
 }
-
 export function CampaignWizardForm({
   campaign,
   mode,
@@ -88,7 +88,6 @@ export function CampaignWizardForm({
     mode === 'edit'
       ? t('employer.campaigns.wizard.savingChanges')
       : t('employer.campaigns.wizard.creatingCampaign');
-
   return (
     <CampaignWizardShell
       currentStep={step}
@@ -118,13 +117,11 @@ export function CampaignWizardForm({
           </AlertDescription>
         </Alert>
       ) : null}
-
       {wizard.stepError ? (
         <Alert variant="error" className="mb-4">
           <AlertDescription>{wizard.stepError}</AlertDescription>
         </Alert>
       ) : null}
-
       {step === 0 ? (
         <CampaignInfoStep
           info={state.info}
@@ -215,6 +212,19 @@ export function CampaignWizardForm({
       ) : null}
 
       {step === 6 ? (
+        <CampaignInvitesStep
+          campaignId={state.draftId ?? campaign?.id ?? null}
+          campaign={campaign}
+          jdText={state.jd.jdText || state.jd.extractedText || campaign?.jobDescription || ''}
+          hardFilters={state.hardFilters}
+          inviteEmails={state.inviteEmails}
+          onHardFiltersChange={wizard.patchHardFilters}
+          onInviteEmailsChange={wizard.setInviteEmails}
+          onBack={wizard.goBack}
+          onNext={wizard.goNext}
+        />
+      ) : null}
+      {step === 7 ? (
         <CampaignReviewStep
           info={state.info}
           jd={state.jd}

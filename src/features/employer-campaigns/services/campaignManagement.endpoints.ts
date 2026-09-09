@@ -15,6 +15,7 @@ export const campaignManagementEndpoints = {
   delete: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   questions: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions`,
   jobNeeds: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs`,
+  jobNeedsSuggest: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs/suggest`,
   questionsGenerate: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/generate`,
   questionsImport: (id: string) =>
