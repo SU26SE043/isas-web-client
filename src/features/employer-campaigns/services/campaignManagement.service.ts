@@ -3,6 +3,7 @@ import { getApiStatusCode } from '@/shared/api/apiError';
 import { DEFAULT_PROCTORING } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignCreateQuestionRequest,
+  CampaignQuestionImportResult,
   CampaignCreateRequest,
   CreateCampaignInvitationsRequest,
   CreateCampaignInvitationsResponse,
@@ -63,6 +64,7 @@ import {
 } from '../utils/campaignCandidatesApi';
 import { parseCampaignInvitationsPage, readNextCursorHeader } from '../utils/campaignInvitationsApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
+import { isCampaignCsvFile, parseCampaignQuestionImport } from '../utils/campaignQuestionImport';
 
 let campaigns: EmployerCampaign[] = [];
 
@@ -406,6 +408,28 @@ export const campaignManagementService = {
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
     return mapped;
+  },
+
+  /** Live: POST /api/v1/campaign/{id}/questions/import — multipart `file`, Draft only. */
+  async importCampaignQuestions(id: string, file: File): Promise<CampaignQuestionImportResult> {
+    if (!isCampaignCsvFile(file)) {
+      throw new CampaignRequestError(400, 'IMPORT_NOT_CSV');
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.questionsImport(id),
+      formData,
+      {
+        transformRequest: [
+          (data: unknown, headers?: Record<string, unknown>) => {
+            if (data instanceof FormData && headers) delete headers['Content-Type'];
+            return data;
+          },
+        ],
+      },
+    );
+    return parseCampaignQuestionImport(response.data);
   },
 
   /** @deprecated Prefer updateCampaignQuestions with API DTOs. */

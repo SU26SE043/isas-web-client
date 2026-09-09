@@ -7,6 +7,7 @@ import { CampaignWizardForm } from '../components/wizard/CampaignWizardForm';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
+  CampaignQuestionImportResult,
   CampaignUpdateRequest,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
@@ -49,6 +50,10 @@ export function CampaignWizardPage() {
 
   const handleGenerateQuestions = async (params: GenerateCampaignQuestionsParams) => {
     return campaignManagementService.generateCampaignQuestions(params);
+  };
+
+  const handleImportQuestions = async (campaignId: string, file: File): Promise<CampaignQuestionImportResult> => {
+    return campaignManagementService.importCampaignQuestions(campaignId, file);
   };
 
   const handleUploadFiles = async (
@@ -133,6 +138,7 @@ export function CampaignWizardPage() {
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}
       onGenerateQuestions={handleGenerateQuestions}
+      onImportQuestions={handleImportQuestions}
       onUploadFiles={handleUploadFiles}
       onReplaceFiles={handleReplaceFiles}
       onDownloadFile={handleDownloadFile}

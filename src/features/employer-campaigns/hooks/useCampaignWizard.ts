@@ -12,6 +12,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  CampaignQuestionImportItem,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
 import {
@@ -58,6 +59,11 @@ import {
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import {
+  importedItemToQuestion,
+  limitImportedQuestions,
+  validImportedQuestions,
+} from '../utils/campaignQuestionImport';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -295,6 +301,7 @@ interface UseCampaignWizardArgs {
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
   onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
+  onImportQuestions: (campaignId: string, file: File) => Promise<import('../types/campaign.api.types').CampaignQuestionImportResult>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -317,6 +324,7 @@ export function useCampaignWizard({
   onUpdateCampaign,
   onUpdateQuestions,
   onGenerateQuestions,
+  onImportQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
@@ -611,6 +619,37 @@ export function useCampaignWizard({
     state.questions,
     t,
   ]);
+
+  const importQuestionsFromCsv = useCallback(async (file: File) => {
+    if (!isDraftEditable) throw new Error('CAMPAIGN_NOT_DRAFT');
+    const id = await fileActions.ensureDraftId();
+    return onImportQuestions(id, file);
+  }, [fileActions, isDraftEditable, onImportQuestions]);
+
+  const appendImportedQuestions = useCallback(async (items: CampaignQuestionImportItem[]) => {
+    if (!isDraftEditable || isSavingQuestions) return;
+    const id = await fileActions.ensureDraftId();
+    const isRequired = state.questionsPerSession == null;
+    const { accepted } = limitImportedQuestions(state.questions.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
+    const nextQuestions = [...state.questions, ...accepted.map((item) => importedItemToQuestion(item, isRequired))];
+    if (nextQuestions.length === state.questions.length) return;
+    setIsSavingQuestions(true);
+    setStepError(null);
+    try {
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(nextQuestions));
+      setState((prev) => ({
+        ...prev,
+        draftId: updated.id,
+        questions: updated.questions,
+        lastSavedAt: updated.updatedAt,
+        autosaveStatus: 'saved',
+      }));
+      setQuestionsSaved(true);
+      toast.success(t('employer.campaigns.campaignQuestions.success.imported'));
+    } finally {
+      setIsSavingQuestions(false);
+    }
+  }, [fileActions, isDraftEditable, isSavingQuestions, onUpdateQuestions, setState, state.questions, state.questionsPerSession, t]);
 
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
@@ -1000,6 +1039,8 @@ export function useCampaignWizard({
     setQuestions,
     generateQuestionsWithAi,
     saveQuestionsNow,
+    importQuestionsFromCsv,
+    appendImportedQuestions,
     addManualQuestion,
     updateQuestion,
     removeQuestion,

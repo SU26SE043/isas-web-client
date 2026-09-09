@@ -11,6 +11,8 @@ import { AiGenerateCard } from './questions/AiGenerateCard';
 import { CampaignQuestionSections } from './questions/CampaignQuestionSections';
 import { GenerateOverwriteModal } from './questions/GenerateOverwriteModal';
 import { QuestionStartOptions } from './questions/QuestionStartOptions';
+import { CampaignQuestionModeControls } from './questions/CampaignQuestionModeControls';
+import { QuestionImportControl, type QuestionImportControlHandle } from './questions/QuestionImportControl';
 
 interface CampaignQuestionsStepProps {
   campaignTitle: string;
@@ -25,7 +27,8 @@ interface CampaignQuestionsStepProps {
   onQuestionsPerSession: (count: number | null) => void;
   onGenerateAi: (opts?: { useDefaultCount?: boolean }) => void;
   onAddManual: () => void;
-  onImportCsv?: () => void;
+  onImportCsv?: (file: File) => Promise<import('../../types/campaign.api.types').CampaignQuestionImportResult>;
+  onConfirmImport?: (items: import('../../types/campaign.api.types').CampaignQuestionImportResult['items']) => Promise<void>;
   onChangePrompt: (id: string, prompt: string) => void;
   onToggleRequired: (id: string, isRequired: boolean) => void;
   onChangeGroup: (id: string, group: string) => void;
@@ -51,6 +54,7 @@ export function CampaignQuestionsStep({
   onGenerateAi,
   onAddManual,
   onImportCsv,
+  onConfirmImport,
   onChangePrompt,
   onToggleRequired,
   onChangeGroup,
@@ -65,6 +69,7 @@ export function CampaignQuestionsStep({
   const listRef = useRef<HTMLUListElement | null>(null);
   const [useDefaultCount, setUseDefaultCount] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const importControlRef = useRef<QuestionImportControlHandle | null>(null);
   const busy = isGenerating || isSaving;
   const max = CAMPAIGN_QUESTION_HARD_MAX;
   const drawMode = questionsPerSession != null;
@@ -123,6 +128,7 @@ export function CampaignQuestionsStep({
       }
     >
       <div className="space-y-5">
+        <QuestionImportControl ref={importControlRef} existingCount={questions.length} max={max} disabled={!isDraft || busy || !onImportCsv} onImportCsv={onImportCsv} onConfirmImport={onConfirmImport} />
         {error ? <FieldError message={error} /> : null}
         {questionBankWarnings.length > 0 ? (
           <div role="status" className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
@@ -138,43 +144,21 @@ export function CampaignQuestionsStep({
             hasJd={hasJd}
             disabled={busy || !isDraft}
             onGenerateAi={requestGenerate}
-            onImportCsv={onImportCsv}
+            onImportCsv={onImportCsv ? () => importControlRef.current?.open() : undefined}
             onAddManual={onAddManual}
           />
         ) : (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-satin bg-surface-overlay px-4 py-3">
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <input type="radio" name="campaign-question-mode" checked={!drawMode} disabled={busy} onChange={() => selectMode(false)} />
-                  {t('employer.campaigns.campaignQuestions.mode.all')}
-                </label>
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <input type="radio" name="campaign-question-mode" checked={drawMode} disabled={busy} onChange={() => selectMode(true)} />
-                  {t('employer.campaigns.campaignQuestions.mode.draw')}
-                </label>
-              </div>
-              {drawMode ? (
-                <label className="flex items-center gap-2 text-sm text-foreground" htmlFor="campaign-question-draw-count">
-                  {t('employer.campaigns.campaignQuestions.draw.countLabel')}
-                  <input
-                    id="campaign-question-draw-count"
-                    type="number"
-                    min={0}
-                    max={poolCount}
-                    value={drawCount}
-                    disabled={busy}
-                    onChange={(event) => onQuestionsPerSession(Math.min(Math.max(Number(event.target.value) || 0, 0), poolCount))}
-                    className="h-9 w-20 rounded-xl border border-satin bg-surface-base px-3 text-sm"
-                  />
-                </label>
-              ) : null}
-              <p className="text-xs text-muted-foreground">
-                {drawMode
-                  ? t('employer.campaigns.campaignQuestions.draw.total').replace('{{fixed}}', String(fixedCount)).replace('{{draw}}', String(drawCount)).replace('{{total}}', String(totalPerCandidate))
-                  : t('employer.campaigns.campaignQuestions.mode.allHint')}
-              </p>
-            </div>
+            <CampaignQuestionModeControls
+              drawMode={drawMode}
+              fixedCount={fixedCount}
+              poolCount={poolCount}
+              drawCount={drawCount}
+              totalPerCandidate={totalPerCandidate}
+              disabled={busy}
+              onSelectMode={selectMode}
+              onDrawCountChange={onQuestionsPerSession}
+            />
 
             <AiGenerateCard
               isDraft={isDraft}
@@ -201,10 +185,15 @@ export function CampaignQuestionsStep({
               onMoveQuestion={onMoveQuestion}
               onRemoveQuestion={onRemoveQuestion}
             />
-            <Button type="button" variant="outline" size="sm" disabled={!isDraft || busy || questions.length >= max} onClick={onAddManual}>
-              <Plus className="size-4" aria-hidden />
-              {t('employer.campaigns.campaignQuestions.question.add')}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={!isDraft || busy || questions.length >= max} onClick={onAddManual}>
+                <Plus className="size-4" aria-hidden />
+                {t('employer.campaigns.campaignQuestions.question.add')}
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={!isDraft || busy || !onImportCsv} onClick={() => importControlRef.current?.open()}>
+                {t('employer.campaigns.campaignQuestions.import.open')}
+              </Button>
+            </div>
           </>
         )}
       </div>

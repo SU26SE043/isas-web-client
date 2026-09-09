@@ -5,6 +5,7 @@ import { useCampaignWizard, type CampaignFormMode } from '../../hooks/useCampaig
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
 import type {
   CampaignCreateQuestionRequest,
+  CampaignQuestionImportResult,
   CampaignCreateRequest,
   CampaignUpdateRequest,
   GenerateCampaignQuestionsParams,
@@ -33,6 +34,7 @@ interface CampaignWizardFormProps {
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
   onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
+  onImportQuestions: (campaignId: string, file: File) => Promise<CampaignQuestionImportResult>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -55,6 +57,7 @@ export function CampaignWizardForm({
   onUpdateCampaign,
   onUpdateQuestions,
   onGenerateQuestions,
+  onImportQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
@@ -69,6 +72,7 @@ export function CampaignWizardForm({
     onUpdateCampaign,
     onUpdateQuestions,
     onGenerateQuestions,
+    onImportQuestions,
     onUploadFiles,
     onReplaceFiles,
     onDownloadFile,
@@ -175,6 +179,8 @@ export function CampaignWizardForm({
           onQuestionCount={wizard.setQuestionCount}
           onQuestionsPerSession={wizard.setQuestionsPerSession}
           onGenerateAi={(opts) => void wizard.generateQuestionsWithAi(opts)}
+          onImportCsv={wizard.importQuestionsFromCsv}
+          onConfirmImport={wizard.appendImportedQuestions}
           onAddManual={wizard.addManualQuestion}
           onChangePrompt={(id, prompt) => wizard.updateQuestion(id, { prompt })}
           onToggleRequired={(id, isRequired) => wizard.updateQuestion(id, { isRequired })}
