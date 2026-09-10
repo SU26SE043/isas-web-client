@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info, Settings2, UsersRound } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -64,15 +64,22 @@ export function CampaignInvitesStep({
     setJobNeeds(campaign?.jobNeeds ?? []);
   }, [campaign?.id, campaign?.jobNeeds]);
 
+  // ⚠ Chỉ thử gợi ý MỘT lần cho mỗi chiến dịch. Bản trước để `suggesting` vừa trong deps vừa
+  // được set trong effect: khi API lỗi hoặc trả danh sách rỗng thì điều kiện thoát
+  // `jobNeeds.length > 0` không bao giờ thoả, `finally` hạ cờ lại kích effect ⇒ POST /job-needs/suggest
+  // lặp vô hạn. Đây là lời gọi GHI dữ liệu và tốn token AI, không phải một truy vấn đọc vô hại.
+  const suggestedForRef = useRef<string | null>(null);
   useEffect(() => {
-    if (tab !== 'cv' || !campaignId || jobNeeds.length > 0 || !jdText.trim() || suggesting) return;
+    if (tab !== 'cv' || !campaignId || jobNeeds.length > 0 || !jdText.trim()) return;
+    if (suggestedForRef.current === campaignId) return;
+    suggestedForRef.current = campaignId;
     setSuggesting(true);
     setSuggestError(false);
     void campaignManagementService.suggestCampaignJobNeeds(campaignId)
       .then((updated) => setJobNeeds(updated.jobNeeds))
       .catch(() => setSuggestError(true))
       .finally(() => setSuggesting(false));
-  }, [campaignId, jdText, jobNeeds.length, suggesting, tab]);
+  }, [campaignId, jdText, jobNeeds.length, tab]);
 
   const validEmails = useMemo(
     () => parseEmails(emailText).filter((email) => EMAIL_RE.test(email)),

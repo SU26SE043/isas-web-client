@@ -221,13 +221,20 @@ export function buildCampaignCreateRequest(
     adaptiveEnabled: settings.adaptiveEnabled,
     groundingEnabled: false,
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
-    questionsPerSession: snapshot.questionsPerSession,
+    // 0 không phải giá trị hợp lệ (backend đòi 1..20); 0 nghĩa là "chưa chọn" ⇒ gửi null.
+    questionsPerSession: snapshot.questionsPerSession && snapshot.questionsPerSession > 0
+      ? snapshot.questionsPerSession
+      : null,
     maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
     ...hardFiltersPayload(snapshot.hardFilters),
-    criteria: mapRubricToCreateCriteria(snapshot.rubric),
+    // ⚠ Rubric rỗng ⇒ BỎ HẲN khoá `criteria`, đừng gửi mảng rỗng. Backend đọc
+    // `if (request.Criteria is not null)` rồi ném "criteria[] phải có ≥1 tiêu chí" ⇒ 400.
+    // Nháp được tạo ngay ở BƯỚC 2 (lúc tải JD) khi bước 3 chưa chạy nên rubric luôn rỗng
+    // ⇒ mọi lần tải JD đều 400 và người dùng kẹt cứng ở bước 2. `undefined` bị JSON bỏ qua.
+    criteria: snapshot.rubric.length ? mapRubricToCreateCriteria(snapshot.rubric) : undefined,
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),
     questions,
@@ -265,14 +272,21 @@ export function buildCampaignUpdateRequest(
     groundingEnabled: false,
     // v10 treats null for these limits as "keep existing" on PUT; omit when UI has no limit.
     maxFollowUps: settings.adaptiveEnabled ? settings.maxFollowUps : undefined,
-    questionsPerSession: snapshot.questionsPerSession,
+    // 0 không phải giá trị hợp lệ (backend đòi 1..20); 0 nghĩa là "chưa chọn" ⇒ gửi null.
+    questionsPerSession: snapshot.questionsPerSession && snapshot.questionsPerSession > 0
+      ? snapshot.questionsPerSession
+      : null,
     maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || undefined,
     ...hardFiltersPayload(snapshot.hardFilters),
-    criteria: mapRubricToCreateCriteria(snapshot.rubric),
+    // ⚠ Rubric rỗng ⇒ BỎ HẲN khoá `criteria`, đừng gửi mảng rỗng. Backend đọc
+    // `if (request.Criteria is not null)` rồi ném "criteria[] phải có ≥1 tiêu chí" ⇒ 400.
+    // Nháp được tạo ngay ở BƯỚC 2 (lúc tải JD) khi bước 3 chưa chạy nên rubric luôn rỗng
+    // ⇒ mọi lần tải JD đều 400 và người dùng kẹt cứng ở bước 2. `undefined` bị JSON bỏ qua.
+    criteria: snapshot.rubric.length ? mapRubricToCreateCriteria(snapshot.rubric) : undefined,
     startsAt: toIsoDateTime(info.startsAt),
     expiresAt: toIsoDateTime(info.expiresAt),
   };

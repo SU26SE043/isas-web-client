@@ -92,7 +92,18 @@ export function CampaignQuestionsStep({
 
   const selectMode = (nextDrawMode: boolean) => {
     if (nextDrawMode) {
-      onQuestionsPerSession(Math.min(Math.max(questionsPerSession ?? poolCount, 0), poolCount));
+      // Ở chế độ "ai cũng làm trọn bộ", effect trên ép MỌI câu thành cố định ⇒ rổ rỗng.
+      // Chuyển sang rút thăm mà không thả câu nào ra rổ thì số bốc kẹt ở 0, ô nhập bị
+      // max={0} nên không nâng lên được, và backend từ chối 0 ⇒ kẹt cứng từ bước 5 trở đi.
+      if (poolCount === 0) {
+        if (questions.length === 0) return;
+        questions.forEach((question) => {
+          if (question.isRequired) onToggleRequired(question.id, false);
+        });
+        onQuestionsPerSession(questions.length);
+        return;
+      }
+      onQuestionsPerSession(Math.min(Math.max(questionsPerSession ?? poolCount, 1), poolCount));
       return;
     }
     questions.forEach((question) => {
