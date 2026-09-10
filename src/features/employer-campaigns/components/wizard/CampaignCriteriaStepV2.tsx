@@ -168,6 +168,7 @@ export function CampaignCriteriaStepV2({
         <CampaignCriteriaManualList
           rubric={rubric}
           disabled={!customized || Boolean(isSaving)}
+          lockReason={isSaving ? 'saving' : 'standard'}
           onChangeRubric={onChangeRubric}
         />
         <WizardSection divided title={t('employer.campaigns.form.group.outcome')} hint={t('employer.campaigns.form.group.outcomeHint')}>

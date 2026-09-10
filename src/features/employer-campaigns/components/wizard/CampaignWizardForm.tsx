@@ -5,7 +5,6 @@ import { useLanguage } from '@/shared/languages';
 import { useCampaignWizard, type CampaignFormMode } from '../../hooks/useCampaignWizard';
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
 import type { CampaignCreateQuestionRequest, CampaignQuestionImportResult, CampaignCreateRequest, CampaignUpdateRequest, GenerateCampaignQuestionsParams } from '../../types/campaign.api.types';
-import { CAMPAIGN_WIZARD_STEP_COUNT } from './campaignWizard.steps';
 import { CampaignWizardShell } from './CampaignWizardShell';
 import { CampaignWizardStepContent } from './CampaignWizardStepContent';
 
@@ -68,7 +67,7 @@ export function CampaignWizardForm({ campaign, mode, onCreateCampaign, onUpdateC
   useDismissStepSuccessToasts(step);
   const finalSubmitLabel = t('employer.campaigns.wizard.deploy.action');
   const finalLoadingLabel = t('employer.campaigns.wizard.deploy.deploying');
-  return <CampaignWizardShell currentStep={step} errorSteps={wizard.errorSteps} campaignName={state.info.title} progressPercent={Math.round(((step + 1) / CAMPAIGN_WIZARD_STEP_COUNT) * 100)} isEditing={mode === 'edit'} autosaveStatus={state.autosaveStatus} lastSavedAt={state.lastSavedAt} completedSteps={wizard.completedSteps} onStepChange={wizard.goToStep}>
+  return <CampaignWizardShell currentStep={step} errorSteps={wizard.errorSteps} campaignName={state.info.title} isEditing={mode === 'edit'} autosaveStatus={state.autosaveStatus} lastSavedAt={state.lastSavedAt} completedSteps={wizard.completedSteps} onStepChange={wizard.goToStep}>
     <CampaignWizardStepContent campaign={campaign} wizard={wizard} onCancel={() => navigate('/employer/campaigns')} finalSubmitLabel={finalSubmitLabel} finalLoadingLabel={finalLoadingLabel} />
   </CampaignWizardShell>;
 }

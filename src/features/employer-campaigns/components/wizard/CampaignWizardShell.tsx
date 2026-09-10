@@ -30,7 +30,6 @@ interface CampaignWizardShellProps {
   errorSteps?: readonly number[];
   campaignName?: string;
   /** @deprecated Không còn hiển thị — thanh bước đã chỉ rõ vị trí. Giữ để caller cũ không vỡ kiểu. */
-  progressPercent?: number;
   isEditing?: boolean;
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
