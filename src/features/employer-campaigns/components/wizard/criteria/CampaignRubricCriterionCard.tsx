@@ -1,44 +1,41 @@
-import {
-  ClipboardList,
-  Layers,
-  MessageCircle,
-  Rocket,
-  Trash2,
-  Users,
-  ChevronDown,
-} from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import { CampaignCriterionDetailModal } from './CampaignCriterionDetailModal';
+import type { CriteriaLockReason } from './criteriaLock';
+import { CRITERIA_ROW_GRID } from './criteriaRowGrid';
 import type { RubricCriterion } from '../../../types/campaignManagement.types';
-
-const CRITERION_ICONS = [
-  <Layers className="size-4" aria-hidden key="layers" />,
-  <MessageCircle className="size-4" aria-hidden key="message" />,
-  <Rocket className="size-4" aria-hidden key="rocket" />,
-  <Users className="size-4" aria-hidden key="users" />,
-];
 
 interface CampaignRubricCriterionCardProps {
   criterion: RubricCriterion;
   index: number;
   disabled?: boolean;
+  lockReason?: CriteriaLockReason;
   onChange: (patch: Partial<RubricCriterion>) => void;
   onRemove: () => void;
 }
 
+/**
+ * Một hàng = MỘT băng ô nhập cao bằng nhau (`h-9`), thẳng cả mép trên lẫn mép dưới.
+ * Bản trước có bốn ô cao khác nhau hoàn toàn (tên 72px · mô tả 112px · hai ô số 36px)
+ * nên đáy so le — đó là chỗ hàng trông lởm chởm. Thứ dày thông tin (mô tả · mốc điểm ·
+ * điểm sàn) chuyển sang `CampaignCriterionDetailModal`; dải tóm tắt bên dưới giữ lại
+ * dấu hiệu cho biết bên trong có gì, để giấu đi không thành mất thông tin.
+ */
 export function CampaignRubricCriterionCard({
   criterion,
   index,
   disabled = false,
+  lockReason,
   onChange,
   onRemove,
 }: CampaignRubricCriterionCardProps) {
   const { t } = useLanguage();
-  const [expanded, setExpanded] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const indexLabel = String(index + 1).padStart(2, '0');
   const weight = Number(criterion.weight) || 0;
   const clamped = Math.max(0, Math.min(100, weight));
@@ -48,47 +45,37 @@ export function CampaignRubricCriterionCard({
   // `weight` thì ngược lại: numeric bên DB nên `step={0.1}` là đúng.
   const maxScoreValid =
     Number.isInteger(criterion.maxScore) && criterion.maxScore >= 1 && criterion.maxScore <= 10;
+  const hasDescription = (criterion.description ?? '').trim().length > 0;
+  const levelCount = criterion.levels?.length ?? 0;
+  const floor = criterion.minPct;
 
   return (
     <article className="frame-satin rounded-xl border border-satin bg-surface-raised/60 px-3 py-3 sm:px-4 sm:py-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(18rem,1.15fr)_minmax(0,1.45fr)_7.5rem_7rem_auto] lg:items-start">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className={cn('grid gap-3', CRITERIA_ROW_GRID, 'lg:items-center')}>
+        <div className="flex min-w-0 items-center gap-3">
+          {/* MỘT dấu hiệu đầu hàng. Bản trước có hai chip cạnh nhau (số thứ tự + icon
+              lặp theo `index % 4`); icon không mang thông tin nào mà lại đặt một
+              `rounded-full` sát một `rounded-lg`. */}
           <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {indexLabel}
           </span>
-          <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-full text-foreground">
-            {CRITERION_ICONS[index % CRITERION_ICONS.length] ?? (
-              <ClipboardList className="size-4" aria-hidden />
-            )}
-          </span>
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1">
             <label className="sr-only" htmlFor={`campaign-rubric-name-${criterion.id}`}>
               {t('employer.campaigns.wizard.rubric.name')}
             </label>
-            <textarea
+            {/* Một dòng để bằng chiều cao hai ô số bên cạnh. Tên tiêu chí là nhãn ngắn
+                ("Chiều sâu kỹ thuật"); giá trị KHÔNG bị cắt cụt (không `truncate`) và
+                tên dài đọc trọn được ở tiêu đề popup chi tiết. */}
+            <Input
               id={`campaign-rubric-name-${criterion.id}`}
               value={criterion.name}
               maxLength={255}
-              rows={2}
               disabled={disabled}
+              title={criterion.name}
               onChange={(event) => onChange({ name: event.target.value })}
-              className="min-h-[72px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm font-semibold leading-relaxed whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-satin bg-surface-overlay/70 text-sm font-semibold"
             />
           </div>
-        </div>
-
-        <div className="min-w-0">
-          <label className="sr-only" htmlFor={`campaign-rubric-desc-${criterion.id}`}>
-            {t('employer.campaigns.wizard.rubric.criterionDesc')}
-          </label>
-          <textarea
-            id={`campaign-rubric-desc-${criterion.id}`}
-            rows={4}
-            value={criterion.description}
-            disabled={disabled}
-            onChange={(event) => onChange({ description: event.target.value })}
-            className="min-h-[112px] w-full resize-y rounded-lg border border-satin bg-surface-overlay/70 px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-[var(--satin-inset)] outline-none transition-[border-color,box-shadow] duration-200 ease-out focus-visible:border-[var(--border-focus)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--isas-silver-100)_22%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
-          />
         </div>
 
         <div className="w-full lg:w-auto">
@@ -98,25 +85,32 @@ export function CampaignRubricCriterionCard({
           <label className="sr-only" htmlFor={`campaign-rubric-weight-${criterion.id}`}>
             {t('employer.campaigns.wizard.rubric.weight')}
           </label>
-          <Input
-            id={`campaign-rubric-weight-${criterion.id}`}
-            type="number"
-            min={0}
-            max={100}
-            step={0.1}
-            disabled={disabled}
-            value={criterion.weight}
-            onChange={(event) => onChange({ weight: Number(event.target.value) })}
-            className="h-9 border-satin bg-surface-overlay/70 text-sm"
-          />
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-overlay">
-            <div
-              className={cn(
-                'h-full rounded-full transition-[width,background-color] duration-300 ease-out',
-                clamped > 0 ? 'bg-success' : 'bg-muted-foreground/40',
-              )}
-              style={{ width: `${clamped}%` }}
+          <div className="relative">
+            <Input
+              id={`campaign-rubric-weight-${criterion.id}`}
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              disabled={disabled}
+              value={criterion.weight}
+              onChange={(event) => onChange({ weight: Number(event.target.value) })}
+              className="border-satin bg-surface-overlay/70 text-sm"
             />
+            {/* Thanh tỉ lệ ĐÈ lên mép dưới ô nhập chứ không nằm dưới nó: đặt bên dưới
+                thì riêng cột trọng số cao hơn ~14px và cả băng hàng lệch đáy. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-px bottom-px h-[3px] overflow-hidden rounded-b-lg bg-surface-overlay"
+            >
+              <span
+                className={cn(
+                  'block h-full transition-[width,background-color] duration-300 ease-out',
+                  clamped > 0 ? 'bg-success' : 'bg-muted-foreground/40',
+                )}
+                style={{ width: `${clamped}%` }}
+              />
+            </span>
           </div>
         </div>
 
@@ -138,17 +132,17 @@ export function CampaignRubricCriterionCard({
             aria-invalid={!maxScoreValid}
             onChange={(event) => onChange({ maxScore: Number(event.target.value) })}
             className={cn(
-              'h-9 border-satin bg-surface-overlay/70 text-sm',
+              'border-satin bg-surface-overlay/70 text-sm',
               !maxScoreValid && 'border-error text-error aria-invalid:border-error',
             )}
           />
         </div>
 
-        <div className="flex justify-end lg:pt-1">
+        <div className="flex justify-end">
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon-lg"
             disabled={disabled}
             onClick={onRemove}
             aria-label={t('employer.campaigns.wizard.rubric.remove')}
@@ -158,14 +152,45 @@ export function CampaignRubricCriterionCard({
           </Button>
         </div>
       </div>
-      <button type="button" className="mt-3 flex w-full items-center justify-between border-t border-satin pt-2 text-left text-xs text-muted-foreground" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-        <span>{criterion.levels?.length ? <Badge variant="outline">{criterion.levels.length} {t('employer.campaigns.wizard.rubric.levels')}</Badge> : <Badge variant="outline">{t('employer.campaigns.wizard.rubric.noLevels')}</Badge>}</span>
-        <ChevronDown className={cn('size-4 transition-transform', expanded && 'rotate-180')} aria-hidden />
+
+      {/* Khoá bảng là cấm SỬA, không phải cấm ĐỌC — nút này vẫn bấm được khi `disabled`
+          để employer xem được mô tả và mốc điểm của bộ chuẩn. */}
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => setDetailOpen(true)}
+        className="mt-3 flex w-full flex-wrap items-center gap-2 border-t border-satin pt-2.5 text-left text-xs text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
+      >
+        <Badge variant="outline">
+          {hasDescription
+            ? t('employer.campaigns.wizard.rubric.hasDesc')
+            : t('employer.campaigns.wizard.rubric.noDesc')}
+        </Badge>
+        <Badge variant="outline">
+          {levelCount > 0
+            ? `${levelCount} ${t('employer.campaigns.wizard.rubric.levels')}`
+            : t('employer.campaigns.wizard.rubric.noLevels')}
+        </Badge>
+        {typeof floor === 'number' ? (
+          <Badge variant="outline">
+            {t('employer.campaigns.wizard.rubric.floorBadge').replace('{{value}}', String(floor))}
+          </Badge>
+        ) : null}
+        <span className="ml-auto inline-flex items-center gap-1 font-medium text-foreground">
+          {t('employer.campaigns.wizard.rubric.detail')}
+          <ChevronRight className="size-3.5" aria-hidden />
+        </span>
       </button>
-      {expanded ? <div className="mt-3 grid gap-3 border-t border-satin pt-3 sm:grid-cols-[1fr_8rem]">
-        <div className="space-y-1">{criterion.levels?.map((level) => <p key={`${criterion.id}-${level.score}`} className="text-xs text-muted-foreground"><strong className="text-foreground">{level.score}</strong> · {level.descriptor}</p>)}</div>
-        <div><label className="text-xs font-medium text-muted-foreground" htmlFor={`campaign-rubric-floor-${criterion.id}`}>{t('employer.campaigns.wizard.rubric.minPct')}</label><Input id={`campaign-rubric-floor-${criterion.id}`} type="number" min={0} value={criterion.minPct ?? ''} disabled={disabled} onChange={(event) => { const value = event.target.value.trim(); onChange({ minPct: value === '' ? null : Number(value) }); }} className="mt-1 h-9 border-satin bg-surface-overlay/70 text-sm" /><p className="mt-1 text-[11px] text-muted-foreground">{t('employer.campaigns.wizard.rubric.minPctHelp')}</p></div>
-      </div> : null}
+
+      <CampaignCriterionDetailModal
+        open={detailOpen}
+        criterion={criterion}
+        indexLabel={indexLabel}
+        disabled={disabled}
+        lockReason={lockReason}
+        onChange={onChange}
+        onClose={() => setDetailOpen(false)}
+      />
     </article>
   );
 }
