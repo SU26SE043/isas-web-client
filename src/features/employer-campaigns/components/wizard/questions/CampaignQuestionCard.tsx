@@ -38,7 +38,7 @@ export function CampaignQuestionCard({
     <li className="space-y-3 rounded-xl border border-satin bg-surface-overlay p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="frame-satin-soft flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
+          <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {String(index + 1).padStart(2, '0')}
           </span>
           <span className="rounded-lg border border-satin px-2 py-0.5 text-xs text-muted-foreground">{question.questionGroup || t('employer.campaigns.campaignQuestions.question.commonGroup')}</span>

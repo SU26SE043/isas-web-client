@@ -340,6 +340,19 @@ Kiểm tra: `npm run check:radius` — phạm vi gác hiện là `src/components
 `SCOPES` trong `scripts/check-radius.mjs`. **Đừng bật cả `src` một lượt** — sẽ đỏ 900+ chỗ
 và kết cục là ai đó tắt lưới đi.
 
+## Chip icon — theo VAI TRÒ
+
+Cùng lý do với bo góc: `src` đang dùng **5 cỡ chip** (`size-7/9/10/12/14`) cho cùng một loại
+vật thể, nên cùng một wizard có bước chip 28px, bước 36px, bước 48px.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| tile | `size-14` | 56 | `SelectionOption`, ô trống lớn (drop zone) |
+| panel header | `size-10` | 40 | chip icon trên header `SectionPanel` |
+| inline | `size-9` | 36 | chip trong một hàng danh sách (số thứ tự, icon tiêu chí) |
+
+Glyph bên trong chip: `size-4` cho `inline`/`panel header`, `size-5`–`size-6` cho `tile`.
+
 ## File size (bắt buộc)
 
 | Phạm vi | Giới hạn |
