@@ -146,7 +146,7 @@ export function CampaignInvitesStep({
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader><DialogTitle>{t('employer.campaigns.wizard.invites.configureTitle')}</DialogTitle><DialogDescription>{t('employer.campaigns.wizard.invites.configureDescription')}</DialogDescription></DialogHeader>
           <div className="space-y-5">
-            {campaignId ? <CampaignJobNeedsCard campaignId={campaignId} initialNeeds={jobNeeds} editable onSaved={(updated) => setJobNeeds(updated.jobNeeds)} /> : null}
+            {campaignId ? <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable onSaved={(updated) => setJobNeeds(updated.jobNeeds)} /> : null}
             <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
           </div>
           <DialogFooter><Button type="button" onClick={() => setConfigOpen(false)}>{t('employer.campaigns.wizard.invites.configureDone')}</Button></DialogFooter>
