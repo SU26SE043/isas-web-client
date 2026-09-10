@@ -68,6 +68,19 @@ import {
 
 export type CampaignFormMode = 'create' | 'edit';
 
+export type PartialDeployState = {
+  campaignId: string;
+  campaign: EmployerCampaign;
+};
+
+export function buildInvitationRetryRequest(
+  partialDeploy: PartialDeployState | null,
+  currentEmails: readonly string[],
+): { campaignId: string; emails: string[] } | null {
+  if (!partialDeploy) return null;
+  return { campaignId: partialDeploy.campaignId, emails: [...currentEmails] };
+}
+
 function pad2(value: number): string {
   return String(value).padStart(2, '0');
 }
@@ -365,7 +378,7 @@ export function useCampaignWizard({
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [partialDeploy, setPartialDeploy] = useState<{ campaignId: string; emails: string[]; campaign: EmployerCampaign } | null>(null);
+  const [partialDeploy, setPartialDeploy] = useState<PartialDeployState | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -1040,7 +1053,7 @@ export function useCampaignWizard({
       onAfterSubmit(deployed.campaign);
     } catch (error) {
       if (error instanceof CampaignInvitationDeployError) {
-        setPartialDeploy({ campaignId: saved.id, emails: error.emails, campaign: error.campaign });
+        setPartialDeploy({ campaignId: saved.id, campaign: error.campaign });
       }
       const status = getApiStatusCode(error);
       setActionError(error instanceof CampaignInvitationDeployError
@@ -1056,20 +1069,22 @@ export function useCampaignWizard({
   }, [handleCreateCampaign, handleUpdateDraft, mode, onAfterSubmit, onDeployCampaign, state.draftId, state.inviteEmails, t]);
 
   const retryDeployInvitations = useCallback(async () => {
-    if (!partialDeploy || isSubmitting) return;
+    const pendingDeploy = partialDeploy;
+    const retryRequest = buildInvitationRetryRequest(pendingDeploy, state.inviteEmails);
+    if (!retryRequest || !pendingDeploy || isSubmitting) return;
     setIsSubmitting(true);
     setActionError(null);
     try {
-      await onSendInvitations(partialDeploy.campaignId, partialDeploy.emails);
+      await onSendInvitations(retryRequest.campaignId, retryRequest.emails);
       toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
-      onAfterSubmit(partialDeploy.campaign);
+      onAfterSubmit(pendingDeploy.campaign);
       setPartialDeploy(null);
     } catch {
       setActionError(t('employer.campaigns.wizard.deploy.invitationFailed'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, t]);
+  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, state.inviteEmails, t]);
 
   return {
     state,

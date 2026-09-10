@@ -1,8 +1,28 @@
 import axios from 'axios';
 import { describe, expect, it } from 'vitest';
-import { mapSubmitError, resolveCampaignErrorStep } from './useCampaignWizard';
+import type { EmployerCampaign } from '../types/campaignManagement.types';
+import {
+  buildInvitationRetryRequest,
+  mapSubmitError,
+  resolveCampaignErrorStep,
+} from './useCampaignWizard';
 
 describe('campaign wizard API error step mapping', () => {
+  it('uses the current wizard email list for a partial deployment retry', () => {
+    const campaign = { id: 'campaign-1' } as EmployerCampaign;
+    const partialDeploy = { campaignId: 'campaign-1', campaign };
+    const currentEmails = ['new@example.com'];
+
+    expect(buildInvitationRetryRequest(partialDeploy, currentEmails)).toEqual({
+      campaignId: 'campaign-1',
+      emails: ['new@example.com'],
+    });
+  });
+
+  it('does not build a retry request when deployment is not partial', () => {
+    expect(buildInvitationRetryRequest(null, ['candidate@example.com'])).toBeNull();
+  });
+
   it('maps validation fields to the affected wizard step', () => {
     expect(resolveCampaignErrorStep('request: maxScore must be <= 10', 'create')).toBe(2);
     expect(resolveCampaignErrorStep('request: maxQuestions is invalid', 'update')).toBe(4);

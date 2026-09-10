@@ -16,6 +16,7 @@ interface CampaignReviewStepProps {
   inviteEmails?: string[]; questionBankWarnings?: string[]; error?: string | null; onGoToStep: (step: number) => void;
   onBack: () => void; onSubmit: () => void; submitLabel: string; submittingLabel: string;
   isSubmitting?: boolean; submitDisabled?: boolean; disableForBlockingIssues?: boolean;
+  hasPartialDeploy?: boolean; onRetryInvitations?: () => void;
 }
 
 function formatDate(value: string): string {
@@ -27,6 +28,7 @@ export function CampaignReviewStep({
   info, jd, rubric, questions, questionsPerSession, settings, campaignId, domainLabel,
   inviteEmails = [], questionBankWarnings = [], error, onGoToStep, onBack, onSubmit,
   submitLabel, submittingLabel, isSubmitting = false, submitDisabled = false, disableForBlockingIssues = false,
+  hasPartialDeploy = false, onRetryInvitations,
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
@@ -42,12 +44,13 @@ export function CampaignReviewStep({
     rubric.length === 0 ? { label: t('employer.campaigns.wizard.criteriaRequired'), step: 2 } : null,
     questions.length === 0 ? { label: t('employer.campaigns.wizard.questionsRequired'), step: 3 } : null,
   ].filter((item): item is { label: string; step: number } => Boolean(item));
-  const deployDisabled = submitDisabled || isSubmitting || (disableForBlockingIssues && blocking.length > 0) || adaptiveBudget.exceedsLimit;
+  const deployDisabled = submitDisabled || isSubmitting || (!hasPartialDeploy && ((disableForBlockingIssues && blocking.length > 0) || adaptiveBudget.exceedsLimit));
 
   return (
-    <SectionPanel icon={<Rocket className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.deploy.title')} description={t('employer.campaigns.wizard.deploy.description')} footer={<CampaignWizardNav onBack={onBack} onNext={onSubmit} nextLabel={isSubmitting ? submittingLabel : t('employer.campaigns.wizard.deploy.action')} nextDisabled={deployDisabled} isSaving={isSubmitting} backDisabled={isSubmitting} />}>
+    <SectionPanel icon={<Rocket className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.deploy.title')} description={t('employer.campaigns.wizard.deploy.description')} footer={<CampaignWizardNav onBack={onBack} onNext={onSubmit} nextLabel={isSubmitting ? submittingLabel : submitLabel} nextDisabled={deployDisabled} isSaving={isSubmitting} backDisabled={isSubmitting} />}>
       <div className="space-y-5">
         {error ? <Alert variant="error"><AlertDescription>{error}</AlertDescription></Alert> : null}
+        {hasPartialDeploy ? <Alert variant="warning"><AlertDescription className="flex flex-wrap items-center justify-between gap-3"><span>{t('employer.campaigns.wizard.deploy.invitationFailed')}</span>{onRetryInvitations ? <Button type="button" variant="outline" disabled={isSubmitting} loading={isSubmitting} onClick={onRetryInvitations}>{t('employer.campaigns.wizard.deploy.retryInvitations')}</Button> : null}</AlertDescription></Alert> : null}
         {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.step}><button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button></li>)}</ul></section> : null}
         {questionBankWarnings.length ? <Alert variant="warning"><AlertTitle>{t('employer.campaigns.wizard.deploy.warningTitle')}</AlertTitle><AlertDescription><ul className="list-inside list-disc">{questionBankWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></AlertDescription></Alert> : null}
         {settings.adaptiveEnabled ? <section className="frame-satin space-y-2 rounded-xl bg-surface-overlay p-4" aria-label={t('employer.campaigns.wizard.review.adaptiveBudget')}>
