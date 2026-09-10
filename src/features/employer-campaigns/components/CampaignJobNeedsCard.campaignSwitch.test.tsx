@@ -46,6 +46,8 @@ describe('CampaignJobNeedsCard — đổi chiến dịch phải reset nháp', ()
     );
     expect(missing, `thiếu key ở: ${missing.join(', ')}`).toEqual([]);
     // đối chứng dương: phép quét phải thật sự tìm thấy chỗ mount, không phải "0 vi phạm" rỗng tuếch
-    expect(sites.length).toBe(2);
+    // (2 → 3: CMP3-F7 thêm chỗ mount thứ ba trong "Cấu hình chi tiết" ở bước 7 —
+    //  CampaignInvitesStep.tsx. Con số này chỉ để chống quét-rỗng, không phải trần.)
+    expect(sites.length).toBe(3);
   });
 });

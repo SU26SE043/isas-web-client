@@ -13,6 +13,9 @@ const snapshot = (hardFilters = createEmptyHardFiltersState()): CampaignWizardSu
     startsAt: '2099-01-01T10:00:00.000Z',
     expiresAt: '2099-01-02T10:00:00.000Z',
     timezone: 'UTC',
+    // CMP3-F2 đưa "Ngôn ngữ phỏng vấn" thành ô bắt buộc ⇒ buildCampaignCreateRequest
+    // ném LANGUAGE_REQUIRED nếu thiếu. Fixture này viết trước F2 nên phải bổ sung.
+    language: 'vi',
   },
   jd: {
     inputMethod: 'text',

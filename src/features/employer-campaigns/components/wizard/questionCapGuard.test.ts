@@ -109,7 +109,10 @@ describe('UX3-F3 — trần ngân hàng đề', () => {
   });
 
   it('truyền cảnh báo ngân hàng đề từ campaign state xuống bước Câu hỏi', () => {
-    const source = read('/wizard/CampaignWizardForm.tsx');
+    // CMP3-F5 tách phần render từng bước khỏi CampaignWizardForm sang
+    // CampaignWizardStepContent (né trần 250 dòng). Bất biến KHÔNG đổi — vẫn là
+    // "truyền nguyên questionBankWarnings từ campaign state xuống" — chỉ đổi chỗ ở.
+    const source = read('/wizard/CampaignWizardStepContent.tsx');
 
     expect(
       /questionBankWarnings=\{campaign\?\.questionBankWarnings \?\? \[\]\}/.test(source),
