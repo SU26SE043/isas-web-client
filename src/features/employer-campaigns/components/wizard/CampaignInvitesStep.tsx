@@ -53,6 +53,7 @@ export function CampaignInvitesStep({
   const [emailText, setEmailText] = useState(inviteEmails.join('\n'));
   const [configOpen, setConfigOpen] = useState(false);
   const [jobNeeds, setJobNeeds] = useState<CampaignJobNeed[]>(campaign?.jobNeeds ?? []);
+  const [hasScoredCandidates, setHasScoredCandidates] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState(false);
 
@@ -71,6 +72,7 @@ export function CampaignInvitesStep({
 
   useEffect(() => {
     setJobNeeds(campaign?.jobNeeds ?? []);
+    setHasScoredCandidates(false);
   }, [campaign?.id, campaign?.jobNeeds]);
 
   // ⚠ Chỉ thử gợi ý MỘT lần cho mỗi chiến dịch. Bản trước để `suggesting` vừa trong deps vừa
@@ -149,7 +151,7 @@ export function CampaignInvitesStep({
             {suggesting ? <Alert variant="info"><AlertDescription>{t('employer.campaigns.wizard.invites.suggestingNeeds')}</AlertDescription></Alert> : null}
             {suggestError ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.suggestFailed')}</AlertDescription></Alert> : null}
             {!campaignId ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.saveDraftFirst')}</AlertDescription></Alert> : null}
-            {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hasJobNeeds={jobNeeds.length > 0} jobNeeds={jobNeeds} hideInvitationAction onAddCandidates={addScreenedCandidates} /> : null}
+            {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hasJobNeeds={jobNeeds.length > 0} jobNeeds={jobNeeds} hideInvitationAction onAddCandidates={addScreenedCandidates} onScoredCandidatesChange={setHasScoredCandidates} /> : null}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-info/30 bg-info/5 p-4 text-sm">
               <div className="flex items-start gap-2"><Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><p className="text-muted-foreground">{t('employer.campaigns.wizard.invites.aiReference')}</p></div>
               <Button type="button" variant="outline" onClick={() => setConfigOpen(true)}><Settings2 className="size-4" aria-hidden />{t('employer.campaigns.wizard.invites.configure')}</Button>
@@ -162,7 +164,7 @@ export function CampaignInvitesStep({
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader><DialogTitle>{t('employer.campaigns.wizard.invites.configureTitle')}</DialogTitle><DialogDescription>{t('employer.campaigns.wizard.invites.configureDescription')}</DialogDescription></DialogHeader>
           <div className="space-y-5">
-            {campaignId ? <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable onSaved={(updated) => setJobNeeds(updated.jobNeeds)} /> : null}
+            {campaignId ? <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable={!hasScoredCandidates} onSaved={(updated) => setJobNeeds(updated.jobNeeds)} /> : null}
             <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
           </div>
           <DialogFooter><Button type="button" onClick={() => setConfigOpen(false)}>{t('employer.campaigns.wizard.invites.configureDone')}</Button></DialogFooter>

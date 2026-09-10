@@ -22,9 +22,9 @@ export function CampaignJobNeedsCard({ campaignId, initialNeeds, editable, onSav
   const [locked, setLocked] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const save = async (next: CampaignJobNeed[]) => { setSaving(true); setError(null); try { const updated = await campaignManagementService.updateCampaignJobNeeds(campaignId, next.map((item) => ({ needId: item.needId, category: (item.category || 'Technical') as JobNeedCategory, text: item.text, isMustHave: item.isMustHave }))); setLocalNeeds(updated.jobNeeds); onSaved?.(updated); } catch (error) { if (campaignManagementService.getErrorStatus(error) === 409) setLocked(true); else setError(t('employer.campaigns.jobNeeds.saveError')); } finally { setSaving(false); } };
-  const add = () => { const value = text.trim(); if (!value) return; const next = [...needs, { needId: `client-${crypto.randomUUID()}`, category, text: value, isMustHave: mustHave }]; setText(''); void save(next); };
-  const remove = (id: string) => { const next = needs.filter((item) => item.needId !== id); setLocalNeeds(next); void save(next); };
+  const save = async (next: CampaignJobNeed[]) => { setSaving(true); setError(null); try { const updated = await campaignManagementService.updateCampaignJobNeeds(campaignId, next.map((item) => ({ needId: item.needId, category: (item.category || 'Technical') as JobNeedCategory, text: item.text, isMustHave: item.isMustHave }))); setLocalNeeds(updated.jobNeeds); onSaved?.(updated); return true; } catch (error) { if (campaignManagementService.getErrorStatus(error) === 409) setLocked(true); else setError(t('employer.campaigns.jobNeeds.saveError')); return false; } finally { setSaving(false); } };
+  const add = () => { const value = text.trim(); if (!value) return; const next = [...needs, { needId: `client-${crypto.randomUUID()}`, category, text: value, isMustHave: mustHave }]; void save(next).then((saved) => { if (saved) setText(''); }); };
+  const remove = (id: string) => { const next = needs.filter((item) => item.needId !== id); void save(next); };
   const grouped = ['Technical', 'WorkStyle', 'Communication', 'Growth'].map((group) => ({ group, items: needs.filter((need) => need.category === group) }));
   return <section className="rounded-xl border border-satin bg-surface-overlay p-4">
     <div className="mb-3 flex items-center gap-2"><Target className="size-4 text-info" aria-hidden /><h3 className="font-semibold text-foreground">{t('employer.campaigns.jobNeeds.title')}</h3></div>

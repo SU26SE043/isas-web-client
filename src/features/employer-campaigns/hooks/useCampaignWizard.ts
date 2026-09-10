@@ -59,7 +59,11 @@ import {
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
-import { CampaignInvitationDeployError } from '../services/campaignManagement.service';
+import {
+  CampaignInvitationDeployError,
+  CampaignRequestError,
+} from '../services/campaignManagement.service';
+import type { FailedCampaignInvitation } from '../types/campaign.api.types';
 import {
   importedItemToQuestion,
   limitImportedQuestions,
@@ -67,6 +71,48 @@ import {
 } from '../utils/campaignQuestionImport';
 
 export type CampaignFormMode = 'create' | 'edit';
+
+export type PartialDeployState = {
+  campaignId: string;
+  campaign: EmployerCampaign;
+};
+
+export function buildInvitationRetryRequest(
+  partialDeploy: PartialDeployState | null,
+  currentEmails: readonly string[],
+): { campaignId: string; emails: string[] } | null {
+  if (!partialDeploy) return null;
+  return { campaignId: partialDeploy.campaignId, emails: [...currentEmails] };
+}
+
+function getInvitationErrorBody(error: unknown): unknown {
+  if (error instanceof CampaignInvitationDeployError) return error.body;
+  if (error instanceof CampaignRequestError) return error.message;
+  return axios.isAxiosError(error) ? error.response?.data : undefined;
+}
+
+export function getInvitationFailureMessage(error: unknown, fallback: string): string {
+  const raw = getInvitationErrorBody(error);
+  const body = raw && typeof raw === 'object' && !Array.isArray(raw)
+    ? ((raw as Record<string, unknown>).data && typeof (raw as Record<string, unknown>).data === 'object'
+      ? (raw as Record<string, unknown>).data
+      : raw) as Record<string, unknown>
+    : null;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
+  if (typeof body?.message === 'string' && body.message.trim()) return body.message.trim();
+  if (typeof body?.error === 'string' && body.error.trim()) return body.error.trim();
+  if (axios.isAxiosError(error)) {
+    const message = getApiErrorMessage(error, '');
+    if (message.trim()) return message.trim();
+  }
+  return fallback;
+}
+
+function getInvitationErrorStatus(error: unknown): number | undefined {
+  if (error instanceof CampaignInvitationDeployError) return error.status;
+  if (error instanceof CampaignRequestError) return error.status;
+  return getApiStatusCode(error);
+}
 
 function pad2(value: number): string {
   return String(value).padStart(2, '0');
@@ -295,22 +341,51 @@ export function mapSubmitError(
   };
 }
 
-function mapDeployError(error: unknown, t: (key: string) => string): string {
+function getDeployErrorData(error: unknown): { status?: number; raw: unknown; nested: Record<string, unknown> | null } {
   const status = getApiStatusCode(error);
   const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
   const body = raw && typeof raw === 'object' ? raw as Record<string, unknown> : null;
   const nested = body?.data && typeof body.data === 'object' ? body.data as Record<string, unknown> : body;
+  return { status, raw, nested };
+}
+
+function adaptiveDeployWarning(nested: Record<string, unknown>, t: (key: string) => string): string {
+  const numberFrom = (key: string, pattern: RegExp) => {
+    const value = nested[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    return Number(String(nested.message ?? '').match(pattern)?.[1] ?? NaN);
+  };
+  const need = numberFrom('need', /(?:need|required|cần)\D*(\d+)/i);
+  const have = numberFrom('have', /(?:have|available|hiện có)\D*(\d+)/i);
+  const questions = numberFrom('questions', /(?:questions|câu hỏi)\D*(\d+)/i);
+  const deep = numberFrom('deep', /(?:deep|depth|độ sâu)\D*(\d+)/i);
+  const safeQuestions = Number.isFinite(questions) ? questions : 0;
+  const safeDeep = Number.isFinite(deep) ? deep : 0;
+  const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
+  return t('employer.campaigns.wizard.adaptiveBudgetTooSmall')
+    .replace('{questions}', String(safeQuestions))
+    .replace('{deep}', String(safeDeep))
+    .replace('{need}', String(Number.isFinite(need) ? need : 0))
+    .replace('{have}', String(Number.isFinite(have) ? have : safeQuestions))
+    .replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount))
+    .replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed));
+}
+
+export function getDeployWarnings(error: unknown, t: (key: string) => string): string[] {
+  const { status, raw, nested } = getDeployErrorData(error);
   const code = typeof nested?.code === 'string' ? nested.code : '';
   const warnings = Array.isArray(nested?.warnings)
     ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
     : [];
-  if (code === 'QUESTION_BANK_INVALID') {
-    return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings].join(' ');
-  }
-  if (code === 'ADAPTIVE_BUDGET_TOO_SMALL') {
-    return [t('employer.campaigns.wizard.deploy.warning.ADAPTIVE_BUDGET_TOO_SMALL'), ...warnings].join(' ');
-  }
-  if (status === 409 && typeof raw === 'string' && raw.trim()) return raw.trim();
+  if (code === 'QUESTION_BANK_INVALID') return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings];
+  if (code === 'ADAPTIVE_BUDGET_TOO_SMALL' && nested) return [adaptiveDeployWarning(nested, t), ...warnings];
+  if (status === 409 && typeof raw === 'string' && raw.trim()) return [raw.trim()];
+  return [];
+}
+
+export function mapDeployError(error: unknown, t: (key: string) => string): string {
+  const warnings = getDeployWarnings(error, t);
+  if (warnings.length) return warnings.join(' ');
   return t('employer.campaigns.wizard.deploy.deployFailed');
 }
 
@@ -367,7 +442,10 @@ export function useCampaignWizard({
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [partialDeploy, setPartialDeploy] = useState<{ campaignId: string; emails: string[]; campaign: EmployerCampaign } | null>(null);
+  const [partialDeploy, setPartialDeploy] = useState<PartialDeployState | null>(null);
+  const [invitationFailures, setInvitationFailures] = useState<FailedCampaignInvitation[]>([]);
+  const [invitationFailureReason, setInvitationFailureReason] = useState<string | null>(null);
+  const [canRetryInvitations, setCanRetryInvitations] = useState(true);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -1040,19 +1118,37 @@ export function useCampaignWizard({
     if (!saved) return;
     setIsSubmitting(true);
     setActionError(null);
+    setInvitationFailures([]);
+    setInvitationFailureReason(null);
+    setCanRetryInvitations(true);
     try {
       const deployed = await onDeployCampaign(saved.id, state.inviteEmails);
+      const failedInvitations = deployed.invitations?.failed ?? [];
+      if (failedInvitations.length > 0) {
+        setPartialDeploy({ campaignId: saved.id, campaign: deployed.campaign });
+        setInvitationFailures(failedInvitations);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
       setPartialDeploy(null);
       toast.success(t('employer.campaigns.wizard.deploy.deploySuccess'));
       onAfterSubmit(deployed.campaign);
     } catch (error) {
       if (error instanceof CampaignInvitationDeployError) {
-        setPartialDeploy({ campaignId: saved.id, emails: error.emails, campaign: error.campaign });
+        setPartialDeploy({ campaignId: saved.id, campaign: error.campaign });
+        setInvitationFailures([]);
+        setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+        setCanRetryInvitations(![400, 403].includes(error.status ?? -1));
+        setActionError(null);
+        return;
       }
       const status = getApiStatusCode(error);
-      setActionError(error instanceof CampaignInvitationDeployError
-        ? t('employer.campaigns.wizard.deploy.invitationFailed')
-        : status === 409
+      setPartialDeploy(null);
+      setInvitationFailures([]);
+      setInvitationFailureReason(null);
+      setCanRetryInvitations(true);
+      setActionError(status === 409
           ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
             ? error.response.data.trim()
             : t('employer.campaigns.wizard.deploy.deployConflict'))
@@ -1063,20 +1159,34 @@ export function useCampaignWizard({
   }, [handleCreateCampaign, handleUpdateDraft, mode, onAfterSubmit, onDeployCampaign, state.draftId, state.inviteEmails, t]);
 
   const retryDeployInvitations = useCallback(async () => {
-    if (!partialDeploy || isSubmitting) return;
+    const pendingDeploy = partialDeploy;
+    const retryRequest = buildInvitationRetryRequest(pendingDeploy, state.inviteEmails);
+    if (!retryRequest || !pendingDeploy || isSubmitting || !canRetryInvitations) return;
     setIsSubmitting(true);
     setActionError(null);
+    setInvitationFailureReason(null);
     try {
-      await onSendInvitations(partialDeploy.campaignId, partialDeploy.emails);
+      const invitations = await onSendInvitations(retryRequest.campaignId, retryRequest.emails);
+      if (invitations.failed.length > 0) {
+        setInvitationFailures(invitations.failed);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
       toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
-      onAfterSubmit(partialDeploy.campaign);
+      onAfterSubmit(pendingDeploy.campaign);
       setPartialDeploy(null);
-    } catch {
-      setActionError(t('employer.campaigns.wizard.deploy.invitationFailed'));
+      setInvitationFailures([]);
+      setCanRetryInvitations(true);
+    } catch (error) {
+      const status = getInvitationErrorStatus(error);
+      setInvitationFailures([]);
+      setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+      setCanRetryInvitations(![400, 403].includes(status ?? -1));
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, t]);
+  }, [canRetryInvitations, isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, state.inviteEmails, t]);
 
   return {
     state,
@@ -1135,6 +1245,9 @@ export function useCampaignWizard({
     handleFinalSubmit,
     retryQuestionsUpdate,
     partialDeploy,
+    invitationFailures,
+    invitationFailureReason,
+    canRetryInvitations,
     retryDeployInvitations,
   };
 }

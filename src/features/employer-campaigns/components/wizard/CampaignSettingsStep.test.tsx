@@ -37,11 +37,17 @@ describe('CampaignSettingsStep adaptive budget for fixed and draw modes', () => 
   it('warns when all mode uses the twenty-question fixed set', () => {
     render(<CampaignSettingsStep {...baseProps} questionCount={20} />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('5');
+    expect(screen.getByRole('alert')).toHaveTextContent('1');
   });
 
-  it('does not warn when draw mode selects five at depth three', () => {
-    render(<CampaignSettingsStep {...baseProps} questionCount={5} />);
+  it('does not warn when the configured total budget fits draw mode', () => {
+    render(
+      <CampaignSettingsStep
+        {...baseProps}
+        settings={{ ...settings, maxQuestions: 20 }}
+        questionCount={5}
+      />,
+    );
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

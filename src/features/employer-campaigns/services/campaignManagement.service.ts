@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { DEFAULT_PROCTORING } from '../mocks/campaignManagement.fixtures';
@@ -90,15 +91,21 @@ export class CampaignRequestError extends Error {
 export class CampaignInvitationDeployError extends Error {
   readonly campaign: EmployerCampaign;
   readonly emails: string[];
+  readonly status?: number;
+  readonly body?: unknown;
   constructor(
     message: string,
     campaign: EmployerCampaign,
     emails: string[],
+    status?: number,
+    body?: unknown,
   ) {
     super(message);
     this.name = 'CampaignInvitationDeployError';
     this.campaign = campaign;
     this.emails = emails;
+    this.status = status;
+    this.body = body;
   }
 }
 
@@ -189,6 +196,18 @@ function unwrapInviteByEmailPayload(data: unknown): CreateCampaignInvitationsRes
     .filter((item): item is NonNullable<typeof item> => item != null);
 
   return { created, failed };
+}
+
+function readPublishWarnings(data: unknown): string[] {
+  const root = data && typeof data === 'object' && !Array.isArray(data)
+    ? data as Record<string, unknown>
+    : null;
+  const nested = root?.data && typeof root.data === 'object' && !Array.isArray(root.data)
+    ? root.data as Record<string, unknown>
+    : root;
+  return Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
 }
 
 export const campaignManagementService = {
@@ -473,7 +492,7 @@ export const campaignManagementService = {
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
-    return { campaign: mapped, warnings: [] };
+    return { campaign: mapped, warnings: readPublishWarnings(response.data) };
   },
 
   /** Publish first, then send the draft invitation list. Never sends before publish succeeds. */
@@ -484,10 +503,14 @@ export const campaignManagementService = {
     try {
       invitations = await this.createCampaignInvitations(id, { emails });
     } catch (error) {
+      const status = error instanceof CampaignRequestError ? error.status : getApiStatusCode(error);
+      const body = axios.isAxiosError(error) ? error.response?.data : error instanceof CampaignRequestError ? error.message : undefined;
       throw new CampaignInvitationDeployError(
         error instanceof Error ? error.message : 'INVITATIONS_FAILED',
         published.campaign,
         emails,
+        status,
+        body,
       );
     }
     return { ...published, invitations };
