@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import {
   BadgeCheck,
   BarChart3,
-  Bell,
   BriefcaseBusiness,
   Building2,
   CircleHelp,
+  Inbox,
   LayoutDashboard,
   LifeBuoy,
   ReceiptText,
@@ -62,7 +62,7 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
     {
       to: '/employer/notifications',
       label: t('engagement.nav.notifications'),
-      icon: <Bell className="h-4 w-4 shrink-0" aria-hidden />,
+      icon: <Inbox className="h-4 w-4 shrink-0" aria-hidden />,
     },
     {
       to: '/employer/settings',
