@@ -17,6 +17,13 @@ export interface SectionPanelProps {
 /**
  * Project-wide glass section shell (header + body + optional footer).
  * Use for multi-step wizards, setup flows, and self-contained form sections.
+ *
+ * Đầu mục chỉ có MỘT dấu hiệu: chip icon (tuỳ chọn) — đúng hợp đồng header
+ * trong docs/UI_GUIDE.md ("icon tuỳ chọn + title + description").
+ * KHÔNG thêm lại thanh dọc `before:` cạnh <h2>: nó giống hệt nhau ở mọi panel
+ * (không mang thông tin, khác chip icon đổi theo từng bước), chồng lên chip
+ * thành hai lớp trang trí, và `pl-4` của nó chỉ nằm trên <h2> nên đẩy title
+ * lệch phải 16px so với description.
  */
 export function SectionPanel({
   title,
@@ -58,7 +65,9 @@ export function SectionPanel({
               </span>
             ) : null}
             <div className="min-w-0">
-              <h2 className="relative pl-4 text-xl font-bold tracking-tight text-foreground before:absolute before:left-0 before:top-1 before:h-6 before:w-1 before:rounded-full before:bg-foreground sm:text-2xl">{title}</h2>
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {title}
+              </h2>
               {description ? (
                 <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                   {description}
