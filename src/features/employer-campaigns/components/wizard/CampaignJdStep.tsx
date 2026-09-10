@@ -65,7 +65,19 @@ export function CampaignJdStep({
 
   const confirmMethodChange = () => {
     if (!pendingMethod) return;
-    onChange({ inputMethod: pendingMethod });
+    // Hộp thoại đã nói rõ "dữ liệu sẽ mất" — nay phải XOÁ THẬT. Bản trước chỉ đổi inputMethod:
+    // gõ JD bằng chữ rồi chuyển sang tab Tải file thì jdText còn nguyên, mà backend ưu tiên text
+    // (C11: `if (request.JdText is not null) { JDText = ...; JDFileUrl = null; }`) ⇒ file vừa tải
+    // bị vứt IM LẶNG trong khi giao diện vẫn báo "đã tải lên". Chiều ngược lại cũng vậy.
+    onChange(
+      pendingMethod === 'file'
+        ? { inputMethod: pendingMethod, jdText: '' }
+        : {
+            inputMethod: pendingMethod,
+            jdFile: null, fileName: null, fileSize: null,
+            fileStatus: 'idle', fileError: null, uploadProgress: null, serverUploaded: false,
+          },
+    );
     setPendingMethod(null);
   };
 

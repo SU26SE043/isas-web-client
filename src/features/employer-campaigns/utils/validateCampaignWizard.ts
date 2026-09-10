@@ -81,11 +81,17 @@ export function validateCampaignWizardStep(
     return null;
   }
 
-  if (step === 1) {
+  // Luật lọc cứng nay nằm ở BƯỚC 7 ("Cấu hình chi tiết"), không còn ở bước 2 — CMP3-F3 đã dời
+  // ô nhập đi. Để lỗi ở bước 2 thì bấm "Triển khai" sẽ đá người dùng về bước 2, nơi KHÔNG CÒN
+  // ô nào để sửa, kèm thông điệp nói về số năm kinh nghiệm.
+  if (step === 6) {
     const minYears = state.hardFilters?.minYearsExperience;
-    if (minYears != null && (!Number.isInteger(minYears) || minYears < 0)) {
+    if (minYears != null && (!Number.isInteger(minYears) || minYears < 0 || minYears > 60)) {
       return 'employer.campaigns.wizard.hardFilters.minYearsInvalid';
     }
+  }
+
+  if (step === 1) {
     if ((jd.criteriaText ?? '').trim().length > MAX_CRITERIA_TEXT_LENGTH) {
       return 'employer.campaigns.wizard.criteriaTextTooLong';
     }
