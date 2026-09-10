@@ -110,8 +110,11 @@ async function installCampaignApi(page: Page, initialStatus: 'Draft' | 'Active' 
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ data: {
+        // ⚠ HÌNH DẠNG THẬT của backend: ImportQuestionsResult.Questions → khoá `questions`.
+        // Bản trước mock trả `items` — đúng khoá mà code HỎNG đọc — nên spec xanh trên cả
+        // bản hỏng lẫn bản đã sửa: nó đo chính cái mock, không đo hợp đồng với server.
           totalRows: 2,
-          items: [
+          questions: [
             { rowNumber: 2, questionText: 'How do you test React components?', isRequired: true, questionGroup: 'Testing' },
             { rowNumber: 3, questionText: 'How do you handle loading states?', isRequired: true, questionGroup: 'UX' },
           ],
@@ -179,8 +182,17 @@ test.describe('CMP4 employer campaign wizard', () => {
     await expect(page.getByText('Uploaded', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: /^Next$/i }).click();
 
-    // Step 3: criteria starts locked, then customization survives a round trip.
+    // Step 3: khoá lúc đầu, VẪN KHOÁ sau khi rời bước rồi quay lại, và tuỳ chỉnh thì dính.
     await expect(page.getByRole('button', { name: /Customize/i })).toBeVisible();
+    // ⚠ Phép PHÂN BIỆT: rời bước rồi quay lại khi CHƯA bấm Customize thì phải VẪN KHOÁ.
+    // Bản hỏng dựng cờ bằng useState theo độ dài rubric; bộ chuẩn đã nạp nên quay lại là cờ tự
+    // bật ⇒ bảng mở khoá. Chỉ kiểm "đã mở" thì bản hỏng cũng thoả — không phân biệt được.
+    await page.getByRole('button', { name: /^Next$/i }).click();
+    await page.getByRole('button', { name: /^Back$/i }).click();
+    await expect(page.getByRole('button', { name: /Customize/i })).toBeVisible();
+    // Nút vẫn được render, chỉ bị disabled (CampaignCriteriaManualList nhận disabled=!customized)
+    // ⇒ phép phân biệt là toBeDisabled, không phải toHaveCount(0). Bản hỏng thì nút BẬT.
+    await expect(page.getByRole('button', { name: /Add criterion/i })).toBeDisabled();
     await page.getByRole('button', { name: /Customize/i }).click();
     await expect(page.getByRole('button', { name: /Add criterion/i })).toBeVisible();
     await page.getByRole('button', { name: /^Next$/i }).click();
@@ -189,8 +201,13 @@ test.describe('CMP4 employer campaign wizard', () => {
     await page.getByRole('button', { name: /^Next$/i }).click();
 
     // Step 4: CSV preview reports two valid rows, then draw mode raises its count.
+    // ⚠ Bắt filechooser thay vì setInputFiles thẳng vào input: nút "Import CSV" PHẢI mở hộp
+    // chọn tệp. Đặt file thẳng vào input ẩn là đi vòng qua đúng con bug (open() chỉ bật hộp
+    // thoại rỗng, không click input) ⇒ spec xanh trên bản hỏng.
+    const chooserPromise = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: /Import CSV/i }).first().click();
-    await page.locator('input[type="file"]').first().setInputFiles({ name: 'questions.csv', mimeType: 'text/csv', buffer: Buffer.from('question_text,sample_answer,is_required,nhom\n"How do you test React components?",,true,Testing\n"How do you handle loading states?",,true,UX\n') });
+    const chooser = await chooserPromise;
+    await chooser.setFiles({ name: 'questions.csv', mimeType: 'text/csv', buffer: Buffer.from('question_text,sample_answer,is_required,nhom\n"How do you test React components?",,true,Testing\n"How do you handle loading states?",,true,UX\n') });
     await expect(page.getByRole('dialog')).toContainText(/Read 2 rows; 2 valid rows/i);
     await page.getByRole('button', { name: /Import 2 rows/i }).click();
     await expect(page.getByText(/How do you test React components/i)).toBeVisible();
@@ -207,8 +224,15 @@ test.describe('CMP4 employer campaign wizard', () => {
     await page.getByRole('button', { name: /^Next$/i }).click();
 
     // Step 7: typing an email only updates wizard state; it does not send invitations.
-    await page.getByLabel('Candidate email list').fill('candidate@example.com');
-    await expect(page.getByLabel('Candidate email list')).toHaveValue('candidate@example.com');
+    // ⚠ Phép PHÂN BIỆT: GÕ TỪNG KÝ TỰ một địa chỉ DỞ DANG. Bản hỏng đồng bộ ngược theo identity
+    // mảng nên mỗi phím bị ghi đè bằng danh sách ĐÃ LỌC ⇒ chữ chưa thành email hợp lệ biến mất.
+    // fill() một email hoàn chỉnh không lộ ra, vì lọc xong bằng đúng cái vừa điền.
+    const emailBox = page.getByLabel('Candidate email list');
+    await emailBox.click();
+    await emailBox.pressSequentially('candidate@exa', { delay: 15 });
+    await expect(emailBox).toHaveValue('candidate@exa');
+    await emailBox.pressSequentially('mple.com', { delay: 15 });
+    await expect(emailBox).toHaveValue('candidate@example.com');
     expect(harness.invitationCalls).toBe(0);
     await page.getByRole('button', { name: /^Next$/i }).click();
 
