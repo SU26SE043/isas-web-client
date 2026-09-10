@@ -91,6 +91,13 @@ export type CampaignWizardPersistedState = {
   criteria: CriteriaFileState;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
+  /**
+   * Người dùng đã bấm "Tùy chỉnh bộ tiêu chí" chưa. Đây là QUYẾT ĐỊNH của họ nên phải sống
+   * ở wizard state, không phải useState trong bước 3: mọi bước đều render có điều kiện
+   * ({step === N ? … : null}) nên rời bước là component bị huỷ, quay lại thì initializer
+   * `rubric.length > 0` chạy lại và tự bật thành true — bảng tự mở khoá.
+   */
+  rubricCustomized: boolean;
   questions: CampaignQuestion[];
   /** Email list collected in step 7; invitations are sent only during deploy. */
   inviteEmails: string[];

@@ -151,6 +151,8 @@ function buildInitialState(
     },
     criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
+    // Sửa sẵn bộ tiêu chí từ server (chế độ edit) ⇒ coi như đã tuỳ chỉnh.
+    rubricCustomized: initialRubric.length > 0,
     questions: campaign?.questions?.length ? campaign.questions : [],
     inviteEmails: campaign?.invitedEmails ?? [],
     questionCount: 5,
@@ -466,9 +468,14 @@ export function useCampaignWizard({
     setState((prev) => ({
       ...prev,
       rubric: [],
+      rubricCustomized: false,
       autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 2),
     }));
+  }, []);
+
+  const customizeRubric = useCallback(() => {
+    setState((prev) => ({ ...prev, rubricCustomized: true }));
   }, []);
 
   const setQuestionCount = useCallback((questionCount: number) => {
@@ -1109,6 +1116,7 @@ export function useCampaignWizard({
     canReplaceFiles: fileActions.canReplaceFiles,
     setRubric,
     resetRubric,
+    customizeRubric,
     setQuestionCount,
     setQuestionsPerSession,
     setInviteEmails,

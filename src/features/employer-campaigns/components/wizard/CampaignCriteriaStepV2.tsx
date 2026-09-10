@@ -18,6 +18,8 @@ import { FieldError } from './FieldError';
 
 interface Props {
   rubric: RubricCriterion[];
+  customized: boolean;
+  onCustomize: () => void;
   campaignId: string | null;
   jobCategory: string | null;
   language?: CampaignLanguage;
@@ -47,6 +49,8 @@ export function shouldShowRubricSummary(rubric: RubricCriterion[]): boolean {
 
 export function CampaignCriteriaStepV2({
   rubric,
+  customized,
+  onCustomize,
   jobCategory,
   language = 'vi',
   error,
@@ -57,7 +61,6 @@ export function CampaignCriteriaStepV2({
   isSaving,
 }: Props) {
   const { t } = useLanguage();
-  const [customized, setCustomized] = React.useState(rubric.length > 0);
   const criteriaQuery = useQuery({
     queryKey: ['system-default-rubric', jobCategory, language],
     queryFn: () => campaignCriteriaService.preview(jobCategory ?? '', language),
@@ -79,7 +82,6 @@ export function CampaignCriteriaStepV2({
   }, [onChangeRubric, preview, rubric.length]);
 
   const resetToStandard = () => {
-    setCustomized(false);
     onReset();
   };
 
@@ -119,7 +121,7 @@ export function CampaignCriteriaStepV2({
                 <Button type="button" size="sm" variant="outline" onClick={() => void criteriaQuery.refetch()}>
                   {t('employer.campaigns.wizard.criteriaPreview.retry')}
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => setCustomized(true)}>
+                <Button type="button" size="sm" variant="ghost" onClick={onCustomize}>
                   {t('employer.campaigns.wizard.criteriaPreview.manualFallback')}
                 </Button>
               </div>
@@ -145,7 +147,7 @@ export function CampaignCriteriaStepV2({
             </div>
             <div className="flex flex-wrap gap-2">
               {!customized ? (
-                <Button type="button" size="sm" onClick={() => setCustomized(true)}>
+                <Button type="button" size="sm" onClick={onCustomize}>
                   {t('employer.campaigns.wizard.criteriaCustomize')}
                 </Button>
               ) : null}

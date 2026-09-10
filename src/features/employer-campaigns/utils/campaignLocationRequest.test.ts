@@ -58,6 +58,9 @@ function persisted(): CampaignWizardPersistedState {
   const base = snapshot();
   return {
     ...base,
+    // CMP3: cờ "đã tuỳ chỉnh bộ tiêu chí" nay nằm ở wizard state (trước là useState trong bước 3,
+    // nên quay lại bước là mất) — fixture kiểu PersistedState phải khai nó.
+    rubricCustomized: false,
     hardFilters: base.hardFilters ?? createEmptyHardFiltersState(),
     criteria: {
       criteriaFile: null,
