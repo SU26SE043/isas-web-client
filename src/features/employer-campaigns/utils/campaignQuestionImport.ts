@@ -27,13 +27,19 @@ function parseError(value: unknown, fallbackRow: number): CampaignQuestionImport
   const row = record(value);
   if (!row) return null;
   const message = text(row.message ?? row.Message ?? row.error ?? row.Error);
-  return message ? { rowNumber: number(row.rowNumber ?? row.RowNumber ?? row.row ?? row.Row, fallbackRow), message } : null;
+  // BE gửi `line` (ImportRowError.Line) = số dòng TRONG FILE tính cả tiêu đề — HR mở Excel nhảy
+  // đúng dòng đó. Thiếu tên này thì rơi về chỉ số mảng ⇒ số dòng bịa.
+  return message ? { rowNumber: number(row.line ?? row.Line ?? row.rowNumber ?? row.RowNumber ?? row.row ?? row.Row, fallbackRow), message } : null;
 }
 
 export function parseCampaignQuestionImport(data: unknown): CampaignQuestionImportResult {
   const root = record(data);
   const payload = record(root?.data ?? root?.Data) ?? root ?? {};
-  const rawItems = Array.isArray(payload.items) ? payload.items : Array.isArray(payload.Items) ? payload.Items : [];
+  // ⚠ Backend trả khoá `questions` (ImportQuestionsResult.Questions), KHÔNG phải `items`.
+  // Đọc thiếu tên này thì import 200 nhưng hộp thoại báo "0 dòng hợp lệ" và nút xác nhận
+  // disabled vĩnh viễn — hỏng IM LẶNG, đúng lớp lỗi lệch tên khoá đã cắn repo nhiều lần.
+  const rawItems = [payload.questions, payload.Questions, payload.items, payload.Items]
+    .find((value): value is unknown[] => Array.isArray(value)) ?? [];
   const errors = (Array.isArray(payload.errors) ? payload.errors : Array.isArray(payload.Errors) ? payload.Errors : [])
     .map((item, index) => parseError(item, index + 2))
     .filter((item): item is CampaignQuestionImportError => Boolean(item));

@@ -10,6 +10,7 @@ interface QuestionImportDialogProps {
   error?: string | null;
   busy?: boolean;
   onClose: () => void;
+  onPickAnother?: () => void;
   onConfirm: () => void;
 }
 
@@ -21,6 +22,7 @@ export function QuestionImportDialog({
   error,
   busy = false,
   onClose,
+  onPickAnother,
   onConfirm,
 }: QuestionImportDialogProps) {
   const { t } = useLanguage();
@@ -56,6 +58,7 @@ export function QuestionImportDialog({
             {t('employer.campaigns.campaignQuestions.import.sample')}
           </a>
           <div className="flex gap-2">
+            {onPickAnother ? <Button type="button" variant="outline" disabled={busy} onClick={onPickAnother}>{t('employer.campaigns.campaignQuestions.import.pickAnother')}</Button> : null}
             <Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('employer.campaigns.campaignQuestions.import.cancel')}</Button>
             <Button type="button" disabled={busy || accepted.length === 0} loading={busy} onClick={onConfirm}>
               {t('employer.campaigns.campaignQuestions.import.confirm').replace('{{count}}', String(accepted.length))}

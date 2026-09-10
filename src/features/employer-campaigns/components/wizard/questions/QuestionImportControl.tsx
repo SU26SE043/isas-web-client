@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestionImportResult } from '../../../types/campaign.api.types';
 import { isCampaignCsvFile, limitImportedQuestions, validImportedQuestions } from '../../../utils/campaignQuestionImport';
@@ -22,11 +22,15 @@ export const QuestionImportControl = forwardRef<QuestionImportControlHandle, Que
   onConfirmImport,
 }, ref) {
   const { t } = useLanguage();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CampaignQuestionImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  useImperativeHandle(ref, () => ({ open: () => { if (!disabled) setOpen(true); } }), [disabled]);
+  // Nút "Nhập CSV" phải mở HỘP CHỌN TỆP của trình duyệt. Bản trước chỉ setOpen(true) ⇒ hộp thoại
+  // xem trước hiện lên RỖNG và không có đường nào chọn file bằng chuột (input file là sr-only,
+  // không ref, không label) ⇒ nút chỉ là vỏ. selectFile tự mở hộp thoại sau khi có file.
+  useImperativeHandle(ref, () => ({ open: () => { if (!disabled) inputRef.current?.click(); } }), [disabled]);
   const valid = validImportedQuestions(result ?? { totalRows: 0, items: [], errors: [] });
   const { accepted, skipped } = limitImportedQuestions(existingCount, valid, max);
   const selectFile = async (file: File | null) => {
@@ -40,7 +44,7 @@ export const QuestionImportControl = forwardRef<QuestionImportControlHandle, Que
     finally { setBusy(false); }
   };
   return <>
-    <input type="file" accept=".csv,text/csv" className="sr-only" disabled={disabled} onChange={(event) => { void selectFile(event.target.files?.[0] ?? null); event.currentTarget.value = ''; }} />
+    <input ref={inputRef} type="file" accept=".csv,text/csv" className="sr-only" disabled={disabled} onChange={(event) => { void selectFile(event.target.files?.[0] ?? null); event.currentTarget.value = ''; }} />
     <QuestionImportDialog
       open={open}
       result={result}
@@ -49,6 +53,7 @@ export const QuestionImportControl = forwardRef<QuestionImportControlHandle, Que
       error={error}
       busy={busy}
       onClose={() => { if (!busy) setOpen(false); }}
+      onPickAnother={() => { if (!busy) inputRef.current?.click(); }}
       onConfirm={() => {
         if (!onConfirmImport) return;
         setBusy(true);
