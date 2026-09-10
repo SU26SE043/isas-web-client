@@ -319,6 +319,27 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
 11. **Bright black + satin silver** — nền `#141416` family; viền brushed aluminum low-contrast
 
+## Bo góc — theo VAI TRÒ (bắt buộc)
+
+Trước khi có mục này, `src` dùng **7 giá trị** bo góc khác nhau ở 981 chỗ, và ngay trong bộ
+primitive `Input` là 16px còn `Button` 12px — hai thứ luôn đứng cạnh nhau lại khác bo góc.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| control | `rounded-lg` | 12 | input · textarea · select · button · ô nhập bất kỳ |
+| nested surface | `rounded-xl` | 16 | thẻ nằm TRONG một panel (thẻ tiêu chí, thẻ câu hỏi) |
+| surface | `rounded-2xl` | 20 | `SectionPanel` · `Card` · `Dialog` · `SelectionOption` |
+| pill | `rounded-full` | — | badge · avatar · chấm trạng thái · thanh tiến độ |
+
+Quy tắc: **surface bọc ngoài luôn bo lớn hơn thứ nằm trong nó**. Không thêm giá trị thứ năm
+(`rounded-md`, `rounded-sm`, `rounded-3xl`, `rounded-4xl` đã bị gỡ). Bo một phía
+(`rounded-t-*`, `rounded-b-*`) không thuộc thang này.
+
+Kiểm tra: `npm run check:radius` — phạm vi gác hiện là `src/components/ui` và
+`src/features/employer-campaigns/components/wizard`; mở rộng bằng cách thêm đường dẫn vào
+`SCOPES` trong `scripts/check-radius.mjs`. **Đừng bật cả `src` một lượt** — sẽ đỏ 900+ chỗ
+và kết cục là ai đó tắt lưới đi.
+
 ## File size (bắt buộc)
 
 | Phạm vi | Giới hạn |

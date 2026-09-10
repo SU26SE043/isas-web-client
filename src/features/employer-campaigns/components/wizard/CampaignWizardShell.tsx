@@ -80,7 +80,7 @@ export function CampaignWizardShell({
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate text-sm font-medium text-foreground sm:text-base">{flowTitle}</p>
-              <span className="rounded-md border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
+              <span className="rounded-lg border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
                 {t('employer.campaigns.status.draft')}
               </span>
             </div>

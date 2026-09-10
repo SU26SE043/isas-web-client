@@ -149,7 +149,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
               <p className="mt-1 text-xs text-muted-foreground">{uploadingLabel}</p>
             ) : null}
             {status === 'failed' ? (
-              <span className="mt-1 inline-flex rounded-md border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
+              <span className="mt-1 inline-flex rounded-lg border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
                 {failureLabel}
               </span>
             ) : null}
