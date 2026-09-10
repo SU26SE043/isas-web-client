@@ -3,20 +3,13 @@ import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
 import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionCard';
+import { criteriaLockCopyKey, type CriteriaLockReason } from './criteria/criteriaLock';
+import { CRITERIA_HEADER_PADDING, CRITERIA_ROW_GRID } from './criteria/criteriaRowGrid';
 
-/**
- * Vì sao bảng bị khoá. `disabled` một mình KHÔNG đủ để giải thích: ở
- * `CampaignCriteriaStepV2` nó là `!customized || isSaving` — hai nguyên nhân
- * khác hẳn nhau, cách gỡ cũng khác. Không truyền prop này thì chỉ nói "đang
- * khoá" chứ không đoán bừa; chỉ sai nguyên nhân còn tệ hơn không nói gì.
- */
-export type CriteriaLockReason = 'standard' | 'saving';
-
-export function criteriaLockCopyKey(reason?: CriteriaLockReason): string {
-  if (reason === 'saving') return 'employer.campaigns.wizard.rubric.lockedSaving';
-  if (reason === 'standard') return 'employer.campaigns.wizard.rubric.lockedStandard';
-  return 'employer.campaigns.wizard.rubric.lockedGeneric';
-}
+// Luật khoá nay sống ở `criteria/criteriaLock` vì popup chi tiết cũng đọc nó; giữ
+// re-export ở đây để call site cũ không phải đổi đường import.
+export { criteriaLockCopyKey };
+export type { CriteriaLockReason };
 
 interface CampaignCriteriaManualListProps {
   rubric: RubricCriterion[];
@@ -65,9 +58,8 @@ export function CampaignCriteriaManualList({
         </div>
       </div> : null}
 
-      {rubric.length > 0 ? <div className="mb-3 hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] gap-3 px-1 text-caption text-muted-foreground lg:grid">
+      {rubric.length > 0 ? <div className={cn('mb-3 hidden gap-3 text-caption text-muted-foreground lg:grid', CRITERIA_ROW_GRID, CRITERIA_HEADER_PADDING)}>
         <span>{t('employer.campaigns.wizard.rubric.colCriterion')}</span>
-        <span>{t('employer.campaigns.wizard.rubric.colDescription')}</span>
         <span>{t('employer.campaigns.wizard.rubric.colWeight')}</span>
         <span>{t('employer.campaigns.wizard.rubric.colMaxScore')}</span>
         <span className="sr-only">{t('employer.campaigns.wizard.rubric.remove')}</span>
@@ -102,6 +94,7 @@ export function CampaignCriteriaManualList({
             criterion={criterion}
             index={index}
             disabled={isLocked}
+            lockReason={lockReason}
             onChange={(patch) => updateCriterion(index, patch)}
             onRemove={() => onChangeRubric(rubric.filter((item) => item.id !== criterion.id))}
           />

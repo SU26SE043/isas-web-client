@@ -6,6 +6,7 @@ import {
   CampaignCriteriaManualList,
   criteriaLockCopyKey,
 } from './CampaignCriteriaManualList';
+import { CRITERIA_ROW_GRID } from './criteria/criteriaRowGrid';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
 
 vi.mock('@/shared/languages', () => ({
@@ -125,5 +126,50 @@ describe('CampaignCriteriaManualList — dấu hiệu khoá', () => {
 
     expect(screen.queryByText(LOCK_TITLE)).not.toBeInTheDocument();
     expect(screen.getByText('employer.campaigns.wizard.rubric.emptyTitle')).toBeInTheDocument();
+  });
+});
+
+describe('CampaignCriteriaManualList — nhãn cột khớp ô nhập', () => {
+  it('dòng tiêu đề dùng CHUNG khuôn lưới với hàng, không khai riêng một bản', () => {
+    // Trước đây tiêu đề khai `1.1fr_1.3fr_…` còn hàng khai `18rem-1.15fr_1.45fr_…`
+    // nên nhãn cột không nằm đúng trên ô nó mô tả.
+    renderList();
+
+    const header = screen.getByText('employer.campaigns.wizard.rubric.colWeight')
+      .parentElement as HTMLElement;
+    expect(header.className).toContain(CRITERIA_ROW_GRID);
+  });
+
+  it('số nhãn cột khớp đúng số ô trên hàng', () => {
+    // Thừa/thiếu một ô là mọi nhãn phía sau trượt sang cột khác mà không có lỗi nào.
+    renderList();
+
+    const header = screen.getByText('employer.campaigns.wizard.rubric.colWeight')
+      .parentElement as HTMLElement;
+    const row = document.querySelector('article > div') as HTMLElement;
+    expect(header.children).toHaveLength(row.children.length);
+  });
+
+  it('bỏ cột MÔ TẢ khỏi tiêu đề vì mô tả đã chuyển sang popup', () => {
+    renderList();
+
+    expect(
+      screen.queryByText('employer.campaigns.wizard.rubric.colDescription'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('nguyên nhân khoá đi tiếp xuống popup chi tiết, không dừng ở thông báo đầu bảng', () => {
+    renderList({ disabled: true, lockReason: 'saving' });
+
+    const key = 'employer.campaigns.wizard.rubric.lockedSaving';
+    // Chỉ có thông báo đầu bảng trước khi mở popup.
+    expect(screen.getAllByText(key)).toHaveLength(1);
+
+    fireEvent.click(
+      screen.getByText('employer.campaigns.wizard.rubric.detail').closest('button')!,
+    );
+    // Popup nói CÙNG nguyên nhân. Không truyền `lockReason` xuống thì nó rơi về
+    // `lockedGeneric` và số này vẫn là 1.
+    expect(screen.getAllByText(key)).toHaveLength(2);
   });
 });
