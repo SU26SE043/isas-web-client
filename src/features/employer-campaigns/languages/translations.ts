@@ -1111,7 +1111,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'Cần tải file JD thành công trước khi xuất bản chiến dịch.',
     'employer.campaigns.wizard.questionsExceedMax':
-      'Số câu hỏi vượt quá giới hạn tối đa đã đặt ở bước Cài đặt.',
+      'Ngân hàng đề vượt trần {{max}} câu của một chiến dịch.',
     'employer.campaigns.wizard.maxFollowUpsInvalid': 'Số câu hỏi đào sâu tối đa phải là số nguyên từ 0 đến 20.',
     'employer.campaigns.wizard.maxQuestionsInvalid': 'Số câu hỏi tối đa phải trong khoảng 0–20.',
     'employer.campaigns.wizard.jdLocalOnlyHint':
@@ -2627,7 +2627,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdUploadRequiredBeforePublish':
       'The JD file must upload successfully before publishing the campaign.',
     'employer.campaigns.wizard.questionsExceedMax':
-      'Question count exceeds the max set in the Settings step.',
+      'The question bank exceeds the {{max}}-question cap for one campaign.',
     'employer.campaigns.wizard.maxFollowUpsInvalid': 'Max follow-up questions must be an integer from 0 to 20.',
     'employer.campaigns.wizard.maxQuestionsInvalid': 'Max questions must be between 0 and 20.',
     'employer.campaigns.wizard.jdLocalOnlyHint':

@@ -57,6 +57,7 @@ import {
   defaultGenerateCount,
   hasWizardJd,
   validateGenerateCount,
+  CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
 import {
@@ -608,14 +609,15 @@ export function useCampaignWizard({
                   : 'employer.campaigns.campaignQuestions.validation.countRequired';
           setStepError(
             t(key)
-              .replace('{{max}}', String(validated.max ?? CAMPAIGN_QUESTION_HARD_MAX)),
+              .replace('{{max}}', String(validated.max ?? CAMPAIGN_AI_GENERATE_MAX)),
           );
           return;
         }
         count = validated.count;
       } else {
-        // The default generation count follows the question-bank cap, not the
-        // per-session interview setting stored in settings.maxQuestions.
+        // Số mặc định bám trần MỘT LƯỢT GỌI AI (backend MaxGeneratedQuestions = 20),
+        // KHÔNG phải trần ngân hàng đề (200) và cũng không phải settings.maxQuestions
+        // (số câu một buổi thi, CHECK 0..20 ở DB). Ba con số khác bản chất nhau.
         count = defaultGenerateCount();
       }
 
@@ -845,7 +847,7 @@ export function useCampaignWizard({
     const step = state.currentStep;
     const errorKey = validateCampaignWizardStep(state, step, { mode });
     if (errorKey) {
-      setStepError(t(errorKey));
+      setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         errorSteps: Array.from(new Set([...prev.errorSteps, prev.currentStep])),
@@ -916,7 +918,7 @@ export function useCampaignWizard({
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
       const first = validation.errors[0];
-      setStepError(t(first.messageKey));
+      setStepError(t(first.messageKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         currentStep: first.step,
@@ -979,7 +981,7 @@ export function useCampaignWizard({
     });
     if (!validation.isValid) {
       const first = validation.errors[0];
-      setStepError(t(first.messageKey));
+      setStepError(t(first.messageKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         currentStep: first.step,
