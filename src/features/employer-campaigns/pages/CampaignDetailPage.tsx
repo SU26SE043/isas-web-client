@@ -19,10 +19,11 @@ export function CampaignDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
+  const { campaign, isLoading, isError, errorStatus, reload, publish, startNow, updateStatus, deleteCampaign } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
+  const [startingNow, setStartingNow] = useState(false);
   const tab = searchParams.get('tab') ?? 'details';
 
   if (tab !== 'details' && tab !== 'candidates' && tab !== 'results') {
@@ -75,6 +76,23 @@ export function CampaignDetailPage() {
         ),
       );
       throw new Error('STATUS_UPDATE_FAILED');
+    }
+  };
+
+  const handleStartNow = async () => {
+    if (!campaign || startingNow) return;
+    setStartingNow(true);
+    try {
+      await startNow(campaign.id);
+      toast.success(t('employer.campaigns.detail.startNowSuccess'));
+      reload();
+    } catch (error) {
+      const status = campaignManagementService.getErrorStatus(error);
+      toast.error(status === 409
+        ? t('employer.campaigns.detail.statusConflict')
+        : t('employer.campaigns.detail.startNowFailed'));
+    } finally {
+      setStartingNow(false);
     }
   };
 
@@ -169,6 +187,8 @@ export function CampaignDetailPage() {
               published={published}
               warnings={warnings}
               onPublish={handlePublish}
+              onStartNow={handleStartNow}
+              startingNow={startingNow}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}
               embedded

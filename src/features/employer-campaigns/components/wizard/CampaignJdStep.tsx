@@ -11,27 +11,18 @@ import {
 } from '@/components/ui/dialog';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type {
-  CampaignHardFiltersState,
-  JobDescriptionState,
-  JobDescriptionMethod,
-} from '../../types/campaignWizard.types';
+import type { JobDescriptionState, JobDescriptionMethod } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
-import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
-import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignFilePanel } from './jd/CampaignFilePanel';
 import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
 
 interface CampaignJdStepProps {
   jd: JobDescriptionState;
-  hardFilters: CampaignHardFiltersState;
-  isDraft: boolean;
   error?: string | null;
   canReplace?: boolean;
   onChange: (patch: Partial<JobDescriptionState>) => void;
-  onHardFiltersChange: (patch: Partial<CampaignHardFiltersState>) => void;
   onSelectFile: (file: File | null) => void;
   onRetryUpload?: () => void;
   onDownload?: () => void;
@@ -42,12 +33,9 @@ interface CampaignJdStepProps {
 
 export function CampaignJdStep({
   jd,
-  hardFilters,
-  isDraft,
   error,
   canReplace = true,
   onChange,
-  onHardFiltersChange,
   onSelectFile,
   onRetryUpload,
   onDownload,
@@ -85,6 +73,7 @@ export function CampaignJdStep({
     <SectionPanel
       icon={<FileText className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.jd')}
+      description={t('employer.campaigns.wizard.jdDescription')}
       footer={
         <CampaignWizardNav
           onBack={onBack}
@@ -135,6 +124,8 @@ export function CampaignJdStep({
               retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
               chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
               supportLabel={t('employer.campaigns.wizard.jdFormats')}
+              previewText={jd.extractedText ?? ''}
+              previewLabel={t('employer.campaigns.wizard.jdExtractedPreview')}
               onFileSelect={onSelectFile}
               onRetry={onRetryUpload}
               onDownload={onDownload}
@@ -157,13 +148,6 @@ export function CampaignJdStep({
           />
         )}
 
-        <CampaignCriteriaTextField
-          value={jd.criteriaText}
-          onChange={(criteriaText) => onChange({ criteriaText })}
-        />
-        {isDraft ? (
-          <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
-        ) : null}
       </div>
 
       <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>

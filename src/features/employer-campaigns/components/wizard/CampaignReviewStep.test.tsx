@@ -73,8 +73,8 @@ const twentyQuestions = Array.from({ length: 20 }, (_, index) => ({
   isRequired: true,
 }));
 
-describe('CampaignReviewStep adaptive budget', () => {
-  it('shows max depth beside max questions and the five-by-depth-two result', () => {
+describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
+  it('shows max depth beside a draw count of five and the five-by-depth-two result', () => {
     render(<CampaignReviewStep {...baseProps} questionsPerSession={5} />);
 
     expect(screen.getByText(/maxDeepPerQuestion/)).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('CampaignReviewStep adaptive budget', () => {
     expect(screen.getByText(/adaptiveBudgetFormula/)).toHaveTextContent('15');
   });
 
-  it('shows an actionable warning and disables publish for six-by-depth-three', () => {
+  it('shows an actionable warning and disables publish for draw count six at depth three', () => {
     render(
       <CampaignReviewStep
         {...baseProps}
@@ -97,7 +97,7 @@ describe('CampaignReviewStep adaptive budget', () => {
     expect(screen.getByRole('button', { name: 'publish' })).toBeDisabled();
   });
 
-  it('uses the full question bank when K is empty and blocks publish at depth three', () => {
+  it('uses the full fixed set in all mode and blocks publish at depth three', () => {
     render(
       <CampaignReviewStep
         {...baseProps}
@@ -113,7 +113,7 @@ describe('CampaignReviewStep adaptive budget', () => {
     expect(screen.getByRole('button', { name: 'publish' })).toBeDisabled();
   });
 
-  it('allows publish for K five at depth three', () => {
+  it('allows publish for draw count five at depth three', () => {
     render(
       <CampaignReviewStep
         {...baseProps}

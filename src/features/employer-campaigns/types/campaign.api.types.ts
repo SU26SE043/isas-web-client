@@ -143,6 +143,26 @@ export type GenerateCampaignQuestionsParams = {
   count?: number;
 };
 
+export type CampaignQuestionImportItem = {
+  rowNumber: number;
+  questionText: string;
+  sampleAnswer?: string | null;
+  isRequired?: boolean | null;
+  questionGroup?: string | null;
+  error?: string | null;
+};
+
+export type CampaignQuestionImportError = {
+  rowNumber: number;
+  message: string;
+};
+
+export type CampaignQuestionImportResult = {
+  totalRows: number;
+  items: CampaignQuestionImportItem[];
+  errors: CampaignQuestionImportError[];
+};
+
 /** POST /api/v1/campaign — create Draft after wizard completes (Employer). */
 export type CampaignCreateRequest = {
   title: string;

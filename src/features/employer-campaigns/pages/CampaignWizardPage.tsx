@@ -7,6 +7,7 @@ import { CampaignWizardForm } from '../components/wizard/CampaignWizardForm';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
+  CampaignQuestionImportResult,
   CampaignUpdateRequest,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
@@ -51,6 +52,10 @@ export function CampaignWizardPage() {
     return campaignManagementService.generateCampaignQuestions(params);
   };
 
+  const handleImportQuestions = async (campaignId: string, file: File): Promise<CampaignQuestionImportResult> => {
+    return campaignManagementService.importCampaignQuestions(campaignId, file);
+  };
+
   const handleUploadFiles = async (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -67,6 +72,14 @@ export function CampaignWizardPage() {
 
   const handleDownloadFile = async (campaignId: string, fileType: 'jd' | 'criteria') => {
     return downloadFile(campaignId, fileType);
+  };
+
+  const handleDeployCampaign = async (campaignId: string, emails: string[]) => {
+    return campaignManagementService.deployCampaign(campaignId, emails);
+  };
+
+  const handleSendInvitations = async (campaignId: string, emails: string[]) => {
+    return campaignManagementService.createCampaignInvitations(campaignId, { emails });
   };
 
   const goToDetail = (campaignId: string) => {
@@ -133,10 +146,13 @@ export function CampaignWizardPage() {
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}
       onGenerateQuestions={handleGenerateQuestions}
+      onImportQuestions={handleImportQuestions}
       onUploadFiles={handleUploadFiles}
       onReplaceFiles={handleReplaceFiles}
       onDownloadFile={handleDownloadFile}
       onAfterSubmit={(next) => goToDetail(next.id)}
+      onDeployCampaign={handleDeployCampaign}
+      onSendInvitations={handleSendInvitations}
     />
   );
 }

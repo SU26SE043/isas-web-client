@@ -33,14 +33,14 @@ const baseProps = {
   onNext: vi.fn(),
 };
 
-describe('CampaignSettingsStep adaptive budget', () => {
-  it('warns when omitted K uses the twenty-question bank', () => {
+describe('CampaignSettingsStep adaptive budget for fixed and draw modes', () => {
+  it('warns when all mode uses the twenty-question fixed set', () => {
     render(<CampaignSettingsStep {...baseProps} questionCount={20} />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('5');
   });
 
-  it('does not warn when K is five at depth three', () => {
+  it('does not warn when draw mode selects five at depth three', () => {
     render(<CampaignSettingsStep {...baseProps} questionCount={5} />);
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

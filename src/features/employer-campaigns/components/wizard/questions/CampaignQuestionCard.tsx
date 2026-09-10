@@ -108,18 +108,22 @@ export function CampaignQuestionCard({
       </div>
 
       <div className="space-y-1"><Label htmlFor={`q-group-${question.id}`}>{t('employer.campaigns.campaignQuestions.question.group')}</Label><Input id={`q-group-${question.id}`} list="campaign-question-groups" value={question.questionGroup ?? ''} disabled={disabled} placeholder={t('employer.campaigns.campaignQuestions.question.commonGroup')} onChange={(event) => onChangeGroup(event.target.value)} /></div>
-      <label className="flex w-fit items-center gap-2 text-xs text-muted-foreground">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-satin"
+      <div className="space-y-1">
+        <Label htmlFor={`q-placement-${question.id}`}>
+          {t('employer.campaigns.campaignQuestions.question.placement')}
+        </Label>
+        <select
+          id={`q-placement-${question.id}`}
+          aria-label={t('employer.campaigns.campaignQuestions.question.placement')}
+          value={question.isRequired ? 'fixed' : 'pool'}
           disabled={disabled}
-          checked={question.isRequired}
-          onChange={(e) => onToggleRequired(e.target.checked)}
-        />
-        {question.isRequired
-          ? t('employer.campaigns.campaignQuestions.question.alwaysAsked')
-          : t('employer.campaigns.campaignQuestions.question.optional')}
-      </label>
+          onChange={(event) => onToggleRequired(event.target.value === 'fixed')}
+          className="h-9 w-full rounded-xl border border-satin bg-surface-overlay/80 px-3 text-sm text-foreground"
+        >
+          <option value="fixed">{t('employer.campaigns.campaignQuestions.question.fixed')}</option>
+          <option value="pool">{t('employer.campaigns.campaignQuestions.question.pool')}</option>
+        </select>
+      </div>
     </li>
   );
 }

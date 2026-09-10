@@ -10,7 +10,6 @@ import {
   Trophy,
   UsersRound,
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
@@ -21,6 +20,7 @@ import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
+import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -31,6 +31,8 @@ interface CampaignDetailViewProps {
   onChangeStatus: (status: CampaignStatusUpdateRequest['status']) => Promise<void>;
   onDelete?: () => Promise<void>;
   embedded?: boolean;
+  onStartNow?: () => Promise<void>;
+  startingNow?: boolean;
 }
 
 export function CampaignDetailView({
@@ -41,6 +43,8 @@ export function CampaignDetailView({
   onChangeStatus,
   onDelete,
   embedded = false,
+  onStartNow,
+  startingNow = false,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
   const isDraft = campaign.status === 'draft';
@@ -70,29 +74,7 @@ export function CampaignDetailView({
           />
         </div> : null}
 
-        {isDraft ? (
-          <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
-            {t('employer.campaigns.detail.inviteAfterPublish')}
-          </p>
-        ) : null}
-
-        {published ? (
-          <Alert variant="success">
-            <AlertDescription>{t('employer.campaigns.detail.publishSuccess')}</AlertDescription>
-          </Alert>
-        ) : null}
-        {warnings.length > 0 ? (
-          <Alert variant="warning">
-            <AlertDescription>
-              <p className="font-medium">{t('employer.campaigns.detail.publishBlocked')}</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                {warnings.map((warning) => (
-                  <li key={warning}>{t(`employer.campaigns.detail.warning.${warning}`)}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <CampaignDetailStatusNotices campaign={campaign} published={published} warnings={warnings} formattedStart={formattedStart} onStartNow={onStartNow} startingNow={startingNow} />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
           <Card className="frame-satin bg-info/[0.035]">
             <CardHeader className="pb-3">

@@ -13,6 +13,7 @@ function snapshot(): CampaignWizardSubmitSnapshot {
     info: {
       title: 'Frontend hiring',
       domain: 'frontend',
+      language: 'vi',
       maxCandidates: 20,
       timeLimitMinutes: 60,
       passScorePct: 70,
@@ -69,6 +70,7 @@ function persisted(): CampaignWizardPersistedState {
       isDownloading: false,
     },
     questionCount: 5,
+    inviteEmails: [],
     currentStep: 0,
     completedSteps: [],
     errorSteps: [],
@@ -77,6 +79,50 @@ function persisted(): CampaignWizardPersistedState {
 }
 
 describe('campaign wizard request contract', () => {
+  it('sends the selected interview language while retaining the time limit', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildCampaignCreateRequest(current)).toMatchObject({
+      language: 'en',
+      timeLimitMinutes: 60,
+    });
+  });
+
+  it('keeps all mode explicit with a null draw count', () => {
+    const current = snapshot();
+    current.questionsPerSession = null;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBeNull();
+  });
+
+  it('sends the computed draw count for pool mode', () => {
+    const current = snapshot();
+    current.questionsPerSession = 5;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBe(5);
+  });
+
+  it('sends interview language changes in a dirty update', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      language: 'en',
+    });
+  });
+
+  it('blocks the information step when interview language is missing', () => {
+    const current = persisted();
+    current.info.language = '';
+
+    expect(validateCampaignWizardStep(current, 0)).toBe(
+      'employer.campaigns.wizard.languageRequired',
+    );
+  });
+
   it('does not send the deprecated location field in the create payload', () => {
     const request = buildCampaignCreateRequest(snapshot());
     expect(request).not.toHaveProperty('location');

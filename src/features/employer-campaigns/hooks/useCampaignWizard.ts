@@ -12,6 +12,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  CampaignQuestionImportItem,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
 import {
@@ -58,6 +59,12 @@ import {
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { CampaignInvitationDeployError } from '../services/campaignManagement.service';
+import {
+  importedItemToQuestion,
+  limitImportedQuestions,
+  validImportedQuestions,
+} from '../utils/campaignQuestionImport';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -94,6 +101,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
   return {
     title: campaign?.title ?? '',
     domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
+    language: campaign?.locale ?? 'vi',
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
     passScorePct: campaign?.passScorePct ?? null,
@@ -131,6 +139,7 @@ function buildInitialState(
             inputMethod: 'text' as const,
             jdText: campaign?.jobDescription ?? '',
             fileStatus: 'uploaded' as const,
+            extractedText: campaign?.jobDescription?.trim().slice(0, 200) ?? '',
           }
         : {}),
     },
@@ -143,11 +152,12 @@ function buildInitialState(
     criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
     questions: campaign?.questions?.length ? campaign.questions : [],
+    inviteEmails: campaign?.invitedEmails ?? [],
     questionCount: 5,
     questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
     currentStep: 0,
-    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6] : [],
+    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6, 7] : [],
     errorSteps: [],
     draftId: campaign?.id,
     autosaveStatus: 'idle',
@@ -283,6 +293,25 @@ export function mapSubmitError(
   };
 }
 
+function mapDeployError(error: unknown, t: (key: string) => string): string {
+  const status = getApiStatusCode(error);
+  const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
+  const body = raw && typeof raw === 'object' ? raw as Record<string, unknown> : null;
+  const nested = body?.data && typeof body.data === 'object' ? body.data as Record<string, unknown> : body;
+  const code = typeof nested?.code === 'string' ? nested.code : '';
+  const warnings = Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
+  if (code === 'QUESTION_BANK_INVALID') {
+    return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings].join(' ');
+  }
+  if (code === 'ADAPTIVE_BUDGET_TOO_SMALL') {
+    return [t('employer.campaigns.wizard.deploy.warning.ADAPTIVE_BUDGET_TOO_SMALL'), ...warnings].join(' ');
+  }
+  if (status === 409 && typeof raw === 'string' && raw.trim()) return raw.trim();
+  return t('employer.campaigns.wizard.deploy.deployFailed');
+}
+
 interface UseCampaignWizardArgs {
   campaign?: EmployerCampaign | null;
   mode: CampaignFormMode;
@@ -293,6 +322,7 @@ interface UseCampaignWizardArgs {
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
   onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
+  onImportQuestions: (campaignId: string, file: File) => Promise<import('../types/campaign.api.types').CampaignQuestionImportResult>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -306,6 +336,8 @@ interface UseCampaignWizardArgs {
     fileType: CampaignFileType,
   ) => Promise<BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
+  onDeployCampaign: (campaignId: string, emails: string[]) => Promise<import('../types/campaignManagement.types').CampaignDeployResult>;
+  onSendInvitations: (campaignId: string, emails: string[]) => Promise<import('../types/campaign.api.types').CreateCampaignInvitationsResponse>;
 }
 
 export function useCampaignWizard({
@@ -315,10 +347,13 @@ export function useCampaignWizard({
   onUpdateCampaign,
   onUpdateQuestions,
   onGenerateQuestions,
+  onImportQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
   onAfterSubmit,
+  onDeployCampaign,
+  onSendInvitations,
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
   const [state, setState] = useState<CampaignWizardPersistedState>(() =>
@@ -330,6 +365,7 @@ export function useCampaignWizard({
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [partialDeploy, setPartialDeploy] = useState<{ campaignId: string; emails: string[]; campaign: EmployerCampaign } | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -443,6 +479,14 @@ export function useCampaignWizard({
     setState((prev) => ({ ...prev, questionsPerSession: value, autosaveStatus: 'dirty' }));
   }, []);
 
+  const setInviteEmails = useCallback((emails: string[]) => {
+    setState((prev) => ({
+      ...prev,
+      inviteEmails: Array.from(new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))),
+      autosaveStatus: 'dirty',
+    }));
+  }, []);
+
   const setQuestions = useCallback((questions: CampaignQuestion[]) => {
     setState((prev) => ({
       ...prev,
@@ -499,10 +543,14 @@ export function useCampaignWizard({
           campaignId: id,
           count,
         });
+        const generatedQuestions = updated.questions.map((question) => ({
+          ...question,
+          isRequired: state.questionsPerSession == null,
+        }));
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
-          questions: updated.questions,
+          questions: generatedQuestions,
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
@@ -546,6 +594,7 @@ export function useCampaignWizard({
       onGenerateQuestions,
       state.jd,
       state.questionCount,
+      state.questionsPerSession,
       t,
     ],
   );
@@ -605,6 +654,37 @@ export function useCampaignWizard({
     t,
   ]);
 
+  const importQuestionsFromCsv = useCallback(async (file: File) => {
+    if (!isDraftEditable) throw new Error('CAMPAIGN_NOT_DRAFT');
+    const id = await fileActions.ensureDraftId();
+    return onImportQuestions(id, file);
+  }, [fileActions, isDraftEditable, onImportQuestions]);
+
+  const appendImportedQuestions = useCallback(async (items: CampaignQuestionImportItem[]) => {
+    if (!isDraftEditable || isSavingQuestions) return;
+    const id = await fileActions.ensureDraftId();
+    const isRequired = state.questionsPerSession == null;
+    const { accepted } = limitImportedQuestions(state.questions.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
+    const nextQuestions = [...state.questions, ...accepted.map((item) => importedItemToQuestion(item, isRequired))];
+    if (nextQuestions.length === state.questions.length) return;
+    setIsSavingQuestions(true);
+    setStepError(null);
+    try {
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(nextQuestions));
+      setState((prev) => ({
+        ...prev,
+        draftId: updated.id,
+        questions: updated.questions,
+        lastSavedAt: updated.updatedAt,
+        autosaveStatus: 'saved',
+      }));
+      setQuestionsSaved(true);
+      toast.success(t('employer.campaigns.campaignQuestions.success.imported'));
+    } finally {
+      setIsSavingQuestions(false);
+    }
+  }, [fileActions, isDraftEditable, isSavingQuestions, onUpdateQuestions, setState, state.questions, state.questionsPerSession, t]);
+
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
       const max = CAMPAIGN_QUESTION_HARD_MAX;
@@ -627,7 +707,7 @@ export function useCampaignWizard({
             skill: '',
             difficulty: 'middle' as const,
             source: 'manual' as const,
-            isRequired: true,
+            isRequired: prev.questionsPerSession == null,
           },
         ],
         autosaveStatus: 'dirty',
@@ -745,8 +825,8 @@ export function useCampaignWizard({
   ]);
 
   /** POST create only when no Draft exists yet (file upload may have created one already). */
-  const handleCreateCampaign = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return;
+  const handleCreateCampaign = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return null;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
@@ -757,7 +837,7 @@ export function useCampaignWizard({
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -774,10 +854,11 @@ export function useCampaignWizard({
         draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
-      onAfterSubmit(created);
+      if (redirect) onAfterSubmit(created);
+      return created;
     } catch (error) {
       const mapped = mapSubmitError(error, t, 'create');
       setActionError(mapped.message);
@@ -788,6 +869,7 @@ export function useCampaignWizard({
           errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
         }));
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
@@ -795,16 +877,16 @@ export function useCampaignWizard({
   }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, snapshot, state, t]);
 
   /** Save Draft metadata + questions — used for edit mode and create-after-ensureDraft. */
-  const handleUpdateDraft = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting) return;
-    if (mode === 'create' && !state.draftId) return;
+  const handleUpdateDraft = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting) return null;
+    if (mode === 'create' && !state.draftId) return null;
     if (!campaignId) {
       setActionError(t('employer.campaigns.wizard.campaignNotFound'));
-      return;
+      return null;
     }
     if (!isDraftEditable) {
       setActionError(t('employer.campaigns.wizard.notDraftEditable'));
-      return;
+      return null;
     }
 
     const validation = validateAllCampaignWizardSteps(state, {
@@ -818,7 +900,7 @@ export function useCampaignWizard({
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -836,7 +918,7 @@ export function useCampaignWizard({
         currentStep: 3,
         errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
       }));
-      return;
+      return null;
     }
 
     let metadataOk = metadataSaved;
@@ -863,14 +945,15 @@ export function useCampaignWizard({
         ...prev,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(
         mode === 'create'
           ? t('employer.campaigns.wizard.createSuccess')
           : t('employer.campaigns.wizard.updateSuccess'),
       );
-      onAfterSubmit(updated);
+      if (redirect) onAfterSubmit(updated);
+      return updated;
     } catch (error) {
       if (metadataOk && !questionsSaved) {
         setMetadataSaved(true);
@@ -895,6 +978,7 @@ export function useCampaignWizard({
           }));
         }
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
@@ -942,13 +1026,50 @@ export function useCampaignWizard({
     }
   }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
 
-  const handleFinalSubmit = useCallback(() => {
-    if (mode === 'create' && !state.draftId) {
-      void handleCreateCampaign();
-      return;
+  const handleFinalSubmit = useCallback(async () => {
+    const saved = mode === 'create' && !state.draftId
+      ? await handleCreateCampaign(false)
+      : await handleUpdateDraft(false);
+    if (!saved) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      const deployed = await onDeployCampaign(saved.id, state.inviteEmails);
+      setPartialDeploy(null);
+      toast.success(t('employer.campaigns.wizard.deploy.deploySuccess'));
+      onAfterSubmit(deployed.campaign);
+    } catch (error) {
+      if (error instanceof CampaignInvitationDeployError) {
+        setPartialDeploy({ campaignId: saved.id, emails: error.emails, campaign: error.campaign });
+      }
+      const status = getApiStatusCode(error);
+      setActionError(error instanceof CampaignInvitationDeployError
+        ? t('employer.campaigns.wizard.deploy.invitationFailed')
+        : status === 409
+          ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
+            ? error.response.data.trim()
+            : t('employer.campaigns.wizard.deploy.deployConflict'))
+          : mapDeployError(error, t));
+    } finally {
+      setIsSubmitting(false);
     }
-    void handleUpdateDraft();
-  }, [handleCreateCampaign, handleUpdateDraft, mode, state.draftId]);
+  }, [handleCreateCampaign, handleUpdateDraft, mode, onAfterSubmit, onDeployCampaign, state.draftId, state.inviteEmails, t]);
+
+  const retryDeployInvitations = useCallback(async () => {
+    if (!partialDeploy || isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await onSendInvitations(partialDeploy.campaignId, partialDeploy.emails);
+      toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
+      onAfterSubmit(partialDeploy.campaign);
+      setPartialDeploy(null);
+    } catch {
+      setActionError(t('employer.campaigns.wizard.deploy.invitationFailed'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, t]);
 
   return {
     state,
@@ -990,9 +1111,12 @@ export function useCampaignWizard({
     resetRubric,
     setQuestionCount,
     setQuestionsPerSession,
+    setInviteEmails,
     setQuestions,
     generateQuestionsWithAi,
     saveQuestionsNow,
+    importQuestionsFromCsv,
+    appendImportedQuestions,
     addManualQuestion,
     updateQuestion,
     removeQuestion,
@@ -1002,6 +1126,8 @@ export function useCampaignWizard({
     goToStep,
     handleFinalSubmit,
     retryQuestionsUpdate,
+    partialDeploy,
+    retryDeployInvitations,
   };
 }
 

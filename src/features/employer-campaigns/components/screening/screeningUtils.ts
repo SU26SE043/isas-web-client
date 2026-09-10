@@ -20,7 +20,10 @@ export function getCandidateRanks(
   const ranks = new Map<string, number>();
   const scoredCandidates = candidates
     .filter((candidate) => candidate.overallMatchScore != null)
-    .sort((left, right) => right.overallMatchScore! - left.overallMatchScore!);
+    .sort((left, right) => {
+      const eligibilityOrder = Number(right.eligible !== false) - Number(left.eligible !== false);
+      return eligibilityOrder || right.overallMatchScore! - left.overallMatchScore!;
+    });
   let scoredPosition = 0;
   let previousScore: number | null = null;
   let previousRank = 0;

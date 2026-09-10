@@ -130,11 +130,12 @@ export function useCampaignFileActions({
       });
       try {
         const id = await ensureDraftId();
+        let updated: EmployerCampaign;
         if (replace) {
-          await onReplaceFiles(id, { jdFile: file });
+          updated = await onReplaceFiles(id, { jdFile: file });
           toast.success(t('employer.campaigns.files.replaceSuccess'));
         } else {
-          await onUploadFiles(id, { jdFile: file });
+          updated = await onUploadFiles(id, { jdFile: file });
           toast.success(t('employer.campaigns.files.uploadSuccess'));
         }
         patchJd({
@@ -142,6 +143,7 @@ export function useCampaignFileActions({
           fileError: null,
           uploadProgress: 100,
           serverUploaded: true,
+          extractedText: updated.jobDescription?.trim().slice(0, 200) ?? '',
         });
         setStepError(null);
       } catch (error) {

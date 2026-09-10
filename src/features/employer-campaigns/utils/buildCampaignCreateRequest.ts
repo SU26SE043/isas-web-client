@@ -199,6 +199,9 @@ export function buildCampaignCreateRequest(
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
+  if (!info.language) {
+    throw new Error('LANGUAGE_REQUIRED');
+  }
 
   const questions = mapQuestionsToApiRequest(snapshot.questions);
   const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
@@ -208,6 +211,7 @@ export function buildCampaignCreateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
+    language: info.language,
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
@@ -241,6 +245,9 @@ export function buildCampaignUpdateRequest(
   if (!info.domain) {
     throw new Error('DOMAIN_REQUIRED');
   }
+  if (!info.language) {
+    throw new Error('LANGUAGE_REQUIRED');
+  }
   const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
   const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
   const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
@@ -248,6 +255,7 @@ export function buildCampaignUpdateRequest(
   return {
     title: info.title.trim(),
     domain: mapDomainToApiLabel(info.domain),
+    language: info.language,
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,

@@ -10,13 +10,17 @@ export const campaignManagementEndpoints = {
   create: CAMPAIGN_API_PREFIX,
   detail: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   publish: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/publish`,
+  startNow: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/start-now`,
   status: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/status`,
   update: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   delete: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   questions: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions`,
   jobNeeds: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs`,
+  jobNeedsSuggest: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs/suggest`,
   questionsGenerate: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/generate`,
+  questionsImport: (id: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/import`,
   files: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files`,
   filesDownload: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files/download`,

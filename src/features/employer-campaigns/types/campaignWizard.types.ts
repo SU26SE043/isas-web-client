@@ -1,5 +1,6 @@
 import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
+import type { CampaignLanguage } from './campaign.api.types';
 
 export type JobDescriptionMethod = 'file' | 'text';
 
@@ -32,6 +33,8 @@ export type JobDescriptionState = {
   jdText: string;
   /** Freeform criteria notes captured alongside JD (step 1); maps to API `criteriaText`. */
   criteriaText: string;
+  /** First 200 characters extracted by the server after a PDF upload. */
+  extractedText?: string;
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
@@ -56,6 +59,8 @@ export type JdAnalysisState = JobDescriptionState;
 export type CampaignInfoState = {
   title: string;
   domain: CampaignDomainOption | '';
+  /** Interview language, independent from the user's UI language. */
+  language?: CampaignLanguage | '';
   maxCandidates: number | null;
   timeLimitMinutes: number;
   /** Optional 0–100; null = HR decides. */
@@ -87,6 +92,8 @@ export type CampaignWizardPersistedState = {
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
+  /** Email list collected in step 7; invitations are sent only during deploy. */
+  inviteEmails: string[];
   /** Count used by the "generate with AI" action on the Questions step. */
   questionCount: number;
   questionsPerSession?: number | null;
@@ -141,6 +148,7 @@ export function createEmptyJdState(): JobDescriptionState {
     fileSize: null,
     jdText: '',
     criteriaText: '',
+    extractedText: '',
     fileStatus: 'idle',
     fileError: null,
     uploadProgress: null,

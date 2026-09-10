@@ -290,6 +290,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     id: item.id,
     title: item.title,
     domain: item.domain?.trim() || undefined,
+    locale: item.language?.toLowerCase() === 'en' ? 'en' : 'vi',
     status: mapStatus(item.status),
     jobDescription: item.jobDescription?.trim() || '',
     capacity,

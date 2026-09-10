@@ -18,6 +18,7 @@ const snapshot = (inputMethod: 'file' | 'text') => ({
   info: {
     title: 'Campaign',
     domain: 'frontend' as const,
+    language: 'vi' as const,
     maxCandidates: null,
     timeLimitMinutes: 30,
     passScorePct: null,
@@ -31,7 +32,7 @@ const snapshot = (inputMethod: 'file' | 'text') => ({
     fileName: inputMethod === 'file' ? 'jd.pdf' : null,
     fileSize: inputMethod === 'file' ? 100 : null,
     jdText: 'Short JD retained after switching to file mode.',
-    criteriaText: '',
+    criteriaText: 'Prefer clear communication examples.',
     fileStatus: inputMethod === 'file' ? ('uploaded' as const) : ('idle' as const),
     fileError: null,
     uploadProgress: null,
@@ -59,5 +60,12 @@ describe('campaign JD fixes', () => {
 
     expect(buildCampaignCreateRequest(fileSnapshot).jdText).toBe(fileSnapshot.jd.jdText);
     expect(buildCampaignUpdateRequest(fileSnapshot).jdText).toBe(fileSnapshot.jd.jdText);
+  });
+
+  it('keeps criteriaText in the payload while the JD step no longer renders its field', () => {
+    const fileSnapshot = snapshot('file');
+
+    expect(buildCampaignCreateRequest(fileSnapshot).criteriaText).toBe(fileSnapshot.jd.criteriaText);
+    expect(buildCampaignUpdateRequest(fileSnapshot).criteriaText).toBe(fileSnapshot.jd.criteriaText);
   });
 });

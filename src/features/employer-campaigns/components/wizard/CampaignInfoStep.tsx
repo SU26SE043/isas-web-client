@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInfoState } from '../../types/campaignWizard.types';
+import type { CampaignLanguage } from '../../types/campaign.api.types';
 import { CAMPAIGN_DOMAIN_OPTIONS, type CampaignDomainOption } from './campaignWizard.steps';
 import { CampaignInfoScheduleSection } from './CampaignInfoScheduleSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
@@ -35,6 +36,7 @@ export function CampaignInfoStep({
     <SectionPanel
       icon={<Briefcase className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.info')}
+      description={t('employer.campaigns.form.timezoneNote')}
       footer={
         <CampaignWizardNav
           onCancel={onCancel}
@@ -85,59 +87,70 @@ export function CampaignInfoStep({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="campaign-max">{t('employer.campaigns.form.maxCandidates')}</Label>
-              <Input
-                id="campaign-max"
-                type="number"
-                min={1}
-                step={1}
-                value={info.maxCandidates ?? ''}
-                placeholder={t('employer.campaigns.form.maxCandidatesPlaceholder')}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({
-                    maxCandidates: raw === '' ? null : Math.max(1, Number(raw) || 1),
-                  });
-                }}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
-              <Input
-                id="campaign-pass-score"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={info.passScorePct ?? ''}
-                placeholder={t('employer.campaigns.form.passScorePlaceholder')}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({
-                    passScorePct:
-                      raw === '' ? null : Number(raw),
-                  });
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('employer.campaigns.form.passScoreHelp')}
+              <Label htmlFor="campaign-language">{t('employer.campaigns.form.interviewLanguage')}</Label>
+              <select
+                id="campaign-language"
+                className={selectClass}
+                value={info.language ?? ''}
+                onChange={(e) => onChange({ language: e.target.value as CampaignLanguage | '' })}
+                aria-describedby="campaign-language-help"
+              >
+                <option value="">{t('employer.campaigns.form.interviewLanguagePlaceholder')}</option>
+                <option value="vi">{t('employer.campaigns.form.interviewLanguage.vi')}</option>
+                <option value="en">{t('employer.campaigns.form.interviewLanguage.en')}</option>
+              </select>
+              <p id="campaign-language-help" className="text-xs text-muted-foreground">
+                {t('employer.campaigns.form.interviewLanguageHelp')}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="campaign-time-limit">{t('employer.campaigns.form.timeLimitMinutes')}</Label>
-              <Input
-                id="campaign-time-limit"
-                type="number"
-                min={1}
-                step={1}
-                value={info.timeLimitMinutes}
-                onChange={(e) =>
-                  onChange({ timeLimitMinutes: Math.max(1, Number(e.target.value) || 1) })
-                }
-              />
-            </div>
+            <details className="rounded-lg border border-satin bg-surface-overlay md:col-span-2">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-foreground">
+                {t('employer.campaigns.form.optionalSettings')}
+              </summary>
+              <div className="grid gap-4 border-t border-satin p-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-max">{t('employer.campaigns.form.maxCandidates')}</Label>
+                  <Input
+                    id="campaign-max"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={info.maxCandidates ?? ''}
+                    placeholder={t('employer.campaigns.form.maxCandidatesPlaceholder')}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      onChange({ maxCandidates: raw === '' ? null : Math.max(1, Number(raw) || 1) });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="campaign-pass-score"
+                      className="pr-8"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={info.passScorePct ?? ''}
+                      placeholder={t('employer.campaigns.form.passScorePlaceholder')}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        onChange({ passScorePct: raw === '' ? null : Number(raw) });
+                      }}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                      {t('employer.campaigns.form.percentSuffix')}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('employer.campaigns.form.passScoreHelp')}
+                  </p>
+                </div>
+              </div>
+            </details>
           </div>
         </section>
 

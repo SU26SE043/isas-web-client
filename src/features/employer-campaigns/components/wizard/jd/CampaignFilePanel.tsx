@@ -28,6 +28,8 @@ interface CampaignFilePanelProps {
   retryLabel: string;
   chooseOtherLabel: string;
   supportLabel: string;
+  previewText?: string;
+  previewLabel?: string;
   onFileSelect: (file: File | null) => void;
   onRetry?: () => void;
   onDownload?: () => void;

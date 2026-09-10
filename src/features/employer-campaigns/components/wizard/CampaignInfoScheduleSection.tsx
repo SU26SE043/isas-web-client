@@ -35,15 +35,6 @@ export function CampaignInfoScheduleSection({ info, onChange }: CampaignInfoSche
             onChange={(e) => onChange({ expiresAt: e.target.value })}
           />
         </div>
-        <div className="space-y-2">
-          <Label>{t('employer.campaigns.form.timezone')}</Label>
-          <p className="rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm text-muted-foreground">
-            {info.timezone || 'UTC'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t('employer.campaigns.form.timezoneHelp')}
-          </p>
-        </div>
       </div>
     </section>
   );

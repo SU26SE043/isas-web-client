@@ -13,21 +13,26 @@ import { JobNeedsRescueEditor } from './JobNeedsRescueEditor';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
 import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
 import type { CampaignJobNeed } from '../../types/campaign.api.types';
+import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 
 interface CvScreeningPanelProps {
   campaignId: string;
   isActive: boolean;
   hasJobNeeds: boolean;
   jobNeeds?: CampaignJobNeed[];
+  allowDraftScreening?: boolean;
+  hideInvitationAction?: boolean;
+  onAddCandidates?: (candidates: CampaignCandidateListItem[]) => void;
 }
 
-export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds = [] }: CvScreeningPanelProps) {
+export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds = [], allowDraftScreening = false, hideInvitationAction = false, onAddCandidates }: CvScreeningPanelProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const setInvitationCandidates = useCampaignInvitationStore(
     (store) => store.setSelectedCandidates,
   );
-  const state = useCvScreeningPanelState(campaignId, isActive, hasJobNeeds);
+  const screeningEnabled = isActive || allowDraftScreening;
+  const state = useCvScreeningPanelState(campaignId, screeningEnabled, hasJobNeeds);
 
   const handleAnalyze = async () => {
     if (!state.canAnalyze) return;
@@ -67,7 +72,7 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
         onAnalyze={() => void handleAnalyze()}
         isAnalyzing={state.analyzeMutation.isPending}
         canAnalyze={state.canAnalyze}
-        isActive={isActive}
+        isActive={screeningEnabled}
       />
       {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
 
@@ -135,8 +140,13 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
                 block: 'start',
               })
             }
+            onUpdateEmail={async (candidateId, email) => {
+              await state.updateCandidateMutation.mutateAsync({ candidateId, payload: { email: email.trim() } });
+            }}
+            updatingCandidateId={state.updateCandidateMutation.isPending ? state.updateCandidateMutation.variables?.candidateId : null}
+            allowIneligibleSelection={allowDraftScreening}
           />
-          {state.selectedCandidateIds.size > 0 ? (
+          {state.selectedCandidateIds.size > 0 && !hideInvitationAction ? (
             <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
               <p className="text-sm text-muted-foreground">
                 {t('employer.campaigns.screening.ranking.selected').replace(
@@ -154,7 +164,7 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
                 </Button>
                 <Button
                   type="button"
-                  disabled={!isActive}
+                  disabled={!screeningEnabled}
                   onClick={() => {
                     const candidates = state.candidates
                       .filter((candidate) => state.selectedCandidateIds.has(candidate.id))
@@ -169,6 +179,12 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
                         matchScore: candidate.overallMatchScore ?? undefined,
                         source: 'cv-screening' as const,
                       }));
+                    if (onAddCandidates) {
+                      onAddCandidates(
+                        state.candidates.filter((candidate) => state.selectedCandidateIds.has(candidate.id)),
+                      );
+                      return;
+                    }
                     setInvitationCandidates(campaignId, candidates);
                     navigate(`/employer/campaigns/${campaignId}/invitations?tab=invite`);
                   }}
