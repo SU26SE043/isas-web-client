@@ -56,8 +56,17 @@ export function CampaignInvitesStep({
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState(false);
 
+  // ⚠ CHỈ đồng bộ ngược khi danh sách đổi từ BÊN NGOÀI (nạp nháp, thêm từ tab CV).
+  // Bản trước phụ thuộc identity của mảng: mỗi lần gõ, saveEmails gọi onInviteEmailsChange,
+  // hook luôn dựng mảng MỚI ⇒ effect chạy ⇒ ghi đè textarea bằng danh sách đã LỌC ⇒ ký tự
+  // đang gõ dở (chưa thành email hợp lệ) biến mất ngay khi vừa gõ.
   useEffect(() => {
+    const typed = parseEmails(emailText).filter((email) => EMAIL_RE.test(email));
+    const same =
+      typed.length === inviteEmails.length && typed.every((email, index) => email === inviteEmails[index]);
+    if (same) return;
     setEmailText(inviteEmails.join('\n'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteEmails]);
 
   useEffect(() => {

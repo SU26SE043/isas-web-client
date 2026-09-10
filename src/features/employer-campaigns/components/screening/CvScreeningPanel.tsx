@@ -146,7 +146,10 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
             updatingCandidateId={state.updateCandidateMutation.isPending ? state.updateCandidateMutation.variables?.candidateId : null}
             allowIneligibleSelection={allowDraftScreening}
           />
-          {state.selectedCandidateIds.size > 0 && !hideInvitationAction ? (
+          {/* hideInvitationAction chỉ ẩn đường ĐIỀU HƯỚNG sang trang mời. Khi có onAddCandidates
+              (wizard bước 7) vẫn phải render khối này, nếu không thì tick chọn ứng viên xong
+              KHÔNG có nút nào để đưa họ vào danh sách mời — công sàng lọc rơi vào hư không. */}
+          {state.selectedCandidateIds.size > 0 && (!hideInvitationAction || onAddCandidates) ? (
             <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
               <p className="text-sm text-muted-foreground">
                 {t('employer.campaigns.screening.ranking.selected').replace(
@@ -189,7 +192,9 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
                     navigate(`/employer/campaigns/${campaignId}/invitations?tab=invite`);
                   }}
                 >
-                  {t('employer.campaigns.screening.invitation.continue')}
+                  {t(onAddCandidates
+                    ? 'employer.campaigns.screening.invitation.addToList'
+                    : 'employer.campaigns.screening.invitation.continue')}
                 </Button>
               </div>
             </div>

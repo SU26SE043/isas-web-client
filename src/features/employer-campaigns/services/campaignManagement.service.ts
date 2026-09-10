@@ -903,11 +903,36 @@ export const campaignManagementService = {
   },
 
   /** Live: POST /api/v1/campaign/{id}/job-needs/suggest — derive needs from the saved JD. */
+  /**
+   * POST /job-needs/suggest → PUT /job-needs.
+   *
+   * ⚠ HAI điều dễ làm sai, đã cắn một lần:
+   * 1. Response là `{ jobNeeds: [...] }` — KHÔNG có `id`/`title`, nên `parseCampaignResponse`
+   *    trả null và bản trước ném "Invalid suggested job needs response" ở MỌI lần gọi, kể cả
+   *    khi server trả 200. Giao diện luôn báo "không tự đọc được nhu cầu" ⇒ nút phân tích CV
+   *    khoá vĩnh viễn ⇒ toàn bộ đường sàng CV ở bước 7 chết.
+   * 2. Endpoint CHỈ ĐỌC — nó không ghi `campaigns.job_needs`. Chỉ nhận gợi ý rồi giữ trong
+   *    state là chưa đủ: chốt CMP3-B1 phía server đòi job_needs ĐÃ LƯU, nên sàng CV vẫn 409.
+   *    Vì vậy phải lưu tiếp qua PUT /job-needs (một cửa ghi duy nhất).
+   */
   async suggestCampaignJobNeeds(id: string): Promise<EmployerCampaign> {
     const response = await apiClient.post<unknown>(campaignManagementEndpoints.jobNeedsSuggest(id));
-    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
-    if (!parsed) throw new Error('Invalid suggested job needs response');
-    return mapCampaignResponseToEmployerCampaign(parsed);
+    const payload = response.data as { jobNeeds?: unknown; JobNeeds?: unknown } | null;
+    const raw = Array.isArray(payload?.jobNeeds)
+      ? payload.jobNeeds
+      : Array.isArray(payload?.JobNeeds)
+        ? payload.JobNeeds
+        : [];
+    const suggested = raw
+      .map((item) => item as { category?: string; text?: string })
+      .filter((item) => typeof item?.text === 'string' && item.text.trim())
+      .map((item) => ({
+        category: (item.category ?? 'Technical') as UpdateCampaignJobNeedsRequest['category'],
+        text: (item.text ?? '').trim(),
+        isMustHave: false,
+      } satisfies UpdateCampaignJobNeedsRequest));
+    if (!suggested.length) throw new Error('EMPTY_SUGGESTED_JOB_NEEDS');
+    return this.updateCampaignJobNeeds(id, suggested);
   },
 
   /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */
