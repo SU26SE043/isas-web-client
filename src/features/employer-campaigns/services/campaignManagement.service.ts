@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { DEFAULT_PROCTORING } from '../mocks/campaignManagement.fixtures';
@@ -90,15 +91,21 @@ export class CampaignRequestError extends Error {
 export class CampaignInvitationDeployError extends Error {
   readonly campaign: EmployerCampaign;
   readonly emails: string[];
+  readonly status?: number;
+  readonly body?: unknown;
   constructor(
     message: string,
     campaign: EmployerCampaign,
     emails: string[],
+    status?: number,
+    body?: unknown,
   ) {
     super(message);
     this.name = 'CampaignInvitationDeployError';
     this.campaign = campaign;
     this.emails = emails;
+    this.status = status;
+    this.body = body;
   }
 }
 
@@ -484,10 +491,14 @@ export const campaignManagementService = {
     try {
       invitations = await this.createCampaignInvitations(id, { emails });
     } catch (error) {
+      const status = error instanceof CampaignRequestError ? error.status : getApiStatusCode(error);
+      const body = axios.isAxiosError(error) ? error.response?.data : error instanceof CampaignRequestError ? error.message : undefined;
       throw new CampaignInvitationDeployError(
         error instanceof Error ? error.message : 'INVITATIONS_FAILED',
         published.campaign,
         emails,
+        status,
+        body,
       );
     }
     return { ...published, invitations };

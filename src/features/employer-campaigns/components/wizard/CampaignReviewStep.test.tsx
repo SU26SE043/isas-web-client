@@ -211,4 +211,44 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
     expect(screen.queryByText('invitationFailed')).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
   });
+
+  it('lists every server-reported failed invitation and keeps retry available', () => {
+    const onRetryInvitations = vi.fn();
+    render(
+      <CampaignReviewStep
+        {...baseProps}
+        hasPartialDeploy
+        onRetryInvitations={onRetryInvitations}
+        invitationFailures={[
+          { email: 'bad-one@example.com', reason: 'Mailbox rejected' },
+          { email: 'bad-two@example.com', reason: 'Already invited' },
+        ]}
+      />,
+    );
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('bad-one@example.com');
+    expect(alert).toHaveTextContent('Mailbox rejected');
+    expect(alert).toHaveTextContent('bad-two@example.com');
+    expect(alert).toHaveTextContent('Already invited');
+    expect(within(alert).getByRole('button', { name: 'retryInvitations' })).toBeEnabled();
+  });
+
+  it('hides retry when the invitation error is permanently actionable by fixing input', () => {
+    render(
+      <CampaignReviewStep
+        {...baseProps}
+        hasPartialDeploy
+        canRetryInvitations={false}
+        invitationFailureReason="The campaign has no available invitation quota."
+        onRetryInvitations={vi.fn()}
+        submitLabel="invitationFixRequired"
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('The campaign has no available invitation quota.');
+    expect(screen.getByRole('alert')).toHaveTextContent('invitationFixRequired');
+    expect(screen.queryByRole('button', { name: 'retryInvitations' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'invitationFixRequired' })[0]).toBeDisabled();
+  });
 });

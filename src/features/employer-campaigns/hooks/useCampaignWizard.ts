@@ -59,7 +59,11 @@ import {
   validateGenerateCount,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
-import { CampaignInvitationDeployError } from '../services/campaignManagement.service';
+import {
+  CampaignInvitationDeployError,
+  CampaignRequestError,
+} from '../services/campaignManagement.service';
+import type { FailedCampaignInvitation } from '../types/campaign.api.types';
 import {
   importedItemToQuestion,
   limitImportedQuestions,
@@ -79,6 +83,35 @@ export function buildInvitationRetryRequest(
 ): { campaignId: string; emails: string[] } | null {
   if (!partialDeploy) return null;
   return { campaignId: partialDeploy.campaignId, emails: [...currentEmails] };
+}
+
+function getInvitationErrorBody(error: unknown): unknown {
+  if (error instanceof CampaignInvitationDeployError) return error.body;
+  if (error instanceof CampaignRequestError) return error.message;
+  return axios.isAxiosError(error) ? error.response?.data : undefined;
+}
+
+export function getInvitationFailureMessage(error: unknown, fallback: string): string {
+  const raw = getInvitationErrorBody(error);
+  const body = raw && typeof raw === 'object' && !Array.isArray(raw)
+    ? ((raw as Record<string, unknown>).data && typeof (raw as Record<string, unknown>).data === 'object'
+      ? (raw as Record<string, unknown>).data
+      : raw) as Record<string, unknown>
+    : null;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
+  if (typeof body?.message === 'string' && body.message.trim()) return body.message.trim();
+  if (typeof body?.error === 'string' && body.error.trim()) return body.error.trim();
+  if (axios.isAxiosError(error)) {
+    const message = getApiErrorMessage(error, '');
+    if (message.trim()) return message.trim();
+  }
+  return fallback;
+}
+
+function getInvitationErrorStatus(error: unknown): number | undefined {
+  if (error instanceof CampaignInvitationDeployError) return error.status;
+  if (error instanceof CampaignRequestError) return error.status;
+  return getApiStatusCode(error);
 }
 
 function pad2(value: number): string {
@@ -379,6 +412,9 @@ export function useCampaignWizard({
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [partialDeploy, setPartialDeploy] = useState<PartialDeployState | null>(null);
+  const [invitationFailures, setInvitationFailures] = useState<FailedCampaignInvitation[]>([]);
+  const [invitationFailureReason, setInvitationFailureReason] = useState<string | null>(null);
+  const [canRetryInvitations, setCanRetryInvitations] = useState(true);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -1046,19 +1082,37 @@ export function useCampaignWizard({
     if (!saved) return;
     setIsSubmitting(true);
     setActionError(null);
+    setInvitationFailures([]);
+    setInvitationFailureReason(null);
+    setCanRetryInvitations(true);
     try {
       const deployed = await onDeployCampaign(saved.id, state.inviteEmails);
+      const failedInvitations = deployed.invitations?.failed ?? [];
+      if (failedInvitations.length > 0) {
+        setPartialDeploy({ campaignId: saved.id, campaign: deployed.campaign });
+        setInvitationFailures(failedInvitations);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
       setPartialDeploy(null);
       toast.success(t('employer.campaigns.wizard.deploy.deploySuccess'));
       onAfterSubmit(deployed.campaign);
     } catch (error) {
       if (error instanceof CampaignInvitationDeployError) {
         setPartialDeploy({ campaignId: saved.id, campaign: error.campaign });
+        setInvitationFailures([]);
+        setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+        setCanRetryInvitations(![400, 403].includes(error.status ?? -1));
+        setActionError(null);
+        return;
       }
       const status = getApiStatusCode(error);
-      setActionError(error instanceof CampaignInvitationDeployError
-        ? t('employer.campaigns.wizard.deploy.invitationFailed')
-        : status === 409
+      setPartialDeploy(null);
+      setInvitationFailures([]);
+      setInvitationFailureReason(null);
+      setCanRetryInvitations(true);
+      setActionError(status === 409
           ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
             ? error.response.data.trim()
             : t('employer.campaigns.wizard.deploy.deployConflict'))
@@ -1071,20 +1125,32 @@ export function useCampaignWizard({
   const retryDeployInvitations = useCallback(async () => {
     const pendingDeploy = partialDeploy;
     const retryRequest = buildInvitationRetryRequest(pendingDeploy, state.inviteEmails);
-    if (!retryRequest || !pendingDeploy || isSubmitting) return;
+    if (!retryRequest || !pendingDeploy || isSubmitting || !canRetryInvitations) return;
     setIsSubmitting(true);
     setActionError(null);
+    setInvitationFailureReason(null);
     try {
-      await onSendInvitations(retryRequest.campaignId, retryRequest.emails);
+      const invitations = await onSendInvitations(retryRequest.campaignId, retryRequest.emails);
+      if (invitations.failed.length > 0) {
+        setInvitationFailures(invitations.failed);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
       toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
       onAfterSubmit(pendingDeploy.campaign);
       setPartialDeploy(null);
-    } catch {
-      setActionError(t('employer.campaigns.wizard.deploy.invitationFailed'));
+      setInvitationFailures([]);
+      setCanRetryInvitations(true);
+    } catch (error) {
+      const status = getInvitationErrorStatus(error);
+      setInvitationFailures([]);
+      setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+      setCanRetryInvitations(![400, 403].includes(status ?? -1));
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, state.inviteEmails, t]);
+  }, [canRetryInvitations, isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, state.inviteEmails, t]);
 
   return {
     state,
@@ -1142,6 +1208,9 @@ export function useCampaignWizard({
     handleFinalSubmit,
     retryQuestionsUpdate,
     partialDeploy,
+    invitationFailures,
+    invitationFailureReason,
+    canRetryInvitations,
     retryDeployInvitations,
   };
 }

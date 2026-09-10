@@ -24,14 +24,18 @@ export function CampaignWizardStepContent({ campaign, wizard, onCancel, finalSub
   const { t } = useLanguage();
   const { state, step } = wizard;
   const isPartialDeploy = Boolean(wizard.partialDeploy);
-  const submitLabel = isPartialDeploy
+  const canRetryInvitations = wizard.canRetryInvitations !== false;
+  const submitLabel = isPartialDeploy && canRetryInvitations
     ? t('employer.campaigns.wizard.deploy.retryInvitations')
-    : finalSubmitLabel;
-  const loadingLabel = isPartialDeploy
+    : isPartialDeploy
+      ? t('employer.campaigns.wizard.deploy.invitationFixRequired')
+      : finalSubmitLabel;
+  const loadingLabel = isPartialDeploy && canRetryInvitations
     ? t('employer.campaigns.wizard.deploy.retryingInvitations')
     : finalLoadingLabel;
   const handleFinalAction = () => {
     if (isPartialDeploy) {
+      if (!canRetryInvitations) return;
       void wizard.retryDeployInvitations();
       return;
     }
@@ -47,6 +51,6 @@ export function CampaignWizardStepContent({ campaign, wizard, onCancel, finalSub
     {step === 4 ? <CampaignSettingsStep settings={state.settings} error={wizard.stepError} onChange={wizard.patchSettings} onBack={wizard.goBack} onNext={wizard.goNext} isSaving={wizard.isSavingStep} questionCount={state.questionsPerSession ?? state.questions.length} /> : null}
     {step === 5 && state.draftId ? <CampaignSlotsStep campaignId={state.draftId} onBack={wizard.goBack} onNext={wizard.goNext} /> : null}
     {step === 6 ? <CampaignInvitesStep campaignId={state.draftId ?? campaign?.id ?? null} campaign={campaign} timeLimitMinutes={state.info.timeLimitMinutes} jdText={state.jd.jdText || state.jd.extractedText || campaign?.jobDescription || ''} hardFilters={state.hardFilters} inviteEmails={state.inviteEmails} onHardFiltersChange={wizard.patchHardFilters} onInviteEmailsChange={wizard.setInviteEmails} onBack={wizard.goBack} onNext={wizard.goNext} /> : null}
-    {step === 7 ? <CampaignReviewStep info={state.info} jd={state.jd} rubric={state.rubric} questions={state.questions} questionsPerSession={state.questionsPerSession} settings={state.settings} campaignId={state.draftId} domainLabel={wizard.domainLabel} inviteEmails={state.inviteEmails} questionBankWarnings={campaign?.questionBankWarnings ?? []} error={wizard.stepError} onGoToStep={wizard.goToStep} onBack={wizard.goBack} onSubmit={handleFinalAction} submitLabel={submitLabel} submittingLabel={loadingLabel} isSubmitting={wizard.isSubmitting} submitDisabled={!wizard.isDraftEditable} disableForBlockingIssues hasPartialDeploy={isPartialDeploy} onRetryInvitations={handleFinalAction} /> : null}
+    {step === 7 ? <CampaignReviewStep info={state.info} jd={state.jd} rubric={state.rubric} questions={state.questions} questionsPerSession={state.questionsPerSession} settings={state.settings} campaignId={state.draftId} domainLabel={wizard.domainLabel} inviteEmails={state.inviteEmails} questionBankWarnings={campaign?.questionBankWarnings ?? []} error={wizard.stepError} onGoToStep={wizard.goToStep} onBack={wizard.goBack} onSubmit={handleFinalAction} submitLabel={submitLabel} submittingLabel={loadingLabel} isSubmitting={wizard.isSubmitting} submitDisabled={!wizard.isDraftEditable} disableForBlockingIssues hasPartialDeploy={isPartialDeploy} invitationFailures={wizard.invitationFailures} invitationFailureReason={wizard.invitationFailureReason} canRetryInvitations={canRetryInvitations} onRetryInvitations={canRetryInvitations ? handleFinalAction : undefined} /> : null}
   </>;
 }
