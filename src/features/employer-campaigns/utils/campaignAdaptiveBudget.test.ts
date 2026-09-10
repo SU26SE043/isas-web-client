@@ -44,6 +44,21 @@ describe('calculateAdaptiveQuestionBudget', () => {
     expect(calculateAdaptiveQuestionBudget(5, 0, true).requestedTotal).toBe(5);
   });
 
+  it('uses the campaign maxQuestions setting as the adaptive budget limit', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, 10)).toMatchObject({
+      limit: 10,
+      requestedTotal: 15,
+      effectiveTotal: 10,
+      maxBaseQuestionCount: 3,
+      exceedsLimit: true,
+    });
+  });
+
+  it('falls back to the system limit when maxQuestions is missing or invalid', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, 0).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, null).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
+  });
+
   it('normalizes invalid negative inputs before calculating', () => {
     expect(calculateAdaptiveQuestionBudget(-2, -3, true)).toMatchObject({
       baseQuestionCount: 0,

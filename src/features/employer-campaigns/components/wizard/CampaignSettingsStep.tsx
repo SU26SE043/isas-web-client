@@ -72,6 +72,7 @@ export function CampaignSettingsStep({
     questionCount,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
+    settings.maxQuestions,
   );
 
   return (

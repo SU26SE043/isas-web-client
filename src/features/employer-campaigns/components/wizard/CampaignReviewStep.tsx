@@ -7,7 +7,7 @@ import type { CampaignQuestion, RubricCriterion } from '../../types/campaignMana
 import type { FailedCampaignInvitation } from '../../types/campaign.api.types';
 import type { CampaignInfoState, CampaignSettingsState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
-import { calculateAdaptiveQuestionBudget, CAMPAIGN_ADAPTIVE_QUESTION_LIMIT } from '../../utils/campaignAdaptiveBudget';
+import { calculateAdaptiveQuestionBudget } from '../../utils/campaignAdaptiveBudget';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
 import { CampaignWizardNav } from './CampaignWizardNav';
 
@@ -41,6 +41,7 @@ export function CampaignReviewStep({
     questionsPerSession ?? questions.length,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
+    settings.maxQuestions,
   );
   const blocking = [
     !jd.jdText.trim() && !jd.fileName && !jd.serverUploaded ? { label: t('employer.campaigns.wizard.jdTextRequired'), step: 1 } : null,
@@ -65,11 +66,11 @@ export function CampaignReviewStep({
         {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.step}><button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button></li>)}</ul></section> : null}
         {questionBankWarnings.length ? <Alert variant="warning"><AlertTitle>{t('employer.campaigns.wizard.deploy.warningTitle')}</AlertTitle><AlertDescription><ul className="list-inside list-disc">{questionBankWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></AlertDescription></Alert> : null}
         {settings.adaptiveEnabled ? <section className="frame-satin space-y-2 rounded-xl bg-surface-overlay p-4" aria-label={t('employer.campaigns.wizard.review.adaptiveBudget')}>
-          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</h3><span className="text-sm text-muted-foreground">{adaptiveBudget.requestedTotal} / {CAMPAIGN_ADAPTIVE_QUESTION_LIMIT}</span></div>
+          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</h3><span className="text-sm text-muted-foreground">{adaptiveBudget.requestedTotal} / {adaptiveBudget.limit}</span></div>
           {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-sm text-muted-foreground">maxDeepPerQuestion: {adaptiveBudget.maxDeepPerQuestion}</p> : null}
           {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetFormula').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{total}}', String(adaptiveBudget.requestedTotal))}</p> : null}
-          <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetSummary').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT)).replace('{{status}}', t(adaptiveBudget.exceedsLimit ? 'employer.campaigns.wizard.review.adaptiveBudgetStatus.exceeded' : 'employer.campaigns.wizard.review.adaptiveBudgetStatus.ok'))}</p>
-          {adaptiveBudget.exceedsLimit ? <Alert variant="error"><AlertDescription>{t('employer.campaigns.wizard.review.adaptiveBudgetExceeded').replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT))}</AlertDescription></Alert> : null}
+          <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetSummary').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(adaptiveBudget.limit)).replace('{{status}}', t(adaptiveBudget.exceedsLimit ? 'employer.campaigns.wizard.review.adaptiveBudgetStatus.exceeded' : 'employer.campaigns.wizard.review.adaptiveBudgetStatus.ok'))}</p>
+          {adaptiveBudget.exceedsLimit ? <Alert variant="error"><AlertDescription>{t('employer.campaigns.wizard.review.adaptiveBudgetExceeded').replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(adaptiveBudget.limit))}</AlertDescription></Alert> : null}
         </section> : null}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCampaign')} value={info.title || '—'} onEdit={() => onGoToStep(0)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
