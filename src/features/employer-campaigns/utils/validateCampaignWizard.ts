@@ -51,24 +51,6 @@ export function validateCampaignWizardStep(
     }
     if (!info.domain) return 'employer.campaigns.wizard.domainRequired';
     if (!info.language) return 'employer.campaigns.wizard.languageRequired';
-    if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
-      return 'employer.campaigns.wizard.timeLimitRequired';
-    }
-    if (info.maxCandidates != null && info.maxCandidates <= 0) {
-      return 'employer.campaigns.form.maxCandidatesInvalid';
-    }
-    if (info.maxCandidates != null && !Number.isInteger(info.maxCandidates)) {
-      return 'employer.campaigns.form.integerRequired';
-    }
-    if (!Number.isInteger(info.timeLimitMinutes)) {
-      return 'employer.campaigns.form.integerRequired';
-    }
-    if (info.passScorePct != null && (info.passScorePct < 0 || info.passScorePct > 100)) {
-      return 'employer.campaigns.form.passScoreInvalid';
-    }
-    if (info.passScorePct != null && !Number.isInteger(info.passScorePct)) {
-      return 'employer.campaigns.form.integerRequired';
-    }
     if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
     if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
     // Past startsAt only blocks create — edit may keep an already-saved schedule.
@@ -84,7 +66,23 @@ export function validateCampaignWizardStep(
   // Luật lọc cứng nay nằm ở BƯỚC 7 ("Cấu hình chi tiết"), không còn ở bước 2 — CMP3-F3 đã dời
   // ô nhập đi. Để lỗi ở bước 2 thì bấm "Triển khai" sẽ đá người dùng về bước 2, nơi KHÔNG CÒN
   // ô nào để sửa, kèm thông điệp nói về số năm kinh nghiệm.
+  // Trần ứng viên nay ở bước "Sức chứa & ca thi". Bỏ trống KHÔNG phải "không giới hạn":
+  // backend rơi về `entitlement.MaxCandidatesCap` của gói (`MaxCandidatesRule`) ⇒ chiến dịch
+  // luôn có trần, chỉ là HR không biết nó bằng bao nhiêu. Bắt khai tường minh.
+  if (step === 5) {
+    if (info.maxCandidates == null) return 'employer.campaigns.form.maxCandidatesRequired';
+    if (info.maxCandidates <= 0) return 'employer.campaigns.form.maxCandidatesInvalid';
+    if (!Number.isInteger(info.maxCandidates)) return 'employer.campaigns.form.integerRequired';
+    return null;
+  }
+
   if (step === 6) {
+    if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
+      return 'employer.campaigns.wizard.timeLimitRequired';
+    }
+    if (!Number.isInteger(info.timeLimitMinutes)) {
+      return 'employer.campaigns.form.integerRequired';
+    }
     const minYears = state.hardFilters?.minYearsExperience;
     if (minYears != null && (!Number.isInteger(minYears) || minYears < 0 || minYears > 60)) {
       return 'employer.campaigns.wizard.hardFilters.minYearsInvalid';
@@ -141,6 +139,13 @@ export function validateCampaignWizardStep(
     }
     if (rubric.some((item) => Number(item.maxScore) > 10)) {
       return 'employer.campaigns.wizard.rubric.maxScoreTooHigh';
+    }
+    // Ngưỡng Đạt/Không đạt của CHÍNH bảng điểm này ⇒ lỗi phải nổ ở bước có ô nhập nó.
+    if (info.passScorePct != null && (info.passScorePct < 0 || info.passScorePct > 100)) {
+      return 'employer.campaigns.form.passScoreInvalid';
+    }
+    if (info.passScorePct != null && !Number.isInteger(info.passScorePct)) {
+      return 'employer.campaigns.form.integerRequired';
     }
     return null;
   }

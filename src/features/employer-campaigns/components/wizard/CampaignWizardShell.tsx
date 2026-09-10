@@ -90,7 +90,7 @@ export function CampaignWizardShell({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-10 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:px-10 lg:py-8">
         <nav
           aria-label={t('employer.campaigns.wizard.stepperLabel')}
           className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[220px] lg:self-start"
@@ -156,7 +156,7 @@ export function CampaignWizardShell({
             })}
           </ol>
 
-          <div className="flex min-h-0 flex-1 flex-col animate-in fade-in duration-300">{children}</div>
+          <div className="flex flex-col animate-in fade-in duration-300">{children}</div>
         </div>
       </div>
     </div>

@@ -14,9 +14,14 @@ import {
 } from '../../services/campaignCriteria.service';
 import { CampaignCriteriaManualList } from './CampaignCriteriaManualList';
 import { CampaignWizardNav } from './CampaignWizardNav';
+import { WizardNumberField } from './WizardNumberField';
+import { WizardSection } from './WizardSection';
 import { FieldError } from './FieldError';
 
 interface Props {
+  /** Ngưỡng Đạt/Không đạt của CHÍNH bảng điểm này — nên nó sống ở đây, không ở bước 1. */
+  passScorePct: number | null;
+  onPassScoreChange: (value: number | null) => void;
   rubric: RubricCriterion[];
   customized: boolean;
   onCustomize: () => void;
@@ -48,6 +53,8 @@ export function shouldShowRubricSummary(rubric: RubricCriterion[]): boolean {
 }
 
 export function CampaignCriteriaStepV2({
+  passScorePct,
+  onPassScoreChange,
   rubric,
   customized,
   onCustomize,
@@ -163,6 +170,22 @@ export function CampaignCriteriaStepV2({
           disabled={!customized || Boolean(isSaving)}
           onChangeRubric={onChangeRubric}
         />
+        <WizardSection divided title={t('employer.campaigns.form.group.outcome')} hint={t('employer.campaigns.form.group.outcomeHint')}>
+          <div className="grid gap-4 @md:grid-cols-2">
+            <WizardNumberField
+              id="campaign-pass-score"
+              label={t('employer.campaigns.form.passScorePct')}
+              tag={t('employer.campaigns.form.optional')}
+              suffix={t('employer.campaigns.form.percentSuffix')}
+              help={t('employer.campaigns.form.passScoreHelp')}
+              value={passScorePct}
+              min={0}
+              max={100}
+              placeholder={t('employer.campaigns.form.passScorePlaceholder')}
+              onChange={onPassScoreChange}
+            />
+          </div>
+        </WizardSection>
       </div>
     </SectionPanel>
   );
