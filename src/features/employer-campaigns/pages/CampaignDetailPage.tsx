@@ -11,7 +11,9 @@ import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
 import { InvitationHistoryPanel } from '../components/email-invitations/InvitationHistoryPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { getDeployWarnings, mapDeployError } from '../hooks/useCampaignWizard';
 import { campaignManagementService } from '../services/campaignManagement.service';
+import { getInvitationApiErrorMessage } from '../utils/invitationApiError';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 
 export function CampaignDetailPage() {
@@ -40,10 +42,11 @@ export function CampaignDetailPage() {
         toast.success(t('employer.campaigns.detail.publishSuccess'));
         reload();
       }
-    } catch {
+    } catch (error) {
       setPublished(false);
-      setWarnings([]);
-      toast.error(t('employer.campaigns.wizard.publishFailed'));
+      const warnings = getDeployWarnings(error, t);
+      setWarnings(warnings);
+      toast.error(mapDeployError(error, t));
       throw new Error('PUBLISH_FAILED');
     }
   };
@@ -89,7 +92,7 @@ export function CampaignDetailPage() {
     } catch (error) {
       const status = campaignManagementService.getErrorStatus(error);
       toast.error(status === 409
-        ? t('employer.campaigns.detail.statusConflict')
+        ? getInvitationApiErrorMessage(error, t('employer.campaigns.detail.startNowFailed'))
         : t('employer.campaigns.detail.startNowFailed'));
     } finally {
       setStartingNow(false);

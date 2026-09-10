@@ -198,6 +198,18 @@ function unwrapInviteByEmailPayload(data: unknown): CreateCampaignInvitationsRes
   return { created, failed };
 }
 
+function readPublishWarnings(data: unknown): string[] {
+  const root = data && typeof data === 'object' && !Array.isArray(data)
+    ? data as Record<string, unknown>
+    : null;
+  const nested = root?.data && typeof root.data === 'object' && !Array.isArray(root.data)
+    ? root.data as Record<string, unknown>
+    : root;
+  return Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
+}
+
 export const campaignManagementService = {
   /**
    * Live: GET /api/v1/campaign → CampaignResponse[] (Bearer employer token via apiClient).
@@ -480,7 +492,7 @@ export const campaignManagementService = {
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
-    return { campaign: mapped, warnings: [] };
+    return { campaign: mapped, warnings: readPublishWarnings(response.data) };
   },
 
   /** Publish first, then send the draft invitation list. Never sends before publish succeeds. */

@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 import {
   buildInvitationRetryRequest,
+  getDeployWarnings,
+  mapDeployError,
   mapSubmitError,
   resolveCampaignErrorStep,
 } from './useCampaignWizard';
@@ -56,5 +58,54 @@ describe('campaign wizard API error step mapping', () => {
       message: 'questions=20; deep=3; need=80; have=20; max=5; depth=0',
       step: 3,
     });
+  });
+
+  it('returns every question-bank warning from the publish response body', () => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 400,
+      statusText: 'Bad Request',
+      headers: {},
+      config: {} as never,
+      data: { data: { code: 'QUESTION_BANK_INVALID', warnings: ['Need a question', 'Need a rubric'] } },
+    };
+    const t = (key: string) => key === 'employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'
+      ? 'Question bank invalid'
+      : key;
+
+    expect(getDeployWarnings(error, t)).toEqual(['Question bank invalid', 'Need a question', 'Need a rubric']);
+    expect(mapDeployError(error, t)).toBe('Question bank invalid Need a question Need a rubric');
+  });
+
+  it('renders all four adaptive budget values for a publish rejection', () => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 400,
+      statusText: 'Bad Request',
+      headers: {},
+      config: {} as never,
+      data: { data: { code: 'ADAPTIVE_BUDGET_TOO_SMALL', need: 80, have: 20, questions: 20, deep: 3 } },
+    };
+    const message = mapDeployError(error, (key) => key === 'employer.campaigns.wizard.adaptiveBudgetTooSmall'
+      ? 'questions={questions}; deep={deep}; need={need}; have={have}; max={maxQuestions}; depth={maxDepth}'
+      : key);
+
+    expect(message).toContain('questions=20');
+    expect(message).toContain('deep=3');
+    expect(message).toContain('need=80');
+    expect(message).toContain('have=20');
+  });
+
+  it('preserves a plain server reason for publish conflicts', () => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 409,
+      statusText: 'Conflict',
+      headers: {},
+      config: {} as never,
+      data: 'Campaign has interview slots configured.',
+    };
+
+    expect(mapDeployError(error, (key) => key)).toBe('Campaign has interview slots configured.');
   });
 });
