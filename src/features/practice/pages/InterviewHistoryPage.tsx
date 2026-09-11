@@ -17,6 +17,7 @@ import {
   computePracticeHistoryPageStats,
   filterAndSortPracticeHistory,
 } from '../utils/practiceSessionHistoryActions';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function InterviewHistoryPage() {
   const navigate = useNavigate();
@@ -90,17 +91,15 @@ export function InterviewHistoryPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-5">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              {t('practice.history.title')}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t('practice.history.subtitle')}</p>
-          </div>
-          <Button type="button" render={<Link to="/practice" />}>
-            {t('practice.history.newPractice')}
-          </Button>
-        </header>
+        <PageHeader
+          title={t('practice.history.title')}
+          description={t('practice.history.subtitle')}
+          actions={
+            <Button type="button" render={<Link to="/practice" />}>
+              {t('practice.history.newPractice')}
+            </Button>
+          }
+        />
 
         <StatGrid columns={4}>
           <StatCard size="sm" label={t('practice.history.stats.pageCount')} value={String(stats.pageCount)} />

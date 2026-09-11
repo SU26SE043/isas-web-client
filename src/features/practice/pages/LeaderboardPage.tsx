@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { LeaderboardTable } from '../components/progress/LeaderboardTable';
 import { learningService } from '../services/learning.service';
 import type { LeaderboardEntry } from '../types/learning.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const LeaderboardPage: React.FC = () => {
   const { t } = useLanguage();
@@ -35,17 +35,11 @@ export const LeaderboardPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <nav className="text-sm text-muted-foreground">
-            <Link to="/candidate/progress" className="hover:text-foreground hover:underline">
-              {t('practice.progress.title')}
-            </Link>
-            <span className="mx-2">{'>'}</span>
-            <span>{t('practice.leaderboard.title')}</span>
-          </nav>
-          <h1 className="heading-primary text-3xl text-foreground">{t('practice.leaderboard.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('practice.leaderboard.subtitle')}</p>
-        </header>
+        <PageHeader
+          backLink={{ to: '/candidate/progress', label: t('practice.progress.title') }}
+          title={t('practice.leaderboard.title')}
+          description={t('practice.leaderboard.subtitle')}
+        />
         <LeaderboardTable entries={entries} />
       </div>
     </div>

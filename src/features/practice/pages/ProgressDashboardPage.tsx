@@ -8,6 +8,7 @@ import { RoadmapCompletionDonut } from '../components/progress/RoadmapCompletion
 import { SkillCompletionStackedBar } from '../components/progress/SkillCompletionStackedBar';
 import { progressService } from '../services/progress.service';
 import type { ProgressMinimalDashboard } from '../types/progress.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const ProgressDashboardPage: React.FC = () => {
   const { t } = useLanguage();
@@ -51,7 +52,7 @@ export const ProgressDashboardPage: React.FC = () => {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
         <div className="app-page space-y-8">
-          <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{t('practice.progress.title')}</h1>
+          <PageHeader title={t('practice.progress.title')} />
           <Alert variant="error" className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 size-5 shrink-0 text-error" aria-hidden />
             <div className="space-y-3">
@@ -72,7 +73,7 @@ export const ProgressDashboardPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-16">
-        <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{t('practice.progress.title')}</h1>
+        <PageHeader title={t('practice.progress.title')} />
 
         <RoadmapCompletionDonut data={data.roadmapCompletion} />
         <SkillCompletionStackedBar skills={data.skillBreakdown} />

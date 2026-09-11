@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, PackagePlus } from 'lucide-react';
+import { PackagePlus } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { PaymentQuerySection } from '../components/PaymentQuerySection';
 import { TokenTransactionsTable } from '../components/TokenTransactionsTable';
@@ -11,6 +11,7 @@ import { useCreditTransactions } from '../hooks/useCreditTransactions';
 import { useCancelPaymentOrder, useMyPaymentOrders } from '../hooks/useMyPaymentOrders';
 import { PaymentOrdersTable } from '../components/PaymentOrdersTable';
 import { TokenPackageCatalog } from '../components/TokenPackageCatalog';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const CreditsWalletPage: React.FC = () => {
   const { t } = useLanguage();
@@ -34,21 +35,16 @@ export const CreditsWalletPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-surface-overlay frame-satin-soft">
-              <CreditCard className="size-5" aria-hidden />
-            </div>
-            <h1 className="heading-primary text-3xl text-foreground">{t('payment.wallet.title')}</h1>
-            <p className="body-text mt-2 max-w-2xl text-muted-foreground">
-              {t('payment.wallet.subtitle')}
-            </p>
-          </div>
-          <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => setActiveTab('packages')}>
-            <PackagePlus className="size-4" aria-hidden />
-            {t('payment.wallet.buyTokens')}
-          </button>
-        </header>
+        <PageHeader
+          title={t('payment.wallet.title')}
+          description={t('payment.wallet.subtitle')}
+          actions={
+            <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => setActiveTab('packages')}>
+              <PackagePlus className="size-4" aria-hidden />
+              {t('payment.wallet.buyTokens')}
+            </button>
+          }
+        />
 
         <nav className="flex gap-1 overflow-x-auto border-b border-satin" aria-label={t('payment.wallet.title')}>
           {tabs.map(([id, label]) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={activeTab === id ? 'shrink-0 border-b-2 border-foreground px-4 py-3 text-sm font-medium text-foreground' : 'shrink-0 border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground'}>{label}</button>)}

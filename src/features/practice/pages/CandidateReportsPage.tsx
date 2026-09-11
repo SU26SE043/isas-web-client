@@ -7,6 +7,7 @@ import { ReportCategoryAccordion } from '../components/reports/ReportCategoryAcc
 import { ReportListItem } from '../components/reports/ReportListItem';
 import { fetchCandidateReportsHub } from '../services/candidateReports.service';
 import type { CandidateReportsHub } from '../types/candidateReports.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 const EMPTY_HUB: CandidateReportsHub = { interview: [], learning: [], cv: [] };
 
@@ -46,10 +47,7 @@ export function CandidateReportsPage() {
 
   return (
     <div className="app-page min-h-full space-y-8">
-      <header className="space-y-2">
-        <h1 className="heading-primary text-3xl text-foreground">{t('practice.reports.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('practice.reports.subtitle')}</p>
-      </header>
+      <PageHeader title={t('practice.reports.title')} description={t('practice.reports.subtitle')} />
 
       <div className="space-y-3">
         <CvAnalysisReportsSection />

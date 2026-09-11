@@ -8,6 +8,7 @@ import { isPlaywrightRuntime } from '@/shared/mock/config';
 import { MyCampaignCard } from '../components/MyCampaignCard';
 import { useMyCampaigns } from '../hooks/useMyCampaigns';
 import { LegacyCandidateCampaignsPage } from './LegacyCandidateCampaignsPage';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 function LiveCandidateCampaignsPage() {
   const { t } = useLanguage();
@@ -43,11 +44,7 @@ function LiveCandidateCampaignsPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <p className="text-label text-muted-foreground">{t('campaigns.my.eyebrow')}</p>
-          <h1 className="heading-primary text-3xl text-foreground">{t('campaigns.my.title')}</h1>
-          <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('campaigns.my.subtitle')}</p>
-        </header>
+        <PageHeader eyebrow={t('campaigns.my.eyebrow')} title={t('campaigns.my.title')} description={t('campaigns.my.subtitle')} />
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">

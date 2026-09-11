@@ -15,6 +15,7 @@ import {
   invalidateLearningRoadmapDetail,
   invalidateLearningRoadmaps,
 } from '../hooks/useLearningRoadmaps';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 function sessionReportPath(roadmapId: string, lessonId: string, sessionId: string) {
   return `/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/report?sessionId=${encodeURIComponent(sessionId)}`;
@@ -85,12 +86,7 @@ export function LearningQuestionReportPage() {
 
   return (
     <div className="app-page min-h-full space-y-6">
-      <header className="space-y-2">
-        <h1 className="heading-primary text-3xl text-foreground">
-          {t('practice.learningPath.questionReportTitle')}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t('practice.learningPath.questionReportSubtitle')}</p>
-      </header>
+      <PageHeader title={t('practice.learningPath.questionReportTitle')} description={t('practice.learningPath.questionReportSubtitle')} />
 
       <QuestionFeedbackReport
         feedback={entry.feedback}

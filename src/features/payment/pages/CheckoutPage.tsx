@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { paymentService } from '../services/payment.service';
 import type { PaymentOrder } from '../types/payment.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const CheckoutPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -58,10 +59,7 @@ export const CheckoutPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <h1 className="heading-primary text-3xl text-foreground">{t('payment.checkout.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('payment.checkout.subtitle')}</p>
-        </header>
+        <PageHeader title={t('payment.checkout.title')} description={t('payment.checkout.subtitle')} />
 
         {error ? (
           <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">

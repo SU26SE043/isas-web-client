@@ -9,6 +9,7 @@ import { LearningRoadmapCardView } from '../components/learning-path/LearningRoa
 import { useLearningRoadmaps } from '../hooks/useLearningRoadmaps';
 import { useHasScoredSession } from '../hooks/useHasScoredSession';
 import type { LearningDashboardQuery } from '../types/learningPath.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function LearningDashboardPage() {
   const { t } = useLanguage();
@@ -37,19 +38,17 @@ export function LearningDashboardPage() {
         hẳn một dòng "không tạo lộ trình tại đây — dùng menu Lộ trình" — một dòng chữ để bù cho việc
         điều hướng bắt người dùng đoán. Gộp lại thì dòng đó không còn lý do tồn tại.
       */}
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="heading-primary text-3xl text-foreground">{t('practice.learningPath.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('practice.learningPath.subtitle')}</p>
-        </div>
-        <Link
-          to="/candidate/roadmap"
-          className="btn-primary inline-flex shrink-0 items-center gap-2"
-        >
-          <Plus className="size-4" aria-hidden />
-          {t('practice.learningPath.createRoadmap')}
-        </Link>
-      </header>
+      <PageHeader
+        className="mb-6"
+        title={t('practice.learningPath.title')}
+        description={t('practice.learningPath.subtitle')}
+        actions={
+          <Link to="/candidate/roadmap" className="btn-primary inline-flex shrink-0 items-center gap-2">
+            <Plus className="size-4" aria-hidden />
+            {t('practice.learningPath.createRoadmap')}
+          </Link>
+        }
+      />
 
       <LearningDashboardToolbar query={query} onChange={setQuery} />
       {fewerLessons ? <p className="mt-4 rounded-lg border border-info/40 bg-info/10 px-4 py-3 text-sm text-info" role="status">{t('practice.learningPath.fewerLessonsNotice')}</p> : null}

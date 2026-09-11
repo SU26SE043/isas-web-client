@@ -8,6 +8,7 @@ import { SkillRadarChart } from '../components/SkillRadarChart';
 import { RoadmapProgressChart } from '../components/RoadmapProgressChart';
 import { LevelEvaluationRow, ListBlock } from '../components/RoadmapReportBlocks';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function LearningRoadmapReportPage() {
   const { roadmapId = '' } = useParams();
@@ -75,15 +76,7 @@ export function LearningRoadmapReportPage() {
 
   return (
     <div className="app-page min-h-full space-y-6">
-      <header className="space-y-2">
-        <p className="text-caption text-muted-foreground">{kindLabel}</p>
-        <h1 className="heading-primary text-3xl text-foreground">
-          {t('practice.learningPath.roadmapReportTitle')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('practice.learningPath.roadmapReportSubtitle')}
-        </p>
-      </header>
+      <PageHeader eyebrow={kindLabel} title={t('practice.learningPath.roadmapReportTitle')} description={t('practice.learningPath.roadmapReportSubtitle')} />
 
       {isInterim ? (
         <section

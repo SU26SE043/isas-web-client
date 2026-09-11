@@ -12,6 +12,7 @@ import { ResetRubricDialog } from '../components/ResetRubricDialog';
 import { UnsavedChangesDialog } from '../components/UnsavedChangesDialog';
 import { useCandidateRubric } from '../hooks/useCandidateRubric';
 import type { RubricValidationCode } from '../types/rubric.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 function validationMessage(t: (key: string) => string, code: RubricValidationCode | null): string | null {
   if (!code) return null;
@@ -29,10 +30,7 @@ export function CandidateRubricsPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-page">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <h1 className="heading-primary text-3xl text-foreground">{t('rubrics.pageTitle')}</h1>
-          <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('rubrics.pageDescription')}</p>
-        </header>
+        <PageHeader title={t('rubrics.pageTitle')} description={t('rubrics.pageDescription')} />
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <RubricCategoryTabs

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { AchievementGrid } from '../components/progress/AchievementGrid';
 import { learningService } from '../services/learning.service';
 import type { Achievement } from '../types/learning.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const AchievementsPage: React.FC = () => {
   const { t } = useLanguage();
@@ -35,17 +35,11 @@ export const AchievementsPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <nav className="text-sm text-muted-foreground">
-            <Link to="/candidate/progress" className="hover:text-foreground hover:underline">
-              {t('practice.progress.title')}
-            </Link>
-            <span className="mx-2">{'>'}</span>
-            <span>{t('practice.achievements.title')}</span>
-          </nav>
-          <h1 className="heading-primary text-3xl text-foreground">{t('practice.achievements.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('practice.achievements.subtitle')}</p>
-        </header>
+        <PageHeader
+          backLink={{ to: '/candidate/progress', label: t('practice.progress.title') }}
+          title={t('practice.achievements.title')}
+          description={t('practice.achievements.subtitle')}
+        />
         <AchievementGrid achievements={achievements} />
       </div>
     </div>

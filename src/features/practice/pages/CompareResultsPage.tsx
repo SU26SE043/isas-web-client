@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { CompareResultsView } from '../components/compare/CompareResultsView';
 import { resultService } from '../services/result.service';
 import type { CompareResultsResponse } from '../types/result.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const CompareResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -43,17 +44,11 @@ export const CompareResultsPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="space-y-2">
-          <nav className="text-sm text-muted-foreground">
-            <Link to="/candidate/practice/history" className="hover:text-foreground hover:underline">
-              {t('practice.history.title')}
-            </Link>
-            <span className="mx-2">{'>'}</span>
-            <span>{t('practice.compare.title')}</span>
-          </nav>
-          <h1 className="heading-primary text-3xl text-foreground">{t('practice.compare.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('practice.compare.subtitle')}</p>
-        </header>
+        <PageHeader
+          backLink={{ to: '/candidate/practice/history', label: t('practice.history.title') }}
+          title={t('practice.compare.title')}
+          description={t('practice.compare.subtitle')}
+        />
 
         {isLoading ? (
           <div className="flex justify-center py-16">

@@ -6,6 +6,7 @@ import { useLanguage } from '@/shared/languages';
 import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { useInterviewHistory } from '@/features/practice/hooks/useInterviewHistory';
 import { computeInterviewActivityStats } from '../utils/interviewHeatmapUtils';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const CandidateDashboardPage: React.FC = () => {
   const { t } = useLanguage();
@@ -25,10 +26,7 @@ export const CandidateDashboardPage: React.FC = () => {
 
   return (
     <div className="app-page">
-      <div className="mb-8">
-        <h1 className="heading-primary text-3xl">{t('profile.dashboard.title')}</h1>
-        <p className="body-text mt-2 max-w-2xl">{t('profile.dashboard.subtitle')}</p>
-      </div>
+      <PageHeader className="mb-8" title={t('profile.dashboard.title')} description={t('profile.dashboard.subtitle')} />
 
       <Link
         to="/practice"
