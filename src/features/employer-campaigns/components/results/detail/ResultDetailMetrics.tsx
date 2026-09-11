@@ -1,4 +1,5 @@
 import { Clock3, Gauge, MessageSquare, Trophy } from 'lucide-react';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultItem, TranscriptQuestion } from '../../../types/campaign.api.types';
 import { hasResultOverride, formatResultScore } from '../../../utils/campaignResultsActions';
@@ -16,15 +17,10 @@ export function ResultDetailMetrics({ item, questions }: { item: CampaignResultI
     [Clock3, t('employer.campaigns.results.detail.totalDuration'), duration ?? '—', null],
   ] as const;
   return (
-    <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <StatGrid columns={4}>
       {values.map(([Icon, label, value, note]) => (
-        <div key={label} className="frame-satin rounded-xl bg-surface-raised p-4">
-          <Icon className="size-4 text-muted-foreground" aria-hidden />
-          <p className="mt-3 text-xs text-muted-foreground">{label}</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">{value}</p>
-          {note ? <small className="mt-1 block text-xs font-medium text-info">{note}</small> : null}
-        </div>
+        <StatCard key={label} size="sm" label={label} value={value} icon={<Icon aria-hidden />} hint={note ? <span className="font-medium text-info">{note}</span> : undefined} />
       ))}
-    </section>
+    </StatGrid>
   );
 }

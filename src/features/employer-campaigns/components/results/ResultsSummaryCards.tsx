@@ -1,3 +1,4 @@
+import { StatCard, StatGrid, StatGridSkeleton } from '@/components/patterns/StatCard';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultsResponse } from '../../types/campaign.api.types';
 import { getResultFlagCount } from '../../utils/campaignResultsActions';
@@ -21,20 +22,11 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
       // unscored sessions are intentionally shown in their own section.
       value: String(data.results.length),
     },
-    {
-      label: t('employer.campaigns.results.summary.pass'),
-      value: String(passCount),
-    },
-    {
-      label: t('employer.campaigns.results.summary.fail'),
-      value: String(failCount),
-    },
+    { label: t('employer.campaigns.results.summary.pass'), value: String(passCount) },
+    { label: t('employer.campaigns.results.summary.fail'), value: String(failCount) },
     {
       label: t('employer.campaigns.results.summary.passScore'),
-      value:
-        passScore != null
-          ? `${passScore}%`
-          : t('employer.campaigns.results.summary.passScoreUnset'),
+      value: passScore != null ? `${passScore}%` : t('employer.campaigns.results.summary.passScoreUnset'),
     },
     {
       label: t('employer.campaigns.results.summary.flagged'),
@@ -44,31 +36,14 @@ export function ResultsSummaryCards({ data, fallbackPassScorePct }: ResultsSumma
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <StatGrid columns={5}>
       {cards.map((card) => (
-        <div
-          key={card.label}
-          className="rounded-xl border border-satin bg-surface-overlay px-3 py-3"
-        >
-          <p className="text-xs text-muted-foreground" title={card.title}>
-            {card.label}
-          </p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">{card.value}</p>
-        </div>
+        <StatCard key={card.label} size="sm" label={card.label} value={card.value} title={card.title} />
       ))}
-    </div>
+    </StatGrid>
   );
 }
 
 export function ResultsSummarySkeleton() {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div
-          key={index}
-          className="h-[72px] animate-pulse rounded-xl border border-satin bg-surface-overlay"
-        />
-      ))}
-    </div>
-  );
+  return <StatGridSkeleton columns={5} size="sm" />;
 }

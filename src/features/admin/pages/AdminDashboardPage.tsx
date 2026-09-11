@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  Activity,
-  Ban,
-  Building2,
-  CalendarDays,
-  RefreshCw,
-  UserPlus,
-  Users,
-} from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +9,7 @@ import { useLanguage } from '@/shared/languages';
 import { AdminAnalyticsChart } from '../components/analytics/AdminAnalyticsChart';
 import { AdminRevenueMetrics } from '../components/analytics/AdminRevenueMetrics';
 import { AdminRoleDistribution } from '../components/analytics/AdminRoleDistribution';
-import { AdminMetricCard } from '../components/AdminMetricCard';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { AdminStatusBadge } from '../components/AdminStatusBadge';
 import { useAdminAnalytics } from '../hooks/useAdminAnalytics';
@@ -43,12 +35,12 @@ export function AdminDashboardPage() {
     new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
 
   const metrics = analytics.data ? [
-    { key: 'totalUsers', label: 'admin.analytics.totalUsers', value: analytics.data.totals.totalUsers, hint: 'admin.analytics.totalUsersHint', status: 'healthy' as const, icon: Users },
-    { key: 'newUsers', label: 'admin.analytics.newUsers', value: analytics.data.totals.newUsers, hint: 'admin.analytics.windowHint', status: 'healthy' as const, icon: UserPlus },
-    { key: 'bannedUsers', label: 'admin.analytics.bannedUsers', value: analytics.data.totals.bannedUsers, hint: 'admin.analytics.bannedUsersHint', status: analytics.data.totals.bannedUsers > 0 ? 'warning' as const : 'healthy' as const, icon: Ban },
-    { key: 'organizations', label: 'admin.analytics.organizations', value: analytics.data.totals.totalOrganizations, hint: 'admin.analytics.organizationsHint', status: 'healthy' as const, icon: Building2 },
-    { key: 'active7', label: 'admin.analytics.active7Days', value: analytics.data.activeUsers.last7Days, hint: 'admin.analytics.activeHint', status: 'healthy' as const, icon: Activity },
-    { key: 'active30', label: 'admin.analytics.active30Days', value: analytics.data.activeUsers.last30Days, hint: 'admin.analytics.activeHint', status: 'healthy' as const, icon: CalendarDays },
+    { key: 'totalUsers', label: 'admin.analytics.totalUsers', value: analytics.data.totals.totalUsers, hint: 'admin.analytics.totalUsersHint', status: 'healthy' as const },
+    { key: 'newUsers', label: 'admin.analytics.newUsers', value: analytics.data.totals.newUsers, hint: 'admin.analytics.windowHint', status: 'healthy' as const },
+    { key: 'bannedUsers', label: 'admin.analytics.bannedUsers', value: analytics.data.totals.bannedUsers, hint: 'admin.analytics.bannedUsersHint', status: analytics.data.totals.bannedUsers > 0 ? 'warning' as const : 'healthy' as const },
+    { key: 'organizations', label: 'admin.analytics.organizations', value: analytics.data.totals.totalOrganizations, hint: 'admin.analytics.organizationsHint', status: 'healthy' as const },
+    { key: 'active7', label: 'admin.analytics.active7Days', value: analytics.data.activeUsers.last7Days, hint: 'admin.analytics.activeHint', status: 'healthy' as const },
+    { key: 'active30', label: 'admin.analytics.active30Days', value: analytics.data.activeUsers.last30Days, hint: 'admin.analytics.activeHint', status: 'healthy' as const },
   ] : [];
 
   return (
@@ -108,21 +100,17 @@ export function AdminDashboardPage() {
       ) : null}
       {analytics.data ? (
         <>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {metrics.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <AdminMetricCard
-                  key={metric.key}
-                  label={t(metric.label)}
-                  value={metric.value}
-                  hint={t(metric.hint)}
-                  status={metric.status}
-                  icon={<Icon className="h-5 w-5" aria-hidden />}
-                />
-              );
-            })}
-          </section>
+          <StatGrid columns={3}>
+            {metrics.map((metric) => (
+              <StatCard
+                key={metric.key}
+                label={t(metric.label)}
+                value={metric.value}
+                hint={t(metric.hint)}
+                aside={<AdminStatusBadge status={metric.status} />}
+              />
+            ))}
+          </StatGrid>
           <section className="grid gap-6 lg:grid-cols-3">
             <AdminAnalyticsChart buckets={analytics.data.buckets} />
             <AdminRoleDistribution items={analytics.data.totals.byRole} />

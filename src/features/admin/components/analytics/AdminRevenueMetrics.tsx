@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard, StatGrid, StatGridSkeleton } from '@/components/patterns/StatCard';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { CHART_CATEGORICAL, CHART_GRID, CHART_TOOLTIP_STYLE } from '@/shared/charts/chartColors';
@@ -40,10 +41,10 @@ export function AdminRevenueMetrics({ groupBy }: { groupBy: AdminAnalyticsGranul
         <div><h2 id="admin-finance-title" className="text-xl font-semibold text-foreground">{t('admin.finance.title')}</h2><p className="text-sm text-muted-foreground">{t('admin.finance.description')}</p></div>
         <div className="text-right text-xs text-muted-foreground"><span>{t('admin.finance.flowNote')}</span>{revenue.data ? <p>{t('admin.finance.range').replace('{from}', new Date(revenue.data.from).toLocaleDateString(locale)).replace('{to}', new Date(revenue.data.to).toLocaleDateString(locale))}</p> : null}</div>
       </div>
-      {revenue.isLoading ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div> : null}
+      {revenue.isLoading ? <StatGridSkeleton columns={4} /> : null}
       {revenue.isError ? <div className="space-y-3"><Alert variant="error"><AlertDescription>{t(errorKey)}</AlertDescription></Alert><Button variant="outline" onClick={() => void revenue.refetch()}>{t('admin.finance.retry')}</Button></div> : null}
       {revenue.data ? <>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(([label, value]) => <Card key={label} className="frame-satin bg-surface-raised"><CardContent className="p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-xl font-semibold text-foreground">{value}</p></CardContent></Card>)}</div>
+        <StatGrid columns={4}>{metrics.map(([label, value]) => <StatCard key={label} label={label} value={value} />)}</StatGrid>
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="frame-satin bg-surface-raised lg:col-span-2"><CardHeader><CardTitle>{t('admin.finance.chartTitle')}</CardTitle></CardHeader><CardContent><div className="h-72 w-full"><ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{ top: 8, right: 12, left: 12, bottom: 8 }}><CartesianGrid stroke={CHART_GRID.stroke} vertical={false} /><XAxis dataKey="label" tick={{ fill: CHART_GRID.axis, fontSize: 11 }} /><YAxis domain={[0, yAxisMax]} allowDecimals={false} tick={{ fill: CHART_GRID.axis, fontSize: 11 }} tickFormatter={(value) => compactAmount(Number(value))} /><Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value: unknown) => [money(typeof value === 'number' ? value : Number(value ?? 0), locale), t('admin.finance.netRevenue')]} /><Bar dataKey="amountVnd" name={t('admin.finance.netRevenue')} fill={CHART_CATEGORICAL[0]} radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></CardContent></Card>
           <Card className="frame-satin bg-surface-raised"><CardHeader><CardTitle>{t('admin.finance.snapshotTitle')}</CardTitle></CardHeader><CardContent>{snapshot.isLoading ? <Skeleton className="h-40" /> : snapshot.data ? <div className="space-y-4 text-sm"><div><p className="text-muted-foreground">{t('admin.finance.mrr')}</p><p className="text-xl font-semibold">{money(snapshot.data.mrrVnd, locale)}</p></div><div><p className="text-muted-foreground">{t('admin.finance.receivables')}</p><p className="text-xl font-semibold">{money(snapshot.data.outstandingReceivables.totalVnd, locale)}</p></div><div><p className="text-muted-foreground">{t('admin.finance.activeSubscriptions')}</p><p className="text-xl font-semibold">{snapshot.data.activeSubscriptionCount}</p></div></div> : <p className="text-sm text-muted-foreground">{t('admin.finance.snapshotUnavailable')}</p>}</CardContent></Card>

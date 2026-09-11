@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Building2, FileCheck2, Users } from 'lucide-react';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,7 +8,6 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { useLanguage } from '@/shared/languages';
 import { EmployerActivityList } from '../components/EmployerActivityList';
-import { EmployerMetricCard } from '../components/EmployerMetricCard';
 import { EmployerStatusBadge } from '../components/EmployerStatusBadge';
 import { useEmployerWorkspace } from '../hooks/useEmployerWorkspace';
 
@@ -50,32 +50,32 @@ export function EmployerDashboardPage() {
           ) : null}
         </header>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <EmployerMetricCard
+        <StatGrid columns={4}>
+          <StatCard
             label={t('employer.dashboard.profileCompleteness')}
             value={`${workspace.profile.completeness}%`}
             hint={workspace.profile.name}
-            icon={<Building2 className="size-5" aria-hidden />}
+            icon={<Building2 aria-hidden />}
           />
-          <EmployerMetricCard
+          <StatCard
             label={t('employer.dashboard.verification')}
             value={t(`employer.status.${workspace.verification.status}`)}
             hint={workspace.profile.emailDomain}
-            icon={<BadgeCheck className="size-5" aria-hidden />}
+            icon={<BadgeCheck aria-hidden />}
           />
-          <EmployerMetricCard
+          <StatCard
             label={t('employer.dashboard.activeCampaigns')}
             value={workspace.activeCampaigns}
             hint={`${workspace.draftCampaigns} ${t('employer.dashboard.drafts')}`}
-            icon={<FileCheck2 className="size-5" aria-hidden />}
+            icon={<FileCheck2 aria-hidden />}
           />
-          <EmployerMetricCard
+          <StatCard
             label={t('employer.dashboard.capacity')}
             value={workspace.candidateCapacity}
             hint={`${workspace.roleSeats} ${t('employer.dashboard.seats')}`}
-            icon={<Users className="size-5" aria-hidden />}
+            icon={<Users aria-hidden />}
           />
-        </div>
+        </StatGrid>
 
         <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
           <Card className="border border-subtle bg-surface-raised">
