@@ -27,7 +27,7 @@ export function ResultDetailHeader({ campaignName, item, total, questions, previ
       <div className="min-w-0 space-y-2">
         <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{campaignName}</p>
         <div>
-          <h1 className="heading-primary text-xl [overflow-wrap:anywhere] sm:text-2xl">{candidateDisplayName(item, t)}</h1>
+          <h1 className="heading-primary text-lg! [overflow-wrap:anywhere] sm:text-2xl!">{candidateDisplayName(item, t)}</h1>
           {email ? <p className="text-sm text-muted-foreground">{email}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
