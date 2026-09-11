@@ -55,7 +55,7 @@ export function CampaignInvitePage() {
           <div className="flex flex-wrap items-center gap-2">
             <CampaignManagementStatusBadge status={campaign.status} />
           </div>
-          <h1 className="heading-primary text-3xl text-foreground">
+          <h1 className="heading-primary text-2xl text-foreground sm:text-3xl">
             {t('employer.campaigns.inviteFlow.title')}
           </h1>
           <p className="text-sm text-muted-foreground">

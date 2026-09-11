@@ -11,12 +11,17 @@ import { RubricLevelsTable } from '../components/rubrics/RubricLevelsTable';
 import { useAdminRubrics } from '../hooks/useAdminRubrics';
 import type { RubricSet } from '../types/adminApi.types';
 
-const categories = ['Frontend', 'Backend', 'Business Analyst'];
+/** Giá trị gửi lên API là enum JobCategory của backend (FE/BE/BA) — gửi nhãn hiển thị ("Frontend") thì mọi lượt tải trang 400. */
+const categories = [
+  { value: 'FE', label: 'Frontend' },
+  { value: 'BE', label: 'Backend' },
+  { value: 'BA', label: 'Business Analyst' },
+] as const;
 const emptyRubric = (category: string, language: 'vi' | 'en'): RubricSet => ({ category, language, version: 0, criteria: [] });
 
 export function AdminRubricsPage() {
   const { t } = useLanguage();
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState<string>(categories[0].value);
   const [language, setLanguage] = useState<'vi' | 'en'>('vi');
   const [draft, setDraft] = useState<RubricSet | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -28,7 +33,7 @@ export function AdminRubricsPage() {
   const forbidden = getApiStatusCode(query.detail.error) === 403;
   const preview = () => { const criterion = rubric.criteria[0]; if (criterion && answer.trim()) query.preview.mutate({ criterionKey: criterion.key, answer }); };
   return <AdminPageShell title={t('admin.rubrics.title')} description={t('admin.rubrics.description')} actions={<><Button type="button" variant="outline" loading={query.suggest.isPending} onClick={() => query.suggest.mutate(seniority || undefined, { onSuccess: (value) => setDraft(value) })}>{t('admin.rubrics.suggest')}</Button><Button type="button" loading={query.update.isPending} disabled={!rubric.criteria.length} onClick={() => setConfirmOpen(true)}>{t('admin.rubrics.save')}</Button></>}>
-    <div className="grid gap-4 rounded-xl border border-satin bg-surface-raised p-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="rubric-category">{t('admin.rubrics.category')}</Label><select id="rubric-category" value={category} onChange={(event) => { setCategory(event.target.value); setDraft(null); }} className="h-9 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground"><option value="Frontend">Frontend</option><option value="Backend">Backend</option><option value="Business Analyst">Business Analyst</option></select></div><div className="space-y-2"><Label htmlFor="rubric-language">{t('admin.rubrics.language')}</Label><select id="rubric-language" value={language} onChange={(event) => { setLanguage(event.target.value as 'vi' | 'en'); setDraft(null); }} className="h-9 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div><div className="space-y-2"><Label htmlFor="rubric-seniority">{t('admin.rubrics.seniority')}</Label><Input id="rubric-seniority" value={seniority} onChange={(event) => setSeniority(event.target.value)} placeholder={t('admin.rubrics.seniorityPlaceholder')} /></div><p className="self-end text-sm text-muted-foreground">{t('admin.rubrics.suggestHint')}</p></div>
+    <div className="grid gap-4 rounded-xl border border-satin bg-surface-raised p-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="rubric-category">{t('admin.rubrics.category')}</Label><select id="rubric-category" value={category} onChange={(event) => { setCategory(event.target.value); setDraft(null); }} className="h-9 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground">{categories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div><div className="space-y-2"><Label htmlFor="rubric-language">{t('admin.rubrics.language')}</Label><select id="rubric-language" value={language} onChange={(event) => { setLanguage(event.target.value as 'vi' | 'en'); setDraft(null); }} className="h-9 w-full rounded-xl border border-satin bg-surface-overlay px-3 text-sm text-foreground"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div><div className="space-y-2"><Label htmlFor="rubric-seniority">{t('admin.rubrics.seniority')}</Label><Input id="rubric-seniority" value={seniority} onChange={(event) => setSeniority(event.target.value)} placeholder={t('admin.rubrics.seniorityPlaceholder')} /></div><p className="self-end text-sm text-muted-foreground">{t('admin.rubrics.suggestHint')}</p></div>
     {query.detail.isLoading ? <p aria-live="polite" className="rounded-xl border border-satin bg-surface-raised p-6 text-sm text-muted-foreground">{t('admin.rubrics.loading')}</p> : null}
     {query.detail.isError ? <div className="space-y-3"><Alert variant="error"><AlertDescription>{forbidden ? t('admin.rubrics.forbidden') : getApiErrorMessage(query.detail.error, t('admin.rubrics.error'))}</AlertDescription></Alert>{!forbidden ? <Button type="button" variant="outline" onClick={() => void query.detail.refetch()}>{t('admin.rubrics.retry')}</Button> : null}</div> : null}
     {query.suggest.isError ? <Alert variant="error"><AlertDescription>{t('admin.rubrics.suggestError')} {getApiErrorMessage(query.suggest.error)}</AlertDescription></Alert> : null}
