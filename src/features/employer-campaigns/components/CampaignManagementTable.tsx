@@ -64,17 +64,18 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                       <Eye className="size-3.5" aria-hidden />
                       {t('employer.campaigns.list.view')}{' '}
                     </Link>
+                    {/* Cùng cấp với "Xem": nút đen duy nhất trên trang là "Tạo chiến dịch" ở đầu trang. */}
                     <Link
-                        to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
-                        className={cn(
-                          buttonVariants({ size: 'sm' }),
-                          'bg-foreground text-background shadow-sm',
-                          'hover:bg-foreground/85',
-                        )}
-                      >
-                        <Send className="size-3.5" aria-hidden />
-                        {t('employer.campaigns.list.invite')}
-                      </Link>
+                      to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
+                      className={cn(
+                        buttonVariants({ variant: 'outline', size: 'sm' }),
+                        'border-foreground/30 bg-foreground/[0.06] text-foreground shadow-sm',
+                        'hover:border-foreground/50 hover:bg-foreground/10',
+                      )}
+                    >
+                      <Send className="size-3.5" aria-hidden />
+                      {t('employer.campaigns.list.invite')}
+                    </Link>
                   </div>
                 </TableCell>
               </TableRow>
@@ -117,7 +118,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               </Link>
               <Link
                 to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
-                className={cn(buttonVariants(), 'w-full')}
+                className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
               >
                 <Send className="size-4" aria-hidden />
                 {t('employer.campaigns.list.invite')}
