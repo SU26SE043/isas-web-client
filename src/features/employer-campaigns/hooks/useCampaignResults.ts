@@ -77,6 +77,8 @@ export function useOverrideCampaignResult(campaignId: string | undefined) {
     onSuccess: (_, variables) => {
       if (!campaignId) return;
       void queryClient.invalidateQueries({ queryKey: campaignResultKeys.list(campaignId) });
+      // Prefix `list(campaignId)` ở trên đã phủ key history (React Query khớp tiền tố) — dòng này là
+      // phòng thủ tường minh: nếu ai đổi key list sang `exact` thì lịch sử vẫn được tải lại.
       void queryClient.invalidateQueries({
         queryKey: campaignResultKeys.overrideHistory(campaignId, variables.sessionId),
       });
@@ -93,6 +95,8 @@ export function useAnswerAudio(
 ) {
   const [state, setState] = useState<AnswerAudioState>('idle');
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  // MIME thật của bản ghi (webm trên Chrome, m4a trên iPhone…) — để nút tải đặt đúng đuôi file.
+  const [mimeType, setMimeType] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
   useEffect(() => () => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -104,13 +108,14 @@ export function useAnswerAudio(
       const blob = await campaignManagementService.getCampaignResultAnswerAudio(campaignId, sessionId, answerId);
       const nextUrl = URL.createObjectURL(blob);
       urlRef.current = nextUrl;
+      setMimeType(blob.type || null);
       setObjectUrl(nextUrl);
       setState('ready');
     } catch {
       setState('error');
     }
   }, [answerId, campaignId, objectUrl, sessionId, state]);
-  return { state, objectUrl, load };
+  return { state, objectUrl, mimeType, load };
 }
 
 export function useExportCampaignResults(campaignId: string | undefined) {
