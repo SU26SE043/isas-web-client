@@ -49,12 +49,10 @@ export function CampaignContextHeader({
       <header className="frame-satin rounded-xl bg-surface-raised px-4 py-4 sm:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="heading-primary [overflow-wrap:anywhere] text-2xl text-foreground sm:text-3xl">
+            {/* Lĩnh vực chỉ in MỘT lần — ở dòng meta bên dưới (trước đây còn một phụ đề ngay dưới h1 nữa). */}
+            <h1 className="heading-primary wrap-anywhere text-2xl text-foreground sm:text-3xl">
               {campaign.title}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {campaign.domain}
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <CampaignManagementStatusBadge status={campaign.status} />
