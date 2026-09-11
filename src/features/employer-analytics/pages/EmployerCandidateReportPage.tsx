@@ -1,6 +1,7 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/patterns/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
 import { AnalyticsBars } from '../components/AnalyticsBars';
@@ -32,11 +33,11 @@ export function EmployerCandidateReportPage() {
         <Link to={`/employer/candidates/${candidate.id}?campaignId=${candidate.campaignId}`} className="text-sm text-muted-foreground hover:text-foreground">
           {t('employerAnalytics.report.back')}
         </Link>
-        <header className="space-y-2">
-          <p className="text-label text-muted-foreground">{t('employerAnalytics.report.eyebrow')}</p>
-          <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.report.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{getCandidateDisplay(candidate, blindHiringEnabled)} · {t(`employerAnalytics.recommendation.${report.recommendation}`)}</p>
-        </header>
+        <PageHeader
+          eyebrow={t('employerAnalytics.report.eyebrow')}
+          title={t('employerAnalytics.report.title')}
+          description={`${getCandidateDisplay(candidate, blindHiringEnabled)} · ${t(`employerAnalytics.recommendation.${report.recommendation}`)}`}
+        />
 
         <div className="grid gap-4 md:grid-cols-3">
           <Metric label={t('employerAnalytics.report.score')} value={visibleScore} />

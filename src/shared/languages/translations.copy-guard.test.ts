@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { translations } from './translations';
 
@@ -25,6 +28,33 @@ describe('copy guard — giá trị i18n không lộ jargon spec/tài liệu n�
     for (const [key, value] of Object.entries(dict)) {
       for (const [why, re] of FORBIDDEN) {
         if (re.test(value)) offenders.push(`${key} → ${why}: "${value}"`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+/** Eyebrow viết cứng trong TSX cũng từng là mã spec (`eyebrow="PAY-BK24"`, `eyebrow={config.screenId}`). */
+describe('copy guard — eyebrow trong TSX không phải mã màn hình', () => {
+  function walk(dir: string, out: string[] = []): string[] {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) walk(full, out);
+      else if (full.endsWith('.tsx') && !full.endsWith('.test.tsx')) out.push(full);
+    }
+    return out;
+  }
+  it('không có eyebrow="<MÃ-SPEC>" hay eyebrow={…screenId}', () => {
+    const root = resolve(process.cwd(), 'src');
+    const offenders: string[] = [];
+    for (const file of walk(root)) {
+      const src = readFileSync(file, 'utf8');
+      for (const m of src.matchAll(/eyebrow=(?:"([^"]*)"|\{([^}]*)\})/g)) {
+        const literal = m[1];
+        const expr = m[2] ?? '';
+        if ((literal && /^[A-Z]{1,5}-[A-Z0-9-]+$/.test(literal)) || /screenId|screenByScope/.test(expr)) {
+          offenders.push(`${file.replace(root, 'src')}: ${m[0]}`);
+        }
       }
     }
     expect(offenders).toEqual([]);

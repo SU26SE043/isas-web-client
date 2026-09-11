@@ -72,7 +72,6 @@ export function AdminBillingPage() {
 
   return (
     <AdminPageShell
-      eyebrow="PAY-BK24"
       title={t('admin.billing.title')}
       description={t('admin.billing.description')}
     >

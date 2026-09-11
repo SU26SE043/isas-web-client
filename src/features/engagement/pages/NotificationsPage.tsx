@@ -6,19 +6,12 @@ import { NotificationCenter } from '../components/NotificationCenter';
 import { useEngagement } from '../hooks/useEngagement';
 import type { EngagementScope } from '../types/engagement.types';
 
-const screenByScope: Record<EngagementScope, string> = {
-  candidate: '',
-  employer: '',
-  admin: '',
-};
-
 export function NotificationsPage({ scope }: { scope: EngagementScope }) {
   const { t } = useLanguage();
   const { notifications, unreadCount, markAllRead, triggerNotification } = useEngagement(scope);
 
   return (
     <EngagementPageShell
-      eyebrow={screenByScope[scope]}
       title={t('engagement.notifications.title')}
       description={t('engagement.notifications.description')}
       actions={(

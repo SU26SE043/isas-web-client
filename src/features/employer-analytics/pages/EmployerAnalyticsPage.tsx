@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { Download } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PageHeader } from '@/components/patterns/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,17 +38,17 @@ export function EmployerAnalyticsPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-label text-muted-foreground">{t('employerAnalytics.analytics.eyebrow')}</p>
-            <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.analytics.title')}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employerAnalytics.analytics.subtitle')}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => runExport('csv')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportCsv')}</Button>
-            <Button onClick={() => runExport('pdf')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportPdf')}</Button>
-          </div>
-        </header>
+        <PageHeader
+          eyebrow={t('employerAnalytics.analytics.eyebrow')}
+          title={t('employerAnalytics.analytics.title')}
+          description={t('employerAnalytics.analytics.subtitle')}
+          actions={
+            <>
+              <Button variant="outline" onClick={() => runExport('csv')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportCsv')}</Button>
+              <Button onClick={() => runExport('pdf')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportPdf')}</Button>
+            </>
+          }
+        />
 
         {message ? <Alert variant="info"><AlertDescription>{message}</AlertDescription></Alert> : null}
         <div className="grid gap-3 rounded-xl border border-subtle bg-surface-raised p-4 md:grid-cols-2">

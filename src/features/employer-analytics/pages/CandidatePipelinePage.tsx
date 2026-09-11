@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PageHeader } from '@/components/patterns/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/patterns/EmptyState';
@@ -36,16 +37,16 @@ export function CandidatePipelinePage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-label text-muted-foreground">{t('employerAnalytics.pipeline.eyebrow')}</p>
-            <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.pipeline.title')}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employerAnalytics.pipeline.subtitle')}</p>
-          </div>
-          <Button onClick={exportCsv}>
-            <Download className="size-4" aria-hidden /> {t('employerAnalytics.pipeline.export')}
-          </Button>
-        </header>
+        <PageHeader
+          eyebrow={t('employerAnalytics.pipeline.eyebrow')}
+          title={t('employerAnalytics.pipeline.title')}
+          description={t('employerAnalytics.pipeline.subtitle')}
+          actions={
+            <Button onClick={exportCsv}>
+              <Download className="size-4" aria-hidden /> {t('employerAnalytics.pipeline.export')}
+            </Button>
+          }
+        />
 
         <div className="flex flex-col gap-3 rounded-xl border border-subtle bg-surface-raised p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-foreground">

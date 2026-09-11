@@ -8,12 +8,6 @@ import type { EngagementScope } from '../types/engagement.types';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 
-const screenByScope: Record<EngagementScope, string> = {
-  candidate: '',
-  employer: '',
-  admin: 'F-NOTIF-003',
-};
-
 export function SettingsPage({ scope }: { scope: EngagementScope }) {
   const { t } = useLanguage();
   const { preferences, savePreferences } = useEngagement(scope);
@@ -23,7 +17,7 @@ export function SettingsPage({ scope }: { scope: EngagementScope }) {
   const organization = useOrganization(isOrganizationMember);
 
   return (
-    <EngagementPageShell eyebrow={screenByScope[scope]} title={t('engagement.settings.title')} description={t('engagement.settings.description')}>
+    <EngagementPageShell title={t('engagement.settings.title')} description={t('engagement.settings.description')}>
       <div className="space-y-6">
         {isOrganizationMember ? (
           <OrganizationProfileForm

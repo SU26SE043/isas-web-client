@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { PageHeader } from '@/components/patterns/PageHeader';
 import { Button } from '@/components/ui/button';
 import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,24 +45,16 @@ export function CampaignListPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-5">
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 space-y-2">
-            <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">
-              {t('employer.campaigns.list.title')}
-            </h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">
-              {t('employer.campaigns.list.subtitle')}
-            </p>
-          </div>
-          <Button
-            size="lg"
-            render={<Link to="/employer/campaigns/new" />}
-            className="w-fit px-5 font-semibold"
-          >
-            <Plus className="size-4" aria-hidden />
-            {t('employer.campaigns.list.create')}
-          </Button>
-        </header>
+        <PageHeader
+          title={t('employer.campaigns.list.title')}
+          description={t('employer.campaigns.list.subtitle')}
+          actions={
+            <Button size="lg" render={<Link to="/employer/campaigns/new" />} className="w-fit px-5 font-semibold">
+              <Plus className="size-4" aria-hidden />
+              {t('employer.campaigns.list.create')}
+            </Button>
+          }
+        />
 
         {summaryQuery.isLoading ? <Skeleton className="h-24 w-full" /> : null}
         {!summaryQuery.isLoading && !summaryQuery.isError ? (

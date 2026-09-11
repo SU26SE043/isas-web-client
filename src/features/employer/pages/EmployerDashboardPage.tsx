@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Building2, FileCheck2, Users } from 'lucide-react';
+import { PageHeader } from '@/components/patterns/PageHeader';
 import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,21 +35,20 @@ export function EmployerDashboardPage() {
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-label text-muted-foreground">{t('employer.dashboard.eyebrow')}</p>
-            <h1 className="heading-primary text-3xl text-foreground">{t('employer.dashboard.title')}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employer.dashboard.subtitle')}</p>
-          </div>
-          {canManageOrg ? (
-            <div className="flex flex-wrap gap-2">
-              <Button render={<Link to="/employer/company" />}>{t('employer.dashboard.completeProfile')}</Button>
-              <Button variant="outline" render={<Link to="/employer/company/verify" />}>
-                {t('employer.dashboard.submitVerification')}
-              </Button>
-            </div>
-          ) : null}
-        </header>
+        <PageHeader
+          title={t('employer.dashboard.title')}
+          description={t('employer.dashboard.subtitle')}
+          actions={
+            canManageOrg ? (
+              <>
+                <Button render={<Link to="/employer/company" />}>{t('employer.dashboard.completeProfile')}</Button>
+                <Button variant="outline" render={<Link to="/employer/company/verify" />}>
+                  {t('employer.dashboard.submitVerification')}
+                </Button>
+              </>
+            ) : null
+          }
+        />
 
         <StatGrid columns={4}>
           <StatCard

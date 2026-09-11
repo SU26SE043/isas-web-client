@@ -12,7 +12,7 @@ export function AdminResourcePage({ resourceKey }: { resourceKey: AdminResourceK
   const config = ADMIN_RESOURCE_CONFIGS[resourceKey];
 
   return (
-    <AdminPageShell eyebrow={config.screenId} title={t(config.titleKey)} description={t(config.descriptionKey)}>
+    <AdminPageShell title={t(config.titleKey)} description={t(config.descriptionKey)}>
       <Alert variant="info"><AlertDescription>{t(config.ruleKey)}</AlertDescription></Alert>
       <AdminDataTable rows={snapshot?.resources[resourceKey] ?? []} resource={resourceKey} onApprove={approveResource} />
     </AdminPageShell>
