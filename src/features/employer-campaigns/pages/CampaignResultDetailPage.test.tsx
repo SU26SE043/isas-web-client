@@ -105,6 +105,15 @@ describe('CampaignResultDetailPage (v2)', () => {
     expect(screen.getByTestId('loc')).toHaveTextContent(`/employer/campaigns/${CAMPAIGN}/results/s-mid`);
   });
 
+  it('đóng trang = MỘT đường: link "Quay lại kết quả" về tab kết quả; không còn nút × thứ hai', async () => {
+    renderPage();
+    await screen.findByText('Hạng #2 / 3');
+    const back = screen.getByRole('link', { name: /quay lại kết quả/i });
+    expect(back).toHaveAttribute('href', `/employer/campaigns/${CAMPAIGN}/overview?tab=results`);
+    expect(screen.queryByRole('button', { name: /đóng đánh giá chi tiết/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Đóng$/)).not.toBeInTheDocument();
+  });
+
   it('ứng viên hạng 1: nút "trước" bị khoá; hạng cuối: nút "sau" bị khoá', async () => {
     renderPage('s-top');
     expect(await screen.findByText('Hạng #1 / 3')).toBeInTheDocument();

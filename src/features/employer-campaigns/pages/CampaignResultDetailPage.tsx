@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ export function CampaignResultDetailPage() {
           )}
           action={
             <Button render={<Link to={backToResults} />} nativeButton={false} variant="outline">
-              {t('employer.campaigns.results.transcript.close')}
+              {t('employer.campaigns.results.detail.back')}
             </Button>
           }
         />
@@ -69,10 +70,14 @@ export function CampaignResultDetailPage() {
   const neighbors = resultNeighbors(resultsQuery.data?.results ?? [], item.sessionId);
 
   return (
-    <div className="h-full overflow-y-auto bg-surface-base">
+    // KHÔNG bọc `overflow-y-auto` như các trang employer khác: layout không kẹp chiều cao nên div đó không
+    // bao giờ cuộn (document cuộn), mà một tổ tiên có overflow ≠ visible là đủ làm `position: sticky` của
+    // rail/dải câu hỏi chết — đo bằng getBoundingClientRect: rail ở y = −675 sau khi nhảy tới câu 3.
+    <div className="min-h-full bg-surface-base">
       <main className="page-container page-section mx-auto max-w-7xl space-y-5">
-        <Link to={backToResults} className="btn-ghost inline-flex">
-          {t('employer.campaigns.results.transcript.close')}
+        <Link to={backToResults} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4" aria-hidden />
+          {t('employer.campaigns.results.detail.back')}
         </Link>
         <ResultDetailHeader
           campaignName={campaignQuery.campaign?.title || campaignId}
@@ -81,7 +86,6 @@ export function CampaignResultDetailPage() {
           questions={questions}
           previous={neighbors.previous}
           next={neighbors.next}
-          onClose={() => navigate(backToResults)}
           onNavigate={(nextSessionId) => navigate(`/employer/campaigns/${campaignId}/results/${nextSessionId}`)}
         />
         <ResultDetailMetrics item={item} questions={questions} />

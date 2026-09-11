@@ -28,6 +28,21 @@ function statusChip(question: TranscriptQuestion, t: (key: string) => string) {
   return null;
 }
 
+// Câu thay cho bản chép khi không có gì để đọc — nói RÕ vì sao, thay vì một câu chung "không có transcript"
+// đứng cạnh chip trạng thái lặp lại y hệt ở header thẻ.
+function transcriptPlaceholderKey(question: TranscriptQuestion): string {
+  if (question.rejectReason === 'no_speech') return 'employer.campaigns.results.detail.noSpeechHint';
+  if (question.answerStatus === 'Skipped' && !question.hasAudio) return 'employer.campaigns.results.detail.skippedHint';
+  if (question.answerStatus === 'Failed') return 'employer.campaigns.results.detail.failedHint';
+  return 'employer.campaigns.results.transcript.emptyAnswer';
+}
+
+// Chỉ số cách nói (F11): hiện khi CÓ số đo, hoặc bài đã chấm mà thiếu số đo (khi đó "chưa đo" là thông tin
+// thật). Im lặng / bỏ trống / chấm lỗi không có số đo ⇒ ẩn hẳn, không bày ba chip "chưa đo" vô nghĩa.
+function showDeliveryMetrics(question: TranscriptQuestion): boolean {
+  return question.deliveryMetrics != null || (question.answerStatus === 'Scored' && question.hasAudio);
+}
+
 export function ResultQuestionCard({
   question,
   campaignId,
@@ -82,26 +97,27 @@ export function ResultQuestionCard({
                 <Eye className="size-4 text-warning" aria-label={t('employer.campaigns.results.detail.needsReviewChip')} />
               ) : null}
             </div>
-            <p className={`mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground ${full ? '' : 'line-clamp-3'}`}>
-              {transcript || t('employer.campaigns.results.transcript.emptyAnswer')}
-            </p>
+            {transcript ? (
+              <p className={`mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground ${full ? '' : 'line-clamp-3'}`}>
+                {transcript}
+              </p>
+            ) : (
+              <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+                {question.rejectReason === 'no_speech' ? <MicOff className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden /> : null}
+                {t(transcriptPlaceholderKey(question))}
+              </p>
+            )}
             {clampable ? (
               <button type="button" className="mt-2 text-xs font-medium text-info underline" onClick={() => setFull((value) => !value)}>
                 {full ? t('employer.campaigns.results.detail.collapse') : t('employer.campaigns.results.detail.expand')}
               </button>
-            ) : null}
-            {question.rejectReason === 'no_speech' ? (
-              <p className="mt-2 flex items-center gap-1 text-xs text-warning">
-                <MicOff className="size-3.5" aria-hidden />
-                {t('employer.campaigns.results.detail.noSpeech')}
-              </p>
             ) : null}
             {question.hasAudio && question.answerId ? (
               <AnswerAudioPlayer campaignId={campaignId} sessionId={sessionId} answerId={question.answerId} />
             ) : null}
           </div>
 
-          <DeliveryMetrics question={question} />
+          {showDeliveryMetrics(question) ? <DeliveryMetrics question={question} /> : null}
 
           {question.scores.length ? (
             <div className="space-y-2">

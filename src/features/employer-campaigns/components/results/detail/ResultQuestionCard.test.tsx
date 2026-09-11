@@ -58,10 +58,14 @@ describe('ResultQuestionCard — trạng thái câu', () => {
       deliveryMetrics: null,
       sampleAnswer: null,
     });
-    expect(screen.getAllByText('Không có tiếng nói · 0 điểm').length).toBeGreaterThan(0);
+    // Chip trạng thái đúng MỘT lần (ở header thẻ); ô bản chép nói VÌ SAO thay vì lặp lại chip.
+    expect(screen.getAllByText('Không có tiếng nói · 0 điểm')).toHaveLength(1);
+    expect(screen.getByText(/Không phát hiện tiếng nói trong bản ghi/)).toBeInTheDocument();
     expect(screen.queryByText('Bỏ trống')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /phát/i })).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
+    // Không có tiếng nói thì không có gì để đo ⇒ KHÔNG hiện ba chip "chưa đo".
+    expect(screen.queryByText(/chưa đo/)).not.toBeInTheDocument();
   });
 
   it('bỏ trống (Skipped, KHÔNG audio, không lý do): chip "Bỏ trống", không player', () => {
@@ -77,12 +81,16 @@ describe('ResultQuestionCard — trạng thái câu', () => {
       sampleAnswer: null,
     });
     expect(screen.getByText('Bỏ trống')).toBeInTheDocument();
+    expect(screen.getByText('Ứng viên không trả lời câu này.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /phát/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/chưa đo/)).not.toBeInTheDocument();
   });
 
-  it('chấm lỗi (Failed) → chip "Chấm lỗi"', () => {
-    renderCard({ ...base, answerStatus: 'Failed', scores: [] });
+  it('chấm lỗi (Failed) → chip "Chấm lỗi"; không bản chép + không số đo → câu giải thích, không "chưa đo"', () => {
+    renderCard({ ...base, answerStatus: 'Failed', scores: [], transcript: null, deliveryMetrics: null });
     expect(screen.getByText('Chấm lỗi')).toBeInTheDocument();
+    expect(screen.getByText('Chấm lỗi — không có bản chép lời.')).toBeInTheDocument();
+    expect(screen.queryByText(/chưa đo/)).not.toBeInTheDocument();
   });
 
   it('needsReview → chip "Cần soi lại"; kind AI làm rõ', () => {

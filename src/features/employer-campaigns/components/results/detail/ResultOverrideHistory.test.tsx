@@ -73,6 +73,30 @@ describe('ResultOverrideHistory', () => {
     expect(screen.getByRole('button', { name: /điều chỉnh kết quả/i })).toBeInTheDocument();
   });
 
+  it('có lịch sử nhưng lần MỚI NHẤT là huỷ → "Không có điều chỉnh đang áp dụng" + ai huỷ/lúc nào/số lần, KHÔNG phải "Chưa có điều chỉnh nào"', () => {
+    renderHistory({
+      history: [history[1], history[2]],
+      item: { ...item, totalScore: 35, overrideScore: null, overrideResult: null, overrideNote: null, overriddenAt: null } as CampaignResultItem,
+    });
+    expect(
+      screen.getByText(/Không có điều chỉnh đang áp dụng — điểm chính thức bằng điểm AI \(35%\) · Không rõ người sửa · .* · 2 lần/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Chưa có điều chỉnh nào/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /xem lịch sử/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /xóa điều chỉnh/i })).not.toBeInTheDocument();
+  });
+
+  it('nút lịch sử đổi nhãn theo trạng thái: "Xem lịch sử" → "Ẩn lịch sử" (aria-expanded)', () => {
+    renderHistory();
+    const toggle = screen.getByRole('button', { name: /xem lịch sử/i });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: /ẩn lịch sử/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('button', { name: /xem lịch sử/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /ẩn lịch sử/i }));
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+  });
+
   it('có override → nút Xóa điều chỉnh; bấm Điều chỉnh mở modal', () => {
     renderHistory();
     expect(screen.getByRole('button', { name: /xóa điều chỉnh/i })).toBeInTheDocument();

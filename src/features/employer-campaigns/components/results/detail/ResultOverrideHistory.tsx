@@ -62,16 +62,20 @@ export function ResultOverrideHistory({ campaignId, item, history, isLoading, is
   }
 
   const unknownActor = t('employer.campaigns.results.override.unknownActor');
-  const summary =
-    latest?.kind === 'Set'
-      ? [
-          formatResultScore(latest.score),
-          resultLabel(latest.result),
+  const count = `${history.length} ${t('employer.campaigns.results.override.changes')}`;
+  // Ba trạng thái, KHÔNG gộp: chưa từng điều chỉnh · đã có lịch sử nhưng lần mới nhất là HUỶ (không còn gì
+  // đang áp dụng) · đang áp dụng. Trước đây hai ca đầu dùng chung câu "Chưa có điều chỉnh nào" — sai với
+  // hàng đã sửa 13 lần rồi huỷ.
+  const summary = !latest
+    ? t('employer.campaigns.results.override.noHistory').replace('{{score}}', formatResultScore(item.aiScore))
+    : latest.kind === 'Set'
+      ? [formatResultScore(latest.score), resultLabel(latest.result), actorLabel(latest, unknownActor), formatResultDateTime(latest.at, language), count].join(' · ')
+      : [
+          t('employer.campaigns.results.override.noneActive').replace('{{score}}', formatResultScore(item.aiScore)),
           actorLabel(latest, unknownActor),
           formatResultDateTime(latest.at, language),
-          `${history.length} ${t('employer.campaigns.results.override.changes')}`,
-        ].join(' · ')
-      : null;
+          count,
+        ].join(' · ');
 
   return (
     <section className="frame-satin rounded-xl bg-surface-raised p-4">
@@ -81,19 +85,13 @@ export function ResultOverrideHistory({ campaignId, item, history, isLoading, is
             <History className="size-4" aria-hidden />
             {t('employer.campaigns.results.override.historyTitle')}
           </h2>
-          {summary ? (
-            <p className="mt-2 truncate text-sm text-muted-foreground">{summary}</p>
-          ) : (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t('employer.campaigns.results.override.noHistory').replace('{{score}}', formatResultScore(item.aiScore))}
-            </p>
-          )}
+          <p className="mt-2 text-sm text-muted-foreground">{summary}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {history.length ? (
-            <Button size="sm" variant="outline" onClick={() => setExpanded((value) => !value)}>
+            <Button size="sm" variant="outline" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
               {expanded ? <ChevronUp aria-hidden /> : <ChevronDown aria-hidden />}
-              {t('employer.campaigns.results.override.viewHistory')}
+              {t(expanded ? 'employer.campaigns.results.override.hideHistory' : 'employer.campaigns.results.override.viewHistory')}
             </Button>
           ) : null}
           <Button size="sm" onClick={() => setOverrideOpen(true)}>

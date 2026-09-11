@@ -50,21 +50,15 @@ export function ResultsRankingTable({
   return (
     <>
       <div className="hidden lg:block">
-        <Table className="min-w-[980px]">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
-              <TableHead>{t('employer.campaigns.results.columns.rank')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.rank')}</TableHead>
               <TableHead>{t('employer.campaigns.results.columns.candidate')}</TableHead>
-              <TableHead>{scoreHeader}</TableHead>
-              <TableHead className="hidden lg:table-cell">
-                {t('employer.campaigns.results.columns.aiScore')}
-              </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.result')}</TableHead>
-              <TableHead className="hidden xl:table-cell">
-                {t('employer.campaigns.results.columns.override')}
-              </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.flags')}</TableHead>
-              <TableHead className="hidden lg:table-cell">
+              <TableHead className="whitespace-nowrap">{scoreHeader}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.result')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.flags')}</TableHead>
+              <TableHead className="whitespace-nowrap">
                 {t('employer.campaigns.results.columns.scoredAt')}
               </TableHead>
               <TableHead className="table-sticky-end">
@@ -83,27 +77,21 @@ export function ResultsRankingTable({
                   <p className="text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
                   <ResultCandidateMeta item={item} />
                 </TableCell>
-                <TableCell className="text-base font-semibold tabular-nums text-foreground">
+                <TableCell className="align-top">
                   <ResultScoreCells item={item} />
-                </TableCell>
-                <TableCell className="hidden tabular-nums text-muted-foreground lg:table-cell">
-                  {formatResultScore(item.aiScore)}
                 </TableCell>
                 <TableCell>
                   <ResultStatusBadge result={item.result} />
                 </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  <ResultOverrideBadge item={item} />
-                </TableCell>
                 <TableCell>
                   <ResultFlagsCell item={item} />
                 </TableCell>
-                <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   {formatResultDateTime(item.scoredAt, language)}
                 </TableCell>
                 <TableCell className="table-sticky-end">
-                  <div className="flex items-center gap-2">
-                    <Button type="button" size="sm" variant="outline" onClick={() => onViewDetails(item)}>
+                  <div className="flex items-center gap-1.5">
+                    <Button type="button" size="sm" variant="outline" className="whitespace-nowrap" onClick={() => onViewDetails(item)}>
                       {t('employer.campaigns.results.actions.viewDetails')}
                     </Button>
                     <ResultsActionsMenu
