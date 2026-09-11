@@ -154,7 +154,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
+        {/* `overflow-x-clip` chứ KHÔNG `overflow-hidden`: hidden biến main thành scroll container ⇒ mọi
+            `position: sticky` bên trong (header reader bài học, thanh công cụ trang) không bao giờ dính —
+            cùng lỗi đã đo ở layout employer (rail ở y = −675 sau khi cuộn). */}
+        <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
           {sectionTitleKey ? (
             <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
               <span className="truncate text-sm font-medium text-muted-foreground">{t(sectionTitleKey)}</span>
