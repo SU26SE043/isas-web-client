@@ -146,7 +146,10 @@ export const EmployerDashboardLayout: React.FC = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
+        {/* `overflow-x-clip` chứ KHÔNG `overflow-hidden`: hidden biến main thành scroll container ⇒ mọi
+            `position: sticky` bên trong (rail câu hỏi, header wizard, thanh chọn CV) không bao giờ dính —
+            đo bằng getBoundingClientRect trên trang Đánh giá chi tiết (rail ở y = −675 sau khi cuộn). */}
+        <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
           <Outlet />
         </main>
       </div>
