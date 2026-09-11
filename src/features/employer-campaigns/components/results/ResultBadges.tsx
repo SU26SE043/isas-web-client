@@ -40,10 +40,10 @@ export function ResultOverrideBadge({ item }: { item: CampaignResultItem }) {
     );
   }
   const title = item.overriddenAt
-    ? t('employer.campaigns.results.override.at').replace(
+    ? t('employer.campaigns.results.override.badgeTooltip').replace(
         '{{time}}',
         formatResultDateTime(item.overriddenAt, language),
-      )
+      ).replace('{{note}}', item.overrideNote?.trim() || t('employer.campaigns.results.override.unchanged'))
     : undefined;
   return (
     <Badge
