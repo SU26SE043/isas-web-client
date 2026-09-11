@@ -93,7 +93,9 @@ describe('sidebar candidate — mục nav Thông báo vs chuông xem nhanh', () 
     useLanguageInTest('vi');
     renderLayout();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
+    // Nhãn nút thu gọn nay đi qua i18n (trước là chuỗi tiếng Anh ghi cứng, trái luật
+    // i18n bắt buộc của repo) ⇒ ở ngôn ngữ 'vi' nó là tiếng Việt.
+    fireEvent.click(screen.getByRole('button', { name: 'Thu gọn thanh bên' }));
 
     // Thu gọn: nhãn bị ẩn về w-0, tooltip `title` là thứ người dùng đọc được.
     expect(screen.getByTitle('Thông báo')).toHaveAttribute('href', '/candidate/notifications');
