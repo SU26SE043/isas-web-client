@@ -55,23 +55,24 @@ export function PracticeHistoryTable({
   return (
     <>
       <div className="hidden md:block">
-        <Table className="min-w-[900px]">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
               {compareMode ? <TableHead className="w-10" scope="col" /> : null}
-              <TableHead scope="col">{t('practice.history.columns.jobCategory')}</TableHead>
+              {/* Cột tiêu đề là cột co giãn duy nhất; các cột ngày/giờ/điểm/thao tác không bẻ dòng. */}
+              <TableHead className="min-w-[14rem]" scope="col">{t('practice.history.columns.jobCategory')}</TableHead>
               {/* L1: trước đây dùng `filterStatus` ("Lọc trạng thái") — đó là nhãn của Ô LỌC,
                   không phải tiêu đề cột, nên header bảng ghi thẳng "LỌC TRẠNG THÁI". */}
               <TableHead scope="col">{t('practice.history.columns.status')}</TableHead>
-              <TableHead scope="col">{t('practice.history.columns.createdAt')}</TableHead>
-              <TableHead className="hidden lg:table-cell" scope="col">
+              <TableHead className="w-0" scope="col">{t('practice.history.columns.createdAt')}</TableHead>
+              <TableHead className="hidden w-0 lg:table-cell" scope="col">
                 {t('practice.history.columns.completedAt')}
               </TableHead>
-              <TableHead className="hidden lg:table-cell" scope="col">
+              <TableHead className="hidden w-0 lg:table-cell" scope="col">
                 {t('practice.history.duration')}
               </TableHead>
-              <TableHead scope="col">{t('practice.history.score')}</TableHead>
-              <TableHead className="text-right" scope="col">
+              <TableHead className="w-0" scope="col">{t('practice.history.score')}</TableHead>
+              <TableHead className="w-0 text-right" scope="col">
                 {t('practice.history.columns.actions')}
               </TableHead>
             </TableRow>
@@ -96,7 +97,7 @@ export function PracticeHistoryTable({
                       />
                     </TableCell>
                   ) : null}
-                  <TableCell>
+                  <TableCell className="max-w-[24rem]">
                     <PracticeSessionTitle item={item} />
                   </TableCell>
                   <TableCell>
@@ -104,24 +105,24 @@ export function PracticeHistoryTable({
                       {t(practiceSessionStatusLabelKey(item.status))}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                     {formatSessionDateTime(item.createdAt, language) ||
                       t('practice.history.dateUnknown')}
                   </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                  <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
                     {item.completedAt
                       ? formatSessionDateTime(item.completedAt, language)
                       : t('practice.history.notCompleted')}
                   </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                  <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
                     {formatDurationLabel(minutes, t)}
                   </TableCell>
-                  <TableCell className="font-semibold tabular-nums text-foreground">
+                  <TableCell className="whitespace-nowrap font-semibold tabular-nums text-foreground">
                     {group === 'pendingScore' && item.overallScore == null
                       ? t('practice.history.scoring')
                       : formatOverallScoreLabel(item.overallScore, t)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="whitespace-nowrap text-right">
                     <PracticeHistoryRowActions
                       item={item}
                       compareMode={compareMode}

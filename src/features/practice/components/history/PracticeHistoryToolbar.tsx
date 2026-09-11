@@ -63,18 +63,16 @@ export function PracticeHistoryToolbar({
   return (
     <div className="space-y-2 rounded-xl border border-satin bg-surface-raised p-4">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_auto_auto]">
-        <div className="space-y-1">
-          <label className="flex items-center gap-2">
-            <Search className="size-4 text-muted-foreground" aria-hidden />
-            <Input
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={t('practice.history.searchPlaceholder')}
-              aria-label={t('practice.history.searchPlaceholder')}
-            />
-          </label>
-          <p className="text-xs text-muted-foreground">{t('practice.history.filterHint')}</p>
-        </div>
+        {/* Phạm vi áp dụng của bộ lọc đưa vào title (tooltip) thay vì một đoạn 2–3 dòng dưới ô tìm kiếm. */}
+        <label className="flex items-center gap-2" title={t('practice.history.filterHint')}>
+          <Search className="size-4 text-muted-foreground" aria-hidden />
+          <Input
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={t('practice.history.searchPlaceholder')}
+            aria-label={t('practice.history.searchPlaceholder')}
+          />
+        </label>
 
         <select
           className={selectClass}
