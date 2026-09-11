@@ -21,6 +21,7 @@ import type {
   CampaignResultExportFormat,
   CampaignResultsResponse,
   CampaignTranscriptResponse,
+  CampaignResultOverrideHistoryResponse,
   GenerateCampaignQuestionsParams,
   OverrideCampaignResultPayload,
   GetCampaignInvitationsQuery,
@@ -58,6 +59,7 @@ import {
   buildCandidateListParams,
   parseCampaignResultsResponse,
   parseCampaignTranscriptResponse,
+  parseCampaignOverrideHistoryResponse,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -1045,6 +1047,31 @@ export const campaignManagementService = {
       campaignManagementEndpoints.resultTranscript(id, sessionId),
     );
     return parseCampaignTranscriptResponse(response.data);
+  },
+
+  async getCampaignResultOverrideHistory(
+    id: string,
+    sessionId: string,
+  ): Promise<CampaignResultOverrideHistoryResponse> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.resultOverrideHistory(id, sessionId),
+    );
+    return parseCampaignOverrideHistoryResponse(response.data);
+  },
+
+  async getCampaignResultAnswerAudio(
+    id: string,
+    sessionId: string,
+    answerId: string,
+  ): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+      campaignManagementEndpoints.resultAnswerAudio(id, sessionId, answerId),
+      { responseType: 'blob' },
+    );
+    if (!(response.data instanceof Blob) || response.data.size <= 0) {
+      throw new CampaignRequestError(404, 'RESULT_ANSWER_AUDIO_NOT_FOUND');
+    }
+    return response.data;
   },
 
   /**

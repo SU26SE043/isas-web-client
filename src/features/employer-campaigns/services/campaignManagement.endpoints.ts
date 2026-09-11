@@ -44,6 +44,10 @@ export const campaignManagementEndpoints = {
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/export`,
   resultTranscript: (id: string, sessionId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/transcript`,
+  resultOverrideHistory: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override-history`,
+  resultAnswerAudio: (id: string, sessionId: string, answerId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/audio`,
   resultOverride: (id: string, sessionId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override`,
 } as const;

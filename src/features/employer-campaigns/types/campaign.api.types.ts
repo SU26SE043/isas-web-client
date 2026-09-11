@@ -522,6 +522,7 @@ export type TranscriptCriterionScore = {
   score: number;
   maxScore?: number | null;
   reasoning?: string | null;
+  levelMatched?: number | null;
 };
 
 export type TranscriptQuestion = {
@@ -530,12 +531,44 @@ export type TranscriptQuestion = {
   content: string;
   transcript?: string | null;
   needsReview: boolean;
+  answerId: string | null;
+  kind: 'Seed' | 'FollowUp' | 'Clarify' | 'NewQuestion';
+  answerStatus: 'Uploaded' | 'Scoring' | 'Scored' | 'Failed' | 'Skipped' | null;
+  rejectReason: string | null;
+  durationSec: number | null;
+  hasAudio: boolean;
+  sampleAnswer: string | null;
+  deliveryMetrics: {
+    speechRateWpm: number | null;
+    pauseCount: number | null;
+    longestPauseSec: number | null;
+    silenceRatio: number | null;
+    fillerCount: number | null;
+    fillerBreakdown: Record<string, number>;
+  } | null;
   scores: TranscriptCriterionScore[];
 };
 
 export type CampaignTranscriptResponse = {
   sessionId: string;
   questions: TranscriptQuestion[];
+};
+
+export type CampaignResultOverrideHistoryItem = {
+  id: string;
+  kind: 'Set' | 'Clear';
+  score: number | null;
+  result: CampaignResultStatus;
+  note: string;
+  actorUserId: string;
+  actorEmail: string | null;
+  at: string;
+  source: 'Live' | 'AuditBackfill';
+};
+
+export type CampaignResultOverrideHistoryResponse = {
+  sessionId: string;
+  items: CampaignResultOverrideHistoryItem[];
 };
 
 export type OverrideCampaignResultPayload = {

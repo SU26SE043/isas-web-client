@@ -8,6 +8,9 @@ import type {
   CampaignResultsResponse,
   CampaignScoredResult,
   CampaignTranscriptResponse,
+  CampaignResultOverrideHistoryResponse,
+  CampaignResultOverrideHistoryItem,
+  TranscriptQuestion,
   CampaignUnscoredFlaggedResult,
   CandidateListQuery,
   CandidateUploadResponse,
@@ -391,6 +394,7 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
                 score,
                 maxScore: pickNumber(scoreRecord, 'maxScore', 'MaxScore') ?? null,
                 reasoning: pickString(scoreRecord, 'reasoning', 'Reasoning') ?? null,
+                levelMatched: pickNumber(scoreRecord, 'levelMatched', 'LevelMatched') ?? null,
               };
             })
             .filter((score): score is NonNullable<typeof score> => score != null)
@@ -401,6 +405,14 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
         content,
         transcript: pickString(record, 'transcript', 'Transcript') ?? null,
         needsReview: Boolean(record.needsReview ?? record.NeedsReview),
+        answerId: pickString(record, 'answerId', 'AnswerId') ?? null,
+        kind: parseQuestionKind(pickString(record, 'kind', 'Kind')),
+        answerStatus: parseAnswerStatus(pickString(record, 'answerStatus', 'AnswerStatus')),
+        rejectReason: pickString(record, 'rejectReason', 'RejectReason') ?? null,
+        durationSec: pickNumber(record, 'durationSec', 'DurationSec') ?? null,
+        hasAudio: Boolean(record.hasAudio ?? record.HasAudio),
+        sampleAnswer: pickString(record, 'sampleAnswer', 'SampleAnswer') ?? null,
+        deliveryMetrics: parseDeliveryMetrics(record.deliveryMetrics ?? record.DeliveryMetrics),
         scores,
       };
     })
@@ -408,6 +420,66 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
     .sort((a, b) => a.orderNo - b.orderNo);
 
   return { sessionId, questions };
+}
+
+function parseQuestionKind(value: string | undefined): TranscriptQuestion['kind'] {
+  return value === 'FollowUp' || value === 'Clarify' || value === 'NewQuestion' ? value : 'Seed';
+}
+
+function parseAnswerStatus(value: string | undefined): TranscriptQuestion['answerStatus'] {
+  return value === 'Uploaded' || value === 'Scoring' || value === 'Scored' || value === 'Failed' || value === 'Skipped'
+    ? value
+    : null;
+}
+
+function parseDeliveryMetrics(raw: unknown): TranscriptQuestion['deliveryMetrics'] {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const breakdown = asRecord(record.fillerBreakdown ?? record.FillerBreakdown);
+  return {
+    speechRateWpm: pickNumber(record, 'speechRateWpm', 'SpeechRateWpm') ?? null,
+    pauseCount: pickNumber(record, 'pauseCount', 'PauseCount') ?? null,
+    longestPauseSec: pickNumber(record, 'longestPauseSec', 'LongestPauseSec') ?? null,
+    silenceRatio: pickNumber(record, 'silenceRatio', 'SilenceRatio') ?? null,
+    fillerCount: pickNumber(record, 'fillerCount', 'FillerCount') ?? null,
+    fillerBreakdown: Object.fromEntries(
+      Object.entries(breakdown ?? {}).flatMap(([key, value]) => {
+        const parsed = asNumber(value);
+        return parsed == null ? [] : [[key, parsed]];
+      }),
+    ),
+  };
+}
+
+export function parseCampaignOverrideHistoryResponse(
+  data: unknown,
+): CampaignResultOverrideHistoryResponse {
+  const root = asRecord(data);
+  const body = asRecord(root?.data) ?? root ?? {};
+  const items = unwrapArrayPayload(body.items ?? body.Items)
+    .map((item): CampaignResultOverrideHistoryItem | null => {
+      const record = asRecord(item);
+      if (!record) return null;
+      const id = pickString(record, 'id', 'Id');
+      const at = pickString(record, 'at', 'At');
+      const actorUserId = pickString(record, 'actorUserId', 'ActorUserId');
+      const kind = pickString(record, 'kind', 'Kind');
+      if (!id || !at || !actorUserId || (kind !== 'Set' && kind !== 'Clear')) return null;
+      const resultRaw = pickString(record, 'result', 'Result');
+      return {
+        id,
+        kind,
+        score: pickNumber(record, 'score', 'Score') ?? null,
+        result: resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null,
+        note: pickString(record, 'note', 'Note') ?? '',
+        actorUserId,
+        actorEmail: pickString(record, 'actorEmail', 'ActorEmail') ?? null,
+        at,
+        source: pickString(record, 'source', 'Source') === 'AuditBackfill' ? 'AuditBackfill' : 'Live',
+      };
+    })
+    .filter((item): item is CampaignResultOverrideHistoryItem => item != null);
+  return { sessionId: pickString(body, 'sessionId', 'SessionId') ?? '', items };
 }
 
 /** Only treat absolute http(s) URLs as safe download links. */
