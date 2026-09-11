@@ -335,6 +335,14 @@ Quy tắc: **surface bọc ngoài luôn bo lớn hơn thứ nằm trong nó**. K
 (`rounded-md`, `rounded-sm`, `rounded-3xl`, `rounded-4xl` đã bị gỡ). Bo một phía
 (`rounded-t-*`, `rounded-b-*`) không thuộc thang này.
 
+⚠ Luật áp cho **cả CSS**: `border-radius: var(--radius-sm|md)` bị cấm — 5 utility `.btn-*`
+trong `src/index.css` từng dùng `--radius-md` (8px) trong khi primitive `Button` là 12px, nên
+một `<Button>` và một `<button class="btn-primary">` đứng cạnh nhau khác bo góc.
+
+⚠ `rounded` **trần** (không dấu gạch) cố ý không bị bắt: trong `src` nó gần như chỉ dùng cho ô
+tick `size-4 rounded` — hộp 16px ép lên 12px sẽ bị kẹp thành gần TRÒN, mà tròn nghĩa là "chọn
+một" (radio) chứ không phải "chọn nhiều".
+
 Kiểm tra: `npm run check:radius` — phạm vi gác là **cả `src`**.
 
 > Bản đầu của mục này ghi *"đừng bật cả `src`, sẽ đỏ 900+ chỗ"* — **con số đó sai**: nó đếm

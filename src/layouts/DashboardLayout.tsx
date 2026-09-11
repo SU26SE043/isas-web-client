@@ -41,7 +41,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
             className={`flex h-14 items-center border-b border-subtle px-3 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
           >
             {!isCollapsed ? (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+              <Link to="/" className="focus-ring hidden rounded-lg sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             ) : null}
@@ -84,7 +84,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
                     {item.label}
                   </span>
                   {isCollapsed ? (
-                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-md border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
+                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-lg border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
                       {item.label}
                     </span>
                   ) : null}

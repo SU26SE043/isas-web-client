@@ -88,7 +88,7 @@ export const AdminDashboardLayout: React.FC = () => {
       <div className="flex min-h-screen">
         <aside className="glass-sidebar sticky top-0 flex h-screen w-[4.5rem] shrink-0 flex-col border-r sm:w-72">
           <div className="flex items-center justify-center border-b border-subtle px-3 py-4 sm:justify-between">
-            <Link to="/" className="focus-ring hidden rounded-md sm:block"><BrandLogo className="h-7" /></Link>
+            <Link to="/" className="focus-ring hidden rounded-lg sm:block"><BrandLogo className="h-7" /></Link>
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:hidden">AD</span>
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">

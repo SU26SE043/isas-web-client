@@ -83,8 +83,8 @@ export const HeroSection: React.FC = () => {
                 {/* Metrics Bottom Bar */}
                 <div className="absolute bottom-4 left-4 right-4 z-10">
                   <div className="flex justify-between mb-2">
-                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.confidence')}: 85%</span>
-                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.pronunciation')}: 92%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded-full border border-default">{t('hero.confidence')}: 85%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded-full border border-default">{t('hero.pronunciation')}: 92%</span>
                   </div>
                   <div className="h-1.5 bg-surface-highlight rounded-full w-full overflow-hidden backdrop-blur-sm border border-default">
                     <div className="h-full bg-surface-overlay w-[85%] relative">
