@@ -44,9 +44,9 @@ export const layoutTranslations: TranslationDictionary = {
     'common.perPage': '/ trang',
     'common.itemsPerPage': 'Số mục mỗi trang',
 
-    'route.authShell': 'Nhóm route xác thực — shell Phase 0',
-    'route.enterpriseShell': 'Nhóm route Doanh nghiệp — shell Phase 0',
-    'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
+    'route.authShell': 'Nhóm route xác thực',
+    'route.enterpriseShell': 'Nhóm route doanh nghiệp',
+    'route.adminShell': 'Nhóm route quản trị',
     'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng PIpraint.',
   },
   en: {
@@ -92,9 +92,9 @@ export const layoutTranslations: TranslationDictionary = {
     'common.perPage': 'per page',
     'common.itemsPerPage': 'Items per page',
 
-    'route.authShell': 'Auth route group — Phase 0 shell',
-    'route.enterpriseShell': 'Enterprise route group — Phase 0 shell',
-    'route.adminShell': 'Admin route group — Phase 0 shell',
+    'route.authShell': 'Auth route group',
+    'route.enterpriseShell': 'Enterprise route group',
+    'route.adminShell': 'Admin route group',
     'auth.loginPrompt': 'Sign in to continue to PIpraint.',
   },
 };

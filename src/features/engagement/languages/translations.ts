@@ -12,7 +12,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notifications.description': 'Theo dõi thông báo trong ứng dụng, số chưa đọc, gộp trùng và trạng thái gửi gần thời gian thực.',
     'engagement.notifications.trigger': 'Gửi thông báo thử',
     'engagement.notifications.center': 'Trung tâm thông báo',
-    'engagement.notifications.centerHint': 'Thông báo mới hiển thị trong dưới 2 giây theo DoD Phase 14.',
+    'engagement.notifications.centerHint': 'Thông báo mới hiển thị trong vòng 2 giây.',
     'engagement.notifications.markAll': 'Đánh dấu đã đọc',
     'engagement.notifications.bell': 'Mở trung tâm thông báo',
     'engagement.notifications.viewAll': 'Xem tất cả thông báo',
@@ -28,14 +28,14 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notification.live.body': 'Thông báo mô phỏng đã được phát vào trung tâm thông báo trong cửa sổ thời gian thực.',
 
     'engagement.settings.title': 'Cài đặt thông báo',
-    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và tùy chọn nhận nội dung tiếp thị theo the documented rule.',
+    'engagement.settings.description': 'Quản lý kênh nhận thông báo, giờ yên lặng và tùy chọn nhận nội dung tiếp thị.',
     'engagement.settings.email': 'Email',
     'engagement.settings.inApp': 'Trong ứng dụng',
     'engagement.settings.marketing': 'Tiếp thị',
     'engagement.settings.quietHours': 'Bật giờ yên lặng',
     'engagement.settings.quietStart': 'Bắt đầu yên lặng',
     'engagement.settings.quietEnd': 'Kết thúc yên lặng',
-    'engagement.settings.marketingRule': 'the documented rule: người dùng có thể từ chối nội dung tiếp thị nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
+    'engagement.settings.marketingRule': 'Bạn có thể từ chối nội dung tiếp thị nhưng vẫn nhận thông báo bắt buộc về bảo mật và vận hành.',
     'engagement.settings.save': 'Lưu cài đặt',
     'engagement.settings.saved': 'Đã lưu cài đặt thông báo.',
 
@@ -126,7 +126,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.roleRule': 'Chỉ quản trị viên tổ chức mới thêm hoặc đổi vai trò thành viên.',
 
     'engagement.webhook.title': 'Webhook của tổ chức',
-    'engagement.webhook.description': 'Cấu hình webhook được ký theo the documented rule để nhận sự kiện chiến dịch, thanh toán và kết quả AI.',
+    'engagement.webhook.description': 'Cấu hình webhook có chữ ký để nhận sự kiện chiến dịch, thanh toán và kết quả AI.',
     'engagement.webhook.rule': 'Chỉ quản trị viên tổ chức được cập nhật endpoint và secret; nhân sự chỉ xem trạng thái gửi.',
   },
   en: {
@@ -140,7 +140,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notifications.description': 'Track in-app notifications, unread count, dedupe, and near-realtime delivery state.',
     'engagement.notifications.trigger': 'Send test notification',
     'engagement.notifications.center': 'Notification Center',
-    'engagement.notifications.centerHint': 'New notifications appear in under 2 seconds for the Phase 14 DoD.',
+    'engagement.notifications.centerHint': 'New notifications appear within 2 seconds.',
     'engagement.notifications.markAll': 'Mark all read',
     'engagement.notifications.bell': 'Open notification center',
     'engagement.notifications.viewAll': 'View all notifications',
@@ -156,14 +156,14 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.notification.live.body': 'A mock notification was delivered into the notification center in the realtime window.',
 
     'engagement.settings.title': 'Notification settings',
-    'engagement.settings.description': 'Manage notification channels, quiet hours, and marketing opt-out under the documented rule.',
+    'engagement.settings.description': 'Manage notification channels, quiet hours, and marketing opt-out.',
     'engagement.settings.email': 'Email',
     'engagement.settings.inApp': 'In-app',
     'engagement.settings.marketing': 'Marketing',
     'engagement.settings.quietHours': 'Enable quiet hours',
     'engagement.settings.quietStart': 'Quiet start',
     'engagement.settings.quietEnd': 'Quiet end',
-    'engagement.settings.marketingRule': 'the documented rule: users may opt out of marketing while still receiving required security and operations messages.',
+    'engagement.settings.marketingRule': 'You may opt out of marketing while still receiving required security and operations messages.',
     'engagement.settings.save': 'Save settings',
     'engagement.settings.saved': 'Notification settings saved.',
 
@@ -254,7 +254,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.team.roleRule': 'Only organization administrators may add members or change their roles.',
 
     'engagement.webhook.title': 'Organization webhooks',
-    'engagement.webhook.description': 'Signed webhook configuration under the documented rule receives campaign, billing, and AI result events.',
+    'engagement.webhook.description': 'Signed webhooks deliver campaign, billing, and AI result events.',
     'engagement.webhook.rule': 'Only organization administrators may update endpoints and secrets; HR staff can view delivery status only.',
   },
 };

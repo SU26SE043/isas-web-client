@@ -46,10 +46,6 @@ export function CampaignListPage() {
       <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
         <header className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 space-y-2">
-            <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-foreground" aria-hidden />
-              {t('employer.campaigns.list.eyebrow')}
-            </p>
             <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">
               {t('employer.campaigns.list.title')}
             </h1>

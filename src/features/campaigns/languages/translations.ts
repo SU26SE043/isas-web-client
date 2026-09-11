@@ -2,7 +2,7 @@ import type { TranslationDictionary } from '@/shared/languages';
 
 export const campaignsTranslations: TranslationDictionary = {
   vi: {
-    'campaigns.browse.eyebrow': 'Giai đoạn 8 · Khám phá chiến dịch',
+    'campaigns.browse.eyebrow': 'Khám phá chiến dịch',
     'campaigns.browse.title': 'Khám phá chiến dịch',
     'campaigns.browse.subtitle': 'Tìm các chiến dịch phỏng vấn B2B đang mở và chọn cơ hội phù hợp với hồ sơ của bạn.',
     'campaigns.browse.available': 'Chiến dịch phù hợp',
@@ -222,7 +222,7 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.invite.switchingAccount': 'Đang đăng xuất...',
   },
   en: {
-    'campaigns.browse.eyebrow': 'Phase 8 · Campaign Discovery',
+    'campaigns.browse.eyebrow': 'Campaign discovery',
     'campaigns.browse.title': 'Campaign Discovery',
     'campaigns.browse.subtitle': 'Find open B2B interview campaigns and choose opportunities that match your profile.',
     'campaigns.browse.available': 'Matching campaigns',
