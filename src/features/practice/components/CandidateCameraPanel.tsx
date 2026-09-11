@@ -86,7 +86,7 @@ export const CandidateCameraPanel: React.FC<CandidateCameraPanelProps> = ({
           </span>
         </div>
 
-        <div className="absolute bottom-3 left-3 rounded-md border border-satin bg-black/45 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
+        <div className="absolute bottom-3 left-3 rounded-full border border-satin bg-black/45 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
           {micEnabled ? t('practice.room.micOn') : t('practice.room.micOff')}
         </div>
       </div>

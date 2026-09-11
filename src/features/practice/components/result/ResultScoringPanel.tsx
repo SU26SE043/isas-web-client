@@ -5,7 +5,7 @@ export function ResultScoringPanel() {
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-3xl border border-subtle bg-surface-raised p-8 text-center shadow-sm">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-2xl border border-subtle bg-surface-raised p-8 text-center shadow-sm">
       <div className="relative">
         <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" aria-hidden />
         <Sparkles className="absolute -right-2 -top-2 h-4 w-4 text-foreground" aria-hidden />

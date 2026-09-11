@@ -26,7 +26,7 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
   const { language, t } = useLanguage();
 
   return (
-    <section className="relative overflow-hidden rounded-3xl frame-satin bg-surface-raised">
+    <section className="relative overflow-hidden rounded-2xl frame-satin bg-surface-raised">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.08),transparent_55%)]"
@@ -45,7 +45,7 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-satin bg-surface-overlay px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-satin bg-surface-overlay px-3 py-1.5">
               <Sparkles className="size-3.5 text-foreground" aria-hidden />
               {t('cv.report.statusReady')}
             </span>
@@ -63,11 +63,11 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
           />
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/candidate/cv/analysis" className="btn-primary inline-flex rounded-md">
+            <Link to="/candidate/cv/analysis" className="btn-primary inline-flex">
               {t('cv.startNewAnalysis')}
               <ArrowRight className="size-4" aria-hidden />
             </Link>
-            <Link to="/practice" className="btn-secondary inline-flex rounded-md">
+            <Link to="/practice" className="btn-secondary inline-flex">
               {t('cv.landing.practiceCta')}
             </Link>
           </div>

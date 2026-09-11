@@ -63,7 +63,7 @@ export const HeroSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-base/90 via-surface-base/30 to-surface-base/10"></div>
 
                 {/* REC Indicator */}
-                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-surface-elevated/90 px-2.5 py-1 rounded-md backdrop-blur-sm">
+                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-surface-elevated/90 px-2.5 py-1 rounded-full backdrop-blur-sm">
                   <div className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgb(239_68_68/0.8)]"></div>
                   <span className="text-[10px] text-foreground font-mono font-bold tracking-wider">REC 00:04:23</span>
                 </div>

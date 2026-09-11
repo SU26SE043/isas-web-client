@@ -110,7 +110,7 @@ export function CampaignInviteResultPage() {
         </header>
 
         {invited.length > 0 ? (
-          <section className="space-y-3 rounded-md border border-success/30 bg-surface-raised p-4">
+          <section className="space-y-3 rounded-xl border border-success/30 bg-surface-raised p-4">
             <h2 className="text-sm font-semibold text-success">
               {t('employer.campaigns.inviteFlow.resultOk')}
             </h2>
@@ -118,7 +118,7 @@ export function CampaignInviteResultPage() {
               {invited.map((item) => (
                 <li
                   key={`${item.invitationId ?? item.email}`}
-                  className="flex items-start gap-3 rounded-md border border-satin bg-surface-overlay px-3 py-2.5"
+                  className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-3 py-2.5"
                 >
                   <Mail className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -145,7 +145,7 @@ export function CampaignInviteResultPage() {
         ) : null}
 
         {hasFailures ? (
-          <section className="space-y-3 rounded-md border border-error/30 bg-surface-raised p-4">
+          <section className="space-y-3 rounded-xl border border-error/30 bg-surface-raised p-4">
             <h2 className="text-sm font-semibold text-error">
               {t('employer.campaigns.inviteFlow.resultFail')}
             </h2>
@@ -153,7 +153,7 @@ export function CampaignInviteResultPage() {
               {failed.map((item) => (
                 <li
                   key={`${item.email}-${item.reason}`}
-                  className="flex items-start gap-3 rounded-md border border-satin bg-surface-overlay px-3 py-2.5"
+                  className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-3 py-2.5"
                 >
                   <XCircle className="mt-0.5 size-4 shrink-0 text-error" aria-hidden />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -167,7 +167,7 @@ export function CampaignInviteResultPage() {
         ) : null}
 
         {isFullSuccess ? (
-          <p className="rounded-md border border-satin bg-surface-overlay px-4 py-3 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-center text-sm text-muted-foreground">
             {t('employer.campaigns.inviteFlow.resultInboxHint')}
           </p>
         ) : null}

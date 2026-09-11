@@ -44,7 +44,7 @@ export function CvFlowSelectFileCard({
       )}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-overlay text-foreground">
+        <span className="frame-satin-soft flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-foreground">
           <FileText className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1 space-y-2">

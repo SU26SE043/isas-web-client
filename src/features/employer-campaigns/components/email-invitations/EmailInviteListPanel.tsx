@@ -74,7 +74,7 @@ export function EmailInviteListPanel({
       </div>
 
       {total === 0 ? (
-        <p className="rounded-md border border-dashed border-satin px-3 py-8 text-center text-sm text-muted-foreground">
+        <p className="rounded-xl border border-dashed border-satin px-3 py-8 text-center text-sm text-muted-foreground">
           {t('employer.campaigns.emailInvitations.list.empty')}
         </p>
       ) : (
@@ -119,7 +119,7 @@ export function EmailInviteListPanel({
       )}
 
       {capacityWarning ? (
-        <p className="rounded-md border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning">
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning">
           {capacityWarning}
         </p>
       ) : null}
@@ -169,7 +169,7 @@ function EmailRow({
 }) {
   const { t } = useLanguage();
   return (
-    <li className="flex items-start gap-2 rounded-md border border-satin bg-surface-raised px-3 py-2">
+    <li className="flex items-start gap-2 rounded-xl border border-satin bg-surface-raised px-3 py-2">
       <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="break-words text-sm text-foreground" style={{ overflowWrap: 'anywhere' }}>

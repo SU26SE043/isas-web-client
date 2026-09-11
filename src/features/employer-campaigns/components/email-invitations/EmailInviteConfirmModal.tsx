@@ -63,7 +63,7 @@ export function EmailInviteConfirmModal({
             </span>
             {emails.length}
           </p>
-          <ul className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-satin bg-surface-overlay px-3 py-2">
+          <ul className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-satin bg-surface-overlay px-3 py-2">
             {preview.map((email) => (
               <li key={email} className="break-words text-foreground">
                 {email}

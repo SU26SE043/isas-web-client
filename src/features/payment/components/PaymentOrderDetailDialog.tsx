@@ -119,7 +119,7 @@ export function PaymentOrderDetailDialog({
             variant="outline"
             onClick={onRefreshStatus}
             disabled={isStatusLoading || isProceeding}
-            className="h-10 rounded-md px-4"
+            className="h-10 px-4"
           >
             <RefreshCw className={cn('size-4', isStatusLoading && 'animate-spin')} aria-hidden />
             {t('payment.orders.refresh')}
@@ -131,7 +131,7 @@ export function PaymentOrderDetailDialog({
               loading={isCanceling}
               disabled={isProceeding}
               onClick={onCancelOrder}
-              className="h-10 rounded-md px-4 border-error/40 text-error hover:bg-error-bg hover:text-error"
+              className="h-10 px-4 border-error/40 text-error hover:bg-error-bg hover:text-error"
             >
               <Trash2 className="size-4" aria-hidden />
               {t('payment.orders.cancelOrder')}
@@ -143,7 +143,7 @@ export function PaymentOrderDetailDialog({
               loading={isProceeding}
               disabled={isCanceling}
               onClick={onProceedPayment}
-              className="h-10 rounded-md px-4"
+              className="h-10 px-4"
             >
               <CreditCard className="size-4" aria-hidden />
               {isProceeding

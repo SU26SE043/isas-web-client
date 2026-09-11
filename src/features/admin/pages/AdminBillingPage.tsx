@@ -91,7 +91,7 @@ export function AdminBillingPage() {
             </div>
             <div>
               <Label htmlFor="billing-mode">{t('admin.billing.mode')}</Label>
-              <select id="billing-mode" value={mode} onChange={(event) => setMode(event.target.value as PaymentModeChoice)} className="mt-2 flex h-10 w-full rounded-md border border-satin bg-surface-overlay px-3 text-sm text-foreground">
+              <select id="billing-mode" value={mode} onChange={(event) => setMode(event.target.value as PaymentModeChoice)} className="mt-2 flex h-10 w-full rounded-lg border border-satin bg-surface-overlay px-3 text-sm text-foreground">
                 <option value="postpaid">{t('admin.billing.postpaid')}</option>
                 <option value="prepaid">{t('admin.billing.prepaid')}</option>
               </select>
@@ -104,7 +104,7 @@ export function AdminBillingPage() {
             ) : null}
             <div>
               <Label htmlFor="billing-note">{t('admin.billing.note')}</Label>
-              <textarea id="billing-note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} className="mt-2 w-full rounded-md border border-satin bg-surface-overlay px-3 py-2 text-sm text-foreground" />
+              <textarea id="billing-note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm text-foreground" />
             </div>
             <label className="flex items-start gap-3 text-sm text-muted-foreground">
               <input type="checkbox" checked={allowStrandedCredits} onChange={(event) => setAllowStrandedCredits(event.target.checked)} className="mt-1" />

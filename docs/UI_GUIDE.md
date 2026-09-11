@@ -335,10 +335,17 @@ Quy tắc: **surface bọc ngoài luôn bo lớn hơn thứ nằm trong nó**. K
 (`rounded-md`, `rounded-sm`, `rounded-3xl`, `rounded-4xl` đã bị gỡ). Bo một phía
 (`rounded-t-*`, `rounded-b-*`) không thuộc thang này.
 
-Kiểm tra: `npm run check:radius` — phạm vi gác hiện là `src/components/ui` và
-`src/features/employer-campaigns/components/wizard`; mở rộng bằng cách thêm đường dẫn vào
-`SCOPES` trong `scripts/check-radius.mjs`. **Đừng bật cả `src` một lượt** — sẽ đỏ 900+ chỗ
-và kết cục là ai đó tắt lưới đi.
+Kiểm tra: `npm run check:radius` — phạm vi gác là **cả `src`**.
+
+> Bản đầu của mục này ghi *"đừng bật cả `src`, sẽ đỏ 900+ chỗ"* — **con số đó sai**: nó đếm
+> mọi `rounded-*` kể cả hợp lệ. Số **vi phạm** thật lúc mở scope là **68** (`rounded-md` 50 ·
+> `rounded-3xl` 12 · `rounded-sm` 6), đã dọn xong.
+
+**Ngoại lệ** — `radius-exempt: <lý do>` trong comment ngay trên dòng (hoặc cuối chính dòng đó).
+Chỉ dùng cho vật thể **không thuộc bốn vai trò**: mark văn bản, ô data-viz. Lý do có thật, không
+phải để làm lưới xanh — ép ô heatmap 11px lên bán kính 12px thì trình duyệt kẹp về nửa cạnh và
+ô vuông thành **hình tròn**, tức lưới làm hỏng đúng thứ nó định bảo vệ. `radius-exempt` trống
+không được chấp nhận.
 
 ## Chip icon — theo VAI TRÒ
 
