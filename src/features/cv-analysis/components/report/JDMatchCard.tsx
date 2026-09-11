@@ -15,7 +15,7 @@ export const JDMatchCard: React.FC<JDMatchCardProps> = ({ jdMatch }) => {
   const { t } = useLanguage();
 
   return (
-    <section className="frame-satin rounded-3xl bg-[var(--glass-bg)] p-6 backdrop-blur-xl sm:p-8">
+    <section className="frame-satin rounded-2xl bg-[var(--glass-bg)] p-6 backdrop-blur-xl sm:p-8">
       <h2 className="text-lg font-semibold tracking-tight text-foreground">{t('cv.report.jdMatch')}</h2>
       <p className="mt-1.5 text-sm text-muted-foreground">{t('cv.report.jdMatchDesc')}</p>
 

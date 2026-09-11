@@ -41,14 +41,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
             className={`flex h-14 items-center border-b border-subtle px-3 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
           >
             {!isCollapsed ? (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+              <Link to="/" className="focus-ring hidden rounded-lg sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             ) : null}
             <button
               type="button"
               onClick={() => setIsCollapsed((value) => !value)}
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
               aria-pressed={isCollapsed}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-surface-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             >
@@ -84,7 +84,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
                     {item.label}
                   </span>
                   {isCollapsed ? (
-                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-md border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
+                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-lg border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
                       {item.label}
                     </span>
                   ) : null}
@@ -94,9 +94,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
           </nav>
 
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
+            {/*
+              Hàng này KHÔNG phải link tới /candidate/notifications (đã có sẵn trong nav chính).
+              Nó mở panel xem nhanh + giữ số chưa đọc (NotificationBell.tsx:67 chỉ setOpen,
+              không điều hướng). Vì vậy nhãn phải là 'Trung tâm thông báo' — trùng đúng tiêu đề
+              của panel nó mở ra (NotificationBell.tsx:95) — chứ KHÔNG dùng lại
+              'engagement.nav.notifications' của mục nav, nếu không sidebar hiện hai dòng y hệt.
+            */}
             <div
               className={navLinkClassName(false, isCollapsed)}
-              title={isCollapsed ? t('engagement.nav.notifications') : undefined}
+              title={isCollapsed ? t('engagement.notifications.center') : undefined}
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('button')) return;
                 event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
@@ -110,7 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
                 ].join(' ')}
                 aria-hidden={isCollapsed}
               >
-                {t('engagement.nav.notifications')}
+                {t('engagement.notifications.center')}
               </span>
             </div>
             <div

@@ -38,13 +38,13 @@ export function CampaignQuestionCard({
     <li className="space-y-3 rounded-xl border border-satin bg-surface-overlay p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="frame-satin-soft flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
+          <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-foreground">
             {String(index + 1).padStart(2, '0')}
           </span>
-          <span className="rounded-md border border-satin px-2 py-0.5 text-xs text-muted-foreground">{question.questionGroup || t('employer.campaigns.campaignQuestions.question.commonGroup')}</span>
+          <span className="rounded-lg border border-satin px-2 py-0.5 text-xs text-muted-foreground">{question.questionGroup || t('employer.campaigns.campaignQuestions.question.commonGroup')}</span>
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium',
+              'inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-xs font-medium',
               isAi
                 ? 'border-foreground bg-foreground text-background'
                 : 'border-satin bg-surface-base text-muted-foreground',

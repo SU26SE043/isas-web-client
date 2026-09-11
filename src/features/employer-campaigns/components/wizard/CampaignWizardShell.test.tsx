@@ -37,6 +37,22 @@ function renderShell(onStepChange = vi.fn()) {
   return onStepChange;
 }
 
+function renderShellMarkup() {
+  return render(
+    <MemoryRouter>
+      <CampaignWizardShell
+        currentStep={1}
+        completedSteps={[0]}
+        onStepChange={vi.fn()}
+        autosaveStatus="saved"
+        lastSavedAt="2026-09-07T12:34:00.000Z"
+      >
+        <div>content</div>
+      </CampaignWizardShell>
+    </MemoryRouter>,
+  );
+}
+
 function buttonsFor(titleKey: string) {
   return screen.getAllByRole('button').filter((button) => button.textContent?.includes(titleKey));
 }
@@ -112,5 +128,48 @@ describe('CampaignWizardShell navigation and save vocabulary', () => {
   it('rejects wizard step indexes outside the step list', () => {
     expect(canNavigateToWizardStep(-1, 1, [0])).toBe(false);
     expect(canNavigateToWizardStep(7, 1, [0])).toBe(false);
+  });
+});
+
+describe('CampaignWizardShell header does not repeat the stepper', () => {
+  it('drops the progress percent entirely', () => {
+    const { container } = renderShellMarkup();
+
+    expect(container.textContent).not.toContain('employer.campaigns.wizard.progress');
+  });
+
+  it('keeps the step counter only below the sm breakpoint', () => {
+    const { container } = renderShellMarkup();
+
+    const counter = [...container.querySelectorAll('span')].find((element) =>
+      element.textContent?.includes('employer.campaigns.wizard.stepCounter'),
+    );
+    expect(counter).toBeDefined();
+    expect(counter?.className).toContain('sm:hidden');
+  });
+
+  it('still shows the autosave status at every breakpoint', () => {
+    const { container } = renderShellMarkup();
+
+    const autosave = [...container.querySelectorAll('p')].find((element) =>
+      element.textContent?.includes('employer.campaigns.wizard.autosave.savedAt'),
+    );
+    expect(autosave).toBeDefined();
+    expect(autosave?.className).not.toContain('hidden');
+  });
+});
+
+describe('CampaignWizardShell stepper labels fit one line', () => {
+  it('uses the short settings label in both steppers', () => {
+    renderShellMarkup();
+
+    expect(screen.getAllByText('employer.campaigns.wizard.steps.settingsShort')).toHaveLength(2);
+    expect(screen.queryAllByText('employer.campaigns.wizard.steps.settings')).toHaveLength(0);
+  });
+
+  it('leaves steps without a short label on their original key', () => {
+    renderShellMarkup();
+
+    expect(screen.getAllByText('employer.campaigns.wizard.steps.review')).toHaveLength(2);
   });
 });

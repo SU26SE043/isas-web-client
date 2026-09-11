@@ -125,7 +125,13 @@ export function CampaignQuestionsStep({
   return (
     <SectionPanel
       icon={<HelpCircle className="size-4" aria-hidden />}
-      title={`${t('employer.campaigns.campaignQuestions.title')} · ${questions.length} / ${max}`}
+      // Bộ đếm chỉ có nghĩa khi ĐÃ có câu hỏi. Ở màn rỗng, "· 0 / 20" là một phân số trần
+      // không đơn vị: 20 là TRẦN CỨNG, không phải mục tiêu — nó đọc như một hạn mức đang
+      // cảnh báo, trong khi việc cần làm chỉ là chọn cách bắt đầu.
+      title={questions.length === 0
+        ? t('employer.campaigns.campaignQuestions.title')
+        : `${t('employer.campaigns.campaignQuestions.title')} · ${t('employer.campaigns.campaignQuestions.countUnit').replace('{{n}}', String(questions.length)).replace('{{max}}', String(max))}`}
+      description={questions.length === 0 ? t('employer.campaigns.campaignQuestions.start.lede') : undefined}
       footer={
         <CampaignWizardNav
           onBack={onBack}

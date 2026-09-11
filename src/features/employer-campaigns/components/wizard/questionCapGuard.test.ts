@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPAIGN_QUESTION_HARD_MAX } from '../../utils/campaignQuestionLimits';
+import {
+  CAMPAIGN_AI_GENERATE_MAX,
+  CAMPAIGN_QUESTION_HARD_MAX,
+} from '../../utils/campaignQuestionLimits';
 
 /**
  * UX3-F3 — trần số câu của ngân hàng đề KHÔNG được phụ thuộc `settings.maxQuestions`.
@@ -38,6 +41,15 @@ const read = (suffix: string) => {
   return stripComments(hit![1]);
 };
 
+/** Cắt thân một `export function` (đóng ngoặc ở cột 0 ⇒ không dính khối con). */
+const exportedFunctionBody = (source: string, name: string) => {
+  const start = source.indexOf(`export function ${name}(`);
+  expect(start, `Không tìm thấy hàm ${name}`).toBeGreaterThanOrEqual(0);
+  const end = source.indexOf('\n}', start);
+  expect(end, `Hàm ${name} không có điểm kết thúc`).toBeGreaterThan(start);
+  return source.slice(start, end);
+};
+
 const callbackBody = (source: string, name: string) => {
   const start = source.indexOf(`const ${name} = useCallback(`);
   expect(start, `Không tìm thấy callback ${name}`).toBeGreaterThanOrEqual(0);
@@ -47,8 +59,56 @@ const callbackBody = (source: string, name: string) => {
 };
 
 describe('UX3-F3 — trần ngân hàng đề', () => {
-  it('trần hệ thống là 20 câu', () => {
-    expect(CAMPAIGN_QUESTION_HARD_MAX).toBe(20);
+  /**
+   * A5 — ĐỔI TIỀN ĐỀ CÓ CHỦ ĐÍCH: bản trước chốt cứng `CAMPAIGN_QUESTION_HARD_MAX === 20`.
+   *
+   * Con số 20 đó SAI so với hợp đồng backend: trần KÍCH THƯỚC ngân hàng đề là
+   * `MaxQuestionsPerCampaign = 200` (`QuestionLimits.cs:36`, áp ở `CampaignService.cs:3673`).
+   * FE dùng chung MỘT hằng = 20 cho cả trần ngân hàng đề LẪN trần một lượt gọi AI, nên
+   * chặt hơn hợp đồng 10 lần — nhà tuyển dụng không tạo nổi rổ đề quá 20 câu, làm chính
+   * tính năng "mỗi ứng viên bốc N câu trong rổ" mất ý nghĩa (rổ phải LỚN hơn N).
+   *
+   * Nay tách đôi. Lưới dưới đây khoá CẢ HAI giá trị: gộp lại thành một hằng, hay đặt nhầm
+   * giá trị của hằng này sang hằng kia, đều phải làm đỏ.
+   */
+  it('hai trần là HAI hằng khác nhau, khớp đúng hai hằng backend', () => {
+    // Trần kích thước ngân hàng đề ← QuestionLimits.cs:36 `MaxQuestionsPerCampaign`.
+    expect(CAMPAIGN_QUESTION_HARD_MAX).toBe(200);
+    // Trần chi phí một lượt gọi AI ← CampaignService.cs:930 `MaxGeneratedQuestions`.
+    expect(CAMPAIGN_AI_GENERATE_MAX).toBe(20);
+    // Bằng nhau = ai đó đã gộp lại; đó đúng là lỗi bản này sinh ra để sửa.
+    expect(CAMPAIGN_QUESTION_HARD_MAX).not.toBe(CAMPAIGN_AI_GENERATE_MAX);
+  });
+
+  /**
+   * Lưới QUÉT MÃ NGUỒN chứ không phải lưới hành vi, vì hai đường dưới đây nối nhầm hằng
+   * mà KHÔNG có triệu chứng: `defaultGenerateCount` là `Math.min(<trần>, 10)` — cả 20 lẫn
+   * 200 đều ra 10. Chỉ có mã nguồn mới phân biệt được ý định.
+   */
+  it('đường sinh câu AI bám trần lượt gọi AI, KHÔNG bám trần ngân hàng đề', () => {
+    const source = read('/utils/campaignQuestionLimits.ts');
+
+    const validate = exportedFunctionBody(source, 'validateGenerateCount');
+    expect(
+      validate.includes('CAMPAIGN_AI_GENERATE_MAX'),
+      'validateGenerateCount phải kẹp theo CAMPAIGN_AI_GENERATE_MAX (20).',
+    ).toBe(true);
+    expect(
+      validate.includes('CAMPAIGN_QUESTION_HARD_MAX'),
+      'validateGenerateCount KHÔNG được kẹp theo trần ngân hàng đề (200): FE sẽ cho gõ tới\n' +
+        '200 rồi backend trả 400 "count phải trong khoảng 1..20." — lỗi nổ sau khi người dùng bấm.',
+    ).toBe(false);
+
+    const fallback = exportedFunctionBody(source, 'defaultGenerateCount');
+    expect(
+      fallback.includes('CAMPAIGN_AI_GENERATE_MAX'),
+      'defaultGenerateCount là mặc định của Ô SỐ CÂU AI ⇒ phải bám trần lượt gọi AI.',
+    ).toBe(true);
+    expect(
+      fallback.includes('CAMPAIGN_QUESTION_HARD_MAX'),
+      'defaultGenerateCount KHÔNG được bám trần ngân hàng đề. Hôm nay nối nhầm vẫn ra 10 nên\n' +
+        'không test hành vi nào thấy — nới trần AI về sau là nó âm thầm sai.',
+    ).toBe(false);
   });
 
   it('bước Câu hỏi lấy trần từ hằng số hệ thống, KHÔNG từ settings.maxQuestions', () => {

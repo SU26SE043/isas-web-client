@@ -1,11 +1,20 @@
-import { Plus } from 'lucide-react';
+import { Lock, Plus } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import { cn } from '@/lib/utils';
 import type { RubricCriterion } from '../../types/campaignManagement.types';
 import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionCard';
+import { criteriaLockCopyKey, type CriteriaLockReason } from './criteria/criteriaLock';
+import { CRITERIA_HEADER_PADDING, CRITERIA_ROW_GRID } from './criteria/criteriaRowGrid';
+
+// Luật khoá nay sống ở `criteria/criteriaLock` vì popup chi tiết cũng đọc nó; giữ
+// re-export ở đây để call site cũ không phải đổi đường import.
+export { criteriaLockCopyKey };
+export type { CriteriaLockReason };
 
 interface CampaignCriteriaManualListProps {
   rubric: RubricCriterion[];
   disabled?: boolean;
+  lockReason?: CriteriaLockReason;
   onChangeRubric: (rubric: RubricCriterion[]) => void;
 }
 
@@ -22,9 +31,16 @@ function createEmptyCriterion(): RubricCriterion {
 export function CampaignCriteriaManualList({
   rubric,
   disabled,
+  lockReason,
   onChangeRubric,
 }: CampaignCriteriaManualListProps) {
   const { t } = useLanguage();
+  const isLocked = Boolean(disabled);
+  const showLockNote = isLocked && rubric.length > 0;
+  const lockNote = t(criteriaLockCopyKey(lockReason)).replace(
+    '{{action}}',
+    t('employer.campaigns.wizard.criteriaCustomize'),
+  );
 
   const updateCriterion = (index: number, patch: Partial<RubricCriterion>) => {
     onChangeRubric(
@@ -34,9 +50,16 @@ export function CampaignCriteriaManualList({
 
   return (
     <>
-      {rubric.length > 0 ? <div className="mb-3 hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_7.5rem_7rem_auto] gap-3 px-1 text-caption text-muted-foreground lg:grid">
+      {showLockNote ? <div id="campaign-rubric-lock-note" role="status" className="frame-satin-soft mb-3 flex items-start gap-2.5 rounded-xl bg-surface-overlay/60 px-3.5 py-2.5">
+        <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">{t('employer.campaigns.wizard.rubric.lockedTitle')}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{lockNote}</p>
+        </div>
+      </div> : null}
+
+      {rubric.length > 0 ? <div className={cn('mb-3 hidden gap-3 text-caption text-muted-foreground lg:grid', CRITERIA_ROW_GRID, CRITERIA_HEADER_PADDING)}>
         <span>{t('employer.campaigns.wizard.rubric.colCriterion')}</span>
-        <span>{t('employer.campaigns.wizard.rubric.colDescription')}</span>
         <span>{t('employer.campaigns.wizard.rubric.colWeight')}</span>
         <span>{t('employer.campaigns.wizard.rubric.colMaxScore')}</span>
         <span className="sr-only">{t('employer.campaigns.wizard.rubric.remove')}</span>
@@ -55,13 +78,23 @@ export function CampaignCriteriaManualList({
         </div>
       </div>}
 
-      <div className="space-y-3">
+      {/* Margin âm bù đúng phần padding nên bật/tắt khoá KHÔNG làm nhảy layout.
+          `cursor-not-allowed` phải nằm ở lớp bọc: `Input` primitive có
+          `disabled:pointer-events-none` ⇒ con trỏ của chính ô nhập không bao giờ hiện. */}
+      <div
+        aria-describedby={showLockNote ? 'campaign-rubric-lock-note' : undefined}
+        className={cn(
+          '-mx-2 space-y-3 rounded-xl px-2 py-2 transition-colors duration-200 ease-out',
+          isLocked && 'cursor-not-allowed bg-surface-overlay/40',
+        )}
+      >
         {rubric.map((criterion, index) => (
           <CampaignRubricCriterionCard
             key={criterion.id}
             criterion={criterion}
             index={index}
-            disabled={Boolean(disabled)}
+            disabled={isLocked}
+            lockReason={lockReason}
             onChange={(patch) => updateCriterion(index, patch)}
             onRemove={() => onChangeRubric(rubric.filter((item) => item.id !== criterion.id))}
           />
@@ -70,14 +103,22 @@ export function CampaignCriteriaManualList({
 
       <button
         type="button"
-        disabled={Boolean(disabled)}
+        disabled={isLocked}
         onClick={() => onChangeRubric([...rubric, createEmptyCriterion()])}
-        className="mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin bg-transparent px-4 py-5 text-center transition-[background-color,border-color] duration-200 ease-out hover:border-[var(--satin-border-hover)] hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
+        className={cn(
+          'mt-1 flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-satin px-4 py-5 text-center transition-[background-color,border-color,opacity] duration-200 ease-out',
+          // Khi khoá thì KHÔNG phát ra class `hover:*`. Giữ chúng thì `:hover` vẫn khớp
+          // trên nút disabled ⇒ nút sáng lên lúc rê chuột ⇒ trông vẫn bấm được.
+          isLocked
+            ? 'cursor-not-allowed bg-surface-overlay/40 opacity-60'
+            : 'bg-transparent hover:border-[var(--satin-border-hover)] hover:bg-surface-overlay',
+        )}
       >
         <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-          <Plus className="size-4" aria-hidden />
+          {isLocked ? <Lock className="size-4" aria-hidden /> : <Plus className="size-4" aria-hidden />}
           {t('employer.campaigns.wizard.rubric.add')}
         </span>
+        {isLocked ? <span className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.rubric.addLocked')}</span> : null}
       </button>
     </>
   );

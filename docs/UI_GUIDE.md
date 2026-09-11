@@ -319,6 +319,55 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
 11. **Bright black + satin silver** — nền `#141416` family; viền brushed aluminum low-contrast
 
+## Bo góc — theo VAI TRÒ (bắt buộc)
+
+Trước khi có mục này, `src` dùng **7 giá trị** bo góc khác nhau ở 981 chỗ, và ngay trong bộ
+primitive `Input` là 16px còn `Button` 12px — hai thứ luôn đứng cạnh nhau lại khác bo góc.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| control | `rounded-lg` | 12 | input · textarea · select · button · ô nhập bất kỳ |
+| nested surface | `rounded-xl` | 16 | thẻ nằm TRONG một panel (thẻ tiêu chí, thẻ câu hỏi) |
+| surface | `rounded-2xl` | 20 | `SectionPanel` · `Card` · `Dialog` · `SelectionOption` |
+| pill | `rounded-full` | — | badge · avatar · chấm trạng thái · thanh tiến độ |
+
+Quy tắc: **surface bọc ngoài luôn bo lớn hơn thứ nằm trong nó**. Không thêm giá trị thứ năm
+(`rounded-md`, `rounded-sm`, `rounded-3xl`, `rounded-4xl` đã bị gỡ). Bo một phía
+(`rounded-t-*`, `rounded-b-*`) không thuộc thang này.
+
+⚠ Luật áp cho **cả CSS**: `border-radius: var(--radius-sm|md)` bị cấm — 5 utility `.btn-*`
+trong `src/index.css` từng dùng `--radius-md` (8px) trong khi primitive `Button` là 12px, nên
+một `<Button>` và một `<button class="btn-primary">` đứng cạnh nhau khác bo góc.
+
+⚠ `rounded` **trần** (không dấu gạch) cố ý không bị bắt: trong `src` nó gần như chỉ dùng cho ô
+tick `size-4 rounded` — hộp 16px ép lên 12px sẽ bị kẹp thành gần TRÒN, mà tròn nghĩa là "chọn
+một" (radio) chứ không phải "chọn nhiều".
+
+Kiểm tra: `npm run check:radius` — phạm vi gác là **cả `src`**.
+
+> Bản đầu của mục này ghi *"đừng bật cả `src`, sẽ đỏ 900+ chỗ"* — **con số đó sai**: nó đếm
+> mọi `rounded-*` kể cả hợp lệ. Số **vi phạm** thật lúc mở scope là **68** (`rounded-md` 50 ·
+> `rounded-3xl` 12 · `rounded-sm` 6), đã dọn xong.
+
+**Ngoại lệ** — `radius-exempt: <lý do>` trong comment ngay trên dòng (hoặc cuối chính dòng đó).
+Chỉ dùng cho vật thể **không thuộc bốn vai trò**: mark văn bản, ô data-viz. Lý do có thật, không
+phải để làm lưới xanh — ép ô heatmap 11px lên bán kính 12px thì trình duyệt kẹp về nửa cạnh và
+ô vuông thành **hình tròn**, tức lưới làm hỏng đúng thứ nó định bảo vệ. `radius-exempt` trống
+không được chấp nhận.
+
+## Chip icon — theo VAI TRÒ
+
+Cùng lý do với bo góc: `src` đang dùng **5 cỡ chip** (`size-7/9/10/12/14`) cho cùng một loại
+vật thể, nên cùng một wizard có bước chip 28px, bước 36px, bước 48px.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| tile | `size-14` | 56 | `SelectionOption`, ô trống lớn (drop zone) |
+| panel header | `size-10` | 40 | chip icon trên header `SectionPanel` |
+| inline | `size-9` | 36 | chip trong một hàng danh sách (số thứ tự, icon tiêu chí) |
+
+Glyph bên trong chip: `size-4` cho `inline`/`panel header`, `size-5`–`size-6` cho `tile`.
+
 ## File size (bắt buộc)
 
 | Phạm vi | Giới hạn |

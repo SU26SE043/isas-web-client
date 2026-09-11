@@ -48,7 +48,7 @@ export function FeatureCvIllustration() {
           style={{ animation: 'scan 3s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate' }}
         >
           <div className="absolute w-full h-[2px] bg-surface-overlay shadow-none" />
-          <div className="absolute right-4 -top-8 bg-surface-overlay/90 backdrop-blur-md text-foreground font-bold text-[10px] font-mono px-3 py-1 rounded border border-default flex items-center space-x-1">
+          <div className="absolute right-4 -top-8 bg-surface-overlay/90 backdrop-blur-md text-foreground font-bold text-[10px] font-mono px-3 py-1 rounded-full border border-default flex items-center space-x-1">
             <div className="w-1.5 h-1.5 bg-surface-raised rounded-full animate-ping" />
             <span>{t('features.scanning')}</span>
           </div>

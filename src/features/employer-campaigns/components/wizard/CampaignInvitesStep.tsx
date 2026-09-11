@@ -13,6 +13,7 @@ import type { CampaignHardFiltersState } from '../../types/campaignWizard.types'
 import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
 import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
+import { WizardNumberField } from './WizardNumberField';
 import { CvScreeningPanel } from '../screening/CvScreeningPanel';
 
 type InviteTab = 'email' | 'cv';
@@ -21,6 +22,8 @@ interface CampaignInvitesStepProps {
   campaignId: string | null;
   campaign?: EmployerCampaign | null;
   timeLimitMinutes?: number;
+  onTimeLimitChange?: (value: number | null) => void;
+  error?: string | null;
   jdText: string;
   hardFilters: CampaignHardFiltersState;
   inviteEmails: string[];
@@ -40,6 +43,8 @@ export function CampaignInvitesStep({
   campaignId,
   campaign,
   timeLimitMinutes,
+  onTimeLimitChange,
+  error,
   jdText,
   hardFilters,
   inviteEmails,
@@ -144,7 +149,21 @@ export function CampaignInvitesStep({
               <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryInvalid')}</p><p className="mt-1 text-xl font-semibold text-foreground">{invalidCount}</p></div>
               <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryExpiry')}</p><p className="mt-1 text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.invites.summaryAtDeploy')}</p></div>
             </div>
-            <div className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm"><span className="text-muted-foreground">{t('employer.campaigns.wizard.invites.estimatedTestTime')}: </span><span className="font-medium text-foreground">{timeLimitMinutes ?? campaign?.durationMinutes ?? '—'} {t('employer.campaigns.wizard.invites.minutes')}</span></div>
+            {/* Thời lượng bài thi sống ở đây vì nó CHỈ đi vào thư mời (`IInvitationEmailPublisher`),
+                không hề gửi sang InterviewService ⇒ nó không ràng buộc buổi thi. Trước đây nó chỉ
+                được HIỆN ở bước này, còn ô nhập thì không tồn tại ở đâu cả ⇒ vĩnh viễn kẹt ở 60. */}
+            <div className="@container grid gap-4 @md:grid-cols-2">
+              <WizardNumberField
+                id="campaign-time-limit"
+                label={t('employer.campaigns.form.timeLimitMinutes')}
+                suffix={t('employer.campaigns.form.minutesSuffix')}
+                help={t('employer.campaigns.form.timeLimitHelp')}
+                value={timeLimitMinutes ?? campaign?.durationMinutes ?? null}
+                min={1}
+                invalid={Boolean(error) && !timeLimitMinutes}
+                onChange={(value) => onTimeLimitChange?.(value == null ? null : Math.max(1, value))}
+              />
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

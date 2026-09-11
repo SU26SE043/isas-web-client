@@ -10,12 +10,26 @@ import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { AutosaveStatus } from '../../types/campaignWizard.types';
 import { CAMPAIGN_WIZARD_STEPS, canNavigateToWizardStep } from './campaignWizard.steps';
+import type { CampaignWizardStepId } from './campaignWizard.steps';
+
+/**
+ * Nhãn ngắn dành riêng cho thanh bước. Cột chỉ rộng 220px ở `lg`, nhãn dài xuống 2 dòng
+ * làm khoảng cách giữa các mục lởm chởm. Khoá gốc `steps.settings` vẫn giữ nguyên vì nó
+ * còn là tiêu đề panel của chính bước đó (`CampaignSettingsStep`), nơi cần mô tả đầy đủ.
+ */
+const STEPPER_TITLE_KEYS: Partial<Record<CampaignWizardStepId, string>> = {
+  settings: 'employer.campaigns.wizard.steps.settingsShort',
+};
+
+function stepperTitleKey(step: (typeof CAMPAIGN_WIZARD_STEPS)[number]): string {
+  return STEPPER_TITLE_KEYS[step.id] ?? step.titleKey;
+}
 
 interface CampaignWizardShellProps {
   currentStep: number;
   errorSteps?: readonly number[];
   campaignName?: string;
-  progressPercent?: number;
+  /** @deprecated Không còn hiển thị — thanh bước đã chỉ rõ vị trí. Giữ để caller cũ không vỡ kiểu. */
   isEditing?: boolean;
   autosaveStatus?: AutosaveStatus;
   lastSavedAt?: string;
@@ -45,7 +59,6 @@ export function CampaignWizardShell({
   currentStep,
   errorSteps = [],
   campaignName,
-  progressPercent = 0,
   isEditing = false,
   autosaveStatus = 'idle',
   lastSavedAt,
@@ -67,17 +80,21 @@ export function CampaignWizardShell({
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate text-sm font-medium text-foreground sm:text-base">{flowTitle}</p>
-              <span className="rounded-md border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
+              <span className="rounded-lg border border-satin bg-surface-overlay px-2 py-0.5 text-xs text-muted-foreground">
                 {t('employer.campaigns.status.draft')}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
               {autosaveLabel(t, autosaveStatus, lastSavedAt)}
-              {' · '}
-              {t('employer.campaigns.wizard.progress')
-                .replace('{percent}', String(Math.round(progressPercent)))
-                .replace('{current}', String(currentStep + 1))
-                .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
+              {/* Bộ đếm bước chỉ hiện dưới `sm`: ở đó thanh bước dọc bị ẩn, còn bản ngang thay
+                  thế lại cuộn ngang nên không nhìn ra tổng số bước. Từ `sm` trở lên thanh bước
+                  đã nói rõ đang ở đâu nên nhắc lại là thừa. */}
+              <span className="sm:hidden">
+                {' · '}
+                {t('employer.campaigns.wizard.stepCounter')
+                  .replace('{current}', String(currentStep + 1))
+                  .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
+              </span>
             </p>
           </div>
           <Link
@@ -90,7 +107,7 @@ export function CampaignWizardShell({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:px-10 lg:py-8">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:px-10 lg:py-8">
         <nav
           aria-label={t('employer.campaigns.wizard.stepperLabel')}
           className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[220px] lg:self-start"
@@ -119,7 +136,7 @@ export function CampaignWizardShell({
                     </span>
                     <span className={cn('min-w-0 pt-1.5', !isLast && 'pb-6')}>
                       <span className={cn('block text-sm font-medium leading-snug group-hover:text-foreground', flowStepLabelClass(status))}>
-                        {t(step.titleKey)}
+                        {t(stepperTitleKey(step))}
                       </span>
                     </span>
                   </button>
@@ -148,7 +165,7 @@ export function CampaignWizardShell({
                   >
                     <FlowStepMarker status={status} stepNumber={index + 1} />
                     <span className={cn('max-w-[7rem] truncate text-xs font-medium group-hover:text-foreground', flowStepLabelClass(status))}>
-                      {t(step.titleKey)}
+                      {t(stepperTitleKey(step))}
                     </span>
                   </button>
                 </li>
@@ -156,7 +173,7 @@ export function CampaignWizardShell({
             })}
           </ol>
 
-          <div className="flex min-h-0 flex-1 flex-col animate-in fade-in duration-300">{children}</div>
+          <div className="flex flex-col animate-in fade-in duration-300">{children}</div>
         </div>
       </div>
     </div>

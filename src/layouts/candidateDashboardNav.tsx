@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, ClipboardCheck, FileText, LifeBuoy, Settings } from 'lucide-react';
+import { CircleHelp, ClipboardCheck, FileText, Inbox, LifeBuoy, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type DashboardNavItem = {
@@ -105,9 +105,12 @@ export function buildCandidateDashboardNav(t: (key: string) => string): Dashboar
       icon: <ClipboardCheck className="h-4 w-4 shrink-0" aria-hidden />,
     },
     {
+      // Icon Inbox chứ KHÔNG phải Bell: chuông ở đáy sidebar (NotificationBell) cũng vẽ Bell,
+      // mà khi sidebar thu gọn nhãn bị ẩn về w-0 nên chỉ còn icon — hai Bell cạnh nhau là
+      // không phân biệt được "trang danh sách" với "panel xem nhanh".
       to: '/candidate/notifications',
       label: t('engagement.nav.notifications'),
-      icon: <Bell className="h-4 w-4 shrink-0" aria-hidden />,
+      icon: <Inbox className="h-4 w-4 shrink-0" aria-hidden />,
     },
     {
       to: '/candidate/settings',

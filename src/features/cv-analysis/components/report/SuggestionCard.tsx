@@ -10,7 +10,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestions }) =
   const { t } = useLanguage();
 
   return (
-    <section className="frame-satin rounded-3xl bg-[var(--glass-bg)] p-6 backdrop-blur-xl sm:p-8">
+    <section className="frame-satin rounded-2xl bg-[var(--glass-bg)] p-6 backdrop-blur-xl sm:p-8">
       <div className="flex items-center gap-3">
         <span className="flex size-9 items-center justify-center rounded-xl bg-white/[0.08] text-foreground">
           <Lightbulb className="size-5" aria-hidden />

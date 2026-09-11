@@ -63,7 +63,7 @@ export const HeroSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-base/90 via-surface-base/30 to-surface-base/10"></div>
 
                 {/* REC Indicator */}
-                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-surface-elevated/90 px-2.5 py-1 rounded-md backdrop-blur-sm">
+                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 bg-surface-elevated/90 px-2.5 py-1 rounded-full backdrop-blur-sm">
                   <div className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgb(239_68_68/0.8)]"></div>
                   <span className="text-[10px] text-foreground font-mono font-bold tracking-wider">REC 00:04:23</span>
                 </div>
@@ -83,8 +83,8 @@ export const HeroSection: React.FC = () => {
                 {/* Metrics Bottom Bar */}
                 <div className="absolute bottom-4 left-4 right-4 z-10">
                   <div className="flex justify-between mb-2">
-                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.confidence')}: 85%</span>
-                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded border border-default">{t('hero.pronunciation')}: 92%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded-full border border-default">{t('hero.confidence')}: 85%</span>
+                    <span className="text-[10px] md:text-xs text-foreground font-medium bg-surface-raised/80 backdrop-blur-md px-2 py-1 rounded-full border border-default">{t('hero.pronunciation')}: 92%</span>
                   </div>
                   <div className="h-1.5 bg-surface-highlight rounded-full w-full overflow-hidden backdrop-blur-sm border border-default">
                     <div className="h-full bg-surface-overlay w-[85%] relative">

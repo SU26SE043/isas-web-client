@@ -118,7 +118,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
             pick(e.dataTransfer.files?.[0] ?? null);
           }}
         >
-          <span className="frame-satin-soft mb-4 flex size-12 items-center justify-center rounded-2xl bg-surface-overlay text-muted-foreground">
+          <span className="frame-satin-soft mb-4 flex size-14 items-center justify-center rounded-2xl bg-surface-overlay text-muted-foreground">
             {status === 'uploading' ? (
               <Spinner className="size-6 border-muted border-t-foreground" label={uploadingLabel} />
             ) : (
@@ -149,7 +149,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
               <p className="mt-1 text-xs text-muted-foreground">{uploadingLabel}</p>
             ) : null}
             {status === 'failed' ? (
-              <span className="mt-1 inline-flex rounded-md border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
+              <span className="mt-1 inline-flex rounded-lg border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
                 {failureLabel}
               </span>
             ) : null}

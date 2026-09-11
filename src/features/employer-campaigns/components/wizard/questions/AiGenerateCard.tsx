@@ -96,7 +96,7 @@ export function AiGenerateCard({
       </div>
 
       {currentQuestionCount > 0 ? (
-        <p className="rounded-md border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning">
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning">
           {t('employer.campaigns.campaignQuestions.overwrite.inlineWarning').replace(
             '{{count}}',
             String(currentQuestionCount),

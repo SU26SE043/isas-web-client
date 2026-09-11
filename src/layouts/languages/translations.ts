@@ -6,6 +6,8 @@ export const layoutTranslations: TranslationDictionary = {
     'language.vietnamese': 'Tiếng Việt',
     'language.english': 'Tiếng Anh',
 
+    'sidebar.expand': 'Mở rộng thanh bên',
+    'sidebar.collapse': 'Thu gọn thanh bên',
     'nav.home': 'Trang chủ',
     'nav.features': 'Tính năng',
     'nav.pricing': 'Bảng giá',
@@ -52,6 +54,8 @@ export const layoutTranslations: TranslationDictionary = {
     'language.vietnamese': 'Tiếng Việt',
     'language.english': 'English',
 
+    'sidebar.expand': 'Expand sidebar',
+    'sidebar.collapse': 'Collapse sidebar',
     'nav.home': 'Home',
     'nav.features': 'Features',
     'nav.pricing': 'Pricing',

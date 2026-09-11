@@ -77,7 +77,7 @@ export const CVResultPage: React.FC = () => {
           <p className="body-text text-error">
             {error === 'missing' ? t('cv.landing.missingId') : error || t('cv.analysisFailed')}
           </p>
-          <Link to="/candidate/cv/analysis" className="btn-primary rounded-md">
+          <Link to="/candidate/cv/analysis" className="btn-primary">
             {t('cv.startNewAnalysis')}
           </Link>
         </div>
