@@ -96,7 +96,7 @@ export function CvFlowNewPdfUploadPanel({
             </span>
           ) : null}
           {isUploaded ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
               <CheckCircle2 className="size-3.5" aria-hidden />
               {uploadCompletedLabel}
             </span>

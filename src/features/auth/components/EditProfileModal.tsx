@@ -87,7 +87,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       contentClassName="max-w-[480px] gap-0 overflow-hidden p-0 sm:max-w-[480px]"
     >
       <div className="flex items-center gap-3 border-b border-subtle bg-surface-base px-6 py-5 pr-16">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-subtle bg-surface-raised text-muted-foreground">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-subtle bg-surface-raised text-muted-foreground">
           <svg
             className="h-5 w-5"
             viewBox="0 0 24 24"
@@ -129,7 +129,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={formData.fullName ?? ''}
               onChange={(e) => handleChange('fullName', e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-md border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
+              className="w-full rounded-lg border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
               placeholder={t('profile.fullNamePlaceholder')}
             />
           </div>
@@ -156,7 +156,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={formData.location ?? ''}
               onChange={(e) => handleChange('location', e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-md border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
+              className="w-full rounded-lg border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
               placeholder={t('profile.locationPlaceholder')}
             />
           </div>
@@ -183,7 +183,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={formData.title ?? ''}
               onChange={(e) => handleChange('title', e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-md border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
+              className="w-full rounded-lg border border-default px-4 py-2.5 text-foreground transition-all focus:border-satin focus:outline-none focus:ring-4 focus:ring-white/10 disabled:opacity-50"
               placeholder={t('profile.titlePlaceholder')}
             />
           </div>
@@ -193,7 +193,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md bg-surface-overlay px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated"
+            className="rounded-lg bg-surface-overlay px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated"
             disabled={isLoading}
           >
             {t('profile.cancel')}
@@ -201,7 +201,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary flex items-center gap-2 rounded-md text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary flex items-center gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? (
               <>

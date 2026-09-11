@@ -50,7 +50,7 @@ export const EmployerDashboardLayout: React.FC = () => {
             )}
           >
             {!isCollapsed && (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+              <Link to="/" className="focus-ring hidden rounded-lg sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             )}

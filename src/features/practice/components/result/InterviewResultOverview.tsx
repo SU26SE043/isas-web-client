@@ -22,7 +22,7 @@ export const InterviewResultOverview = memo(function InterviewResultOverview({
   const { t } = useLanguage();
 
   return (
-    <aside className="space-y-6 rounded-3xl border border-subtle bg-surface-raised p-6 shadow-sm">
+    <aside className="space-y-6 rounded-2xl border border-subtle bg-surface-raised p-6 shadow-sm">
       <ScoreDial score={result.overallScore} label={t('practice.result.overallScore')} />
 
       <div className="rounded-xl bg-surface-base p-4">

@@ -77,7 +77,7 @@ export function JobNeedsRescueEditor({ campaignId }: JobNeedsRescueEditorProps) 
           aria-describedby="job-needs-rescue-help"
         />
         <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-          <select value={category} disabled={mutation.isPending || locked} onChange={(event) => setCategory(event.target.value as JobNeedCategory)} className="h-10 rounded-md border border-satin bg-surface-base px-2 text-sm text-foreground">
+          <select value={category} disabled={mutation.isPending || locked} onChange={(event) => setCategory(event.target.value as JobNeedCategory)} className="h-10 rounded-lg border border-satin bg-surface-base px-2 text-sm text-foreground">
             {(['Technical', 'WorkStyle', 'Communication', 'Growth'] as JobNeedCategory[]).map((item) => <option key={item} value={item}>{t(`employer.campaigns.jobNeeds.group.${item}`)}</option>)}
           </select>
           <label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={mustHave} disabled={mutation.isPending || locked} onChange={(event) => setMustHave(event.target.checked)} />{t('employer.campaigns.jobNeeds.mustHave')}</label>

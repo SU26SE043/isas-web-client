@@ -12,6 +12,7 @@ export const InterviewHeatmapLegend: React.FC = () => {
         {([0, 1, 2, 3] as const).map((level) => (
           <span
             key={level}
+            // radius-exempt: ô chú giải phải khớp hệt ô heatmap (xem InterviewHeatmapCell).
             className={`size-[11px] rounded-sm sm:size-3 ${ACTIVITY_LEVEL_CLASS[level]}`}
             aria-hidden
           />

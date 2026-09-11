@@ -96,12 +96,12 @@ export function InvitationDetailPanel({
                   <p className="text-sm font-medium text-foreground">{criterion.name}</p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                     {criterion.weight != null ? (
-                      <span className="rounded-md border border-satin px-2 py-0.5">
+                      <span className="rounded-full border border-satin px-2 py-0.5">
                         {t('campaigns.invite.weight')}: {criterion.weight}
                       </span>
                     ) : null}
                     {criterion.maxScore != null ? (
-                      <span className="rounded-md border border-satin px-2 py-0.5">
+                      <span className="rounded-full border border-satin px-2 py-0.5">
                         {t('campaigns.invite.maxScore')}: {criterion.maxScore}
                       </span>
                     ) : null}
