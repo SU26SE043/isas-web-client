@@ -158,10 +158,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
             `position: sticky` bên trong (header reader bài học, thanh công cụ trang) không bao giờ dính —
             cùng lỗi đã đo ở layout employer (rail ở y = −675 sau khi cuộn). */}
         <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
+          {/* Chỉ tiêu đề khu vực — toggle ngôn ngữ đã có ở sidebar, đặt thêm ở đây là hai nút VI/EN trên cùng một màn. */}
           {sectionTitleKey ? (
-            <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
+            <header className="flex h-14 shrink-0 items-center border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
               <span className="truncate text-sm font-medium text-muted-foreground">{t(sectionTitleKey)}</span>
-              <LanguageToggle compact />
             </header>
           ) : null}
           <div className="min-w-0">

@@ -38,4 +38,15 @@ describe('learning shared chrome', () => {
 
     expect(screen.getAllByAltText(BRAND_LOGO_ALT)).toHaveLength(1);
   });
+
+  it('renders exactly one LanguageToggle (sidebar) — header khu vực không lặp lại nút VI/EN', () => {
+    render(
+      <MemoryRouter>
+        <DashboardLayout sectionTitleKey="practice.learningPath.title" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('practice.learningPath.title')).toBeInTheDocument();
+    expect(screen.getAllByTestId('language-toggle')).toHaveLength(1);
+  });
 });
