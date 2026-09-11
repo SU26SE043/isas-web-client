@@ -30,7 +30,7 @@ export function LearningRoadmapReportPage() {
 
   if (isError || !data) {
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           title={t('practice.learningPath.errorTitle')}
@@ -74,7 +74,7 @@ export function LearningRoadmapReportPage() {
   const threshold = data.levelEvaluation[0]?.levelThreshold ?? null;
 
   return (
-    <div className="page-container page-section min-h-full space-y-6 py-8">
+    <div className="app-page min-h-full space-y-6">
       <header className="space-y-2">
         <p className="text-caption text-muted-foreground">{kindLabel}</p>
         <h1 className="heading-primary text-3xl text-foreground">

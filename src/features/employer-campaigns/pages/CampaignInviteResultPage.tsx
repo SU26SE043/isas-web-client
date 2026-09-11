@@ -40,7 +40,7 @@ export function CampaignInviteResultPage() {
   if (!hasPayload) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto flex max-w-xl flex-col items-center gap-6 text-center">
+        <div className="app-page flex flex-col items-center gap-6 text-center">
           <CircleAlert className="size-14 text-muted-foreground" aria-hidden />
           <div className="space-y-2">
             <h1 className="heading-primary text-2xl text-foreground">
@@ -65,7 +65,7 @@ export function CampaignInviteResultPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="flex flex-col items-center gap-4 text-center">
           {isFullSuccess ? (
             <CheckCircle2 className="size-16 text-success" aria-hidden />

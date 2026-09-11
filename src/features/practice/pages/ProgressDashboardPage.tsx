@@ -50,7 +50,7 @@ export const ProgressDashboardPage: React.FC = () => {
   if (hasError || !data) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container mx-auto max-w-4xl space-y-8 px-6 py-12 sm:py-16">
+        <div className="app-page space-y-8">
           <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{t('practice.progress.title')}</h1>
           <Alert variant="error" className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 size-5 shrink-0 text-error" aria-hidden />
@@ -71,7 +71,7 @@ export const ProgressDashboardPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container mx-auto max-w-4xl space-y-16 px-6 py-12 sm:py-16">
+      <div className="app-page space-y-16">
         <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{t('practice.progress.title')}</h1>
 
         <RoadmapCompletionDonut data={data.roadmapCompletion} />

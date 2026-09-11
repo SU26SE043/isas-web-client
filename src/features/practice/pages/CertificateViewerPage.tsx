@@ -61,7 +61,7 @@ export const CertificateViewerPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-2xl space-y-6">
+      <div className="app-page space-y-6">
         {error ? (
           <p className="rounded-lg border border-error/20 bg-error-bg px-4 py-3 text-sm text-error">
             {t('practice.certificate.error')}

@@ -30,7 +30,7 @@ export function LearningDashboardPage() {
   }, [fewerLessons, location.pathname, navigate]);
 
   return (
-    <div className="page-container page-section min-h-screen">
+    <div className="app-page min-h-screen">
       {/*
         Trang này nay là lối vào DUY NHẤT của lộ trình: vừa liệt kê lộ trình đang có, vừa tạo mới.
         Trước đây menu tách làm hai mục ("Học tập" để xem, "Lộ trình" để tạo) và trang này phải ghi

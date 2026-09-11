@@ -65,7 +65,7 @@ export function LearningTheoryPage() {
     const isForbidden = errorStatus === 403;
     const isAiFailure = errorStatus === 502;
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           variant={isForbidden ? 'no-permission' : 'no-results'}
@@ -110,7 +110,7 @@ export function LearningTheoryPage() {
 
   if (!roadmap) {
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           title={t('practice.learningPath.errorTitle')}

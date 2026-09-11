@@ -20,7 +20,7 @@ export function EmployerDashboardPage() {
   if (isLoading || !workspace) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto max-w-7xl space-y-5">
+        <div className="app-page space-y-5">
           <Skeleton className="h-24 w-full" />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-32" />)}
@@ -33,7 +33,7 @@ export function EmployerDashboardPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <p className="text-label text-muted-foreground">{t('employer.dashboard.eyebrow')}</p>

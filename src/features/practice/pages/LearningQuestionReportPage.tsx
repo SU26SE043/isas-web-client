@@ -71,7 +71,7 @@ export function LearningQuestionReportPage() {
 
   if (!sessionId || !entry) {
     return (
-      <div className="page-container page-section space-y-4 py-8">
+      <div className="app-page space-y-4">
         <p className="text-sm text-error">{t('practice.learningPath.questionReportMissing')}</p>
         <Link
           to={`/candidate/learning/roadmaps/${roadmapId}/lessons/${lessonId}/theory`}
@@ -84,7 +84,7 @@ export function LearningQuestionReportPage() {
   }
 
   return (
-    <div className="page-container page-section min-h-full space-y-6 py-8">
+    <div className="app-page min-h-full space-y-6">
       <header className="space-y-2">
         <h1 className="heading-primary text-3xl text-foreground">
           {t('practice.learningPath.questionReportTitle')}

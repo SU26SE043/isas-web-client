@@ -33,7 +33,7 @@ export const CreditsWalletPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-surface-overlay frame-satin-soft">

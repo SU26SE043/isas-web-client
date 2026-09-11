@@ -201,7 +201,7 @@ export function CampaignDetailView({
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px]">{content}</div>
+      <div className="app-page">{content}</div>
     </div>
   ); }
 

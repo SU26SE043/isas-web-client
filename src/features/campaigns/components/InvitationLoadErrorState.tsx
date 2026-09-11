@@ -9,7 +9,7 @@ export function InvitationLoadErrorState({ message }: InvitationLoadErrorStatePr
   const { t } = useLanguage();
 
   return (
-    <div className="page-container page-section flex min-h-[70vh] flex-col items-center justify-center gap-4 text-center">
+    <div className="app-page flex min-h-[70vh] flex-col items-center justify-center gap-4 text-center">
       <p className="text-sm text-error" role="alert">{message}</p>
       <button type="button" className="btn-secondary" onClick={() => window.location.reload()}>
         {t('campaigns.invite.retryLoad')}

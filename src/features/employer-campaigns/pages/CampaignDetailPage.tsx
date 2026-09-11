@@ -114,7 +114,7 @@ export function CampaignDetailPage() {
   if (isLoading) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto max-w-6xl space-y-3" aria-busy="true">
+        <div className="app-page space-y-3" aria-busy="true">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-96 w-full" />
         </div>
@@ -177,7 +177,7 @@ export function CampaignDetailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
+      <div className="app-page space-y-5">
         <CampaignContextHeader
           campaign={campaign}
           mode="overview"
@@ -222,7 +222,7 @@ function DetailShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
+      <div className="app-page space-y-6">
         <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
           {t('employer.campaigns.detail.back')}
         </Link>

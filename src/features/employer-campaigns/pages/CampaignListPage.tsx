@@ -43,7 +43,7 @@ export function CampaignListPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
+      <div className="app-page space-y-5">
         <header className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 space-y-2">
             <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">

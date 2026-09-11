@@ -57,7 +57,7 @@ export function LearningPracticeReportPage() {
 
   if (!sessionId) {
     return (
-      <p className="page-container page-section text-sm text-error">
+      <p className="app-page text-sm text-error">
         {t('practice.learningPath.sessionReportMissing')}
       </p>
     );
@@ -73,7 +73,7 @@ export function LearningPracticeReportPage() {
 
   if (sessionQuery.isError) {
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           title={t('practice.learningPath.errorTitle')}
@@ -91,7 +91,7 @@ export function LearningPracticeReportPage() {
 
   if (!isScored || !session?.result) {
     return (
-      <div className="page-container page-section flex min-h-[40vh] flex-col items-center justify-center gap-3">
+      <div className="app-page flex min-h-[40vh] flex-col items-center justify-center gap-3">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
         <p className="text-sm text-muted-foreground">{t('practice.scoring.description')}</p>
         {scoringTimedOut ? (

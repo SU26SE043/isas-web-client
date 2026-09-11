@@ -28,7 +28,7 @@ export function CandidateRubricsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-page">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="space-y-2">
           <h1 className="heading-primary text-3xl text-foreground">{t('rubrics.pageTitle')}</h1>
           <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('rubrics.pageDescription')}</p>

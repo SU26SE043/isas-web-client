@@ -184,7 +184,7 @@ function LiveMagicLinkLandingPage() {
 
   if (isBootstrapping || loadState.status === 'loading') {
     return (
-      <div className="page-container page-section flex min-h-[70vh] items-center justify-center gap-3">
+      <div className="app-page flex min-h-[70vh] items-center justify-center gap-3">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
         <span className="text-sm text-muted-foreground">{t('campaigns.invite.loading')}</span>
       </div>
@@ -193,7 +193,7 @@ function LiveMagicLinkLandingPage() {
 
   if (loadState.status === 'notFound') {
     return (
-      <div className="page-container page-section min-h-[70vh]">
+      <div className="app-page min-h-[70vh]">
         <InviteExpiredState variant="invalid" />
       </div>
     );
@@ -201,7 +201,7 @@ function LiveMagicLinkLandingPage() {
 
   if (loadState.status === 'gone') {
     return (
-      <div className="page-container page-section min-h-[70vh]">
+      <div className="app-page min-h-[70vh]">
         <InviteExpiredState variant="expired" />
       </div>
     );
@@ -212,7 +212,7 @@ function LiveMagicLinkLandingPage() {
   }
 
   return (
-    <div className="page-container page-section min-h-[70vh] space-y-6 py-8">
+    <div className="app-page min-h-[70vh] space-y-6">
       <InvitationDetailPanel
         invitation={loadState.invitation}
         onJoin={handleJoin}

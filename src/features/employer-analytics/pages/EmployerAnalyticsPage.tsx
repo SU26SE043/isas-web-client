@@ -36,7 +36,7 @@ export function EmployerAnalyticsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <p className="text-label text-muted-foreground">{t('employerAnalytics.analytics.eyebrow')}</p>

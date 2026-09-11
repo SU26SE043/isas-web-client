@@ -48,7 +48,7 @@ export function LearningRoadmapDetailPage() {
     const isNotFound = errorStatus === 404;
     const isForbidden = errorStatus === 403;
     return (
-      <div className="page-container page-section min-h-screen">
+      <div className="app-page min-h-screen">
         <Link to="/candidate/learning" className="text-sm text-muted-foreground hover:text-foreground">
           {t('practice.learningPath.backToDashboard')}
         </Link>
@@ -148,7 +148,7 @@ export function LearningRoadmapDetailPage() {
   };
 
   return (
-    <div className="page-container page-section min-h-screen bg-[radial-gradient(circle_at_80%_0%,rgba(37,99,235,0.15),transparent_32%),radial-gradient(circle_at_20%_100%,rgba(124,58,237,0.12),transparent_28%)]">
+    <div className="app-page min-h-screen bg-[radial-gradient(circle_at_80%_0%,rgba(37,99,235,0.15),transparent_32%),radial-gradient(circle_at_20%_100%,rgba(124,58,237,0.12),transparent_28%)]">
       <Link to="/candidate/learning" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground">
         <ArrowLeft className="size-4 text-info" aria-hidden />
         {t('practice.learningPath.backToDashboard')}

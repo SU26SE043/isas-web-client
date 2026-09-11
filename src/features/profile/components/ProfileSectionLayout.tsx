@@ -23,7 +23,7 @@ export const ProfileSectionLayout: React.FC<ProfileSectionLayoutProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="dashboard-content min-h-full">
+    <div className="app-page min-h-full">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-label text-muted-foreground mb-1">

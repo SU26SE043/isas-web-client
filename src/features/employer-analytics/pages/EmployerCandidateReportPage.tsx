@@ -19,7 +19,7 @@ export function EmployerCandidateReportPage() {
   if (isLoading || !candidate || !report) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto max-w-6xl"><Skeleton className="h-96 w-full" /></div>
+        <div className="app-page"><Skeleton className="h-96 w-full" /></div>
       </div>
     );
   }
@@ -28,7 +28,7 @@ export function EmployerCandidateReportPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
+      <div className="app-page space-y-6">
         <Link to={`/employer/candidates/${candidate.id}?campaignId=${candidate.campaignId}`} className="text-sm text-muted-foreground hover:text-foreground">
           {t('employerAnalytics.report.back')}
         </Link>

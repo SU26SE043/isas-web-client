@@ -89,7 +89,7 @@ export function InterviewHistoryPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-5">
+      <div className="app-page space-y-5">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">

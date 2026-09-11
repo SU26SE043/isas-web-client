@@ -45,7 +45,7 @@ export function CampaignInviteEmailPage() {
 
   if (isLoading) {
     return (
-      <div className="page-container page-section mx-auto max-w-6xl space-y-4">
+      <div className="app-page space-y-4">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-72 w-full" />
       </div>
@@ -54,7 +54,7 @@ export function CampaignInviteEmailPage() {
 
   if (!campaign || (isError && errorStatus === 404)) {
     return (
-      <div className="page-container page-section mx-auto max-w-3xl">
+      <div className="app-page">
         <EmptyState
           variant="no-results"
           title={t('employer.campaigns.detail.notFoundTitle')}
@@ -71,7 +71,7 @@ export function CampaignInviteEmailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px]">
+      <div className="app-page">
         <div className="space-y-6">
           <CampaignContextHeader
             campaign={campaign}

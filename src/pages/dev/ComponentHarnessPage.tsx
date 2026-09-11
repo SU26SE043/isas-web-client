@@ -18,7 +18,7 @@ export function ComponentHarnessPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   return (
-    <div className="dashboard-content space-y-6">
+    <div className="app-page space-y-6">
       <div>
         <h1 className="heading-primary text-2xl">{t('ds.dev.harnessTitle')}</h1>
         <p className="body-text mt-1">{t('ds.dev.harnessDescription')}</p>

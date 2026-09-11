@@ -65,7 +65,7 @@ export function SessionResultErrorState({
   const { title, description } = copy[kind];
 
   return (
-    <div className="page-container page-section flex min-h-[50vh] items-center justify-center">
+    <div className="app-page flex min-h-[50vh] items-center justify-center">
       <div className="max-w-lg text-center">
         <AlertCircle className="mx-auto size-10 text-error" aria-hidden />
         <h1 className="mt-4 text-2xl font-semibold text-foreground">{title}</h1>

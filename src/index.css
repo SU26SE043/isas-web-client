@@ -488,8 +488,15 @@ select {
     padding-block: clamp(2.5rem, 6vw, 5rem);
   }
 
-  .dashboard-content {
-    padding: clamp(1.25rem, 3vw, 1.75rem);
+  /* Wrapper trang trong app (candidate · employer · admin). KHÔNG dùng @utility: Tailwind v4 sắp @utility theo số
+     property nên max-w-… / py-… viết cạnh sẽ đè nó; class thường trong @layer này đứng SAU utility sinh ra ⇒ thắng,
+     và đó là chủ đích — bề rộng/đệm trang là một quyết định chung, không phải per-page. Marketing dùng page-section. */
+  .app-page {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2rem);
+    padding-block: clamp(1.5rem, 3vw, 2.5rem);
   }
 
   /* === TYPOGRAPHY === */

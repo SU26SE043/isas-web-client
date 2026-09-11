@@ -15,7 +15,7 @@ export function CompanyProfilePage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-5xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="space-y-2">
           <p className="text-label text-muted-foreground">{t('employer.company.eyebrow')}</p>
           <h1 className="heading-primary text-3xl text-foreground">{t('employer.company.title')}</h1>

@@ -45,7 +45,7 @@ export function CandidateReportsPage() {
   const scoreLabel = t('practice.reports.score');
 
   return (
-    <div className="page-container page-section min-h-full space-y-8 py-8">
+    <div className="app-page min-h-full space-y-8">
       <header className="space-y-2">
         <h1 className="heading-primary text-3xl text-foreground">{t('practice.reports.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('practice.reports.subtitle')}</p>

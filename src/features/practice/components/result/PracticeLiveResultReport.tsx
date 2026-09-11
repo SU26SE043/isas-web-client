@@ -30,7 +30,7 @@ export function PracticeLiveResultReport({
   if (!view.hasResult) return null;
 
   return (
-    <div className="page-container page-section mx-auto max-w-7xl space-y-6 py-8">
+    <div className="app-page space-y-6">
       <SessionResultHeader view={view} />
 
       <div className="space-y-4 border-y border-satin py-3">

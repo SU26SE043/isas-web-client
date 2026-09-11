@@ -46,7 +46,7 @@ export function CampaignResultDetailPage() {
 
   if (!item) {
     return (
-      <div className="page-container page-section">
+      <div className="app-page">
         <EmptyState
           variant="no-results"
           title={t('employer.campaigns.results.transcript.title')}
@@ -74,7 +74,7 @@ export function CampaignResultDetailPage() {
     // bao giờ cuộn (document cuộn), mà một tổ tiên có overflow ≠ visible là đủ làm `position: sticky` của
     // rail/dải câu hỏi chết — đo bằng getBoundingClientRect: rail ở y = −675 sau khi nhảy tới câu 3.
     <div className="min-h-full bg-surface-base">
-      <main className="page-container page-section mx-auto max-w-7xl space-y-5">
+      <main className="app-page space-y-5">
         <Link to={backToResults} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" aria-hidden />
           {t('employer.campaigns.results.detail.back')}

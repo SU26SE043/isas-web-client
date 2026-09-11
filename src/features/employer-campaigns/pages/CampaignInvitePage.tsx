@@ -15,7 +15,7 @@ export function CampaignInvitePage() {
 
   if (isLoading) {
     return (
-      <div className="page-container page-section mx-auto max-w-3xl space-y-4">
+      <div className="app-page space-y-4">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-48 w-full" />
       </div>
@@ -24,7 +24,7 @@ export function CampaignInvitePage() {
 
   if (!campaign || (isError && errorStatus === 404)) {
     return (
-      <div className="page-container page-section mx-auto max-w-3xl">
+      <div className="app-page">
         <EmptyState
           variant="no-results"
           title={t('employer.campaigns.detail.notFoundTitle')}
@@ -43,7 +43,7 @@ export function CampaignInvitePage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-3xl space-y-6">
+      <div className="app-page space-y-6">
         <Link
           to={`/employer/campaigns/${id}`}
           className="text-sm text-muted-foreground hover:text-foreground"

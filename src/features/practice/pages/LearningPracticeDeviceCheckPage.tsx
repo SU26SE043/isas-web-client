@@ -56,7 +56,7 @@ export function LearningPracticeDeviceCheckPage() {
 
   if (error) {
     return (
-      <div className="page-container page-section">
+      <div className="app-page">
         <p className="text-sm text-error">{t('practice.learningPath.error')}</p>
         <button
           type="button"

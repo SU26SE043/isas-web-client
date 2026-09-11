@@ -72,7 +72,7 @@ export function CandidateCampaignDetailPage() {
   const isNotFound = error instanceof CampaignCandidateError && error.code === 'notFound';
   if (isError || !data || isNotFound) {
     return (
-      <div className="page-container page-section mx-auto max-w-3xl space-y-4 py-12 text-center">
+      <div className="app-page space-y-4 text-center">
         <h1 className="heading-primary text-2xl text-foreground">{t('campaigns.detail.notFound')}</h1>
         <p className="text-sm text-muted-foreground">{t('campaigns.detail.notFoundHint')}</p>
         {isError && !isNotFound ? (
@@ -139,7 +139,7 @@ export function CandidateCampaignDetailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-[radial-gradient(circle_at_78%_8%,rgba(37,99,235,0.16),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(124,58,237,0.1),transparent_34%)] bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-5 py-6">
+      <div className="app-page space-y-5">
         <Link to="/candidate/campaigns" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="size-4" aria-hidden />{t('campaigns.my.backToList')}</Link>
 
         <header className="relative overflow-hidden rounded-2xl border border-info/60 bg-[radial-gradient(circle_at_80%_40%,rgba(37,99,235,0.2),transparent_38%),radial-gradient(circle_at_65%_100%,rgba(124,58,237,0.14),transparent_34%)] bg-surface-raised p-6 shadow-none sm:p-8">

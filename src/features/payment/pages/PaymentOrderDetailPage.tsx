@@ -16,7 +16,7 @@ export function PaymentOrderDetailPage() {
   const cancel = useCancelPaymentOrder();
   const pending = order.data ? ['pending', '1'].includes(order.data.status.toLowerCase()) : false;
 
-  return <div className="h-full overflow-y-auto bg-surface-base"><div className="page-container page-section mx-auto max-w-3xl space-y-5">
+  return <div className="h-full overflow-y-auto bg-surface-base"><div className="app-page space-y-5">
     <Link to="/candidate/credits" className="btn-ghost inline-flex items-center gap-2"><ArrowLeft className="size-4" aria-hidden />{t('payment.orders.backToOrders')}</Link>
     <PaymentQuerySection isLoading={order.isLoading} isError={order.isError || !order.data} errorMessage={t('payment.orders.loadError')} onRetry={() => void order.refetch()}>
       {order.data ? <OrderDetail order={order.data} locale={locale} pending={pending} cancelling={cancel.isPending} onCancel={() => cancel.mutate(order.data!.orderId)} t={t} /> : null}

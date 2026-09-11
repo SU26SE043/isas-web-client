@@ -57,7 +57,7 @@ export const CheckoutPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="space-y-2">
           <h1 className="heading-primary text-3xl text-foreground">{t('payment.checkout.title')}</h1>
           <p className="body-text text-sm text-muted-foreground">{t('payment.checkout.subtitle')}</p>

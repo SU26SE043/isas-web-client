@@ -34,7 +34,7 @@ export const AchievementsPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-5xl space-y-6">
+      <div className="app-page space-y-6">
         <header className="space-y-2">
           <nav className="text-sm text-muted-foreground">
             <Link to="/candidate/progress" className="hover:text-foreground hover:underline">

@@ -24,7 +24,7 @@ export const CandidateDashboardPage: React.FC = () => {
   const stats = computeInterviewActivityStats(interviews);
 
   return (
-    <div className="dashboard-content">
+    <div className="app-page">
       <div className="mb-8">
         <h1 className="heading-primary text-3xl">{t('profile.dashboard.title')}</h1>
         <p className="body-text mt-2 max-w-2xl">{t('profile.dashboard.subtitle')}</p>

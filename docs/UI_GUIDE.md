@@ -98,9 +98,9 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 
 | Class | Mô tả |
 |-------|--------|
-| `page-container` | max-w-7xl, responsive padding |
-| `page-section` | Vertical section padding |
-| `dashboard-content` | Dashboard main area padding |
+| `app-page` | **Wrapper mọi trang trong app** (candidate · employer · admin): max-w 80rem, canh giữa, padding ngang `clamp(1rem,4vw,2rem)`, padding dọc `clamp(1.5rem,3vw,2.5rem)`. Đừng viết `mx-auto max-w-* py-*` cạnh nó — class này nằm sau utility trong cascade nên các token đó chết. |
+| `page-container` | Marketing: max-w 80rem + padding ngang |
+| `page-section` | Marketing: padding dọc lớn `clamp(2.5rem,6vw,5rem)` |
 
 ## Components
 

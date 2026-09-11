@@ -23,7 +23,7 @@ export const ProfileViewPage: React.FC = () => {
   }
 
   return (
-    <div className="dashboard-content min-h-full">
+    <div className="app-page min-h-full">
       <ProfilePageHeader onEditClick={() => setIsEditModalOpen(true)} />
 
       <div className="mx-auto max-w-6xl space-y-4">
