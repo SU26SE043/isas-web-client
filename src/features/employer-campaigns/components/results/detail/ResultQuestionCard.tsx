@@ -165,7 +165,8 @@ function DeliveryMetrics({ question }: { question: TranscriptQuestion }) {
   return (
     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
       <Badge variant="outline">
-        {t('employer.campaigns.results.detail.speed')}: {value(metrics?.speechRateWpm, ' wpm')} · {speedLabel}
+        {t('employer.campaigns.results.detail.speed')}:{' '}
+        {metrics?.speechRateWpm == null ? notMeasured : `${metrics.speechRateWpm} wpm · ${speedLabel}`}
       </Badge>
       <Badge variant="outline">
         {t('employer.campaigns.results.detail.pauses')}: {pauses}
