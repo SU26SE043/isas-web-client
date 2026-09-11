@@ -26,7 +26,8 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.status'),
-      value: campaign.status,
+      // Cùng khoá dịch với CampaignManagementStatusBadge — trước đây in thẳng 'active' cạnh badge đã dịch.
+      value: t(`employer.campaigns.status.${campaign.status}`),
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.expiresAt'),

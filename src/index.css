@@ -389,6 +389,44 @@ select {
     background: rgb(0 0 0 / 0.035);
   }
 
+  /* Cột thao tác dính mép phải khi bảng rộng hơn khung (ranking HR ở 1440px bị cắt mất nút
+     "Xem đánh giá chi tiết", không có dấu hiệu nào cho biết còn cột). Phải khai ở đây vì hai rule
+     trên ép `background: transparent` cho mọi th/td với specificity cao hơn utility Tailwind. */
+  .glass-table-container thead th.table-sticky-end,
+  .glass-table-container tbody td.table-sticky-end {
+    position: sticky;
+    right: 0;
+    /* `position: sticky` LUÔN tạo stacking context (kể cả z-index auto) ⇒ menu "⋯" (absolute z-20
+       nằm TRONG ô) bị ô dính của hàng DƯỚI — đứng sau trong DOM — vẽ đè lên, bất kể z-index base.
+       Đo bằng elementFromPoint: điểm giữa menu trả về nút của hàng dưới. Cách sửa duy nhất là nâng
+       ô của hàng đang mở menu lên (rule `:has([aria-expanded="true"])` bên dưới). */
+    background: rgb(255 255 255 / 0.97);
+    box-shadow:
+      inset 1px 0 0 rgb(0 0 0 / 0.08),
+      inset 0 -1px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Ô header dính phải cùng màu dải header (thead dùng --surface-overlay), kẻo hiện một ô trắng
+     lệch màu ngay cả khi bảng vừa khung (đo ở 1920/2560). */
+  .glass-table-container thead th.table-sticky-end {
+    background: var(--surface-overlay);
+  }
+
+  /* Hover / đang mở menu (TableRow: hover:bg-surface-highlight + has-aria-expanded:bg-surface-highlight)
+     = --surface-highlight + lớp đen 3.5% (rule trên) ⇒ ô dính phải vẽ cùng công thức trên nền đục,
+     nếu không ô cuối sáng hơn phần còn lại của hàng — kể cả lúc chuột đã rời sang menu. */
+  .glass-table-container tbody tr:hover td.table-sticky-end,
+  .glass-table-container tbody tr:has([aria-expanded="true"]) td.table-sticky-end {
+    background:
+      linear-gradient(rgb(0 0 0 / 0.035), rgb(0 0 0 / 0.035)),
+      var(--surface-highlight, rgb(228 228 231));
+  }
+
+  /* Hàng đang mở menu phải nổi trên các ô dính của hàng dưới (xem chú thích stacking context ở trên). */
+  .glass-table-container tbody tr:has([aria-expanded="true"]) td.table-sticky-end {
+    z-index: 2;
+  }
+
   .glass-well {
     background: rgb(255 255 255 / 0.72);
     border: 1px dashed var(--satin-border);

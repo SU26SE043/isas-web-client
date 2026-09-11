@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 import { parseAuthError } from '../../utils/authErrors';
-import { resolvePostLoginPath } from '../../utils/getPostLoginPath';
+import { getRequestedReturnPath, resolvePostLoginPath } from '../../utils/getPostLoginPath';
 import { SocialLoginButton } from '../SocialLoginButton';
 import { SSOButton } from '../SSOButton';
 import { signInFormVariants } from './authModal.animations';
@@ -32,7 +32,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectFrom = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
+  const redirectFrom = getRequestedReturnPath(location.state, location.pathname);
   const sessionExpired =
     searchParams.get('reason') === 'session-expired' ||
     (location.state as { reason?: string } | null)?.reason === 'session-expired';

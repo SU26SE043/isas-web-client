@@ -67,7 +67,9 @@ export function ResultsRankingTable({
               <TableHead className="hidden lg:table-cell">
                 {t('employer.campaigns.results.columns.scoredAt')}
               </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.actions')}</TableHead>
+              <TableHead className="table-sticky-end">
+                {t('employer.campaigns.results.columns.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,7 +101,7 @@ export function ResultsRankingTable({
                 <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
                   {formatResultDateTime(item.scoredAt, language)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="table-sticky-end">
                   <div className="flex items-center gap-2">
                     <Button type="button" size="sm" variant="outline" onClick={() => onViewDetails(item)}>
                       {t('employer.campaigns.results.actions.viewDetails')}

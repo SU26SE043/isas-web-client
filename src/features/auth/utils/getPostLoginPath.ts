@@ -83,3 +83,28 @@ export function resolvePostLoginPath(
   }
   return getPostLoginPath(role);
 }
+
+/** Trang mà đăng nhập xong PHẢI quay lại (điểm tiếp tục có nghĩa), không phải mọi trang marketing. */
+const RETURN_TO_CURRENT_PATH = /^\/(invite|invitations)\//;
+
+/**
+ * Đường muốn quay lại sau khi đăng nhập từ AuthModal.
+ *
+ * Ưu tiên `state.from` (do RequireAuth / link "Đăng nhập" trên trang mời đặt). Không có thì lấy CHÍNH
+ * trang đang mở modal — nhưng CHỈ khi đó là trang mời: header marketing mở modal tại chỗ
+ * (`?auth=login`) mà không đặt `state`, nên ứng viên bấm "Đăng nhập" ngay trên `/invite/<token>` bị
+ * ném về dashboard rồi phải mở lại link (đo thật 2026-09-11). Các trang marketing khác (`/`,
+ * `/pricing`, `/enterprise`…) giữ mặc định "về nhà theo vai" — `/enterprise` nằm trong allowlist của
+ * employer (vì các redirect legacy `/enterprise/*`) nên trả về "trang hiện tại" bừa sẽ đưa employer
+ * quay lại trang marketing có CTA "Đăng ký" thay vì dashboard (review 2026-09-11).
+ * Kết quả vẫn đi qua `resolvePostLoginPath` ⇒ vai không được phép vào trang đó thì về nhà theo vai.
+ */
+export function getRequestedReturnPath(
+  state: unknown,
+  currentPathname: string | null | undefined,
+): string | undefined {
+  const from = (state as { from?: { pathname?: string } } | null)?.from?.pathname;
+  if (from) return from;
+  if (currentPathname && RETURN_TO_CURRENT_PATH.test(currentPathname)) return currentPathname;
+  return undefined;
+}
