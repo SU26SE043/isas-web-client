@@ -1,6 +1,6 @@
 import { BadgeCheck, ClipboardList, PieChart, Star } from 'lucide-react';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { useLanguage } from '@/shared/languages';
-import { cn } from '@/lib/utils';
 import type { WeightStatus } from '../types/rubric.types';
 
 interface RubricSummaryProps {
@@ -10,85 +10,38 @@ interface RubricSummaryProps {
   weightStatus: WeightStatus;
 }
 
-export function RubricSummary({
-  criteriaCount,
-  totalWeightLabel,
-  totalMaxScore,
-  weightStatus,
-}: RubricSummaryProps) {
+export function RubricSummary({ criteriaCount, totalWeightLabel, totalMaxScore, weightStatus }: RubricSummaryProps) {
   const { t } = useLanguage();
-
   const weightValid = weightStatus === 'valid';
-  const statusValid = weightValid;
-
-  const statusLabel = statusValid
+  const statusLabel = weightValid
     ? t('rubrics.summary.statusValid')
     : weightStatus === 'over'
       ? t('rubrics.summary.statusOver')
       : t('rubrics.summary.statusUnder');
 
-  const items = [
-    {
-      label: t('rubrics.summary.criteriaCount'),
-      value: String(criteriaCount),
-      icon: <ClipboardList className="size-4 text-muted-foreground" aria-hidden />,
-      tone: 'default' as const,
-      hint: undefined,
-    },
-    {
-      label: t('rubrics.summary.totalWeight'),
-      value: totalWeightLabel,
-      icon: <PieChart className="size-4 text-muted-foreground" aria-hidden />,
-      tone: weightValid ? ('success' as const) : ('error' as const),
-      hint: undefined,
-    },
-    {
-      label: t('rubrics.summary.totalMaxScore'),
-      value: String(totalMaxScore),
-      icon: <Star className="size-4 text-muted-foreground" aria-hidden />,
-      // Thông tin thuần: tổng điểm tối đa không có ngưỡng đúng/sai (điểm tổng chấm theo % từng tiêu chí).
-      tone: 'default' as const,
-      hint: t('rubrics.summary.totalMaxScoreHint'),
-    },
-    {
-      label: t('rubrics.summary.status'),
-      value: statusLabel,
-      icon: (
-        <BadgeCheck
-          className={cn('size-4', statusValid ? 'text-success' : 'text-error')}
-          aria-hidden
-        />
-      ),
-      tone: statusValid ? ('success' as const) : ('error' as const),
-      hint: statusValid ? t('rubrics.summary.statusValidHint') : undefined,
-    },
-  ];
-
   return (
-    <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {items.map((item) => (
-        <div
-          key={item.label}
-          className="frame-satin rounded-xl border border-satin bg-surface-raised px-4 py-3"
-        >
-          <dt className="flex items-center justify-between gap-2 text-caption text-muted-foreground">
-            <span>{item.label}</span>
-            {item.icon}
-          </dt>
-          <dd
-            className={cn(
-              'mt-2 text-2xl font-semibold tracking-tight text-foreground',
-              item.tone === 'success' && 'text-success',
-              item.tone === 'error' && 'text-error',
-            )}
-          >
-            {item.value}
-          </dd>
-          {item.hint ? (
-            <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
-          ) : null}
-        </div>
-      ))}
-    </dl>
+    <StatGrid columns={4}>
+      <StatCard label={t('rubrics.summary.criteriaCount')} value={String(criteriaCount)} icon={<ClipboardList aria-hidden />} />
+      <StatCard
+        label={t('rubrics.summary.totalWeight')}
+        value={totalWeightLabel}
+        icon={<PieChart aria-hidden />}
+        tone={weightValid ? 'success' : 'error'}
+      />
+      {/* Thông tin thuần: tổng điểm tối đa không có ngưỡng đúng/sai (điểm tổng chấm theo % từng tiêu chí). */}
+      <StatCard
+        label={t('rubrics.summary.totalMaxScore')}
+        value={String(totalMaxScore)}
+        icon={<Star aria-hidden />}
+        hint={t('rubrics.summary.totalMaxScoreHint')}
+      />
+      <StatCard
+        label={t('rubrics.summary.status')}
+        value={statusLabel}
+        icon={<BadgeCheck aria-hidden />}
+        tone={weightValid ? 'success' : 'error'}
+        hint={weightValid ? t('rubrics.summary.statusValidHint') : undefined}
+      />
+    </StatGrid>
   );
 }

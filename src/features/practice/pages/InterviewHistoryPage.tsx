@@ -5,7 +5,7 @@ import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
 import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { PracticeHistoryContent } from '../components/history/PracticeHistoryContent';
-import { PracticeHistoryStatCard } from '../components/history/PracticeHistoryStatCard';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { PracticeHistoryToolbar } from '../components/history/PracticeHistoryToolbar';
 import { usePracticeSessionHistory } from '../hooks/usePracticeSessionHistory';
 import type {
@@ -102,31 +102,17 @@ export function InterviewHistoryPage() {
           </Button>
         </header>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageCount')}
-            value={String(stats.pageCount)}
-          />
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageCompleted')}
-            value={String(stats.completed)}
-            tone="success"
-          />
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageInProgress')}
-            value={String(stats.inProgress)}
-            tone="warning"
-          />
-          <PracticeHistoryStatCard
+        <StatGrid columns={4}>
+          <StatCard size="sm" label={t('practice.history.stats.pageCount')} value={String(stats.pageCount)} />
+          <StatCard size="sm" label={t('practice.history.stats.pageCompleted')} value={String(stats.completed)} tone="success" />
+          <StatCard size="sm" label={t('practice.history.stats.pageInProgress')} value={String(stats.inProgress)} tone="warning" />
+          <StatCard
+            size="sm"
             label={t('practice.history.stats.pageAvgScore')}
-            value={
-              stats.avgScore == null
-                ? t('practice.history.scoreUnavailable')
-                : stats.avgScore.toFixed(1)
-            }
+            value={stats.avgScore == null ? t('practice.history.scoreUnavailable') : stats.avgScore.toFixed(1)}
             tone="info"
           />
-        </div>
+        </StatGrid>
 
         <PracticeHistoryToolbar
           search={search}
