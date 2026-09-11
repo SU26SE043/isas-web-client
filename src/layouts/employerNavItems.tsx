@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import {
-  BadgeCheck,
   BarChart3,
   BriefcaseBusiness,
-  Building2,
   CircleHelp,
   Inbox,
   LayoutDashboard,
@@ -30,19 +28,8 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       end: true,
       icon: <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />,
     },
-    {
-      to: '/employer/company',
-      label: t('employer.nav.company'),
-      end: true,
-      icon: <Building2 className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
-    },
-    {
-      to: '/employer/company/verify',
-      label: t('employer.nav.verify'),
-      icon: <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden />,
-      roles: [UserRole.ORG_ADMIN, UserRole.ADMIN],
-    },
+    // Hồ sơ công ty (/employer/company) và Xác minh (/employer/company/verify) TẠM ẨN khỏi nav: hai trang
+    // vẫn là mock UI (useEmployerWorkspace) chờ backend hồ sơ công ty. Route + page giữ nguyên để bật lại.
     {
       to: '/employer/campaigns',
       label: t('employer.campaigns.nav.campaigns'),

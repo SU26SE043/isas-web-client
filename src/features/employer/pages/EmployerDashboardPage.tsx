@@ -1,108 +1,112 @@
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Building2, FileCheck2, Users } from 'lucide-react';
+import { CheckCircle2, Coins, FileCheck2, Plus, Send } from 'lucide-react';
 import { PageHeader } from '@/components/patterns/PageHeader';
-import { StatCard, StatGrid } from '@/components/patterns/StatCard';
+import { StatCard, StatGrid, StatGridSkeleton } from '@/components/patterns/StatCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
+import { useEmployerPaymentAccount } from '@/features/employer-billing/hooks/useEmployerPaymentQueries';
+import { PaymentMode } from '@/features/employer-billing/types/employerPayment.types';
+import { useEmployerCampaigns } from '@/features/employer-campaigns/hooks/useEmployerCampaigns';
+import { computeCampaignStats } from '@/features/employer-campaigns/utils/campaignStats';
 import { useLanguage } from '@/shared/languages';
-import { EmployerActivityList } from '../components/EmployerActivityList';
-import { EmployerStatusBadge } from '../components/EmployerStatusBadge';
-import { useEmployerWorkspace } from '../hooks/useEmployerWorkspace';
+import { EmployerNextStepCard, EmployerRecentCampaigns, EmployerTeamStat } from '../components/EmployerDashboardSections';
+import { computeEmployerNextStep, recentCampaigns } from '../utils/employerNextStep';
 
+/**
+ * Dashboard employer đọc DỮ LIỆU THẬT: danh sách chiến dịch (cùng công thức thống kê với trang chiến dịch), ví
+ * credit của tổ chức, số thành viên (chỉ OrgAdmin — HR gọi endpoint này bị 403). Trước đây toàn bộ trang là
+ * workspace mock (độ hoàn thiện hồ sơ 68%, xác minh, hoạt động tháng 7 cố định). Hai trang Hồ sơ công ty /
+ * Xác minh vẫn còn route nhưng ẩn khỏi nav cho tới khi có backend hồ sơ công ty.
+ */
 export function EmployerDashboardPage() {
   const { t } = useLanguage();
   const user = useAuthStore((state) => state.user);
   const canManageOrg = user?.role === UserRole.ORG_ADMIN || user?.role === UserRole.ADMIN;
-  const { workspace, isLoading } = useEmployerWorkspace();
+  const campaignsQuery = useEmployerCampaigns({ query: '', status: 'all' });
+  const accountQuery = useEmployerPaymentAccount();
 
-  if (isLoading || !workspace) {
-    return (
-      <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="app-page space-y-5">
-          <Skeleton className="h-24 w-full" />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-32" />)}
-          </div>
-          <Skeleton className="h-72 w-full" />
-        </div>
-      </div>
-    );
-  }
+  const stats = computeCampaignStats(campaignsQuery.campaigns);
+  const account = accountQuery.data;
+  const isPrepaid = account ? account.paymentMode === PaymentMode.Prepaid : true;
+  const remainingCredits = account ? (isPrepaid ? account.remainingCredits : (account.periodUsage ?? 0)) : null;
+  const creditHint = account
+    ? isPrepaid
+      ? t('employer.dashboard.creditsPrepaid')
+      : t('employer.dashboard.creditsPostpaid').replace('{limit}', String(account.creditLimit ?? '—'))
+    : accountQuery.isError
+      ? t('employer.dashboard.creditsUnavailable')
+      : undefined;
+
+  const description = user?.orgName
+    ? t('employer.dashboard.subtitleOrg').replace('{org}', user.orgName)
+    : t('employer.dashboard.subtitle');
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
       <div className="app-page space-y-6">
         <PageHeader
           title={t('employer.dashboard.title')}
-          description={t('employer.dashboard.subtitle')}
+          description={description}
           actions={
-            canManageOrg ? (
-              <>
-                <Button render={<Link to="/employer/company" />}>{t('employer.dashboard.completeProfile')}</Button>
-                <Button variant="outline" render={<Link to="/employer/company/verify" />}>
-                  {t('employer.dashboard.submitVerification')}
-                </Button>
-              </>
-            ) : null
+            <Button render={<Link to="/employer/campaigns/new" />}>
+              <Plus aria-hidden />
+              {t('employer.dashboard.createCampaign')}
+            </Button>
           }
         />
 
-        <StatGrid columns={4}>
-          <StatCard
-            label={t('employer.dashboard.profileCompleteness')}
-            value={`${workspace.profile.completeness}%`}
-            hint={workspace.profile.name}
-            icon={<Building2 aria-hidden />}
-          />
-          <StatCard
-            label={t('employer.dashboard.verification')}
-            value={t(`employer.status.${workspace.verification.status}`)}
-            hint={workspace.profile.emailDomain}
-            icon={<BadgeCheck aria-hidden />}
-          />
-          <StatCard
-            label={t('employer.dashboard.activeCampaigns')}
-            value={workspace.activeCampaigns}
-            hint={`${workspace.draftCampaigns} ${t('employer.dashboard.drafts')}`}
-            icon={<FileCheck2 aria-hidden />}
-          />
-          <StatCard
-            label={t('employer.dashboard.capacity')}
-            value={workspace.candidateCapacity}
-            hint={`${workspace.roleSeats} ${t('employer.dashboard.seats')}`}
-            icon={<Users aria-hidden />}
-          />
-        </StatGrid>
+        {campaignsQuery.isLoading ? (
+          <StatGridSkeleton columns={4} />
+        ) : campaignsQuery.isError ? (
+          <p className="rounded-xl border border-error/30 bg-error-bg px-4 py-3 text-sm text-error" role="alert">
+            {t('employer.dashboard.loadError')}
+          </p>
+        ) : (
+          <StatGrid columns={4}>
+            <StatCard
+              label={t('employer.dashboard.activeCampaigns')}
+              value={stats.active}
+              hint={t('employer.dashboard.draftsHint').replace('{count}', String(stats.draft))}
+              icon={<FileCheck2 aria-hidden />}
+              to="/employer/campaigns"
+            />
+            <StatCard
+              label={t('employer.dashboard.invited')}
+              value={stats.invited}
+              hint={t('employer.dashboard.invitedHint')}
+              icon={<Send aria-hidden />}
+            />
+            <StatCard
+              label={t(isPrepaid ? 'employer.dashboard.credits' : 'employer.dashboard.periodUsage')}
+              value={remainingCredits == null ? '—' : remainingCredits.toLocaleString()}
+              hint={creditHint}
+              icon={<Coins aria-hidden />}
+              tone={isPrepaid && remainingCredits === 0 ? 'warning' : 'neutral'}
+              to="/employer/billing"
+            />
+            {canManageOrg ? (
+              <EmployerTeamStat />
+            ) : (
+              <StatCard
+                label={t('employer.dashboard.completed')}
+                value={stats.completed}
+                hint={t('employer.dashboard.completedHint')}
+                icon={<CheckCircle2 aria-hidden />}
+              />
+            )}
+          </StatGrid>
+        )}
 
-        <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
-          <Card className="border border-subtle bg-surface-raised">
-            <CardHeader className="gap-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{t('employer.dashboard.readiness')}</CardTitle>
-                  <p className="mt-2 text-sm text-muted-foreground">{t('employer.dashboard.readinessCopy')}</p>
-                </div>
-                <EmployerStatusBadge status={workspace.verification.status} />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[t('employer.dashboard.stepProfile'), t('employer.dashboard.stepVerify'), t('employer.dashboard.stepCampaign')].map(
-                (step, index) => (
-                  <div key={step} className="flex gap-3 rounded-xl border border-subtle bg-surface-overlay p-4">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-black">
-                      {index + 1}
-                    </span>
-                    <p className="text-sm text-foreground">{step}</p>
-                  </div>
-                ),
-              )}
-            </CardContent>
-          </Card>
-          <EmployerActivityList activities={workspace.activities} />
-        </div>
+        {campaignsQuery.isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : campaignsQuery.isError ? null : (
+          <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+            <EmployerNextStepCard step={computeEmployerNextStep(campaignsQuery.campaigns, account ? remainingCredits : null, isPrepaid)} />
+            <EmployerRecentCampaigns campaigns={recentCampaigns(campaignsQuery.campaigns)} />
+          </div>
+        )}
       </div>
     </div>
   );
