@@ -38,7 +38,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
               exit="inactive"
               custom={1}
             >
-              <h1 className="text-4xl heading-primary mb-4">{t('auth.helloTitle')}</h1>
+              <h1 className="text-3xl sm:text-4xl heading-primary mb-4">{t('auth.helloTitle')}</h1>
               <p className="text-base text-muted-foreground mb-10 font-medium leading-relaxed">
                 {t('auth.helloDescription')}
               </p>
@@ -60,7 +60,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({
               exit="inactive"
               custom={-1}
             >
-              <h1 className="text-4xl heading-primary mb-4">{t('auth.welcomeBackTitle')}</h1>
+              <h1 className="text-3xl sm:text-4xl heading-primary mb-4">{t('auth.welcomeBackTitle')}</h1>
               <p className="text-base text-white/80 mb-10 font-medium leading-relaxed">
                 {t('auth.welcomeBackDescription')}
               </p>

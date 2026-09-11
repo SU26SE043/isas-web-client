@@ -11,7 +11,7 @@ export const PricingPage: React.FC = () => {
     <section className="page-section">
       <div className="page-container">
         <div className="mx-auto mb-12 max-w-2xl text-center">
-          <h1 className="heading-primary mb-4 text-4xl">{t('pricing.title')}</h1>
+          <h1 className="heading-primary mb-4 text-3xl sm:text-4xl">{t('pricing.title')}</h1>
           <p className="body-text text-lg">{t('pricing.description')}</p>
         </div>
         <PricingTable />

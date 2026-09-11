@@ -719,16 +719,6 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-@media (max-width: 768px) {
-  .heading-primary {
-    font-size: clamp(1.75rem, 5vw, 2.25rem);
-  }
-
-  .heading-secondary {
-    font-size: clamp(1.25rem, 4vw, 1.75rem);
-  }
-}
-
 @keyframes countdown-ring-rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

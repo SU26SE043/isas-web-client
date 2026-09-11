@@ -89,7 +89,7 @@ export const EmployerSection: React.FC = () => {
             <span className="inline-block px-4 py-1.5 rounded-full bg-surface-overlay text-foreground text-xs font-bold tracking-widest mb-6">
               {t('employer.badge')}
             </span>
-            <h2 className="text-4xl heading-primary mb-8 leading-tight">
+            <h2 className="text-3xl sm:text-4xl heading-primary mb-8 leading-tight">
               {t('employer.titleLine1')} <br /> {t('employer.titleLine2')}
             </h2>
             <p className="text-xl text-foreground/80 mb-12 leading-relaxed">

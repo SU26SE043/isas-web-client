@@ -28,7 +28,7 @@ export const ScoreDial = memo(function ScoreDial({ score, label }: ScoreDialProp
           aria-hidden
         />
         <div className="text-center">
-          <p className={`heading-primary text-4xl ${scoreTone(clamped)}`}>{clamped}</p>
+          <p className={`heading-primary text-3xl sm:text-4xl ${scoreTone(clamped)}`}>{clamped}</p>
           <p className="text-xs font-medium text-muted-foreground">/100</p>
         </div>
       </div>

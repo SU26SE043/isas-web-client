@@ -73,7 +73,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       animate="active"
       exit="hiddenRight"
     >
-      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
+      <h1 className="text-3xl sm:text-4xl heading-primary mb-6 tracking-tight">{t('auth.signUpTitle')}</h1>
 
       <div className="w-full mb-6">
         <SocialLoginButton />

@@ -19,7 +19,7 @@ export const FeaturesSection: React.FC = () => {
           viewport={{ once: false, margin: "-50px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl heading-primary mb-6">{t('features.title')}</h2>
+          <h2 className="text-3xl sm:text-4xl heading-primary mb-6">{t('features.title')}</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             {t('features.description')}
           </p>

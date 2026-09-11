@@ -15,7 +15,7 @@ export const EnterprisePage: React.FC = () => {
       <section className="page-section border-b border-subtle">
         <div className="page-container">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="heading-primary mb-4 text-4xl">{t('enterprise.title')}</h1>
+            <h1 className="heading-primary mb-4 text-3xl sm:text-4xl">{t('enterprise.title')}</h1>
             <p className="body-text mb-8 text-lg">{t('enterprise.description')}</p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button type="button" onClick={() => openAuthModal('signup')} className="btn-primary">

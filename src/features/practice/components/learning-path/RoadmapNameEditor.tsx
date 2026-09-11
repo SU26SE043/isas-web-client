@@ -38,7 +38,7 @@ export function RoadmapNameEditor({ name, isSaving, error, onSave }: RoadmapName
     return (
       <div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="relative heading-primary text-4xl text-foreground sm:text-5xl">{name}</h1>
+          <h1 className="relative heading-primary text-3xl text-foreground sm:text-5xl">{name}</h1>
           <button
             type="button"
             className="btn-ghost inline-flex items-center gap-2 text-xs"

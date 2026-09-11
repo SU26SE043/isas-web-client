@@ -114,7 +114,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       animate="active"
       exit="hiddenLeft"
     >
-      <h1 className="text-4xl heading-primary mb-6 tracking-tight">{t('auth.signInTitle')}</h1>
+      <h1 className="text-3xl sm:text-4xl heading-primary mb-6 tracking-tight">{t('auth.signInTitle')}</h1>
 
       {sessionExpired ? (
         <p className="mb-4 w-full rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-center text-xs text-warning">

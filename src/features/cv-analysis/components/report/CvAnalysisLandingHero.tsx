@@ -35,7 +35,7 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
         <div className="max-w-3xl space-y-6">
           <p className="text-label text-muted-foreground">{t('cv.landing.kicker')}</p>
           <div className="space-y-3">
-            <h1 className="heading-primary text-4xl tracking-tight text-foreground sm:text-5xl">
+            <h1 className="heading-primary text-3xl tracking-tight text-foreground sm:text-5xl">
               {formatJobCategoryDisplay(result.jobCategory, language) ||
                 t('cv.landing.untitledDomain')}
             </h1>

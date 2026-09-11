@@ -24,7 +24,7 @@ export const HeroSection: React.FC = () => {
               <Sparkles aria-hidden className="mr-2 size-3.5 shrink-0" />
               {t('hero.badge')}
             </div>
-            <h1 className="text-5xl lg:text-6xl xl:text-[4.5rem] heading-primary text-foreground leading-[1.1] mb-8">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-[4.5rem] heading-primary text-foreground leading-[1.1] mb-8">
               {t('hero.titleLine1')} <br />
               <span className="relative inline-block mt-2">
                 <span className="relative z-10 text-foreground">{t('hero.highlight')}</span>
