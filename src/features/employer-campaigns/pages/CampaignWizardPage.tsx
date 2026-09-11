@@ -2,7 +2,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
-import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { useQueryClient } from '@tanstack/react-query';
+import { deployCampaignAndSyncCache, useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { CampaignWizardForm } from '../components/wizard/CampaignWizardForm';
 import type {
   CampaignCreateQuestionRequest,
@@ -16,6 +17,7 @@ import { campaignManagementService } from '../services/campaignManagement.servic
 export function CampaignWizardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const {
     campaign,
@@ -75,7 +77,8 @@ export function CampaignWizardPage() {
   };
 
   const handleDeployCampaign = async (campaignId: string, emails: string[]) => {
-    return campaignManagementService.deployCampaign(campaignId, emails);
+    // Đồng bộ cache chi tiết ngay sau deploy — xem chú thích tại deployCampaignAndSyncCache.
+    return deployCampaignAndSyncCache(queryClient, campaignId, emails);
   };
 
   const handleSendInvitations = async (campaignId: string, emails: string[]) => {

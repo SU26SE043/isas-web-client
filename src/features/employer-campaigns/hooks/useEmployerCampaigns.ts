@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
-import { campaignManagementService } from '../services/campaignManagement.service';
+import {
+  campaignManagementService,
+  CampaignInvitationDeployError,
+} from '../services/campaignManagement.service';
 import type {
+  CampaignDeployResult,
   CampaignFilters,
   EmployerCampaign,
 } from '../types/campaignManagement.types';
@@ -14,6 +18,37 @@ export const EMPLOYER_CAMPAIGN_DETAIL_QUERY_KEY = ['employer', 'campaign'] as co
 
 export function employerCampaignsQueryKey(filters: CampaignFilters) {
   return [...EMPLOYER_CAMPAIGNS_QUERY_KEY, filters.query, filters.status] as const;
+}
+
+/**
+ * Deploy (publish + invite) từ wizard, rồi ĐỒNG BỘ cache chi tiết ngay.
+ *
+ * Vì sao: wizard seed cache chi tiết lúc tạo nháp (`create` bên dưới) và `staleTime` toàn cục là
+ * 5 phút. Trước bản vá này wizard gọi thẳng service rồi `navigate` sang trang chi tiết ⇒ React Query
+ * trả bản nháp còn "tươi" ⇒ HR thấy toast "Đã triển khai" cạnh badge "Bản nháp", banner "cần xuất
+ * bản" và một nút "Triển khai" thứ hai (bấm lại là 409) — tới 5 phút hoặc tới khi F5. Đường `publish`
+ * trong hook đã làm đúng; wizard chỉ không đi qua nó vì cần publish + mời trong một lượt.
+ *
+ * Deploy hụt ở bước mời (`CampaignInvitationDeployError`) thì campaign VẪN đã Active ⇒ cũng phải
+ * ghi cache từ `error.campaign` rồi mới ném tiếp, kẻo rời wizard lúc đó lại thấy "Bản nháp".
+ */
+export async function deployCampaignAndSyncCache(
+  queryClient: QueryClient,
+  campaignId: string,
+  emails: string[],
+): Promise<CampaignDeployResult> {
+  const sync = (campaign: EmployerCampaign) => {
+    queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), campaign);
+    void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
+  };
+  try {
+    const result = await campaignManagementService.deployCampaign(campaignId, emails);
+    sync(result.campaign);
+    return result;
+  } catch (error) {
+    if (error instanceof CampaignInvitationDeployError) sync(error.campaign);
+    throw error;
+  }
 }
 
 export function employerCampaignDetailQueryKey(id: string) {
