@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   Activity,
-  Bell,
   BookOpen,
   Bot,
   Briefcase,
@@ -16,6 +15,8 @@ import {
   Flag,
   Gauge,
   HeartPulse,
+  Inbox,
+  LayoutTemplate,
   LifeBuoy,
   LockKeyhole,
   LogOut,
@@ -64,7 +65,7 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
       { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
       { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <Bell className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <LayoutTemplate className="h-4 w-4" aria-hidden /> },
       { to: '/admin/reports', label: t('admin.nav.reports'), icon: <FileText className="h-4 w-4" aria-hidden /> },
       { to: '/admin/audit-logs', label: t('admin.nav.audit'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
       { to: '/admin/system-config', label: t('admin.nav.systemConfig'), icon: <Settings className="h-4 w-4" aria-hidden /> },
@@ -74,7 +75,7 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/backups', label: t('admin.nav.backups'), icon: <DatabaseBackup className="h-4 w-4" aria-hidden /> },
       { to: '/admin/maintenance', label: t('admin.nav.maintenance'), icon: <Wrench className="h-4 w-4" aria-hidden /> },
       { to: '/admin/support-tickets', label: t('admin.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notifications', label: t('engagement.nav.notifications'), icon: <Bell className="h-4 w-4" aria-hidden /> },
+      { to: '/admin/notifications', label: t('engagement.nav.notifications'), icon: <Inbox className="h-4 w-4" aria-hidden /> },
       { to: '/admin/settings', label: t('engagement.nav.settings'), icon: <Settings className="h-4 w-4" aria-hidden /> },
       { to: '/admin/help', label: t('engagement.nav.help'), icon: <CircleHelp className="h-4 w-4" aria-hidden /> },
       { to: '/admin/support', label: t('engagement.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
@@ -101,8 +102,18 @@ export const AdminDashboardLayout: React.FC = () => {
             </div>
           </nav>
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
+            {/*
+              Hàng này KHÔNG phải link tới /admin/notifications (đã có sẵn trong nav chính).
+              Nó mở panel xem nhanh + giữ số chưa đọc (NotificationBell.tsx:67 chỉ setOpen,
+              không điều hướng). Vì vậy nhãn phải là 'Trung tâm thông báo' — trùng đúng tiêu đề
+              của panel nó mở ra (NotificationBell.tsx:95) — chứ KHÔNG dùng lại
+              'engagement.nav.notifications' của mục nav, nếu không sidebar hiện hai dòng y hệt.
+              `title` là bắt buộc: dưới sm nhãn bị ẩn (hidden sm:inline) nên chỉ còn icon, mà mọi
+              mục nav đều có title — thiếu ở đây thì hàng này là icon câm không tooltip.
+            */}
             <div
               className={navLinkClassName(false)}
+              title={t('engagement.notifications.center')}
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('button')) return;
                 event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
@@ -110,7 +121,7 @@ export const AdminDashboardLayout: React.FC = () => {
             >
               <NotificationBell scope="admin" panelPlacement="sidebar" variant="sidebar" />
               <span className="hidden text-sm sm:inline">
-                {t('engagement.nav.notifications')}
+                {t('engagement.notifications.center')}
               </span>
             </div>
             <div className="hidden items-center rounded-xl py-2.5 sm:flex sm:justify-start sm:px-3">

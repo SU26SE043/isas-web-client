@@ -94,9 +94,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
           </nav>
 
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
+            {/*
+              Hàng này KHÔNG phải link tới /candidate/notifications (đã có sẵn trong nav chính).
+              Nó mở panel xem nhanh + giữ số chưa đọc (NotificationBell.tsx:67 chỉ setOpen,
+              không điều hướng). Vì vậy nhãn phải là 'Trung tâm thông báo' — trùng đúng tiêu đề
+              của panel nó mở ra (NotificationBell.tsx:95) — chứ KHÔNG dùng lại
+              'engagement.nav.notifications' của mục nav, nếu không sidebar hiện hai dòng y hệt.
+            */}
             <div
               className={navLinkClassName(false, isCollapsed)}
-              title={isCollapsed ? t('engagement.nav.notifications') : undefined}
+              title={isCollapsed ? t('engagement.notifications.center') : undefined}
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('button')) return;
                 event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
@@ -110,7 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
                 ].join(' ')}
                 aria-hidden={isCollapsed}
               >
-                {t('engagement.nav.notifications')}
+                {t('engagement.notifications.center')}
               </span>
             </div>
             <div
