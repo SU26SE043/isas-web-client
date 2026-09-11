@@ -78,7 +78,7 @@ test.describe('organization profile Auth APIs', () => {
     await page.goto('/employer/settings');
 
     await expect(page.getByLabel('Organization name')).toBeDisabled();
-    await expect(page.getByText('Only OrgAdmin can edit it.')).toBeVisible();
+    await expect(page.getByText('You can view this information. Only organization administrators can edit it.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save organization' })).toHaveCount(0);
     expect(putCalls).toBe(0);
   });
@@ -142,7 +142,7 @@ test.describe('organization profile Auth APIs', () => {
     await page.getByRole('button', { name: 'Save organization' }).click();
 
     await expect(page.getByRole('alert')).toContainText(
-      'Only OrgAdmin can update organization information.',
+      'Only organization administrators can update organization information.',
     );
     await expect(nameInput).toHaveValue('Unsaved organization');
 
