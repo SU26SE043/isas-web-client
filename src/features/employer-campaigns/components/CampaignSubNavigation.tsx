@@ -59,9 +59,11 @@ export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationP
           },
         ];
 
+  // Dưới lg dải tab cuộn ngang: mép phải mờ dần (mask) + đệm phải để tab cuối không bị mờ ở cuối cuộn
+  // + snap để dừng đúng tab — dấu hiệu "còn nữa" không cần JS.
   return (
     <nav
-      className="overflow-x-auto rounded-xl border border-satin bg-surface-raised p-1"
+      className="snap-x snap-proximity overflow-x-auto rounded-xl border border-satin bg-surface-raised p-1 max-lg:mask-r-from-85% max-lg:pr-8"
       aria-label={t('employer.campaigns.workspace.navigation')}
     >
       <div className="flex min-w-max gap-1">
@@ -72,7 +74,7 @@ export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationP
               to={item.to}
               aria-current={activeTab === item.id ? 'page' : undefined}
               className={cn(
-                'rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200',
+                'snap-start rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200',
                 activeTab === item.id
                   ? 'bg-foreground text-background shadow-sm'
                   : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground',

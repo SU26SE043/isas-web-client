@@ -149,13 +149,13 @@ export function CampaignWizardShell({
         <div className="flex min-w-0 flex-1 flex-col gap-5">
           <ol
             aria-label={t('employer.campaigns.wizard.stepperLabel')}
-            className="flex gap-2 overflow-x-auto pb-1 sm:hidden"
+            className="flex snap-x snap-proximity gap-2 overflow-x-auto pb-1 pr-8 mask-r-from-85% sm:hidden"
           >
             {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
               const status = resolveFlowStepStatus(index, currentStep, errorSteps);
               const canNavigate = Boolean(onStepChange) && canNavigateToWizardStep(index, currentStep, completedSteps);
               return (
-                <li key={step.id} className="flex shrink-0 items-center gap-2">
+                <li key={step.id} className="flex shrink-0 snap-start items-center gap-2">
                   <button
                     type="button"
                     disabled={!canNavigate}
@@ -164,7 +164,8 @@ export function CampaignWizardShell({
                     className="group flex min-h-11 items-center gap-2 text-left disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     <FlowStepMarker status={status} stepNumber={index + 1} />
-                    <span className={cn('max-w-[7rem] truncate text-xs font-medium group-hover:text-foreground', flowStepLabelClass(status))}>
+                    {/* Bước đang chọn không bị cắt chữ; các bước khác vẫn truncate cho vừa dải. */}
+                    <span className={cn('text-xs font-medium group-hover:text-foreground', index === currentStep ? 'whitespace-nowrap' : 'max-w-[7rem] truncate', flowStepLabelClass(status))}>
                       {t(stepperTitleKey(step))}
                     </span>
                   </button>
