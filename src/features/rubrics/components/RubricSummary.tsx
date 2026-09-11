@@ -8,7 +8,6 @@ interface RubricSummaryProps {
   totalWeightLabel: string;
   totalMaxScore: number;
   weightStatus: WeightStatus;
-  maxScoreStatus: WeightStatus;
 }
 
 export function RubricSummary({
@@ -16,17 +15,15 @@ export function RubricSummary({
   totalWeightLabel,
   totalMaxScore,
   weightStatus,
-  maxScoreStatus,
 }: RubricSummaryProps) {
   const { t } = useLanguage();
 
   const weightValid = weightStatus === 'valid';
-  const maxScoreValid = maxScoreStatus === 'valid';
-  const statusValid = weightValid && maxScoreValid;
+  const statusValid = weightValid;
 
   const statusLabel = statusValid
     ? t('rubrics.summary.statusValid')
-    : weightStatus === 'over' || maxScoreStatus === 'over'
+    : weightStatus === 'over'
       ? t('rubrics.summary.statusOver')
       : t('rubrics.summary.statusUnder');
 
@@ -49,8 +46,9 @@ export function RubricSummary({
       label: t('rubrics.summary.totalMaxScore'),
       value: String(totalMaxScore),
       icon: <Star className="size-4 text-muted-foreground" aria-hidden />,
-      tone: maxScoreValid ? ('success' as const) : ('error' as const),
-      hint: undefined,
+      // Thông tin thuần: tổng điểm tối đa không có ngưỡng đúng/sai (điểm tổng chấm theo % từng tiêu chí).
+      tone: 'default' as const,
+      hint: t('rubrics.summary.totalMaxScoreHint'),
     },
     {
       label: t('rubrics.summary.status'),

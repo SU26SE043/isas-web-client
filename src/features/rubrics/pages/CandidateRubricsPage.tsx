@@ -6,7 +6,6 @@ import { RubricCategoryTabs } from '../components/RubricCategoryTabs';
 import { RubricCriteriaTable } from '../components/RubricCriteriaTable';
 import { RubricPageSkeleton } from '../components/RubricPageSkeleton';
 import { RubricStatusPanel } from '../components/RubricStatusPanel';
-import { RubricMaxScoreStatus } from '../components/RubricMaxScoreStatus';
 import { RubricSummary } from '../components/RubricSummary';
 import { RubricWeightStatus } from '../components/RubricWeightStatus';
 import { ResetRubricDialog } from '../components/ResetRubricDialog';
@@ -69,21 +68,14 @@ export function CandidateRubricsPage() {
               totalWeightLabel={flow.totalWeightLabel}
               totalMaxScore={flow.totalMaxScore}
               weightStatus={flow.weightStatus}
-              maxScoreStatus={flow.maxScoreStatus}
             />
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <RubricWeightStatus
-                totalWeight={flow.totalWeight}
-                totalWeightLabel={flow.totalWeightLabel}
-                weightStatus={flow.weightStatus}
-                serverError={flow.saveError}
-              />
-              <RubricMaxScoreStatus
-                totalMaxScore={flow.totalMaxScore}
-                maxScoreStatus={flow.maxScoreStatus}
-              />
-            </div>
+            <RubricWeightStatus
+              totalWeight={flow.totalWeight}
+              totalWeightLabel={flow.totalWeightLabel}
+              weightStatus={flow.weightStatus}
+              serverError={flow.saveError}
+            />
 
             <RubricCriteriaTable
               criteria={flow.criteria}
