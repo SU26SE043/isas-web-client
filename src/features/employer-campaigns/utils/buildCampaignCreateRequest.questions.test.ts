@@ -45,8 +45,8 @@ describe('mapRubricToCreateCriteria', () => {
         { id: '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40', name: 'Technical', description: '', weight: 99, maxScore: 10 },
       ]),
     ).toEqual([
-      { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Communication', description: null, weight: 0.01, maxScore: 10, minPct: null },
-      { id: '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40', name: 'Technical', description: null, weight: 0.99, maxScore: 10, minPct: null },
+      { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Communication', description: null, weight: 0.01, maxScore: 10, minPct: null, levels: [] },
+      { id: '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40', name: 'Technical', description: null, weight: 0.99, maxScore: 10, minPct: null, levels: [] },
     ]);
   });
 
@@ -55,7 +55,7 @@ describe('mapRubricToCreateCriteria', () => {
       mapRubricToCreateCriteria([
         { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Depth', description: '', weight: 100, maxScore: 2.5 },
       ]),
-    ).toEqual([{ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Depth', description: null, weight: 1, maxScore: 2.5, minPct: null }]);
+    ).toEqual([{ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Depth', description: null, weight: 1, maxScore: 2.5, minPct: null, levels: [] }]);
   });
 
   it('echoes existing score levels when a criterion is renamed', () => {
@@ -95,11 +95,16 @@ describe('mapRubricToCreateCriteria', () => {
     expect(sent.id).toBe('3fa85f64-5717-4562-b3fc-2c963f66afa6');
   });
 
-  it('does not send an empty levels array for a new criterion', () => {
-    expect(
-      mapRubricToCreateCriteria([
-        { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'New', description: '', weight: 100, maxScore: 5, levels: [] },
-      ]),
-    ).toEqual([{ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'New', description: null, weight: 1, maxScore: 5, minPct: null }]);
+  // Đổi tiền đề (2026-09-12): trước đây tiêu chí không mốc BỎ khoá `levels` khỏi payload. Với CAMP-16 ba trạng thái
+  // (vắng = BE mang mốc cũ sang theo TÊN · [] = xoá · [...] = thay) thì cách đó khiến HR xoá hết mốc trong bộ sửa mốc mà
+  // server vẫn giữ bộ cũ — im lặng. Wizard hydrate cả levels nên state là nguồn đầy đủ ⇒ gửi tường minh `[]`.
+  it('gửi levels: [] tường minh khi tiêu chí không có mốc (xoá hết mốc phải xoá được trên server)', () => {
+    for (const levels of [[], undefined]) {
+      expect(
+        mapRubricToCreateCriteria([
+          { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'New', description: '', weight: 100, maxScore: 5, levels },
+        ]),
+      ).toEqual([{ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'New', description: null, weight: 1, maxScore: 5, minPct: null, levels: [] }]);
+    }
   });
 });

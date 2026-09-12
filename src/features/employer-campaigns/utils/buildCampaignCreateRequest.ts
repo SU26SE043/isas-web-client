@@ -60,7 +60,10 @@ export function mapRubricToCreateCriteria(
         weight,
         maxScore: Number(item.maxScore) || 1,
         minPct: item.minPct ?? null,
-        ...(item.levels?.length ? { levels: item.levels } : {}),
+        // CAMP-16 ba trạng thái: vắng = BE GIỮ mốc cũ (carry-over theo tên) · [] = XOÁ · [...] = thay.
+        // Wizard luôn giữ trọn bộ mốc trong state (mapper hydrate cả levels) nên gửi TƯỜNG MINH:
+        // không có mốc ⇒ [] — thiếu dòng này thì HR xoá hết mốc trong editor mà server vẫn giữ bộ cũ.
+        levels: item.levels?.length ? item.levels : [],
       };
     });
 }
