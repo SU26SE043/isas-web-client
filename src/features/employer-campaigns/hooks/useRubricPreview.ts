@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isServerEntityId } from '../utils/campaignQuestionLimits';
 import type {
   RubricPreviewError,
   RubricPreviewRequest,
@@ -74,8 +75,11 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
       setError({ code: 'notFound', message: '' });
       return null;
     }
+    // Id câu hỏi đúc cục bộ (`question-N`, chưa qua PUT) không tồn tại trên server ⇒ BE 400 "không thuộc chiến
+    // dịch"; null = BE tự lấy câu đầu tiên. Lọc theo HÌNH DẠNG GUID (cùng luật với tiêu chí ở create request).
+    const questionId = isServerEntityId(input.questionId) ? input.questionId : null;
     try {
-      const created = await mutateAsync({ id, input });
+      const created = await mutateAsync({ id, input: { ...input, questionId } });
       const key = rubricPreviewQueryKey(id);
       // Ghi thẳng lượt vừa nhận vào cache (POST trả về đúng lượt đã xong) rồi mới đồng bộ lại lịch
       // sử — dùng id ĐÃ resolve, không phải closure: ở create mode `beforeRun` vừa mới tạo draft.

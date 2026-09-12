@@ -187,6 +187,8 @@ export function CampaignCriteriaStepV2({
           disabled={!customized || Boolean(isSaving)}
           lockReason={isSaving ? 'saving' : 'standard'}
           onChangeRubric={onChangeRubric}
+          campaignId={campaignId}
+          onEnsurePersisted={onBeforeRun}
         />
         <WizardSection divided title={t('employer.campaigns.form.group.outcome')} hint={t('employer.campaigns.form.group.outcomeHint')}>
           <div className="grid gap-4 @md:grid-cols-2">

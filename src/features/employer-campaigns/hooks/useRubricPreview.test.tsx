@@ -23,7 +23,7 @@ function makeRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
   return {
     id: 'run-1',
     status: 'Succeeded',
-    questionId: 'q-1',
+    questionId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     questionText: 'Q',
     rubricFingerprint: 'fp',
     rubricVersion: 1,
@@ -125,11 +125,11 @@ describe('useRubricPreview — run()', () => {
     const { result } = renderHook(() => useRubricPreview({ campaignId: null, beforeRun }), { wrapper });
 
     let returned: RubricPreviewRun | null = null;
-    await act(async () => { returned = await result.current.run({ questionId: 'q-1' }); });
+    await act(async () => { returned = await result.current.run({ questionId: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }); });
 
     expect(beforeRun).toHaveBeenCalledTimes(1);
     expect(beforeRun.mock.invocationCallOrder[0]).toBeLessThan(runMock.mock.invocationCallOrder[0]);
-    expect(runMock).toHaveBeenCalledWith('c-fresh', { questionId: 'q-1' });
+    expect(runMock).toHaveBeenCalledWith('c-fresh', { questionId: '3fa85f64-5717-4562-b3fc-2c963f66afa6' });
     expect(returned).toEqual(created);
     // Lượt vừa nhận vào cache của ĐÚNG id đã resolve ⇒ đổi prop sang id đó là thấy ngay.
     expect(client.getQueryData(['rubric-preview', 'c-fresh'])).toEqual([created]);
@@ -153,7 +153,7 @@ describe('useRubricPreview — run()', () => {
     await waitFor(() => expect(result.current.runs).toHaveLength(1));
 
     await act(async () => { await result.current.run({}); });
-    expect(runMock).toHaveBeenCalledWith('c1', {});
+    expect(runMock).toHaveBeenCalledWith('c1', { questionId: null });
     await waitFor(() => expect(historyMock).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(result.current.latest?.id).toBe('run-2'));
     expect(result.current.runs).toHaveLength(2);
@@ -195,5 +195,19 @@ describe('useRubricPreview — run()', () => {
     await act(async () => { await result.current.run({}); });
     expect(runMock).not.toHaveBeenCalled();
     expect(result.current.error).toMatchObject({ code: 'notFound' });
+  });
+});
+
+describe('useRubricPreview — questionId phải là GUID server', () => {
+  // Id đúc cục bộ (`question-N`) chưa qua PUT không tồn tại trên server ⇒ BE 400 "không thuộc chiến dịch";
+  // gửi null để BE tự lấy câu đầu tiên thay vì đốt một lượt vào lỗi.
+  it('id cục bộ → gửi questionId: null; GUID → giữ nguyên', async () => {
+    historyMock.mockResolvedValue([]);
+    runMock.mockResolvedValue(makeRun({ id: 'run-x' }));
+    const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });
+    await act(async () => { await result.current.run({ questionId: 'question-3', customAnswer: 'x' }); });
+    expect(runMock).toHaveBeenLastCalledWith('c1', { questionId: null, customAnswer: 'x' });
+    await act(async () => { await result.current.run({ questionId: '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40' }); });
+    expect(runMock).toHaveBeenLastCalledWith('c1', { questionId: '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40' });
   });
 });

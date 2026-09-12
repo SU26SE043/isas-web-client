@@ -95,6 +95,8 @@ export type CampaignResponse = {
   maxConcurrentInterviews?: number | null;
   maxDeepPerQuestion?: number | null;
   skipPenalty?: boolean | null;
+  /** CAMP-18 — phiên bản thước đo hiện hành (`CampaignResponse.RubricVersion`). */
+  rubricVersion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
   questionsPerSession?: number | null;

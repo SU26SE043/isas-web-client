@@ -228,6 +228,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     questionsPerSession: pickNumber(record, 'questionsPerSession', 'QuestionsPerSession') ?? null,
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
     skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
+    rubricVersion: pickNumber(record, 'rubricVersion', 'RubricVersion') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
     createdAt: pickString(record, 'createdAt', 'CreatedAt') ?? null,
     updatedAt: pickString(record, 'updatedAt', 'UpdatedAt') ?? null,
@@ -302,6 +303,7 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
     passScorePct: item.passScorePct ?? null,
     skipPenalty: item.skipPenalty ?? null,
+    rubricVersion: item.rubricVersion ?? null,
     antiCheatEnabled:
       item.antiCheatEnabled ??
       LIST_DEFAULT_PROCTORING.maxViolations > 0,

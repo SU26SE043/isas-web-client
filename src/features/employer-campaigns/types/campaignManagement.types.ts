@@ -80,6 +80,8 @@ export interface EmployerCampaign {
   invitedCount?: number | null;
   completedCount?: number | null;
   skipPenalty?: boolean | null;
+  /** CAMP-18 — phiên bản thước đo hiện hành của chiến dịch (Campaign cấp; null = response cũ chưa mang). */
+  rubricVersion?: number | null;
   locale: CampaignLocale;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
