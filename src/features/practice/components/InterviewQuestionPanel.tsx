@@ -5,16 +5,14 @@ import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../uti
 import type { PracticeQuestionResponse, QuestionAnswerState } from '../types/b2cPracticeSession.types';
 
 interface InterviewQuestionPanelProps {
-  /** Vị trí trong mảng — dùng để tô đậm bước, KHÔNG dùng làm số hiệu (xem `displayNumber`). */
+  /**
+   * Vị trí trong mảng — vừa tô đậm vòng tròn ở stepper vừa là số hiệu "Câu hỏi N / M". Hai chỗ phải
+   * đọc CÙNG một số: trước đây nhãn đếm theo thứ tự xuất hiện còn stepper đếm theo vị trí ⇒ câu đào
+   * sâu hiện "Câu hỏi 6 / 6" với vòng tròn 2 tô đậm. Số của câu đang hiện không đổi vì câu đào sâu
+   * luôn chèn ngay SAU nó (store `appendQuestion`).
+   */
   currentIndex: number;
   totalQuestions: number;
-  /**
-   * Số hiệu hiển thị, cấp theo THỨ TỰ XUẤT HIỆN và không bao giờ đổi sau khi câu đã hiện.
-   *
-   * Vắng ⇒ rơi về `currentIndex + 1` (hành vi cũ): câu đào sâu chèn vào giữa mảng sẽ đổi nhãn của
-   * một câu ĐÃ HIỆN. Mọi call site trong phòng phỏng vấn phải truyền prop này.
-   */
-  displayNumber?: number;
   /** Số câu ứng viên đã chọn. Vắng ⇒ rơi về độ dài mảng, thứ phình lên mỗi lần có câu đào sâu. */
   plannedTotal?: number;
   remainingSeconds: number;
@@ -31,7 +29,6 @@ interface InterviewQuestionPanelProps {
 export function InterviewQuestionPanel({
   currentIndex,
   totalQuestions,
-  displayNumber,
   plannedTotal,
   remainingSeconds,
   question,
@@ -58,7 +55,7 @@ export function InterviewQuestionPanel({
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium text-muted-foreground">
             {t('practice.room.questionOf')
-              .replace('{current}', String(displayNumber ?? currentIndex + 1))
+              .replace('{current}', String(currentIndex + 1))
               .replace('{total}', String(plannedTotal ?? Math.max(totalQuestions, steps.length, 1)))}
           </p>
           {question?.kind ? (

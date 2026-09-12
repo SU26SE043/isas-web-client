@@ -16,86 +16,68 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-const question = (id: string, orderNo: number): PracticeQuestionResponse => ({
+const question = (id: string, orderNo: number, kind = 'Seed'): PracticeQuestionResponse => ({
   id,
   orderNo,
   content: `Nội dung ${id}`,
   timeLimitSec: 120,
-  kind: 'Seed',
+  kind,
   citations: [],
 });
 
+// Vòng tròn đang tô đậm trong stepper (`aria-current="step"` nằm trên <span> số hiệu).
+const activeStep = () => document.querySelector('[aria-current="step"]')?.textContent;
+
 /**
- * Số hiệu câu KHÔNG được đổi sau khi đã hiện.
+ * Nhãn "Câu N / M" và vòng tròn tô đậm trong stepper phải là CÙNG MỘT SỐ.
  *
- * Backend cố ý đánh `orderNo` có khoảng trống (câu gốc 1, 5, 9… — `SeedOrderStride`) để chuỗi đào
- * sâu chèn vào giữa, và trả danh sách đã sắp theo `orderNo`. Câu đào sâu của câu 1 mang `orderNo=2`
- * nên nó chen vào GIỮA mảng — nếu số hiệu lấy từ vị trí mảng thì câu gốc thứ hai đang là "Câu 2" sẽ
- * nhảy thành "Câu 3" ngay trước mắt ứng viên.
+ * Trước đây nhãn đếm theo thứ tự XUẤT HIỆN (map cấp số lúc hydrate: 5 câu gốc nhận 1..5, câu đào sâu
+ * về sau nhận 6) còn stepper đếm theo VỊ TRÍ mảng ⇒ đo trên dev 2026-09-12: câu Clarify của câu 1
+ * hiện "Câu hỏi 6 / 6" trong khi vòng tròn số 2 được tô đậm. Hai cách đếm trên cùng màn hình.
  */
 describe('InterviewQuestionPanel — đánh số câu', () => {
-  it('giữ nguyên số hiệu của câu đã hiện khi câu đào sâu chèn vào giữa', () => {
-    const seed1 = question('s1', 1);
-    const seed2 = question('s2', 5);
-
+  it('nhãn và vòng tròn tô đậm cùng một số khi câu đào sâu chèn ngay sau câu vừa trả lời', () => {
+    const seeds = [question('s1', 1), question('s2', 5), question('s3', 9)];
     const { rerender } = render(
-      <InterviewQuestionPanel
-        currentIndex={1}
-        totalQuestions={2}
-        displayNumber={2}
-        plannedTotal={6}
-        remainingSeconds={100}
-        question={seed2}
-        questions={[seed1, seed2]}
-      />,
+      <InterviewQuestionPanel currentIndex={0} totalQuestions={3} plannedTotal={3} remainingSeconds={100} question={seeds[0]} questions={seeds} />,
     );
-    expect(screen.getByText('Câu 2/6')).toBeInTheDocument();
+    expect(screen.getByText('Câu 1/3')).toBeInTheDocument();
+    expect(activeStep()).toBe('1');
 
-    // Câu đào sâu về, chen vào giữa: mảng thành [s1, f1, s2] ⇒ vị trí của s2 nhảy từ 1 lên 2.
-    const follow = question('f1', 2);
+    // Câu đào sâu của s1 về, `appendQuestion` chèn NGAY SAU s1 và nó thành câu hiện tại.
+    const follow = question('f1', 2, 'Clarify');
+    const withFollow = [seeds[0], follow, seeds[1], seeds[2]];
     rerender(
+      <InterviewQuestionPanel currentIndex={1} totalQuestions={4} plannedTotal={4} remainingSeconds={100} question={follow} questions={withFollow} />,
+    );
+    // Không phải "Câu 4/4" (thứ tự xuất hiện) — là "Câu 2", đúng vòng tròn số 2 đang tô đậm.
+    expect(screen.getByText('Câu 2/4')).toBeInTheDocument();
+    expect(activeStep()).toBe('2');
+  });
+
+  it('quay lại buổi dở: đứng ở câu đầu chưa trả lời, nhãn khớp vòng tròn tô đậm', () => {
+    // Server trả cả câu đào sâu đã xen kẽ (theo orderNo); 2 câu đầu đã nộp ⇒ hiện tại là chỉ số 2.
+    const items = [question('s1', 1), question('f1', 2, 'Clarify'), question('s2', 5), question('s3', 9)];
+    render(
       <InterviewQuestionPanel
         currentIndex={2}
-        totalQuestions={3}
-        displayNumber={2}
-        plannedTotal={6}
+        totalQuestions={4}
+        plannedTotal={4}
         remainingSeconds={100}
-        question={seed2}
-        questions={[seed1, follow, seed2]}
+        question={items[2]}
+        questions={items}
+        questionStates={{ s1: 'submitted', f1: 'submitted', s2: 'reading_question', s3: 'not_started' }}
       />,
     );
-
-    // Vẫn là "Câu 2" — số đã cấp cho s2 không đổi, dù nó đã trôi sang vị trí khác.
-    expect(screen.getByText('Câu 2/6')).toBeInTheDocument();
+    expect(screen.getByText('Câu 3/4')).toBeInTheDocument();
+    expect(activeStep()).toBe('3');
   });
 
   it('mẫu số là số câu đã chọn, không phình theo số câu đang có', () => {
     const items = [question('s1', 1), question('f1', 2)];
     render(
-      <InterviewQuestionPanel
-        currentIndex={0}
-        totalQuestions={2}
-        displayNumber={1}
-        plannedTotal={20}
-        remainingSeconds={100}
-        question={items[0]}
-        questions={items}
-      />,
+      <InterviewQuestionPanel currentIndex={0} totalQuestions={2} plannedTotal={20} remainingSeconds={100} question={items[0]} questions={items} />,
     );
     expect(screen.getByText('Câu 1/20')).toBeInTheDocument();
-  });
-
-  it('không có số hiệu thì rơi về vị trí mảng — giữ tương thích call site cũ', () => {
-    const items = [question('s1', 1), question('s2', 5)];
-    render(
-      <InterviewQuestionPanel
-        currentIndex={1}
-        totalQuestions={2}
-        remainingSeconds={100}
-        question={items[1]}
-        questions={items}
-      />,
-    );
-    expect(screen.getByText('Câu 2/2')).toBeInTheDocument();
   });
 });

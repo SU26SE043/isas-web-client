@@ -111,23 +111,11 @@ export function useB2cPracticeRoom(
     [store.currentQuestionId, store.questions],
   );
 
-  // SỐ HIỆU HIỂN THỊ — cấp một lần lúc câu xuất hiện lần đầu, không bao giờ tính lại.
-  //
-  // Không dùng vị trí trong mảng: backend cố ý đánh `orderNo` có KHOẢNG TRỐNG (câu gốc nhận 1, 5,
-  // 9… — xem `SeedOrderStride`) để chuỗi đào sâu chèn vào giữa, và trả về đã sắp theo `orderNo`.
-  // Câu đào sâu của câu 1 mang `orderNo = 2` nên nó chen vào GIỮA mảng ⇒ câu gốc thứ hai tụt từ chỉ
-  // số 1 xuống 2 ⇒ nhãn của một câu ĐÃ HIỆN đổi từ "Câu 2" thành "Câu 3" ngay trước mắt ứng viên.
-  //
-  // Khoảng trống là thứ backend cần; cái sai là lấy vị trí mảng làm số hiệu. Map dưới đây cấp số
-  // tăng dần theo THỨ TỰ XUẤT HIỆN, nên câu đã hiện giữ số vĩnh viễn và câu mới luôn nhận số kế tiếp.
-  const displayNumbersRef = useRef(new Map<string, number>());
-  const displayNumbers = useMemo(() => {
-    const assigned = displayNumbersRef.current;
-    for (const question of store.questions) {
-      if (!assigned.has(question.id)) assigned.set(question.id, assigned.size + 1);
-    }
-    return assigned;
-  }, [store.questions]);
+  // SỐ HIỆU HIỂN THỊ = vị trí trong mảng + 1 — CÙNG nguồn với vòng tròn đang tô đậm ở stepper. Trước đây nhãn
+  // đếm theo thứ tự XUẤT HIỆN (map cấp số lúc hydrate) còn stepper đếm theo vị trí ⇒ câu đào sâu của
+  // câu 1 hiện "Câu hỏi 6 / 6" trong khi stepper tô vòng tròn 2 (đo trên dev 2026-09-12). Vị trí mảng
+  // của câu ĐANG hiện không bao giờ đổi: `appendQuestion` chèn câu đào sâu ngay SAU câu hiện tại (test
+  // khoá ở store), nên chỉ những câu chưa hiện mới trôi — đúng như vòng tròn stepper vẫn trôi.
 
   // Chữ đã nằm trong store và render độc lập. Audio bắt đầu tải ngay khi có
   // questionId (kể cả trong countdown), nhưng chỉ được phát sau gate bắt đầu.
@@ -443,14 +431,11 @@ export function useB2cPracticeRoom(
     stage: store.stage,
     questions: store.questions,
     currentQuestion,
-    // Vị trí trong mảng — vẫn dùng cho điều hướng và tô đậm bước, KHÔNG còn đóng vai số hiệu.
+    // Vị trí trong mảng — vừa để tô đậm bước ở stepper vừa là số hiệu ("Câu hỏi N") — một nguồn duy nhất.
     currentIndex: Math.max(
       0,
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
-    displayNumber: store.currentQuestionId
-      ? displayNumbers.get(store.currentQuestionId) ?? displayNumbers.size
-      : 1,
     // Mẫu số = số câu ứng viên đã CHỌN, không phải số câu đang có trong mảng. `questions.length`
     // phình lên mỗi lần câu đào sâu về ⇒ "Câu 1/2" thành "Câu 1/3" rồi "1/4" mà không ai bấm gì.
     // Buổi giao ít hơn thì dừng ở "Câu 4/20" — trung thực hơn một mẫu số nhảy.
