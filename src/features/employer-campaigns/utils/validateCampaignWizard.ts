@@ -1,6 +1,7 @@
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
 import { validateCampaignPdf } from './campaignFiles';
 import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
+import { validateCriterionLevels } from './criterionLevelRules';
 
 const LAST_STEP_INDEX = 7;
 // Trần số câu MỘT BUỔI THI (`settings.maxQuestions`, gồm cả câu đào sâu) — khớp CHECK
@@ -148,6 +149,18 @@ export function validateCampaignWizardStep(
     }
     if (rubric.some((item) => Number(item.maxScore) > 10)) {
       return 'employer.campaigns.wizard.rubric.maxScoreTooHigh';
+    }
+    // Mốc điểm là TUỲ CHỌN (CAMP-14): không có mốc thì KHÔNG chặn. Nhưng đã có mốc thì phải
+    // đúng luật CAMP-17, nếu không backend trả 400 lúc PUT/publish — sau khi HR đã đi hết
+    // wizard. Đặt SAU kiểm `maxScore` vì luật mốc đo theo chính thang đó.
+    if (
+      rubric.some(
+        (item) =>
+          (item.levels?.length ?? 0) > 0 &&
+          !validateCriterionLevels(item.levels ?? [], Number(item.maxScore)).ok,
+      )
+    ) {
+      return 'employer.campaigns.wizard.rubric.levelsInvalid';
     }
     // Ngưỡng Đạt/Không đạt của CHÍNH bảng điểm này ⇒ lỗi phải nổ ở bước có ô nhập nó.
     if (info.passScorePct != null && (info.passScorePct < 0 || info.passScorePct > 100)) {
