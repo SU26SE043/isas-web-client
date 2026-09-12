@@ -693,6 +693,10 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
           const source = hasAnswerObject ? answer : question;
           return {
             ...source,
+            // API lồng answer TRONG question: `answer.id` là id CÂU TRẢ LỜI. Không nâng nó lên `answerId` thì mọi
+            // entry đều answerId=null ⇒ phòng thi không phân biệt được câu đã nộp với câu chưa nộp khi quay lại
+            // buổi dở (lỗi đo trên dev 2026-09-12: resume bắt đầu lại từ câu 1 và ghi đè bài đã nộp).
+            answerId: hasAnswerObject ? pickString(answer.answerId, answer.id) || null : null,
             evaluation:
               asRecord(source).evaluation ??
               question.evaluation ??

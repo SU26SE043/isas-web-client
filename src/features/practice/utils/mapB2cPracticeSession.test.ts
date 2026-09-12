@@ -426,6 +426,26 @@ describe('mapPracticeSessionResponse', () => {
   });
 });
 
+describe('mapPracticeSessionResponse — answerId khi answer lồng trong question', () => {
+  it('nâng answer.id thành answerId; câu chưa có answer ⇒ answerId null (không lấy nhầm id câu hỏi)', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 'session-resume',
+      status: 'InProgress',
+      jobCategory: 'BE',
+      questions: [
+        { id: 'q1', orderNo: 1, content: 'Câu 1', timeLimitSec: 120, kind: 'Seed', answer: { id: 'ans-1', status: 'Scored', transcript: 'đã nói', scores: [] } },
+        { id: 'q2', orderNo: 5, content: 'Câu 2', timeLimitSec: 120, kind: 'Seed', answer: null },
+      ],
+      result: null,
+    });
+
+    expect(mapped.answers?.map((a) => [a.questionId, a.answerId, a.status])).toEqual([
+      ['q1', 'ans-1', 'Scored'],
+      ['q2', null, null],
+    ]);
+  });
+});
+
 describe('mapSubmitPracticeAnswerResponse', () => {
   it('maps nextQuestion and nextAction', () => {
     const mapped = mapSubmitPracticeAnswerResponse({
