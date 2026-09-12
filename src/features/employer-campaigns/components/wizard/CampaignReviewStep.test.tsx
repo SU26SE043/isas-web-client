@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CampaignReviewStep } from './CampaignReviewStep';
 import { createEmptyJdState } from '../../types/campaignWizard.types';
 import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
+import type { CampaignSlotResponse } from '../../types/campaign.api.types';
 
 vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({
@@ -21,32 +22,36 @@ vi.mock('@/shared/languages', () => ({
       if (key === 'employer.campaigns.wizard.review.adaptiveBudgetStatus.ok') return 'within limit';
       if (key === 'employer.campaigns.wizard.review.adaptiveBudgetStatus.exceeded') return 'OVER LIMIT';
       if (key === 'employer.campaigns.wizard.deploy.retryInvitations') return 'retryInvitations';
+      // T12 R2 — giữ placeholder thô để test đọc được số đã `.replace()`, mẫu theo 3 key adaptive ở trên.
+      if (key === 'employer.campaigns.wizard.deploy.blockSlotShortfall') return `${key} {{inviting}} {{available}}`;
+      if (key === 'employer.campaigns.wizard.deploy.blockSlotOutsideWindow') return `${key} {{n}}`;
+      if (key === 'employer.campaigns.wizard.deploy.scheduleSlots') return `${key} {{n}} {{assigned}} {{capacity}}`;
       return key;
     },
   }),
 }));
 
+// Hook thật dùng react-query — mock để test bước 8 không cần QueryClientProvider. Trạng thái
+// mutable để từng test tự đặt `data`/`isLoading`/`isError` (T12 R2: phân biệt "0 ca thật" với
+// "chưa tải xong/lỗi" là chính điều task này phải làm đúng).
+const slotsQueryState = vi.hoisted(() => ({
+  data: [] as CampaignSlotResponse[] | undefined,
+  isLoading: false,
+  isError: false,
+}));
 vi.mock('../../hooks/useCampaignSlots', () => ({
-  useCampaignSlots: () => ({ data: [] }),
-}));
-
-// Hook thật (W1) dùng react-query — mock để test bước 8 không cần QueryClientProvider; card chỉ nhận api qua props.
-const rubricPreviewApi = vi.hoisted(() => ({
-  runs: [] as unknown[],
-  latest: null as unknown,
-  isLoadingHistory: false,
-  isRunning: false,
-  freeRunsRemaining: 3 as number | null,
-  error: null,
-  run: vi.fn(async () => null),
-  clearError: vi.fn(),
-}));
-vi.mock('../../hooks/useRubricPreview', () => ({
-  useRubricPreview: () => rubricPreviewApi,
+  useCampaignSlots: () => ({
+    data: slotsQueryState.data,
+    isLoading: slotsQueryState.isLoading,
+    isError: slotsQueryState.isError,
+  }),
 }));
 
 afterEach(() => {
   cleanup();
+  slotsQueryState.data = [];
+  slotsQueryState.isLoading = false;
+  slotsQueryState.isError = false;
 });
 
 const baseProps = {
@@ -268,19 +273,18 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
   });
 });
 
-describe('CampaignReviewStep — chấm thử thước đo (compact, CAMP-19)', () => {
+// T12 R2 — ĐỔI TIỀN ĐỀ có chủ đích: `CampaignReviewStep` KHÔNG còn render
+// `RubricPreviewMount variant="compact"` ở bước Review. Ba test cũ ở đây kiểm chính card đó
+// (`data-testid="preview-compact-status"`/`"preview-soft-warning"`); T10 sẽ mount
+// `QuestionPreviewSummaryLine` vào chỗ đã chừa placeholder trong `CampaignReviewStep.tsx`. Bản
+// thân `RubricPreviewMount`/`RubricPreviewCard` KHÔNG bị đổi (FE-A sở hữu, gỡ compact ở đó) —
+// đây chỉ là chỗ GỌI nó bị bỏ, nên test chuyển hướng sang khẳng định "không còn ở đây nữa".
+describe('CampaignReviewStep — chấm thử thước đo compact KHÔNG còn render (T12 R2, thay CAMP-19)', () => {
   const rubricWithLevels: RubricCriterion[] = [
     { id: 'c1', name: 'Depth', description: '', weight: 100, maxScore: 5, levels: [{ score: 0, descriptor: 'none' }, { score: 5, descriptor: 'top' }] },
   ];
 
-  it('không có campaignId ⇒ card ở trạng thái chặn, KHÔNG có cảnh báo mềm, Phát hành vẫn bấm được', () => {
-    render(<CampaignReviewStep {...baseProps} rubric={rubricWithLevels} questions={twentyQuestions} questionsPerSession={5} />);
-    expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('employer.campaigns.rubricPreview.blocked.noCampaign');
-    expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
-  });
-
-  it('có campaign + thước đo có mốc + 0 lượt ⇒ cảnh báo MỀM, Phát hành KHÔNG bị chặn, nút là "Lưu & chấm thử" khi có bước lưu', () => {
+  it('dù truyền đủ campaignId/campaignStatus/onBeforeRun, card compact vẫn KHÔNG xuất hiện', () => {
     render(
       <CampaignReviewStep
         {...baseProps}
@@ -292,16 +296,92 @@ describe('CampaignReviewStep — chấm thử thước đo (compact, CAMP-19)', 
         onBeforeRun={async () => 'cmp-1'}
       />,
     );
-    expect(screen.getByTestId('preview-soft-warning')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' })).toBeEnabled();
+    expect(screen.queryByTestId('preview-compact-status')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
+  });
+});
+
+describe('CampaignReviewStep — Sức chứa & ca thi (T12 R2)', () => {
+  const readyRubric: RubricCriterion[] = [
+    { id: 'r1', name: 'Depth', description: '', weight: 100, maxScore: 5 },
+  ];
+  const readyQuestions: CampaignQuestion[] = [
+    { id: 'q1', prompt: 'Q1', skill: 'frontend', difficulty: 'middle', source: 'manual', isRequired: true },
+  ];
+  // adaptiveEnabled: false ⇒ loại hẳn ngân sách adaptive khỏi phép so sánh, để `deployDisabled`
+  // trong các test dưới đây chỉ còn phản ánh đúng MỘT biến số: khối chặn liên quan tới ca thi.
+  const readyProps = { ...baseProps, rubric: readyRubric, questions: readyQuestions, settings: { ...baseProps.settings, adaptiveEnabled: false } };
+
+  function slot(capacity: number, assignedCount: number, id = `cap${capacity}-assigned${assignedCount}`): CampaignSlotResponse {
+    return { id, startsAt: '2026-09-10T09:00:00.000Z', endsAt: '2026-09-10T11:00:00.000Z', capacity, assignedCount, startedCount: 0 };
+  }
+  function slotAt(startsAt: string, endsAt: string, capacity: number, assignedCount: number, id = 'outside-1'): CampaignSlotResponse {
+    return { id, startsAt, endsAt, capacity, assignedCount, startedCount: 0 };
+  }
+
+  it('mời vượt chỗ ca thi ⇒ chặn triển khai, bấm mục chặn đưa về bước 6 (index 5)', () => {
+    // capacity=5, assignedCount=3 ⇒ available=2 ≠ total=5 (cố ý LỆCH hai số này — nếu code
+    // dùng nhầm `.total` thay `.available` thì test dưới đây phải bắt được sự khác biệt).
+    slotsQueryState.data = [slot(5, 3)];
+    const onGoToStep = vi.fn();
+    render(
+      <CampaignReviewStep
+        {...readyProps}
+        campaignId="cmp-1"
+        inviteEmails={['a@x.com', 'b@x.com', 'c@x.com']}
+        disableForBlockingIssues
+        onGoToStep={onGoToStep}
+      />,
+    );
+    const blocker = screen.getByRole('button', { name: /blockSlotShortfall/ });
+    expect(blocker).toHaveTextContent('3'); // đang mời 3
+    expect(blocker).toHaveTextContent('2'); // chỉ còn 2 chỗ trống (available, KHÔNG PHẢI total=5)
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeDisabled();
+    fireEvent.click(blocker);
+    expect(onGoToStep).toHaveBeenCalledWith(5);
+  });
+
+  it('có ca NẰM NGOÀI cửa sổ chiến dịch ⇒ chặn triển khai và bảng ca thi gắn nhãn đúng ca đó', () => {
+    slotsQueryState.data = [slotAt('2020-01-01T09:00:00.000Z', '2020-01-01T11:00:00.000Z', 5, 0)];
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" disableForBlockingIssues />);
+    expect(screen.getByText(/blockSlotOutsideWindow/)).toHaveTextContent('1');
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeDisabled();
+    expect(screen.getByText(/slotOutsideBadge/)).toBeInTheDocument();
+  });
+
+  it('KHÔNG khai ca nào ⇒ không chặn, tóm tắt lịch nói "không ca"', () => {
+    slotsQueryState.data = [];
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" inviteEmails={['a@x.com', 'b@x.com']} disableForBlockingIssues />);
+    expect(screen.queryByText(/blockSlotShortfall/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/blockSlotOutsideWindow/)).not.toBeInTheDocument();
+    expect(screen.getByText(/scheduleNoSlots/)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
   });
 
-  it('thiếu mốc ⇒ dòng trạng thái là LÝ DO, nút chấm thử disabled, Phát hành vẫn bấm được (cảnh báo mềm, không chặn)', () => {
-    const missing: RubricCriterion[] = [{ ...rubricWithLevels[0], levels: [] }];
-    render(<CampaignReviewStep {...baseProps} campaignId="cmp-1" rubric={missing} questions={twentyQuestions} questionsPerSession={5} />);
-    expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('missingLevels');
-    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeDisabled();
+  it('có ca ⇒ tóm tắt lịch hiện đúng N ca và đã đặt assigned/capacity, ĐÚNG THỨ TỰ', () => {
+    slotsQueryState.data = [slot(5, 2, 's1'), slot(3, 1, 's2')]; // total=8, assigned=3
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" />);
+    const summary = screen.getByText(/scheduleSlots/);
+    // Khớp CHUỖI theo đúng thứ tự "n assigned capacity" — chỉ kiểm từng số riêng lẻ (toán tử
+    // 'chứa') sẽ KHÔNG bắt được lỗi hoán đổi assigned↔capacity vì cả hai vẫn là 3 và 8, chỉ
+    // đổi chỗ cho nhau.
+    expect(summary).toHaveTextContent('employer.campaigns.wizard.deploy.scheduleSlots 2 3 8');
+  });
+
+  it('slots đang tải hoặc lỗi (data undefined) ⇒ KHÔNG chặn dù có nhiều lời mời — chưa có dữ liệu không phải "hết chỗ"', () => {
+    slotsQueryState.data = undefined;
+    slotsQueryState.isLoading = true;
+    render(
+      <CampaignReviewStep
+        {...readyProps}
+        campaignId="cmp-1"
+        inviteEmails={['a@x.com', 'b@x.com', 'c@x.com']}
+        disableForBlockingIssues
+      />,
+    );
+    expect(screen.queryByText(/blockSlotShortfall/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/blockSlotOutsideWindow/)).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
   });
 });
