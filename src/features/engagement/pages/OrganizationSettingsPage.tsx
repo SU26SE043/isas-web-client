@@ -16,7 +16,7 @@ export function OrganizationSettingsPage() {
   const organization = useOrganization(isOrganizationMember);
 
   return (
-    <EngagementPageShell title={t('engagement.organization.pageTitle')} description={t('engagement.organization.description')}>
+    <EngagementPageShell title={t('engagement.organization.pageTitle')} description={t('engagement.organization.pageDescription')}>
       {isOrganizationMember ? (
         <OrganizationProfileForm
           {...organization}

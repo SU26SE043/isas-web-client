@@ -5,6 +5,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.nav.team': 'Nhóm',
 
     'engagement.organization.pageTitle': 'Tổ chức',
+    'engagement.organization.pageDescription': 'Tên và mã số thuế hiện trên hoá đơn và lời mời ứng viên. Chỉ quản trị viên tổ chức được sửa.',
     'engagement.organization.title': 'Thông tin tổ chức',
     'engagement.organization.description': 'Xem thông tin tổ chức hiện tại và cập nhật tên, mã số thuế.',
     'engagement.organization.name': 'Tên tổ chức',
@@ -61,6 +62,7 @@ export const engagementTranslations: TranslationDictionary = {
     'engagement.nav.team': 'Team',
 
     'engagement.organization.pageTitle': 'Organization',
+    'engagement.organization.pageDescription': 'The name and tax code shown on invoices and candidate invitations. Only organization administrators can edit them.',
     'engagement.organization.title': 'Organization information',
     'engagement.organization.description': 'View the current organization and update its name or tax code.',
     'engagement.organization.name': 'Organization name',

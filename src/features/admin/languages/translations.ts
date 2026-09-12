@@ -52,7 +52,7 @@ export const adminTranslations: TranslationDictionary = {
     'admin.table.actions': 'Thao tác',
 
     'admin.dashboard.title': 'Nền tảng quản trị',
-    'admin.dashboard.description': 'Điều hành người dùng, RBAC, kiểm toán, cấu hình AI và vận hành hệ thống từ một không gian quản trị.',
+    'admin.dashboard.description': 'Doanh thu, người dùng, tổ chức, chiến dịch và cấu hình AI (prompt · rubric · ngưỡng lộ trình) trong một không gian quản trị.',
     'admin.analytics.totalUsers': 'Tổng người dùng',
     'admin.analytics.totalUsersHint': 'Tất cả tài khoản trên nền tảng',
     'admin.analytics.newUsers': 'Người dùng mới',
@@ -358,7 +358,7 @@ export const adminTranslations: TranslationDictionary = {
     'admin.table.actions': 'Actions',
 
     'admin.dashboard.title': 'Admin Platform',
-    'admin.dashboard.description': 'Operate users, RBAC, audit, AI config, and platform health from one admin workspace.',
+    'admin.dashboard.description': 'Revenue, users, organizations, campaigns, and AI configuration (prompts · rubrics · roadmap thresholds) in one admin workspace.',
     'admin.analytics.totalUsers': 'Total users',
     'admin.analytics.totalUsersHint': 'All accounts across the platform',
     'admin.analytics.newUsers': 'New users',
