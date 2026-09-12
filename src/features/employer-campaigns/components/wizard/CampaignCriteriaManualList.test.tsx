@@ -222,3 +222,14 @@ describe('CampaignCriteriaManualList — nút "AI đề xuất mốc" ở header
     expect(screen.getByRole('button', { name: /levelsEditor\.openEmpty/ })).toBeEnabled();
   });
 });
+
+describe('CampaignCriteriaManualList — tiêu chí mới thêm (SC2)', () => {
+  it('bấm "Thêm tiêu chí mới" ⇒ tiêu chí mới mang scoringScope: Always (mặc định an toàn)', () => {
+    const { onChangeRubric } = renderList();
+    fireEvent.click(addButton());
+
+    const nextRubric = onChangeRubric.mock.calls.at(-1)?.[0] as RubricCriterion[];
+    const added = nextRubric.at(-1);
+    expect(added?.scoringScope).toBe('Always');
+  });
+});

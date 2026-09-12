@@ -4,14 +4,22 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CampaignWizardController } from '../../hooks/useCampaignWizard';
 
 /**
- * Khoá KHE NỐI wizard → bước Tiêu chí → bảng tiêu chí (CAMP-19/CAMP-16). Card chấm thử và nút AI đề xuất mốc đều
- * có test riêng, nhưng khe giữa chúng (StepContent chuyền `persistForPreview` xuống làm `onBeforeRun` /
- * `onEnsurePersisted`) thì không — gỡ một prop ở đây là cả hai tính năng rơi về trạng thái "chưa có campaign"
+ * Khoá KHE NỐI wizard → bước Tiêu chí → bảng tiêu chí (CAMP-16). Nút AI đề xuất mốc có test riêng,
+ * nhưng khe giữa chúng (StepContent chuyền `persistForPreview` xuống làm `onBeforeRun` /
+ * `onEnsurePersisted`) thì không — gỡ một prop ở đây là tính năng rơi về trạng thái "chưa lưu"
  * mà không test nào đỏ (tiền lệ Q10-M2). Mock hai component con để bắt đúng prop chúng nhận.
+ *
+ * SC2 — card chấm thử ĐÃ RỜI bước 3 (nay theo từng câu, sống ở bước khác). `useRubricPreview` được
+ * spy (không phải factory ẩn danh) để khoá luôn vế "bước 3 KHÔNG mount card": gọi nó tức là card
+ * còn sống ở đây, sai với thiết kế SC2.
  */
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'vi' }) }));
 const criteriaStepSpy = vi.fn();
 const manualListSpy = vi.fn();
+const useRubricPreviewSpy = vi.fn(() => ({
+  runs: [], latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null,
+  run: async () => null, clearError: () => undefined,
+}));
 vi.mock('./CampaignCriteriaStepV2', async (importOriginal) => {
   const mod = await importOriginal<typeof import('./CampaignCriteriaStepV2')>();
   return { ...mod, CampaignCriteriaStepV2: (props: Record<string, unknown>) => { criteriaStepSpy(props); return null; } };
@@ -19,9 +27,7 @@ vi.mock('./CampaignCriteriaStepV2', async (importOriginal) => {
 vi.mock('./CampaignCriteriaManualList', () => ({
   CampaignCriteriaManualList: (props: Record<string, unknown>) => { manualListSpy(props); return null; },
 }));
-vi.mock('../../hooks/useRubricPreview', () => ({
-  useRubricPreview: () => ({ runs: [], latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: async () => null, clearError: () => undefined }),
-}));
+vi.mock('../../hooks/useRubricPreview', () => ({ useRubricPreview: useRubricPreviewSpy }));
 vi.mock('../../services/campaignCriteria.service', () => ({ campaignCriteriaService: { preview: vi.fn(async () => ({ jobCategory: 'BE', language: 'vi', criteria: [] })) } }));
 
 const { CampaignWizardStepContent } = await import('./CampaignWizardStepContent');
@@ -41,17 +47,17 @@ function wizardAt(step: number): CampaignWizardController {
   } as unknown as CampaignWizardController;
 }
 
-describe('CampaignWizardStepContent — khe nối chấm thử/đề xuất mốc', () => {
-  it('bước 3: CriteriaStepV2 nhận persistForPreview làm onBeforeRun, câu hỏi thật, campaignStatus và goToStep(3)', () => {
+describe('CampaignWizardStepContent — khe nối đề xuất mốc (SC2: card chấm thử đã rời bước 3)', () => {
+  it('bước 3: CriteriaStepV2 nhận persistForPreview làm onBeforeRun — khe DUY NHẤT còn lại giữa StepContent và bước này', () => {
     const wizard = wizardAt(2);
     render(<CampaignWizardStepContent wizard={wizard} campaign={{ rubricVersion: 4 } as never} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
     const props = criteriaStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onBeforeRun).toBe(wizard.persistForPreview);
-    expect(props.questions).toBe(wizard.state.questions);
-    expect(props.campaignStatus).toBe('draft');
-    expect(props.currentRubricVersion).toBe(4);
-    (props.onGoToQuestions as () => void)();
-    expect(wizard.goToStep).toHaveBeenCalledWith(3);
+    // SC2 — 4 prop của card chấm thử cũ KHÔNG còn tồn tại trên CriteriaStepV2 nữa.
+    expect(props).not.toHaveProperty('campaignStatus');
+    expect(props).not.toHaveProperty('questions');
+    expect(props).not.toHaveProperty('onGoToQuestions');
+    expect(props).not.toHaveProperty('currentRubricVersion');
   });
 
   it('CriteriaStepV2 chuyền onBeforeRun xuống bảng tiêu chí làm onEnsurePersisted (AI đề xuất mốc cần lưu trước)', () => {
@@ -63,5 +69,14 @@ describe('CampaignWizardStepContent — khe nối chấm thử/đề xuất mố
     const props = manualListSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onEnsurePersisted).toBe(onBeforeRun);
     expect(props.campaignId).toBe('c-1');
+  });
+
+  it('bước 3 KHÔNG mount card chấm thử — render CriteriaStepV2 THẬT, useRubricPreview không được gọi', () => {
+    const onBeforeRun = vi.fn(async () => 'c-1');
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={qc}><CampaignCriteriaStepV2 passScorePct={null} onPassScoreChange={() => undefined} rubric={[]} customized onCustomize={() => undefined}
+      campaignId="c-1" jobCategory="BE" onChangeRubric={() => undefined} onReset={() => undefined} onBack={() => undefined} onNext={() => undefined}
+      onBeforeRun={onBeforeRun} /></QueryClientProvider>);
+    expect(useRubricPreviewSpy).not.toHaveBeenCalled();
   });
 });

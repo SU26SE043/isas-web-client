@@ -101,12 +101,21 @@ export function mapQuestionsToApiRequest(
     });
 }
 
-/** `undefined`/`null` ⇒ omit key (JSON/`toEqual` coi `undefined` là vắng); mảng thật ⇒ lọc còn GUID server. */
+/**
+ * Ba ca, KHÔNG phải hai (T7-R1, đã đo có rủi ro thật): `undefined`/`null` ⇒ omit key (JSON/
+ * `toEqual` coi `undefined` là vắng) · mảng GỐC rỗng thật `[]` ⇒ gửi `[]` nguyên (HR đã chủ động
+ * "chỉ Always") · mảng GỐC có phần tử nhưng SAU lọc GUID còn rỗng (toàn id tạm `criterion-N`/
+ * `new-xxxx` — tiêu chí vừa thêm tay trong CÙNG lượt lưu, chưa có id server) ⇒ OMIT khoá, KHÔNG
+ * gửi `[]`. Gửi `[]` ở ca thứ ba sẽ bị BE đọc thành "XOÁ nhãn" (W1) trong khi ý định thật là
+ * "chưa resolve được, đừng đụng nhãn đang có trên server" — hai ý khác hẳn nhau.
+ */
 function normalizeTargetCriterionIdsForRequest(
   value: string[] | null | undefined,
 ): string[] | undefined {
   if (value == null) return undefined;
-  return value.filter((id) => isServerEntityId(id));
+  if (value.length === 0) return [];
+  const resolved = value.filter((id) => isServerEntityId(id));
+  return resolved.length === 0 ? undefined : resolved;
 }
 
 function criteriaRequestToRubric(

@@ -34,6 +34,9 @@ function createEmptyCriterion(): RubricCriterion {
     description: '',
     weight: 0,
     maxScore: 10,
+    // SC2 — tiêu chí HR tự thêm mặc định chấm MỌI câu (an toàn, khớp hành vi "vắng ⇒ Always").
+    // Đặt tường minh (không để `undefined`) để công tắc trên card có trạng thái rõ ràng ngay.
+    scoringScope: 'Always',
   };
 }
 

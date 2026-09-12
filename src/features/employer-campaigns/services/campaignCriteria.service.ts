@@ -9,6 +9,11 @@ export type CampaignCriteriaPreviewCriterion = {
   maxScore: number;
   levelCount: number;
   levels: RubricLevel[];
+  /**
+   * SC2 — 'Always' | 'WhenTargeted'; vắng/lạ ⇒ `undefined` (caller, `previewToRubric`, mặc định
+   * 'Always'). Bộ chuẩn admin soạn ở InterviewService (W5, `GetB2CRubricAsync`).
+   */
+  scoringScope?: 'Always' | 'WhenTargeted';
 };
 
 export type CampaignCriteriaPreview = {
@@ -55,6 +60,7 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
         const descriptor = text(parsed?.descriptor ?? parsed?.Descriptor);
         return descriptor ? [{ score: number(parsed?.score ?? parsed?.Score), descriptor }] : [];
       });
+      const rawScope = row.scoringScope ?? row.ScoringScope;
       return [{
         id: text(row.id ?? row.Id, `system-${index + 1}`),
         name: text(row.name ?? row.Name),
@@ -63,6 +69,7 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
         maxScore: number(row.maxScore ?? row.MaxScore, 10),
         levelCount: number(row.levelCount ?? row.LevelCount, levels.length),
         levels,
+        scoringScope: rawScope === 'Always' || rawScope === 'WhenTargeted' ? rawScope : undefined,
       }];
     }),
   };

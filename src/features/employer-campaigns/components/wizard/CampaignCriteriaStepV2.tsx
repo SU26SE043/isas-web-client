@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../types/campaignManagement.types';
+import type { RubricCriterion } from '../../types/campaignManagement.types';
 import type { CampaignLanguage } from '../../types/campaign.api.types';
 import {
   campaignCriteriaService,
@@ -14,7 +14,6 @@ import {
 } from '../../services/campaignCriteria.service';
 import { CampaignCriteriaManualList } from './CampaignCriteriaManualList';
 import { CampaignWizardNav } from './CampaignWizardNav';
-import { RubricPreviewMount } from './preview/RubricPreviewMount';
 import { WizardNumberField } from './WizardNumberField';
 import { WizardSection } from './WizardSection';
 import { FieldError } from './FieldError';
@@ -36,15 +35,11 @@ interface Props {
   onNext: () => void;
   isSaving?: boolean;
   /**
-   * CAMP-19 — card chấm thử thước đo sống ở bước này, cạnh thứ nó kiểm. Mọi prop dưới đây TUỲ CHỌN:
-   * thiếu ⇒ card hiện ở trạng thái chặn ("chưa có campaign"/"chưa có câu hỏi") thay vì biến mất.
+   * SC2 — card chấm thử thước đo ĐÃ RỜI bước này (chấm nay theo TỪNG CÂU, sống cạnh câu hỏi ở
+   * bước 4/8 — xem `RubricPreviewMount`). `onBeforeRun` vẫn ở lại: `CampaignCriteriaManualList`
+   * dùng nó làm `onEnsurePersisted` cho nút "AI đề xuất mốc" (CAMP-16, cần lưu trước khi AI đọc).
    */
-  campaignStatus?: EmployerCampaignStatus | null;
-  questions?: CampaignQuestion[];
-  /** Lưu thước đo + câu hỏi rồi trả campaignId — card đổi nhãn thành "Lưu & chấm thử" và hỏi trước khi lưu lên campaign Active. */
   onBeforeRun?: () => Promise<string | null>;
-  onGoToQuestions?: () => void;
-  currentRubricVersion?: number | null;
 }
 
 export function previewToRubric(preview: CampaignCriteriaPreview): RubricCriterion[] {
@@ -56,6 +51,8 @@ export function previewToRubric(preview: CampaignCriteriaPreview): RubricCriteri
     maxScore: item.maxScore,
     minPct: null,
     levels: item.levels.length ? item.levels : undefined,
+    // SC2 — bộ chuẩn (W5) mang scoringScope; vắng/lạ (đã chuẩn hoá `undefined` ở service) ⇒ 'Always'.
+    scoringScope: item.scoringScope === 'WhenTargeted' ? 'WhenTargeted' : 'Always',
   }));
 }
 
@@ -78,11 +75,7 @@ export function CampaignCriteriaStepV2({
   onNext,
   isSaving,
   campaignId,
-  campaignStatus = null,
-  questions = [],
   onBeforeRun,
-  onGoToQuestions,
-  currentRubricVersion,
 }: Props) {
   const { t } = useLanguage();
   const criteriaQuery = useQuery({
@@ -206,16 +199,6 @@ export function CampaignCriteriaStepV2({
             />
           </div>
         </WizardSection>
-        <RubricPreviewMount
-          campaignId={campaignId}
-          campaignStatus={campaignStatus}
-          rubric={rubric}
-          questions={questions}
-          passScorePct={passScorePct}
-          onBeforeRun={onBeforeRun}
-          onGoToQuestions={onGoToQuestions}
-          currentRubricVersion={currentRubricVersion}
-        />
       </div>
     </SectionPanel>
   );
