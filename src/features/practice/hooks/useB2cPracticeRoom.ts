@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import {
-  getPracticeSession,
-  submitPracticeAnswer,
-  submitPracticeSession,
-} from '../services/b2cPracticeSession.service';
+import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
-import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import { loadRoomSession } from './loadRoomSession';
 
 // Brief enough to let the "time's up" state paint before the auto-submit
 // request fires, but short enough not to add a needless extra second on top
@@ -210,21 +206,8 @@ export function useB2cPracticeRoom(
       }
       store.setStage('interviewing');
       try {
-        const campaignSession = readCampaignInterviewSession(sessionId);
-        if (campaignSession) {
-          store.hydrateFromSession({
-            id: sessionId,
-            status: 'InProgress',
-            questions: campaignSession.questions.map((question) => ({
-              ...question,
-              kind: 'question',
-            })),
-            answers: [],
-            result: null,
-          });
-          return;
-        }
-        const session = await getPracticeSession(sessionId);
+        // B2B lẫn B2C đều hỏi server (marker B2B không có câu trả lời — xem `loadRoomSession`).
+        const session = await loadRoomSession(sessionId);
         if (cancelled) return;
         store.hydrateFromSession(session);
       } catch {

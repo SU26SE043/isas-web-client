@@ -67,25 +67,45 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
   ...initialState,
 
   hydrateFromSession: (session) => {
-    const first = session.questions[0] ?? null;
+    // Quay lại buổi dở: server đã giữ câu trả lời (INT-3/BK16) nên phải nạp lại, KHÔNG được bắt đầu từ câu 1 —
+    // bắt đầu lại là ứng viên trả lời đè lên bài đã nộp (upload lại = ghi đè, điểm cũ bị xoá và chấm lại).
+    // Đo trên dev 2026-09-12: buổi đã nộp 8/9 câu, "Tiếp tục" cho ra 9/9 câu chưa trả lời, 4 lượt nộp thêm đè đúng câu 1–4.
+    const answersByQuestionId: Record<string, SubmittedAnswerState> = {};
+    for (const answer of session.answers ?? []) {
+      if (!answer.answerId || !answer.questionId) continue;
+      answersByQuestionId[answer.questionId] = {
+        answerId: answer.answerId,
+        questionId: answer.questionId,
+        status: answer.status ?? 'Scoring',
+        transcript: answer.transcript ?? null,
+      };
+    }
+    const current = session.questions.find((q) => !answersByQuestionId[q.id]) ?? null;
+    const allAnswered = session.questions.length > 0 && current == null;
+    // Không còn câu nào chưa trả lời ⇒ đứng ở câu cuối và mở nút Kết thúc (nút đó chỉ hiện khi `interviewComplete`).
+    const anchor = current ?? session.questions[session.questions.length - 1] ?? null;
     const questionStates: Record<string, QuestionAnswerState> = {};
     for (const q of session.questions) {
-      questionStates[q.id] = q.id === first?.id ? 'reading_question' : 'not_started';
+      questionStates[q.id] = answersByQuestionId[q.id]
+        ? 'submitted'
+        : q.id === anchor?.id
+          ? 'reading_question'
+          : 'not_started';
     }
     set({
       sessionId: session.id,
       session,
       questions: session.questions,
-      currentQuestionId: first?.id ?? null,
-      answersByQuestionId: {},
+      currentQuestionId: anchor?.id ?? null,
+      answersByQuestionId,
       questionStates,
       recordingStatus: 'idle',
-      remainingSeconds: first?.timeLimitSec ?? session.timeLimitSec ?? 120,
-      stage: 'interviewing',
-      sessionTimeLimitSec: session.timeLimitSec ?? first?.timeLimitSec ?? 120,
+      remainingSeconds: anchor?.timeLimitSec ?? session.timeLimitSec ?? 120,
+      stage: allAnswered ? 'ready_to_finish' : 'interviewing',
+      sessionTimeLimitSec: session.timeLimitSec ?? anchor?.timeLimitSec ?? 120,
       speechWarning: null,
       lastNextAction: null,
-      interviewComplete: false,
+      interviewComplete: allAnswered,
     });
   },
 
