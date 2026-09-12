@@ -373,6 +373,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.questionKind': 'Loại câu hỏi',
     'practice.result.quickNavLabel': 'Điều hướng nhanh báo cáo',
     'practice.result.jumpToQuestion': 'Đi đến câu hỏi:',
+    'practice.result.followUps': 'Câu theo sau',
+    'practice.result.followUpCount': '{{n}} câu theo sau',
     'practice.result.sampleDisclaimer':
       'AI soạn theo rubric của buổi này. Chỉ dùng để tham khảo cách triển khai ý, không nên học thuộc.',
     'practice.result.copySample': 'Sao chép',
@@ -1631,6 +1633,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.questionKind': 'Question type',
     'practice.result.quickNavLabel': 'Report quick navigation',
     'practice.result.jumpToQuestion': 'Jump to question:',
+    'practice.result.followUps': 'Follow-up questions',
+    'practice.result.followUpCount': '{{n}} follow-up questions',
     'practice.result.sampleDisclaimer':
       'AI drafted this using the session rubric. Use it as a reference for structuring ideas, not to memorize.',
     'practice.result.copySample': 'Copy',

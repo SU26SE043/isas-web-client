@@ -17,9 +17,9 @@ import { ProctoringAnalysis } from '../components/results/ProctoringAnalysis';
 import { ResultDetailHeader } from '../components/results/detail/ResultDetailHeader';
 import { ResultDetailMetrics } from '../components/results/detail/ResultDetailMetrics';
 import { ResultOverrideHistory } from '../components/results/detail/ResultOverrideHistory';
-import { ResultQuestionCard } from '../components/results/detail/ResultQuestionCard';
+import { ResultQuestionGroupList } from '../components/results/detail/ResultQuestionGroupList';
 import { ResultQuestionNav } from '../components/results/detail/ResultQuestionNav';
-import { numberQuestions } from '@/shared/utils/questionNumbering';
+import { groupQuestionsByRoot, numberQuestions } from '@/shared/utils/questionNumbering';
 
 /**
  * Trang "Đánh giá chi tiết" v2 (E11c): header + điều hướng ứng viên · 4 số liệu · lịch sử điều chỉnh của HR ·
@@ -71,6 +71,8 @@ export function CampaignResultDetailPage() {
   // đọc "Câu 1 · 2 · 3 · 5 · 7 · 9" và tưởng thiếu bài.
   const questions = [...(transcriptQuery.data?.questions ?? [])].sort((a, b) => a.orderNo - b.orderNo);
   const questionLabels = numberQuestions(questions.map((q) => ({ id: q.questionId, kind: q.kind }))).labels;
+  // Câu theo sau gom về câu gốc của nó: rail chỉ trỏ câu gốc, thẻ con lồng dưới thẻ gốc.
+  const questionGroups = groupQuestionsByRoot(questions, (q) => q.kind);
   // Trước/sau theo thứ tự HẠNG server trả (không phải thứ tự bảng đã lọc/sort ở client).
   const neighbors = resultNeighbors(resultsQuery.data?.results ?? [], item.sessionId);
 
@@ -112,18 +114,8 @@ export function CampaignResultDetailPage() {
           </div>
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_13rem]">
-            <section className="space-y-4">
-              {questions.map((question) => (
-                <ResultQuestionCard
-                  key={question.questionId}
-                  question={question}
-                  label={questionLabels.get(question.questionId) ?? String(question.orderNo)}
-                  campaignId={campaignId}
-                  sessionId={item.sessionId}
-                />
-              ))}
-            </section>
-            <ResultQuestionNav questions={questions} labels={questionLabels} />
+            <ResultQuestionGroupList groups={questionGroups} labels={questionLabels} campaignId={campaignId} sessionId={item.sessionId} />
+            <ResultQuestionNav groups={questionGroups} labels={questionLabels} />
           </div>
         )}
         <ProctoringAnalysis flags={item.flags} />

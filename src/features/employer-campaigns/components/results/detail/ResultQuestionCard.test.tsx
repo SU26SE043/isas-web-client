@@ -5,6 +5,8 @@ import { LanguageProvider } from '@/shared/languages';
 import type { TranscriptQuestion } from '../../../types/campaign.api.types';
 import { ResultQuestionCard } from './ResultQuestionCard';
 import { ResultQuestionNav } from './ResultQuestionNav';
+import { ResultQuestionGroupList } from './ResultQuestionGroupList';
+import { groupQuestionsByRoot } from '@/shared/utils/questionNumbering';
 
 afterEach(() => cleanup());
 
@@ -122,16 +124,18 @@ describe('ResultQuestionCard — trạng thái câu', () => {
   });
 });
 
+const groupsOf = (items: TranscriptQuestion[]) => groupQuestionsByRoot(items, (q) => q.kind);
+
 describe('ResultQuestionNav', () => {
   it('anchor #q-{n} + điểm + icon theo trạng thái', () => {
     render(
       <LanguageProvider>
         <ResultQuestionNav
-          questions={[
+          groups={groupsOf([
             base,
             { ...base, questionId: 'q2', orderNo: 2, scores: [], rejectReason: 'no_speech' },
             { ...base, questionId: 'q3', orderNo: 3, needsReview: true },
-          ]}
+          ])}
         />
       </LanguageProvider>,
     );
@@ -160,15 +164,33 @@ describe('ResultQuestionCard / ResultQuestionNav — số hiệu phân cấp', (
     expect(screen.queryByRole('heading', { name: 'Câu 5' })).not.toBeInTheDocument();
   });
 
-  it('rail điều hướng in 1 · 1.1 · 2 theo map nhãn', () => {
+  it('rail CHỈ liệt kê câu gốc 1 · 2 (theo map nhãn) kèm +N câu theo sau; không có chip 1.1', () => {
     const labels = new Map([['q1', '1'], ['q1b', '1.1'], ['q2', '2']]);
     render(
       <LanguageProvider>
-        <ResultQuestionNav questions={[base, follow, seed2]} labels={labels} />
+        <ResultQuestionNav groups={groupsOf([base, follow, seed2])} labels={labels} />
       </LanguageProvider>,
     );
-    // Span đầu của mỗi link là nhãn câu; span sau là điểm TB.
-    const links = screen.getAllByRole('link').map((el) => el.querySelector('span')?.textContent);
-    expect(links).toEqual(['Câu 1', 'Câu 1.1', 'Câu 2']);
+    const links = screen.getAllByRole('link');
+    // Span đầu của mỗi link là nhãn câu; span sau là +N (nếu có) rồi điểm TB.
+    expect(links.map((el) => el.querySelector('span')?.textContent)).toEqual(['Câu 1', 'Câu 2']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#q-1', '#q-5']);
+    expect(links[0]).toHaveTextContent('+1');
+    expect(links[1]).not.toHaveTextContent('+');
+  });
+
+  it('danh sách thẻ: câu theo sau lồng dưới thẻ gốc của nó, đúng thứ tự 1 · 1.1 · 2', () => {
+    const labels = new Map([['q1', '1'], ['q1b', '1.1'], ['q2', '2']]);
+    render(
+      <LanguageProvider>
+        <ResultQuestionGroupList groups={groupsOf([base, follow, seed2])} labels={labels} campaignId="c1" sessionId="s1" />
+      </LanguageProvider>,
+    );
+    expect(screen.getAllByRole('heading', { level: 2 }).map((el) => el.textContent)).toEqual(['Câu 1', 'Câu 1.1', 'Câu 2']);
+    const nested = screen.getByLabelText('Câu theo sau');
+    expect(nested).toHaveTextContent('Câu theo sau · 1');
+    expect(nested.querySelector('h2')?.textContent).toBe('Câu 1.1');
+    // Thẻ 2 KHÔNG nằm trong khối lồng của câu 1.
+    expect(nested).not.toHaveTextContent('Câu gốc thứ hai.');
   });
 });

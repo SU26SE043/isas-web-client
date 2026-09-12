@@ -34,3 +34,27 @@ export function numberQuestions(questions: readonly { id: string; kind?: string 
   }
   return { labels, rootCount };
 }
+
+export interface QuestionGroup<T> {
+  root: T;
+  /** Câu đào sâu của `root`, đúng thứ tự mảng (1.1, 1.2…). */
+  children: T[];
+}
+
+/**
+ * Gom câu đào sâu về câu gốc gần nhất phía trước — CÙNG luật với `numberQuestions`, nên nhóm và số hiệu không
+ * bao giờ lệch nhau (câu mang nhãn "2.1" luôn nằm trong nhóm của câu "2"). Màn kết quả dùng để chỉ liệt kê câu
+ * gốc trong dải điều hướng, bấm vào mới thấy câu theo sau (user chốt 2026-09-13: 20 chip 1 · 1.1 · 1.2 · 2 … quá dài).
+ */
+export function groupQuestionsByRoot<T>(questions: readonly T[], kindOf: (question: T) => string | null | undefined): QuestionGroup<T>[] {
+  const groups: QuestionGroup<T>[] = [];
+  for (const question of questions) {
+    const last = groups[groups.length - 1];
+    if (last && isDeepDiveKind(kindOf(question))) {
+      last.children.push(question);
+    } else {
+      groups.push({ root: question, children: [] });
+    }
+  }
+  return groups;
+}
