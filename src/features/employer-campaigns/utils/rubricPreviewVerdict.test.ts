@@ -18,12 +18,16 @@ import {
   criteriaMissingLevels,
   defaultPreviewQuestion,
   DISCRIMINATION_RANGE_PCT,
+  FREE_RUNS_PER_QUESTION,
   FREE_RUNS_PER_VERSION,
+  freeRunsForQuestion,
   freeRunsForVersion,
   hasVerifiedRun,
   latestSeenRubricVersion,
   computeCompression,
+  scopedCriteriaForQuestion,
 } from './rubricPreviewVerdict';
+import type { CampaignQuestion, RubricCriterion } from '../types/campaignManagement.types';
 
 describe('computeVerdict — thứ tự + biên độ, không phải |Δ|', () => {
   it('thứ tự đúng và biên độ ≥ 30 ⇒ discriminates, range = Excellent − Weak', () => {
@@ -204,5 +208,67 @@ describe('helpers', () => {
     expect(freeRunsForVersion(0, goodRun({ rubricVersion: 1, freeRunsRemaining: 0 }), 2)).toBe(FREE_RUNS_PER_VERSION);
     // Không biết bản hiện tại ⇒ không suy "bản khác" từ "không biết" — tin số của lượt mới nhất.
     expect(freeRunsForVersion(1, goodRun({ rubricVersion: 4, freeRunsRemaining: 1 }), null)).toBe(1);
+  });
+
+  it('freeRunsForQuestion: không có questionId ⇒ null; chưa lượt nào của câu đó ⇒ trần mặc định 1; bản khác ⇒ trần mới', () => {
+    const runs = [
+      goodRun({ id: 'r1', questionId: 'q-1', rubricVersion: 2, freeRunsRemaining: 0 }),
+      goodRun({ id: 'r2', questionId: 'q-2', rubricVersion: 1, freeRunsRemaining: 5 }),
+    ];
+    expect(freeRunsForQuestion(runs, 2, null)).toBeNull();
+    expect(freeRunsForQuestion(runs, 2, 'q-1')).toBe(0);
+    // Lượt mới nhất của q-1 thuộc bản 2; đang hỏi cho bản 5 (khác) ⇒ quota của bản 5 còn nguyên.
+    expect(freeRunsForQuestion(runs, 5, 'q-1')).toBe(FREE_RUNS_PER_QUESTION);
+    // Chưa có lượt nào của q-3 ⇒ trần mặc định.
+    expect(freeRunsForQuestion(runs, 2, 'q-3')).toBe(FREE_RUNS_PER_QUESTION);
+    // Trần tuỳ chỉnh qua tham số thứ 4.
+    expect(freeRunsForQuestion(runs, 2, 'q-3', 3)).toBe(3);
+  });
+});
+
+describe('scopedCriteriaForQuestion — SC2 chấm theo phạm vi câu hỏi', () => {
+  const rubric: RubricCriterion[] = [
+    { id: 'c-always', name: 'Cách nói', description: '', weight: 40, maxScore: 5, scoringScope: 'Always' },
+    { id: 'c-target-1', name: 'Nội dung A', description: '', weight: 30, maxScore: 5, scoringScope: 'WhenTargeted' },
+    { id: 'c-target-2', name: 'Nội dung B', description: '', weight: 30, maxScore: 5, scoringScope: 'WhenTargeted' },
+    // Tiêu chí chưa từng đọc qua mapper (scoringScope undefined) ⇒ coi như 'Always'.
+    { id: 'c-legacy', name: 'Legacy', description: '', weight: 0, maxScore: 5 },
+  ];
+  const question = (targetCriterionIds: string[] | null): CampaignQuestion => ({
+    id: 'q-1', prompt: 'Câu hỏi', skill: '', difficulty: 'middle', source: 'ai', isRequired: true, targetCriterionIds,
+  });
+
+  it('question null/targetCriterionIds null (chưa gắn nhãn) ⇒ KHÔNG thu hẹp, trả nguyên rubric', () => {
+    expect(scopedCriteriaForQuestion(rubric, null)).toEqual(rubric);
+    expect(scopedCriteriaForQuestion(rubric, question(null))).toEqual(rubric);
+  });
+
+  it('[] (đã gắn nhãn rỗng) ⇒ chỉ còn tiêu chí Always/chưa-đọc-scope', () => {
+    expect(scopedCriteriaForQuestion(rubric, question([]))).toEqual([rubric[0], rubric[3]]);
+  });
+
+  it('[ids] ⇒ Always ∪ đúng những WhenTargeted có trong danh sách', () => {
+    expect(scopedCriteriaForQuestion(rubric, question(['c-target-1']))).toEqual([rubric[0], rubric[1], rubric[3]]);
+  });
+});
+
+describe('computeBlocker — scopedCriteria (SC2), tương thích ngược với call site chưa truyền câu cụ thể', () => {
+  const rubricMixed: RubricCriterion[] = [
+    { id: 'c-always', name: 'Cách nói', description: '', weight: 50, maxScore: 5, scoringScope: 'Always', levels: [{ score: 0, descriptor: 'x' }, { score: 5, descriptor: 'y' }] },
+    // WhenTargeted, THIẾU mốc — nhưng không câu nào trong `questions` nhắm tới nó.
+    { id: 'c-target', name: 'Nội dung', description: '', weight: 50, maxScore: 5, scoringScope: 'WhenTargeted', levels: [] },
+  ];
+  const base = { campaignId: 'cmp-1', campaignStatus: 'draft' as const, rubric: rubricMixed, questions: previewQuestions, isRunning: false };
+
+  it('KHÔNG truyền scopedCriteria (call site cũ) ⇒ hành vi TRƯỚC SC2: đòi mốc cho CẢ rubric', () => {
+    expect(computeBlocker(base)).toEqual({ kind: 'missingLevels', criteria: ['Nội dung'] });
+  });
+
+  it('truyền scopedCriteria đã loại tiêu chí không được nhắm tới ⇒ thiếu mốc của nó KHÔNG chặn', () => {
+    expect(computeBlocker({ ...base, scopedCriteria: [rubricMixed[0]] })).toBeNull();
+  });
+
+  it('scopedCriteria vẫn chứa tiêu chí thiếu mốc (câu này CÓ nhắm tới) ⇒ vẫn chặn', () => {
+    expect(computeBlocker({ ...base, scopedCriteria: rubricMixed })).toEqual({ kind: 'missingLevels', criteria: ['Nội dung'] });
   });
 });

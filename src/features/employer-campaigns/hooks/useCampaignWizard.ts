@@ -788,7 +788,9 @@ export function useCampaignWizard({
     const id = await fileActions.ensureDraftId();
     const isRequired = state.questionsPerSession == null;
     const { accepted } = limitImportedQuestions(state.questions.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
-    const nextQuestions = [...state.questions, ...accepted.map((item) => importedItemToQuestion(item, isRequired))];
+    // SC2 — truyền rubric hiện tại để cột `targetCriteria` (nếu file có) được resolve thành id thật
+    // ngay lúc import; không có cột đó thì `resolveTargetCriterionIds` trả `ids: null` (không đổi).
+    const nextQuestions = [...state.questions, ...accepted.map((item) => importedItemToQuestion(item, isRequired, state.rubric))];
     if (nextQuestions.length === state.questions.length) return;
     setIsSavingQuestions(true);
     setStepError(null);

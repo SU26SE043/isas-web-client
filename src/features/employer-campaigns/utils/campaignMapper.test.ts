@@ -157,4 +157,69 @@ describe('campaignMapper', () => {
     const missing = parseCampaignResponse({ id: 'c-rv3', title: 'RV', status: 'Draft', maxQuestions: 9 });
     expect(mapCampaignResponseToEmployerCampaign(missing!).rubricVersion).toBeNull();
   });
+
+  // SC2 — vắng ⇒ 'Always' (INT-18 lùi an toàn: không nhãn = chấm mọi câu); giá trị lạ cũng rơi về 'Always'.
+  it('scoringScope: vắng/lạ ⇒ Always; WhenTargeted giữ nguyên', () => {
+    const parsed = parseCampaignResponse({
+      id: 'c-scope',
+      title: 'Scope',
+      status: 'Draft',
+      criteria: [
+        { name: 'Cách nói', weight: 0.4, maxScore: 5 },
+        { name: 'Nội dung', weight: 0.6, maxScore: 5, scoringScope: 'WhenTargeted' },
+        { name: 'Lạ', weight: 0.1, maxScore: 5, scoringScope: 'Bogus' },
+      ],
+    });
+    const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
+    expect(campaign.rubric[0]?.scoringScope).toBe('Always');
+    expect(campaign.rubric[1]?.scoringScope).toBe('WhenTargeted');
+    expect(campaign.rubric[2]?.scoringScope).toBe('Always');
+  });
+
+  // SC2 — targetCriterionIds: null khi chưa gắn nhãn (KHÔNG phải []); sampleAnswer đi qua nguyên vẹn.
+  it('đọc targetCriterionIds + sampleAnswer của câu hỏi; null khi vắng, [] khi đã gắn nhãn rỗng', () => {
+    const parsed = parseCampaignResponse({
+      id: 'c-target',
+      title: 'Target',
+      status: 'Draft',
+      questions: [
+        { questionText: 'Câu chưa gắn nhãn' },
+        { questionText: 'Câu gắn nhãn rỗng', targetCriterionIds: [] },
+        { questionText: 'Câu có nhãn', targetCriterionIds: ['c1', 'c2'], sampleAnswer: 'Bài mẫu' },
+      ],
+    });
+    const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
+    expect(campaign.questions[0]?.targetCriterionIds).toBeNull();
+    expect(campaign.questions[0]?.sampleAnswer).toBeNull();
+    expect(campaign.questions[1]?.targetCriterionIds).toEqual([]);
+    expect(campaign.questions[2]?.targetCriterionIds).toEqual(['c1', 'c2']);
+    expect(campaign.questions[2]?.sampleAnswer).toBe('Bài mẫu');
+  });
+
+  // SC2 — coverageWarnings thuần THÔNG TIN (không chặn publish, khác `warnings` chứa K_BELOW_CRITERIA_GROUPS).
+  it('đọc questionBank.coverageWarnings (camelCase lẫn PascalCase)', () => {
+    const parsed = parseCampaignResponse({
+      id: 'c-coverage',
+      title: 'Coverage',
+      status: 'Active',
+      questionBank: {
+        total: 5,
+        warnings: ['K_BELOW_CRITERIA_GROUPS'],
+        coverageWarnings: [{ criterionId: 'c1', name: 'Nội dung' }],
+      },
+    });
+    const campaign = mapCampaignResponseToEmployerCampaign(parsed!);
+    expect(campaign.questionBank?.coverageWarnings).toEqual([{ criterionId: 'c1', name: 'Nội dung' }]);
+    expect(campaign.questionBankWarnings).toEqual(['K_BELOW_CRITERIA_GROUPS']);
+
+    const pascal = parseCampaignResponse({
+      id: 'c-coverage-2',
+      title: 'Coverage',
+      status: 'Active',
+      QuestionBank: { CoverageWarnings: [{ CriterionId: 'c9', Name: 'Khác' }] },
+    });
+    expect(mapCampaignResponseToEmployerCampaign(pascal!).questionBank?.coverageWarnings).toEqual([
+      { criterionId: 'c9', name: 'Khác' },
+    ]);
+  });
 });

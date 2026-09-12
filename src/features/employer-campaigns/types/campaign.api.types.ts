@@ -31,6 +31,8 @@ export type CampaignRubricCriterionResponse = {
   minPct?: number | null;
   source?: CampaignCriterionSource | string | null;
   levels?: RubricLevel[] | null;
+  /** SC2 — 'Always' | 'WhenTargeted'; vắng ⇒ coi như 'Always'. */
+  scoringScope?: 'Always' | 'WhenTargeted' | string | null;
 };
 
 export type CampaignQuestionResponse = {
@@ -43,6 +45,9 @@ export type CampaignQuestionResponse = {
   isRequired?: boolean | null;
   questionGroup?: string | null;
   hrEditedAt?: string | null;
+  /** SC2 — id các `CampaignRubricCriterionResponse` (WhenTargeted) câu này nhắm tới. null = chưa gắn nhãn. */
+  targetCriterionIds?: string[] | null;
+  sampleAnswer?: string | null;
 };
 
 export type CampaignCandidateResponse = {
@@ -74,7 +79,15 @@ export type CampaignResponse = {
   seniority?: CampaignSeniority | string | null;
   jobDescription?: string | null;
   capacity?: number | null;
-  questionBank?: { total?: number | null; alwaysAsked?: number | null; questionsPerSession?: number | null; groups?: Array<{ name: string; count: number }>; warnings?: string[] } | null;
+  questionBank?: {
+    total?: number | null;
+    alwaysAsked?: number | null;
+    questionsPerSession?: number | null;
+    groups?: Array<{ name: string; count: number }>;
+    warnings?: string[];
+    /** SC2 — tiêu chí WhenTargeted không câu nào nhắm; KHÔNG chặn publish. */
+    coverageWarnings?: Array<{ criterionId: string; name: string }>;
+  } | null;
   cvCount?: number | null;
   invitedCount?: number | null;
   completedCount?: number | null;
@@ -125,6 +138,8 @@ export type CampaignCreateCriterionRequest = {
   minPct?: number | null;
   /** Existing server-authored anchors must be echoed on replace-all updates. */
   levels?: RubricLevel[];
+  /** SC2 — vắng ⇒ server mặc định 'Always'. */
+  scoringScope?: 'Always' | 'WhenTargeted';
 };
 
 export type CampaignCreateQuestionRequest = {
@@ -134,6 +149,13 @@ export type CampaignCreateQuestionRequest = {
   source?: CampaignQuestionSource;
   isRequired: boolean;
   questionGroup?: string | null;
+  /**
+   * SC2 — PUT /questions ba trạng thái: khoá VẮNG (`undefined`) = GIỮ NGUYÊN · `[]` = XOÁ nhãn ·
+   * `[ids]` = THAY. Id phải thuộc `campaign_criteria` hiện tại, ngược lại BE trả 400.
+   */
+  targetCriterionIds?: string[];
+  /** CAMP-16 ba trạng thái: `undefined` = không gửi · `null` = GIỮ NGUYÊN · `''` = XOÁ · chuỗi = đặt. */
+  sampleAnswer?: string | null;
 };
 
 /** PUT /api/v1/campaign/{id}/questions — full replace array body. */
@@ -151,6 +173,11 @@ export type CampaignQuestionImportItem = {
   sampleAnswer?: string | null;
   isRequired?: boolean | null;
   questionGroup?: string | null;
+  /**
+   * SC2 — TÊN tiêu chí (chưa resolve id) từ cột `targetCriteria` của file import, phân tách `|`
+   * hoặc `;`. `resolveTargetCriterionIds` (campaignQuestionImport.ts) đối chiếu với rubric hiện tại.
+   */
+  targetCriteriaNames?: string[] | null;
   error?: string | null;
 };
 

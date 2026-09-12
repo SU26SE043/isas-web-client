@@ -18,6 +18,13 @@ export interface CampaignCandidateRow {
   status: CampaignCandidateStatus;
 }
 
+/**
+ * SC2 — chấm THEO PHẠM VI CÂU HỎI. `Always` = tiêu chí CÁCH NÓI, chấm mọi câu.
+ * `WhenTargeted` = tiêu chí NỘI DUNG, chỉ chấm khi có câu hỏi nhắm tới (`CampaignQuestion.targetCriterionIds`).
+ * Vắng (server không trả field) ⇒ coi như `'Always'` — lùi an toàn, khớp Interview INT-18.
+ */
+export type RubricScoringScope = 'Always' | 'WhenTargeted';
+
 export interface RubricCriterion {
   id: string;
   name: string;
@@ -27,6 +34,8 @@ export interface RubricCriterion {
   minPct?: number | null;
   /** Server-authored score anchors; keep them when renaming or editing a criterion. */
   levels?: RubricLevel[];
+  /** SC2 — xem `RubricScoringScope`. Optional để không phá các nơi đúc object chưa biết field này. */
+  scoringScope?: RubricScoringScope;
 }
 
 export type CampaignQuestionSource = 'ai' | 'manual';
@@ -40,6 +49,19 @@ export interface CampaignQuestion {
   source: CampaignQuestionSource;
   isRequired: boolean;
   questionGroup?: string | null;
+  /**
+   * SC2 — id các tiêu chí `WhenTargeted` mà câu này nhắm tới. Ba trạng thái CHỈ có ý nghĩa lúc GHI
+   * (xem `mapQuestionsToApiRequest`): `undefined`/`null` = chưa gắn nhãn (Interview chấm ĐỦ rubric,
+   * coi như PUT không đổi gì) · `[]` = đã gắn nhãn RỖNG (chỉ chấm `Always`) · `[ids]` = thay thế.
+   * GET luôn trả `null` khi câu chưa từng được gắn nhãn.
+   */
+  targetCriterionIds?: string[] | null;
+  /**
+   * Câu trả lời mẫu (AI viết hoặc HR tự soạn) cho câu hỏi này. Ba trạng thái trên PUT (CAMP-16):
+   * `undefined` = chưa từng đọc (không gửi field) · `null` = GIỮ NGUYÊN trên server ·
+   * `''` = XOÁ · chuỗi khác = đặt giá trị mới.
+   */
+  sampleAnswer?: string | null;
 }
 
 export interface EmployerCampaign {
@@ -73,7 +95,13 @@ export interface EmployerCampaign {
     alwaysAsked?: number | null;
     questionsPerSession?: number | null;
     groups?: Array<{ name: string; count: number }>;
+    /** Chặn Publish (400 `QUESTION_BANK_INVALID`) — bao gồm cả mã SC2 `K_BELOW_CRITERIA_GROUPS`. */
     warnings?: string[];
+    /**
+     * SC2 — tiêu chí `WhenTargeted` KHÔNG câu hỏi nào nhắm tới. Thuần THÔNG TIN, KHÔNG chặn Publish
+     * (khác `warnings` ở trên).
+     */
+    coverageWarnings?: Array<{ criterionId: string; name: string }>;
   } | null;
   questionBankWarnings?: string[];
   cvCount?: number | null;

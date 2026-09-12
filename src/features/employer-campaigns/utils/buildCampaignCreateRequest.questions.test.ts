@@ -35,6 +35,34 @@ describe('mapQuestionsToApiRequest', () => {
       },
     ]);
   });
+
+  // SC2 — `undefined`/`null` domain (chưa gắn nhãn) ⇒ khoá `targetCriterionIds` VẮNG (giữ nguyên
+  // trên server); mảng thật (kể cả `[]`) ⇒ gửi nguyên, lọc bỏ id KHÔNG phải GUID server.
+  it('targetCriterionIds: undefined/null ⇒ vắng khoá; [] ⇒ gửi []; lọc id không phải GUID server', () => {
+    const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
+
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1' }])[0]).not.toHaveProperty('targetCriterionIds');
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: null }])[0]).not.toHaveProperty('targetCriterionIds');
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [] }])[0].targetCriterionIds).toEqual([]);
+    expect(
+      mapQuestionsToApiRequest([
+        { ...base, id: 'q1', targetCriterionIds: ['3fa85f64-5717-4562-b3fc-2c963f66afa6', 'criterion-0', ''] },
+      ])[0].targetCriterionIds,
+    ).toEqual(['3fa85f64-5717-4562-b3fc-2c963f66afa6']);
+  });
+
+  // CAMP-16 — `sampleAnswer`: `undefined` (chưa từng đọc) ⇒ khoá vắng; `null` ⇒ gửi `null` = GIỮ
+  // NGUYÊN; `''` ⇒ gửi `''` = XOÁ; chuỗi khác ⇒ đặt giá trị mới.
+  it('sampleAnswer: undefined ⇒ vắng khoá; null/rỗng/chuỗi đều gửi nguyên (3 trạng thái CAMP-16)', () => {
+    const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
+
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1' }])[0]).not.toHaveProperty('sampleAnswer');
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', sampleAnswer: null }])[0].sampleAnswer).toBeNull();
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', sampleAnswer: '' }])[0].sampleAnswer).toBe('');
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', sampleAnswer: 'Gợi ý trả lời' }])[0].sampleAnswer).toBe(
+      'Gợi ý trả lời',
+    );
+  });
 });
 
 describe('mapRubricToCreateCriteria', () => {
@@ -106,5 +134,16 @@ describe('mapRubricToCreateCriteria', () => {
         ]),
       ).toEqual([{ id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'New', description: null, weight: 1, maxScore: 5, minPct: null, levels: [] }]);
     }
+  });
+
+  // SC2 — `scoringScope`: `undefined` domain (chưa từng đọc qua mapper) ⇒ khoá vắng (server mặc
+  // định 'Always'); giá trị thật ('Always'/'WhenTargeted') ⇒ gửi nguyên.
+  it('scoringScope: undefined ⇒ vắng khoá; giá trị thật gửi nguyên', () => {
+    const base = { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Tiêu chí', description: '', weight: 100, maxScore: 5 };
+    expect(mapRubricToCreateCriteria([base])[0]).not.toHaveProperty('scoringScope');
+    expect(mapRubricToCreateCriteria([{ ...base, scoringScope: 'Always' }])[0].scoringScope).toBe('Always');
+    expect(mapRubricToCreateCriteria([{ ...base, scoringScope: 'WhenTargeted' }])[0].scoringScope).toBe(
+      'WhenTargeted',
+    );
   });
 });

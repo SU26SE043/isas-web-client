@@ -10,6 +10,7 @@ import type {
   EmployerCampaign,
   EmployerCampaignStatus,
   RubricCriterion,
+  RubricScoringScope,
 } from '../types/campaignManagement.types';
 
 const LIST_DEFAULT_PROCTORING: CampaignProctoringConfig = {
@@ -90,6 +91,11 @@ export function unwrapCampaignDetailPayload(data: unknown): unknown {
   return data;
 }
 
+/** SC2 — chuỗi lạ/rỗng ⇒ `undefined` (coi như vắng, mapper hạ tầng sẽ mặc định 'Always'). */
+function parseScoringScope(value: unknown): RubricScoringScope | undefined {
+  return value === 'Always' || value === 'WhenTargeted' ? value : undefined;
+}
+
 function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
   if (!Array.isArray(raw)) return [];
   const result: CampaignRubricCriterionResponse[] = [];
@@ -110,6 +116,7 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       minPct: pickNumber(record, 'minPct', 'MinPct', 'minimumPct', 'MinimumPct'),
       source: pickString(record, 'source', 'Source') ?? null,
       levels,
+      scoringScope: parseScoringScope(record.scoringScope ?? record.ScoringScope) ?? null,
     });
   });
   return result;
@@ -125,6 +132,12 @@ function parseRubricLevels(raw: unknown): CampaignRubricCriterionResponse['level
     return score != null && descriptor ? [{ score, descriptor }] : [];
   });
   return levels;
+}
+
+/** SC2 — `Guid[] | null`. Chuỗi/số lẫn vào mảng bị loại (defensive); mảng rỗng hợp lệ (đã gắn nhãn nhưng không target gì). */
+function parseTargetCriterionIds(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  return raw.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
 }
 
 function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
@@ -160,9 +173,23 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
             : null,
       questionGroup: pickString(record, 'questionGroup', 'QuestionGroup') ?? null,
       hrEditedAt: pickString(record, 'hrEditedAt', 'HrEditedAt') ?? null,
+      targetCriterionIds: parseTargetCriterionIds(record.targetCriterionIds ?? record.TargetCriterionIds),
+      sampleAnswer: pickString(record, 'sampleAnswer', 'SampleAnswer') ?? null,
     });
   });
   return result;
+}
+
+/** SC2 — tiêu chí WhenTargeted không câu nào nhắm; camelCase-first, PascalCase fallback (BE mới, chưa tin tuyệt đối casing). */
+function parseCoverageWarnings(raw: unknown): Array<{ criterionId: string; name: string }> {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry) => {
+    const record = asRecord(entry);
+    if (!record) return [];
+    const criterionId = pickString(record, 'criterionId', 'CriterionId');
+    const name = pickString(record, 'name', 'Name');
+    return criterionId && name ? [{ criterionId, name }] : [];
+  });
 }
 
 function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
@@ -205,7 +232,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     keywordsAny: asStringArray(record.keywordsAny ?? record.KeywordsAny),
     minYearsExperience: pickNumber(record, 'minYearsExperience', 'MinYearsExperience') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
-    questionBank: (() => { const bank = asRecord(record.questionBank ?? record.QuestionBank); return bank ? { total: pickNumber(bank, 'total', 'Total'), alwaysAsked: pickNumber(bank, 'alwaysAsked', 'AlwaysAsked'), questionsPerSession: pickNumber(bank, 'questionsPerSession', 'QuestionsPerSession'), groups: Array.isArray(bank.groups) ? bank.groups as Array<{ name: string; count: number }> : [], warnings: Array.isArray(bank.warnings) ? asStringArray(bank.warnings) : [] } : null; })(),
+    questionBank: (() => { const bank = asRecord(record.questionBank ?? record.QuestionBank); return bank ? { total: pickNumber(bank, 'total', 'Total'), alwaysAsked: pickNumber(bank, 'alwaysAsked', 'AlwaysAsked'), questionsPerSession: pickNumber(bank, 'questionsPerSession', 'QuestionsPerSession'), groups: Array.isArray(bank.groups) ? bank.groups as Array<{ name: string; count: number }> : [], warnings: Array.isArray(bank.warnings) ? asStringArray(bank.warnings) : [], coverageWarnings: parseCoverageWarnings(bank.coverageWarnings ?? bank.CoverageWarnings) } : null; })(),
     cvCount: pickNumber(record, 'cvCount', 'CvCount') ?? null,
     invitedCount: pickNumber(record, 'invitedCount', 'InvitedCount') ?? null,
     completedCount: pickNumber(record, 'completedCount', 'CompletedCount') ?? null,
@@ -262,6 +289,10 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
     minPct: item.minPct ?? null,
     levels: item.levels?.length ? item.levels : undefined,
+    // SC2 — vắng/lạ đã được `parseScoringScope` chuẩn hoá thành null ở `parseRubric`; mặc định 'Always'
+    // NGAY TẠI ĐÂY (không để undefined trôi xuống UI) — mọi tiêu chí ĐANG SỐNG trong wizard đều phải
+    // có một scope tường minh để `scopedCriteriaForQuestion` không phải đoán lại lần nữa.
+    scoringScope: item.scoringScope === 'WhenTargeted' ? 'WhenTargeted' : 'Always',
   }));
 }
 
@@ -278,6 +309,10 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
     source: mapQuestionSource(item.source),
     isRequired: item.isRequired ?? true,
     questionGroup: item.questionGroup ?? null,
+    // SC2 — `null` khi server chưa gắn nhãn (GET luôn trả `null`, không phải `undefined`), giữ
+    // NGUYÊN phân biệt với `[]` (đã gắn nhãn rỗng) — xem doc trên `CampaignQuestion.targetCriterionIds`.
+    targetCriterionIds: item.targetCriterionIds ?? null,
+    sampleAnswer: item.sampleAnswer ?? null,
   }));
 }
 

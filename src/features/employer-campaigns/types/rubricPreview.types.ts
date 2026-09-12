@@ -47,6 +47,11 @@ export interface RubricPreviewSample {
 export interface RubricPreviewRun {
   id: string;
   status: RubricPreviewStatus;
+  /**
+   * SC2 — kể từ hợp đồng này BE LUÔN resolve (không còn `null`) cho lượt MỚI: chấm thử nay gắn với
+   * ĐÚNG một câu hỏi cụ thể, và `freeRunsRemaining` tính theo (campaign, rubricVersion, questionId).
+   * Giữ kiểu `| null` để không vỡ các lượt CŨ đã lưu trước khi field này tồn tại.
+   */
   questionId: string | null;
   questionText: string;
   rubricFingerprint: string;
@@ -56,6 +61,7 @@ export interface RubricPreviewRun {
   deliveryMetricsAvailable: boolean;
   lengthParityWarning: boolean;
   billed: boolean;
+  /** SC2 — quota tính THEO CÂU (FreeRunsPerQuestion = 1), không còn theo campaign (dùng `freeRunsForQuestion`). */
   freeRunsRemaining: number;
   /** Bộ thước đo ĐÃ DÙNG (snapshot), không phải bộ hiện tại. */
   rubric: RubricPreviewCriterion[];
@@ -63,6 +69,11 @@ export interface RubricPreviewRun {
   errorReason: string | null;
   createdAt: string;
   completedAt: string | null;
+  /**
+   * SC2 — id các tiêu chí THỰC SỰ đã chấm (Always ∪ targets của câu; câu không nhãn ⇒ toàn bộ rubric).
+   * Optional (mặc định `[]` khi parse) để không vỡ fixture/lượt cũ chưa mang field này.
+   */
+  scopedCriterionIds?: string[];
 }
 
 /** Lỗi đã phân loại để UI hiện LÝ DO thay vì toast chung. */
@@ -115,5 +126,27 @@ export interface UseRubricPreviewApi {
   error: RubricPreviewError | null;
   /** Gọi `beforeRun` (lưu thước đo + câu hỏi) rồi POST. Trả null khi lỗi (error đã set). */
   run: (input: RubricPreviewRequest) => Promise<RubricPreviewRun | null>;
+  clearError: () => void;
+}
+
+/**
+ * SC2 — bề mặt `useQuestionPreview` (per-question). KHÔNG thêm/bớt field mà không sửa cả hai phía
+ * (hook `useQuestionPreview.ts` và bất kỳ UI nào tiêu thụ nó).
+ */
+export interface UseQuestionPreviewApi {
+  /** Chỉ lượt của ĐÚNG câu hỏi này (hoặc lượt legacy `questionId: null` khi hook được gọi với `questionId: null`). */
+  runs: RubricPreviewRun[];
+  /** `runs[0]` — mới nhất trước, khớp thứ tự `getRubricPreviewHistory`. */
+  latest: RubricPreviewRun | null;
+  isLoadingHistory: boolean;
+  /** Bất kỳ lượt nào đang `Running` TRONG TOÀN CHIẾN DỊCH (BE khoá 409 khi có lượt Running, bất kể câu nào). */
+  isRunning: boolean;
+  /** id câu đang có lượt `Running` (null khi không có lượt nào đang chạy). Dùng để khoá nút Ở NHỮNG CÂU KHÁC. */
+  runningQuestionId: string | null;
+  /** Quota còn lại CHO ĐÚNG CÂU NÀY — null khi hook không gắn với câu cụ thể (`questionId: null`). */
+  freeRunsRemaining: number | null;
+  error: RubricPreviewError | null;
+  /** POST cho ĐÚNG câu đã truyền vào hook; `customAnswer` = bài HR tự dán (band Custom). */
+  run: (customAnswer?: string | null) => Promise<RubricPreviewRun | null>;
   clearError: () => void;
 }
