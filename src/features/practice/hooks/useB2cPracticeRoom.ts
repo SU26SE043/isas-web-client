@@ -111,11 +111,9 @@ export function useB2cPracticeRoom(
     [store.currentQuestionId, store.questions],
   );
 
-  // SỐ HIỆU HIỂN THỊ = vị trí trong mảng + 1 — CÙNG nguồn với vòng tròn đang tô đậm ở stepper. Trước đây nhãn
-  // đếm theo thứ tự XUẤT HIỆN (map cấp số lúc hydrate) còn stepper đếm theo vị trí ⇒ câu đào sâu của
-  // câu 1 hiện "Câu hỏi 6 / 6" trong khi stepper tô vòng tròn 2 (đo trên dev 2026-09-12). Vị trí mảng
-  // của câu ĐANG hiện không bao giờ đổi: `appendQuestion` chèn câu đào sâu ngay SAU câu hiện tại (test
-  // khoá ở store), nên chỉ những câu chưa hiện mới trôi — đúng như vòng tròn stepper vẫn trôi.
+  // SỐ HIỆU HIỂN THỊ: panel tự tính phân cấp (1 · 1.1 · 2 …) từ `kind` + thứ tự mảng (`questionNumbering`);
+  // hook chỉ cấp `currentIndex` để tô đậm vòng tròn. Lịch sử: từng đếm theo thứ tự xuất hiện (map cấp số lúc
+  // hydrate) ⇒ câu đào sâu hiện "Câu hỏi 6 / 6" với vòng tròn 2 tô đậm (đo dev 2026-09-12).
 
   // Chữ đã nằm trong store và render độc lập. Audio bắt đầu tải ngay khi có
   // questionId (kể cả trong countdown), nhưng chỉ được phát sau gate bắt đầu.
@@ -431,17 +429,11 @@ export function useB2cPracticeRoom(
     stage: store.stage,
     questions: store.questions,
     currentQuestion,
-    // Vị trí trong mảng — vừa để tô đậm bước ở stepper vừa là số hiệu ("Câu hỏi N") — một nguồn duy nhất.
+    // Vị trí trong mảng — tô đậm bước ở stepper; số hiệu phân cấp do panel tính (`questionNumbering`).
     currentIndex: Math.max(
       0,
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
-    // Mẫu số = số câu ứng viên đã CHỌN, không phải số câu đang có trong mảng. `questions.length`
-    // phình lên mỗi lần câu đào sâu về ⇒ "Câu 1/2" thành "Câu 1/3" rồi "1/4" mà không ai bấm gì.
-    // Buổi giao ít hơn thì dừng ở "Câu 4/20" — trung thực hơn một mẫu số nhảy.
-    plannedTotal: store.session?.questionCount && store.session.questionCount > 0
-      ? store.session.questionCount
-      : store.questions.length,
     remainingSeconds: effectiveRemainingSeconds,
     answersByQuestionId: store.answersByQuestionId,
     questionStates: store.questionStates,
