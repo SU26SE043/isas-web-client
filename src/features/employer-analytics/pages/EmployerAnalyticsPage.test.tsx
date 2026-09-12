@@ -125,6 +125,20 @@ describe('EmployerAnalyticsPage', () => {
     expect(rows).toHaveLength(31);
   });
 
+  it('đổi nhóm sang tháng khi kỳ mới CHƯA về ⇒ vẫn vẽ lưới NGÀY của dữ liệu cũ (không trộn hai lưới) + báo đang tải', async () => {
+    service.getEmployerAnalytics
+      .mockResolvedValueOnce(parseEmployerAnalytics(buildAnalyticsPayload()))
+      .mockReturnValueOnce(new Promise(() => undefined));
+    renderPage();
+    await screen.findByText('Chiến dịch đang mở');
+    fireEvent.change(screen.getByLabelText('Nhóm theo'), { target: { value: 'month' } });
+    await waitFor(() => expect(screen.getByTestId('employer-analytics-range')).toHaveTextContent('Đang tải kỳ mới'));
+    // keepPreviousData giữ payload `granularity: 'day'` ⇒ lưới vẫn 30 ngày; điền theo select 'month'
+    // sẽ ra 2 mốc tháng + 2 bucket ngày của BE = lưới trộn.
+    const rows = within(screen.getByTestId('employer-analytics-trend-table')).getAllByRole('row');
+    expect(rows).toHaveLength(31);
+  });
+
   it('org chưa có chiến dịch ⇒ empty-state có link Tạo chiến dịch, không thẻ số', async () => {
     service.getEmployerAnalytics.mockResolvedValue(parseEmployerAnalytics(buildEmptyAnalyticsPayload()));
     renderPage();
