@@ -368,6 +368,8 @@ export const campaignManagementService = {
         ? existing.questions.map((item) => ({
             questionText: item.prompt,
             isRequired: true,
+            targetCriterionIds: item.targetCriterionIds ?? undefined,
+            sampleAnswer: item.sampleAnswer,
           }))
         : undefined,
     });
@@ -407,6 +409,7 @@ export const campaignManagementService = {
             description: item.description || null,
             weight: Number(item.weight) > 1 ? Number(item.weight) / 100 : Number(item.weight),
             maxScore: item.maxScore,
+            scoringScope: item.scoringScope,
           }))
         : undefined,
       jdText: existing?.jobDescription,

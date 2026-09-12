@@ -115,6 +115,13 @@ export interface ComputeBlockerInput {
   canPersist?: boolean;
   campaignStatus: EmployerCampaignStatus | null | undefined;
   rubric: RubricCriterion[];
+  /**
+   * SC2 — tiêu chí THỰC SỰ sẽ được chấm cho câu đang test (Always ∪ targets của câu; câu không
+   * nhãn/không truyền câu cụ thể ⇒ toàn bộ rubric). Tính bằng `scopedCriteriaForQuestion(rubric, question)`.
+   * VẮNG ⇒ dùng nguyên `rubric` — hành vi TRƯỚC SC2, giữ tương thích ngược cho call site chưa truyền
+   * câu hỏi cụ thể (chấm thử campaign-level, không phải per-question).
+   */
+  scopedCriteria?: RubricCriterion[];
   questions: CampaignQuestion[];
   isRunning: boolean;
 }
@@ -125,14 +132,34 @@ export function criteriaMissingLevels(rubric: RubricCriterion[]): string[] {
 }
 
 /**
+ * SC2 — tiêu chí thực sự chấm cho MỘT câu cụ thể: mọi tiêu chí `Always` (chấm mọi câu) cộng tiêu chí
+ * `WhenTargeted` mà câu đó có nhãn. `question` null/`targetCriterionIds` null (chưa gắn nhãn) ⇒ KHÔNG
+ * thu hẹp gì — trả nguyên `rubric` (khớp INT-18/Interview: `null` = chấm ĐỦ). `[]` (đã gắn nhãn rỗng)
+ * ⇒ chỉ còn tiêu chí `Always`. Tiêu chí thiếu `scoringScope` (chưa từng đọc qua mapper) coi như `Always`.
+ */
+export function scopedCriteriaForQuestion(
+  rubric: RubricCriterion[],
+  question: CampaignQuestion | null | undefined,
+): RubricCriterion[] {
+  const targets = question?.targetCriterionIds;
+  if (targets == null) return rubric;
+  const targetSet = new Set(targets);
+  return rubric.filter(
+    (criterion) => (criterion.scoringScope ?? 'Always') === 'Always' || targetSet.has(criterion.id),
+  );
+}
+
+/**
  * Lý do chưa chạy được, tính ở FE để không đốt lượt nhận 400. Thứ tự ưu tiên cố định:
  * noCampaign → closed → running → missingLevels → noQuestions — cái đứng trước là điều kiện tiên quyết của cái sau.
  */
-export function computeBlocker({ campaignId, canPersist = false, campaignStatus, rubric, questions, isRunning }: ComputeBlockerInput): RubricPreviewBlocker | null {
+export function computeBlocker({ campaignId, canPersist = false, campaignStatus, rubric, scopedCriteria, questions, isRunning }: ComputeBlockerInput): RubricPreviewBlocker | null {
   if (!campaignId && !canPersist) return { kind: 'noCampaign' };
   if (campaignStatus === 'closed' || campaignStatus === 'archived') return { kind: 'closed' };
   if (isRunning) return { kind: 'running' };
-  const missing = criteriaMissingLevels(rubric);
+  // SC2 — chỉ đòi mốc cho tiêu chí TRONG PHẠM VI câu sắp test; tiêu chí WhenTargeted không câu nào
+  // nhắm tới thì thiếu mốc cũng KHÔNG chặn (nó không bao giờ được chấm cho câu này).
+  const missing = criteriaMissingLevels(scopedCriteria ?? rubric);
   if (missing.length > 0) return { kind: 'missingLevels', criteria: missing };
   if (questions.length === 0) return { kind: 'noQuestions' };
   return null;
@@ -174,4 +201,30 @@ export function freeRunsForVersion(
   if (!latest) return reported ?? FREE_RUNS_PER_VERSION;
   if (currentRubricVersion != null && latest.rubricVersion !== currentRubricVersion) return FREE_RUNS_PER_VERSION;
   return reported;
+}
+
+/**
+ * SC2 — quota nay tính THEO CÂU (campaign, rubricVersion, questionId), KHÔNG còn theo campaign
+ * (`FREE_RUNS_PER_VERSION`/`freeRunsForVersion` ở trên là quota CŨ, giữ cho call site campaign-level
+ * chưa chuyển sang chấm thử theo câu). 1 lượt `Succeeded` miễn phí cho MỖI (campaign, rubricVersion, câu).
+ */
+export const FREE_RUNS_PER_QUESTION = 1;
+
+/**
+ * Số lượt miễn phí còn lại cho ĐÚNG câu hỏi này. `runs` là danh sách lượt (không cần lọc sẵn theo
+ * câu — hàm tự tìm lượt MỚI NHẤT của đúng `questionId`, giả định `runs` đã sắp mới nhất trước, đúng
+ * thứ tự `getRubricPreviewHistory` trả về). Không có `questionId` (chưa chọn câu cụ thể) ⇒ `null` —
+ * quota là khái niệm PER-QUESTION, không có câu thì không có gì để đếm.
+ */
+export function freeRunsForQuestion(
+  runs: RubricPreviewRun[],
+  rubricVersion: number | null,
+  questionId: string | null,
+  freeRunsPerQuestion: number = FREE_RUNS_PER_QUESTION,
+): number | null {
+  if (!questionId) return null;
+  const latestForQuestion = runs.find((run) => run.questionId === questionId) ?? null;
+  if (!latestForQuestion) return freeRunsPerQuestion;
+  if (rubricVersion != null && latestForQuestion.rubricVersion !== rubricVersion) return freeRunsPerQuestion;
+  return latestForQuestion.freeRunsRemaining;
 }

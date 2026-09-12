@@ -64,6 +64,11 @@ export function mapRubricToCreateCriteria(
         // Wizard luôn giữ trọn bộ mốc trong state (mapper hydrate cả levels) nên gửi TƯỜNG MINH:
         // không có mốc ⇒ [] — thiếu dòng này thì HR xoá hết mốc trong editor mà server vẫn giữ bộ cũ.
         levels: item.levels?.length ? item.levels : [],
+        // SC2 — `item.scoringScope` là `undefined` chỉ khi object được đúc TAY, không qua mapper đọc
+        // (mapper luôn hydrate 'Always'/'WhenTargeted' tường minh). Bỏ HẲN khoá khi `undefined` (thay
+        // vì gán giá trị `undefined`) để cả JSON lẫn `toHaveProperty` đều thấy khoá VẮNG — server mặc
+        // định 'Always' — khớp hệt hành vi hiện có với các test CHƯA biết field này.
+        ...(item.scoringScope !== undefined ? { scoringScope: item.scoringScope } : {}),
       };
     });
 }
@@ -75,16 +80,33 @@ export function mapQuestionsToApiRequest(
   return questions
     .filter((item) => item.prompt.trim())
     .map((item) => {
+      const targetCriterionIds = normalizeTargetCriterionIdsForRequest(item.targetCriterionIds);
       const payload: CampaignCreateQuestionRequest = {
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
         ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
+        // SC2 — PUT ba trạng thái: `undefined`/`null` domain ⇒ khoá VẮNG (giữ nguyên nhãn server đang
+        // có); mảng thật (kể cả `[]`) ⇒ gửi nguyên, đã lọc id KHÔNG phải GUID server (tiêu chí vừa
+        // thêm tay trong CÙNG lượt lưu chưa có id thật ⇒ gửi id đó sẽ 400 "không thuộc chiến dịch").
+        // Bỏ HẲN khoá khi vắng (không gán `undefined`) — `toHaveProperty` thấy khoá dù giá trị undefined.
+        ...(targetCriterionIds !== undefined ? { targetCriterionIds } : {}),
+        // CAMP-16 kiểu 3 trạng thái CỦA RIÊNG field này: `undefined` domain (chưa từng đọc) ⇒ bỏ khoá;
+        // `null` (đã đọc, server chưa có sample answer) ⇒ gửi `null` = GIỮ NGUYÊN; `''`/chuỗi ⇒ gửi nguyên.
+        ...(item.sampleAnswer !== undefined ? { sampleAnswer: item.sampleAnswer } : {}),
       };
       if (isServerEntityId(item.id)) {
         payload.id = item.id.trim();
       }
       return payload;
     });
+}
+
+/** `undefined`/`null` ⇒ omit key (JSON/`toEqual` coi `undefined` là vắng); mảng thật ⇒ lọc còn GUID server. */
+function normalizeTargetCriterionIdsForRequest(
+  value: string[] | null | undefined,
+): string[] | undefined {
+  if (value == null) return undefined;
+  return value.filter((id) => isServerEntityId(id));
 }
 
 function criteriaRequestToRubric(
@@ -98,6 +120,7 @@ function criteriaRequestToRubric(
     maxScore: item.maxScore,
     minPct: item.minPct ?? null,
     levels: item.levels ?? undefined,
+    scoringScope: item.scoringScope,
   }));
 }
 
@@ -111,6 +134,8 @@ function questionRequestToUi(
     difficulty: 'middle' as const,
     source: item.source === 'AiGenerated' ? ('ai' as const) : ('manual' as const),
     isRequired: item.isRequired,
+    targetCriterionIds: item.targetCriterionIds ?? null,
+    sampleAnswer: item.sampleAnswer,
   }));
 }
 
