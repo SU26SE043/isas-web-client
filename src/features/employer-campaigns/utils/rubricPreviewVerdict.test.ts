@@ -120,6 +120,12 @@ describe('computeBlocker — ưu tiên noCampaign → closed → running → mis
     expect(computeBlocker({ ...base, campaignId: null, campaignStatus: 'closed', isRunning: true, rubric: rubricMissingLevels, questions: [] })).toEqual({ kind: 'noCampaign' });
   });
 
+  it('chưa có campaign nhưng có đường lưu (wizard tạo mới) ⇒ KHÔNG chặn vì thiếu campaign, vẫn chặn vế sau', () => {
+    expect(computeBlocker({ ...base, campaignId: null, canPersist: true })).toBeNull();
+    expect(computeBlocker({ ...base, campaignId: null, canPersist: true, rubric: rubricMissingLevels })).toMatchObject({ kind: 'missingLevels' });
+    expect(computeBlocker({ ...base, campaignId: null, canPersist: true, questions: [] })).toEqual({ kind: 'noQuestions' });
+  });
+
   it('closed/archived thắng running; paused và active không chặn', () => {
     expect(computeBlocker({ ...base, campaignStatus: 'closed', isRunning: true })).toEqual({ kind: 'closed' });
     expect(computeBlocker({ ...base, campaignStatus: 'archived' })).toEqual({ kind: 'closed' });

@@ -44,6 +44,11 @@ describe('RubricPreviewCard — trạng thái bị chặn', () => {
     expect(screen.getByRole('button', { name: /rubricPreview\.run$/ })).toBeDisabled();
   });
 
+  it('chưa có campaign NHƯNG có onBeforeRun (wizard tạo mới): nút "Lưu & chấm thử" bấm được', () => {
+    render(<RubricPreviewCard {...base} preview={inertPreview()} campaignId={null} onBeforeRun={vi.fn(async () => 'c-new')} />);
+    expect(screen.getByRole('button', { name: /rubricPreview\.runSave$/ })).toBeEnabled();
+  });
+
   it('chưa có câu hỏi: lý do + link sang bước câu hỏi', () => {
     const onGoToQuestions = vi.fn();
     render(<RubricPreviewCard {...base} preview={inertPreview()} questions={[]} onGoToQuestions={onGoToQuestions} />);

@@ -51,7 +51,7 @@ export function RubricPreviewCard({
   const [selectedRunId, setSelectedRunId] = React.useState<string | null>(null);
   const [rerunOpen, setRerunOpen] = React.useState(false);
   const { runs, latest, isRunning } = preview;
-  const blocker = computeBlocker({ campaignId, campaignStatus, rubric, questions, isRunning });
+  const blocker = computeBlocker({ campaignId, canPersist: Boolean(onBeforeRun), campaignStatus, rubric, questions, isRunning });
   const viewing = (selectedRunId ? runs.find((run) => run.id === selectedRunId) : null) ?? latest;
   const version = currentRubricVersion ?? latestSeenRubricVersion(runs);
   const savesBeforeRun = Boolean(onBeforeRun);

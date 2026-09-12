@@ -88,6 +88,11 @@ export function compareRuns(a: RubricPreviewRun, b: RubricPreviewRun): RubricPre
 
 export interface ComputeBlockerInput {
   campaignId: string | null | undefined;
+  /**
+   * Wizard chế độ TẠO: draft chỉ được tạo lazily, nên `campaignId` null KHÔNG có nghĩa là không chạy được — chính
+   * "Lưu & chấm thử" (`onBeforeRun`) sẽ tạo draft. Có đường lưu ⇒ vế `noCampaign` không áp; các vế sau vẫn áp.
+   */
+  canPersist?: boolean;
   campaignStatus: EmployerCampaignStatus | null | undefined;
   rubric: RubricCriterion[];
   questions: CampaignQuestion[];
@@ -103,8 +108,8 @@ export function criteriaMissingLevels(rubric: RubricCriterion[]): string[] {
  * Lý do chưa chạy được, tính ở FE để không đốt lượt nhận 400. Thứ tự ưu tiên cố định:
  * noCampaign → closed → running → missingLevels → noQuestions — cái đứng trước là điều kiện tiên quyết của cái sau.
  */
-export function computeBlocker({ campaignId, campaignStatus, rubric, questions, isRunning }: ComputeBlockerInput): RubricPreviewBlocker | null {
-  if (!campaignId) return { kind: 'noCampaign' };
+export function computeBlocker({ campaignId, canPersist = false, campaignStatus, rubric, questions, isRunning }: ComputeBlockerInput): RubricPreviewBlocker | null {
+  if (!campaignId && !canPersist) return { kind: 'noCampaign' };
   if (campaignStatus === 'closed' || campaignStatus === 'archived') return { kind: 'closed' };
   if (isRunning) return { kind: 'running' };
   const missing = criteriaMissingLevels(rubric);
