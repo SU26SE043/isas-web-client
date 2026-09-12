@@ -9,6 +9,7 @@ import { practiceTranslations } from '../../features/practice/languages/translat
 import { paymentTranslations } from '../../features/payment/languages/translations';
 import { employerCampaignTranslations } from '../../features/employer-campaigns/languages/translations';
 import { employerTranslations } from '../../features/employer/languages/translations';
+import { employerAnalyticsTranslations } from '../../features/employer-analytics/languages/translations';
 import { adminTranslations } from '../../features/admin/languages/translations';
 import { employerBillingTranslations } from '../../features/employer-billing/languages/translations';
 import { liveEmployerPaymentTranslations } from '../../features/employer-billing/languages/livePaymentTranslations';
@@ -29,6 +30,7 @@ export const translations = mergeTranslations(
   paymentTranslations,
   employerCampaignTranslations,
   employerTranslations,
+  employerAnalyticsTranslations,
   adminTranslations,
   employerBillingTranslations,
   liveEmployerPaymentTranslations,
