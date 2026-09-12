@@ -194,6 +194,7 @@ export function CampaignDetailPage() {
               startingNow={startingNow}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}
+              onEditCriteria={() => navigate(`/employer/campaigns/${campaign.id}/edit?step=3`)}
               embedded
             />
           </div>

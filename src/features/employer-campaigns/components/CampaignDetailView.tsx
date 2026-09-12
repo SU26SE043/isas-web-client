@@ -34,6 +34,8 @@ interface CampaignDetailViewProps {
   embedded?: boolean;
   onStartNow?: () => Promise<void>;
   startingNow?: boolean;
+  /** Mở wizard ở bước Tiêu chí để khai mốc (chỉ Draft — wizard từ chối campaign đã mở). */
+  onEditCriteria?: () => void;
 }
 
 export function CampaignDetailView({
@@ -46,6 +48,7 @@ export function CampaignDetailView({
   embedded = false,
   onStartNow,
   startingNow = false,
+  onEditCriteria,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
   const isDraft = campaign.status === 'draft';
@@ -181,7 +184,7 @@ export function CampaignDetailView({
             ))}
           </div>
         </CollapsibleDetailCard>
-        <CampaignRubricPreviewSection campaign={campaign} />
+        <CampaignRubricPreviewSection campaign={campaign} onGoToCriteria={isDraft ? onEditCriteria : undefined} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.questions')}
           icon={ListChecks}

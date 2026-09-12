@@ -96,9 +96,12 @@ describe('RubricPreviewRunForm', () => {
     expect(onRun).toHaveBeenCalledWith({ questionId: 'q-2', customAnswer: null });
   });
 
-  it('không có câu hỏi nào ⇒ nút disabled, questionId null', () => {
+  it('không có câu hỏi nào ⇒ nút disabled, select KHÔNG trống (option "chưa có câu hỏi")', () => {
     render(<RubricPreviewRunForm {...base} questions={[]} onRun={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeDisabled();
+    const select = screen.getByRole('combobox');
+    expect(select).toBeDisabled();
+    expect(select).toHaveTextContent('employer.campaigns.rubricPreview.question.empty');
   });
 
   it('initialQuestionId hợp lệ được giữ; không hợp lệ rơi về mặc định', () => {

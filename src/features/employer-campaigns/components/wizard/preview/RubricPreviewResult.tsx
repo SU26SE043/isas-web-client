@@ -9,6 +9,8 @@ import type { RubricPreviewRun, RubricPreviewVerdict } from '../../../types/rubr
 import { computeVerdict } from '../../../utils/rubricPreviewVerdict';
 import { RubricPreviewResultTable } from './RubricPreviewResultTable';
 
+const WARN_CHIP = 'rounded-lg border border-warning/30 bg-warning/5 px-2.5 py-1 text-xs leading-snug text-warning';
+
 export function formatPct(value: number): string {
   return `${Math.round(value * 10) / 10}`;
 }
@@ -141,9 +143,10 @@ export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onE
             <p className="text-xs text-muted-foreground">{t('employer.campaigns.rubricPreview.result.footnote')}</p>
           </div>
 
+          {/* Câu cảnh báo dài ⇒ KHÔNG dùng Badge (h-5 + nowrap + overflow-hidden cắt cụt ở 375px); chip tự xuống dòng. */}
           <div className="flex flex-wrap items-center gap-2" data-testid="preview-warnings">
-            {!run.deliveryMetricsAvailable ? <Badge variant="warning">{t('employer.campaigns.rubricPreview.warn.textOnly')}</Badge> : null}
-            {run.lengthParityWarning ? <Badge variant="warning">{t('employer.campaigns.rubricPreview.warn.lengthParity')}</Badge> : null}
+            {!run.deliveryMetricsAvailable ? <p className={WARN_CHIP}>{t('employer.campaigns.rubricPreview.warn.textOnly')}</p> : null}
+            {run.lengthParityWarning ? <p className={WARN_CHIP}>{t('employer.campaigns.rubricPreview.warn.lengthParity')}</p> : null}
             {run.billed ? <Badge variant="info">{t('employer.campaigns.rubricPreview.warn.billed')}</Badge> : null}
           </div>
 

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../../types/campaignManagement.types';
 import type { RubricPreviewBlocker, RubricPreviewRequest, UseRubricPreviewApi } from '../../../types/rubricPreview.types';
-import { computeBlocker, computeVerdict, criteriaMissingLevels, hasVerifiedRun, latestSeenRubricVersion } from '../../../utils/rubricPreviewVerdict';
+import { computeBlocker, computeVerdict, criteriaMissingLevels, freeRunsForVersion, hasVerifiedRun, latestSeenRubricVersion } from '../../../utils/rubricPreviewVerdict';
 import { RubricPreviewHistory, runNumberOf } from './RubricPreviewHistory';
 import { formatPct, RubricPreviewResult } from './RubricPreviewResult';
 import { RubricPreviewRunForm } from './RubricPreviewRunForm';
@@ -56,7 +56,7 @@ export function RubricPreviewCard({
   const version = currentRubricVersion ?? latestSeenRubricVersion(runs);
   const savesBeforeRun = Boolean(onBeforeRun);
   const requireConfirm = savesBeforeRun && campaignStatus === 'active';
-  const freeLeft = preview.freeRunsRemaining;
+  const freeLeft = freeRunsForVersion(preview.freeRunsRemaining, latest, version);
 
   const blockedReason = (item: RubricPreviewBlocker): string =>
     item.kind === 'missingLevels'
@@ -122,7 +122,13 @@ export function RubricPreviewCard({
               <FlaskConical className="size-4" aria-hidden />
               {t('employer.campaigns.rubricPreview.title')}
             </p>
-            <p className="text-xs text-muted-foreground" data-testid="preview-compact-status">
+            <p
+              className={cn(
+                'text-xs',
+                blocker || verified?.verdict === 'weak' || verified?.verdict === 'inconclusive' ? 'text-warning' : verified ? 'text-success' : 'text-muted-foreground',
+              )}
+              data-testid="preview-compact-status"
+            >
               {blocker
                 ? blockedReason(blocker)
                 : verified && latest

@@ -17,6 +17,8 @@ import {
   criteriaMissingLevels,
   defaultPreviewQuestion,
   DISCRIMINATION_RANGE_PCT,
+  FREE_RUNS_PER_VERSION,
+  freeRunsForVersion,
   hasVerifiedRun,
   latestSeenRubricVersion,
 } from './rubricPreviewVerdict';
@@ -167,5 +169,14 @@ describe('helpers', () => {
   it('latestSeenRubricVersion: max qua các lượt', () => {
     expect(latestSeenRubricVersion([goodRun({ rubricVersion: 1 }), goodRun({ rubricVersion: 3 })])).toBe(3);
     expect(latestSeenRubricVersion([])).toBeNull();
+  });
+
+  // Quota là thứ HR nhìn trước khi bấm; BE chỉ trả nó KÈM lượt ⇒ trước lượt đầu phải tự biết còn nguyên 3.
+  it('freeRunsForVersion: chưa lượt nào ⇒ 3; lượt mới nhất cùng bản ⇒ tin số BE; bản khác ⇒ quota mới 3', () => {
+    expect(freeRunsForVersion(null, null, 1)).toBe(FREE_RUNS_PER_VERSION);
+    expect(freeRunsForVersion(2, goodRun({ rubricVersion: 1, freeRunsRemaining: 2 }), 1)).toBe(2);
+    expect(freeRunsForVersion(0, goodRun({ rubricVersion: 1, freeRunsRemaining: 0 }), 2)).toBe(FREE_RUNS_PER_VERSION);
+    // Không biết bản hiện tại ⇒ không suy "bản khác" từ "không biết" — tin số của lượt mới nhất.
+    expect(freeRunsForVersion(1, goodRun({ rubricVersion: 4, freeRunsRemaining: 1 }), null)).toBe(1);
   });
 });

@@ -11,6 +11,8 @@ import { CampaignWizardStepContent } from './CampaignWizardStepContent';
 interface CampaignWizardFormProps {
   campaign?: EmployerCampaign | null;
   mode: CampaignFormMode;
+  /** Bước mở đầu (0-based), chỉ chế độ edit — xem `useCampaignWizard`. */
+  initialStep?: number;
   onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
   onUpdateCampaign: (campaignId: string, payload: CampaignUpdateRequest) => Promise<EmployerCampaign>;
   onUpdateQuestions: (campaignId: string, questions: CampaignCreateQuestionRequest[]) => Promise<EmployerCampaign>;
@@ -59,10 +61,10 @@ export function useDismissStepSuccessToasts(step: number) {
   }, [step]);
 }
 
-export function CampaignWizardForm({ campaign, mode, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations }: CampaignWizardFormProps) {
+export function CampaignWizardForm({ campaign, mode, initialStep, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations }: CampaignWizardFormProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const wizard = useCampaignWizard({ campaign, mode, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations });
+  const wizard = useCampaignWizard({ campaign, mode, initialStep, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations });
   const { state, step } = wizard;
   useDismissStepSuccessToasts(step);
   const finalSubmitLabel = t('employer.campaigns.wizard.deploy.action');

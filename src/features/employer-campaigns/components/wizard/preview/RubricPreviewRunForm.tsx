@@ -119,6 +119,7 @@ export function RubricPreviewRunForm({
           onChange={(event) => setQuestionId(event.target.value)}
           className="h-9 w-full rounded-lg border border-satin bg-surface-overlay/80 px-2 text-sm text-foreground disabled:opacity-50"
         >
+          {questions.length === 0 ? <option value="">{t('employer.campaigns.rubricPreview.question.empty')}</option> : null}
           {questions.map((question) => (
             <option key={question.id} value={question.id}>
               {truncatePrompt(question.prompt)}

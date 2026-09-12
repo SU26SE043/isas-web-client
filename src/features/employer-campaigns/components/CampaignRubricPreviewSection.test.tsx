@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MOCK_EMPLOYER_CAMPAIGNS } from '../mocks/campaignManagement.fixtures';
-import { goodRun, inertPreview, rubricWithLevels } from '../mocks/rubricPreview.fixtures';
+import { goodRun, inertPreview, rubricMissingLevels, rubricWithLevels } from '../mocks/rubricPreview.fixtures';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 import { CampaignRubricPreviewSection } from './CampaignRubricPreviewSection';
 
@@ -38,6 +38,19 @@ describe('CampaignRubricPreviewSection (trang chi tiết)', () => {
     hookCalls.api = inertPreview({ runs: [latest], latest });
     render(<CampaignRubricPreviewSection campaign={active} />);
     expect(screen.getByText(/employer\.campaigns\.rubricPreview\.threshold\.failing/)).toBeInTheDocument();
+  });
+
+  it('thiếu mốc + có đường sửa (Draft) ⇒ nút "Về sửa mốc" gọi đúng callback; không có đường (Active) ⇒ chỉ nêu lý do', () => {
+    hookCalls.api = inertPreview();
+    const onGoToCriteria = vi.fn();
+    const { unmount } = render(<CampaignRubricPreviewSection campaign={{ ...active, status: 'draft', rubric: rubricMissingLevels }} onGoToCriteria={onGoToCriteria} />);
+    screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.goToCriteria' }).click();
+    expect(onGoToCriteria).toHaveBeenCalledOnce();
+    unmount();
+
+    render(<CampaignRubricPreviewSection campaign={{ ...active, rubric: rubricMissingLevels }} />);
+    expect(screen.getByTestId('preview-description')).toHaveTextContent('employer.campaigns.rubricPreview.blocked.missingLevels');
+    expect(screen.queryByRole('button', { name: 'employer.campaigns.rubricPreview.goToCriteria' })).not.toBeInTheDocument();
   });
 
   it('Closed/Archived: không mount gì', () => {

@@ -174,6 +174,7 @@ function defaultSettings(campaign?: EmployerCampaign | null): CampaignSettingsSt
 function buildInitialState(
   campaign?: EmployerCampaign | null,
   mode: CampaignFormMode = 'create',
+  initialStep?: number,
 ): CampaignWizardPersistedState {
   const hasJdText = Boolean(campaign?.jobDescription?.trim());
   const initialRubric = decimalWeightsToPercent(campaign?.rubric?.length ? campaign.rubric : []);
@@ -205,7 +206,8 @@ function buildInitialState(
     questionCount: 5,
     questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
-    currentStep: 0,
+    // Chỉ chế độ edit mới mở thẳng vào một bước (mọi bước đã hoàn thành); create luôn đi từ bước 1.
+    currentStep: mode === 'edit' && initialStep != null ? Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, initialStep)) : 0,
     completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6, 7] : [],
     errorSteps: [],
     draftId: campaign?.id,
@@ -414,6 +416,8 @@ export function mapDeployError(error: unknown, t: (key: string) => string): stri
 interface UseCampaignWizardArgs {
   campaign?: EmployerCampaign | null;
   mode: CampaignFormMode;
+  /** Bước mở đầu (0-based) — chỉ có hiệu lực ở chế độ edit; dùng cho deep-link `?step=` từ trang chi tiết. */
+  initialStep?: number;
   onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
   onUpdateCampaign: (campaignId: string, payload: CampaignUpdateRequest) => Promise<EmployerCampaign>;
   onUpdateQuestions: (
@@ -442,6 +446,7 @@ interface UseCampaignWizardArgs {
 export function useCampaignWizard({
   campaign,
   mode,
+  initialStep,
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
@@ -456,7 +461,7 @@ export function useCampaignWizard({
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
   const [state, setState] = useState<CampaignWizardPersistedState>(() =>
-    buildInitialState(campaign, mode),
+    buildInitialState(campaign, mode, initialStep),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);

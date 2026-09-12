@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
@@ -14,8 +14,15 @@ import type {
 } from '../types/campaign.api.types';
 import { campaignManagementService } from '../services/campaignManagement.service';
 
+export function parseWizardStepParam(raw: string | null): number | undefined {
+  if (raw == null || !/^\d+$/.test(raw)) return undefined;
+  const oneBased = Number(raw);
+  return oneBased >= 1 ? oneBased - 1 : undefined;
+}
+
 export function CampaignWizardPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
@@ -34,6 +41,8 @@ export function CampaignWizardPage() {
   } = useEmployerCampaign(id);
   const mode = id ? 'edit' : 'create';
   const isEditing = mode === 'edit';
+  // `?step=3` = "Bước 3/8" như người dùng thấy (1-based); hook nhận 0-based. Rác/ngoài dải ⇒ bỏ qua, mở bước 1.
+  const initialStep = parseWizardStepParam(searchParams.get('step'));
 
   const handleCreateCampaign = async (input: CampaignCreateRequest) => {
     return createCampaign(input);
@@ -145,6 +154,7 @@ export function CampaignWizardPage() {
     <CampaignWizardForm
       campaign={campaign}
       mode={mode}
+      initialStep={initialStep}
       onCreateCampaign={handleCreateCampaign}
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}

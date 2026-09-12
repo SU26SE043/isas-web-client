@@ -137,3 +137,21 @@ export function defaultPreviewQuestion(questions: CampaignQuestion[]): CampaignQ
 export function latestSeenRubricVersion(runs: RubricPreviewRun[]): number | null {
   return runs.length ? Math.max(...runs.map((run) => run.rubricVersion)) : null;
 }
+
+/** CAMP-19: 3 lượt `Succeeded` miễn phí cho MỖI (campaign, rubric_version). Chỉ dùng để hiện quota TRƯỚC lượt đầu. */
+export const FREE_RUNS_PER_VERSION = 3;
+
+/**
+ * Số lượt miễn phí còn lại để hiện trên card. BE chỉ trả `freeRunsRemaining` KÈM một lượt, nên trước lượt đầu
+ * (hoặc khi lượt mới nhất thuộc bản thước đo CŨ — quota đếm theo bản) card không có số nào để hiện; khi đó
+ * quota của bản hiện tại chắc chắn còn nguyên. Không biết bản hiện tại (`null`) thì tin số của lượt mới nhất.
+ */
+export function freeRunsForVersion(
+  reported: number | null,
+  latest: RubricPreviewRun | null,
+  currentRubricVersion: number | null,
+): number | null {
+  if (!latest) return reported ?? FREE_RUNS_PER_VERSION;
+  if (currentRubricVersion != null && latest.rubricVersion !== currentRubricVersion) return FREE_RUNS_PER_VERSION;
+  return reported;
+}

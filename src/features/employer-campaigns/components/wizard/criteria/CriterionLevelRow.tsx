@@ -71,7 +71,7 @@ export function CriterionLevelRow({ row, maxScore, error, onChange, onRemove }: 
           </label>
           <Textarea
             id={descriptorId}
-            rows={2}
+            rows={3}
             value={row.descriptor}
             maxLength={LEVEL_DESCRIPTOR_MAX}
             aria-invalid={invalid}

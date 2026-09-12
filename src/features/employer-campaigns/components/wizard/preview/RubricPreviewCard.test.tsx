@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { goodRun, inertPreview, previewQuestions, rubricMissingLevels, rubricWithLevels } from '../../../mocks/rubricPreview.fixtures';
+import { goodRun, inertPreview, narrowRun, previewQuestions, rubricMissingLevels, rubricWithLevels } from '../../../mocks/rubricPreview.fixtures';
 import { RubricPreviewCard } from './RubricPreviewCard';
 
 const messages: Record<string, string> = {
@@ -64,6 +64,11 @@ describe('RubricPreviewCard — trạng thái bị chặn', () => {
 });
 
 describe('RubricPreviewCard — sẵn sàng / đang chạy / kết quả', () => {
+  it('chưa lượt nào: chip quota vẫn hiện "còn 3" (BE chỉ trả quota kèm lượt) — HR biết trước giá', () => {
+    render(<RubricPreviewCard {...base} preview={inertPreview()} />);
+    expect(screen.getByTestId('preview-quota')).toHaveTextContent('Còn 3 lượt miễn phí');
+  });
+
   it('sẵn sàng: mô tả + chip quota + select câu hỏi + nút "Chấm thử" (không có bước lưu)', () => {
     render(<RubricPreviewCard {...base} preview={inertPreview({ freeRunsRemaining: 2 })} />);
     expect(screen.getByTestId('preview-description')).toHaveTextContent('employer.campaigns.rubricPreview.description');
@@ -139,6 +144,22 @@ describe('RubricPreviewCard — compact (bước 8)', () => {
     render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [latest], latest })} />);
     expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('Đã chấm thử · v3 · phân biệt được (70)');
     expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
+  });
+
+  // Bước 8 là màn cuối trước Phát hành: kết luận "chưa tách được 3 mức" mà in màu xám thì HR lướt qua.
+  it('dòng trạng thái mang màu theo kết luận: tách được ⇒ success; chưa tách/thứ tự sai ⇒ warning; bị chặn ⇒ warning', () => {
+    const good = goodRun();
+    const { unmount } = render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [good], latest: good })} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveClass('text-success');
+    unmount();
+
+    const narrow = narrowRun();
+    const { unmount: unmount2 } = render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [narrow], latest: narrow })} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveClass('text-warning');
+    unmount2();
+
+    render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview()} rubric={rubricMissingLevels} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveClass('text-warning');
   });
 
   it('cảnh báo MỀM khi thước đo có mốc mà 0 lượt Succeeded ở bản hiện tại — không chặn gì', () => {
