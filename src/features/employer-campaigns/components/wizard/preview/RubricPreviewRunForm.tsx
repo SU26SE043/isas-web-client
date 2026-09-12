@@ -89,8 +89,9 @@ export function RubricPreviewRunForm({
   const baseLabel = savesBeforeRun ? t('employer.campaigns.rubricPreview.runSave') : t('employer.campaigns.rubricPreview.run');
   const runLabel = paid ? t('employer.campaigns.rubricPreview.runPaid').replace('{{label}}', baseLabel) : baseLabel;
 
+  // Bước 8: nút đen duy nhất phải là "Triển khai chiến dịch" — chấm thử ở đó là việc phụ, không được tranh mắt.
   const button = (
-    <Button type="button" disabled={disabled || isRunning || questions.length === 0} loading={isRunning} onClick={submit}>
+    <Button type="button" variant={compact ? 'outline' : 'default'} disabled={disabled || isRunning || questions.length === 0} loading={isRunning} onClick={submit}>
       {!isRunning ? <FlaskConical className="size-4" aria-hidden /> : null}
       {isRunning ? t('employer.campaigns.rubricPreview.running') : runLabel}
     </Button>

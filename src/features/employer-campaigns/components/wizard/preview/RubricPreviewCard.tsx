@@ -188,8 +188,9 @@ export function RubricPreviewCard({
             </Button>
           ) : null}
         </div>
+        {/* `ml-auto`: khi khối quota rớt xuống dòng hai (mô tả dài) nó vẫn dính mép phải thay vì lơ lửng giữa card. */}
         {freeLeft != null && !blocker ? (
-          <div className="space-y-0.5 text-right">
+          <div className="ml-auto space-y-0.5 text-right">
             <Badge variant={freeLeft > 0 ? 'success' : 'info'} data-testid="preview-quota">
               {freeLeft > 0 ? t('employer.campaigns.rubricPreview.quota.free').replace('{{n}}', String(freeLeft)) : t('employer.campaigns.rubricPreview.quota.paid')}
             </Badge>

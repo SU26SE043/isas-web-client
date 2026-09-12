@@ -123,6 +123,8 @@ describe('RubricPreviewRunForm', () => {
     const user = userEvent.setup();
     render(<RubricPreviewRunForm {...base} compact savesBeforeRun requireConfirm currentRubricVersion={1} onRun={onRun} />);
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    // H11: ở bước 8 nút chấm thử là outline — nút đen duy nhất trên màn là "Triển khai chiến dịch".
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' })).toHaveClass('border');
     await user.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' }));
     expect(onRun).not.toHaveBeenCalled();
     await user.click(await screen.findByRole('button', { name: 'employer.campaigns.rubricPreview.confirm.confirm' }));
