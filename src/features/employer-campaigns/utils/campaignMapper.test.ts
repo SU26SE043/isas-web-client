@@ -146,4 +146,15 @@ describe('campaignMapper', () => {
 
     expect(campaign.rubric[0]?.levels).toEqual([{ score: 0, descriptor: 'No evidence' }]);
   });
+
+  // CAMP-18: `rubricVersion` là nhãn thước đo hiện hành, card chấm thử dùng nó để nói "v{N} → v{N+1}". Fixture cố ý
+  // để maxQuestions ≠ rubricVersion để phép đọc-nhầm-cột không lọt; thiếu field → null (không bịa v1).
+  it('đọc rubricVersion của campaign (camelCase lẫn PascalCase), thiếu thì null', () => {
+    const parsed = parseCampaignResponse({ id: 'c-rv', title: 'RV', status: 'Active', maxQuestions: 9, rubricVersion: 3 });
+    expect(mapCampaignResponseToEmployerCampaign(parsed!).rubricVersion).toBe(3);
+    const pascal = parseCampaignResponse({ id: 'c-rv2', title: 'RV', status: 'Active', MaxQuestions: 9, RubricVersion: 5 });
+    expect(mapCampaignResponseToEmployerCampaign(pascal!).rubricVersion).toBe(5);
+    const missing = parseCampaignResponse({ id: 'c-rv3', title: 'RV', status: 'Draft', maxQuestions: 9 });
+    expect(mapCampaignResponseToEmployerCampaign(missing!).rubricVersion).toBeNull();
+  });
 });
