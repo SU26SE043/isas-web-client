@@ -240,3 +240,67 @@ describe('CampaignRubricCriterionCard — khoá bảng', () => {
     expect(screen.getByLabelText(`${K}.criterionDesc`)).toHaveValue('Mô tả');
   });
 });
+
+describe('CampaignRubricCriterionCard — bộ sửa mốc điểm', () => {
+  const E = 'employer.campaigns.wizard.levelsEditor';
+  const d = 'Mô tả đủ dài để qua ngưỡng hai mươi ký tự.';
+
+  it('nút mở bộ sửa mốc nói "Thêm mốc" khi chưa có, "Sửa mốc" khi đã có', () => {
+    renderCard();
+    expect(screen.getByRole('button', { name: `${E}.openEmpty` })).toBeInTheDocument();
+
+    cleanup();
+    renderCard({ levels: [{ score: 0, descriptor: d }, { score: 10, descriptor: d }] });
+    expect(screen.getByRole('button', { name: `${E}.open` })).toBeInTheDocument();
+  });
+
+  it('nút Sửa mốc là ANH EM của nút tóm tắt, không lồng vào nó (button trong button là HTML sai)', () => {
+    const { detailButton } = renderCard();
+    const levelsButton = screen.getByRole('button', { name: `${E}.openEmpty` });
+    expect(detailButton.contains(levelsButton)).toBe(false);
+  });
+
+  it('khoá bảng thì KHÔNG có nút sửa mốc — kể cả trong popup chi tiết', () => {
+    renderCard({ levels: [{ score: 0, descriptor: d }, { score: 10, descriptor: d }] }, { disabled: true });
+    expect(screen.queryByRole('button', { name: `${E}.open` })).not.toBeInTheDocument();
+
+    openDetail();
+    expect(screen.queryByRole('button', { name: `${E}.open` })).not.toBeInTheDocument();
+  });
+
+  it('lưu từ bộ sửa mốc chảy ra onChange({ levels }) của hàng', () => {
+    const { onChange } = renderCard({ maxScore: 10 });
+    fireEvent.click(screen.getByRole('button', { name: `${E}.openEmpty` }));
+    fireEvent.click(screen.getByRole('button', { name: /scaffold|levelsEditor\.scaffold/ }));
+    for (const area of screen.getAllByLabelText(`${E}.descriptor`)) {
+      fireEvent.change(area, { target: { value: d } });
+    }
+    fireEvent.click(screen.getByRole('button', { name: `${E}.save` }));
+
+    expect(onChange).toHaveBeenCalledWith({
+      levels: [
+        { score: 0, descriptor: d },
+        { score: 10, descriptor: d },
+      ],
+    });
+  });
+
+  it('xoá hết mốc rồi lưu → levels về undefined (khớp quy ước "không mốc = vắng field")', () => {
+    const { onChange } = renderCard({ levels: [{ score: 0, descriptor: d }, { score: 10, descriptor: d }] });
+    fireEvent.click(screen.getByRole('button', { name: `${E}.open` }));
+    for (const button of screen.getAllByRole('button', { name: /removeLevel/ })) fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: `${E}.save` }));
+
+    expect(onChange).toHaveBeenCalledWith({ levels: undefined });
+  });
+
+  it('từ popup chi tiết bấm Sửa mốc: đóng chi tiết, mở bộ sửa — một dialog tại một thời điểm', () => {
+    renderCard({ levels: [{ score: 0, descriptor: d }, { score: 10, descriptor: d }] });
+    openDetail();
+    expect(screen.getByLabelText(`${K}.criterionDesc`)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: `${E}.open` }));
+    expect(screen.queryByLabelText(`${K}.criterionDesc`)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(`${E}.score`)).toHaveLength(2);
+  });
+});
