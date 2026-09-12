@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../../types/campaignManagement.types';
 import type { RubricPreviewBlocker, RubricPreviewRequest, UseRubricPreviewApi } from '../../../types/rubricPreview.types';
-import { computeBlocker, computeVerdict, latestSeenRubricVersion } from '../../../utils/rubricPreviewVerdict';
+import { computeBlocker, computeVerdict, criteriaMissingLevels, hasVerifiedRun, latestSeenRubricVersion } from '../../../utils/rubricPreviewVerdict';
 import { RubricPreviewHistory, runNumberOf } from './RubricPreviewHistory';
 import { formatPct, RubricPreviewResult } from './RubricPreviewResult';
 import { RubricPreviewRunForm } from './RubricPreviewRunForm';
@@ -107,8 +107,15 @@ export function RubricPreviewCard({
 
   if (variant === 'compact') {
     const verified = latest?.status === 'Succeeded' ? computeVerdict(latest, passScorePct) : null;
+    // Cảnh báo MỀM (không chặn Phát hành): thước đo có mốc mà chưa lượt Succeeded nào ở bản hiện tại.
+    const softWarning = !blocker && rubric.length > 0 && criteriaMissingLevels(rubric).length === 0 && !hasVerifiedRun(runs, version);
     return (
       <div className={cn('frame-satin space-y-2 rounded-xl bg-surface-overlay px-4 py-3', className)}>
+        {softWarning ? (
+          <Alert variant="warning" data-testid="preview-soft-warning">
+            <AlertDescription>{t('employer.campaigns.rubricPreview.softWarning')}</AlertDescription>
+          </Alert>
+        ) : null}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 space-y-0.5">
             <p className="flex items-center gap-2 text-sm font-medium text-foreground">

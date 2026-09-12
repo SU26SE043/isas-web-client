@@ -3,13 +3,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
+import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../types/campaignManagement.types';
 import type { FailedCampaignInvitation } from '../../types/campaign.api.types';
 import type { CampaignInfoState, CampaignSettingsState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import { calculateAdaptiveQuestionBudget } from '../../utils/campaignAdaptiveBudget';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
 import { CampaignWizardNav } from './CampaignWizardNav';
+import { RubricPreviewMount } from './preview/RubricPreviewMount';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState; jd: JobDescriptionState; rubric: RubricCriterion[]; questions: CampaignQuestion[];
@@ -19,6 +20,8 @@ interface CampaignReviewStepProps {
   isSubmitting?: boolean; submitDisabled?: boolean; disableForBlockingIssues?: boolean;
   hasPartialDeploy?: boolean; onRetryInvitations?: () => void; invitationFailures?: FailedCampaignInvitation[];
   invitationFailureReason?: string | null; canRetryInvitations?: boolean;
+  /** CAMP-19 — chấm thử thước đo (biến thể compact + cảnh báo mềm, KHÔNG chặn Phát hành). Tuỳ chọn: thiếu ⇒ card ở trạng thái chặn. */
+  campaignStatus?: EmployerCampaignStatus | null; onBeforeRun?: () => Promise<string | null>; currentRubricVersion?: number | null;
 }
 
 function formatDate(value: string): string {
@@ -32,6 +35,7 @@ export function CampaignReviewStep({
   submitLabel, submittingLabel, isSubmitting = false, submitDisabled = false, disableForBlockingIssues = false,
   hasPartialDeploy = false, onRetryInvitations,
   invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true,
+  campaignStatus = null, onBeforeRun, currentRubricVersion,
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
@@ -80,6 +84,7 @@ export function CampaignReviewStep({
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={`${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={`${formatDate(info.startsAt)} · ${slots.length} · ${capacity}`} onEdit={() => onGoToStep(5)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
+        <RubricPreviewMount variant="compact" campaignId={campaignId ?? null} campaignStatus={campaignStatus} rubric={rubric} questions={questions} passScorePct={info.passScorePct} onBeforeRun={onBeforeRun} onGoToCriteria={() => onGoToStep(2)} onGoToQuestions={() => onGoToStep(3)} currentRubricVersion={currentRubricVersion} />
         <section className="rounded-xl border border-info/30 bg-info/5 p-4">
           <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
           <Button type="button" className="mt-4" disabled={deployDisabled} loading={isSubmitting} onClick={onSubmit}>{isSubmitting ? submittingLabel : submitLabel}</Button>

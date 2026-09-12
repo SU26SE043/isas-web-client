@@ -129,9 +129,27 @@ describe('RubricPreviewCard — compact (bước 8)', () => {
     expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeDisabled();
   });
 
-  it('đã có lượt Succeeded: dòng trạng thái mang version + kết luận', () => {
+  it('đã có lượt Succeeded: dòng trạng thái mang version + kết luận; KHÔNG cảnh báo mềm', () => {
     const latest = goodRun({ rubricVersion: 3 });
     render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [latest], latest })} />);
     expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('Đã chấm thử · v3 · phân biệt được (70)');
+    expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
+  });
+
+  it('cảnh báo MỀM khi thước đo có mốc mà 0 lượt Succeeded ở bản hiện tại — không chặn gì', () => {
+    const { unmount } = render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview()} />);
+    expect(screen.getByTestId('preview-soft-warning')).toHaveTextContent('employer.campaigns.rubricPreview.softWarning');
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeEnabled();
+    unmount();
+
+    // Lượt cũ ở v1, bản hiện tại là v2 (truyền tường minh) ⇒ vẫn cảnh báo.
+    const stale = goodRun({ rubricVersion: 1 });
+    const { unmount: unmount2 } = render(<RubricPreviewCard {...base} variant="compact" currentRubricVersion={2} preview={inertPreview({ runs: [stale], latest: stale })} />);
+    expect(screen.getByTestId('preview-soft-warning')).toBeInTheDocument();
+    unmount2();
+
+    // Thiếu mốc ⇒ đã có lý do chặn, không chồng thêm cảnh báo mềm.
+    render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview()} rubric={rubricMissingLevels} />);
+    expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
   });
 });

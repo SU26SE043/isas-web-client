@@ -30,6 +30,21 @@ vi.mock('../../hooks/useCampaignSlots', () => ({
   useCampaignSlots: () => ({ data: [] }),
 }));
 
+// Hook thật (W1) dùng react-query — mock để test bước 8 không cần QueryClientProvider; card chỉ nhận api qua props.
+const rubricPreviewApi = vi.hoisted(() => ({
+  runs: [] as unknown[],
+  latest: null as unknown,
+  isLoadingHistory: false,
+  isRunning: false,
+  freeRunsRemaining: 3 as number | null,
+  error: null,
+  run: vi.fn(async () => null),
+  clearError: vi.fn(),
+}));
+vi.mock('../../hooks/useRubricPreview', () => ({
+  useRubricPreview: () => rubricPreviewApi,
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -250,5 +265,43 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('invitationFixRequired');
     expect(screen.queryByRole('button', { name: 'retryInvitations' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'invitationFixRequired' })[0]).toBeDisabled();
+  });
+});
+
+describe('CampaignReviewStep — chấm thử thước đo (compact, CAMP-19)', () => {
+  const rubricWithLevels: RubricCriterion[] = [
+    { id: 'c1', name: 'Depth', description: '', weight: 100, maxScore: 5, levels: [{ score: 0, descriptor: 'none' }, { score: 5, descriptor: 'top' }] },
+  ];
+
+  it('không có campaignId ⇒ card ở trạng thái chặn, KHÔNG có cảnh báo mềm, Phát hành vẫn bấm được', () => {
+    render(<CampaignReviewStep {...baseProps} rubric={rubricWithLevels} questions={twentyQuestions} questionsPerSession={5} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('employer.campaigns.rubricPreview.blocked.noCampaign');
+    expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
+  });
+
+  it('có campaign + thước đo có mốc + 0 lượt ⇒ cảnh báo MỀM, Phát hành KHÔNG bị chặn, nút là "Lưu & chấm thử" khi có bước lưu', () => {
+    render(
+      <CampaignReviewStep
+        {...baseProps}
+        campaignId="cmp-1"
+        campaignStatus="draft"
+        rubric={rubricWithLevels}
+        questions={twentyQuestions}
+        questionsPerSession={5}
+        onBeforeRun={async () => 'cmp-1'}
+      />,
+    );
+    expect(screen.getByTestId('preview-soft-warning')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' })).toBeEnabled();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
+  });
+
+  it('thiếu mốc ⇒ dòng trạng thái là LÝ DO, nút chấm thử disabled, Phát hành vẫn bấm được (cảnh báo mềm, không chặn)', () => {
+    const missing: RubricCriterion[] = [{ ...rubricWithLevels[0], levels: [] }];
+    render(<CampaignReviewStep {...baseProps} campaignId="cmp-1" rubric={missing} questions={twentyQuestions} questionsPerSession={5} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveTextContent('missingLevels');
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
   });
 });
