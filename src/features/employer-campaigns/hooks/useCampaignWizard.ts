@@ -226,6 +226,27 @@ function toSnapshot(state: CampaignWizardPersistedState): CampaignWizardSubmitSn
   };
 }
 
+/**
+ * Dấu vân tay của bộ câu hỏi NHƯ SERVER ĐANG GIỮ — dùng để biết `persistForPreview` có phải PUT
+ * câu hỏi lại không. Serialize đúng payload gửi đi (id chỉ giữ khi là id server) nên một câu vừa
+ * sửa prompt, đổi nhóm, hay còn mang id client (`client-…`) đều làm vân tay lệch.
+ */
+export function questionsPersistKey(questions: CampaignQuestion[]): string {
+  return JSON.stringify(mapQuestionsToApiRequest(questions));
+}
+
+/**
+ * `buildDirtyUpdateRequest` LUÔN echo `title`/`domain` (BE đòi) nên `Object.keys(dirty).length`
+ * không bao giờ là 0 — không dùng nó để hỏi "có gì đổi không". So hai payload ĐẦY ĐỦ thay vào đó.
+ */
+export function hasCampaignUpdateChanges(
+  baseline: CampaignWizardSubmitSnapshot,
+  current: CampaignWizardSubmitSnapshot,
+): boolean {
+  return JSON.stringify(buildCampaignUpdateRequest(baseline))
+    !== JSON.stringify(buildCampaignUpdateRequest(current));
+}
+
 function markCompleted(completed: number[], step: number) {
   return Array.from(new Set([...completed, step])).sort((a, b) => a - b);
 }
@@ -441,6 +462,7 @@ export function useCampaignWizard({
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [isSavingQuestions, setIsSavingQuestions] = useState(false);
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
+  const [isPersistingForPreview, setIsPersistingForPreview] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [partialDeploy, setPartialDeploy] = useState<PartialDeployState | null>(null);
@@ -455,6 +477,11 @@ export function useCampaignWizard({
   const baselineSnapshotRef = useRef<CampaignWizardSubmitSnapshot | null>(
     mode === 'edit' ? toSnapshot(state) : null,
   );
+  // Vân tay bộ câu hỏi server đang giữ (xem `questionsPersistKey`). null = chưa từng xác nhận
+  // (create mode: draft POST có gửi câu hỏi nhưng state vẫn mang id client ⇒ phải PUT một lần).
+  const questionsPersistKeyRef = useRef<string | null>(
+    mode === 'edit' ? questionsPersistKey(state.questions) : null,
+  );
 
   useEffect(() => {
     if (mode !== 'edit' || !campaign?.id) return;
@@ -463,6 +490,7 @@ export function useCampaignWizard({
     const next = buildInitialState(campaign, 'edit');
     setState(next);
     baselineSnapshotRef.current = toSnapshot(next);
+    questionsPersistKeyRef.current = questionsPersistKey(next.questions);
     setMetadataSaved(false);
     setQuestionsSaved(false);
   }, [campaign, mode]);
@@ -634,6 +662,8 @@ export function useCampaignWizard({
           ...question,
           isRequired: state.questionsPerSession == null,
         }));
+        // Server giữ `updated.questions`; state giữ bản đã ép isRequired ⇒ lệch là PUT lại khi chấm thử.
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
@@ -712,6 +742,7 @@ export function useCampaignWizard({
     try {
       const id = await fileActions.ensureDraftId();
       const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -758,6 +789,7 @@ export function useCampaignWizard({
     setStepError(null);
     try {
       const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(nextQuestions));
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -1025,6 +1057,7 @@ export function useCampaignWizard({
       }
 
       const updated = await onUpdateQuestions(campaignId, questionPayload);
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
       setQuestionsSaved(true);
       setMetadataSaved(false);
       setQuestionsSaved(false);
@@ -1093,6 +1126,7 @@ export function useCampaignWizard({
     try {
       const questionPayload = mapQuestionsToApiRequest(state.questions);
       const updated = await onUpdateQuestions(campaignId, questionPayload);
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
       setMetadataSaved(false);
       setQuestionsSaved(false);
       toast.success(t('employer.campaigns.wizard.updateSuccess'));
@@ -1112,6 +1146,122 @@ export function useCampaignWizard({
       setIsSubmitting(false);
     }
   }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
+
+  /**
+   * CAMP-19 — "lưu rồi mới chấm". Wizard KHÔNG PUT thước đo/câu hỏi lên server cho tới lúc Phát hành
+   * (`autosaveStatus: 'dirty'` chỉ là nhãn), trong khi BE chấm thử bộ ĐANG LƯU trong DB ⇒ bấm chấm
+   * thử mà chưa lưu là BE chấm bộ cũ còn màn hình hiện bộ mới — sai im lặng.
+   *
+   * Thứ tự: validate bước 0+2+3 (KHÔNG `validateAllCampaignWizardSteps` — nó kéo cả bước 5, mà
+   * `maxCandidates` mặc định null nên sẽ chặn oan người còn đang ở bước tiêu chí) → ensureDraft
+   * → PUT metadata nếu có thay đổi thật → PUT câu hỏi nếu vân tay lệch → trả campaignId.
+   *
+   * CỐ Ý không đụng `metadataSaved`/`questionsSaved`: đó là cờ RETRY sau khi Phát hành hỏng nửa
+   * chừng — `handleUpdateDraft` đọc `metadataSaved === true` nghĩa là "bỏ qua PUT metadata", nên
+   * bật nó ở đây là làm rơi im lặng mọi chỉnh sửa HR gõ SAU lần chấm thử, đúng lúc bấm Phát hành.
+   * Ghi `baselineSnapshotRef` là đủ: diff lần Phát hành sẽ tự nhỏ lại.
+   */
+  const persistForPreview = useCallback(async (): Promise<string | null> => {
+    if (
+      requestLockRef.current
+      || isSubmitting
+      || isPersistingForPreview
+      || isGeneratingQuestions
+      || isSavingQuestions
+      || isEnsuringDraft
+    ) {
+      return null;
+    }
+    if (!isDraftEditable) {
+      setActionError(t('employer.campaigns.wizard.notDraftEditable'));
+      return null;
+    }
+
+    const validationMode = mode === 'create' && state.draftId ? 'edit' : mode;
+    // Bước 0 đi kèm vì cả hai đường ghi đều cần nó: `ensureDraftId` tự validate rồi ném Error mang
+    // i18n key (rơi vào "tạo thất bại" chung nếu không bắt trước), còn `buildCampaignUpdateRequest`
+    // ném DOMAIN_REQUIRED. Mode-aware nên edit không bị chặn bởi ngày bắt đầu đã qua.
+    for (const step of [0, 2, 3]) {
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      if (errorKey) {
+        setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
+        setState((prev) => ({
+          ...prev,
+          currentStep: step,
+          errorSteps: Array.from(new Set([...prev.errorSteps, step])),
+        }));
+        return null;
+      }
+    }
+
+    requestLockRef.current = true;
+    setIsPersistingForPreview(true);
+    setActionError(null);
+    setStepError(null);
+    let phase: 'create' | 'update' | 'questions' = 'create';
+    try {
+      const id = await fileActions.ensureDraftId();
+
+      phase = 'update';
+      const currentSnapshot = snapshot();
+      const baseline = baselineSnapshotRef.current;
+      if (!baseline || hasCampaignUpdateChanges(baseline, currentSnapshot)) {
+        const payload = baseline
+          ? buildDirtyUpdateRequest(baseline, currentSnapshot)
+          : buildCampaignUpdateRequest(currentSnapshot);
+        if (Object.keys(payload).length > 0) {
+          await onUpdateCampaign(id, payload);
+        }
+        baselineSnapshotRef.current = currentSnapshot;
+      }
+
+      phase = 'questions';
+      let savedAt: string | undefined;
+      if (questionsPersistKey(state.questions) !== questionsPersistKeyRef.current) {
+        const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+        savedAt = updated.updatedAt;
+        setState((prev) => ({
+          ...prev,
+          draftId: updated.id,
+          // id server thay id client — `questionId` của lượt chấm thử phải là id ĐÃ LƯU.
+          questions: updated.questions,
+        }));
+      }
+
+      const lastSavedAt = savedAt ?? new Date().toISOString();
+      setState((prev) => ({ ...prev, autosaveStatus: 'saved', lastSavedAt }));
+      return id;
+    } catch (error) {
+      const mapped = mapSubmitError(error, t, phase);
+      setActionError(mapped.message);
+      if (mapped.step != null) {
+        setState((prev) => ({
+          ...prev,
+          currentStep: mapped.step!,
+          errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+        }));
+      }
+      return null;
+    } finally {
+      requestLockRef.current = false;
+      setIsPersistingForPreview(false);
+    }
+  }, [
+    fileActions,
+    isDraftEditable,
+    isEnsuringDraft,
+    isGeneratingQuestions,
+    isPersistingForPreview,
+    isSavingQuestions,
+    isSubmitting,
+    mode,
+    onUpdateCampaign,
+    onUpdateQuestions,
+    snapshot,
+    state,
+    t,
+  ]);
 
   const handleFinalSubmit = useCallback(async () => {
     const saved = mode === 'create' && !state.draftId
@@ -1246,6 +1396,10 @@ export function useCampaignWizard({
     goToStep,
     handleFinalSubmit,
     retryQuestionsUpdate,
+    persistForPreview,
+    isPersistingForPreview,
+    campaignId,
+    campaignStatus,
     partialDeploy,
     invitationFailures,
     invitationFailureReason,
