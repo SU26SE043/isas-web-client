@@ -96,3 +96,15 @@ export function flagLabelKey(signalType: string): string | null {
   const normalized = signalType.trim().toLowerCase();
   return KNOWN_SIGNALS.has(normalized) ? `employerAnalytics.flags.${normalized}` : null;
 }
+
+/**
+ * Chiến dịch "có hoạt động" = đã có ít nhất một ứng viên đi vào phễu (mời / tham gia / bắt đầu / chấm).
+ * Bảng theo-từng-chiến-dịch mặc định chỉ hiện nhóm này: đo trên dev, org demo có 67 chiến dịch mà 44 là
+ * bản nháp toàn số 0 — liệt kê hết thì bảng dài gấp 3 lần phần còn lại của trang và con số có ý nghĩa bị
+ * chôn ở giữa. Nhóm còn lại vẫn mở được bằng công tắc, không giấu.
+ */
+export function hasCampaignActivity(row: {
+  invited: number; joined: number; started: number; scored: number;
+}): boolean {
+  return row.invited + row.joined + row.started + row.scored > 0;
+}

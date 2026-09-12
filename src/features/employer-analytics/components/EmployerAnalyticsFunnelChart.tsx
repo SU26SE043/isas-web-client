@@ -54,8 +54,10 @@ export function EmployerAnalyticsFunnelChart({ data }: { data: EmployerAnalytics
                 formatter={(value) => [String(value), t('employerAnalytics.funnel.candidates')]}
               />
               <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive={false}>
-                {rows.map((row, index) => (
-                  <Cell key={row.stage} fill={chartCategoryColor(index)} />
+                {/* Một màu cho cả phễu — độ dài thanh đã nói hết; 6 màu cầu vồng chỉ thêm việc cho mắt.
+                    Riêng bậc "Đạt" đổi màu vì đó là kết luận HR cần dừng lại. */}
+                {rows.map((row) => (
+                  <Cell key={row.stage} fill={chartCategoryColor(row.stage === 'passed' ? 1 : 0)} />
                 ))}
               </Bar>
             </BarChart>

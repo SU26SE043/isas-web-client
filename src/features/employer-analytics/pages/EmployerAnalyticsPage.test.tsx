@@ -111,6 +111,10 @@ describe('EmployerAnalyticsPage', () => {
 
     const link = screen.getByRole('link', { name: 'Backend Engineer' });
     expect(link).toHaveAttribute('href', '/employer/campaigns/c-1/overview');
+    // c-2 toàn số 0 ⇒ mặc định bị ẩn (bảng chỉ hiện chiến dịch có ứng viên); bật công tắc mới thấy — tiền đề
+    // đổi có chủ đích khi thêm công tắc, KHÔNG phải test nới ra cho xanh.
+    expect(screen.queryByRole('link', { name: 'Chiến dịch chưa đặt tên' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: /chưa có ứng viên/ }));
     expect(screen.getByRole('link', { name: 'Chiến dịch chưa đặt tên' })).toHaveAttribute('href', '/employer/campaigns/c-2/overview');
     expect(screen.getByText('SQL')).toBeInTheDocument();
     expect(screen.getByText('Cao')).toBeInTheDocument();

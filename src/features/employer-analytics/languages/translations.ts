@@ -93,7 +93,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.flags.fullscreen_exit': 'Thoát toàn màn hình',
 
     'employerAnalytics.campaigns.title': 'Theo từng chiến dịch',
-    'employerAnalytics.campaigns.description': 'Mọi chiến dịch của tổ chức, mới nhất trước. Mở chiến dịch để xem xếp hạng và xuất kết quả.',
+    'employerAnalytics.campaigns.description': 'Chiến dịch đã có ứng viên trong phễu, mới nhất trước. Mở chiến dịch để xem xếp hạng và xuất kết quả.',
     'employerAnalytics.campaigns.campaign': 'Chiến dịch',
     'employerAnalytics.campaigns.status': 'Trạng thái',
     'employerAnalytics.campaigns.invited': 'Mời',
@@ -104,6 +104,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.campaigns.median': 'Điểm trung vị',
     'employerAnalytics.campaigns.untitled': 'Chiến dịch chưa đặt tên',
     'employerAnalytics.campaigns.empty': 'Chưa có chiến dịch nào.',
+    'employerAnalytics.campaigns.showIdle': 'Hiện cả {{count}} chiến dịch chưa có ứng viên nào',
+    'employerAnalytics.campaigns.allIdle': 'Chưa chiến dịch nào có ứng viên — bật công tắc trên để xem bản nháp.',
 
     'employerAnalytics.errors.forbidden': 'Phiên đăng nhập không thuộc tổ chức nào. Đăng nhập lại bằng tài khoản nhà tuyển dụng.',
     'employerAnalytics.errors.invalidRange': 'Kỳ không hợp lệ. Chọn lại kỳ rồi thử lại.',
@@ -207,7 +209,7 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.flags.fullscreen_exit': 'Exited fullscreen',
 
     'employerAnalytics.campaigns.title': 'Per campaign',
-    'employerAnalytics.campaigns.description': 'Every campaign of the organization, newest first. Open a campaign for its ranking and export.',
+    'employerAnalytics.campaigns.description': 'Campaigns with candidates in the funnel, newest first. Open a campaign for its ranking and export.',
     'employerAnalytics.campaigns.campaign': 'Campaign',
     'employerAnalytics.campaigns.status': 'Status',
     'employerAnalytics.campaigns.invited': 'Invited',
@@ -218,6 +220,8 @@ export const employerAnalyticsTranslations: TranslationDictionary = {
     'employerAnalytics.campaigns.median': 'Median score',
     'employerAnalytics.campaigns.untitled': 'Untitled campaign',
     'employerAnalytics.campaigns.empty': 'No campaign yet.',
+    'employerAnalytics.campaigns.showIdle': 'Also show {{count}} campaigns with no candidates yet',
+    'employerAnalytics.campaigns.allIdle': 'No campaign has candidates yet — turn on the switch above to see drafts.',
 
     'employerAnalytics.errors.forbidden': 'Your session does not belong to an organization. Sign in again with an employer account.',
     'employerAnalytics.errors.invalidRange': 'Invalid period. Pick a period and try again.',
