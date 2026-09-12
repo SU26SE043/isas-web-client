@@ -2,7 +2,7 @@ import { Clock } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
-import { numberQuestions } from '../utils/questionNumbering';
+import { numberQuestions } from '@/shared/utils/questionNumbering';
 import type { PracticeQuestionResponse, QuestionAnswerState } from '../types/b2cPracticeSession.types';
 
 interface InterviewQuestionPanelProps {

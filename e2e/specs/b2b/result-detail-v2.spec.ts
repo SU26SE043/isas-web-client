@@ -17,7 +17,8 @@ test('employer can review result detail history and transcript states', async ({
   await expect(page.getByRole('heading', { name: 'Nguyen Van A' })).toBeVisible();
   await expect(page.getByText('60% · Fail · Unknown editor')).toBeVisible();
   await expect(page.getByText('No speech · 0 points')).toHaveCount(0);
-  await expect(page.getByText('Question 2')).toBeVisible();
+  // q2 là FollowUp của q1 ⇒ số hiệu phân cấp "1.1" (cùng cách đếm ứng viên thấy trong phòng thi), không phải "2".
+  await expect(page.getByText('Question 1.1', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /View history/i }).click();
   await expect(page.getByText('Adjustment cleared')).toBeVisible();
   await expect(page.getByRole('button', { name: /Adjust result/i })).toBeVisible();
@@ -31,6 +32,6 @@ test('employer can review result detail history and transcript states', async ({
   await page.getByRole('button', { name: /Cancel/i }).click();
 
   await page.setViewportSize({ width: 375, height: 812 });
-  await expect(page.getByText('Question 1')).toBeVisible();
+  await expect(page.getByText('Question 1', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/result-detail-v2-mobile.png', fullPage: true });
 });

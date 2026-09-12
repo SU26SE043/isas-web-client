@@ -1,3 +1,4 @@
+import { numberQuestions } from '@/shared/utils/questionNumbering';
 import type {
   PracticeAnswerReview,
   PracticeBenchmark,
@@ -46,7 +47,10 @@ export type CriteriaResultViewModel = {
 export type QuestionResultViewModel = {
   questionId: string;
   answerId?: string;
+  /** Vị trí trong danh sách (1..N) — dùng để sắp/điều hướng, KHÔNG in ra màn hình. */
   orderNo: number;
+  /** Số hiệu hiển thị phân cấp: câu gốc "1", "2"…; câu đào sâu "1.1", "1.2"… — cùng cách đếm với phòng thi. */
+  label: string;
   content: string;
   kind?: string;
   timeLimitSec?: number;
@@ -133,6 +137,8 @@ export function mapPracticeSessionResponseToViewModel(
         kind: answer.kind ?? 'question',
       }));
 
+  // Cùng cách đánh số với phòng thi (`InterviewQuestionPanel`): câu gốc giữ số cố định, câu đào sâu là số con.
+  const numbering = numberQuestions(questionsSource);
   const questions: QuestionResultViewModel[] = questionsSource.map((question, index) => {
     const answer =
       session.answers?.find((item) => item.questionId === question.id) ?? null;
@@ -145,8 +151,9 @@ export function mapPracticeSessionResponseToViewModel(
     return {
       questionId: question.id,
       answerId: answer?.answerId ?? undefined,
-        // API orderNo has gaps for inserted follow-up questions; UI numbering is array-based.
-        orderNo: index + 1,
+      // API orderNo has gaps for inserted follow-up questions; this is the array position, `label` is what renders.
+      orderNo: index + 1,
+      label: numbering.labels.get(question.id) ?? String(index + 1),
       content: answer?.content?.trim() || question.content || '',
       kind: answer?.kind || question.kind,
       timeLimitSec: question.timeLimitSec || session.timeLimitSec,

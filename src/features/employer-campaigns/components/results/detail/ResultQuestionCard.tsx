@@ -45,10 +45,13 @@ function showDeliveryMetrics(question: TranscriptQuestion): boolean {
 
 export function ResultQuestionCard({
   question,
+  label,
   campaignId,
   sessionId,
 }: {
   question: TranscriptQuestion;
+  /** Số hiệu phân cấp (1 · 1.1 · 2) do trang tính từ cả danh sách; vắng ⇒ in `orderNo` thô (có khoảng trống). */
+  label?: string;
   campaignId: string;
   sessionId: string;
 }) {
@@ -65,7 +68,7 @@ export function ResultQuestionCard({
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-satin px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-semibold text-foreground">
-            {t('employer.campaigns.results.detail.question').replace('{{number}}', String(question.orderNo))}
+            {t('employer.campaigns.results.detail.question').replace('{{number}}', label ?? String(question.orderNo))}
           </h2>
           <Badge variant="outline">{t(questionKindKeys[question.kind])}</Badge>
           {status ? (

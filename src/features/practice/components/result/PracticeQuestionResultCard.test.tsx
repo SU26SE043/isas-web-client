@@ -20,6 +20,7 @@ describe('PracticeQuestionResultCard', () => {
         question={{
           questionId: 'q1',
           orderNo: 1,
+          label: '1',
           content: 'Explain your API design process.',
           timeLimitSec: 120,
           transcript: 'My recorded answer.',

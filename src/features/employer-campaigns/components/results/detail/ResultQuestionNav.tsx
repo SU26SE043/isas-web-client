@@ -8,7 +8,7 @@ import { questionAverageScore } from '../../../utils/resultDetailViewModel';
  * dải này rơi xuống DƯỚI toàn bộ thẻ câu trên mobile, tức xuất hiện đúng lúc không còn gì để nhảy tới.
  * Nền đục + blur để chữ thẻ câu cuộn phía sau không xuyên qua.
  */
-export function ResultQuestionNav({ questions }: { questions: TranscriptQuestion[] }) {
+export function ResultQuestionNav({ questions, labels }: { questions: TranscriptQuestion[]; labels?: Map<string, string> }) {
   const { t } = useLanguage();
   return (
     <nav
@@ -25,7 +25,7 @@ export function ResultQuestionNav({ questions }: { questions: TranscriptQuestion
             href={`#q-${question.orderNo}`}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-satin bg-surface-raised px-3 py-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <span>{t('employer.campaigns.results.detail.questionShort').replace('{{number}}', String(question.orderNo))}</span>
+            <span>{t('employer.campaigns.results.detail.questionShort').replace('{{number}}', labels?.get(question.questionId) ?? String(question.orderNo))}</span>
             <span className="font-semibold text-foreground">{questionAverageScore(question)?.toFixed(1) ?? '—'}</span>
             {question.rejectReason === 'no_speech' ? <MicOff className="size-3.5 text-warning" aria-hidden /> : null}
             {question.needsReview ? <Eye className="size-3.5 text-warning" aria-hidden /> : null}

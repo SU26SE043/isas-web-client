@@ -83,3 +83,24 @@ describe('practiceSessionResultFormat', () => {
     expect(getQuestionStatusGroup('Skipped')).toBe('skipped');
   });
 });
+
+describe('practiceSessionResultViewModel — số hiệu phân cấp', () => {
+  it('câu đào sâu nhận số con của câu gốc gần nhất; câu gốc phía sau không bị đẩy lùi', () => {
+    const session: PracticeSessionResponse = {
+      id: 's2',
+      status: 'Scored',
+      questions: [
+        { id: 'q1', orderNo: 1, content: 'Gốc 1', timeLimitSec: 120, kind: 'Seed' },
+        { id: 'q1b', orderNo: 2, content: 'Đào sâu 1', timeLimitSec: 120, kind: 'Clarify' },
+        { id: 'q2', orderNo: 5, content: 'Gốc 2', timeLimitSec: 120, kind: 'Seed' },
+      ],
+      answers: [],
+      result: null,
+    };
+    const vm = mapPracticeSessionResponseToViewModel(session);
+    expect(vm.questions.map((q) => q.label)).toEqual(['1', '1.1', '2']);
+    // `orderNo` của view model vẫn là vị trí mảng (điều hướng), không phải số in ra.
+    expect(vm.questions.map((q) => q.orderNo)).toEqual([1, 2, 3]);
+  });
+});
+

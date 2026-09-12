@@ -19,6 +19,7 @@ import { ResultDetailMetrics } from '../components/results/detail/ResultDetailMe
 import { ResultOverrideHistory } from '../components/results/detail/ResultOverrideHistory';
 import { ResultQuestionCard } from '../components/results/detail/ResultQuestionCard';
 import { ResultQuestionNav } from '../components/results/detail/ResultQuestionNav';
+import { numberQuestions } from '@/shared/utils/questionNumbering';
 
 /**
  * Trang "Đánh giá chi tiết" v2 (E11c): header + điều hướng ứng viên · 4 số liệu · lịch sử điều chỉnh của HR ·
@@ -65,7 +66,11 @@ export function CampaignResultDetailPage() {
     );
   }
 
-  const questions = transcriptQuery.data?.questions ?? [];
+  // Sắp theo `orderNo` (câu đào sâu xen ngay sau câu gốc — INT-17b) rồi đánh số PHÂN CẤP 1 · 1.1 · 2 như phòng
+  // thi ứng viên đã thấy. Trước đây in thẳng `orderNo` — số BE cố ý có KHOẢNG TRỐNG (câu gốc 1, 3, 5…) nên HR
+  // đọc "Câu 1 · 2 · 3 · 5 · 7 · 9" và tưởng thiếu bài.
+  const questions = [...(transcriptQuery.data?.questions ?? [])].sort((a, b) => a.orderNo - b.orderNo);
+  const questionLabels = numberQuestions(questions.map((q) => ({ id: q.questionId, kind: q.kind }))).labels;
   // Trước/sau theo thứ tự HẠNG server trả (không phải thứ tự bảng đã lọc/sort ở client).
   const neighbors = resultNeighbors(resultsQuery.data?.results ?? [], item.sessionId);
 
@@ -109,10 +114,16 @@ export function CampaignResultDetailPage() {
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_13rem]">
             <section className="space-y-4">
               {questions.map((question) => (
-                <ResultQuestionCard key={question.questionId} question={question} campaignId={campaignId} sessionId={item.sessionId} />
+                <ResultQuestionCard
+                  key={question.questionId}
+                  question={question}
+                  label={questionLabels.get(question.questionId) ?? String(question.orderNo)}
+                  campaignId={campaignId}
+                  sessionId={item.sessionId}
+                />
               ))}
             </section>
-            <ResultQuestionNav questions={questions} />
+            <ResultQuestionNav questions={questions} labels={questionLabels} />
           </div>
         )}
         <ProctoringAnalysis flags={item.flags} />
