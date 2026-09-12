@@ -153,6 +153,18 @@ describe('persistForPreview — create mode', () => {
     expect(result.current.state.errorSteps).not.toContain(5);
   });
 
+  it('⑥ CHƯA có câu hỏi (AI đề xuất mốc ở bước 3 của wizard tạo mới): vẫn tạo draft + PUT thước đo, KHÔNG PUT câu hỏi, không lỗi bước 3', async () => {
+    const { result } = renderCreateWizard(handlers);
+    act(() => { result.current.setQuestions([]); });
+    let id: string | null = null;
+    await act(async () => { id = await result.current.persistForPreview(); });
+    expect(id).toBe('c-1');
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).not.toHaveBeenCalled();
+    expect(result.current.stepError).toBeNull();
+    expect(result.current.state.errorSteps).not.toContain(3);
+  });
+
   it('④ rubric Σweight ≠ 100 → trả null, báo lỗi ở bước 2, KHÔNG gọi API nào', async () => {
     const { result } = renderCreateWizard(handlers);
     act(() => {

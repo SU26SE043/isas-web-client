@@ -1181,7 +1181,11 @@ export function useCampaignWizard({
     // Bước 0 đi kèm vì cả hai đường ghi đều cần nó: `ensureDraftId` tự validate rồi ném Error mang
     // i18n key (rơi vào "tạo thất bại" chung nếu không bắt trước), còn `buildCampaignUpdateRequest`
     // ném DOMAIN_REQUIRED. Mode-aware nên edit không bị chặn bởi ngày bắt đầu đã qua.
-    for (const step of [0, 2, 3]) {
+    // Bước 3 chỉ validate khi ĐÃ có câu hỏi: "AI đề xuất mốc" (CAMP-16) cũng đi qua đường lưu này ở ngay bước 3
+    // của wizard tạo mới — lúc chưa có câu hỏi nào — mà BE `levels/suggest` chỉ cần tiêu chí. Chấm thử thì cần câu hỏi,
+    // nhưng card đã chặn ở FE (`noQuestions`) trước khi gọi tới đây ⇒ không có đường nào lưu rồi POST hụt.
+    const stepsToValidate = state.questions.length > 0 ? [0, 2, 3] : [0, 2];
+    for (const step of stepsToValidate) {
       const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
       if (errorKey) {
         setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
@@ -1217,7 +1221,7 @@ export function useCampaignWizard({
 
       phase = 'questions';
       let savedAt: string | undefined;
-      if (questionsPersistKey(state.questions) !== questionsPersistKeyRef.current) {
+      if (state.questions.length > 0 && questionsPersistKey(state.questions) !== questionsPersistKeyRef.current) {
         const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
         questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
         savedAt = updated.updatedAt;
