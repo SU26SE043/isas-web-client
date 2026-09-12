@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
@@ -13,7 +12,6 @@ import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { AdminStatusBadge } from '../components/AdminStatusBadge';
 import { useAdminAnalytics } from '../hooks/useAdminAnalytics';
-import { useAdminPlatform } from '../hooks/useAdminPlatform';
 import type { AdminAnalyticsGranularity } from '../types/adminAnalytics.types';
 
 export function AdminDashboardPage() {
@@ -21,7 +19,6 @@ export function AdminDashboardPage() {
   const [groupBy, setGroupBy] = useState<AdminAnalyticsGranularity>('day');
   const [revenueGroupBy, setRevenueGroupBy] = useState<AdminAnalyticsGranularity>('day');
   const analytics = useAdminAnalytics({ groupBy });
-  const { snapshot, isLoading: isSnapshotLoading } = useAdminPlatform();
   const status = getApiStatusCode(analytics.error);
   const errorKey = status === 400
     ? 'admin.analytics.errors.invalidRange'
@@ -118,37 +115,6 @@ export function AdminDashboardPage() {
         </>
       ) : null}
 
-      {isSnapshotLoading || !snapshot ? (
-        <div className="grid gap-6 lg:grid-cols-2"><Skeleton className="h-64" /><Skeleton className="h-64" /></div>
-      ) : (
-        <section className="grid gap-6 lg:grid-cols-2">
-          <Card className="frame-satin bg-surface-raised">
-            <CardHeader><CardTitle>{t('admin.dashboard.health')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {snapshot.health.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg border border-satin bg-surface-overlay p-3">
-                  <div>
-                    <p className="font-medium text-foreground">{t(item.nameKey)}</p>
-                    <p className="text-xs text-muted-foreground">{item.latencyMs}ms</p>
-                  </div>
-                  <AdminStatusBadge status={item.status} />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          <Card className="frame-satin bg-surface-raised">
-            <CardHeader><CardTitle>{t('admin.dashboard.audit')}</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {snapshot.auditLogs.slice(0, 3).map((log) => (
-                <div key={log.id} className="rounded-lg border border-satin bg-surface-overlay p-3">
-                  <p className="font-medium text-foreground">{t(log.actionKey)}</p>
-                  <p className="text-xs text-muted-foreground">{log.actor} · {log.hash}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </section>
-      )}
     </AdminPageShell>
   );
 }

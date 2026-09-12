@@ -27,9 +27,6 @@ import { PracticeHistoryRowActions } from './PracticeHistoryRowActions';
 
 interface PracticeHistoryTableProps {
   items: PracticeSessionHistoryItem[];
-  compareMode?: boolean;
-  selectedIds?: string[];
-  onToggleCompare?: (id: string) => void;
   onViewResult: (id: string) => void;
   onResume: (id: string) => void;
 }
@@ -44,9 +41,6 @@ const statusClass = {
 
 export function PracticeHistoryTable({
   items,
-  compareMode = false,
-  selectedIds = [],
-  onToggleCompare,
   onViewResult,
   onResume,
 }: PracticeHistoryTableProps) {
@@ -58,7 +52,6 @@ export function PracticeHistoryTable({
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
-              {compareMode ? <TableHead className="w-10" scope="col" /> : null}
               {/* Cột tiêu đề là cột co giãn duy nhất; các cột ngày/giờ/điểm/thao tác không bẻ dòng. */}
               <TableHead className="min-w-[14rem]" scope="col">{t('practice.history.columns.jobCategory')}</TableHead>
               {/* L1: trước đây dùng `filterStatus` ("Lọc trạng thái") — đó là nhãn của Ô LỌC,
@@ -80,23 +73,10 @@ export function PracticeHistoryTable({
           <TableBody>
             {items.map((item) => {
               const group = getPracticeHistoryStatusGroup(item.status);
-              const canCompare = group === 'completed' && item.overallScore != null;
-              const selected = selectedIds.includes(item.id);
               const minutes = practiceSessionDurationMinutes(item);
 
               return (
-                <TableRow key={item.id} data-state={selected ? 'selected' : undefined}>
-                  {compareMode ? (
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        disabled={!canCompare}
-                        aria-label={t('practice.compare.selectItem')}
-                        onChange={() => onToggleCompare?.(item.id)}
-                      />
-                    </TableCell>
-                  ) : null}
+                <TableRow key={item.id}>
                   <TableCell className="max-w-[24rem]">
                     <PracticeSessionTitle item={item} />
                   </TableCell>
@@ -125,7 +105,6 @@ export function PracticeHistoryTable({
                   <TableCell className="whitespace-nowrap text-right">
                     <PracticeHistoryRowActions
                       item={item}
-                      compareMode={compareMode}
                       onViewResult={onViewResult}
                       onResume={onResume}
                     />
@@ -155,15 +134,6 @@ export function PracticeHistoryTable({
                     </Badge>
                   </div>
                 </div>
-                {compareMode ? (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(item.id)}
-                    disabled={!(group === 'completed' && item.overallScore != null)}
-                    aria-label={t('practice.compare.selectItem')}
-                    onChange={() => onToggleCompare?.(item.id)}
-                  />
-                ) : null}
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -183,16 +153,13 @@ export function PracticeHistoryTable({
                   </dd>
                 </div>
               </dl>
-              {!compareMode ? (
-                <div className="mt-3">
-                  <PracticeHistoryRowActions
-                    item={item}
-                    compareMode={false}
-                    onViewResult={onViewResult}
-                    onResume={onResume}
-                  />
-                </div>
-              ) : null}
+              <div className="mt-3">
+                <PracticeHistoryRowActions
+                  item={item}
+                  onViewResult={onViewResult}
+                  onResume={onResume}
+                />
+              </div>
             </article>
           );
         })}

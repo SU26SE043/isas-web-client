@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
-import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { PracticeHistoryContent } from '../components/history/PracticeHistoryContent';
 import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { PracticeHistoryToolbar } from '../components/history/PracticeHistoryToolbar';
@@ -33,8 +32,6 @@ export function InterviewHistoryPage() {
   const [currentCursor, setCurrentCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
   const [pageIndex, setPageIndex] = useState(1);
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const historyQuery = usePracticeSessionHistory({
     cursor: currentCursor ?? undefined,
@@ -119,7 +116,6 @@ export function InterviewHistoryPage() {
           source={source}
           sort={sort}
           isFetching={historyQuery.isFetching}
-          compareMode={compareMode}
           dateFilter={dateFilter || undefined}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
@@ -131,32 +127,12 @@ export function InterviewHistoryPage() {
           }}
           onSortChange={setSort}
           onRefresh={() => void historyQuery.refetch()}
-          onToggleCompareMode={() => {
-            setCompareMode((value) => !value);
-            setSelectedIds([]);
-          }}
           onClearDateFilter={() => {
             const next = new URLSearchParams(searchParams);
             next.delete('date');
             setSearchParams(next);
           }}
         />
-
-        {compareMode ? (
-          <InterviewHistoryCompareBar
-            selectedCount={selectedIds.length}
-            onCompare={() => {
-              if (selectedIds.length !== 2) return;
-              navigate(
-                `/candidate/practice/history/compare?left=${selectedIds[0]}&right=${selectedIds[1]}`,
-              );
-            }}
-            onCancel={() => {
-              setCompareMode(false);
-              setSelectedIds([]);
-            }}
-          />
-        ) : null}
 
         {historyQuery.data || historyQuery.isLoading || historyQuery.isError ? (
           <PracticeHistoryContent
@@ -166,21 +142,12 @@ export function InterviewHistoryPage() {
             pageItems={pageItems}
             visibleItems={visibleItems}
             hasActiveFilters={hasActiveFilters}
-            compareMode={compareMode}
-            selectedIds={selectedIds}
             pageIndex={pageIndex}
             pageSize={pageSize}
             canGoPrevious={cursorHistory.length > 0}
             canGoNext={Boolean(nextCursor)}
             onRetry={() => void historyQuery.refetch()}
             onClearFilters={clearFilters}
-            onToggleCompare={(id) => {
-              setSelectedIds((current) => {
-                if (current.includes(id)) return current.filter((item) => item !== id);
-                if (current.length >= 2) return [current[1], id];
-                return [...current, id];
-              });
-            }}
             onViewResult={(id) => navigate(`/candidate/practice/history/${id}`)}
             onResume={(id) => navigate(`/interview/${id}/room`)}
             onPrevious={() => {

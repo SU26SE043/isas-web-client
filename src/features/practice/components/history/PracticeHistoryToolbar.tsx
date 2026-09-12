@@ -31,14 +31,12 @@ interface PracticeHistoryToolbarProps {
   source: PracticeHistorySourceFilter;
   sort: PracticeHistorySort;
   isFetching: boolean;
-  compareMode: boolean;
   dateFilter?: string;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: PracticeHistoryStatusFilter) => void;
   onSourceChange: (value: PracticeHistorySourceFilter) => void;
   onSortChange: (value: PracticeHistorySort) => void;
   onRefresh: () => void;
-  onToggleCompareMode: () => void;
   onClearDateFilter?: () => void;
 }
 
@@ -48,21 +46,19 @@ export function PracticeHistoryToolbar({
   source,
   sort,
   isFetching,
-  compareMode,
   dateFilter,
   onSearchChange,
   onStatusChange,
   onSourceChange,
   onSortChange,
   onRefresh,
-  onToggleCompareMode,
   onClearDateFilter,
 }: PracticeHistoryToolbarProps) {
   const { t } = useLanguage();
 
   return (
     <div className="space-y-2 rounded-xl border border-satin bg-surface-raised p-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_auto_auto]">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_auto]">
         {/* Phạm vi áp dụng của bộ lọc đưa vào title (tooltip) thay vì một đoạn 2–3 dòng dưới ô tìm kiếm. */}
         <label className="flex items-center gap-2" title={t('practice.history.filterHint')}>
           <Search className="size-4 text-muted-foreground" aria-hidden />
@@ -112,14 +108,6 @@ export function PracticeHistoryToolbar({
           <option value="scoreDesc">{t('practice.history.sort.scoreDesc')}</option>
           <option value="scoreAsc">{t('practice.history.sort.scoreAsc')}</option>
         </select>
-
-        <Button
-          type="button"
-          variant={compareMode ? 'default' : 'outline'}
-          onClick={onToggleCompareMode}
-        >
-          {t('practice.compare.toggle')}
-        </Button>
 
         <Button
           type="button"

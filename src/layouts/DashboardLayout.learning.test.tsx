@@ -22,10 +22,6 @@ vi.mock('./components/SidebarLogoutButton', () => ({
   SidebarLogoutButton: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 
-vi.mock('@/features/engagement/components/NotificationBell', () => ({
-  NotificationBell: () => <div data-testid="notification-bell" />,
-}));
-
 afterEach(cleanup);
 
 describe('learning shared chrome', () => {

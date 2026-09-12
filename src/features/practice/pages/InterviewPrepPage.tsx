@@ -50,7 +50,6 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
   const subStep = parseSubStep(searchParams.get('step'));
   const isCampaignSession = Boolean(sessionId && isCampaignSessionId(sessionId));
   const learningContext = getLearningSessionRouteContext(searchParams);
-  const isLearningSession = Boolean(learningContext);
   const cancelHref = learningContext
     ? `/candidate/learning/roadmaps/${learningContext.roadmapId}`
     : '/candidate/dashboard';

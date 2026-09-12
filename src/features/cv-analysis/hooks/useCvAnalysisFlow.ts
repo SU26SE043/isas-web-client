@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
-import { profileService } from '@/features/profile/services/profile.service';
 import { cvAnalysisService, CvAnalysisError } from '../services/cvAnalysis.service';
 import type { CvAnalysisDomain } from '../types/cvDomain.types';
 import { isCvAnalysisDomain } from '../types/cvDomain.types';
@@ -512,12 +511,6 @@ export function useCvAnalysisFlow() {
 
       prependCvAnalysisToCache(queryClient, result);
       queryClient.setQueryData(cvAnalysisDetailQueryKey(result.id), result);
-
-      try {
-        await profileService.markCvUploaded();
-      } catch {
-        /* profile flag is best-effort */
-      }
 
       setParseProgress(100);
       toast.success(t('cv.createSuccess'));

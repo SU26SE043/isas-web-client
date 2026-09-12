@@ -5,20 +5,16 @@ import { getPracticeHistoryStatusGroup } from '../../utils/practiceSessionHistor
 
 interface PracticeHistoryRowActionsProps {
   item: PracticeSessionHistoryItem;
-  compareMode: boolean;
   onViewResult: (id: string) => void;
   onResume: (id: string) => void;
 }
 
 export function PracticeHistoryRowActions({
   item,
-  compareMode,
   onViewResult,
   onResume,
 }: PracticeHistoryRowActionsProps) {
   const { t } = useLanguage();
-  if (compareMode) return null;
-
   const group = getPracticeHistoryStatusGroup(item.status);
 
   if (group === 'completed') {

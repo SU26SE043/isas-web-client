@@ -22,10 +22,6 @@ const overlayDebt: Record<string, string> = {
   'src/features/cv-analysis/components/flow/CvAnalysisProgressStep.tsx': 'static progress detail; not state-bearing',
   'src/features/admin/components/rubrics/RubricLevelsTable.tsx': 'table chrome; deferred flat surface',
   'src/features/admin/components/roadmap-thresholds/RoadmapThresholdsTable.tsx': 'table chrome; deferred flat surface',
-  'src/features/profile/pages/PortfolioPage.tsx': 'static portfolio card; not state-bearing',
-  'src/features/profile/pages/ExperiencePage.tsx': 'static experience card; not state-bearing',
-  'src/features/profile/pages/EducationPage.tsx': 'static education card; not state-bearing',
-  'src/features/profile/pages/CertificatesPage.tsx': 'static certificate card; not state-bearing',
   'src/features/admin/pages/AdminPromptsPage.tsx': 'legacy prompt editor chrome; deferred flat surface',
   'src/features/profile/components/profile-view/ProfileFileUploadCard.tsx': 'static upload wells; drag state migrated in UX2-F3',
   'src/features/profile/components/profile-view/ProfileFilesTable.tsx': 'static table row chrome; deferred flat surface',
@@ -69,7 +65,7 @@ describe('light theme regression guard', () => {
         line.match(overlay) ? [`${rel}:${index + 1}: ${line.trim()}`] : [],
       );
     });
-    expect(Object.keys(overlayDebt)).toHaveLength(35);
+    expect(Object.keys(overlayDebt)).toHaveLength(31);
     expect(Object.values(overlayDebt).every((reason) => reason.length > 0)).toBe(true);
     expect(violations, violations.join('\n')).toEqual([]);
   });

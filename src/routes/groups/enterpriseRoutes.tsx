@@ -10,13 +10,7 @@ import { CampaignInviteCvPage } from '@/features/employer-campaigns/pages/Campai
 import { CampaignInviteEmailPage } from '@/features/employer-campaigns/pages/CampaignInviteEmailPage';
 import { CampaignInviteResultPage } from '@/features/employer-campaigns/pages/CampaignInviteResultPage';
 import { CampaignWorkspaceRedirect } from '@/features/employer-campaigns/pages/CampaignWorkspaceRedirect';
-import { CompanyProfilePage } from '@/features/employer/pages/CompanyProfilePage';
-import { CompanyVerificationPage } from '@/features/employer/pages/CompanyVerificationPage';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
-import { CandidatePipelinePage } from '@/features/employer-analytics/pages/CandidatePipelinePage';
-import { EmployerAnalyticsPage } from '@/features/employer-analytics/pages/EmployerAnalyticsPage';
-import { EmployerCandidateProfilePage } from '@/features/employer-analytics/pages/EmployerCandidateProfilePage';
-import { EmployerCandidateReportPage } from '@/features/employer-analytics/pages/EmployerCandidateReportPage';
 import { BillingShell } from '@/features/employer-billing/components/live/BillingShell';
 import { EmployerInvoicesPage } from '@/features/employer-billing/pages/EmployerInvoicesPage';
 import { EmployerBillingOverviewPage } from '@/features/employer-billing/pages/live/EmployerBillingOverviewPage';
@@ -26,24 +20,19 @@ import { EmployerOrderDetailPage } from '@/features/employer-billing/pages/live/
 import { EmployerTransactionsPage } from '@/features/employer-billing/pages/live/EmployerTransactionsPage';
 import { EmployerPaymentCallbackPage } from '@/features/employer-billing/pages/live/EmployerPaymentCallbackPage';
 import { EmployerTeamPage } from '@/features/engagement/pages/EmployerTeamPage';
-import { HelpPage } from '@/features/engagement/pages/HelpPage';
-import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
-import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
-import { SupportPage } from '@/features/engagement/pages/SupportPage';
+import { OrganizationSettingsPage } from '@/features/engagement/pages/OrganizationSettingsPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
 
+// Đường `/employer/analytics`, `candidates/:id(/report)`, `campaigns/:id/candidates`, `company*` từng chạy
+// trên fixture (`useEmployerAnalytics`/`useEmployerWorkspace`) — gỡ hẳn 2026-09-13, BE không có endpoint tương ứng.
 export const enterpriseRoutes: RouteObject[] = [
   { path: '/enterprise/dashboard', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/campaigns', element: <Navigate to="/employer/campaigns" replace /> },
-  { path: '/enterprise/company', element: <Navigate to="/employer/company" replace /> },
-  { path: '/enterprise/company/verify', element: <Navigate to="/employer/company/verify" replace /> },
-  { path: '/enterprise/analytics', element: <Navigate to="/employer/analytics" replace /> },
   { path: '/enterprise/subscription', element: <Navigate to="/employer/subscription" replace /> },
   { path: '/enterprise/billing', element: <Navigate to="/employer/billing" replace /> },
   { path: '/enterprise/invoices', element: <Navigate to="/employer/invoices" replace /> },
-  { path: '/enterprise/notifications', element: <Navigate to="/employer/notifications" replace /> },
   { path: '/enterprise/settings', element: <Navigate to="/employer/settings" replace /> },
   { path: '/enterprise/team', element: <Navigate to="/employer/team" replace /> },
   { path: '/enterprise/*', element: <Navigate to="/employer/dashboard" replace /> },
@@ -59,16 +48,8 @@ export const enterpriseRoutes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <EmployerDashboardPage /> },
-              {
-                element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
-                children: [
-                  { path: 'company', element: <CompanyProfilePage /> },
-                  { path: 'company/verify', element: <CompanyVerificationPage /> },
-                ],
-              },
               { path: 'campaigns', element: <CampaignListPage /> },
               { path: 'campaigns/new', element: <CampaignWizardPage /> },
-              { path: 'campaigns/:id/candidates', element: <CandidatePipelinePage /> },
               { path: 'campaigns/:id/selection', element: <Navigate to="../invite" relative="path" replace /> },
               { path: 'campaigns/:id/invite', element: <CampaignInvitePage /> },
               { path: 'campaigns/:id/invite/cv', element: <CampaignInviteCvPage /> },
@@ -94,9 +75,6 @@ export const enterpriseRoutes: RouteObject[] = [
                 path: 'campaigns/:id',
                 element: <CampaignWorkspaceRedirect target="overview-details" />,
               },
-              { path: 'candidates/:id', element: <EmployerCandidateProfilePage /> },
-              { path: 'candidates/:id/report', element: <EmployerCandidateReportPage /> },
-              { path: 'analytics', element: <EmployerAnalyticsPage /> },
               {
                 element: <RequireRole roles={[UserRole.ORG_ADMIN, UserRole.ADMIN]} />,
                 children: [
@@ -118,10 +96,8 @@ export const enterpriseRoutes: RouteObject[] = [
                   { path: 'subscription', element: <Navigate to="/employer/billing/packages" replace /> },
                 ],
               },
-              { path: 'notifications', element: <NotificationsPage scope="employer" /> },
-              { path: 'settings', element: <SettingsPage scope="employer" /> },
-              { path: 'help', element: <HelpPage scope="employer" /> },
-              { path: 'support', element: <SupportPage scope="employer" /> },
+              // Trang "Tổ chức" (`PUT /auth/org` thật). Thông báo/help/support/preferences là fixture — gỡ 2026-09-13.
+              { path: 'settings', element: <OrganizationSettingsPage /> },
               {
                 element: <RequireRole roles={[UserRole.ORG_ADMIN]} />,
                 children: [

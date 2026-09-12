@@ -17,11 +17,6 @@ import { LearningQuestionReportPage } from '@/features/practice/pages/LearningQu
 import { LearningRoadmapReportPage } from '@/features/practice/pages/LearningRoadmapReportPage';
 import { CandidateReportsPage } from '@/features/practice/pages/CandidateReportsPage';
 import { LearningReaderLayout } from '@/features/practice/components/learning-path/LearningReaderLayout';
-import { CertificateViewerPage } from '@/features/practice/pages/CertificateViewerPage';
-import { CompareResultsPage } from '@/features/practice/pages/CompareResultsPage';
-import { ProgressDashboardPage } from '@/features/practice/pages/ProgressDashboardPage';
-import { LeaderboardPage } from '@/features/practice/pages/LeaderboardPage';
-import { AchievementsPage } from '@/features/practice/pages/AchievementsPage';
 import { CreditsWalletPage } from '@/features/payment/pages/CreditsWalletPage';
 import { TokenUsagePage } from '@/features/payment/pages/TokenUsagePage';
 import { SubscriptionPlansPage } from '@/features/payment/pages/SubscriptionPlansPage';
@@ -30,20 +25,8 @@ import { PaymentCallbackPage } from '@/features/payment/pages/PaymentCallbackPag
 import { PaymentSuccessPage } from '@/features/payment/pages/PaymentSuccessPage';
 import { PaymentFailedPage } from '@/features/payment/pages/PaymentFailedPage';
 import { PaymentOrderDetailPage } from '@/features/payment/pages/PaymentOrderDetailPage';
-import { HelpPage } from '@/features/engagement/pages/HelpPage';
-import { NotificationsPage } from '@/features/engagement/pages/NotificationsPage';
-import { SettingsPage } from '@/features/engagement/pages/SettingsPage';
-import { SupportPage } from '@/features/engagement/pages/SupportPage';
 import { CandidateDashboardPage } from '@/features/profile/pages/CandidateDashboardPage';
 import { ProfileViewPage } from '@/features/profile/pages/ProfileViewPage';
-import { ProfileCompletePage } from '@/features/profile/pages/ProfileCompletePage';
-import { CareerGoalPage } from '@/features/profile/pages/CareerGoalPage';
-import { EducationPage } from '@/features/profile/pages/EducationPage';
-import { ExperiencePage } from '@/features/profile/pages/ExperiencePage';
-import { SkillsPage } from '@/features/profile/pages/SkillsPage';
-import { CertificatesPage } from '@/features/profile/pages/CertificatesPage';
-import { PortfolioPage } from '@/features/profile/pages/PortfolioPage';
-import { SocialLinksPage } from '@/features/profile/pages/SocialLinksPage';
 import { CandidateRubricsPage } from '@/features/rubrics/pages/CandidateRubricsPage';
 import { CandidateCampaignsPage } from '@/features/campaigns/pages/CandidateCampaignsPage';
 import { CandidateCampaignBriefingPage } from '@/features/campaigns/pages/CandidateCampaignBriefingPage';
@@ -106,19 +89,15 @@ export const candidateRoutes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <CandidateDashboardPage /> },
+              // `profile/*` (hồ sơ nhiều bước), `progress`/`leaderboard`/`achievements`/`certificates`,
+              // `history/compare`, notifications/settings/help/support từng chạy trên fixture — gỡ 2026-09-13
+              // (BE chỉ có `PUT /auth/me` tên/chức danh/địa điểm, đã nằm trong `ProfileViewPage`).
               { path: 'profile', element: <ProfileViewPage /> },
-              { path: 'profile/complete', element: <ProfileCompletePage /> },
-              { path: 'profile/career-goal', element: <CareerGoalPage /> },
-              { path: 'profile/education', element: <EducationPage /> },
-              { path: 'profile/experience', element: <ExperiencePage /> },
-              { path: 'profile/skills', element: <SkillsPage /> },
-              { path: 'profile/certificates', element: <CertificatesPage /> },
-              { path: 'profile/portfolio', element: <PortfolioPage /> },
-              { path: 'profile/social', element: <SocialLinksPage /> },
               { path: 'cv/analysis', element: <CVAnalysisPage /> },
               { path: 'cv/analysis/report', element: <CVResultPage /> },
               { path: 'cv/upload', element: <CvUploadLegacyRedirect /> },
               { path: 'campaigns', element: <CandidateCampaignsPage /> },
+              // Chỉ phục vụ e2e mock (`campaign-*` legacy, Playwright); runtime thật không có link tới đây.
               { path: 'campaigns/:token/briefing', element: <CandidateCampaignBriefingPage /> },
               { path: 'campaigns/:id', element: <CandidateCampaignDetailPage /> },
               {
@@ -135,26 +114,17 @@ export const candidateRoutes: RouteObject[] = [
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },
               { path: 'interview-history', element: <Navigate to="/candidate/practice/history" replace /> },
-              { path: 'practice/history/compare', element: <CompareResultsPage /> },
               { path: 'practice/history/:id', element: <PracticeHistoryResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },
               { path: 'rubrics', element: <CandidateRubricsPage /> },
               { path: 'results/:id', element: <CandidateResultsLegacyRedirect /> },
               { path: 'history', element: <CandidateHistoryLegacyRedirect /> },
               { path: 'roadmap', element: <RoadmapPage /> },
-              { path: 'progress', element: <ProgressDashboardPage /> },
-              { path: 'leaderboard', element: <LeaderboardPage /> },
-              { path: 'achievements', element: <AchievementsPage /> },
               { path: 'credits', element: <CreditsWalletPage /> },
               { path: 'orders/:orderId', element: <PaymentOrderDetailPage /> },
               { path: 'usage', element: <TokenUsagePage /> },
               { path: 'subscription', element: <SubscriptionPlansPage /> },
               { path: 'payment', element: <CheckoutPage /> },
-              { path: 'certificates/:id', element: <CertificateViewerPage /> },
-              { path: 'notifications', element: <NotificationsPage scope="candidate" /> },
-              { path: 'settings', element: <SettingsPage scope="candidate" /> },
-              { path: 'help', element: <HelpPage scope="candidate" /> },
-              { path: 'support', element: <SupportPage scope="candidate" /> },
             ],
           },
           {

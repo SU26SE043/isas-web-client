@@ -18,15 +18,12 @@ interface PracticeHistoryContentProps {
    * phía client. Tên cũ `hasClientFilters` nay sẽ nói dối.
    */
   hasActiveFilters: boolean;
-  compareMode: boolean;
-  selectedIds: string[];
   pageIndex: number;
   pageSize: number;
   canGoPrevious: boolean;
   canGoNext: boolean;
   onRetry: () => void;
   onClearFilters: () => void;
-  onToggleCompare: (id: string) => void;
   onViewResult: (id: string) => void;
   onResume: (id: string) => void;
   onPrevious: () => void;
@@ -41,15 +38,12 @@ export function PracticeHistoryContent({
   pageItems,
   visibleItems,
   hasActiveFilters,
-  compareMode,
-  selectedIds,
   pageIndex,
   pageSize,
   canGoPrevious,
   canGoNext,
   onRetry,
   onClearFilters,
-  onToggleCompare,
   onViewResult,
   onResume,
   onPrevious,
@@ -130,9 +124,6 @@ export function PracticeHistoryContent({
       ) : null}
       <PracticeHistoryTable
         items={visibleItems}
-        compareMode={compareMode}
-        selectedIds={selectedIds}
-        onToggleCompare={onToggleCompare}
         onViewResult={onViewResult}
         onResume={onResume}
       />

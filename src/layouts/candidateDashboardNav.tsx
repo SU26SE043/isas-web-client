@@ -1,4 +1,4 @@
-import { CircleHelp, ClipboardCheck, FileText, Inbox, LifeBuoy, Settings } from 'lucide-react';
+import { ClipboardCheck, FileText } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type DashboardNavItem = {
@@ -75,15 +75,6 @@ export function buildCandidateDashboardNav(t: (key: string) => string): Dashboar
       ),
     },
     {
-      to: '/candidate/progress',
-      label: t('profile.navProgress'),
-      icon: (
-        <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-    },
-    {
       to: '/candidate/learning',
       // Gộp hai mục cũ ("Học tập" + "Lộ trình") làm một: trang này nay vừa liệt kê lộ trình
       // vừa có nút tạo mới, nên hai lối vào riêng chỉ làm người dùng phải đoán nên bấm cái nào.
@@ -103,29 +94,6 @@ export function buildCandidateDashboardNav(t: (key: string) => string): Dashboar
       to: '/candidate/rubrics',
       label: t('rubrics.nav'),
       icon: <ClipboardCheck className="h-4 w-4 shrink-0" aria-hidden />,
-    },
-    {
-      // Icon Inbox chứ KHÔNG phải Bell: chuông ở đáy sidebar (NotificationBell) cũng vẽ Bell,
-      // mà khi sidebar thu gọn nhãn bị ẩn về w-0 nên chỉ còn icon — hai Bell cạnh nhau là
-      // không phân biệt được "trang danh sách" với "panel xem nhanh".
-      to: '/candidate/notifications',
-      label: t('engagement.nav.notifications'),
-      icon: <Inbox className="h-4 w-4 shrink-0" aria-hidden />,
-    },
-    {
-      to: '/candidate/settings',
-      label: t('engagement.nav.settings'),
-      icon: <Settings className="h-4 w-4 shrink-0" aria-hidden />,
-    },
-    {
-      to: '/candidate/help',
-      label: t('engagement.nav.help'),
-      icon: <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />,
-    },
-    {
-      to: '/candidate/support',
-      label: t('engagement.nav.support'),
-      icon: <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />,
     },
   ];
 }

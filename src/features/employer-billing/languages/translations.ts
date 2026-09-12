@@ -2,9 +2,7 @@ import type { TranslationDictionary } from '@/shared/languages';
 
 export const employerBillingTranslations: TranslationDictionary = {
   vi: {
-    'employer.nav.subscription': 'Gói đăng ký',
     'employer.nav.billing': 'Thanh toán',
-    'employer.nav.invoices': 'Hóa đơn',
 
     'employerBilling.cycle.monthly': 'Hàng tháng',
     'employerBilling.cycle.annual': 'Hàng năm',
@@ -134,9 +132,7 @@ export const employerBillingTranslations: TranslationDictionary = {
     'employerBilling.usage.tokensUsed': 'Token đã dùng',
   },
   en: {
-    'employer.nav.subscription': 'Subscription',
     'employer.nav.billing': 'Billing',
-    'employer.nav.invoices': 'Invoices',
 
     'employerBilling.cycle.monthly': 'Monthly',
     'employerBilling.cycle.annual': 'Annual',

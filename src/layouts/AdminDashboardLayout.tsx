@@ -1,36 +1,19 @@
 import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
-  Activity,
-  BookOpen,
-  Bot,
   Briefcase,
   Building2,
-  CircleHelp,
-  ClipboardCheck,
   ClipboardList,
   CreditCard,
-  DatabaseBackup,
-  FileText,
-  Flag,
   Gauge,
-  HeartPulse,
-  Inbox,
-  LayoutTemplate,
-  LifeBuoy,
-  LockKeyhole,
   LogOut,
-  Settings,
-  Shield,
   SlidersHorizontal,
   Target,
   Users,
-  Wrench,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
@@ -54,31 +37,10 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
       { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
       { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/roles', label: t('admin.nav.roles'), icon: <Shield className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/permissions', label: t('admin.nav.permissions'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/approvals', label: t('admin.nav.approvals'), icon: <ClipboardCheck className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/candidates', label: t('admin.nav.candidates'), icon: <Users className="h-4 w-4" aria-hidden /> },
       { to: '/admin/campaigns', label: t('admin.nav.campaigns'), icon: <Briefcase className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/content', label: t('admin.nav.content'), icon: <FileText className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/learning', label: t('admin.nav.learning'), icon: <BookOpen className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/ai-config', label: t('admin.nav.aiConfig'), icon: <Bot className="h-4 w-4" aria-hidden /> },
       { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
       { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
       { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <LayoutTemplate className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/reports', label: t('admin.nav.reports'), icon: <FileText className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/audit-logs', label: t('admin.nav.audit'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/system-config', label: t('admin.nav.systemConfig'), icon: <Settings className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/feature-flags', label: t('admin.nav.flags'), icon: <Flag className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/monitoring', label: t('admin.nav.monitoring'), icon: <Activity className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/health', label: t('admin.nav.health'), icon: <HeartPulse className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/backups', label: t('admin.nav.backups'), icon: <DatabaseBackup className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/maintenance', label: t('admin.nav.maintenance'), icon: <Wrench className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/support-tickets', label: t('admin.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notifications', label: t('engagement.nav.notifications'), icon: <Inbox className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/settings', label: t('engagement.nav.settings'), icon: <Settings className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/help', label: t('engagement.nav.help'), icon: <CircleHelp className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/support', label: t('engagement.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
     ],
     [t],
   );
@@ -102,28 +64,6 @@ export const AdminDashboardLayout: React.FC = () => {
             </div>
           </nav>
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
-            {/*
-              Hàng này KHÔNG phải link tới /admin/notifications (đã có sẵn trong nav chính).
-              Nó mở panel xem nhanh + giữ số chưa đọc (NotificationBell.tsx:67 chỉ setOpen,
-              không điều hướng). Vì vậy nhãn phải là 'Trung tâm thông báo' — trùng đúng tiêu đề
-              của panel nó mở ra (NotificationBell.tsx:95) — chứ KHÔNG dùng lại
-              'engagement.nav.notifications' của mục nav, nếu không sidebar hiện hai dòng y hệt.
-              `title` là bắt buộc: dưới sm nhãn bị ẩn (hidden sm:inline) nên chỉ còn icon, mà mọi
-              mục nav đều có title — thiếu ở đây thì hàng này là icon câm không tooltip.
-            */}
-            <div
-              className={navLinkClassName(false)}
-              title={t('engagement.notifications.center')}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('button')) return;
-                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
-              }}
-            >
-              <NotificationBell scope="admin" panelPlacement="sidebar" variant="sidebar" />
-              <span className="hidden text-sm sm:inline">
-                {t('engagement.notifications.center')}
-              </span>
-            </div>
             <div className="hidden items-center rounded-xl py-2.5 sm:flex sm:justify-start sm:px-3">
               <LanguageToggle compact />
             </div>
