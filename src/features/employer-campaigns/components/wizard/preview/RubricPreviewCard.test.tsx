@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { goodRun, inertPreview, narrowRun, previewQuestions, rubricMissingLevels, rubricWithLevels } from '../../../mocks/rubricPreview.fixtures';
+import { brokenRun, goodRun, inertPreview, narrowRun, previewQuestions, rubricMissingLevels, rubricWithLevels } from '../../../mocks/rubricPreview.fixtures';
 import { RubricPreviewCard } from './RubricPreviewCard';
 
 const messages: Record<string, string> = {
@@ -11,6 +11,7 @@ const messages: Record<string, string> = {
   'employer.campaigns.rubricPreview.result.header': 'Lượt {{n}} · thước đo v{{version}} · {{date}}',
   'employer.campaigns.rubricPreview.compact.verified': 'Đã chấm thử · v{{version}} · {{verdict}}',
   'employer.campaigns.rubricPreview.verdict.discriminates': 'phân biệt được ({{range}})',
+  'employer.campaigns.rubricPreview.runPaid': '{{label}} · −1 credit',
 };
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => messages[key] ?? key, language: 'vi' }) }));
 
@@ -25,13 +26,14 @@ const base = {
 };
 
 describe('RubricPreviewCard — trạng thái bị chặn', () => {
-  it('thiếu mốc: LÝ DO thay mô tả (nêu đúng tên tiêu chí), nút disabled, có nút Về sửa mốc; KHÔNG toast chung', () => {
+  it('thiếu mốc: mô tả VẪN hiện + lý do là dòng riêng (nêu đúng tên tiêu chí), nút disabled, có nút Về sửa mốc; KHÔNG toast chung', () => {
     const onGoToCriteria = vi.fn();
     render(<RubricPreviewCard {...base} preview={inertPreview()} rubric={rubricMissingLevels} onGoToCriteria={onGoToCriteria} />);
 
+    // Designer review H8: lần đầu gặp HR phải biết tính năng làm gì — lý do chặn KHÔNG được thay thế mô tả.
     const description = screen.getByTestId('preview-description');
     expect(description).toHaveTextContent('Thiếu mốc điểm ở: Giao tiếp.');
-    expect(description).not.toHaveTextContent('employer.campaigns.rubricPreview.description');
+    expect(description).toHaveTextContent('employer.campaigns.rubricPreview.description');
     expect(screen.getByRole('button', { name: /rubricPreview\.run$/ })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.goToCriteria' }));
     expect(onGoToCriteria).toHaveBeenCalledOnce();
@@ -77,11 +79,19 @@ describe('RubricPreviewCard — sẵn sàng / đang chạy / kết quả', () =>
     expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeEnabled();
   });
 
-  it('có bước lưu (wizard) ⇒ nút "Lưu & chấm thử"; hết lượt miễn phí ⇒ chip trả phí + dòng credit ứng viên', () => {
+  it('có bước lưu (wizard) ⇒ nút "Lưu & chấm thử"; hết lượt miễn phí ⇒ nút mang giá "−1 credit" + chip trả phí + dòng credit ứng viên + gợi ý reset', () => {
     render(<RubricPreviewCard {...base} preview={inertPreview({ freeRunsRemaining: 0 })} onBeforeRun={async () => 'cmp-1'} />);
-    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' })).toBeEnabled();
+    // R1 designer review: hết lượt ⇒ giá phải đứng NGAY TRÊN nút, không chỉ ở chip góc phải.
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave · −1 credit' })).toBeEnabled();
     expect(screen.getByTestId('preview-quota')).toHaveTextContent('employer.campaigns.rubricPreview.quota.paid');
     expect(screen.getByText('employer.campaigns.rubricPreview.quota.paidHint')).toBeInTheDocument();
+    expect(screen.getByText('employer.campaigns.rubricPreview.quota.resetHint')).toBeInTheDocument();
+  });
+
+  it('còn lượt miễn phí ⇒ nút KHÔNG mang giá, KHÔNG có gợi ý reset', () => {
+    render(<RubricPreviewCard {...base} preview={inertPreview({ freeRunsRemaining: 2 })} onBeforeRun={async () => 'cmp-1'} />);
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' })).toBeEnabled();
+    expect(screen.queryByText('employer.campaigns.rubricPreview.quota.resetHint')).not.toBeInTheDocument();
   });
 
   it('bấm chạy gọi preview.run với câu bắt buộc đầu tiên', async () => {
@@ -91,10 +101,11 @@ describe('RubricPreviewCard — sẵn sàng / đang chạy / kết quả', () =>
     await waitFor(() => expect(run).toHaveBeenCalledWith({ questionId: 'q-2', customAnswer: null }));
   });
 
-  it('đang chạy: role=status + không còn form', () => {
+  it('đang chạy: role=status + form VẪN mount nhưng khoá (unmount là mất bài đối chứng HR vừa dán nếu AI lỗi)', () => {
     render(<RubricPreviewCard {...base} preview={inertPreview({ isRunning: true })} />);
     expect(screen.getByRole('status')).toHaveTextContent('employer.campaigns.rubricPreview.running');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.running' })).toBeDisabled();
   });
 
   it('có lượt mới nhất: hiện kết quả, form ẩn tới khi bấm Chấm lại', () => {
@@ -169,6 +180,19 @@ describe('RubricPreviewCard — compact (bước 8)', () => {
 
     render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview()} rubric={rubricMissingLevels} />);
     expect(screen.getByTestId('preview-compact-status')).toHaveClass('text-warning');
+  });
+
+  it('H11: kết luận xấu ⇒ thứ tự sai tô error + có link "Sửa mốc ở bước 3"; kết luận tốt ⇒ không link', () => {
+    const onGoToCriteria = vi.fn();
+    const broken = brokenRun();
+    const { unmount } = render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [broken], latest: broken })} onGoToCriteria={onGoToCriteria} />);
+    expect(screen.getByTestId('preview-compact-status')).toHaveClass('text-error');
+    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.compact.editLevels' }));
+    expect(onGoToCriteria).toHaveBeenCalledOnce();
+    unmount();
+    const good = goodRun();
+    render(<RubricPreviewCard {...base} variant="compact" preview={inertPreview({ runs: [good], latest: good })} onGoToCriteria={onGoToCriteria} />);
+    expect(screen.queryByRole('button', { name: 'employer.campaigns.rubricPreview.compact.editLevels' })).not.toBeInTheDocument();
   });
 
   it('cảnh báo MỀM khi thước đo có mốc mà 0 lượt Succeeded ở bản hiện tại — không chặn gì', () => {

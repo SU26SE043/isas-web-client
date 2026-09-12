@@ -72,6 +72,8 @@ export function CriterionLevelRow({ row, maxScore, error, onChange, onRemove }: 
           <Textarea
             id={descriptorId}
             rows={3}
+            className="field-sizing-content min-h-[4.5rem]"
+            /* `field-sizing: content` (Chrome/Edge) cao theo nội dung — mô tả AI ~190/500 ký tự tràn 3 dòng, cắt giữa câu. Firefox rơi về rows=3 + cuộn. */
             value={row.descriptor}
             maxLength={LEVEL_DESCRIPTOR_MAX}
             aria-invalid={invalid}

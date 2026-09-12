@@ -41,7 +41,8 @@ export function RubricPreviewHistory({ runs, latest, viewingId, isLoading = fals
   }
   const formatDate = (value: string) => {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'short', timeStyle: 'short' });
+    // Cùng một định dạng với header lượt (Result) — hai kiểu ngày trên một card là lỗi N7 của designer review.
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
   return (
@@ -61,9 +62,15 @@ export function RubricPreviewHistory({ runs, latest, viewingId, isLoading = fals
                     <span className="font-medium text-foreground">{t('employer.campaigns.rubricPreview.history.run').replace('{{n}}', String(runNumberOf(runs, run.id)))}</span>
                     <span className="text-xs text-muted-foreground">v{run.rubricVersion} · {formatDate(run.createdAt)}</span>
                     {run.status === 'Succeeded' ? (
-                      <span className="text-xs text-muted-foreground">
-                        {t(`employer.campaigns.rubricPreview.verdict.${verdict?.verdict ?? 'inconclusive'}`).replace('{{range}}', formatPct(verdict?.range ?? 0))}
-                      </span>
+                      <>
+                        {/* Ba con số trên từng dòng: cùng thước đo mà 44→56→52 là NHIỄU bộ chấm — HR phải thấy điều đó (CAMP-19). */}
+                        <span className="text-xs tabular-nums text-foreground" data-testid="history-scores">
+                          {run.samples.filter((sample) => sample.band !== 'Custom').map((sample) => `${t(`employer.campaigns.rubricPreview.band.${sample.band}`)} ${formatPct(sample.actualWeightedPct)}`).join(' · ')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {t(`employer.campaigns.rubricPreview.verdict.${verdict?.verdict ?? 'inconclusive'}`).replace('{{range}}', formatPct(verdict?.range ?? 0))}
+                        </span>
+                      </>
                     ) : (
                       <Badge variant={run.status === 'Failed' ? 'destructive' : 'info'}>
                         {run.status === 'Failed' ? t('employer.campaigns.rubricPreview.history.failed') : t('employer.campaigns.rubricPreview.history.running')}

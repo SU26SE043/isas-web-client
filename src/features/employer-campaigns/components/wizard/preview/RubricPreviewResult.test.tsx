@@ -132,6 +132,55 @@ describe('RubricPreviewResult — tầng 1', () => {
     expect(screen.queryByTestId('preview-bands')).not.toBeInTheDocument();
   });
 
+  it('H1: kết luận đứng TRÊN hàng nút và TRÊN 3 thẻ điểm (HR đọc kết luận trước, không tự cộng trừ số)', () => {
+    render(<RubricPreviewResult run={narrowRun()} runNumber={1} passScorePct={null} onRerun={vi.fn()} onEditLevels={vi.fn()} />);
+    const verdict = screen.getByTestId('preview-verdict');
+    const bands = screen.getByTestId('preview-bands');
+    const editButton = screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.editLevels' });
+    expect(verdict.compareDocumentPosition(editButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(editButton.compareDocumentPosition(bands) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Hai nút cùng cấp outline — không có nút đen nào giục "Chấm lại" (tốn lượt) trước khi sửa mốc.
+    expect(editButton).toHaveClass('border');
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.rerun' })).toHaveClass('border');
+    expect(screen.getByText('employer.campaigns.rubricPreview.result.expectedHint')).toBeInTheDocument();
+  });
+
+  it('H2: nén hai đầu (Yếu chấm CAO hơn kỳ vọng ở ≥½ tiêu chí VÀ Xuất sắc THẤP hơn ở ≥½) ⇒ câu chẩn đoán kèm số; lượt đẹp ⇒ không', () => {
+    const compressed = goodRun({
+      samples: [
+        sample('Weak', 20, 48, [sample('Weak', 0, 0).scores[0], sample('Weak', 0, 0).scores[1]].map((score) => ({ ...score, expectedLevel: 1, actualScore: 3, levelMatched: 3 }))),
+        sample('Good', 60, 66),
+        sample('Excellent', 100, 70, [sample('Excellent', 0, 0).scores[0], sample('Excellent', 0, 0).scores[1]].map((score) => ({ ...score, expectedLevel: 5, actualScore: 3, levelMatched: 3 }))),
+      ],
+    });
+    const { unmount } = render(<RubricPreviewResult run={compressed} runNumber={1} passScorePct={null} />);
+    expect(screen.getByTestId('preview-compression')).toHaveTextContent('employer.campaigns.rubricPreview.compression');
+    unmount();
+    render(<RubricPreviewResult run={goodRun()} runNumber={1} passScorePct={null} />);
+    expect(screen.queryByTestId('preview-compression')).not.toBeInTheDocument();
+  });
+
+  it('H13: bài tự dán được đặt vào vị trí so với 3 bài AI (dưới Yếu / giữa / trên Xuất sắc)', () => {
+    const between = goodRun({ samples: [...goodRun().samples, sample('Custom', 0, 40)] });
+    const { unmount } = render(<RubricPreviewResult run={between} runNumber={1} passScorePct={null} />);
+    expect(screen.getByTestId('preview-custom-position')).toHaveTextContent('employer.campaigns.rubricPreview.custom.betweenWeakGood');
+    unmount();
+    const { unmount: unmount2 } = render(<RubricPreviewResult run={goodRun({ samples: [...goodRun().samples, sample('Custom', 0, 10)] })} runNumber={1} passScorePct={null} />);
+    expect(screen.getByTestId('preview-custom-position')).toHaveTextContent('employer.campaigns.rubricPreview.custom.belowWeak');
+    unmount2();
+    render(<RubricPreviewResult run={goodRun()} runNumber={1} passScorePct={null} />);
+    expect(screen.queryByTestId('preview-custom-position')).not.toBeInTheDocument();
+  });
+
+  it('H9: dimmed ⇒ aria-busy + không nhận click (kết quả cũ mờ đi trong lúc chấm lại, không bị thay bằng loader trống)', () => {
+    const onRerun = vi.fn();
+    render(<RubricPreviewResult run={goodRun()} runNumber={1} passScorePct={null} onRerun={onRerun} dimmed />);
+    const section = screen.getByTestId('preview-bands').closest('section');
+    expect(section).toHaveAttribute('aria-busy', 'true');
+    expect(section).toHaveClass('pointer-events-none');
+    expect(screen.getByTestId('preview-bands')).toBeInTheDocument();
+  });
+
   it('formatDelta có dấu, làm tròn 1 chữ số', () => {
     expect(formatDelta(2)).toBe('+2');
     expect(formatDelta(-12.04)).toBe('−12');

@@ -12,9 +12,17 @@ import type { RubricPreviewRun, RubricPreviewSample, RubricPreviewSampleScore } 
  * vì mốc không cách đều (0/2/4/5) — chênh 1 điểm có thể là cùng mốc hoặc khác mốc. Không có mốc thì so điểm.
  */
 export function isOffExpected(score: RubricPreviewSampleScore, band: RubricPreviewSample['band']): boolean {
-  if (band === 'Custom') return false;
-  if (score.levelMatched != null) return score.levelMatched !== score.expectedLevel;
-  return Math.abs(score.actualScore - score.expectedLevel) >= 1;
+  return offBy(score, band) !== 0;
+}
+
+/**
+ * Lệch bao nhiêu MỨC so với kỳ vọng (âm = chấm thấp hơn). 18–19/21 ô cùng một màu cam là mất tín hiệu:
+ * "Khá 0/5 kỳ vọng 4" nghiêm trọng hơn hẳn "3/5 kỳ vọng 5" nhưng trông y hệt ⇒ phân bậc theo độ lệch.
+ */
+export function offBy(score: RubricPreviewSampleScore, band: RubricPreviewSample['band']): number {
+  if (band === 'Custom') return 0;
+  const chosen = score.levelMatched ?? Math.round(score.actualScore);
+  return chosen - score.expectedLevel;
 }
 
 type Focus = { kind: 'reasoning'; sample: RubricPreviewSample; score: RubricPreviewSampleScore } | { kind: 'answer'; sample: RubricPreviewSample };
@@ -55,22 +63,26 @@ export function RubricPreviewResultTable({ run }: { run: RubricPreviewRun }) {
               {run.samples.map((sample) => {
                 const score = sample.scores.find((item) => item.criterionId === criterion.id);
                 if (!score) return <TableCell key={sample.band} className="text-center">—</TableCell>;
-                const off = isOffExpected(score, sample.band);
+                const off = offBy(score, sample.band);
+                // 1 mức = tín hiệu nhẹ (mũi tên, chữ xám) · ≥2 mức = cảnh báo (cam + ⚠). Không đổ cam cho mọi ô lệch.
+                const severe = Math.abs(off) >= 2;
+                const arrow = off > 0 ? '↑' : off < 0 ? '↓' : '';
                 return (
-                  <TableCell key={sample.band} className="text-center">
+                  <TableCell key={sample.band} className="text-center" data-off={off}>
                     <button
                       type="button"
-                      className={cn('inline-flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 hover:bg-surface-highlight', off && 'text-warning')}
+                      className={cn('inline-flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 hover:bg-surface-highlight', severe && 'text-warning')}
                       aria-label={`${t('employer.campaigns.rubricPreview.details.openReasoning')}: ${criterion.name} · ${bandLabel(sample.band)}`}
-                      title={off ? t('employer.campaigns.rubricPreview.details.offExpected') : undefined}
+                      title={off !== 0 ? t('employer.campaigns.rubricPreview.details.offExpected') : t('employer.campaigns.rubricPreview.details.openReasoning')}
                       onClick={() => setFocus({ kind: 'reasoning', sample, score })}
                     >
-                      <span className={cn('inline-flex items-center gap-1 font-semibold tabular-nums', off ? 'text-warning' : 'text-foreground')}>
-                        {off ? <TriangleAlert className="size-3.5" aria-hidden /> : null}
+                      <span className={cn('inline-flex items-center gap-1 font-semibold tabular-nums underline decoration-dotted underline-offset-4', severe ? 'text-warning' : 'text-foreground')}>
+                        {severe ? <TriangleAlert className="size-3.5" aria-hidden /> : null}
                         {score.actualScore}/{score.maxScore}
                       </span>
                       {sample.band !== 'Custom' ? (
-                        <span className="text-xs text-muted-foreground">
+                        <span className={cn('text-xs tabular-nums', severe ? 'text-warning' : 'text-muted-foreground')}>
+                          {arrow ? `${arrow}${Math.abs(off)} · ` : ''}
                           {t('employer.campaigns.rubricPreview.details.expectedLevel').replace('{{level}}', String(score.expectedLevel))}
                         </span>
                       ) : null}

@@ -70,7 +70,27 @@ export function computeVerdict(run: RubricPreviewRun, passScorePct: number | nul
         }
       : null;
 
-  return { ordering, range, bias, maxAbsDelta, verdict, threshold };
+  return { ordering, range, bias, maxAbsDelta, verdict, threshold, compression: computeCompression(weak, excellent) };
+}
+
+/** Mức bộ chấm CHỌN so với mức code kỳ vọng — so theo mốc (levelMatched) vì mốc không cách đều; không có mốc thì so điểm. */
+function levelDelta(score: RubricPreviewSample['scores'][number]): number {
+  return (score.levelMatched ?? score.actualScore) - score.expectedLevel;
+}
+
+/**
+ * Đếm theo TIÊU CHÍ chứ không theo điểm gộp: bias gộp có thể bằng 0 (Yếu +24, Xuất sắc −30 triệt tiêu nhau)
+ * trong khi đúng ca đó là thứ HR cần thấy — mốc đầu thang mở quá rộng, mốc cuối thang đóng quá chặt.
+ */
+export function computeCompression(
+  weak: RubricPreviewSample | undefined,
+  excellent: RubricPreviewSample | undefined,
+): RubricPreviewVerdict['compression'] {
+  if (!weak || !excellent || weak.scores.length === 0 || excellent.scores.length === 0) return null;
+  const total = Math.min(weak.scores.length, excellent.scores.length);
+  const weakOver = weak.scores.filter((score) => levelDelta(score) > 0).length;
+  const excellentUnder = excellent.scores.filter((score) => levelDelta(score) < 0).length;
+  return weakOver * 2 >= total && excellentUnder * 2 >= total ? { weakOver, excellentUnder, total } : null;
 }
 
 /**

@@ -50,8 +50,9 @@ export function SuggestLevelsButton({ campaignId, onEnsurePersisted, rubric, onC
   const apply = (suggested: SuggestedCriterionLevels[], mode: SuggestedLevelsMergeMode) => {
     const summary = summarizeSuggestedLevels(rubric, suggested);
     onChangeRubric(mergeSuggestedLevels(rubric, suggested, mode));
-    const applied = mode === 'fillEmpty' ? summary.matched - summary.matchedWithLevels : summary.matched;
-    const parts = [t(`${K}.suggestApplied`).replace('{{count}}', String(applied))];
+    // Gọi TÊN tiêu chí vừa được điền, không chỉ đếm — HR phải biết mở "Sửa mốc" ở dòng nào.
+    const appliedNames = mode === 'fillEmpty' ? summary.matchedEmptyNames : summary.matchedNames;
+    const parts = [t(`${K}.suggestApplied`).replace('{{count}}', String(appliedNames.length)).replace('{{names}}', appliedNames.join(', ') || '—')];
     if (summary.unmatched.length) {
       parts.push(
         t(`${K}.suggestUnmatched`)
@@ -95,7 +96,10 @@ export function SuggestLevelsButton({ campaignId, onEnsurePersisted, rubric, onC
     }
   };
 
-  const pendingCount = pending ? summarizeSuggestedLevels(rubric, pending).matchedWithLevels : 0;
+  const pendingSummary = pending ? summarizeSuggestedLevels(rubric, pending) : null;
+  const pendingCount = pendingSummary?.matchedWithLevels ?? 0;
+  // Hộp thoại gộp phải gọi tên tiêu chí SẼ được điền — "3 tiêu chí đã có mốc" không cho HR biết chỗ trống là chỗ nào.
+  const pendingEmptyNames = pendingSummary?.matchedEmptyNames ?? [];
 
   return (
     <div className="flex min-w-0 flex-col items-end gap-1.5">
@@ -132,7 +136,7 @@ export function SuggestLevelsButton({ campaignId, onEnsurePersisted, rubric, onC
         <div className="space-y-4 pr-8">
           <h2 className="text-base font-semibold text-foreground">{t(`${K}.mergeTitle`)}</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {t(`${K}.mergeDescription`).replace('{{count}}', String(pendingCount))}
+            {t(`${K}.mergeDescription`).replace('{{count}}', String(pendingCount)).replace('{{names}}', pendingEmptyNames.join(', ') || '—')}
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" size="lg" onClick={() => setPending(null)}>

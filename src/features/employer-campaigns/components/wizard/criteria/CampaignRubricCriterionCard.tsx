@@ -170,7 +170,8 @@ export function CampaignRubricCriterionCard({
             ? t('employer.campaigns.wizard.rubric.hasDesc')
             : t('employer.campaigns.wizard.rubric.noDesc')}
         </Badge>
-        <Badge variant="outline">
+        {/* Thiếu mốc là thứ chặn chấm thử — badge phải nổi để HR tìm ra tiêu chí nào thiếu, không lẫn với "6 mốc điểm". */}
+        <Badge variant={levelCount > 0 ? 'outline' : 'warning'}>
           {levelCount > 0
             ? `${levelCount} ${t('employer.campaigns.wizard.rubric.levels')}`
             : t('employer.campaigns.wizard.rubric.noLevels')}

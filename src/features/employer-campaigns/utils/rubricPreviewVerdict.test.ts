@@ -8,6 +8,7 @@ import {
   rubricMissingLevels,
   rubricWithLevels,
   sample,
+  score,
 } from '../mocks/rubricPreview.fixtures';
 import {
   BIAS_DELTA_PCT,
@@ -21,6 +22,7 @@ import {
   freeRunsForVersion,
   hasVerifiedRun,
   latestSeenRubricVersion,
+  computeCompression,
 } from './rubricPreviewVerdict';
 
 describe('computeVerdict — thứ tự + biên độ, không phải |Δ|', () => {
@@ -172,6 +174,30 @@ describe('helpers', () => {
   });
 
   // Quota là thứ HR nhìn trước khi bấm; BE chỉ trả nó KÈM lượt ⇒ trước lượt đầu phải tự biết còn nguyên 3.
+  // Ca thật đo trên dev 4/4 lượt: Yếu +24…+36, Xuất sắc −30…−33 ⇒ bias gộp = none (trái dấu) nhưng đó chính là
+  // thứ HR sửa được: mốc thấp quá dễ, mốc cao quá khó. Đếm theo TIÊU CHÍ, so theo MỐC chọn (levelMatched).
+  it('computeCompression: Yếu vượt mốc ≥ nửa tiêu chí VÀ Xuất sắc dưới mốc ≥ nửa ⇒ nén; thiếu một vế ⇒ null', () => {
+    const weakOver = sample('Weak', 20, 48, [score('a', 'A', 1, 3), score('b', 'B', 1, 3), score('c', 'C', 1, 1)]);
+    const excellentUnder = sample('Excellent', 100, 68, [score('a', 'A', 5, 3), score('b', 'B', 5, 5), score('c', 'C', 5, 3)]);
+    expect(computeCompression(weakOver, excellentUnder)).toEqual({ weakOver: 2, excellentUnder: 2, total: 3 });
+    // Yếu đúng mốc ⇒ không phải nén, dù Xuất sắc bị chấm thấp (đó là bias âm ở một đầu, câu chữ khác).
+    const weakOk = sample('Weak', 20, 20, [score('a', 'A', 1, 1), score('b', 'B', 1, 1), score('c', 'C', 1, 2)]);
+    expect(computeCompression(weakOk, excellentUnder)).toBeNull();
+    expect(computeCompression(undefined, excellentUnder)).toBeNull();
+    expect(computeVerdict(goodRun(), null).compression).toBeNull();
+  });
+
+  it('computeCompression so theo MỨC đã chọn (levelMatched), không theo điểm thô — cùng quy ước với bảng tầng 2', () => {
+    // Mốc không cách đều: điểm thô 2.4 nhưng bộ chấm đã snap về mức 1 ⇒ Yếu KHÔNG vượt kỳ vọng.
+    const snapped = (id: string, expected: number, actual: number, level: number) => ({ ...score(id, id, expected, actual), levelMatched: level });
+    const weak = sample('Weak', 20, 30, [snapped('a', 1, 2.4, 1), snapped('b', 1, 2.4, 1)]);
+    const excellent = sample('Excellent', 100, 70, [snapped('a', 5, 3, 3), snapped('b', 5, 3, 3)]);
+    expect(computeCompression(weak, excellent)).toBeNull();
+    // Cùng điểm thô, nhưng mức chọn là 3 ⇒ vượt ⇒ nén.
+    const weakOver = sample('Weak', 20, 30, [snapped('a', 1, 2.4, 3), snapped('b', 1, 2.4, 3)]);
+    expect(computeCompression(weakOver, excellent)).toEqual({ weakOver: 2, excellentUnder: 2, total: 2 });
+  });
+
   it('freeRunsForVersion: chưa lượt nào ⇒ 3; lượt mới nhất cùng bản ⇒ tin số BE; bản khác ⇒ quota mới 3', () => {
     expect(freeRunsForVersion(null, null, 1)).toBe(FREE_RUNS_PER_VERSION);
     expect(freeRunsForVersion(2, goodRun({ rubricVersion: 1, freeRunsRemaining: 2 }), 1)).toBe(2);

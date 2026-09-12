@@ -136,6 +136,10 @@ export type SuggestedLevelsMatchSummary = {
   matchedWithLevels: number;
   /** Tên đề xuất không khớp tiêu chí local nào (đổi tên sau khi lưu, hoặc server còn tiêu chí cũ). */
   unmatched: string[];
+  /** Tên (local) của mọi tiêu chí khớp — "Thay hết" sẽ ghi đè đúng danh sách này. */
+  matchedNames: string[];
+  /** Tên (local) của tiêu chí khớp mà CHƯA có mốc — "Chỉ điền chỗ trống" chỉ chạm danh sách này. */
+  matchedEmptyNames: string[];
 };
 
 export function summarizeSuggestedLevels(
@@ -146,6 +150,8 @@ export function summarizeSuggestedLevels(
   let matched = 0;
   let matchedWithLevels = 0;
   const unmatched: string[] = [];
+  const matchedNames: string[] = [];
+  const matchedEmptyNames: string[] = [];
   for (const item of suggested) {
     if (item.levels.length === 0) continue;
     const local = localNames.get(normalizeCriterionName(item.name));
@@ -154,7 +160,9 @@ export function summarizeSuggestedLevels(
       continue;
     }
     matched += 1;
+    matchedNames.push(local.name);
     if (hasLevels(local)) matchedWithLevels += 1;
+    else matchedEmptyNames.push(local.name);
   }
-  return { matched, matchedWithLevels, unmatched };
+  return { matched, matchedWithLevels, unmatched, matchedNames, matchedEmptyNames };
 }

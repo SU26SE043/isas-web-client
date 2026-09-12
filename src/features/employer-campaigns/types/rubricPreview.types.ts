@@ -93,6 +93,12 @@ export interface RubricPreviewVerdict {
   verdict: 'discriminates' | 'weak' | 'inconclusive';
   /** Chồng ngưỡng Đạt (passScorePct) lên từng bài — kiểm luôn ngưỡng HR đặt. */
   threshold: { pct: number; failing: RubricPreviewBand[] } | null;
+  /**
+   * "Nén về giữa": bài Yếu bị chấm CAO hơn mốc kỳ vọng ở ≥ nửa số tiêu chí VÀ bài Xuất sắc bị chấm THẤP hơn ở ≥ nửa
+   * ⇒ mốc thấp quá dễ đạt, mốc cao quá khó — đây là chẩn đoán HR sửa được (viết lại mốc), khác `bias` (cả 3 cùng dấu).
+   * `null` = không nén (hoặc không đủ dữ liệu tiêu chí để kết luận).
+   */
+  compression: { weakOver: number; excellentUnder: number; total: number } | null;
 }
 
 /** Badge so hai lượt: chỉ "cùng thước đo" khi CẢ fingerprint LẪN promptVersion trùng (admin đổi prompt chấm cũng đổi điểm). */

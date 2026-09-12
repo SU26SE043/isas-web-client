@@ -16,7 +16,7 @@ export const PREVIEW_CRITERIA: RubricPreviewRun['rubric'] = [
   { criterionId: 'c-comm', name: 'Giao tiếp', weight: 0.4, maxScore: 5, levels: [{ score: 0, descriptor: 'Trống' }, { score: 5, descriptor: 'Xuất sắc' }] },
 ];
 
-function score(criterionId: string, name: string, expectedLevel: number, actualScore: number, reasoning = `Lý do ${name}`): RubricPreviewSampleScore {
+export function score(criterionId: string, name: string, expectedLevel: number, actualScore: number, reasoning = `Lý do ${name}`): RubricPreviewSampleScore {
   return { criterionId, criterionName: name, maxScore: 5, expectedLevel, actualScore, levelMatched: actualScore, reasoning };
 }
 

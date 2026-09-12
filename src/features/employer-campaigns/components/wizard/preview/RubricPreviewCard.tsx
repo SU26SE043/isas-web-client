@@ -50,6 +50,12 @@ export function RubricPreviewCard({
   const { t } = useLanguage();
   const [selectedRunId, setSelectedRunId] = React.useState<string | null>(null);
   const [rerunOpen, setRerunOpen] = React.useState(false);
+  // "Mở" một lượt cũ render nó ở ĐẦU card (ngoài viewport khi lịch sử nằm dưới bảng) ⇒ cuộn lên, không thì bấm mà không thấy gì đổi.
+  React.useEffect(() => {
+    if (!selectedRunId) return;
+    const anchor = document.getElementById('rubric-preview-title');
+    if (anchor && typeof anchor.scrollIntoView === 'function') anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [selectedRunId]);
   const { runs, latest, isRunning } = preview;
   const blocker = computeBlocker({ campaignId, canPersist: Boolean(onBeforeRun), campaignStatus, rubric, questions, isRunning });
   const viewing = (selectedRunId ? runs.find((run) => run.id === selectedRunId) : null) ?? latest;
@@ -104,6 +110,7 @@ export function RubricPreviewCard({
       savesBeforeRun={savesBeforeRun}
       requireConfirm={requireConfirm}
       currentRubricVersion={version}
+      freeRunsLeft={freeLeft}
       compact={variant === 'compact'}
       initialQuestionId={initialQuestionId}
       onRun={handleRun}
@@ -131,7 +138,7 @@ export function RubricPreviewCard({
             <p
               className={cn(
                 'text-xs',
-                blocker || verified?.verdict === 'weak' || verified?.verdict === 'inconclusive' ? 'text-warning' : verified ? 'text-success' : 'text-muted-foreground',
+                blocker || verified?.verdict === 'inconclusive' ? 'text-warning' : verified?.verdict === 'weak' ? 'text-error' : verified ? 'text-success' : 'text-muted-foreground',
               )}
               data-testid="preview-compact-status"
             >
@@ -143,6 +150,12 @@ export function RubricPreviewCard({
                       .replace('{{verdict}}', t(`employer.campaigns.rubricPreview.verdict.${verified.verdict}`).replace('{{range}}', formatPct(verified.range)))
                   : t('employer.campaigns.rubricPreview.compact.none')}
             </p>
+            {/* Kết luận xấu mà hành động duy nhất là chạy lại (tốn lượt) thì HR không sửa được gì ⇒ đưa đường về bước 3. */}
+            {verified && verified.verdict !== 'discriminates' && onGoToCriteria ? (
+              <button type="button" className="text-xs font-medium text-foreground underline underline-offset-4" onClick={onGoToCriteria}>
+                {t('employer.campaigns.rubricPreview.compact.editLevels')}
+              </button>
+            ) : null}
           </div>
           {isRunning ? runningStatus : form(null)}
         </div>
@@ -159,9 +172,11 @@ export function RubricPreviewCard({
             <FlaskConical className="size-4" aria-hidden />
             {t('employer.campaigns.rubricPreview.title')}
           </h3>
-          <p className={cn('max-w-3xl text-sm leading-relaxed', blocker ? 'text-warning' : 'text-muted-foreground')} data-testid="preview-description">
-            {blocker ? blockedReason(blocker) : t('employer.campaigns.rubricPreview.description')}
-          </p>
+          {/* Mô tả LUÔN hiện (lần đầu gặp HR phải biết tính năng làm gì); lý do chặn là dòng riêng, không thay thế mô tả. */}
+          <div className="max-w-3xl space-y-1 text-sm leading-relaxed" data-testid="preview-description">
+            <p className="text-muted-foreground">{t('employer.campaigns.rubricPreview.description')}</p>
+            {blocker && blocker.kind !== 'running' ? <p className="font-medium text-warning">{blockedReason(blocker)}</p> : null}
+          </div>
           {blocker?.kind === 'missingLevels' && onGoToCriteria ? (
             <Button type="button" size="sm" variant="outline" onClick={onGoToCriteria}>
               {t('employer.campaigns.rubricPreview.goToCriteria')}
@@ -179,12 +194,17 @@ export function RubricPreviewCard({
               {freeLeft > 0 ? t('employer.campaigns.rubricPreview.quota.free').replace('{{n}}', String(freeLeft)) : t('employer.campaigns.rubricPreview.quota.paid')}
             </Badge>
             {freeLeft <= 0 ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.rubricPreview.quota.paidHint')}</p> : null}
-            <p className="text-xs text-muted-foreground">{t('employer.campaigns.rubricPreview.quota.resetHint')}</p>
+            {freeLeft <= 0 ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.rubricPreview.quota.resetHint')}</p> : null}
           </div>
         ) : null}
       </div>
 
       {errorAlert}
+
+      {/* Form đứng TRÊN kết quả khi chấm lại (bấm "Chấm lại" mà form mọc dưới bảng 7 hàng là ngoài màn hình), và GIỮ
+          mount trong lúc chạy (disabled) — unmount là mất bài đối chứng HR vừa dán nếu AI lỗi. */}
+      {isRunning ? runningStatus : null}
+      {!viewing || rerunOpen || isRunning ? form(viewing?.questionId ?? null, viewing && !isRunning ? () => setRerunOpen(false) : undefined) : null}
 
       {viewing ? (
         <RubricPreviewResult
@@ -194,10 +214,9 @@ export function RubricPreviewCard({
           onRerun={!isRunning && !rerunOpen ? () => setRerunOpen(true) : undefined}
           onEditLevels={onGoToCriteria}
           onBackToLatest={latest && viewing.id !== latest.id ? () => setSelectedRunId(null) : undefined}
+          dimmed={isRunning}
         />
       ) : null}
-
-      {isRunning ? runningStatus : !viewing || rerunOpen ? form(viewing?.questionId ?? null, viewing ? () => setRerunOpen(false) : undefined) : null}
 
       {latest && viewing ? (
         <RubricPreviewHistory runs={runs} latest={latest} viewingId={viewing.id} isLoading={preview.isLoadingHistory} onOpen={setSelectedRunId} />

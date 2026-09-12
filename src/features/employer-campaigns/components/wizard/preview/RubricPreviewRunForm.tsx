@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { FlaskConical } from 'lucide-react';
+import { ChevronDown, FlaskConical } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +27,8 @@ export interface RubricPreviewRunFormProps {
   /** Campaign đang mở + có bước lưu ⇒ hỏi trước: lưu tạo bản thước đo mới cho ứng viên thi sau. */
   requireConfirm: boolean;
   currentRubricVersion: number | null;
+  /** Hết lượt miễn phí (≤ 0) ⇒ nhãn nút nêu giá + hỏi trước khi trừ credit tổ chức. `null` = chưa biết. */
+  freeRunsLeft?: number | null;
   /** Chỉ nút (+ confirm), không select/custom — cho bước 8. */
   compact?: boolean;
   initialQuestionId?: string | null;
@@ -40,6 +43,7 @@ export function RubricPreviewRunForm({
   savesBeforeRun,
   requireConfirm,
   currentRubricVersion,
+  freeRunsLeft = null,
   compact = false,
   initialQuestionId = null,
   onRun,
@@ -63,20 +67,27 @@ export function RubricPreviewRunForm({
     questionId: effectiveQuestionId || null,
     customAnswer: customOpen && customAnswer.trim() ? customAnswer.trim() : null,
   });
+  // Trừ credit tổ chức là tiền thật: KHÔNG trừ trong im lặng — nhãn nút nêu giá, và hỏi trước khi chạy.
+  const paid = freeRunsLeft != null && freeRunsLeft <= 0;
   const submit = () => {
-    if (requireConfirm) {
+    if (requireConfirm || paid) {
       setConfirmOpen(true);
       return;
     }
     onRun(buildInput());
   };
-  const confirmDescription =
+  const versionSentence =
     currentRubricVersion != null
       ? t('employer.campaigns.rubricPreview.confirm.description')
           .replace('{{next}}', String(currentRubricVersion + 1))
           .replace('{{current}}', String(currentRubricVersion))
       : t('employer.campaigns.rubricPreview.confirm.descriptionUnknown');
-  const runLabel = savesBeforeRun ? t('employer.campaigns.rubricPreview.runSave') : t('employer.campaigns.rubricPreview.run');
+  const confirmTitle = paid ? t('employer.campaigns.rubricPreview.confirm.paidTitle') : t('employer.campaigns.rubricPreview.confirm.title');
+  const confirmDescription = [paid ? t('employer.campaigns.rubricPreview.confirm.paidDescription') : null, requireConfirm ? versionSentence : null]
+    .filter(Boolean)
+    .join(' ');
+  const baseLabel = savesBeforeRun ? t('employer.campaigns.rubricPreview.runSave') : t('employer.campaigns.rubricPreview.run');
+  const runLabel = paid ? t('employer.campaigns.rubricPreview.runPaid').replace('{{label}}', baseLabel) : baseLabel;
 
   const button = (
     <Button type="button" disabled={disabled || isRunning || questions.length === 0} loading={isRunning} onClick={submit}>
@@ -88,9 +99,9 @@ export function RubricPreviewRunForm({
     <ConfirmDialog
       open={confirmOpen}
       onOpenChange={setConfirmOpen}
-      title={t('employer.campaigns.rubricPreview.confirm.title')}
+      title={confirmTitle}
       description={confirmDescription}
-      confirmLabel={t('employer.campaigns.rubricPreview.confirm.confirm')}
+      confirmLabel={paid ? runLabel : t('employer.campaigns.rubricPreview.confirm.confirm')}
       cancelLabel={t('employer.campaigns.rubricPreview.confirm.cancel')}
       onConfirm={() => {
         setConfirmOpen(false);
@@ -132,12 +143,13 @@ export function RubricPreviewRunForm({
       <div className="space-y-2">
         <button
           type="button"
-          className="text-sm font-medium text-foreground underline underline-offset-4"
+          className="inline-flex items-center gap-1 text-sm font-medium text-foreground"
           aria-expanded={customOpen}
           aria-controls={customId}
           disabled={disabled || isRunning}
           onClick={() => setCustomOpen((open) => !open)}
         >
+          <ChevronDown className={cn('size-3.5 transition-transform', customOpen && 'rotate-180')} aria-hidden />
           {t('employer.campaigns.rubricPreview.custom.toggle')}
         </button>
         {customOpen ? (

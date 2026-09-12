@@ -8,6 +8,7 @@ import { RubricPreviewRunForm, truncatePrompt } from './RubricPreviewRunForm';
 
 const messages: Record<string, string> = {
   'employer.campaigns.rubricPreview.confirm.description': 'Lưu sẽ tạo thước đo v{{next}}, người đã thi giữ v{{current}}.',
+  'employer.campaigns.rubricPreview.runPaid': '{{label}} · −1 credit',
 };
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => messages[key] ?? key, language: 'vi' }) }));
 
@@ -76,6 +77,38 @@ describe('RubricPreviewRunForm', () => {
     await user.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' }));
     await user.click(await screen.findByRole('button', { name: 'employer.campaigns.rubricPreview.confirm.confirm' }));
     expect(onRun).toHaveBeenCalledWith({ questionId: 'q-2', customAnswer: null });
+  });
+
+  it('R1: hết lượt miễn phí ⇒ nút mang giá "−1 credit" và HỎI TRƯỚC (tiêu đề trả phí), kể cả Draft không có bước lưu; huỷ thì không chạy', async () => {
+    const onRun = vi.fn();
+    const user = userEvent.setup();
+    render(<RubricPreviewRunForm {...base} freeRunsLeft={0} onRun={onRun} />);
+    const button = screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run · −1 credit' });
+    await user.click(button);
+    expect(onRun).not.toHaveBeenCalled();
+    expect(await screen.findByText('employer.campaigns.rubricPreview.confirm.paidTitle')).toBeInTheDocument();
+    expect(screen.getByText('employer.campaigns.rubricPreview.confirm.paidDescription')).toBeInTheDocument();
+    // Nút xác nhận cũng in giá — đó là lần cuối HR thấy số tiền trước khi trừ.
+    await user.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.confirm.cancel' }));
+    await waitFor(() => expect(screen.queryByText('employer.campaigns.rubricPreview.confirm.paidTitle')).not.toBeInTheDocument());
+    expect(onRun).not.toHaveBeenCalled();
+    await user.click(button);
+    await screen.findByText('employer.campaigns.rubricPreview.confirm.paidTitle');
+    const confirmButton = screen.getAllByRole('button', { name: 'employer.campaigns.rubricPreview.run · −1 credit' }).find((node) => node !== button);
+    if (!confirmButton) throw new Error('confirm button must repeat the price');
+    await user.click(confirmButton);
+    expect(onRun).toHaveBeenCalledWith({ questionId: 'q-2', customAnswer: null });
+  });
+
+  it('R1: trả phí + Active có bước lưu ⇒ một hộp thoại nói CẢ HAI (giá + version mới); còn lượt miễn phí ⇒ nút không mang giá', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<RubricPreviewRunForm {...base} savesBeforeRun requireConfirm currentRubricVersion={2} freeRunsLeft={0} onRun={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave · −1 credit' }));
+    const description = await screen.findByText(/paidDescription/);
+    expect(description).toHaveTextContent('Lưu sẽ tạo thước đo v3, người đã thi giữ v2.');
+    unmount();
+    render(<RubricPreviewRunForm {...base} freeRunsLeft={2} onRun={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.run' })).toBeInTheDocument();
   });
 
   it('không biết version hiện tại ⇒ câu confirm không bịa số', async () => {

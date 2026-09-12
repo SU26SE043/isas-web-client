@@ -8,7 +8,8 @@ import { SuggestLevelsButton } from './SuggestLevelsButton';
 vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({
     t: (key: string) => {
-      if (key === 'employer.campaigns.wizard.levelsEditor.suggestApplied') return 'applied {{count}}';
+      if (key === 'employer.campaigns.wizard.levelsEditor.suggestApplied') return 'applied {{count}}: {{names}}';
+      if (key === 'employer.campaigns.wizard.levelsEditor.mergeDescription') return 'merge {{count}} · fill: {{names}}';
       if (key === 'employer.campaigns.wizard.levelsEditor.suggestUnmatched') return 'unmatched {{count}}: {{names}}';
       return key;
     },
@@ -111,7 +112,8 @@ describe('SuggestLevelsButton — ghép kết quả', () => {
     // id server 'srv-1' ≠ id local 'a' — chỉ tên mới ghép được.
     expect(next[0]).toMatchObject({ id: 'a', levels: ai });
     expect(next[1].levels).toBeUndefined();
-    expect(screen.getByRole('status')).toHaveTextContent('applied 1');
+    // N2 designer review: gọi TÊN tiêu chí vừa điền (tên local, không phải "giao TIẾP" của server).
+    expect(screen.getByRole('status')).toHaveTextContent('applied 1: Giao tiếp');
     expect(screen.getByRole('status')).toHaveTextContent('Không khớp');
   });
 
@@ -139,11 +141,14 @@ describe('SuggestLevelsButton — ghép kết quả', () => {
     fireEvent.click(button());
     await screen.findByText(`${K}.mergeTitle`);
     expect(onChangeRubric).not.toHaveBeenCalled();
+    // N1: hộp thoại gọi tên chỗ trống SẼ được điền — không chỉ "1 tiêu chí đã có mốc".
+    expect(screen.getByText('merge 1 · fill: Kỹ thuật')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: `${K}.mergeFillEmpty` }));
     const next = onChangeRubric.mock.calls[0][0] as RubricCriterion[];
     expect(next[0].levels).toEqual(own);
     expect(next[1].levels).toEqual(ai);
+    expect(screen.getByRole('status')).toHaveTextContent('applied 1: Kỹ thuật');
   });
 
   it('"Thay hết" ghi đè cả mốc HR đã soạn', async () => {
@@ -159,6 +164,7 @@ describe('SuggestLevelsButton — ghép kết quả', () => {
 
     const next = onChangeRubric.mock.calls[0][0] as RubricCriterion[];
     expect(next[0].levels).toEqual(ai);
+    expect(screen.getByRole('status')).toHaveTextContent('applied 1: Giao tiếp');
   });
 });
 

@@ -213,6 +213,13 @@ describe('summarizeSuggestedLevels', () => {
         { name: 'Tiêu chí đã đổi tên', levels: ok },
         { name: 'Rỗng', levels: [] },
       ]),
-    ).toEqual({ matched: 2, matchedWithLevels: 1, unmatched: ['Tiêu chí đã đổi tên'] });
+    ).toEqual({
+      matched: 2,
+      matchedWithLevels: 1,
+      unmatched: ['Tiêu chí đã đổi tên'],
+      // Tên LOCAL (không phải tên server "giao tiếp") — UI gọi tên dòng HR đang nhìn thấy.
+      matchedNames: ['Giao tiếp', 'Kỹ thuật'],
+      matchedEmptyNames: ['Kỹ thuật'],
+    });
   });
 });

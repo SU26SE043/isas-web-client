@@ -2,10 +2,15 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { goodRun } from '../../../mocks/rubricPreview.fixtures';
+import { goodRun, sample } from '../../../mocks/rubricPreview.fixtures';
 import { RubricPreviewHistory, runNumberOf } from './RubricPreviewHistory';
 
-const messages: Record<string, string> = { 'employer.campaigns.rubricPreview.history.run': 'Lượt {{n}}' };
+const messages: Record<string, string> = {
+  'employer.campaigns.rubricPreview.history.run': 'Lượt {{n}}',
+  'employer.campaigns.rubricPreview.band.Weak': 'Yếu',
+  'employer.campaigns.rubricPreview.band.Good': 'Khá',
+  'employer.campaigns.rubricPreview.band.Excellent': 'Xuất sắc',
+};
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => messages[key] ?? key, language: 'vi' }) }));
 
 afterEach(cleanup);
@@ -43,6 +48,14 @@ describe('RubricPreviewHistory', () => {
     const items = screen.getAllByRole('listitem');
     expect(within(items[0]).getByText('employer.campaigns.rubricPreview.history.same')).toBeInTheDocument();
     expect(within(items[1]).getByText('employer.campaigns.rubricPreview.history.failed')).toBeInTheDocument();
+  });
+
+  it('H5: mỗi dòng Succeeded in 3 con số Yếu/Khá/Xuất sắc (bỏ bài Custom) — cùng thước đo mà điểm nhảy là NHIỄU bộ chấm, HR phải thấy', () => {
+    const withCustom = goodRun({ id: 'r9', createdAt: '2026-09-12T05:00:00Z', samples: [...goodRun().samples, sample('Custom', 0, 55)] });
+    render(<RubricPreviewHistory runs={[latest, withCustom]} latest={latest} viewingId="r4" onOpen={vi.fn()} />);
+    const scores = screen.getByTestId('history-scores');
+    expect(scores).toHaveTextContent('Yếu 18 · Khá 62 · Xuất sắc 88');
+    expect(scores).not.toHaveTextContent('55');
   });
 
   it('bấm Mở trả về id lượt; không còn lượt nào khác thì không render', () => {

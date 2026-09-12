@@ -149,7 +149,9 @@ describe('CampaignRubricCriterionCard — dải tóm tắt giữ dấu hiệu c�
 
     cleanup();
     renderCard();
-    expect(screen.getByText(`${K}.noLevels`)).toBeInTheDocument();
+    // Thiếu mốc là thứ CHẶN chấm thử ⇒ badge cảnh báo (H8), không lẫn màu với "2 mốc điểm" (outline).
+    expect(screen.getByText(`${K}.noLevels`)).toHaveClass('text-warning');
+    expect(screen.getByText(`${K}.noLevels`)).not.toHaveClass('border-border');
   });
 
   it('hiện điểm sàn kèm số thật khi có, và im lặng khi chưa đặt', () => {

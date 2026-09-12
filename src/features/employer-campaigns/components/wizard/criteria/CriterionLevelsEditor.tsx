@@ -166,10 +166,13 @@ function LevelsEditorForm({ criterion, indexLabel, onSave, onClose }: Omit<Crite
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="lg" onClick={scaffold} disabled={scaffoldDisabled} title={t(`${K}.scaffoldHint`).replace('{{max}}', String(maxScore))}>
-          <Ruler className="size-4" aria-hidden />
-          {t(`${K}.scaffold`).replace('{{max}}', String(maxScore))}
-        </Button>
+        {/* Ẩn khi đã đủ mốc 0 và max: nút disabled không hiện tooltip, chỉ gây thắc mắc "tạo khung là gì". */}
+        {!scaffoldDisabled ? (
+          <Button type="button" variant="outline" size="lg" onClick={scaffold} title={t(`${K}.scaffoldHint`).replace('{{max}}', String(maxScore))}>
+            <Ruler className="size-4" aria-hidden />
+            {t(`${K}.scaffold`).replace('{{max}}', String(maxScore))}
+          </Button>
+        ) : null}
         <Button type="button" variant="outline" size="lg" onClick={addRow} disabled={addDisabled}>
           <Plus className="size-4" aria-hidden />
           {t(`${K}.addLevel`)}

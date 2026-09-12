@@ -68,8 +68,8 @@ describe('CriterionLevelsEditor — nạp và chuẩn hoá', () => {
 
     expect(scores().map((input) => input.value)).toEqual(['0', '7']);
     expect(descriptors().map((area) => area.value)).toEqual(['', '']);
-    // Đã có đủ hai mốc biên thì nút tắt — bấm lại không đẻ mốc trùng.
-    expect(screen.getByRole('button', { name: 'scaffold 7' })).toBeDisabled();
+    // Đã có đủ hai mốc biên thì nút BIẾN MẤT (không phải disabled: nút xám không hiện tooltip, chỉ gây thắc mắc) — bấm lại không đẻ mốc trùng.
+    expect(screen.queryByRole('button', { name: 'scaffold 7' })).not.toBeInTheDocument();
   });
 
   it('"Thêm mốc" lấy điểm nguyên nhỏ nhất còn trống, không trùng mốc đang có', () => {
@@ -84,6 +84,11 @@ describe('CriterionLevelsEditor — nạp và chuẩn hoá', () => {
     expect(input).toHaveAttribute('step', '1');
     expect(input).toHaveAttribute('min', '0');
     expect(input).toHaveAttribute('max', '7');
+  });
+
+  it('ô mô tả cao theo nội dung (field-sizing-content) — mô tả AI ~190 ký tự không bị cắt giữa câu ở 3 dòng', () => {
+    renderEditor({ levels: [{ score: 0, descriptor: d }] });
+    expect(descriptors()[0]).toHaveClass('field-sizing-content');
   });
 
   it('đếm ký tự mô tả theo trần 500, đo sau trim', () => {

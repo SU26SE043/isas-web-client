@@ -5,15 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import type { RubricPreviewRun, RubricPreviewVerdict } from '../../../types/rubricPreview.types';
+import type { RubricPreviewRun } from '../../../types/rubricPreview.types';
 import { computeVerdict } from '../../../utils/rubricPreviewVerdict';
+import { formatPct } from './formatPct';
 import { RubricPreviewResultTable } from './RubricPreviewResultTable';
+import { RubricPreviewVerdictBlock } from './RubricPreviewVerdictBlock';
+
+export { formatPct };
 
 const WARN_CHIP = 'rounded-lg border border-warning/30 bg-warning/5 px-2.5 py-1 text-xs leading-snug text-warning';
-
-export function formatPct(value: number): string {
-  return `${Math.round(value * 10) / 10}`;
-}
 
 export function formatDelta(value: number): string {
   const rounded = Math.round(value * 10) / 10;
@@ -21,12 +21,6 @@ export function formatDelta(value: number): string {
   if (rounded < 0) return `−${Math.abs(rounded)}`;
   return '0';
 }
-
-const VERDICT_TONE: Record<RubricPreviewVerdict['verdict'], string> = {
-  discriminates: 'text-success',
-  weak: 'text-error',
-  inconclusive: 'text-warning',
-};
 
 export interface RubricPreviewResultProps {
   run: RubricPreviewRun;
@@ -36,9 +30,11 @@ export interface RubricPreviewResultProps {
   onRerun?: () => void;
   onEditLevels?: () => void;
   onBackToLatest?: () => void;
+  /** Đang chạy lượt mới ⇒ mờ kết quả cũ để HR không đọc nhầm là lượt vừa bấm. */
+  dimmed?: boolean;
 }
 
-export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onEditLevels, onBackToLatest }: RubricPreviewResultProps) {
+export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onEditLevels, onBackToLatest, dimmed = false }: RubricPreviewResultProps) {
   const { t, language } = useLanguage();
   const [detailsOpen, setDetailsOpen] = React.useState(false);
   const verdict = computeVerdict(run, passScorePct);
@@ -50,38 +46,26 @@ export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onE
   const failed = run.status === 'Failed';
 
   return (
-    <section className="space-y-4" aria-label={t('employer.campaigns.rubricPreview.result.header').replace('{{n}}', String(runNumber)).replace('{{version}}', String(run.rubricVersion)).replace('{{date}}', dateLabel)}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <p className="text-sm font-semibold text-foreground">
-            {t('employer.campaigns.rubricPreview.result.header').replace('{{n}}', String(runNumber)).replace('{{version}}', String(run.rubricVersion)).replace('{{date}}', dateLabel)}
-          </p>
+    <section
+      className={cn('space-y-4', dimmed && 'pointer-events-none opacity-60')}
+      aria-busy={dimmed || undefined}
+      aria-label={t('employer.campaigns.rubricPreview.result.header').replace('{{n}}', String(runNumber)).replace('{{version}}', String(run.rubricVersion)).replace('{{date}}', dateLabel)}
+    >
+      <div className="min-w-0 space-y-1">
+        <p className="text-sm font-semibold text-foreground">
+          {t('employer.campaigns.rubricPreview.result.header').replace('{{n}}', String(runNumber)).replace('{{version}}', String(run.rubricVersion)).replace('{{date}}', dateLabel)}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {t('employer.campaigns.rubricPreview.result.question')}: <span className="text-foreground">{run.questionText}</span>
+        </p>
+        {onBackToLatest ? (
           <p className="text-xs text-muted-foreground">
-            {t('employer.campaigns.rubricPreview.result.question')}: <span className="text-foreground">{run.questionText}</span>
+            {t('employer.campaigns.rubricPreview.result.viewingOld')}{' '}
+            <button type="button" className="underline underline-offset-4 text-foreground" onClick={onBackToLatest}>
+              {t('employer.campaigns.rubricPreview.result.backToLatest')}
+            </button>
           </p>
-          {onBackToLatest ? (
-            <p className="text-xs text-muted-foreground">
-              {t('employer.campaigns.rubricPreview.result.viewingOld')}{' '}
-              <button type="button" className="underline underline-offset-4 text-foreground" onClick={onBackToLatest}>
-                {t('employer.campaigns.rubricPreview.result.backToLatest')}
-              </button>
-            </p>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {onRerun ? (
-            <Button type="button" size="sm" variant="outline" onClick={onRerun}>
-              <RotateCcw className="size-3.5" aria-hidden />
-              {t('employer.campaigns.rubricPreview.rerun')}
-            </Button>
-          ) : null}
-          {onEditLevels ? (
-            <Button type="button" size="sm" variant="ghost" onClick={onEditLevels}>
-              <Pencil className="size-3.5" aria-hidden />
-              {t('employer.campaigns.rubricPreview.editLevels')}
-            </Button>
-          ) : null}
-        </div>
+        ) : null}
       </div>
 
       {failed ? (
@@ -96,6 +80,26 @@ export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onE
 
       {!failed && run.samples.length ? (
         <>
+          {/* Thứ tự đọc: KẾT LUẬN trước (3 giây biết ổn hay không) → việc cần làm → số liệu → cảnh báo → bảng chi tiết. */}
+          <RubricPreviewVerdictBlock run={run} verdict={verdict} />
+
+          {onRerun || onEditLevels ? (
+            <div className="flex flex-wrap gap-2">
+              {onEditLevels ? (
+                <Button type="button" size="sm" variant="outline" onClick={onEditLevels}>
+                  <Pencil className="size-3.5" aria-hidden />
+                  {t('employer.campaigns.rubricPreview.editLevels')}
+                </Button>
+              ) : null}
+              {onRerun ? (
+                <Button type="button" size="sm" variant="outline" onClick={onRerun}>
+                  <RotateCcw className="size-3.5" aria-hidden />
+                  {t('employer.campaigns.rubricPreview.rerun')}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className={cn('grid gap-3 grid-cols-1', run.samples.length >= 4 ? 'sm:grid-cols-4' : 'sm:grid-cols-3')} data-testid="preview-bands">
             {run.samples.map((sample) => {
               const isCustom = sample.band === 'Custom';
@@ -124,23 +128,6 @@ export function RubricPreviewResult({ run, runNumber, passScorePct, onRerun, onE
                 </div>
               );
             })}
-          </div>
-
-          <div className="space-y-1.5 text-sm">
-            <p className={cn('font-semibold', VERDICT_TONE[verdict.verdict])} data-testid="preview-verdict">
-              {t(`employer.campaigns.rubricPreview.verdict.${verdict.verdict}`).replace('{{range}}', formatPct(verdict.range))}
-            </p>
-            {verdict.bias !== 'none' ? <p className="text-muted-foreground">{t(`employer.campaigns.rubricPreview.bias.${verdict.bias}`)}</p> : null}
-            {verdict.threshold ? (
-              <p className="text-muted-foreground">
-                {verdict.threshold.failing.length
-                  ? t('employer.campaigns.rubricPreview.threshold.failing')
-                      .replace('{{pct}}', String(verdict.threshold.pct))
-                      .replace('{{bands}}', verdict.threshold.failing.map(bandLabel).join(' · '))
-                  : t('employer.campaigns.rubricPreview.threshold.allPass').replace('{{pct}}', String(verdict.threshold.pct))}
-              </p>
-            ) : null}
-            <p className="text-xs text-muted-foreground">{t('employer.campaigns.rubricPreview.result.footnote')}</p>
           </div>
 
           {/* Câu cảnh báo dài ⇒ KHÔNG dùng Badge (h-5 + nowrap + overflow-hidden cắt cụt ở 375px); chip tự xuống dòng. */}

@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { goodRun, sample } from '../../../mocks/rubricPreview.fixtures';
 import type { RubricPreviewSampleScore } from '../../../types/rubricPreview.types';
-import { isOffExpected, RubricPreviewResultTable } from './RubricPreviewResultTable';
+import { isOffExpected, offBy, RubricPreviewResultTable } from './RubricPreviewResultTable';
 
 const messages: Record<string, string> = {
   'employer.campaigns.rubricPreview.band.Weak': 'Yếu',
@@ -50,6 +50,34 @@ describe('RubricPreviewResultTable — tầng 2', () => {
     expect(customCell).toHaveTextContent('2/5');
     expect(customCell).not.toHaveTextContent('mốc kỳ vọng');
     expect(customCell).not.toHaveClass('text-warning');
+  });
+
+  it('H3: phân bậc lệch — 1 mức = mũi tên + chữ xám (không ⚠), ≥2 mức = cam + ⚠; đúng mức = không mũi tên', () => {
+    render(<RubricPreviewResultTable run={run} />);
+    const rows = screen.getAllByRole('row');
+    // Xuất sắc · Chiều sâu: 4/5 kỳ vọng 5 ⇒ lệch −1 ⇒ nhẹ.
+    const mild = within(rows[1]).getByRole('button', { name: /Chiều sâu kỹ thuật · Xuất sắc/ });
+    expect(mild).toHaveTextContent('↓1 · mốc kỳ vọng 5');
+    expect(mild).not.toHaveClass('text-warning');
+    expect(mild.querySelector('svg')).toBeNull();
+    expect(mild.closest('td')).toHaveAttribute('data-off', '-1');
+    // Yếu · Giao tiếp: 3/5 kỳ vọng 1 ⇒ lệch +2 ⇒ nghiêm trọng.
+    const severe = within(rows[2]).getByRole('button', { name: /Giao tiếp · Yếu/ });
+    expect(severe).toHaveTextContent('↑2 · mốc kỳ vọng 1');
+    expect(severe).toHaveClass('text-warning');
+    expect(severe.querySelector('svg')).not.toBeNull();
+    // Khá · Chiều sâu: 3/5 kỳ vọng 3 ⇒ đúng mức.
+    const exact = within(rows[1]).getByRole('button', { name: /Chiều sâu kỹ thuật · Khá/ });
+    expect(exact).not.toHaveTextContent('↑');
+    expect(exact).not.toHaveTextContent('↓');
+    expect(exact.closest('td')).toHaveAttribute('data-off', '0');
+  });
+
+  it('offBy: so theo MỨC đã chọn, không theo điểm; không có mức thì làm tròn điểm; Custom luôn 0', () => {
+    expect(offBy(score('c', 'x', 3, 4.6, 5, null), 'Good')).toBe(2);
+    expect(offBy(score('c', 'x', 3, 4.6, null, null), 'Good')).toBe(2);
+    expect(offBy(score('c', 'x', 3, 2.4, null, null), 'Good')).toBe(-1);
+    expect(offBy(score('c', 'x', 0, 5, 5, null), 'Custom')).toBe(0);
   });
 
   it('bấm ô mở lý do chấm; ô không có lý do nói rõ là không có', async () => {
