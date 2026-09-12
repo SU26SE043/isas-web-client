@@ -11,6 +11,7 @@ import { CampaignInviteEmailPage } from '@/features/employer-campaigns/pages/Cam
 import { CampaignInviteResultPage } from '@/features/employer-campaigns/pages/CampaignInviteResultPage';
 import { CampaignWorkspaceRedirect } from '@/features/employer-campaigns/pages/CampaignWorkspaceRedirect';
 import { EmployerDashboardPage } from '@/features/employer/pages/EmployerDashboardPage';
+import { EmployerAnalyticsPage } from '@/features/employer-analytics/pages/EmployerAnalyticsPage';
 import { BillingShell } from '@/features/employer-billing/components/live/BillingShell';
 import { EmployerInvoicesPage } from '@/features/employer-billing/pages/EmployerInvoicesPage';
 import { EmployerBillingOverviewPage } from '@/features/employer-billing/pages/live/EmployerBillingOverviewPage';
@@ -25,8 +26,9 @@ import { RequireAuth } from '@/routes/RequireAuth';
 import { RequireRole } from '@/routes/RequireRole';
 import { UserRole } from '@/features/auth/types/auth.types';
 
-// Đường `/employer/analytics`, `candidates/:id(/report)`, `campaigns/:id/candidates`, `company*` từng chạy
-// trên fixture (`useEmployerAnalytics`/`useEmployerWorkspace`) — gỡ hẳn 2026-09-13, BE không có endpoint tương ứng.
+// Đường `candidates/:id(/report)`, `campaigns/:id/candidates`, `company*` từng chạy trên fixture
+// (`useEmployerWorkspace`) — gỡ hẳn 2026-09-13, BE không có endpoint tương ứng. `/employer/analytics` dựng lại
+// cùng ngày trên endpoint thật `GET /api/v1/campaign/analytics` (cùng gate role với các trang chiến dịch).
 export const enterpriseRoutes: RouteObject[] = [
   { path: '/enterprise/dashboard', element: <Navigate to="/employer/dashboard" replace /> },
   { path: '/enterprise/campaigns', element: <Navigate to="/employer/campaigns" replace /> },
@@ -49,6 +51,7 @@ export const enterpriseRoutes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <EmployerDashboardPage /> },
               { path: 'campaigns', element: <CampaignListPage /> },
+              { path: 'analytics', element: <EmployerAnalyticsPage /> },
               { path: 'campaigns/new', element: <CampaignWizardPage /> },
               { path: 'campaigns/:id/selection', element: <Navigate to="../invite" relative="path" replace /> },
               { path: 'campaigns/:id/invite', element: <CampaignInvitePage /> },

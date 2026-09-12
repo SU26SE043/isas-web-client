@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { BriefcaseBusiness, Building2, LayoutDashboard, ReceiptText, Users } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, Building2, LayoutDashboard, ReceiptText, Users } from 'lucide-react';
 import { UserRole, type UserRoleType } from '@/features/auth/types/auth.types';
 
 export type EmployerNavItem = {
@@ -10,8 +10,9 @@ export type EmployerNavItem = {
   roles?: UserRoleType[];
 };
 
-// Chỉ còn màn có BE thật. Analytics / thông báo / help / support / hồ sơ công ty từng là fixture
-// (`useEmployerAnalytics`, `useEngagement`, `useEmployerWorkspace`) — gỡ hẳn 2026-09-13.
+// Chỉ còn màn có BE thật. Thông báo / help / support / hồ sơ công ty từng là fixture
+// (`useEngagement`, `useEmployerWorkspace`) — gỡ hẳn 2026-09-13. "Phân tích" quay lại 2026-09-13 trên
+// endpoint thật `GET /api/v1/campaign/analytics` (Employer = cả OrgAdmin lẫn HrMember, chỉ đọc).
 export function buildEmployerNavItems(t: (key: string) => string): EmployerNavItem[] {
   return [
     {
@@ -24,6 +25,11 @@ export function buildEmployerNavItems(t: (key: string) => string): EmployerNavIt
       to: '/employer/campaigns',
       label: t('employer.campaigns.nav.campaigns'),
       icon: <BriefcaseBusiness className="h-4 w-4 shrink-0" aria-hidden />,
+    },
+    {
+      to: '/employer/analytics',
+      label: t('employerAnalytics.nav.title'),
+      icon: <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />,
     },
     {
       to: '/employer/billing',
