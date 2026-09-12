@@ -1,4 +1,5 @@
 import type { CampaignSlotResponse } from '../types/campaign.api.types';
+import { campaignSlotCapacity } from './campaignSlots';
 
 /**
  * Ca thi nằm NGOÀI cửa sổ chiến dịch — ứng viên được gán vào đó sẽ không bao giờ thi được.
@@ -32,4 +33,21 @@ export function slotsOutsideCampaignWindow(
 export function slotCapacityOverflow(totalSlotCapacity: number, maxCandidates: number | null): number {
   if (maxCandidates == null || maxCandidates <= 0) return 0;
   return Math.max(0, totalSlotCapacity - maxCandidates);
+}
+
+/**
+ * Bao nhiêu lời mời trong lượt này sẽ KHÔNG có ca nào chứa — số chỗ trống hiện có (`available`,
+ * cùng cách `AssignSlotsAsync` (BE) đếm: `capacity − assignedCount` mỗi ca) ít hơn số đang mời.
+ *
+ * `slots.length === 0` (chiến dịch KHÔNG khai ca nào) trả `0`, KHÔNG PHẢI "thiếu vô hạn" —
+ * phép trừ ngây thơ `0 (available) − inviteCount` từng cho ra số dương và bắn cảnh báo
+ * "vượt 0 chỗ" ngay cả khi campaign chưa hề bật cơ chế ca thi (ca là tuỳ chọn).
+ */
+export function inviteSlotShortfall(
+  slots: readonly CampaignSlotResponse[],
+  inviteCount: number,
+): number {
+  if (slots.length === 0) return 0;
+  const { available } = campaignSlotCapacity([...slots]);
+  return Math.max(0, inviteCount - available);
 }

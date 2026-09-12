@@ -12,6 +12,8 @@ interface CampaignSlotsStepProps {
   campaignStartsAt: string;
   campaignExpiresAt: string;
   error?: string | null;
+  /** Trần đã LƯU trên server — cảnh báo mềm khi ô đang trống ở chế độ sửa. Mặc định null. */
+  savedMaxCandidates?: number | null;
   onMaxCandidatesChange: (value: number | null) => void;
   onBack: () => void;
   onNext: () => void;
@@ -21,11 +23,12 @@ interface CampaignSlotsStepProps {
  * Sức chứa & ca thi. Trần ứng viên nằm ở đây chứ không ở bước 1 vì nó CÙNG BẢN CHẤT với sức
  * chứa từng ca — và đây là chỗ duy nhất so được hai con số đó với nhau.
  *
- * ⚠ Phần sức chứa LUÔN hiện (bắt buộc); chỉ phần ca thi mới là tuỳ chọn, và nó cần
- * `campaignId` vì ca lưu thẳng qua API chứ không nằm trong state nháp.
+ * ⚠ Cả trần ứng viên LẪN ca thi đều là TUỲ CHỌN — HR triển khai nhanh không phải nghĩ ra
+ * hai con số này trước; ca thi vẫn cần `campaignId` vì nó lưu thẳng qua API chứ không nằm
+ * trong state nháp.
  */
 export function CampaignSlotsStep({
-  campaignId, maxCandidates, campaignStartsAt, campaignExpiresAt, error,
+  campaignId, maxCandidates, campaignStartsAt, campaignExpiresAt, error, savedMaxCandidates,
   onMaxCandidatesChange, onBack, onNext,
 }: CampaignSlotsStepProps) {
   const { t } = useLanguage();
@@ -42,7 +45,8 @@ export function CampaignSlotsStep({
           maxCandidates={maxCandidates}
           campaignStartsAt={campaignStartsAt}
           campaignExpiresAt={campaignExpiresAt}
-          invalid={Boolean(error) && maxCandidates == null}
+          invalid={Boolean(error)}
+          savedMaxCandidates={savedMaxCandidates ?? null}
           onChange={onMaxCandidatesChange}
         />
         <WizardSection divided hint={t('employer.campaigns.form.group.slotsHint')}>

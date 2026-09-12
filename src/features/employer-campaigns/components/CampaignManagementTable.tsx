@@ -48,7 +48,8 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                 </TableCell>
                 <TableCell>{formatDate(campaign.deadline, language)}</TableCell>
                 <TableCell>
-                  {campaign.cvCount ?? 0}/{campaign.capacity}
+                  {/* capacity=0 = "không trần riêng" (maxCandidates tuỳ chọn), không phải 0 chỗ. */}
+                  {campaign.cvCount ?? 0}/{campaign.capacity > 0 ? campaign.capacity : '—'}
                 </TableCell>
                 <TableCell>{formatDate(campaign.updatedAt, language)}</TableCell>
                 <TableCell>
@@ -104,7 +105,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.capacity')}</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {campaign.cvCount ?? 0}/{campaign.capacity}
+                  {campaign.cvCount ?? 0}/{campaign.capacity > 0 ? campaign.capacity : '—'}
                 </dd>
               </div>
             </dl>

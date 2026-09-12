@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CampaignSlotResponse } from '../types/campaign.api.types';
-import { slotCapacityOverflow, slotsOutsideCampaignWindow } from './campaignCapacityChecks';
+import { inviteSlotShortfall, slotCapacityOverflow, slotsOutsideCampaignWindow } from './campaignCapacityChecks';
 
 function slot(startsAt: string, endsAt: string, capacity = 5): CampaignSlotResponse {
   return { id: `${startsAt}-${endsAt}`, startsAt, endsAt, capacity, assignedCount: 0, startedCount: 0 };
@@ -39,5 +39,28 @@ describe('slotCapacityOverflow', () => {
 
   it('chưa khai trần ⇒ 0, không đoán hộ', () => {
     expect(slotCapacityOverflow(12, null)).toBe(0);
+  });
+});
+
+describe('inviteSlotShortfall', () => {
+  const slotWith = (capacity: number, assignedCount: number): CampaignSlotResponse => ({
+    id: `cap${capacity}-assigned${assignedCount}`,
+    startsAt: '2099-01-10T09:00Z',
+    endsAt: '2099-01-10T11:00Z',
+    capacity,
+    assignedCount,
+    startedCount: 0,
+  });
+
+  it('KHÔNG có ca nào ⇒ 0 — mời không cần slot, không phải "thiếu vô hạn"', () => {
+    expect(inviteSlotShortfall([], 5)).toBe(0);
+  });
+
+  it('1 ca 5/3 đã gán, mời thêm 3 người ⇒ thiếu đúng 1 chỗ', () => {
+    expect(inviteSlotShortfall([slotWith(5, 3)], 3)).toBe(1);
+  });
+
+  it('đủ chỗ ⇒ 0', () => {
+    expect(inviteSlotShortfall([slotWith(5, 1)], 3)).toBe(0);
   });
 });

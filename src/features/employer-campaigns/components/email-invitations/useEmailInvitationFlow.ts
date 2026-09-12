@@ -20,6 +20,7 @@ import {
   type InvalidEmailItem,
 } from '../../utils/emailInvitationUtils';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
+import { inviteSlotShortfall } from '../../utils/campaignCapacityChecks';
 
 export type EmailInviteStep = 'form' | 'result';
 
@@ -61,13 +62,13 @@ export function useEmailInvitationFlow(campaign: EmployerCampaign, initialEmails
 
   const capacityWarning = useMemo(() => {
     if (!slotsQuery.data || validEmails.length === 0) return null;
+    // Chiến dịch KHÔNG khai ca nào (`slotsQuery.data = []`) ⇒ mời không cần slot, không phải
+    // "0 chỗ trống" — `inviteSlotShortfall` trả 0 đúng ca đó, khác phép trừ ngây thơ cũ.
+    if (inviteSlotShortfall(slotsQuery.data, validEmails.length) === 0) return null;
     const { available } = campaignSlotCapacity(slotsQuery.data);
-    if (validEmails.length > available) {
-      return t('employer.campaigns.slots.invitationWarning')
-        .replace('{inviting}', String(validEmails.length))
-        .replace('{available}', String(available));
-    }
-    return null;
+    return t('employer.campaigns.slots.invitationWarning')
+      .replace('{inviting}', String(validEmails.length))
+      .replace('{available}', String(available));
   }, [slotsQuery.data, t, validEmails.length]);
 
   const canSend =

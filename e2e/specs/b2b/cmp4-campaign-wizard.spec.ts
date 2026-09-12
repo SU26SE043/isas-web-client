@@ -63,11 +63,9 @@ test.describe('CMP4 employer campaign wizard', () => {
     // Steps 5–6: settings and slots remain in the wizard before invites.
     await expect(page.getByRole('heading', { name: /Security & adaptive interview/i })).toBeVisible();
     await page.getByRole('button', { name: /^Next$/i }).click();
-    // Bước 6 nay là "Sức chứa & ca thi": trần ứng viên BẮT BUỘC nằm ở đây, không còn ở bước 1.
+    // Bước 6 nay là "Sức chứa & ca thi": trần ứng viên TUỲ CHỌN (không còn bắt buộc như bước
+    // 1 cũ) — bỏ trống vẫn qua thẳng bước Mời, không có alert nào chặn lại.
     await expect(page.getByRole('heading', { name: /Capacity & slots/i })).toBeVisible();
-    await page.getByRole('button', { name: /^Next$/i }).click();
-    await expect(page.getByRole('alert')).toContainText('maximum number of candidates');
-    await page.getByLabel('Maximum candidates').fill('30');
     await page.getByRole('button', { name: /^Next$/i }).click();
 
     // Step 7: typing an email only updates wizard state; it does not send invitations.
