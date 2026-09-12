@@ -1,32 +1,29 @@
-import { useProfile } from '@/features/profile/hooks/useProfile';
-import { useDashboardSummary } from '@/features/profile/hooks/useDashboardSummary';
 import { useTokenWallet } from '@/features/payment/hooks/useTokenWallet';
 import { isLearningSessionId } from '../types/interviewFlow.types';
 
+/**
+ * Cổng vào phòng thi đọc VÍ THẬT (`/payment/me/account`). Trước đây nó đọc `useProfile`/`useDashboardSummary`
+ * — hai hook thuộc domain `profile` KHÔNG nối BE (fixture cố định) ⇒ ví thật hết credit vẫn được "Tiếp tục",
+ * còn fixture đổi thì chặn oan; cộng thêm cổng "hoàn thiện hồ sơ" mà BE không hề có (đo dev 2026-09-13).
+ *
+ * Hai luật:
+ * - Buổi luyện thường: credit ĐÃ được giữ lúc tạo buổi (reserve-first, PAY-5) ⇒ KHÔNG chặn ở đây — chặn
+ *   sẽ nhốt đúng người vừa tiêu credit cuối cho chính buổi này (khả dụng = 0 sau khi giữ).
+ * - Buổi lesson (`learning-*`): giữ credit xảy ra lúc bấm Bắt đầu ở phòng chờ ⇒ cần ≥ 1 credit khả dụng.
+ */
 export function useInterviewGate(sessionId?: string) {
-  const { completeness, isLoading: profileLoading } = useProfile();
-  const { summary, isLoading: summaryLoading } = useDashboardSummary();
-  const { available: walletAvailable, isLoading: walletLoading } = useTokenWallet();
+  const { available, reserved, isLoading } = useTokenWallet();
   const isLearning = Boolean(sessionId && isLearningSessionId(sessionId));
-
-  const tokenAvailable = isLearning
-    ? walletAvailable ?? summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0
-    : summary?.tokenAvailable ?? summary?.creditsRemaining ?? 0;
-  const tokenReserved = summary?.tokenReserved ?? 0;
-  const meetsProfileGate = isLearning ? true : (completeness?.meetsGate ?? false);
-  const hasSufficientTokens = isLearning ? tokenAvailable >= 1 : tokenAvailable > tokenReserved;
+  const tokenAvailable = available ?? 0;
+  const hasSufficientTokens = isLearning ? tokenAvailable >= 1 : true;
 
   return {
-    isLoading: isLearning ? walletLoading : profileLoading || summaryLoading,
-    canStart: meetsProfileGate && hasSufficientTokens,
-    meetsProfileGate,
-    hasCredits: hasSufficientTokens,
+    isLoading: isLearning ? isLoading : false,
+    canStart: hasSufficientTokens,
     hasSufficientTokens,
     tokenAvailable,
-    tokenReserved,
+    tokenReserved: reserved ?? 0,
     creditsRemaining: tokenAvailable,
-    reserveEstimate: isLearning ? 0 : tokenReserved,
-    completenessPercent: completeness?.percent ?? summary?.profileCompleteness ?? 0,
     isLearning,
   };
 }

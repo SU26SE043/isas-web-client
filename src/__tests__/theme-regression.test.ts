@@ -32,7 +32,6 @@ const overlayDebt: Record<string, string> = {
   'src/features/profile/components/profile-view/ProfileBasicInfoCard.tsx': 'static icon well; not state-bearing',
   'src/features/profile/components/profile-view/CandidateProfileHeader.tsx': 'static profile chip; not state-bearing',
   'src/features/employer-campaigns/components/wizard/jd/CampaignFileUploadedCard.tsx': 'static uploaded file card; not state-bearing',
-  'src/features/practice/components/flow/InterviewGatePanel.tsx': 'static interview gate well; not state-bearing',
   'src/features/practice/components/flow/InterviewFlowShell.tsx': 'static flow chrome; deferred flat surface',
   'src/features/employer-campaigns/components/email-invitations/EmailInvitationFlow.tsx': 'static step chrome; deferred flat surface',
   'src/features/employer-campaigns/components/screening/CvUploadZone.tsx': 'static upload well; drag state deferred',
@@ -70,7 +69,7 @@ describe('light theme regression guard', () => {
         line.match(overlay) ? [`${rel}:${index + 1}: ${line.trim()}`] : [],
       );
     });
-    expect(Object.keys(overlayDebt)).toHaveLength(36);
+    expect(Object.keys(overlayDebt)).toHaveLength(35);
     expect(Object.values(overlayDebt).every((reason) => reason.length > 0)).toBe(true);
     expect(violations, violations.join('\n')).toEqual([]);
   });

@@ -51,11 +51,11 @@ vi.mock('../hooks/useInterviewGate', () => ({
   useInterviewGate: () => ({
     isLoading: false,
     canStart: true,
-    meetsProfileGate: true,
-    hasCredits: true,
-    completenessPercent: 100,
+    hasSufficientTokens: true,
     tokenAvailable: 10,
-    reserveEstimate: 1,
+    tokenReserved: 1,
+    creditsRemaining: 10,
+    isLearning: false,
   }),
 }));
 
@@ -82,10 +82,6 @@ vi.mock('../components/flow/InterviewFlowShell', () => ({
       {children}
     </main>
   ),
-}));
-
-vi.mock('../components/flow/InterviewGatePanel', () => ({
-  InterviewGatePanel: () => <div>Interview gate</div>,
 }));
 
 const session = {
