@@ -427,6 +427,22 @@ select {
     z-index: 2;
   }
 
+  /* Cột ĐẦU dính trái — gương của `.table-sticky-end`. Dùng cho bảng "tiêu chí × mức" ở 375px: không dính
+     thì vuốt ngang xem điểm là mất luôn tên tiêu chí, HR không biết đang đọc hàng nào. */
+  .glass-table-container thead th.table-sticky-start,
+  .glass-table-container tbody td.table-sticky-start {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: rgb(255 255 255 / 0.97);
+    box-shadow:
+      inset -1px 0 0 rgb(0 0 0 / 0.08),
+      inset 0 -1px 0 rgb(0 0 0 / 0.06);
+  }
+  .glass-table-container thead th.table-sticky-start {
+    background: var(--surface-overlay);
+  }
+
   .glass-well {
     background: rgb(255 255 255 / 0.72);
     border: 1px dashed var(--satin-border);

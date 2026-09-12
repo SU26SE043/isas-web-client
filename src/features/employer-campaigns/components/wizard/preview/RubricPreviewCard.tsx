@@ -72,10 +72,16 @@ export function RubricPreviewCard({
     });
   };
 
+  // Nguyên văn BE là tiếng kỹ thuật ("AIService /score-preview trả 502") — HR cần biết NÊN LÀM GÌ, chi tiết để dòng phụ.
+  const errorHeadline = preview.error ? t(`employer.campaigns.rubricPreview.error.${preview.error.code}`) : '';
+  const errorDetail = preview.error?.message && preview.error.message !== errorHeadline ? preview.error.message : null;
   const errorAlert = preview.error ? (
-    <Alert variant="error">
-      <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-        <span>{preview.error.message}</span>
+    <Alert variant="error" data-testid="preview-error">
+      <AlertDescription className="flex flex-wrap items-start justify-between gap-2">
+        <span className="min-w-0 space-y-0.5">
+          <span className="block">{errorHeadline}</span>
+          {errorDetail ? <span className="block text-xs opacity-80">{errorDetail}</span> : null}
+        </span>
         <Button type="button" size="sm" variant="ghost" onClick={preview.clearError}>
           {t('employer.campaigns.rubricPreview.error.dismiss')}
         </Button>

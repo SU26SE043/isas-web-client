@@ -183,6 +183,15 @@ describe('useRubricPreview — run()', () => {
     expect(result.current.error).toBeNull();
   });
 
+  it('502 (BE đã ghi lượt Failed) → tải lại lịch sử ngay để màn hình khớp server, không đợi reload', async () => {
+    runMock.mockRejectedValue(axiosError(502, 'AIService /score-preview trả 502'));
+    const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });
+    await waitFor(() => expect(historyMock).toHaveBeenCalledTimes(1));
+    await act(async () => { await result.current.run({}); });
+    expect(result.current.error).toMatchObject({ code: 'aiFailed' });
+    await waitFor(() => expect(historyMock).toHaveBeenCalledTimes(2));
+  });
+
   it('400 thiếu mốc → missingLevels kèm danh sách tiêu chí', async () => {
     runMock.mockRejectedValue(axiosError(400, 'Chưa khai mốc điểm cho tiêu chí: Giao tiếp, Tư duy. Chấm thử cần mốc.'));
     const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });

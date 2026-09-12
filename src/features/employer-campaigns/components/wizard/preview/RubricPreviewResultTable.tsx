@@ -29,10 +29,11 @@ export function RubricPreviewResultTable({ run }: { run: RubricPreviewRun }) {
 
   return (
     <>
-      <Table className="min-w-[36rem]">
+      {/* 375px: cột tiêu chí dính trái (`table-sticky-start`) + hẹp lại để cột điểm đầu lộ ra ngay, không phải vuốt mù. */}
+      <Table className="min-w-[30rem]">
         <TableHeader>
           <TableRow>
-            <TableHead>{t('employer.campaigns.rubricPreview.details.criterion')}</TableHead>
+            <TableHead className="table-sticky-start max-sm:max-w-[8.5rem]">{t('employer.campaigns.rubricPreview.details.criterion')}</TableHead>
             {run.samples.map((sample) => (
               <TableHead key={sample.band} className="text-center">
                 <button
@@ -50,7 +51,7 @@ export function RubricPreviewResultTable({ run }: { run: RubricPreviewRun }) {
         <TableBody>
           {criteria.map((criterion) => (
             <TableRow key={criterion.id}>
-              <TableCell className="font-medium text-foreground">{criterion.name}</TableCell>
+              <TableCell className="table-sticky-start font-medium text-foreground max-sm:max-w-[8.5rem] max-sm:text-xs max-sm:leading-snug max-sm:break-words max-sm:whitespace-normal">{criterion.name}</TableCell>
               {run.samples.map((sample) => {
                 const score = sample.scores.find((item) => item.criterionId === criterion.id);
                 if (!score) return <TableCell key={sample.band} className="text-center">—</TableCell>;

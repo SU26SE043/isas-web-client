@@ -176,7 +176,9 @@ function LevelsEditorForm({ criterion, indexLabel, onSave, onClose }: Omit<Crite
         </Button>
       </div>
 
-      <footer className="flex flex-wrap justify-end gap-2">
+      {/* Dính đáy DialogContent (chính nó là scroll container, p-6): 5+ mốc ở màn 900px thì nút Lưu trôi
+          xuống dưới mép nhìn thấy — HR tưởng không có nút lưu. Lề âm phủ phần padding của dialog. */}
+      <footer className="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap justify-end gap-2 border-t border-satin bg-surface-elevated px-6 py-4">
         <Button type="button" variant="ghost" size="lg" onClick={onClose}>
           {t(`${K}.cancel`)}
         </Button>

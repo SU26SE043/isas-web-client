@@ -117,12 +117,21 @@ describe('RubricPreviewCard — sẵn sàng / đang chạy / kết quả', () =>
     expect(screen.getByText(/Lượt 2 · thước đo v2/)).toBeInTheDocument();
   });
 
-  it('lỗi từ hook hiện LÝ DO đã phân loại + nút bỏ qua gọi clearError', () => {
+  it('lỗi từ hook: dòng chính là câu HÀNH ĐỘNG theo mã lỗi, nguyên văn BE là dòng phụ; nút bỏ qua gọi clearError', () => {
     const clearError = vi.fn();
     render(<RubricPreviewCard {...base} preview={inertPreview({ error: { code: 'noCredit', message: 'Ví tổ chức hết credit' }, clearError })} />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Ví tổ chức hết credit');
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('employer.campaigns.rubricPreview.error.noCredit');
+    expect(alert).toHaveTextContent('Ví tổ chức hết credit');
     fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.error.dismiss' }));
     expect(clearError).toHaveBeenCalledOnce();
+  });
+
+  // Ca thật gặp trên dev: BE trả 502 "AIService /score-preview trả 502" — HR không biết phải làm gì với dòng đó.
+  it('502 aiFailed: câu hành động đứng TRƯỚC chi tiết kỹ thuật, không in trần nguyên văn làm dòng chính', () => {
+    render(<RubricPreviewCard {...base} preview={inertPreview({ error: { code: 'aiFailed', message: 'AIService /score-preview trả 502' } })} />);
+    const alert = screen.getByRole('alert');
+    expect(alert.textContent?.indexOf('employer.campaigns.rubricPreview.error.aiFailed')).toBeLessThan(alert.textContent?.indexOf('/score-preview') ?? -1);
   });
 });
 

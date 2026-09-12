@@ -91,6 +91,9 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
       return created;
     } catch (cause) {
       setError(mapRubricPreviewError(cause));
+      // BE ghi lượt `Failed` (không tính quota, không trừ credit) TRƯỚC khi trả 502 ⇒ tải lại lịch sử để màn
+      // hình khớp server ngay, không đợi reload. Lỗi 400/402/409 không tạo row — invalidate thừa là vô hại.
+      await queryClient.invalidateQueries({ queryKey: rubricPreviewQueryKey(id) });
       return null;
     }
   }, [beforeRun, campaignId, mutateAsync, queryClient]);
