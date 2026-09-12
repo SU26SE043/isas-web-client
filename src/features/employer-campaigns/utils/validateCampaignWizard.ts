@@ -76,11 +76,14 @@ export function validateCampaignWizardStep(
   // Luật lọc cứng nay nằm ở BƯỚC 7 ("Cấu hình chi tiết"), không còn ở bước 2 — CMP3-F3 đã dời
   // ô nhập đi. Để lỗi ở bước 2 thì bấm "Triển khai" sẽ đá người dùng về bước 2, nơi KHÔNG CÒN
   // ô nào để sửa, kèm thông điệp nói về số năm kinh nghiệm.
-  // Trần ứng viên nay ở bước "Sức chứa & ca thi". Bỏ trống KHÔNG phải "không giới hạn":
-  // backend rơi về `entitlement.MaxCandidatesCap` của gói (`MaxCandidatesRule`) ⇒ chiến dịch
-  // luôn có trần, chỉ là HR không biết nó bằng bao nhiêu. Bắt khai tường minh.
+  // Trần ứng viên nay ở bước "Sức chứa & ca thi", và LÀ TUỲ CHỌN — bắt buộc chỉ chặn HR
+  // triển khai nhanh mà chưa cần biết con số này. Backend `maxCandidates` là `int?` không
+  // bắt buộc: null = không trần riêng, rơi về trần của gói (`entitlement.MaxCandidatesCap`).
+  // ⚠ Ở chế độ SỬA, bỏ trống KHÔNG xoá được trần đã lưu — `buildCampaignCreateRequest` chỉ
+  // gửi khoá này khi có giá trị dương, và BE chỉ ghi khi payload mang khoá đó (`HasValue`).
+  // Cảnh báo mềm cho ca đó nằm ở `CampaignCapacitySection` (UI), không phải lỗi chặn ở đây.
   if (step === 5) {
-    if (info.maxCandidates == null) return 'employer.campaigns.form.maxCandidatesRequired';
+    if (info.maxCandidates == null) return null;
     if (info.maxCandidates <= 0) return 'employer.campaigns.form.maxCandidatesInvalid';
     if (!Number.isInteger(info.maxCandidates)) return 'employer.campaigns.form.integerRequired';
     return null;

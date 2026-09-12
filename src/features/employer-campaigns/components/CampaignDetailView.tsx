@@ -96,7 +96,9 @@ export function CampaignDetailView({
                 <CampaignDetailMetric
                   icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
-                  value={`${campaign.cvCount ?? 0}/${campaign.capacity}`}
+                  // capacity=0 (`campaignMapper.ts` sentinel cho `maxCandidates` chưa khai — nay
+                  // TUỲ CHỌN) nghĩa là "không trần riêng", không phải "sức chứa bằng không".
+                  value={`${campaign.cvCount ?? 0}/${campaign.capacity > 0 ? campaign.capacity : '—'}`}
                 />
                 <CampaignDetailMetric
                   icon={Clock3}
