@@ -21,6 +21,7 @@ import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
 import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
+import { CampaignRubricPreviewSection } from './CampaignRubricPreviewSection';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -180,6 +181,7 @@ export function CampaignDetailView({
             ))}
           </div>
         </CollapsibleDetailCard>
+        <CampaignRubricPreviewSection campaign={campaign} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.questions')}
           icon={ListChecks}

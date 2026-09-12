@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import type { RubricCriterion } from '../../types/campaignManagement.types';
+import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../types/campaignManagement.types';
 import type { CampaignLanguage } from '../../types/campaign.api.types';
 import {
   campaignCriteriaService,
@@ -14,6 +14,7 @@ import {
 } from '../../services/campaignCriteria.service';
 import { CampaignCriteriaManualList } from './CampaignCriteriaManualList';
 import { CampaignWizardNav } from './CampaignWizardNav';
+import { RubricPreviewMount } from './preview/RubricPreviewMount';
 import { WizardNumberField } from './WizardNumberField';
 import { WizardSection } from './WizardSection';
 import { FieldError } from './FieldError';
@@ -34,6 +35,16 @@ interface Props {
   onBack: () => void;
   onNext: () => void;
   isSaving?: boolean;
+  /**
+   * CAMP-19 — card chấm thử thước đo sống ở bước này, cạnh thứ nó kiểm. Mọi prop dưới đây TUỲ CHỌN:
+   * thiếu ⇒ card hiện ở trạng thái chặn ("chưa có campaign"/"chưa có câu hỏi") thay vì biến mất.
+   */
+  campaignStatus?: EmployerCampaignStatus | null;
+  questions?: CampaignQuestion[];
+  /** Lưu thước đo + câu hỏi rồi trả campaignId — card đổi nhãn thành "Lưu & chấm thử" và hỏi trước khi lưu lên campaign Active. */
+  onBeforeRun?: () => Promise<string | null>;
+  onGoToQuestions?: () => void;
+  currentRubricVersion?: number | null;
 }
 
 export function previewToRubric(preview: CampaignCriteriaPreview): RubricCriterion[] {
@@ -66,6 +77,12 @@ export function CampaignCriteriaStepV2({
   onBack,
   onNext,
   isSaving,
+  campaignId,
+  campaignStatus = null,
+  questions = [],
+  onBeforeRun,
+  onGoToQuestions,
+  currentRubricVersion,
 }: Props) {
   const { t } = useLanguage();
   const criteriaQuery = useQuery({
@@ -187,6 +204,16 @@ export function CampaignCriteriaStepV2({
             />
           </div>
         </WizardSection>
+        <RubricPreviewMount
+          campaignId={campaignId}
+          campaignStatus={campaignStatus}
+          rubric={rubric}
+          questions={questions}
+          passScorePct={passScorePct}
+          onBeforeRun={onBeforeRun}
+          onGoToQuestions={onGoToQuestions}
+          currentRubricVersion={currentRubricVersion}
+        />
       </div>
     </SectionPanel>
   );
