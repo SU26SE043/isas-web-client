@@ -1,4 +1,4 @@
-import { ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronRight, ListOrdered, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { CampaignCriterionDetailModal } from './CampaignCriterionDetailModal';
+import { CriterionLevelsEditor } from './CriterionLevelsEditor';
 import type { CriteriaLockReason } from './criteriaLock';
 import { CRITERIA_ROW_GRID } from './criteriaRowGrid';
 import type { RubricCriterion } from '../../../types/campaignManagement.types';
@@ -36,6 +37,7 @@ export function CampaignRubricCriterionCard({
 }: CampaignRubricCriterionCardProps) {
   const { t } = useLanguage();
   const [detailOpen, setDetailOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
   const indexLabel = String(index + 1).padStart(2, '0');
   const weight = Number(criterion.weight) || 0;
   const clamped = Math.max(0, Math.min(100, weight));
@@ -153,13 +155,15 @@ export function CampaignRubricCriterionCard({
         </div>
       </div>
 
-      {/* Khoá bảng là cấm SỬA, không phải cấm ĐỌC — nút này vẫn bấm được khi `disabled`
-          để employer xem được mô tả và mốc điểm của bộ chuẩn. */}
+      {/* Khoá bảng là cấm SỬA, không phải cấm ĐỌC — nút tóm tắt vẫn bấm được khi `disabled`
+          để employer xem được mô tả và mốc điểm của bộ chuẩn. Nút "Sửa mốc" là nút ANH EM
+          (không lồng vào nút tóm tắt — button trong button là HTML sai) và chỉ hiện khi sửa được. */}
+      <div className="mt-3 flex items-center gap-2 border-t border-satin pt-2.5">
       <button
         type="button"
         aria-haspopup="dialog"
         onClick={() => setDetailOpen(true)}
-        className="mt-3 flex w-full flex-wrap items-center gap-2 border-t border-satin pt-2.5 text-left text-xs text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
+        className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left text-xs text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
       >
         <Badge variant="outline">
           {hasDescription
@@ -181,6 +185,22 @@ export function CampaignRubricCriterionCard({
           <ChevronRight className="size-3.5" aria-hidden />
         </span>
       </button>
+      {!disabled ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-haspopup="dialog"
+          onClick={() => setLevelsOpen(true)}
+          className="shrink-0"
+        >
+          <ListOrdered className="size-3.5" aria-hidden />
+          {levelCount > 0
+            ? t('employer.campaigns.wizard.levelsEditor.open')
+            : t('employer.campaigns.wizard.levelsEditor.openEmpty')}
+        </Button>
+      ) : null}
+      </div>
 
       <CampaignCriterionDetailModal
         open={detailOpen}
@@ -190,6 +210,23 @@ export function CampaignRubricCriterionCard({
         lockReason={lockReason}
         onChange={onChange}
         onClose={() => setDetailOpen(false)}
+        onEditLevels={
+          disabled
+            ? undefined
+            : () => {
+                // Một dialog tại một thời điểm: đóng chi tiết rồi mới mở bộ sửa mốc.
+                setDetailOpen(false);
+                setLevelsOpen(true);
+              }
+        }
+      />
+      <CriterionLevelsEditor
+        open={levelsOpen}
+        criterion={criterion}
+        indexLabel={indexLabel}
+        // `[]` = bỏ mốc ⇒ ghi `undefined` cho khớp quy ước `previewToRubric` (không mốc = vắng field).
+        onSave={(levels) => onChange({ levels: levels.length ? levels : undefined })}
+        onClose={() => setLevelsOpen(false)}
       />
     </article>
   );

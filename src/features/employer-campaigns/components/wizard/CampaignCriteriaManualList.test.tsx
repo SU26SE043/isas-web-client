@@ -173,3 +173,52 @@ describe('CampaignCriteriaManualList — nhãn cột khớp ô nhập', () => {
     expect(screen.getAllByText(key)).toHaveLength(2);
   });
 });
+
+describe('CampaignCriteriaManualList — nút "AI đề xuất mốc" ở header', () => {
+  const SUGGEST = /employer\.campaigns\.wizard\.levelsEditor\.suggest$/;
+  const NEEDS_SAVE = 'employer.campaigns.wizard.levelsEditor.suggestNeedsSave';
+
+  it('mặc định (không truyền campaignId/onEnsurePersisted) vẫn render: nút hiện nhưng TẮT kèm lý do', () => {
+    // Mọi prop mới là optional — `CampaignCriteriaStepV2` chưa nối vẫn chạy như cũ.
+    renderList();
+
+    expect(screen.getByRole('button', { name: SUGGEST })).toBeDisabled();
+    expect(screen.getByText(NEEDS_SAVE)).toBeInTheDocument();
+  });
+
+  it('có campaignId thì nút bấm được, không còn lý do "cần lưu trước"', () => {
+    renderList({ campaignId: 'camp-1' });
+
+    expect(screen.getByRole('button', { name: SUGGEST })).toBeEnabled();
+    expect(screen.queryByText(NEEDS_SAVE)).not.toBeInTheDocument();
+  });
+
+  it('có onEnsurePersisted (chưa có id) cũng bấm được — persist sẽ cấp id', () => {
+    renderList({ onEnsurePersisted: vi.fn().mockResolvedValue('camp-2') });
+
+    expect(screen.getByRole('button', { name: SUGGEST })).toBeEnabled();
+  });
+
+  it('khoá bảng thì KHÔNG có nút — không có gì để AI điền vào', () => {
+    renderList({ disabled: true, lockReason: 'standard', campaignId: 'camp-1' });
+
+    expect(screen.queryByRole('button', { name: SUGGEST })).not.toBeInTheDocument();
+  });
+
+  it('danh sách rỗng thì KHÔNG có nút (server cũng trả 400 chưa có tiêu chí)', () => {
+    render(<CampaignCriteriaManualList rubric={[]} campaignId="camp-1" onChangeRubric={vi.fn()} />);
+
+    expect(screen.queryByRole('button', { name: SUGGEST })).not.toBeInTheDocument();
+  });
+
+  it('nút Sửa mốc của từng hàng cũng chỉ hiện khi mở khoá', () => {
+    renderList({ disabled: true, lockReason: 'standard' });
+    expect(
+      screen.queryByRole('button', { name: /levelsEditor\.open/ }),
+    ).not.toBeInTheDocument();
+
+    cleanup();
+    renderList();
+    expect(screen.getByRole('button', { name: /levelsEditor\.openEmpty/ })).toBeEnabled();
+  });
+});

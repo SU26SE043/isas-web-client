@@ -5,6 +5,7 @@ import type { RubricCriterion } from '../../types/campaignManagement.types';
 import { CampaignRubricCriterionCard } from './criteria/CampaignRubricCriterionCard';
 import { criteriaLockCopyKey, type CriteriaLockReason } from './criteria/criteriaLock';
 import { CRITERIA_HEADER_PADDING, CRITERIA_ROW_GRID } from './criteria/criteriaRowGrid';
+import { SuggestLevelsButton } from './criteria/SuggestLevelsButton';
 
 // Luật khoá nay sống ở `criteria/criteriaLock` vì popup chi tiết cũng đọc nó; giữ
 // re-export ở đây để call site cũ không phải đổi đường import.
@@ -16,6 +17,14 @@ interface CampaignCriteriaManualListProps {
   disabled?: boolean;
   lockReason?: CriteriaLockReason;
   onChangeRubric: (rubric: RubricCriterion[]) => void;
+  /**
+   * Cho nút "AI đề xuất mốc" (CAMP-16). Cả hai TUỲ CHỌN — không truyền thì nút hiện nhưng
+   * tắt kèm lý do "cần lưu chiến dịch trước", danh sách vẫn chạy như cũ.
+   * `onEnsurePersisted` lưu bản nháp rồi trả id (AI đọc tiêu chí ĐÃ LƯU); có nó thì được
+   * ưu tiên hơn `campaignId`.
+   */
+  campaignId?: string | null;
+  onEnsurePersisted?: () => Promise<string | null>;
 }
 
 function createEmptyCriterion(): RubricCriterion {
@@ -33,6 +42,8 @@ export function CampaignCriteriaManualList({
   disabled,
   lockReason,
   onChangeRubric,
+  campaignId,
+  onEnsurePersisted,
 }: CampaignCriteriaManualListProps) {
   const { t } = useLanguage();
   const isLocked = Boolean(disabled);
@@ -56,6 +67,16 @@ export function CampaignCriteriaManualList({
           <p className="text-sm font-medium text-foreground">{t('employer.campaigns.wizard.rubric.lockedTitle')}</p>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{lockNote}</p>
         </div>
+      </div> : null}
+
+      {/* Header bảng: chỉ khi SỬA được. Khoá bảng thì không có gì để AI điền vào. */}
+      {!isLocked && rubric.length > 0 ? <div className="mb-3 flex justify-end">
+        <SuggestLevelsButton
+          campaignId={campaignId}
+          onEnsurePersisted={onEnsurePersisted}
+          rubric={rubric}
+          onChangeRubric={onChangeRubric}
+        />
       </div> : null}
 
       {rubric.length > 0 ? <div className={cn('mb-3 hidden gap-3 text-caption text-muted-foreground lg:grid', CRITERIA_ROW_GRID, CRITERIA_HEADER_PADDING)}>

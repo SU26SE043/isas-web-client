@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { ListOrdered, Lock } from 'lucide-react';
 import { AppModal } from '@/components/ui/app-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ interface CampaignCriterionDetailModalProps {
   lockReason?: CriteriaLockReason;
   onChange: (patch: Partial<RubricCriterion>) => void;
   onClose: () => void;
+  /** Mở bộ sửa mốc (do card sở hữu). Không truyền khi bảng khoá ⇒ không có nút. */
+  onEditLevels?: () => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export function CampaignCriterionDetailModal({
   lockReason,
   onChange,
   onClose,
+  onEditLevels,
 }: CampaignCriterionDetailModalProps) {
   const { t } = useLanguage();
   const levels = criterion.levels ?? [];
@@ -91,9 +94,20 @@ export function CampaignCriterionDetailModal({
 
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
           <section className="min-w-0 space-y-1.5">
-            <p className="text-sm font-medium text-foreground">
-              {t('employer.campaigns.wizard.rubric.levelsTitle')}
-            </p>
+            <div className="flex min-h-7 items-center justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">
+                {t('employer.campaigns.wizard.rubric.levelsTitle')}
+              </p>
+              {/* Chỉ khi sửa được: popup này không phải cửa hậu qua khoá bảng. */}
+              {onEditLevels && !disabled ? (
+                <Button type="button" variant="outline" size="sm" onClick={onEditLevels}>
+                  <ListOrdered className="size-3.5" aria-hidden />
+                  {levels.length
+                    ? t('employer.campaigns.wizard.levelsEditor.open')
+                    : t('employer.campaigns.wizard.levelsEditor.openEmpty')}
+                </Button>
+              ) : null}
+            </div>
             {levels.length ? (
               <ul className="frame-satin-soft space-y-1 rounded-xl bg-surface-overlay/50 px-3 py-2">
                 {levels.map((level) => (
