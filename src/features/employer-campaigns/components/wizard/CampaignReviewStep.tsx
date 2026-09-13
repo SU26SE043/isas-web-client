@@ -12,6 +12,7 @@ import { campaignSlotCapacity } from '../../utils/campaignSlots';
 import { inviteSlotShortfall, slotsOutsideCampaignWindow } from '../../utils/campaignCapacityChecks';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { CampaignReviewSlotsTable } from './review/CampaignReviewSlotsTable';
+import { CampaignReviewDeployOptions, useStartNowOnDeploy } from './review/CampaignReviewDeployOptions';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState; jd: JobDescriptionState; rubric: RubricCriterion[]; questions: CampaignQuestion[];
@@ -91,12 +92,17 @@ export function CampaignReviewStep({
       : null,
   ].filter((item): item is BlockingItem => Boolean(item));
   const deployDisabled = submitDisabled || isSubmitting || (hasPartialDeploy && !canRetryInvitations) || (!hasPartialDeploy && ((disableForBlockingIssues && blocking.length > 0) || adaptiveBudget.exceedsLimit));
+  // T13 R2 — "Mở ngay khi triển khai": có ca ⇒ khoá (ca quyết định giờ mở), đã tới giờ ⇒ khoá.
+  const startNow = useStartNowOnDeploy({ campaignId, startsAt: info.startsAt, slotCount: slots.length });
+  const formattedStart = formatDate(info.startsAt);
   const scheduleValue = slots.length > 0
     ? t('employer.campaigns.wizard.deploy.scheduleSlots')
         .replace('{{n}}', String(slots.length))
         .replace('{{assigned}}', String(assignedCount))
         .replace('{{capacity}}', String(capacity))
-    : t('employer.campaigns.wizard.deploy.scheduleNoSlots');
+    : startNow.checked
+      ? t('employer.campaigns.wizard.deploy.scheduleStartNow').replace('{{start}}', formattedStart)
+      : t('employer.campaigns.wizard.deploy.scheduleNoSlots');
 
   return (
     <SectionPanel icon={<Rocket className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.deploy.title')} description={t('employer.campaigns.wizard.deploy.description')} footer={<CampaignWizardNav onBack={onBack} onNext={onSubmit} nextLabel={isSubmitting ? submittingLabel : submitLabel} nextDisabled={deployDisabled} isSaving={isSubmitting} backDisabled={isSubmitting} />}>
@@ -132,8 +138,9 @@ export function CampaignReviewStep({
         {/* T10: <QuestionPreviewSummaryLine campaignId={campaignId} questions={questions} /> */}
         {/* Hợp đồng chờ FE-A: { campaignId: string | null; questions: CampaignQuestion[] } —
             `campaignId` ở component này là `string | undefined`, nối bằng `campaignId ?? null`. */}
+        {hasPartialDeploy ? null : <CampaignReviewDeployOptions startNow={startNow} slotCount={slots.length} formattedStart={formattedStart} disabled={isSubmitting} />}
         <section className="rounded-xl border border-info/30 bg-info/5 p-4">
-          <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
+          <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p>{startNow.checked ? <p className="font-medium text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedStartNow').replace('{{start}}', formattedStart)}</p> : null}<p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
           <Button type="button" className="mt-4" disabled={deployDisabled} loading={isSubmitting} onClick={onSubmit}>{isSubmitting ? submittingLabel : submitLabel}</Button>
         </section>
       </div>

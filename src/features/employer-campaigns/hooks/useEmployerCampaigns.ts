@@ -7,6 +7,7 @@ import {
   CampaignInvitationDeployError,
 } from '../services/campaignManagement.service';
 import type {
+  CampaignDeployOptions,
   CampaignDeployResult,
   CampaignFilters,
   EmployerCampaign,
@@ -31,18 +32,23 @@ export function employerCampaignsQueryKey(filters: CampaignFilters) {
  *
  * Deploy hụt ở bước mời (`CampaignInvitationDeployError`) thì campaign VẪN đã Active ⇒ cũng phải
  * ghi cache từ `error.campaign` rồi mới ném tiếp, kẻo rời wizard lúc đó lại thấy "Bản nháp".
+ *
+ * T13 R2: `options.startNow` đi thẳng xuống service; bản sync vào cache là `result.campaign` /
+ * `error.campaign` — service đã đổi chúng sang bản ĐÃ start-now (startsAt=now) khi bước đó xong,
+ * nên trang chi tiết không hiện banner "mở lúc <giờ cũ>" + nút "Mở ngay" thừa ngay sau deploy.
  */
 export async function deployCampaignAndSyncCache(
   queryClient: QueryClient,
   campaignId: string,
   emails: string[],
+  options?: CampaignDeployOptions,
 ): Promise<CampaignDeployResult> {
   const sync = (campaign: EmployerCampaign) => {
     queryClient.setQueryData(employerCampaignDetailQueryKey(campaignId), campaign);
     void queryClient.invalidateQueries({ queryKey: EMPLOYER_CAMPAIGNS_QUERY_KEY });
   };
   try {
-    const result = await campaignManagementService.deployCampaign(campaignId, emails);
+    const result = await campaignManagementService.deployCampaign(campaignId, emails, options);
     sync(result.campaign);
     return result;
   } catch (error) {

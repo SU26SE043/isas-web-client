@@ -21,6 +21,7 @@ import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
 import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
+import { useCampaignSlots } from '../hooks/useCampaignSlots';
 import { CampaignRubricPreviewSection } from './CampaignRubricPreviewSection';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
@@ -51,6 +52,10 @@ export function CampaignDetailView({
   onEditCriteria,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
+  // T13 R2 — cùng query key với CampaignSlotsPanel bên dưới (React Query dedup, không thêm request):
+  // "Mở ngay" phải nhìn thấy ca để khoá. Đang tải/lỗi ⇒ 0 (backend vẫn chặn 409 làm lớp hai).
+  const slotsQuery = useCampaignSlots(campaign.id);
+  const slotCount = slotsQuery.data?.length ?? 0;
   const isDraft = campaign.status === 'draft';
   const hasDetailActions =
     campaign.status === 'draft' ||
@@ -78,7 +83,7 @@ export function CampaignDetailView({
           />
         </div> : null}
 
-        <CampaignDetailStatusNotices campaign={campaign} published={published} warnings={warnings} formattedStart={formattedStart} onStartNow={onStartNow} startingNow={startingNow} />
+        <CampaignDetailStatusNotices campaign={campaign} published={published} warnings={warnings} formattedStart={formattedStart} onStartNow={onStartNow} startingNow={startingNow} slotCount={slotCount} />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
           <Card className="frame-satin bg-info/[0.035]">
             <CardHeader className="pb-3">

@@ -138,6 +138,13 @@ export async function installCampaignApi(page: Page, initialStatus: 'Draft' | 'A
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(draft) });
       return;
     }
+    if (path === `${campaignPath}/start-now` && method === 'POST') {
+      // T13 R2 — "Mở ngay khi triển khai": chỉ được gọi SAU publish và TRƯỚC invitations.
+      events.push('start-now');
+      draft = { ...draft, status: 'Active', startsAt: new Date().toISOString() };
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(draft) });
+      return;
+    }
     if (path === `${campaignPath}/invitations` && method === 'POST') {
       events.push('invitations');
       invitationCalls += 1;

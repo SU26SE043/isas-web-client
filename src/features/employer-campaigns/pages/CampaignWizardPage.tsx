@@ -12,6 +12,7 @@ import type {
   CampaignUpdateRequest,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
+import type { CampaignDeployOptions } from '../types/campaignManagement.types';
 import { campaignManagementService } from '../services/campaignManagement.service';
 
 export function parseWizardStepParam(raw: string | null): number | undefined {
@@ -85,9 +86,9 @@ export function CampaignWizardPage() {
     return downloadFile(campaignId, fileType);
   };
 
-  const handleDeployCampaign = async (campaignId: string, emails: string[]) => {
+  const handleDeployCampaign = async (campaignId: string, emails: string[], options?: CampaignDeployOptions) => {
     // Đồng bộ cache chi tiết ngay sau deploy — xem chú thích tại deployCampaignAndSyncCache.
-    return deployCampaignAndSyncCache(queryClient, campaignId, emails);
+    return deployCampaignAndSyncCache(queryClient, campaignId, emails, options);
   };
 
   const handleSendInvitations = async (campaignId: string, emails: string[]) => {
