@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { mapQuestionsToApiRequest, mapRubricToCreateCriteria } from './buildCampaignCreateRequest';
+import { buildCampaignCreateRequest, mapQuestionsToApiRequest, mapRubricToCreateCriteria, UnresolvedCriterionIdError } from './buildCampaignCreateRequest';
+import { createDefaultSettingsState, createEmptyJdState } from '../types/campaignWizard.types';
+
+const GUID_A = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+const GUID_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 import type { CampaignQuestion } from '../types/campaignManagement.types';
 
 describe('mapQuestionsToApiRequest', () => {
@@ -38,29 +42,60 @@ describe('mapQuestionsToApiRequest', () => {
 
   // SC2 — `undefined`/`null` domain (chưa gắn nhãn) ⇒ khoá `targetCriterionIds` VẮNG (giữ nguyên
   // trên server); mảng thật (kể cả `[]`) ⇒ gửi nguyên, lọc bỏ id KHÔNG phải GUID server.
-  it('targetCriterionIds: undefined/null ⇒ vắng khoá; [] ⇒ gửi []; lọc id không phải GUID server', () => {
+  it('targetCriterionIds: undefined/null ⇒ vắng khoá; [] ⇒ gửi []; toàn GUID server ⇒ gửi nguyên', () => {
     const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
 
     expect(mapQuestionsToApiRequest([{ ...base, id: 'q1' }])[0]).not.toHaveProperty('targetCriterionIds');
     expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: null }])[0]).not.toHaveProperty('targetCriterionIds');
     expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [] }])[0].targetCriterionIds).toEqual([]);
     expect(
-      mapQuestionsToApiRequest([
-        { ...base, id: 'q1', targetCriterionIds: ['3fa85f64-5717-4562-b3fc-2c963f66afa6', 'criterion-0', ''] },
-      ])[0].targetCriterionIds,
-    ).toEqual(['3fa85f64-5717-4562-b3fc-2c963f66afa6']);
+      mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [GUID_A, GUID_B] }])[0].targetCriterionIds,
+    ).toEqual([GUID_A, GUID_B]);
   });
 
-  // T7-R1 — ca THỨ BA, khác cả hai ca trên: mảng GỐC có phần tử (HR ĐÃ gắn nhãn) nhưng toàn id
-  // TẠM (tiêu chí WhenTargeted vừa thêm tay trong CÙNG lượt lưu, chưa qua PUT nên chưa có id
-  // server). Gửi `[]` ở đây sẽ bị BE đọc là "XOÁ nhãn" — mất liên kết HR vừa tạo. Phải OMIT khoá
-  // (giữ nguyên trên server) để lượt lưu SAU (khi tiêu chí đã có id thật) có cơ hội gắn lại.
-  it('targetCriterionIds: mảng gốc có phần tử nhưng SAU lọc GUID còn rỗng (toàn id tạm) ⇒ OMIT khoá, KHÔNG gửi []', () => {
+  // R1(c) — ĐỔI TIỀN ĐỀ so với T7-R1: trước đây id tạm còn sót bị OMIT khoá (BE giữ nhãn cũ/`null`) "để lượt
+  // lưu sau gắn lại" — nhưng không lượt sau nào gắn lại cả: create mode giữ id tạm tới tận Lưu & chấm thử, còn
+  // Triển khai/Lưu câu hỏi vứt response PUT metadata ⇒ nhãn HR vừa gắn bốc hơi mà báo "lưu thành công". Nay
+  // mọi đường lưu ghép id qua `adoptServerRubric` TRƯỚC khi tới đây, nên id tạm còn sót là lỗi đường đi ⇒ NÉM.
+  it('R1(c): id tạm còn sót (toàn id tạm HOẶC lẫn với GUID) ⇒ ném UnresolvedCriterionIdError kèm đúng các id, KHÔNG omit im lặng', () => {
     const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
 
-    expect(
-      mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: ['criterion-not-guid', 'another-fake-id'] }])[0],
-    ).not.toHaveProperty('targetCriterionIds');
+    expect(() => mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: ['criterion-not-guid', 'another-fake-id'] }]))
+      .toThrow(UnresolvedCriterionIdError);
+    let caught: unknown;
+    try {
+      mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [GUID_A, 'system-2'] }]);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(UnresolvedCriterionIdError);
+    expect((caught as UnresolvedCriterionIdError).ids).toEqual(['system-2']);
+  });
+
+  it("R1(a): `unresolvedTargets: 'omit'` (POST create) — toàn id tạm ⇒ OMIT khoá (không gửi [] = XOÁ); lẫn GUID ⇒ chỉ phần GUID; [] thật vẫn gửi []", () => {
+    const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
+    const omit = { unresolvedTargets: 'omit' as const };
+
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: ['new-a', 'system-1'] }], omit)[0])
+      .not.toHaveProperty('targetCriterionIds');
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [GUID_A, 'new-a'] }], omit)[0].targetCriterionIds)
+      .toEqual([GUID_A]);
+    expect(mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: [] }], omit)[0].targetCriterionIds).toEqual([]);
+  });
+
+  it('R1(a): buildCampaignCreateRequest (POST) bỏ nhãn id tạm có chủ đích thay vì ném — tiêu chí chưa có GUID nào để resolve', () => {
+    const request = buildCampaignCreateRequest({
+      info: { title: 'T', domain: 'backend', language: 'vi', maxCandidates: null, timeLimitMinutes: 60, passScorePct: null, startsAt: '2030-01-01T09:00', expiresAt: '2030-02-01T09:00', timezone: 'UTC' },
+      jd: { ...createEmptyJdState(), jdText: 'JD' },
+      rubric: [{ id: 'new-a', name: 'A', description: '', weight: 100, maxScore: 5, scoringScope: 'WhenTargeted' }],
+      questions: [
+        { id: 'client-1', prompt: 'Q1', skill: '', difficulty: 'middle', source: 'manual', isRequired: true, targetCriterionIds: ['new-a'] },
+        { id: 'client-2', prompt: 'Q2', skill: '', difficulty: 'middle', source: 'manual', isRequired: true, targetCriterionIds: [] },
+      ],
+      settings: createDefaultSettingsState(),
+    });
+    expect(request.questions[0]).not.toHaveProperty('targetCriterionIds');
+    expect(request.questions[1].targetCriterionIds).toEqual([]);
   });
 
   // CAMP-16 — `sampleAnswer`: `undefined` (chưa từng đọc) ⇒ khoá vắng; `null` ⇒ gửi `null` = GIỮ

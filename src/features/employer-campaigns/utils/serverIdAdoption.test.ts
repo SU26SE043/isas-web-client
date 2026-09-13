@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CampaignQuestion, RubricCriterion } from '../types/campaignManagement.types';
-import { adoptServerCriterionIds, buildQuestionIdAliases, remapQuestionTargetIds } from './serverIdAdoption';
+import { adoptServerCriterionIds, adoptServerRubric, buildQuestionIdAliases, pruneQuestionTargetIds, remapQuestionTargetIds } from './serverIdAdoption';
 
 const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -50,5 +50,39 @@ describe('buildQuestionIdAliases — client-… → id server từ response PUT'
     const sent = [q('client-1', 'Trùng'), q('client-2', 'Trùng'), q('client-3', '   ')];
     const saved = [q(C, 'Trùng'), q(D, 'Trùng')];
     expect([...buildQuestionIdAliases(sent, saved)]).toEqual([['client-1', C], ['client-2', D]]);
+  });
+});
+
+describe('pruneQuestionTargetIds — R2 cắt nhãn về ⊆ id tiêu chí còn tồn tại', () => {
+  it('GUID/id không còn ⇒ bỏ; null giữ null (cùng tham chiếu); cắt hết ⇒ [] chứ không về null; không đổi ⇒ giữ nguyên mảng', () => {
+    const questions = [q('q1', 'Q1', [A, B]), q('q2', 'Q2', null), q('q3', 'Q3', [B]), q('q4', 'Q4', [A])];
+    const result = pruneQuestionTargetIds(questions, new Set([A]));
+    expect(result[0].targetCriterionIds).toEqual([A]);
+    expect(result[1]).toBe(questions[1]);
+    expect(result[2].targetCriterionIds).toEqual([]);
+    expect(result[3]).toBe(questions[3]);
+    expect(pruneQuestionTargetIds(questions, new Set([A, B]))).toBe(questions);
+  });
+});
+
+describe('adoptServerRubric — R1/R2 một chỗ ghép + cắt cho mọi đường nhận rubric server', () => {
+  it('ghép id tạm theo tên, viết lại nhãn câu, VÀ cắt GUID chết không có trong rubric server', () => {
+    const local = { rubric: [crit(A, 'Giao tiếp'), crit('new-x', 'Kỹ thuật'), crit(C, 'Đã xoá')], questions: [q('q1', 'Q1', ['new-x', C, A]), q('q2', 'Q2', null)] };
+    const server = [crit(A, 'Giao tiếp'), crit(B, 'kỹ thuật')];
+    const result = adoptServerRubric(local, server);
+    expect(result.adopted).toBe(true);
+    expect(result.rubric.map((item) => item.id)).toEqual([A, B, C]);
+    expect(result.questions[0].targetCriterionIds).toEqual([B, A]);
+    expect(result.questions[1]).toBe(local.questions[1]);
+    expect([...result.idMap]).toEqual([['new-x', B]]);
+  });
+  it('server không echo id nào (rubric rỗng / bản merge-fallback mang id tạm) ⇒ KHÔNG ghép, KHÔNG cắt mù, trả nguyên tham chiếu', () => {
+    const local = { rubric: [crit('new-x', 'Kỹ thuật')], questions: [q('q1', 'Q1', ['new-x'])] };
+    for (const server of [[], null, undefined, [crit('criterion-0', 'Kỹ thuật')]]) {
+      const result = adoptServerRubric(local, server);
+      expect(result.adopted).toBe(false);
+      expect(result.rubric).toBe(local.rubric);
+      expect(result.questions).toBe(local.questions);
+    }
   });
 });

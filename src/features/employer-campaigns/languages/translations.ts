@@ -1151,6 +1151,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'Chiến dịch phải có ít nhất một câu hỏi.',
     'employer.campaigns.wizard.questionsRequired': 'Chiến dịch phải có ít nhất một câu hỏi.',
+    'employer.campaigns.wizard.questions.unresolvedCriterionIds': 'Nhãn tiêu chí của câu hỏi chưa khớp bộ tiêu chí đã lưu — lưu lại bước Tiêu chí rồi thử lại.',
     'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'Cấu hình hiện có {questions} câu hỏi ở độ sâu {deep}: cần {need}, đang có {have}, trong khi trần hệ thống là 20 và cấu hình này chỉ cho phép tối đa {maxQuestions} câu. Hãy giảm còn {maxQuestions} câu hoặc chọn độ sâu không quá {maxDepth}.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Tiêu chí đánh giá không hợp lệ. Vui lòng kiểm tra trọng số và điểm tối đa.',
@@ -2947,6 +2948,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'The campaign must include at least one question.',
     'employer.campaigns.wizard.questionsRequired': 'The campaign must include at least one question.',
+    'employer.campaigns.wizard.questions.unresolvedCriterionIds': 'Question criterion tags do not match the saved criteria — save the Criteria step again, then retry.',
     'employer.campaigns.wizard.adaptiveBudgetTooSmall': 'The current configuration has {questions} questions at depth {deep}: it needs {need}, has {have}, and the system cap is 20, so this configuration allows at most {maxQuestions} questions. Reduce to {maxQuestions} questions or choose a depth no greater than {maxDepth}.',
     'employer.campaigns.wizard.criteriaInvalid':
       'Evaluation criteria are invalid. Please check weights and max scores.',

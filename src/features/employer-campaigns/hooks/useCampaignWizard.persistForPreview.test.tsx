@@ -334,12 +334,188 @@ describe('persistForPreview — SC2 · T9: id tạm → id server (tiêu chí th
     expect(result.current.resolveQuestionId('id-la')).toBe('id-la');
   });
 
-  it('PUT metadata trả rubric rỗng/không khớp tên ⇒ giữ nguyên id tạm, không ném, nhãn id tạm bị omit như trước', async () => {
+  // R1(c) — ĐỔI TIỀN ĐỀ: trước đây ca này "không ném, nhãn id tạm bị omit như trước" — tức HR gắn nhãn, bấm lưu,
+  // thấy "đã lưu", mà server nhận `null`. Server không echo rubric là bất thường (mọi đường ghi đều echo criteria);
+  // nay không có sự thật để ghép ⇒ id tạm còn sót ⇒ lỗi hiển thị ở bước Câu hỏi, KHÔNG PUT câu hỏi, trả null.
+  it('R1(c): PUT metadata trả rubric rỗng/không khớp tên ⇒ id tạm không resolve được ⇒ lỗi ở bước Câu hỏi, KHÔNG PUT câu hỏi', async () => {
     const { result } = renderCreateWizard(handlers);
     act(() => { result.current.setQuestions([{ ...clientQuestions[0], targetCriterionIds: ['new-b'] }]); });
-    await act(async () => { await result.current.persistForPreview(); });
-    const payload = (handlers.onUpdateQuestions as ReturnType<typeof vi.fn>).mock.calls[0][1] as Array<Record<string, unknown>>;
-    expect(payload[0]).not.toHaveProperty('targetCriterionIds');
+    let id: string | null = 'sentinel';
+    await act(async () => { id = await result.current.persistForPreview(); });
+    expect(id).toBeNull();
+    expect(handlers.onUpdateQuestions).not.toHaveBeenCalled();
+    expect(result.current.stepError).toBe('employer.campaigns.wizard.questions.unresolvedCriterionIds');
+    expect(result.current.state.currentStep).toBe(3);
+    expect(result.current.state.errorSteps).toContain(3);
     expect(result.current.state.rubric.map((item) => item.id)).toEqual(['new-a', 'new-b']);
+  });
+});
+
+/**
+ * R1 — nhãn chip từng MẤT IM LẶNG ở mọi đường lưu trừ "Lưu & chấm thử": create mode giữ id tạm trong `state.rubric`
+ * tới tận `persistForPreview` (ensureDraft không adopt `created.rubric`), còn Triển khai / Lưu câu hỏi dựng payload
+ * câu hỏi TRƯỚC PUT metadata và vứt response ⇒ nhãn `[temp]` bị omit ⇒ câu lưu `null`. R2 — xoá tiêu chí ở bước 3
+ * để lại GUID chết trong nhãn ⇒ Triển khai 400.
+ */
+describe('R1/R2 — nhãn chip sống sót qua MỌI đường lưu; GUID chết bị cắt', () => {
+  const CRIT_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const CRIT_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const serverRubric = [
+    { id: CRIT_A, name: 'Giao tiếp', description: '', weight: 0.6, maxScore: 10 },
+    { id: CRIT_B, name: 'Kỹ thuật', description: '', weight: 0.4, maxScore: 10 },
+  ];
+  const lastQuestionsPayload = () => {
+    const calls = (handlers.onUpdateQuestions as ReturnType<typeof vi.fn>).mock.calls;
+    return calls[calls.length - 1][1] as Array<Record<string, unknown>>;
+  };
+
+  it('R1(a)+(b) create mode → Triển khai (handleFinalSubmit): nhãn id tạm ⇒ PUT /questions mang GUID; state.rubric nhận GUID', async () => {
+    handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric, questions: [] }));
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric }));
+    // Server echo nhãn (như BE thật) — mock mặc định trả câu KHÔNG nhãn nên state sau lưu sẽ mất nhãn vì mock, không vì code.
+    (handlers.onUpdateQuestions as unknown as { mockImplementation: (fn: unknown) => void }).mockImplementation(
+      async (_id: string, payload: Array<{ targetCriterionIds?: string[] }>) => campaignResponse({
+        rubric: serverRubric,
+        questions: payload.map((item, index) => ({ ...serverQuestions[index], targetCriterionIds: item.targetCriterionIds ?? null })),
+      }),
+    );
+    handlers.onDeployCampaign = vi.fn(async () => ({ campaign: campaignResponse({ status: 'active' }), warnings: [], invitations: null, startNow: 'skipped' }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => {
+      result.current.patchInfo({ maxCandidates: 10 });
+      result.current.setQuestions([
+        { ...clientQuestions[0], targetCriterionIds: ['new-b'] },
+        { ...clientQuestions[1], targetCriterionIds: ['new-a', 'new-b'] },
+      ]);
+    });
+    // Nháp sinh ra qua goNext ở bước 4 (đường thật của wizard tạo mới) — chỉ POST, KHÔNG PUT gì.
+    for (let step = 0; step <= 4; step += 1) {
+      await act(async () => { await result.current.goNext(); });
+    }
+    expect(result.current.state.currentStep).toBe(5);
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).not.toHaveBeenCalled();
+    // R1(a): ensureDraft ghép created.rubric ⇒ state mang GUID ngay, không đợi Lưu & chấm thử.
+    expect(result.current.state.rubric.map((item) => item.id)).toEqual([CRIT_A, CRIT_B]);
+    expect(result.current.state.questions.map((q) => q.targetCriterionIds)).toEqual([[CRIT_B], [CRIT_A, CRIT_B]]);
+
+    // Triển khai (handleUpdateDraft): PUT metadata TRƯỚC, payload câu hỏi dựng SAU ⇒ mang GUID (trước R1: undefined).
+    await act(async () => { await result.current.handleFinalSubmit(); });
+    expect(handlers.onDeployCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateCampaign.mock.invocationCallOrder[0]).toBeLessThan(handlers.onUpdateQuestions.mock.invocationCallOrder[0]);
+    const payload = lastQuestionsPayload();
+    expect(payload[0].targetCriterionIds).toEqual([CRIT_B]);
+    expect(payload[1].targetCriterionIds).toEqual([CRIT_A, CRIT_B]);
+  });
+
+  // Mutation M2 (bỏ adopt trong handleUpdateDraft) XANH với ca trên vì rubric đã GUID từ ensureDraft ⇒ ca này mới
+  // là ca R1(b) thật: nháp ĐÃ có, HR thêm tiêu chí mới ở bước 3 (id tạm) + gắn nhãn, bấm Triển khai.
+  it('R1(b) edit mode: thêm tiêu chí mới (id tạm) + gắn nhãn rồi Triển khai ⇒ PUT metadata trước, PUT /questions mang GUID mới từ saved.rubric', async () => {
+    const CRIT_C = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({
+      rubric: [...serverRubric, { id: CRIT_C, name: 'Mới', description: '', weight: 0.2, maxScore: 10 }],
+    }));
+    handlers.onDeployCampaign = vi.fn(async () => ({ campaign: campaignResponse({ status: 'active' }), warnings: [], invitations: null, startNow: 'skipped' }));
+    const { result } = renderEditWizard(handlers);
+    act(() => {
+      result.current.setRubric([
+        { ...result.current.state.rubric[0], weight: 50 },
+        { ...result.current.state.rubric[1], weight: 30 },
+        { id: 'new-c', name: 'Mới', description: '', weight: 20, maxScore: 10 },
+      ]);
+      result.current.updateQuestion(SERVER_Q1, { targetCriterionIds: ['new-c'] });
+    });
+    await act(async () => { await result.current.handleFinalSubmit(); });
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateCampaign.mock.invocationCallOrder[0]).toBeLessThan(handlers.onUpdateQuestions.mock.invocationCallOrder[0]);
+    expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_C]);
+    expect(handlers.onDeployCampaign).toHaveBeenCalledTimes(1);
+    expect(result.current.stepError).toBeNull();
+    expect(result.current.state.rubric.map((item) => item.id)).toEqual([CRIT_A, CRIT_B, CRIT_C]);
+  });
+
+  it('R1(a) handleCreateCampaign (create mode chưa có nháp, bấm Triển khai thẳng): POST bỏ nhãn tạm rồi PUT /questions mang GUID sau khi ghép created.rubric', async () => {
+    handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric, questions: serverQuestions }));
+    handlers.onDeployCampaign = vi.fn(async () => ({ campaign: campaignResponse({ status: 'active' }), warnings: [], invitations: null, startNow: 'skipped' }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => {
+      result.current.patchInfo({ maxCandidates: 10 });
+      result.current.setQuestions([{ ...clientQuestions[0], targetCriterionIds: ['new-b'] }, clientQuestions[1]]);
+    });
+    await act(async () => { await result.current.handleFinalSubmit(); });
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    const posted = (handlers.onCreateCampaign as ReturnType<typeof vi.fn>).mock.calls[0][0] as { questions: Array<Record<string, unknown>> };
+    expect(posted.questions[0]).not.toHaveProperty('targetCriterionIds');
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(1);
+    expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_B]);
+    expect(handlers.onUpdateQuestions.mock.invocationCallOrder[0]).toBeLessThan(handlers.onDeployCampaign.mock.invocationCallOrder[0]);
+    expect(result.current.state.rubric.map((item) => item.id)).toEqual([CRIT_A, CRIT_B]);
+  });
+
+  it('R1(b) saveQuestionsNow (Lưu câu hỏi): PUT metadata TRƯỚC, PUT /questions SAU và mang GUID đã ghép', async () => {
+    handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ rubric: [], questions: [] }));
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => { result.current.setQuestions([{ ...clientQuestions[0], targetCriterionIds: ['new-a'] }]); });
+    await act(async () => { await result.current.saveQuestionsNow(); });
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateCampaign.mock.invocationCallOrder[0]).toBeLessThan(handlers.onUpdateQuestions.mock.invocationCallOrder[0]);
+    expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_A]);
+    expect(result.current.stepError).toBeNull();
+  });
+
+  it('R1(a) AI sinh câu ở create mode: nhãn GUID của câu khớp state.rubric đã ghép từ created.rubric (chip sáng, coverage cục bộ đúng)', async () => {
+    handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric, questions: [] }));
+    handlers.onGenerateQuestions = vi.fn(async () => campaignResponse({
+      rubric: serverRubric,
+      questions: [{ ...serverQuestions[0], source: 'ai', targetCriterionIds: [CRIT_B] }],
+    }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => { result.current.setQuestions([]); });
+    await act(async () => { await result.current.generateQuestionsWithAi({ useDefaultCount: true }); });
+    const rubricIds = new Set(result.current.state.rubric.map((item) => item.id));
+    expect(rubricIds).toEqual(new Set([CRIT_A, CRIT_B]));
+    expect(result.current.state.questions[0].targetCriterionIds).toEqual([CRIT_B]);
+    expect(result.current.state.questions[0].targetCriterionIds!.every((id) => rubricIds.has(id))).toBe(true);
+  });
+
+  it('R2 setRubric xoá tiêu chí ⇒ nhãn trỏ nó bị cắt ngay trong state (null giữ null, cắt hết ⇒ [])', () => {
+    const { result } = renderCreateWizard(handlers);
+    act(() => {
+      result.current.setQuestions([
+        { ...clientQuestions[0], targetCriterionIds: ['new-a', 'new-b'] },
+        { ...clientQuestions[1], targetCriterionIds: null },
+        { id: 'client-3', prompt: 'Q3', skill: '', difficulty: 'middle', source: 'manual', isRequired: true, targetCriterionIds: ['new-b'] },
+      ]);
+      result.current.setRubric([rubric[0]]);
+    });
+    expect(result.current.state.questions.map((q) => q.targetCriterionIds)).toEqual([['new-a'], null, []]);
+    act(() => result.current.resetRubric());
+    expect(result.current.state.questions.map((q) => q.targetCriterionIds)).toEqual([[], null, []]);
+  });
+
+  it('R2 trước PUT /questions cắt theo saved.rubric: GUID không còn trên server (edit mode, tiêu chí đã xoá) không đi vào payload', async () => {
+    const DEAD = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    const campaign = campaignResponse({
+      rubric: [...serverRubric, { id: DEAD, name: 'Cũ', description: '', weight: 0, maxScore: 10 }],
+      questions: [{ ...serverQuestions[0], targetCriterionIds: [DEAD, CRIT_A] }],
+      startsAt: new Date(Date.now() + 3_600_000).toISOString(),
+      deadline: new Date(Date.now() + 30 * 24 * 3_600_000).toISOString(),
+      capacity: 10,
+      durationMinutes: 60,
+    });
+    // Server đã cắt DEAD trong replace-all ⇒ response chỉ còn A, B.
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric }));
+    const { result } = renderEditWizard(handlers, campaign);
+    // Giả lập nhãn còn GUID chết dù rubric state không còn nó (đường nào đó bỏ qua prune ở setRubric).
+    act(() => {
+      result.current.setRubric(result.current.state.rubric.filter((item) => item.id !== DEAD).map((item, index) => ({ ...item, weight: index === 0 ? 70 : 30 })));
+      result.current.updateQuestion(SERVER_Q1, { targetCriterionIds: [DEAD, CRIT_A] });
+    });
+    await act(async () => { await result.current.persistForPreview(); });
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledTimes(1);
+    expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_A]);
   });
 });
