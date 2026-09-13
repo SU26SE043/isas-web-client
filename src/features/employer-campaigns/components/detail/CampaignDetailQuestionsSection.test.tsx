@@ -66,6 +66,10 @@ describe('CampaignDetailQuestionsSection — tab Chi tiết dùng card theo câu
     expect(within(cardA).getByRole('textbox', { name: 'employer.campaigns.campaignQuestions.question.contentLabel' })).toBeDisabled();
     expect(within(cardA).queryByTestId('question-scope-picker')).not.toBeInTheDocument();
     expect(within(cardA).queryByLabelText('employer.campaigns.questionCard.sampleAnswer.label')).not.toBeInTheDocument();
+    // Hàng đầu: nút lên/xuống/xoá KHOÁ (card `disabled`) — trang chi tiết không sắp xếp/xoá câu, việc đó thuộc wizard.
+    for (const name of ['moveUp', 'moveDown', 'delete']) {
+      expect(within(cardA).getByRole('button', { name: `employer.campaigns.campaignQuestions.question.${name}` })).toBeDisabled();
+    }
     expect(within(cardA).getByTestId('question-preview-panel')).toBeInTheDocument();
     expect(within(cardA).getByRole('button', { name: RUN })).toBeEnabled();
     expect(within(cardA).queryByRole('button', { name: RUN_SAVE })).not.toBeInTheDocument();
