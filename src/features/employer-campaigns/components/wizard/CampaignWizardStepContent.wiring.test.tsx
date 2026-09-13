@@ -27,6 +27,10 @@ vi.mock('./CampaignCriteriaStepV2', async (importOriginal) => {
 vi.mock('./CampaignCriteriaManualList', () => ({
   CampaignCriteriaManualList: (props: Record<string, unknown>) => { manualListSpy(props); return null; },
 }));
+const questionsStepSpy = vi.fn();
+vi.mock('./CampaignQuestionsStep', () => ({
+  CampaignQuestionsStep: (props: Record<string, unknown>) => { questionsStepSpy(props); return null; },
+}));
 vi.mock('../../hooks/useRubricPreview', () => ({ useRubricPreview: useRubricPreviewSpy }));
 vi.mock('../../services/campaignCriteria.service', () => ({ campaignCriteriaService: { preview: vi.fn(async () => ({ jobCategory: 'BE', language: 'vi', criteria: [] })) } }));
 
@@ -36,11 +40,13 @@ const { CampaignCriteriaStepV2 } = await vi.importActual<typeof import('./Campai
 function wizardAt(step: number): CampaignWizardController {
   const persistForPreview = vi.fn(async () => 'c-1');
   const goToStep = vi.fn();
+  const resolveQuestionId = vi.fn((id: string) => id);
+  const updateQuestion = vi.fn();
   const questions = [{ id: 'q1', prompt: 'Câu 1', skill: '', difficulty: 'junior', source: 'manual', isRequired: true }];
   return {
     step, mode: 'create', errorSteps: [], completedSteps: [], stepError: null, actionError: null, partialDeploy: null,
     canRetryInvitations: true, isSavingStep: false, isSubmitting: false, isDraftEditable: true, metadataSaved: false, questionsSaved: false,
-    domainLabel: 'Backend', jobCategory: 'BE', campaignStatus: 'draft', persistForPreview, goToStep,
+    domainLabel: 'Backend', jobCategory: 'BE', campaignStatus: 'draft', persistForPreview, goToStep, resolveQuestionId, updateQuestion,
     state: { currentStep: step, draftId: 'c-1', info: { title: 't', domain: 'backend', language: 'vi', passScorePct: 60, startsAt: '', expiresAt: '', maxCandidates: 5, timeLimitMinutes: 60 },
       jd: { inputMethod: 'text', jdText: 'jd' }, rubric: [], rubricCustomized: false, questions, questionCount: 5, questionsPerSession: null,
       settings: {}, inviteEmails: [], errorSteps: [], completedSteps: [], autosaveStatus: 'idle' },
@@ -78,5 +84,42 @@ describe('CampaignWizardStepContent — khe nối đề xuất mốc (SC2: card 
       campaignId="c-1" jobCategory="BE" onChangeRubric={() => undefined} onReset={() => undefined} onBack={() => undefined} onNext={() => undefined}
       onBeforeRun={onBeforeRun} /></QueryClientProvider>);
     expect(useRubricPreviewSpy).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * SC2 · T9 — khe nối wizard → bước 4: chấm thử THEO CÂU sống ở đây (D-1). Gỡ một prop là card mất panel/picker
+ * mà không test nào ở tầng card đỏ (card nhận mọi thứ qua props) — nên khoá đúng giá trị StepContent chuyền xuống.
+ */
+describe('CampaignWizardStepContent — khe nối bước 4 (SC2 · T9)', () => {
+  it('QuestionsStep nhận rubric + preview{beforeRun=persistForPreview, resolveQuestionId, campaignId, currentRubricVersion} + initialOpenQuestionId + coverageWarnings', () => {
+    const wizard = wizardAt(3);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={{ id: 'c-1', rubricVersion: 4, questionBank: { coverageWarnings: [{ criterionId: 'x', name: 'X' }] } } as never} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" initialQuestionId="q1" />);
+    const props = questionsStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.rubric).toBe(wizard.state.rubric);
+    const preview = props.preview as Record<string, unknown>;
+    expect(preview.beforeRun).toBe(wizard.persistForPreview);
+    expect(preview.resolveQuestionId).toBe(wizard.resolveQuestionId);
+    expect(preview.campaignId).toBe('c-1');
+    expect(preview.currentRubricVersion).toBe(4);
+    expect(preview.passScorePct).toBe(60);
+    expect(props.initialOpenQuestionId).toBe('q1');
+    expect(props.coverageWarnings).toEqual([{ criterionId: 'x', name: 'X' }]);
+  });
+
+  it('onChangeTargets/onChangeSampleAnswer đi vào wizard.updateQuestion đúng khoá (I2: [] giữ [] không thành null); onGoToCriteria ⇒ goToStep(2)', () => {
+    const wizard = wizardAt(3);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
+    const props = questionsStepSpy.mock.calls.at(-1)?.[0] as { onChangeTargets: (id: string, next: string[] | null) => void; onChangeSampleAnswer: (id: string, text: string) => void; onGoToCriteria: () => void; preview: { onGoToCriteria: () => void } };
+    props.onChangeTargets('q1', []);
+    expect(wizard.updateQuestion).toHaveBeenLastCalledWith('q1', { targetCriterionIds: [] });
+    props.onChangeTargets('q1', ['c-1']);
+    expect(wizard.updateQuestion).toHaveBeenLastCalledWith('q1', { targetCriterionIds: ['c-1'] });
+    props.onChangeSampleAnswer('q1', 'mẫu');
+    expect(wizard.updateQuestion).toHaveBeenLastCalledWith('q1', { sampleAnswer: 'mẫu' });
+    props.onGoToCriteria();
+    props.preview.onGoToCriteria();
+    expect(wizard.goToStep).toHaveBeenCalledTimes(2);
+    expect(wizard.goToStep).toHaveBeenCalledWith(2);
   });
 });

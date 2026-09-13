@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { HelpCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignQuestion } from '../../types/campaignManagement.types';
+import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
+import type { QuestionCoverageWarning, QuestionPreviewContext } from '../../types/questionPreview.types';
 import { CAMPAIGN_QUESTION_HARD_MAX } from '../../utils/campaignQuestionLimits';
+import { splitQuestionBankWarnings } from '../../utils/questionCoverage';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 import { AiGenerateCard } from './questions/AiGenerateCard';
@@ -13,6 +15,11 @@ import { GenerateOverwriteModal } from './questions/GenerateOverwriteModal';
 import { QuestionStartOptions } from './questions/QuestionStartOptions';
 import { CampaignQuestionModeControls } from './questions/CampaignQuestionModeControls';
 import { QuestionImportControl, type QuestionImportControlHandle } from './questions/QuestionImportControl';
+import { QuestionCoverageNotice } from './questions/QuestionCoverageNotice';
+import { useQuestionDrawMode } from './questions/useQuestionDrawMode';
+
+/** SC2 · T9 — phần ngữ cảnh chấm thử mà màn cha cung cấp; Step tự thêm `questions` + state "câu đang chạy". */
+export type CampaignQuestionsPreviewProps = Omit<QuestionPreviewContext, 'questions' | 'runningQuestionId' | 'onRunningChange'>;
 
 interface CampaignQuestionsStepProps {
   campaignTitle: string;
@@ -38,6 +45,17 @@ interface CampaignQuestionsStepProps {
   onNext: () => void;
   isGenerating?: boolean;
   isSaving?: boolean;
+  /** SC2 — thước đo bước 3 (picker nhãn, chip, bao phủ cục bộ). Vắng ⇒ bước 4 như trước SC2. */
+  rubric?: RubricCriterion[];
+  onChangeTargets?: (id: string, next: string[] | null) => void;
+  onChangeSampleAnswer?: (id: string, text: string) => void;
+  onGoToCriteria?: () => void;
+  /** SC2 — chấm thử theo câu (D-1). Vắng ⇒ card không có panel. */
+  preview?: CampaignQuestionsPreviewProps;
+  /** `questionBank.coverageWarnings` server trả — dùng khi không có `rubric` để tính cục bộ. */
+  coverageWarnings?: QuestionCoverageWarning[];
+  /** Deep-link `?question=<id>`. */
+  initialOpenQuestionId?: string | null;
 }
 
 export function CampaignQuestionsStep({
@@ -64,53 +82,32 @@ export function CampaignQuestionsStep({
   onNext,
   isGenerating = false,
   isSaving = false,
+  rubric,
+  onChangeTargets,
+  onChangeSampleAnswer,
+  onGoToCriteria,
+  preview,
+  coverageWarnings,
+  initialOpenQuestionId,
 }: CampaignQuestionsStepProps) {
   const { t } = useLanguage();
   const listRef = useRef<HTMLUListElement | null>(null);
+  // POST chấm thử chạy 20–60s trong MỘT card; các card khác chỉ biết qua state này (mutation là per-instance).
+  const [runningQuestionId, setRunningQuestionId] = useState<string | null>(null);
+  const previewCtx: QuestionPreviewContext | undefined = preview
+    ? { ...preview, questions, runningQuestionId, onRunningChange: setRunningQuestionId }
+    : undefined;
+  // K-rule (chặn publish) đi vào QuestionCoverageNotice như lỗi; phần còn lại giữ khối cảnh báo mềm như trước.
+  const { soft: softBankWarnings } = splitQuestionBankWarnings(questionBankWarnings);
   const [useDefaultCount, setUseDefaultCount] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const importControlRef = useRef<QuestionImportControlHandle | null>(null);
   const busy = isGenerating || isSaving;
   const max = CAMPAIGN_QUESTION_HARD_MAX;
-  const drawMode = questionsPerSession != null;
-  const fixedCount = questions.filter((question) => question.isRequired).length;
-  const poolCount = questions.length - fixedCount;
-  const drawCount = Math.min(Math.max(questionsPerSession ?? 0, 0), poolCount);
-  const totalPerCandidate = drawMode ? fixedCount + drawCount : questions.length;
   const canContinue = !busy;
-
-  useEffect(() => {
-    if (!drawMode && poolCount > 0) {
-      questions.forEach((question) => {
-        if (!question.isRequired) onToggleRequired(question.id, true);
-      });
-    }
-    if (drawMode && questionsPerSession != null && questionsPerSession > poolCount) {
-      onQuestionsPerSession(poolCount);
-    }
-  }, [drawMode, onQuestionsPerSession, onToggleRequired, poolCount, questions, questionsPerSession]);
-
-  const selectMode = (nextDrawMode: boolean) => {
-    if (nextDrawMode) {
-      // Ở chế độ "ai cũng làm trọn bộ", effect trên ép MỌI câu thành cố định ⇒ rổ rỗng.
-      // Chuyển sang rút thăm mà không thả câu nào ra rổ thì số bốc kẹt ở 0, ô nhập bị
-      // max={0} nên không nâng lên được, và backend từ chối 0 ⇒ kẹt cứng từ bước 5 trở đi.
-      if (poolCount === 0) {
-        if (questions.length === 0) return;
-        questions.forEach((question) => {
-          if (question.isRequired) onToggleRequired(question.id, false);
-        });
-        onQuestionsPerSession(questions.length);
-        return;
-      }
-      onQuestionsPerSession(Math.min(Math.max(questionsPerSession ?? poolCount, 1), poolCount));
-      return;
-    }
-    questions.forEach((question) => {
-      if (!question.isRequired) onToggleRequired(question.id, true);
-    });
-    onQuestionsPerSession(null);
-  };
+  const { drawMode, fixedCount, poolCount, drawCount, totalPerCandidate, selectMode } = useQuestionDrawMode({
+    questions, questionsPerSession, onToggleRequired, onQuestionsPerSession,
+  });
 
   const requestGenerate = () => {
     if (!isDraft || busy) return;
@@ -147,11 +144,11 @@ export function CampaignQuestionsStep({
       <div className="space-y-5">
         <QuestionImportControl ref={importControlRef} existingCount={questions.length} max={max} disabled={!isDraft || busy || !onImportCsv} onImportCsv={onImportCsv} onConfirmImport={onConfirmImport} />
         {error ? <FieldError message={error} /> : null}
-        {questionBankWarnings.length > 0 ? (
+        {softBankWarnings.length > 0 ? (
           <div role="status" className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
             <p className="font-medium">{t('employer.campaigns.campaignQuestions.bank.warnings')}</p>
             <ul className="mt-1 list-disc space-y-1 pl-5">
-              {questionBankWarnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}
+              {softBankWarnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}
             </ul>
           </div>
         ) : null}
@@ -201,6 +198,19 @@ export function CampaignQuestionsStep({
               onChangeGroup={onChangeGroup}
               onMoveQuestion={onMoveQuestion}
               onRemoveQuestion={onRemoveQuestion}
+              rubric={rubric}
+              onChangeTargets={onChangeTargets}
+              onChangeSampleAnswer={onChangeSampleAnswer}
+              onGoToCriteria={onGoToCriteria}
+              previewCtx={previewCtx}
+              initialOpenQuestionId={initialOpenQuestionId}
+            />
+            <QuestionCoverageNotice
+              questions={questions}
+              questionsPerSession={questionsPerSession}
+              rubric={rubric}
+              serverCoverageWarnings={coverageWarnings}
+              questionBankWarnings={questionBankWarnings}
             />
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" disabled={!isDraft || busy || questions.length >= max} onClick={onAddManual}>

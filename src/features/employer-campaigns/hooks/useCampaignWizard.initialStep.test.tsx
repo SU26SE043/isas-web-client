@@ -9,7 +9,7 @@ vi.mock('react-hot-toast', () => {
 });
 
 import { useCampaignWizard } from './useCampaignWizard';
-import { parseWizardStepParam } from '../pages/CampaignWizardPage';
+import { parseWizardQuestionParam, parseWizardStepParam } from '../pages/CampaignWizardPage';
 
 /**
  * Deep-link `?step=` từ trang chi tiết ("Về sửa mốc" mở thẳng bước Tiêu chí). Chỉ chế độ edit mới nhảy bước
@@ -76,5 +76,14 @@ describe('parseWizardStepParam — ?step= là 1-based như "Bước 3/8"', () =>
 
   it.each([null, '', '0', 'abc', '3.5', '-2', ' 3'])('rác %s → undefined', (raw) => {
     expect(parseWizardStepParam(raw)).toBeUndefined();
+  });
+});
+
+describe('parseWizardQuestionParam — ?question=<id> (SC2 · T9, đi kèm ?step=4)', () => {
+  it('trả id đã trim; rỗng/toàn khoảng trắng/null ⇒ null (Sections tự bỏ qua id lạ)', () => {
+    expect(parseWizardQuestionParam(' 9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40 ')).toBe('9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40');
+    expect(parseWizardQuestionParam(null)).toBeNull();
+    expect(parseWizardQuestionParam('')).toBeNull();
+    expect(parseWizardQuestionParam('   ')).toBeNull();
   });
 });
