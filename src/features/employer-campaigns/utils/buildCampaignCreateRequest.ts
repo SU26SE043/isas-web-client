@@ -36,9 +36,11 @@ export function mapDomainToApiLabel(domain: CampaignDomainOption): string {
 export function resolveDomainOption(value?: string | null): CampaignDomainOption | '' {
   const normalized = (value ?? '').trim().toLowerCase();
   if (!normalized) return '';
-  if (normalized.includes('frontend') || normalized === 'frontend development') return 'frontend';
-  if (normalized.includes('backend')) return 'backend';
-  if (normalized.includes('business') || normalized.includes('analyst')) return 'business-analyst';
+  if (normalized.includes('frontend') || normalized === 'frontend development' || normalized === 'fe') return 'frontend';
+  if (normalized.includes('backend') || normalized === 'be') return 'backend';
+  if (normalized.includes('business') || normalized.includes('analyst') || normalized === 'ba') return 'business-analyst';
+  // Mã nghề `BE`/`FE`/`BA` là giá trị AIService/API dùng (`jobCategory`); campaign tạo qua API mang chúng —
+  // không nhận thì wizard sửa bắt chọn lại lĩnh vực dù chiến dịch đã có.
   return '';
 }
 
