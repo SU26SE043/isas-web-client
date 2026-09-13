@@ -4,7 +4,9 @@ const sourceFiles = import.meta.glob('/src/**/*.tsx', { query: '?raw', import: '
 const read = (path: string) => sourceFiles[`/${path}`];
 describe('UX2 F3 state surfaces', () => {
   it('distinguishes AI and HR question badges', () => {
-    const source = read('src/features/employer-campaigns/components/wizard/questions/CampaignQuestionCard.tsx');
+    // SC2 · T9: badge AI/HR nay nằm ở hàng đầu (trigger) của card — file `QuestionCardHeader.tsx`, không còn trong
+    // `CampaignQuestionCard.tsx` (card chỉ còn là vỏ Collapsible + panel).
+    const source = read('src/features/employer-campaigns/components/wizard/questions/QuestionCardHeader.tsx');
     expect(source).toContain("bg-foreground text-background");
     expect(source).toContain("bg-surface-base text-muted-foreground");
     expect(source).not.toMatch(/bg-white\/\[[0-9.]+\]/);

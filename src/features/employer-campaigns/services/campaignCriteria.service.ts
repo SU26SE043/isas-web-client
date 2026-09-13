@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
+import { parseScoringScope } from '../utils/campaignMapper';
 
 export type CampaignCriteriaPreviewCriterion = {
   id: string;
@@ -9,6 +10,11 @@ export type CampaignCriteriaPreviewCriterion = {
   maxScore: number;
   levelCount: number;
   levels: RubricLevel[];
+  /**
+   * SC2 — 'Always' | 'WhenTargeted'; vắng/lạ ⇒ `undefined` (caller, `previewToRubric`, mặc định
+   * 'Always'). Bộ chuẩn admin soạn ở InterviewService (W5, `GetB2CRubricAsync`).
+   */
+  scoringScope?: 'Always' | 'WhenTargeted';
 };
 
 export type CampaignCriteriaPreview = {
@@ -63,6 +69,7 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
         maxScore: number(row.maxScore ?? row.MaxScore, 10),
         levelCount: number(row.levelCount ?? row.LevelCount, levels.length),
         levels,
+        scoringScope: parseScoringScope(row.scoringScope ?? row.ScoringScope),
       }];
     }),
   };

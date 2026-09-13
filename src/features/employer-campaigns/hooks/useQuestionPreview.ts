@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { RubricPreviewRun, UseQuestionPreviewApi } from '../types/rubricPreview.types';
+import type { RubricPreviewError, RubricPreviewRequest, RubricPreviewRun, UseQuestionPreviewApi } from '../types/rubricPreview.types';
+import { isServerEntityId } from '../utils/campaignQuestionLimits';
 import { freeRunsForQuestion } from '../utils/rubricPreviewVerdict';
 import { getRubricPreviewHistory } from '../services/campaignRubricPreview.service';
 import { rubricPreviewQueryKey, useRubricPreview } from './useRubricPreview';
@@ -18,6 +19,13 @@ export type UseQuestionPreviewArgs = {
   currentRubricVersion?: number | null;
   /** Xem `useRubricPreview` — lưu thước đo + câu hỏi lên server TRƯỚC khi POST. */
   beforeRun?: () => Promise<string | null>;
+  /**
+   * SC2 · T9 — SAU `beforeRun`, câu đúc cục bộ (`client-…`) đã được server cấp id thật, nhưng `run` giữ
+   * `questionId` từ lúc bấm nút. Không hỏi lại thì `useRubricPreview` lọc id không-GUID thành `null` ⇒ BE
+   * chấm CÂU ĐẦU TIÊN ⇒ kết quả rơi vào card khác, im lặng. Wizard truyền hàm tra bảng alias local→server
+   * (`useCampaignWizard.resolveQuestionId`); trang chi tiết (mọi câu đã có id server) không cần.
+   */
+  resolveQuestionId?: (localId: string) => string;
 };
 
 function selectRunsForQuestion(
@@ -44,8 +52,33 @@ export function useQuestionPreview({
   questionId,
   currentRubricVersion = null,
   beforeRun,
+  resolveQuestionId,
 }: UseQuestionPreviewArgs): UseQuestionPreviewApi {
-  const base = useRubricPreview({ campaignId, beforeRun });
+  // Request đang bay — `useRubricPreview.run` đọc `input.questionId` SAU `await beforeRun()` (rồi mới lọc
+  // GUID + spread vào body), nên ghi id đã resolve vào CHÍNH object này là đủ để POST mang id server.
+  // Test `useQuestionPreview.test.tsx` khoá thứ tự đó; đổi `useRubricPreview` đọc id trước await ⇒ test ĐỎ.
+  const pendingRef = useRef<RubricPreviewRequest | null>(null);
+  const [localError, setLocalError] = useState<RubricPreviewError | null>(null);
+  const wrappedBeforeRun = useMemo(() => {
+    if (!beforeRun) return undefined;
+    return async (): Promise<string | null> => {
+      const persisted = await beforeRun();
+      if (!persisted) return null;
+      const pending = pendingRef.current;
+      if (pending && resolveQuestionId && pending.questionId) {
+        const resolved = resolveQuestionId(pending.questionId);
+        if (!isServerEntityId(resolved)) {
+          // Lưu xong mà câu vẫn không có id server (không được PUT vì prompt rỗng, PUT hụt…) — KHÔNG để
+          // `useRubricPreview` gửi `null` rồi BE chấm câu đầu tiên thay cho câu HR đang đứng (I7).
+          setLocalError({ code: 'noQuestions', message: '' });
+          return null;
+        }
+        pending.questionId = resolved;
+      }
+      return persisted;
+    };
+  }, [beforeRun, resolveQuestionId]);
+  const base = useRubricPreview({ campaignId, beforeRun: wrappedBeforeRun });
 
   const select = useCallback(
     (data: RubricPreviewRun[]) => selectRunsForQuestion(data, questionId),
@@ -66,9 +99,22 @@ export function useQuestionPreview({
   const runningQuestionId = base.latest?.status === 'Running' ? base.latest.questionId : null;
 
   const run = useCallback(
-    (customAnswer?: string | null) => base.run({ questionId, customAnswer: customAnswer ?? null }),
+    async (customAnswer?: string | null) => {
+      setLocalError(null);
+      const input: RubricPreviewRequest = { questionId, customAnswer: customAnswer ?? null };
+      pendingRef.current = input;
+      try {
+        return await base.run(input);
+      } finally {
+        pendingRef.current = null;
+      }
+    },
     [base.run, questionId],
   );
+  const clearError = useCallback(() => {
+    setLocalError(null);
+    base.clearError();
+  }, [base.clearError]);
 
   return {
     runs,
@@ -77,8 +123,8 @@ export function useQuestionPreview({
     isRunning: base.isRunning,
     runningQuestionId,
     freeRunsRemaining: freeRunsForQuestion(runs, currentRubricVersion, questionId),
-    error: base.error,
+    error: base.error ?? localError,
     run,
-    clearError: base.clearError,
+    clearError,
   };
 }

@@ -85,9 +85,10 @@ export function mapQuestionsToApiRequest(
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
         ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
-        // SC2 — PUT ba trạng thái: `undefined`/`null` domain ⇒ khoá VẮNG (giữ nguyên nhãn server đang
-        // có); mảng thật (kể cả `[]`) ⇒ gửi nguyên, đã lọc id KHÔNG phải GUID server (tiêu chí vừa
-        // thêm tay trong CÙNG lượt lưu chưa có id thật ⇒ gửi id đó sẽ 400 "không thuộc chiến dịch").
+        // SC2 — PUT BA nhánh (xem `normalizeTargetCriterionIdsForRequest`): `undefined`/`null` ⇒ khoá VẮNG
+        // (giữ nguyên nhãn server đang có) · `[]` thật ⇒ gửi `[]` (HR đã chủ động "chỉ Always") · mảng có
+        // phần tử ⇒ gửi phần đã lọc GUID, nhưng nếu lọc xong RỖNG (toàn id tạm — tiêu chí vừa thêm tay trong
+        // CÙNG lượt lưu, gửi id đó sẽ 400 "không thuộc chiến dịch") ⇒ cũng OMIT khoá, KHÔNG gửi `[]`.
         // Bỏ HẲN khoá khi vắng (không gán `undefined`) — `toHaveProperty` thấy khoá dù giá trị undefined.
         ...(targetCriterionIds !== undefined ? { targetCriterionIds } : {}),
         // CAMP-16 kiểu 3 trạng thái CỦA RIÊNG field này: `undefined` domain (chưa từng đọc) ⇒ bỏ khoá;
@@ -101,12 +102,24 @@ export function mapQuestionsToApiRequest(
     });
 }
 
-/** `undefined`/`null` ⇒ omit key (JSON/`toEqual` coi `undefined` là vắng); mảng thật ⇒ lọc còn GUID server. */
+/**
+ * Ba ca, KHÔNG phải hai (T7-R1, đã đo có rủi ro thật): `undefined`/`null` ⇒ omit key (JSON/
+ * `toEqual` coi `undefined` là vắng) · mảng GỐC rỗng thật `[]` ⇒ gửi `[]` nguyên (HR đã chủ động
+ * "chỉ Always") · mảng GỐC có phần tử nhưng SAU lọc GUID còn rỗng (toàn id tạm `criterion-N`/
+ * `new-xxxx` — tiêu chí vừa thêm tay trong CÙNG lượt lưu, chưa có id server) ⇒ OMIT khoá, KHÔNG
+ * gửi `[]`. Gửi `[]` ở ca thứ ba sẽ bị BE đọc thành "XOÁ nhãn" (W1) trong khi ý định thật là
+ * "chưa resolve được, đừng đụng nhãn đang có trên server" — hai ý khác hẳn nhau.
+ * FACT T9-R3 (P8): ca thứ ba nay chỉ còn tới được khi PUT câu hỏi chạy TRƯỚC `remapQuestionTargetIds` — sau
+ * `persistForPreview`, id tạm không resolve được đã bị `remapQuestionTargetIds` CẮT ⇒ tới đây là `[]` gốc ⇒ gửi
+ * `[]` (= chỉ Always), KHÔNG omit như T7; đổi ngữ nghĩa tường minh, nhất quán với BE cắt dangling.
+ */
 function normalizeTargetCriterionIdsForRequest(
   value: string[] | null | undefined,
 ): string[] | undefined {
   if (value == null) return undefined;
-  return value.filter((id) => isServerEntityId(id));
+  if (value.length === 0) return [];
+  const resolved = value.filter((id) => isServerEntityId(id));
+  return resolved.length === 0 ? undefined : resolved;
 }
 
 function criteriaRequestToRubric(

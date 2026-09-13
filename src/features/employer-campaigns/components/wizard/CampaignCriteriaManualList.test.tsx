@@ -222,3 +222,47 @@ describe('CampaignCriteriaManualList — nút "AI đề xuất mốc" ở header
     expect(screen.getByRole('button', { name: /levelsEditor\.openEmpty/ })).toBeEnabled();
   });
 });
+
+describe('CampaignCriteriaManualList — đổi phạm vi chấm ở tầng DANH SÁCH (SC2)', () => {
+  const twoRows: RubricCriterion[] = [
+    { id: 'c1', name: 'Giao tiếp', description: 'Mô tả 1', weight: 60, maxScore: 10, scoringScope: 'Always' },
+    { id: 'c2', name: 'Chiều sâu', description: 'Mô tả 2', weight: 40, maxScore: 5, scoringScope: 'Always' },
+  ];
+
+  it('bấm "Chỉ khi câu hỏi nhắm tới" ở hàng 2 ⇒ onChangeRubric nhận MẢNG MỚI: hàng 2 đổi scope, mọi field khác + hàng 1 nguyên, mảng gốc không mutate', () => {
+    const snapshot = JSON.stringify(twoRows);
+    const onChangeRubric = vi.fn();
+    render(<CampaignCriteriaManualList rubric={twoRows} onChangeRubric={onChangeRubric} />);
+
+    const toggles = screen.getAllByRole('button', { name: 'employer.campaigns.wizard.rubric.scope.whenTargeted' });
+    expect(toggles).toHaveLength(2);
+    fireEvent.click(toggles[1]);
+
+    const next = onChangeRubric.mock.calls.at(-1)?.[0] as RubricCriterion[];
+    expect(next).not.toBe(twoRows);
+    expect(next[1]).toEqual({ ...twoRows[1], scoringScope: 'WhenTargeted' });
+    expect(next[0]).toBe(twoRows[0]);
+    // Patch phải ĐÈ lên item (`{ ...item, ...patch }`), không phải item đè lên patch — đảo thứ tự spread thì scope
+    // không bao giờ đổi mà suite cũ vẫn xanh (Tester đã đo).
+    expect(next[1].scoringScope).toBe('WhenTargeted');
+    expect(JSON.stringify(twoRows)).toBe(snapshot);
+  });
+
+  it('bấm lại segment ĐANG chọn ⇒ không phát onChangeRubric (không báo "Chưa lưu" oan)', () => {
+    const onChangeRubric = vi.fn();
+    render(<CampaignCriteriaManualList rubric={twoRows} onChangeRubric={onChangeRubric} />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'employer.campaigns.wizard.rubric.scope.always' })[1]);
+    expect(onChangeRubric).not.toHaveBeenCalled();
+  });
+});
+
+describe('CampaignCriteriaManualList — tiêu chí mới thêm (SC2)', () => {
+  it('bấm "Thêm tiêu chí mới" ⇒ tiêu chí mới mang scoringScope: Always (mặc định an toàn)', () => {
+    const { onChangeRubric } = renderList();
+    fireEvent.click(addButton());
+
+    const nextRubric = onChangeRubric.mock.calls.at(-1)?.[0] as RubricCriterion[];
+    const added = nextRubric.at(-1);
+    expect(added?.scoringScope).toBe('Always');
+  });
+});

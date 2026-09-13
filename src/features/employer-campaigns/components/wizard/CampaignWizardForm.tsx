@@ -13,6 +13,8 @@ interface CampaignWizardFormProps {
   mode: CampaignFormMode;
   /** Bước mở đầu (0-based), chỉ chế độ edit — xem `useCampaignWizard`. */
   initialStep?: number;
+  /** Deep-link `?question=<id>` — mở đúng card câu hỏi ở bước 4 (SC2 · T9). */
+  initialQuestionId?: string | null;
   onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
   onUpdateCampaign: (campaignId: string, payload: CampaignUpdateRequest) => Promise<EmployerCampaign>;
   onUpdateQuestions: (campaignId: string, questions: CampaignCreateQuestionRequest[]) => Promise<EmployerCampaign>;
@@ -61,7 +63,7 @@ export function useDismissStepSuccessToasts(step: number) {
   }, [step]);
 }
 
-export function CampaignWizardForm({ campaign, mode, initialStep, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations }: CampaignWizardFormProps) {
+export function CampaignWizardForm({ campaign, mode, initialStep, initialQuestionId, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations }: CampaignWizardFormProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const wizard = useCampaignWizard({ campaign, mode, initialStep, onCreateCampaign, onUpdateCampaign, onUpdateQuestions, onGenerateQuestions, onImportQuestions, onUploadFiles, onReplaceFiles, onDownloadFile, onAfterSubmit, onDeployCampaign, onSendInvitations });
@@ -70,6 +72,6 @@ export function CampaignWizardForm({ campaign, mode, initialStep, onCreateCampai
   const finalSubmitLabel = t('employer.campaigns.wizard.deploy.action');
   const finalLoadingLabel = t('employer.campaigns.wizard.deploy.deploying');
   return <CampaignWizardShell currentStep={step} errorSteps={wizard.errorSteps} campaignName={state.info.title} isEditing={mode === 'edit'} autosaveStatus={state.autosaveStatus} lastSavedAt={state.lastSavedAt} completedSteps={wizard.completedSteps} onStepChange={wizard.goToStep}>
-    <CampaignWizardStepContent campaign={campaign} wizard={wizard} onCancel={() => navigate('/employer/campaigns')} finalSubmitLabel={finalSubmitLabel} finalLoadingLabel={finalLoadingLabel} />
+    <CampaignWizardStepContent campaign={campaign} wizard={wizard} onCancel={() => navigate('/employer/campaigns')} finalSubmitLabel={finalSubmitLabel} finalLoadingLabel={finalLoadingLabel} initialQuestionId={initialQuestionId} />
   </CampaignWizardShell>;
 }

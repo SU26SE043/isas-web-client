@@ -51,6 +51,18 @@ describe('mapQuestionsToApiRequest', () => {
     ).toEqual(['3fa85f64-5717-4562-b3fc-2c963f66afa6']);
   });
 
+  // T7-R1 — ca THỨ BA, khác cả hai ca trên: mảng GỐC có phần tử (HR ĐÃ gắn nhãn) nhưng toàn id
+  // TẠM (tiêu chí WhenTargeted vừa thêm tay trong CÙNG lượt lưu, chưa qua PUT nên chưa có id
+  // server). Gửi `[]` ở đây sẽ bị BE đọc là "XOÁ nhãn" — mất liên kết HR vừa tạo. Phải OMIT khoá
+  // (giữ nguyên trên server) để lượt lưu SAU (khi tiêu chí đã có id thật) có cơ hội gắn lại.
+  it('targetCriterionIds: mảng gốc có phần tử nhưng SAU lọc GUID còn rỗng (toàn id tạm) ⇒ OMIT khoá, KHÔNG gửi []', () => {
+    const base = { prompt: 'Câu hỏi', skill: '', difficulty: 'middle' as const, source: 'manual' as const, isRequired: true };
+
+    expect(
+      mapQuestionsToApiRequest([{ ...base, id: 'q1', targetCriterionIds: ['criterion-not-guid', 'another-fake-id'] }])[0],
+    ).not.toHaveProperty('targetCriterionIds');
+  });
+
   // CAMP-16 — `sampleAnswer`: `undefined` (chưa từng đọc) ⇒ khoá vắng; `null` ⇒ gửi `null` = GIỮ
   // NGUYÊN; `''` ⇒ gửi `''` = XOÁ; chuỗi khác ⇒ đặt giá trị mới.
   it('sampleAnswer: undefined ⇒ vắng khoá; null/rỗng/chuỗi đều gửi nguyên (3 trạng thái CAMP-16)', () => {

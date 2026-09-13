@@ -192,3 +192,58 @@ describe('useQuestionPreview — run() POST đúng câu đã truyền vào hook'
     expect(runMock).toHaveBeenCalledWith('c1', { questionId: null, customAnswer: null });
   });
 });
+
+describe('useQuestionPreview — SC2 · T9: resolveQuestionId sau beforeRun (câu vừa được lưu mới có id server)', () => {
+  const SERVER_ID = '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40';
+
+  it('beforeRun HOÀN TẤT rồi mới POST, và POST mang id server do resolveQuestionId trả về (không phải null)', async () => {
+    runMock.mockResolvedValue(makeRun({ id: 'run-new', questionId: SERVER_ID }));
+    const order: string[] = [];
+    const beforeRun = vi.fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      order.push('beforeRun:done');
+      return 'c-1';
+    });
+    runMock.mockImplementation(async () => { order.push('POST'); return makeRun({ id: 'run-new', questionId: SERVER_ID }); });
+    // correction T9-R3 (F3): resolver KHÔNG được là bảng tĩnh — alias local→server chỉ tồn tại SAU khi `beforeRun`
+    // (PUT) xong. Bảng tĩnh khiến phép hoist resolve lên TRƯỚC `await beforeRun()` vẫn xanh, trong khi production
+    // sẽ chặn mọi lượt chấm thử ĐẦU TIÊN (alias chưa có ⇒ id vẫn `client-…` ⇒ báo lỗi, không POST).
+    const resolveQuestionId = vi.fn((id: string) => {
+      order.push('resolve');
+      return id === 'client-abc' && order.includes('beforeRun:done') ? SERVER_ID : id;
+    });
+    const { result } = renderHook(
+      () => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun, resolveQuestionId }),
+      { wrapper },
+    );
+    await act(async () => { await result.current.run('Bài'); });
+    expect(order).toEqual(['beforeRun:done', 'resolve', 'POST']);
+    expect(resolveQuestionId).toHaveBeenCalledWith('client-abc');
+    expect(runMock).toHaveBeenCalledWith('c-1', { questionId: SERVER_ID, customAnswer: 'Bài' });
+  });
+
+  it('có resolver mà sau khi lưu vẫn không có id server ⇒ KHÔNG POST (không để BE chấm câu đầu tiên), báo lỗi, clearError dọn được', async () => {
+    const beforeRun = vi.fn(async () => 'c-1');
+    const resolveQuestionId = vi.fn((id: string) => id);
+    const { result } = renderHook(
+      () => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun, resolveQuestionId }),
+      { wrapper },
+    );
+    let returned: unknown = 'x';
+    await act(async () => { returned = await result.current.run(); });
+    expect(returned).toBeNull();
+    expect(runMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(result.current.error?.code).toBe('noQuestions'));
+    act(() => result.current.clearError());
+    await waitFor(() => expect(result.current.error).toBeNull());
+  });
+
+  it('không có resolver ⇒ hành vi cũ nguyên (id không-GUID ⇒ gửi null), beforeRun vẫn gọi trước', async () => {
+    runMock.mockResolvedValue(makeRun());
+    const beforeRun = vi.fn(async () => 'c-1');
+    const { result } = renderHook(() => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun }), { wrapper });
+    await act(async () => { await result.current.run(); });
+    expect(beforeRun).toHaveBeenCalledTimes(1);
+    expect(runMock).toHaveBeenCalledWith('c-1', { questionId: null, customAnswer: null });
+  });
+});

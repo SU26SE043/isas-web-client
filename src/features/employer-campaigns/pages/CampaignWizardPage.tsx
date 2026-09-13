@@ -21,6 +21,12 @@ export function parseWizardStepParam(raw: string | null): number | undefined {
   return oneBased >= 1 ? oneBased - 1 : undefined;
 }
 
+/** `?question=<id>` (SC2 · T9) — id câu hỏi cần mở ở bước 4; rỗng/rác ⇒ không mở gì (id lạ đã bị Sections bỏ qua). */
+export function parseWizardQuestionParam(raw: string | null): string | null {
+  const value = raw?.trim() ?? '';
+  return value ? value : null;
+}
+
 export function CampaignWizardPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -44,6 +50,7 @@ export function CampaignWizardPage() {
   const isEditing = mode === 'edit';
   // `?step=3` = "Bước 3/8" như người dùng thấy (1-based); hook nhận 0-based. Rác/ngoài dải ⇒ bỏ qua, mở bước 1.
   const initialStep = parseWizardStepParam(searchParams.get('step'));
+  const initialQuestionId = parseWizardQuestionParam(searchParams.get('question'));
 
   const handleCreateCampaign = async (input: CampaignCreateRequest) => {
     return createCampaign(input);
@@ -156,6 +163,7 @@ export function CampaignWizardPage() {
       campaign={campaign}
       mode={mode}
       initialStep={initialStep}
+      initialQuestionId={initialQuestionId}
       onCreateCampaign={handleCreateCampaign}
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}

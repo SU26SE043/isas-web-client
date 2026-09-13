@@ -287,3 +287,59 @@ describe('persistForPreview — ngày bắt đầu', () => {
     expect(id).toBe('c-1');
   });
 });
+
+/**
+ * SC2 · T9 — quyết định (a) của scope picker: sau PUT metadata, id tạm của tiêu chí vừa thêm ở bước 3 được thay
+ * bằng id server (ghép theo tên) TRƯỚC khi PUT câu hỏi, để nhãn câu trỏ vào tiêu chí mới không bị lọc rớt
+ * (FACT T7-R1). Và `resolveQuestionId` tra id server cho câu `client-…` vừa được lưu.
+ */
+describe('persistForPreview — SC2 · T9: id tạm → id server (tiêu chí theo TÊN, câu hỏi theo response)', () => {
+  const CRIT_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const CRIT_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+
+  it('nhãn câu trỏ id tạm ⇒ sau PUT metadata (trả rubric có id) PUT câu hỏi mang id SERVER; state.rubric nhận id server; lần 2 không PUT lại', async () => {
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({
+      rubric: [
+        { id: CRIT_A, name: 'Giao tiếp', description: '', weight: 0.6, maxScore: 10 },
+        { id: CRIT_B, name: 'Kỹ thuật', description: '', weight: 0.4, maxScore: 10 },
+      ],
+    }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => {
+      result.current.setQuestions([
+        { ...clientQuestions[0], targetCriterionIds: ['new-b'] },
+        { ...clientQuestions[1], targetCriterionIds: null },
+      ]);
+    });
+
+    await act(async () => { await result.current.persistForPreview(); });
+
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(1);
+    const payload = (handlers.onUpdateQuestions as ReturnType<typeof vi.fn>).mock.calls[0][1] as Array<Record<string, unknown>>;
+    expect(payload[0].targetCriterionIds).toEqual([CRIT_B]);
+    expect(payload[1]).not.toHaveProperty('targetCriterionIds');
+    expect(result.current.state.rubric.map((item) => item.id)).toEqual([CRIT_A, CRIT_B]);
+
+    await act(async () => { await result.current.persistForPreview(); });
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolveQuestionId: trước lưu trả nguyên id client; sau lưu trả id server của ĐÚNG câu đó', async () => {
+    const { result } = renderCreateWizard(handlers);
+    expect(result.current.resolveQuestionId('client-2')).toBe('client-2');
+    await act(async () => { await result.current.persistForPreview(); });
+    expect(result.current.resolveQuestionId('client-1')).toBe(SERVER_Q1);
+    expect(result.current.resolveQuestionId('client-2')).toBe(SERVER_Q2);
+    expect(result.current.resolveQuestionId('id-la')).toBe('id-la');
+  });
+
+  it('PUT metadata trả rubric rỗng/không khớp tên ⇒ giữ nguyên id tạm, không ném, nhãn id tạm bị omit như trước', async () => {
+    const { result } = renderCreateWizard(handlers);
+    act(() => { result.current.setQuestions([{ ...clientQuestions[0], targetCriterionIds: ['new-b'] }]); });
+    await act(async () => { await result.current.persistForPreview(); });
+    const payload = (handlers.onUpdateQuestions as ReturnType<typeof vi.fn>).mock.calls[0][1] as Array<Record<string, unknown>>;
+    expect(payload[0]).not.toHaveProperty('targetCriterionIds');
+    expect(result.current.state.rubric.map((item) => item.id)).toEqual(['new-a', 'new-b']);
+  });
+});

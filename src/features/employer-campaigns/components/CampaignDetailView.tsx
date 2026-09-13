@@ -22,7 +22,7 @@ import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
 import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
 import { useCampaignSlots } from '../hooks/useCampaignSlots';
-import { CampaignRubricPreviewSection } from './CampaignRubricPreviewSection';
+import { CampaignDetailQuestionsSection } from './detail/CampaignDetailQuestionsSection';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -191,7 +191,7 @@ export function CampaignDetailView({
             ))}
           </div>
         </CollapsibleDetailCard>
-        <CampaignRubricPreviewSection campaign={campaign} onGoToCriteria={isDraft ? onEditCriteria : undefined} />
+        <CampaignDetailQuestionsSection campaign={campaign} onEditCriteria={isDraft ? onEditCriteria : undefined} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.questions')}
           icon={ListChecks}

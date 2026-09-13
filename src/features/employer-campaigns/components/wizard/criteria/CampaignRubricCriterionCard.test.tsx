@@ -306,3 +306,32 @@ describe('CampaignRubricCriterionCard — bộ sửa mốc điểm', () => {
     expect(screen.getAllByLabelText(`${E}.score`)).toHaveLength(2);
   });
 });
+
+// SC2 — công tắc phạm vi chấm sống trên hàng, cạnh dải badge (không cần mở popup mới thấy).
+describe('CampaignRubricCriterionCard — công tắc phạm vi chấm (SC2)', () => {
+  const S = 'employer.campaigns.wizard.rubric.scope';
+
+  it('vắng scoringScope ⇒ công tắc hiện Always đang chọn (mặc định an toàn)', () => {
+    renderCard();
+    expect(screen.getByRole('button', { name: `${S}.always` })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('scoringScope=WhenTargeted ⇒ công tắc hiện WhenTargeted đang chọn', () => {
+    renderCard({ scoringScope: 'WhenTargeted' });
+    expect(screen.getByRole('button', { name: `${S}.whenTargeted` })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('bấm đổi phạm vi ⇒ onChange({ scoringScope }) của ĐÚNG hàng, không đụng field khác', () => {
+    const { onChange } = renderCard({ scoringScope: 'Always' });
+    fireEvent.click(screen.getByRole('button', { name: `${S}.whenTargeted` }));
+    expect(onChange).toHaveBeenCalledWith({ scoringScope: 'WhenTargeted' });
+  });
+
+  it('khoá bảng ⇒ công tắc cũng bị khoá (không phải cửa hậu qua khoá bảng)', () => {
+    const { onChange } = renderCard({}, { disabled: true });
+    const button = screen.getByRole('button', { name: `${S}.whenTargeted` });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

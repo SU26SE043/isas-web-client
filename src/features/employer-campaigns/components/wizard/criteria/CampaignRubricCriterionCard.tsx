@@ -7,6 +7,7 @@ import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { CampaignCriterionDetailModal } from './CampaignCriterionDetailModal';
 import { CriterionLevelsEditor } from './CriterionLevelsEditor';
+import { CriterionScopeToggle } from './CriterionScopeToggle';
 import type { CriteriaLockReason } from './criteriaLock';
 import { CRITERIA_ROW_GRID } from './criteriaRowGrid';
 import type { RubricCriterion } from '../../../types/campaignManagement.types';
@@ -157,8 +158,9 @@ export function CampaignRubricCriterionCard({
 
       {/* Khoá bảng là cấm SỬA, không phải cấm ĐỌC — nút tóm tắt vẫn bấm được khi `disabled`
           để employer xem được mô tả và mốc điểm của bộ chuẩn. Nút "Sửa mốc" là nút ANH EM
-          (không lồng vào nút tóm tắt — button trong button là HTML sai) và chỉ hiện khi sửa được. */}
-      <div className="mt-3 flex items-center gap-2 border-t border-satin pt-2.5">
+          (không lồng vào nút tóm tắt — button trong button là HTML sai) và chỉ hiện khi sửa được.
+          Công tắc phạm vi (SC2) đứng cạnh — cùng hàng meta, không cần popup mới thấy. */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-satin pt-2.5">
       <button
         type="button"
         aria-haspopup="dialog"
@@ -186,6 +188,11 @@ export function CampaignRubricCriterionCard({
           <ChevronRight className="size-3.5" aria-hidden />
         </span>
       </button>
+      <CriterionScopeToggle
+        scope={criterion.scoringScope}
+        disabled={disabled}
+        onChange={(scoringScope) => onChange({ scoringScope })}
+      />
       {!disabled ? (
         <Button
           type="button"

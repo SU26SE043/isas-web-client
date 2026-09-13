@@ -57,6 +57,11 @@ function list(camel: unknown, pascal: unknown): unknown[] {
   return [];
 }
 
+/** Mảng chuỗi (id tiêu chí); phần tử không phải chuỗi/rỗng bị bỏ. Vắng ⇒ `[]` (khớp docstring `scopedCriterionIds`). */
+function stringList(camel: unknown, pascal: unknown): string[] {
+  return list(camel, pascal).flatMap((item) => (typeof item === 'string' && item.trim() ? [item.trim()] : []));
+}
+
 /**
  * Trạng thái lạ → `Failed` (terminal), KHÔNG phải `Running`: `Running` làm hook poll GET mỗi 5s
  * vô hạn cho một lượt không bao giờ kết thúc.
@@ -145,6 +150,10 @@ export function parseRubricPreviewRun(data: unknown): RubricPreviewRun {
     errorReason: nullableText(row.errorReason ?? row.ErrorReason),
     createdAt: text(row.createdAt ?? row.CreatedAt),
     completedAt: nullableText(row.completedAt ?? row.CompletedAt),
+    // SC2 · correction T9-R3 (F1): BE T6 trả tập tiêu chí ĐÃ chấm; parser bỏ sót ⇒ `scopedCriterionIdsForRun`
+    // không bao giờ tới nhánh "sự thật BE" và bảng luôn lọc theo nhãn HIỆN TẠI (HR đổi nhãn sau lượt chấm ⇒ lượt cũ
+    // hiện sai tập tiêu chí). Lượt cũ / BE chưa deploy ⇒ `[]` ⇒ suy cục bộ như trước.
+    scopedCriterionIds: stringList(row.scopedCriterionIds, row.ScopedCriterionIds),
   };
 }
 

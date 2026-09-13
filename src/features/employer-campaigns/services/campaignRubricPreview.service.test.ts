@@ -44,6 +44,8 @@ const fullRun = {
   errorReason: null,
   createdAt: '2026-09-12T10:00:00Z',
   completedAt: '2026-09-12T10:00:40Z',
+  // SC2 (BE T6) — tập tiêu chí ĐÃ chấm của lượt này; feed như JSON thật, không dựng `RubricPreviewRun` tay.
+  scopedCriterionIds: ['c-1'],
 };
 
 describe('parseRubricPreviewRun', () => {
@@ -59,6 +61,7 @@ describe('parseRubricPreviewRun', () => {
         Rubric: [{ CriterionId: 'c', Name: 'N', Weight: 1, MaxScore: 5, Levels: [{ Score: 5, Descriptor: 'Tốt' }] }],
         Samples: [{ Band: 'Excellent', AnswerText: 'x', WordCount: 1, ExpectedWeightedPct: 90, ActualWeightedPct: 88, Scores: [] }],
         CreatedAt: '2026-09-12T11:00:00Z',
+        ScopedCriterionIds: ['c', 7, '', ' c2 '],
       },
     });
     expect(parsed).toMatchObject({
@@ -66,12 +69,14 @@ describe('parseRubricPreviewRun', () => {
       rubric: [{ criterionId: 'c', name: 'N', weight: 1, maxScore: 5, levels: [{ score: 5, descriptor: 'Tốt' }] }],
       samples: [{ band: 'Excellent', scores: [] }],
       completedAt: null, errorReason: null,
+      scopedCriterionIds: ['c', 'c2'],
     });
   });
 
   it('mảng thiếu → [], status lạ → Failed (không phải Running, kẻo poll vô hạn), band lạ → Custom', () => {
     const parsed = parseRubricPreviewRun({ id: 'r', status: 'Weird', samples: [{ band: 'Nope' }] });
     expect(parsed.rubric).toEqual([]);
+    expect(parsed.scopedCriterionIds).toEqual([]);
     expect(parsed.status).toBe('Failed');
     expect(parsed.samples[0]?.band).toBe('Custom');
     expect(parsed.samples[0]?.scores).toEqual([]);
