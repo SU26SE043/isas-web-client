@@ -28,7 +28,8 @@ vi.mock('../hooks/useCampaignSlots', () => ({
 vi.mock('./slots/CampaignSlotsPanel', () => ({ CampaignSlotsPanel: () => null }));
 vi.mock('./CampaignAttachmentsCard', () => ({ CampaignAttachmentsCard: () => null }));
 vi.mock('./CampaignJobNeedsCard', () => ({ CampaignJobNeedsCard: () => null }));
-vi.mock('./CampaignRubricPreviewSection', () => ({ CampaignRubricPreviewSection: () => null }));
+// SC2 T10 thay `CampaignRubricPreviewSection` bằng section card theo câu (cần Router + react-query) — cùng lý do cắt.
+vi.mock('./detail/CampaignDetailQuestionsSection', () => ({ CampaignDetailQuestionsSection: () => null }));
 vi.mock('./CampaignScoringRulesCard', () => ({ CampaignScoringRulesCard: () => null }));
 vi.mock('./CampaignDetailActions', () => ({ CampaignDetailActions: () => null }));
 
