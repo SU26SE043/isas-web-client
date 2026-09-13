@@ -26,7 +26,7 @@ interface CampaignReviewStepProps {
   invitationFailureReason?: string | null; canRetryInvitations?: boolean;
 }
 
-interface BlockingItem { key: string; label: string; step: number; }
+interface BlockingItem { key: string; label: string; step: number; /** Có ⇒ `label` là câu thường, chỉ vế này thành link (câu dài không nên gạch chân cả đoạn). */ linkLabel?: string; }
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -66,7 +66,7 @@ export function CampaignReviewStep({
   // Có rubric ⇒ bản cục bộ là sự thật (kể cả khi server còn giữ cảnh báo cũ của lần lưu trước); không rubric ⇒ tin server.
   const kRuleLabel = localK ? formatKRuleMessage(t, localK) : rubric.length > 0 ? null : serverWarnings.blocking[0] ?? null;
   const blocking: BlockingItem[] = [
-    kRuleLabel ? { key: 'kRule', label: kRuleLabel, step: 3 } : null,
+    kRuleLabel ? { key: 'kRule', label: kRuleLabel, step: 3, linkLabel: t('employer.campaigns.review.previewSummary.goToQuestions') } : null,
     !jd.jdText.trim() && !jd.fileName && !jd.serverUploaded ? { key: 'jd', label: t('employer.campaigns.wizard.jdTextRequired'), step: 1 } : null,
     rubric.length === 0 ? { key: 'rubric', label: t('employer.campaigns.wizard.criteriaRequired'), step: 2 } : null,
     questions.length === 0 ? { key: 'questions', label: t('employer.campaigns.wizard.questionsRequired'), step: 3 } : null,
@@ -115,7 +115,7 @@ export function CampaignReviewStep({
             {canRetryInvitations && onRetryInvitations ? <Button type="button" variant="outline" className="mt-3" disabled={isSubmitting} loading={isSubmitting} onClick={onRetryInvitations}>{t('employer.campaigns.wizard.deploy.retryInvitations')}</Button> : null}
           </AlertDescription>
         </Alert> : null}
-        {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.key}><button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button></li>)}</ul></section> : null}
+        {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.key}>{item.linkLabel ? <>{item.label} <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={() => onGoToStep(item.step)}>{item.linkLabel}</button></> : <button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button>}</li>)}</ul></section> : null}
         {slots.length > 0 ? <CampaignReviewSlotsTable slots={slots} outsideIds={outsideWindowSlots.map((slot) => slot.id)} /> : null}
         {serverWarnings.soft.length ? <Alert variant="warning"><AlertTitle>{t('employer.campaigns.wizard.deploy.warningTitle')}</AlertTitle><AlertDescription><ul className="list-inside list-disc">{serverWarnings.soft.map((warning) => <li key={warning}>{warning}</li>)}</ul></AlertDescription></Alert> : null}
         {settings.adaptiveEnabled ? <section className="frame-satin space-y-2 rounded-xl bg-surface-overlay p-4" aria-label={t('employer.campaigns.wizard.review.adaptiveBudget')}>

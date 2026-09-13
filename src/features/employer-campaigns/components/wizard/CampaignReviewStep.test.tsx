@@ -303,15 +303,21 @@ describe('CampaignReviewStep — K-rule ở bước 8: chữ người đọc, t�
 
   it('K=1 < 2 tiêu chí được nhắm ⇒ mục chặn dùng copy kRule (không mã máy), link về bước 4, nút Triển khai KHÓA', () => {
     render(<CampaignReviewStep {...baseProps} rubric={rubricWT} questions={[q('q1', ['c-a']), q('q2', ['c-b'])]} questionsPerSession={1} questionBankWarnings={['K_BELOW_CRITERIA_GROUPS: questions_per_session (1) …']} disableForBlockingIssues />);
-    const item = screen.getByRole('button', { name: /employer\.campaigns\.questionCard\.coverage\.kRule/ });
-    expect(item).toBeInTheDocument();
+    expect(screen.getByText(/employer\.campaigns\.questionCard\.coverage\.kRule/)).toBeInTheDocument();
+    // Câu dài là chữ thường; chỉ vế "Sang bước 4" là link (bấm ⇒ về bước Câu hỏi).
+    // (cùng nhãn với link của dòng tóm tắt chấm thử ⇒ có 2 nút; nút trong khối chặn là nút đầu)
+    const links = screen.getAllByRole('button', { name: 'employer.campaigns.review.previewSummary.goToQuestions' });
+    expect(links.length).toBe(2);
+    const onGoToStep = baseProps.onGoToStep as ReturnType<typeof vi.fn>;
+    fireEvent.click(links[0]);
+    expect(onGoToStep).toHaveBeenCalledWith(3);
     expect(screen.queryByText(/K_BELOW_CRITERIA_GROUPS/)).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeDisabled();
   });
 
   it('server chặn nhưng state đã sửa (K=2 ≥ 2) ⇒ KHÔNG chặn; cảnh báo mềm của server vẫn hiện, không kèm dòng K-rule', () => {
     render(<CampaignReviewStep {...baseProps} rubric={rubricWT} questions={[q('q1', ['c-a']), q('q2', ['c-b'])]} questionsPerSession={2} questionBankWarnings={['K_BELOW_CRITERIA_GROUPS: cũ', 'Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).']} disableForBlockingIssues />);
-    expect(screen.queryByRole('button', { name: /coverage\.kRule/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/coverage\.kRule/)).not.toBeInTheDocument();
     expect(screen.getByText('Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).')).toBeInTheDocument();
     expect(screen.queryByText(/K_BELOW_CRITERIA_GROUPS/)).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
