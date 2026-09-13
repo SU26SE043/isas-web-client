@@ -42,39 +42,57 @@ export function splitQuestionBankWarnings(warnings: string[]): { blocking: strin
 }
 
 /**
- * Số "tiêu chí CHÍNH" distinct = `targetCriterionIds[0]` của mỗi câu có nhãn (cùng định nghĩa với selector
- * rút đều của BE — một câu chỉ đếm vào MỘT rổ).
+ * R4 — tập id tiêu chí `WhenTargeted` của rubric (mirror BE `WT`). `undefined` khi không biết rubric ⇒ giữ hành vi
+ * cũ (đếm mọi nhãn[0]).
  */
-export function primaryCriteriaCount(questions: CampaignQuestion[]): number {
-  return primaryCriteriaOf(questions).size;
+function targetableIdsOf(rubric: RubricCriterion[] | undefined): ReadonlySet<string> | undefined {
+  if (!rubric) return undefined;
+  return new Set(rubric.filter((criterion) => criterion.scoringScope === 'WhenTargeted').map((criterion) => criterion.id));
 }
 
-function primaryCriteriaOf(questions: CampaignQuestion[]): Set<string> {
+/**
+ * Số "tiêu chí CHÍNH" distinct = `targetCriterionIds[0]` của mỗi câu có nhãn (cùng định nghĩa với selector
+ * rút đều của BE — một câu chỉ đếm vào MỘT rổ). Có `rubric` ⇒ CHỈ đếm id `WhenTargeted` (R4).
+ */
+export function primaryCriteriaCount(questions: CampaignQuestion[], rubric?: RubricCriterion[]): number {
+  return primaryCriteriaOf(questions, targetableIdsOf(rubric)).size;
+}
+
+function primaryCriteriaOf(questions: CampaignQuestion[], targetable?: ReadonlySet<string>): Set<string> {
   const primary = new Set<string>();
   for (const question of questions) {
     const first = question.targetCriterionIds?.[0];
-    if (first) primary.add(first);
+    if (!first) continue;
+    // R4 mirror BE: nhãn[0] KHÔNG thuộc WT (HR lật scope tiêu chí về Always SAU khi đã gắn nhãn) không phải tiêu chí
+    // chính — Always chấm mọi câu nên không cần "rổ" riêng; đếm nó là chặn publish oan.
+    if (targetable && !targetable.has(first)) continue;
+    primary.add(first);
   }
   return primary;
 }
 
 /**
- * K-rule tính cục bộ — mirror BE `QuestionBankSummary.Build` (SC2 · BUG-2): câu BẮT BUỘC luôn được rút nên
+ * K-rule tính cục bộ — mirror BE `QuestionBankSummary.Build` (SC2 · BUG-2 + R4): câu BẮT BUỘC luôn được rút nên
  * (a) chiếm khe: khe còn lại = `K − |required|`; (b) tiêu chí chính chúng nhắm coi như ĐÃ phủ. Chặn khi
  * `K − |required| < |tiêu chí chính của câu KHÔNG bắt buộc ∖ tiêu chí chính của câu bắt buộc|`. Không có câu bắt
  * buộc ⇒ suy biến về `K < distinct tiêu chí chính`. `null` = không vi phạm (K null = thi hết bộ ⇒ mọi câu đều
  * được hỏi). Đây là lý do "K ≥ số tiêu chí" chưa đủ: một câu bắt buộc không nhãn ăn mất khe, tiêu chí còn lại
  * bị rơi cho MỌI ứng viên mà không ai báo.
+ * Công thức BE: `WT = {id | scoringScope == 'WhenTargeted'}` · `covered = {label[0] | required, label[0] ∈ WT}` ·
+ * `uncovered = {label[0] | !required, label[0] ∈ WT} ∖ covered` · chặn khi `K ≠ null && |uncovered| > 0 && K − |required| < |uncovered|`.
+ * Không có `rubric` ⇒ không lọc theo WT (như trước R4).
  */
 export function computeLocalKRule(
   questions: CampaignQuestion[],
   questionsPerSession: number | null | undefined,
+  rubric?: RubricCriterion[],
 ): { k: number; required: number; uncovered: number } | null {
   if (questionsPerSession == null) return null;
+  const targetable = targetableIdsOf(rubric);
   const required = questions.filter((question) => question.isRequired);
   const optional = questions.filter((question) => !question.isRequired);
-  const covered = primaryCriteriaOf(required);
-  const uncovered = [...primaryCriteriaOf(optional)].filter((id) => !covered.has(id)).length;
+  const covered = primaryCriteriaOf(required, targetable);
+  const uncovered = [...primaryCriteriaOf(optional, targetable)].filter((id) => !covered.has(id)).length;
   const slots = questionsPerSession - required.length;
   // `uncovered === 0` ⇒ không có tiêu chí nào rơi (câu bắt buộc phủ hết) — ca `|required| > K` đã có cảnh báo
   // riêng "số câu bắt buộc nhiều hơn số câu mỗi buổi" (CAMP-22), không báo K-rule chồng lên.

@@ -23,7 +23,8 @@ export interface QuestionCoverageNoticeProps {
 export function QuestionCoverageNotice({ questions, questionsPerSession, rubric, serverCoverageWarnings = [], questionBankWarnings = [] }: QuestionCoverageNoticeProps) {
   const { t } = useLanguage();
   const coverage = rubric ? computeLocalCoverageWarnings(rubric, questions) : serverCoverageWarnings;
-  const localK = computeLocalKRule(questions, questionsPerSession);
+  // R4 — truyền rubric để K-rule chỉ đếm tiêu chí `WhenTargeted` (mirror BE); vắng rubric ⇒ đếm mọi nhãn như trước.
+  const localK = computeLocalKRule(questions, questionsPerSession, rubric);
   const { blocking } = splitQuestionBankWarnings(questionBankWarnings);
   const kMessages = localK
     ? [t('employer.campaigns.questionCard.coverage.kRule').replace('{{k}}', String(localK.k)).replace('{{r}}', String(localK.required)).replace('{{n}}', String(localK.uncovered))]

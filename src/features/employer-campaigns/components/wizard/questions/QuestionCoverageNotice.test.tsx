@@ -43,6 +43,13 @@ describe('QuestionCoverageNotice', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
+  // R4 (khe nối): notice phải TRUYỀN rubric xuống K-rule — nhãn[0] trỏ tiêu chí Always (HR lật scope sau khi gắn) không
+  // phải tiêu chí chính ⇒ K=1 với q1 [A(Always)] + q2 [C] chỉ có 1 tiêu chí chính ⇒ KHÔNG chặn.
+  it('R4: nhãn[0] trỏ tiêu chí Always không đếm là tiêu chí chính ⇒ K=1 không chặn', () => {
+    const { container } = render(<QuestionCoverageNotice questions={[q('q1', ['c-a']), q('q2', ['c-c'])]} questionsPerSession={1} rubric={rubric} />);
+    expect(container.querySelector('[data-testid="question-k-rule"]')).toBeNull();
+  });
+
   it('BUG-2: câu bắt buộc chiếm khe — K=2, q4 bắt buộc KHÔNG nhãn + q1 [B] + q2 [C] ⇒ chặn; q4 bắt buộc [C] ⇒ KHÔNG chặn', () => {
     const { unmount } = render(<QuestionCoverageNotice questions={[{ ...q('q4', null), isRequired: true }, q('q1', ['c-b']), q('q2', ['c-c'])]} questionsPerSession={2} rubric={rubric} />);
     expect(screen.getByTestId('question-k-rule')).toBeInTheDocument();
