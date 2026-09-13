@@ -1098,6 +1098,15 @@ export function useCampaignWizard({
       const current = snapshot();
       const request = buildCampaignCreateRequest(current);
       const created = await onCreateCampaign(request);
+      // Ghi `draftId` NGAY khi nháp đã tồn tại trên server — TRƯỚC nhánh PUT câu hỏi. PUT hỏng (mạng/400/id tạm)
+      // mà chưa ghi thì lần bấm Triển khai kế lại POST ⇒ campaign TRÙNG (Tester RISK-1); có id thì lần sau đi
+      // đường `handleUpdateDraft` (PUT metadata + câu hỏi lên đúng nháp này).
+      setState((prev) => ({
+        ...prev,
+        draftId: created.id,
+        autosaveStatus: 'saved',
+        lastSavedAt: created.updatedAt ?? new Date().toISOString(),
+      }));
       // R1(a) — POST bỏ nhãn id tạm có chủ đích (tiêu chí chưa có GUID); ghép `created.rubric` rồi PUT câu hỏi
       // mang GUID nếu có nhãn — không thì chip HR vừa gắn mất ngay ở lượt Triển khai đầu tiên của create mode.
       const adopted = adoptSavedRubric(created.rubric, { rubric: current.rubric, questions: current.questions });
@@ -1112,7 +1121,6 @@ export function useCampaignWizard({
 
       setState((prev) => ({
         ...prev,
-        draftId: created.id,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
         completedSteps: markCompleted(prev.completedSteps, 7),

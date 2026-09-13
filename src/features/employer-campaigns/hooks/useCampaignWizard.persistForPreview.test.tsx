@@ -453,6 +453,34 @@ describe('R1/R2 — nhãn chip sống sót qua MỌI đường lưu; GUID chết
     expect(result.current.state.rubric.map((item) => item.id)).toEqual([CRIT_A, CRIT_B]);
   });
 
+  // Tester RISK-1: `draftId` phải được ghi NGAY khi POST trả về — PUT /questions hỏng mà chưa ghi thì lần Triển khai
+  // kế POST lần 2 ⇒ campaign TRÙNG trên server (probe: 2 lần handleFinalSubmit ⇒ onCreateCampaign 2 lần).
+  it('handleCreateCampaign: PUT /questions ném ⇒ bấm Triển khai lại KHÔNG POST lần 2 — đi đường handleUpdateDraft lên đúng nháp', async () => {
+    handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ id: 'c-new', rubric: serverRubric, questions: serverQuestions }));
+    handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({ id: 'c-new', rubric: serverRubric }));
+    handlers.onUpdateQuestions = vi.fn(async () => campaignResponse({ id: 'c-new', rubric: serverRubric }));
+    handlers.onUpdateQuestions.mockRejectedValueOnce(new Error('network down'));
+    handlers.onDeployCampaign = vi.fn(async () => ({ campaign: campaignResponse({ id: 'c-new', status: 'active' }), warnings: [], invitations: null, startNow: 'skipped' }));
+    const { result } = renderCreateWizard(handlers);
+    act(() => {
+      result.current.patchInfo({ maxCandidates: 10 });
+      result.current.setQuestions([{ ...clientQuestions[0], targetCriterionIds: ['new-b'] }, clientQuestions[1]]);
+    });
+    await act(async () => { await result.current.handleFinalSubmit(); });
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onDeployCampaign).not.toHaveBeenCalled();
+    expect(result.current.actionError).not.toBeNull();
+    expect(result.current.campaignId).toBe('c-new');
+
+    await act(async () => { await result.current.handleFinalSubmit(); });
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(2);
+    expect(handlers.onUpdateCampaign).toHaveBeenCalledWith('c-new', expect.objectContaining({ criteria: expect.arrayContaining([expect.objectContaining({ id: CRIT_A })]) }));
+    expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_B]);
+    expect(handlers.onDeployCampaign).toHaveBeenCalledWith('c-new', expect.anything(), expect.anything());
+  });
+
   it('R1(b) saveQuestionsNow (Lưu câu hỏi): PUT metadata TRƯỚC, PUT /questions SAU và mang GUID đã ghép', async () => {
     handlers.onCreateCampaign = vi.fn(async () => campaignResponse({ rubric: [], questions: [] }));
     handlers.onUpdateCampaign = vi.fn(async () => campaignResponse({ rubric: serverRubric }));
