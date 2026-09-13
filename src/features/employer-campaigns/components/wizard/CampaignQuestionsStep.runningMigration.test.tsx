@@ -17,7 +17,7 @@ const hook = vi.hoisted(() => ({ run: vi.fn(() => new Promise<null>(() => undefi
 vi.mock('../../hooks/useQuestionPreview', () => ({
   useQuestionPreview: (): UseQuestionPreviewApi => ({
     runs: [], latest: null, isLoadingHistory: false, isRunning: false, runningQuestionId: null, freeRunsRemaining: 1, error: null,
-    run: hook.run, clearError: vi.fn(),
+    run: hook.run, clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn(),
   }),
 }));
 

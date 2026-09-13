@@ -44,7 +44,7 @@ const question: CampaignQuestion = { id: 'q-1', prompt: 'Thiết kế API thanh 
 const other: CampaignQuestion = { id: 'q-2', prompt: 'Câu hai', skill: '', difficulty: 'middle', source: 'manual', isRequired: true };
 
 function api(overrides: Partial<UseQuestionPreviewApi> = {}): UseQuestionPreviewApi {
-  return { runs: [], latest: null, isLoadingHistory: false, isRunning: false, runningQuestionId: null, freeRunsRemaining: 1, error: null, run: vi.fn(async () => null), clearError: vi.fn(), ...overrides };
+  return { runs: [], latest: null, isLoadingHistory: false, isRunning: false, runningQuestionId: null, freeRunsRemaining: 1, error: null, run: vi.fn(async () => null), clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn(), ...overrides };
 }
 function ctx(overrides: Partial<QuestionPreviewContext> = {}): QuestionPreviewContext {
   return { campaignId: 'c-1', campaignStatus: 'draft', rubric: SEVEN, questions: [question, other], passScorePct: 60, currentRubricVersion: 1, beforeRun: vi.fn(async () => 'c-1'), onRunningChange: vi.fn(), runningQuestionId: null, ...overrides };
@@ -169,5 +169,61 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     expect(screen.getByTestId('question-preview-error')).toHaveTextContent('rubricPreview.error.noCredit');
     fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.error.dismiss' }));
     expect(preview.clearError).toHaveBeenCalled();
+  });
+});
+
+/**
+ * R3/I7 — POST không confirm từng trừ credit im lặng khi FE đoán sai quota. Nay: FE không biết ⇒ HỎI; HR đồng ý ⇒ POST
+ * mang `confirmBilled: true`; BE 409 PREVIEW_BILLING_CONFIRM_REQUIRED ⇒ hộp thoại tự mở, đồng ý ⇒ gọi lại có cờ.
+ */
+describe('QuestionPreviewPanel — R3: xác nhận trả phí', () => {
+  it('quota null (không biết) ⇒ HỎI trước với tiêu đề "có thể trừ"; đồng ý ⇒ run(custom, { confirmBilled: true })', async () => {
+    const preview = api({ freeRunsRemaining: null });
+    const user = userEvent.setup();
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    await user.click(screen.getByRole('button', { name: RUN }));
+    expect(preview.run).not.toHaveBeenCalled();
+    expect(await screen.findByText('employer.campaigns.rubricPreview.confirm.maybePaidTitle')).toBeInTheDocument();
+    expect(screen.getByText(/questionCard\.preview\.confirm\.unknownDescription/)).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: RUN }));
+    expect(preview.run).toHaveBeenCalledTimes(1);
+    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+  });
+
+  it('hết lượt (0) ⇒ đồng ý ⇒ POST mang confirmBilled: true', async () => {
+    const preview = api({ freeRunsRemaining: 0 });
+    const user = userEvent.setup();
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    await user.click(screen.getByRole('button', { name: /rubricPreview\.runPaid/ }));
+    await user.click(await screen.findByRole('button', { name: /confirm.*runPaid|rubricPreview\.runPaid/ }));
+    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+  });
+
+  it('còn lượt miễn phí (1) ⇒ KHÔNG hỏi, run(custom) không có cờ', () => {
+    const preview = api({ freeRunsRemaining: 1 });
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    fireEvent.click(screen.getByRole('button', { name: RUN }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(preview.run).toHaveBeenCalledTimes(1);
+    expect((preview.run as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual(['Bài mẫu của HR']);
+  });
+
+  it('BE 409 confirm-required (billingConfirm ≠ null) ⇒ hộp thoại TỰ mở; đồng ý ⇒ clearBillingConfirm + gọi lại có cờ; huỷ ⇒ chỉ clear, không run', async () => {
+    const user = userEvent.setup();
+    const billingConfirm = { freeRunsRemaining: 0, questionId: 'q-1', input: { questionId: 'q-1', customAnswer: 'Bài mẫu của HR' } };
+    const preview = api({ freeRunsRemaining: 1, billingConfirm });
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    expect(await screen.findByText('employer.campaigns.rubricPreview.confirm.paidTitle')).toBeInTheDocument();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /rubricPreview\.runPaid/ }));
+    expect(preview.clearBillingConfirm).toHaveBeenCalledTimes(1);
+    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+    cleanup();
+
+    const preview2 = api({ freeRunsRemaining: 1, billingConfirm });
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview2} />);
+    await user.click(await screen.findByRole('button', { name: 'employer.campaigns.rubricPreview.confirm.cancel' }));
+    expect(preview2.clearBillingConfirm).toHaveBeenCalledTimes(1);
+    expect(preview2.run).not.toHaveBeenCalled();
   });
 });

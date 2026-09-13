@@ -75,22 +75,45 @@ export function mapRubricToCreateCriteria(
     });
 }
 
+/**
+ * R1(c) — nhãn câu còn id TẠM (`new-…`/`system-N`/`criterion-N`) lúc dựng payload `PUT …/questions` = đường lưu
+ * đã QUÊN ghép id server (`adoptServerRubric`) — trước đây bị omit im lặng ⇒ câu lưu `null`, chip tắt, không ai
+ * biết. Ném để wizard hiện lỗi ở bước Câu hỏi thay vì "lưu thành công" mà mất nhãn.
+ */
+export class UnresolvedCriterionIdError extends Error {
+  readonly ids: string[];
+  constructor(ids: string[]) {
+    super(`UNRESOLVED_CRITERION_IDS: ${ids.join(', ')}`);
+    this.name = 'UnresolvedCriterionIdError';
+    this.ids = ids;
+  }
+}
+
+export interface MapQuestionsOptions {
+  /**
+   * `throw` (mặc định, cho PUT …/questions): id tạm còn sót ⇒ `UnresolvedCriterionIdError`.
+   * `omit` (CHỈ cho POST create): tiêu chí chưa có id server nào nên nhãn KHÔNG THỂ resolve — bỏ khoá, rồi
+   * `adoptServerRubric` ghép id từ `created.rubric` và nhãn được gửi lại ở PUT câu hỏi ngay sau (R1a).
+   */
+  unresolvedTargets?: 'throw' | 'omit';
+}
+
 /** The server owns question source; only preserve an id when editing an existing AI question. */
 export function mapQuestionsToApiRequest(
   questions: CampaignQuestion[],
+  options: MapQuestionsOptions = {},
 ): CampaignCreateQuestionRequest[] {
   return questions
     .filter((item) => item.prompt.trim())
     .map((item) => {
-      const targetCriterionIds = normalizeTargetCriterionIdsForRequest(item.targetCriterionIds);
+      const targetCriterionIds = normalizeTargetCriterionIdsForRequest(item.targetCriterionIds, options.unresolvedTargets ?? 'throw');
       const payload: CampaignCreateQuestionRequest = {
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
         ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
-        // SC2 — PUT BA nhánh (xem `normalizeTargetCriterionIdsForRequest`): `undefined`/`null` ⇒ khoá VẮNG
-        // (giữ nguyên nhãn server đang có) · `[]` thật ⇒ gửi `[]` (HR đã chủ động "chỉ Always") · mảng có
-        // phần tử ⇒ gửi phần đã lọc GUID, nhưng nếu lọc xong RỖNG (toàn id tạm — tiêu chí vừa thêm tay trong
-        // CÙNG lượt lưu, gửi id đó sẽ 400 "không thuộc chiến dịch") ⇒ cũng OMIT khoá, KHÔNG gửi `[]`.
+        // SC2 — BA nhánh (xem `normalizeTargetCriterionIdsForRequest`): `undefined`/`null` ⇒ khoá VẮNG (giữ
+        // nguyên nhãn server đang có) · `[]` thật ⇒ gửi `[]` (HR đã chủ động "chỉ Always") · mảng có phần tử ⇒
+        // gửi nguyên; id tạm còn sót ⇒ ném (PUT) hoặc omit (POST create — xem `MapQuestionsOptions`).
         // Bỏ HẲN khoá khi vắng (không gán `undefined`) — `toHaveProperty` thấy khoá dù giá trị undefined.
         ...(targetCriterionIds !== undefined ? { targetCriterionIds } : {}),
         // CAMP-16 kiểu 3 trạng thái CỦA RIÊNG field này: `undefined` domain (chưa từng đọc) ⇒ bỏ khoá;
@@ -105,21 +128,24 @@ export function mapQuestionsToApiRequest(
 }
 
 /**
- * Ba ca, KHÔNG phải hai (T7-R1, đã đo có rủi ro thật): `undefined`/`null` ⇒ omit key (JSON/
- * `toEqual` coi `undefined` là vắng) · mảng GỐC rỗng thật `[]` ⇒ gửi `[]` nguyên (HR đã chủ động
- * "chỉ Always") · mảng GỐC có phần tử nhưng SAU lọc GUID còn rỗng (toàn id tạm `criterion-N`/
- * `new-xxxx` — tiêu chí vừa thêm tay trong CÙNG lượt lưu, chưa có id server) ⇒ OMIT khoá, KHÔNG
- * gửi `[]`. Gửi `[]` ở ca thứ ba sẽ bị BE đọc thành "XOÁ nhãn" (W1) trong khi ý định thật là
- * "chưa resolve được, đừng đụng nhãn đang có trên server" — hai ý khác hẳn nhau.
- * FACT T9-R3 (P8): ca thứ ba nay chỉ còn tới được khi PUT câu hỏi chạy TRƯỚC `remapQuestionTargetIds` — sau
- * `persistForPreview`, id tạm không resolve được đã bị `remapQuestionTargetIds` CẮT ⇒ tới đây là `[]` gốc ⇒ gửi
- * `[]` (= chỉ Always), KHÔNG omit như T7; đổi ngữ nghĩa tường minh, nhất quán với BE cắt dangling.
+ * Ba ca (T7-R1): `undefined`/`null` ⇒ omit key (JSON/`toEqual` coi `undefined` là vắng) · mảng GỐC rỗng thật
+ * `[]` ⇒ gửi `[]` nguyên (HR đã chủ động "chỉ Always") · mảng có id TẠM (`criterion-N`/`new-…`/`system-N`):
+ *  - `throw` (PUT …/questions): trước R1(c) ca này OMIT khoá (BE giữ nhãn cũ / `null`) — tức nhãn HR vừa gắn
+ *    bốc hơi mà "lưu thành công". Sau R1, mọi đường lưu đều ghép id qua `adoptServerRubric` TRƯỚC khi tới đây,
+ *    nên id tạm còn sót là LỖI ĐƯỜNG ĐI ⇒ ném `UnresolvedCriterionIdError` cho wizard hiện ở bước Câu hỏi.
+ *  - `omit` (POST create): tiêu chí chưa có id server nào ⇒ bỏ khoá có chủ đích; nhãn được PUT lại sau khi
+ *    ghép `created.rubric` (R1a). Gửi `[]` ở đây là bảo BE "XOÁ nhãn" — sai ý.
+ * Id tạm lẫn với GUID trong CÙNG một nhãn cũng ném (`throw`) — chỉ gửi phần GUID là cắt nhãn im lặng.
  */
 function normalizeTargetCriterionIdsForRequest(
   value: string[] | null | undefined,
+  unresolvedTargets: 'throw' | 'omit',
 ): string[] | undefined {
   if (value == null) return undefined;
   if (value.length === 0) return [];
+  const unresolved = value.filter((id) => !isServerEntityId(id));
+  if (unresolved.length === 0) return value;
+  if (unresolvedTargets === 'throw') throw new UnresolvedCriterionIdError(unresolved);
   const resolved = value.filter((id) => isServerEntityId(id));
   return resolved.length === 0 ? undefined : resolved;
 }
@@ -246,7 +272,8 @@ export function buildCampaignCreateRequest(
     throw new Error('LANGUAGE_REQUIRED');
   }
 
-  const questions = mapQuestionsToApiRequest(snapshot.questions);
+  // R1(a) — POST create: tiêu chí chưa có id server ⇒ nhãn id tạm bị bỏ có chủ đích, PUT lại sau khi ghép `created.rubric`.
+  const questions = mapQuestionsToApiRequest(snapshot.questions, { unresolvedTargets: 'omit' });
   const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
   const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
   const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;

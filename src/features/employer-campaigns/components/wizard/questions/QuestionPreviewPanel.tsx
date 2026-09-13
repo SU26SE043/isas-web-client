@@ -61,9 +61,11 @@ export function QuestionPreviewPanel({ question, index, ctx, preview, disabled =
   const reason = blockedReason();
   const canRun = !blocker && !emptyPrompt && !runningOther;
 
-  const handleRun = (customAnswer: string | null) => {
+  const handleRun = (customAnswer: string | null, confirmBilled: boolean) => {
     ctx.onRunningChange(question.id);
-    void preview.run(customAnswer)
+    // Chỉ đính tuỳ chọn khi có cờ — lượt miễn phí gọi `run(customAnswer)` y như trước.
+    const pending = confirmBilled ? preview.run(customAnswer, { confirmBilled: true }) : preview.run(customAnswer);
+    void pending
       .then((result) => { if (result) setSelectedRunId(null); })
       .finally(() => ctx.onRunningChange(null));
   };
@@ -124,6 +126,8 @@ export function QuestionPreviewPanel({ question, index, ctx, preview, disabled =
         requireConfirm={Boolean(ctx.beforeRun) && ctx.campaignStatus === 'active'}
         currentRubricVersion={ctx.currentRubricVersion}
         freeRunsLeft={preview.freeRunsRemaining}
+        billingConfirmPending={preview.billingConfirm != null}
+        onCancelBillingConfirm={preview.clearBillingConfirm}
         disabled={disabled || !canRun}
         isRunning={anyRunning}
         onRun={handleRun}

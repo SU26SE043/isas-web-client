@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
@@ -146,6 +147,57 @@ describe('useQuestionPreview — freeRunsRemaining theo câu', () => {
     );
     await waitFor(() => expect(result.current.runs).toHaveLength(1));
     expect(result.current.freeRunsRemaining).toBe(1);
+  });
+});
+
+describe('useQuestionPreview — R3(a): freeRunsRemaining null = KHÔNG BIẾT (đang tải / cửa sổ 20 lượt đầy)', () => {
+  it('lịch sử đang tải ⇒ null (không đoán "còn 1")', async () => {
+    let resolveHistory!: (value: RubricPreviewRun[]) => void;
+    historyMock.mockReturnValue(new Promise<RubricPreviewRun[]>((r) => { resolveHistory = r; }));
+    const { result } = renderHook(() => useQuestionPreview({ campaignId: 'c1', questionId: 'q-1' }), { wrapper });
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(true));
+    expect(result.current.freeRunsRemaining).toBeNull();
+    await act(async () => { resolveHistory([]); });
+    await waitFor(() => expect(result.current.isLoadingHistory).toBe(false));
+    expect(result.current.freeRunsRemaining).toBe(1);
+  });
+
+  it('cửa sổ 20 lượt đầy toàn lượt câu KHÁC ⇒ null (lượt của câu này có thể nằm ngoài cửa sổ); 19 lượt ⇒ vẫn 1', async () => {
+    const others = (n: number) => Array.from({ length: n }, (_, i) => makeRun({ id: `o${i}`, questionId: 'q-other', createdAt: `2026-09-13T10:${String(i).padStart(2, '0')}:00Z` }));
+    historyMock.mockResolvedValue(others(20));
+    const full = renderHook(() => useQuestionPreview({ campaignId: 'c1', questionId: 'q-1' }), { wrapper });
+    await waitFor(() => expect(full.result.current.isLoadingHistory).toBe(false));
+    expect(full.result.current.runs).toEqual([]);
+    expect(full.result.current.freeRunsRemaining).toBeNull();
+    cleanup(); client.clear();
+
+    historyMock.mockResolvedValue(others(19));
+    const partial = renderHook(() => useQuestionPreview({ campaignId: 'c2', questionId: 'q-1' }), { wrapper });
+    await waitFor(() => expect(partial.result.current.isLoadingHistory).toBe(false));
+    expect(partial.result.current.freeRunsRemaining).toBe(1);
+  });
+});
+
+describe('useQuestionPreview — R3(b): run(customAnswer, { confirmBilled }) đính cờ vào POST', () => {
+  const Q = '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40';
+  it('confirmBilled: true ⇒ POST mang cờ; không truyền ⇒ body không có khoá', async () => {
+    runMock.mockResolvedValue(makeRun({ questionId: Q }));
+    const { result } = renderHook(() => useQuestionPreview({ campaignId: 'c1', questionId: Q }), { wrapper });
+    await act(async () => { await result.current.run('Bài', { confirmBilled: true }); });
+    expect(runMock).toHaveBeenLastCalledWith('c1', { questionId: Q, customAnswer: 'Bài', confirmBilled: true });
+    await act(async () => { await result.current.run('Bài', { confirmBilled: false }); });
+    expect(runMock).toHaveBeenLastCalledWith('c1', { questionId: Q, customAnswer: 'Bài' });
+  });
+  it('409 confirm-required ⇒ billingConfirm nổi lên qua hook per-question, error null', async () => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = { status: 409, statusText: '', headers: {}, config: {} as never, data: { code: 'PREVIEW_BILLING_CONFIRM_REQUIRED', freeRunsRemaining: 0, questionId: Q } };
+    runMock.mockRejectedValueOnce(error);
+    const { result } = renderHook(() => useQuestionPreview({ campaignId: 'c1', questionId: Q }), { wrapper });
+    await act(async () => { await result.current.run(); });
+    expect(result.current.error).toBeNull();
+    expect(result.current.billingConfirm).toMatchObject({ freeRunsRemaining: 0, questionId: Q });
+    act(() => result.current.clearBillingConfirm());
+    expect(result.current.billingConfirm).toBeNull();
   });
 });
 

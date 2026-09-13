@@ -18,7 +18,7 @@ const hook = vi.hoisted(() => ({ args: [] as unknown[], runs: [] as unknown[] })
 vi.mock('../../../hooks/useRubricPreview', () => ({
   useRubricPreview: (options: unknown) => {
     hook.args.push(options);
-    return { runs: hook.runs, latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: vi.fn(), clearError: vi.fn() };
+    return { runs: hook.runs, latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: vi.fn(), clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn() };
   },
 }));
 

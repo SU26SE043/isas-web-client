@@ -107,6 +107,15 @@ describe('endpoints', () => {
     expect(campaignRubricPreviewEndpoints.run('camp 1')).toBe('/api/v1/campaign/camp%201/rubric-preview');
   });
 
+  // R3(b) — cờ chỉ xuất hiện khi HR đã đồng ý; lượt miễn phí giữ nguyên hình dạng body (ca trên).
+  it('POST mang confirmBilled: true khi HR đã đồng ý trừ credit; false/vắng ⇒ không có khoá', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: fullRun } as never);
+    await runRubricPreview('c1', { questionId: null, confirmBilled: true });
+    expect(post).toHaveBeenLastCalledWith(expect.any(String), { questionId: null, customAnswer: null, confirmBilled: true }, expect.anything());
+    await runRubricPreview('c1', { questionId: null, confirmBilled: false });
+    expect(post).toHaveBeenLastCalledWith(expect.any(String), { questionId: null, customAnswer: null }, expect.anything());
+  });
+
   it('GET lịch sử đúng URL', async () => {
     const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: [fullRun] } as never);
     await expect(getRubricPreviewHistory('c1')).resolves.toHaveLength(1);
@@ -143,6 +152,17 @@ describe('mapRubricPreviewError', () => {
     [500, 'Failed to run rubric preview: boom', { code: 'unknown', message: 'Failed to run rubric preview: boom' }],
   ] as const)('%s "%s" → %o', (status, body, expected) => {
     expect(mapRubricPreviewError(axiosError(status, body))).toEqual(expected);
+  });
+
+  // R3(c) — BE 409 đòi xác nhận trả phí: nhận diện theo `code`, KHÔNG theo câu chữ (409 khác = running/closed).
+  it('409 code PREVIEW_BILLING_CONFIRM_REQUIRED → billingConfirmRequired kèm freeRunsRemaining/questionId (thân phẳng, bọc data, PascalCase)', () => {
+    const q = '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40';
+    expect(mapRubricPreviewError(axiosError(409, { code: 'PREVIEW_BILLING_CONFIRM_REQUIRED', freeRunsRemaining: 0, questionId: q })))
+      .toEqual({ code: 'billingConfirmRequired', freeRunsRemaining: 0, questionId: q, message: '' });
+    expect(mapRubricPreviewError(axiosError(409, { data: { Code: 'PREVIEW_BILLING_CONFIRM_REQUIRED', FreeRunsRemaining: 0, QuestionId: null } })))
+      .toMatchObject({ code: 'billingConfirmRequired', freeRunsRemaining: 0, questionId: null });
+    // 409 không mang code ⇒ vẫn là closed/running như trước.
+    expect(mapRubricPreviewError(axiosError(409, { code: 'SOMETHING_ELSE' }))).toMatchObject({ code: 'closed' });
   });
 
   it('thân JSON {message} vẫn giữ nguyên văn BE', () => {

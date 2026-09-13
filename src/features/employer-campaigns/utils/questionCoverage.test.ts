@@ -49,6 +49,27 @@ describe('K-rule cục bộ + tách warning server', () => {
     // required nhiều hơn K ⇒ khe âm ⇒ chặn nếu còn tiêu chí chưa phủ
     expect(computeLocalKRule([req('q1', []), req('q2', []), opt('q3', ['B'])], 1)).toEqual({ k: 1, required: 2, uncovered: 1 });
   });
+  // R4 (mirror BE): chỉ id tiêu chí `WhenTargeted` mới là "tiêu chí chính". HR gắn nhãn xong rồi LẬT scope tiêu chí
+  // về Always ⇒ nhãn[0] còn trỏ id đó nhưng nó chấm mọi câu — không cần rổ riêng ⇒ không đếm, không chặn oan.
+  it('R4: có rubric ⇒ chỉ đếm nhãn[0] ∈ WhenTargeted; lật cả hai về Always ⇒ không chặn; không rubric ⇒ đếm mọi nhãn như cũ', () => {
+    const wt = (id: string, scope: 'Always' | 'WhenTargeted'): RubricCriterion => ({ id, name: id, description: '', weight: 50, maxScore: 5, scoringScope: scope });
+    const opt = (id: string, targets: string[]) => ({ ...question(id, targets), isRequired: false });
+    const questions = [opt('q1', ['A']), opt('q2', ['B'])];
+    expect(computeLocalKRule(questions, 1, [wt('A', 'WhenTargeted'), wt('B', 'WhenTargeted')])).toEqual({ k: 1, required: 0, uncovered: 2 });
+    expect(computeLocalKRule(questions, 1, [wt('A', 'Always'), wt('B', 'Always')])).toBeNull();
+    // Một id Always lọt vào nhãn ⇒ không đếm ⇒ uncovered = 1 ≤ K=1 ⇒ không chặn (không rubric thì chặn như cũ).
+    expect(computeLocalKRule(questions, 1, [wt('A', 'Always'), wt('B', 'WhenTargeted')])).toBeNull();
+    expect(computeLocalKRule(questions, 1)).toEqual({ k: 1, required: 0, uncovered: 2 });
+    expect(primaryCriteriaCount(questions, [wt('A', 'Always'), wt('B', 'WhenTargeted')])).toBe(1);
+    expect(primaryCriteriaCount(questions)).toBe(2);
+    // Câu bắt buộc phủ bằng nhãn[0] ∈ WT vẫn tính là ĐÃ phủ: K=2, r bắt buộc [B] chiếm 1 khe, còn 1 khe ≥ 1 tiêu chí
+    // chưa phủ (A) ⇒ không chặn. K=1 thì khe còn 0 < 1 ⇒ chặn (đúng công thức `K − |required| < |uncovered|`).
+    const req = (id: string, targets: string[]) => ({ ...question(id, targets), isRequired: true });
+    const WT = [wt('A', 'WhenTargeted'), wt('B', 'WhenTargeted')];
+    expect(computeLocalKRule([req('r', ['B']), opt('q1', ['B']), opt('q2', ['A'])], 2, WT)).toBeNull();
+    expect(computeLocalKRule([req('r', ['B']), opt('q1', ['B']), opt('q2', ['A'])], 1, WT)).toEqual({ k: 1, required: 1, uncovered: 1 });
+  });
+
   it('splitQuestionBankWarnings: dòng K_BELOW_CRITERIA_GROUPS thành blocking (bỏ tiền tố mã), còn lại soft', () => {
     const { blocking, soft } = splitQuestionBankWarnings([
       'Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).',

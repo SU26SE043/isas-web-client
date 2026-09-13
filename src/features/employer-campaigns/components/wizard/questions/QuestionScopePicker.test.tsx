@@ -24,15 +24,30 @@ describe('QuestionScopePicker — I2 ba trạng thái', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('chọn 1 chip ⇒ [id]; thứ tự theo rubric (tiêu chí chính = phần tử đầu), không theo thứ tự bấm', () => {
+  // R8 — ĐỔI TIỀN ĐỀ: trước đây "thứ tự theo rubric, không theo thứ tự bấm" ⇒ thêm chip vào [B, A] thành [A, B, C]
+  // ⇒ tiêu chí CHÍNH (nhãn[0], BE rút đều theo nó) đổi từ B sang A mà HR không biết. Nay giữ thứ tự hiện có.
+  it('chọn 1 chip ⇒ [id]; chip thêm sau NỐI CUỐI (tiêu chí chính = phần tử đầu KHÔNG đổi), không sắp lại theo rubric', () => {
     const onChange = vi.fn();
     const { rerender } = render(<QuestionScopePicker questionId="q1" rubric={rubric} value={null} onChange={onChange} />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Thiết kế' }));
     expect(onChange).toHaveBeenLastCalledWith(['c-design']);
     rerender(<QuestionScopePicker questionId="q1" rubric={rubric} value={['c-design']} onChange={onChange} />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Chiều sâu' }));
-    expect(onChange).toHaveBeenLastCalledWith(['c-depth', 'c-design']);
+    expect(onChange).toHaveBeenLastCalledWith(['c-design', 'c-depth']);
     expect(screen.getByRole('checkbox', { name: 'Thiết kế' })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('R8: câu AI có nhãn [B, A] (ngược thứ tự rubric) ⇒ thêm C ⇒ [B, A, C]; bỏ B (đang là chính) ⇒ [A] — xoá tại chỗ, không sắp lại', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<QuestionScopePicker questionId="q1" rubric={rubric} value={['c-design', 'c-depth']} onChange={onChange} />);
+    // Rubric có thêm tiêu chí C WhenTargeted để nối cuối.
+    const rubricC = [...rubric, { id: 'c-algo', name: 'Thuật toán', description: '', weight: 0, maxScore: 5, scoringScope: 'WhenTargeted' as const }];
+    rerender(<QuestionScopePicker questionId="q1" rubric={rubricC} value={['c-design', 'c-depth']} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Thuật toán' }));
+    expect(onChange).toHaveBeenLastCalledWith(['c-design', 'c-depth', 'c-algo']);
+    rerender(<QuestionScopePicker questionId="q1" rubric={rubricC} value={['c-design', 'c-depth', 'c-algo']} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Thiết kế' }));
+    expect(onChange).toHaveBeenLastCalledWith(['c-depth', 'c-algo']);
   });
 
   it('bỏ chip cuối cùng ⇒ [] (đã xét, không nhắm) — KHÔNG quay về null; dòng giải thích đổi theo', () => {

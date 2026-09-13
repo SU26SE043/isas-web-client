@@ -49,7 +49,7 @@ const previewHook = vi.hoisted(() => ({ runs: [] as unknown[], args: [] as unkno
 vi.mock('../../hooks/useRubricPreview', () => ({
   useRubricPreview: (options: unknown) => {
     previewHook.args.push(options);
-    return { runs: previewHook.runs, latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: vi.fn(), clearError: vi.fn() };
+    return { runs: previewHook.runs, latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: vi.fn(), clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn() };
   },
 }));
 vi.mock('../../hooks/useCampaignSlots', () => ({

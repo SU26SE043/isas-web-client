@@ -21,6 +21,7 @@ import {
   buildDirtyUpdateRequest,
   mapQuestionsToApiRequest,
   resolveDomainOption,
+  UnresolvedCriterionIdError,
   type CampaignWizardSubmitSnapshot,
 } from '../utils/buildCampaignCreateRequest';
 import {
@@ -60,7 +61,7 @@ import {
   CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
-import { adoptServerCriterionIds, buildQuestionIdAliases, remapQuestionTargetIds } from '../utils/serverIdAdoption';
+import { adoptServerRubric, buildQuestionIdAliases, pruneQuestionTargetIds } from '../utils/serverIdAdoption';
 import {
   CampaignInvitationDeployError,
   CampaignRequestError,
@@ -237,7 +238,9 @@ function toSnapshot(state: CampaignWizardPersistedState): CampaignWizardSubmitSn
  * sửa prompt, đổi nhóm, hay còn mang id client (`client-…`) đều làm vân tay lệch.
  */
 export function questionsPersistKey(questions: CampaignQuestion[]): string {
-  return JSON.stringify(mapQuestionsToApiRequest(questions));
+  // `omit`: vân tay chỉ để SO SÁNH, không phải payload gửi đi — và nó được tính cả trong render (khởi tạo ref),
+  // nên KHÔNG được ném khi nhãn còn id tạm (HR vừa thêm tiêu chí ở bước 3 mà chưa lưu) — R1(c) chỉ ném ở PUT thật.
+  return JSON.stringify(mapQuestionsToApiRequest(questions, { unresolvedTargets: 'omit' }));
 }
 
 /**
@@ -588,14 +591,24 @@ export function useCampaignWizard({
     snapshot,
   });
 
+  // R2 — rubric đổi ⇒ cắt nhãn câu về ⊆ id tiêu chí còn tồn tại. HR xoá tiêu chí X ở bước 3: BE replace-all cắt X
+  // trong DB ngay ở PUT metadata, rồi PUT …/questions mang lại GUID X ⇒ 400 "không thuộc chiến dịch" — Triển khai
+  // hỏng mà không thấy vì sao. Cắt ở nguồn (state) + cắt lần nữa theo `saved.rubric` trước mọi PUT câu hỏi.
   const setRubric = useCallback((rubric: RubricCriterion[]) => {
-    setState((prev) => ({ ...prev, rubric, autosaveStatus: 'dirty' }));
+    setState((prev) => ({
+      ...prev,
+      rubric,
+      questions: pruneQuestionTargetIds(prev.questions, new Set(rubric.map((item) => item.id))),
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const resetRubric = useCallback(() => {
     setState((prev) => ({
       ...prev,
       rubric: [],
+      // Bộ chuẩn nạp lại mang id `system-N` MỚI ⇒ mọi nhãn cũ đều trỏ tiêu chí không còn ⇒ cắt (null giữ null).
+      questions: pruneQuestionTargetIds(prev.questions, new Set()),
       rubricCustomized: false,
       autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 2),
@@ -630,6 +643,76 @@ export function useCampaignWizard({
       errorSteps: clearError(prev.errorSteps, 3),
     }));
   }, []);
+
+  /**
+   * R1 — MỘT chỗ ghép rubric server về state (id tạm → GUID, nhãn câu theo, GUID chết bị cắt), dùng chung cho
+   * mọi đường nhận rubric từ server. Trả bản ghép tính từ `local` (closure của caller — dựng payload PUT câu hỏi
+   * TỪ ĐÓ, không từ `state` cũ), đồng thời setState trên `prev` (state mới nhất).
+   */
+  const adoptSavedRubric = useCallback((
+    serverRubric: RubricCriterion[] | null | undefined,
+    local: { rubric: RubricCriterion[]; questions: CampaignQuestion[] },
+  ) => {
+    const next = adoptServerRubric(local, serverRubric);
+    setState((prev) => {
+      const own = adoptServerRubric({ rubric: prev.rubric, questions: prev.questions }, serverRubric);
+      if (own.rubric === prev.rubric && own.questions === prev.questions) return prev;
+      return { ...prev, rubric: own.rubric, questions: own.questions };
+    });
+    return next;
+  }, []);
+
+  /**
+   * R1(c) — nhãn câu còn id tạm lúc dựng payload PUT câu hỏi = đường lưu quên ghép id server. Hiện lỗi ở bước
+   * Câu hỏi (không phải "lưu thành công" rồi mất nhãn). Trả true khi đã xử lý.
+   */
+  const failIfUnresolvedCriteria = useCallback((error: unknown): boolean => {
+    if (!(error instanceof UnresolvedCriterionIdError)) return false;
+    setStepError(t('employer.campaigns.wizard.questions.unresolvedCriterionIds'));
+    setState((prev) => ({
+      ...prev,
+      currentStep: 3,
+      errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
+    }));
+    return true;
+  }, [t]);
+
+  /**
+   * R1(b) — đảm bảo nháp tồn tại VÀ thước đo trên server khớp state (PUT metadata khi lệch baseline), rồi trả
+   * snapshot ĐÃ ghép id server để caller dựng payload câu hỏi từ đó. Là phần "lưu thước đo" của `persistForPreview`,
+   * tách ra để Lưu câu hỏi / import CSV dùng chung — trước đây hai đường đó PUT câu hỏi mà KHÔNG PUT metadata,
+   * nên tiêu chí vừa thêm ở bước 3 chưa có GUID ⇒ nhãn trỏ vào nó bị omit.
+   * `onPhase('update')` báo caller đã qua bước tạo nháp (để map lỗi đúng pha).
+   */
+  const persistDraftMetadata = useCallback(async (
+    onPhase?: (phase: 'update') => void,
+  ): Promise<{ id: string; rubric: RubricCriterion[]; questions: CampaignQuestion[] }> => {
+    const { id, adopted } = await fileActions.ensureDraft();
+    onPhase?.('update');
+    const current: CampaignWizardSubmitSnapshot = adopted
+      ? { ...snapshot(), rubric: adopted.rubric, questions: adopted.questions }
+      : snapshot();
+    let rubric = current.rubric;
+    let questions = current.questions;
+    const baseline = baselineSnapshotRef.current;
+    if (!baseline || hasCampaignUpdateChanges(baseline, current)) {
+      const payload = baseline
+        ? buildDirtyUpdateRequest(baseline, current)
+        : buildCampaignUpdateRequest(current);
+      if (Object.keys(payload).length > 0) {
+        const saved = await onUpdateCampaign(id, payload);
+        // Ghép id tạm → id server theo TÊN từ chính response PUT (BE replace-all mint id mới cho tiêu chí không echo
+        // id) + cắt nhãn trỏ GUID chết. Không làm thì nhãn câu hỏi trỏ id tạm bị chặn ở PUT câu hỏi ngay bên dưới.
+        const next = adoptSavedRubric(saved.rubric, { rubric, questions });
+        rubric = next.rubric;
+        questions = next.questions;
+      }
+      // Baseline mang id ĐÃ resolve — không thì lần lưu kế thấy payload "có id" ≠ baseline "không id" và PUT metadata
+      // lại dù HR không đổi gì.
+      baselineSnapshotRef.current = { ...current, rubric, questions };
+    }
+    return { id, rubric, questions };
+  }, [adoptSavedRubric, fileActions, onUpdateCampaign, snapshot]);
 
   const generateQuestionsWithAi = useCallback(
     async (options?: { useDefaultCount?: boolean }) => {
@@ -758,13 +841,25 @@ export function useCampaignWizard({
       return;
     }
 
+    // R1(b) — thước đo phải HỢP LỆ vì lưu câu hỏi nay PUT metadata trước (cùng luật `persistForPreview`).
+    const validationMode = mode === 'create' && state.draftId ? 'edit' : mode;
+    for (const step of [0, 2]) {
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      if (errorKey) {
+        setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
+        setState((prev) => ({ ...prev, currentStep: step, errorSteps: Array.from(new Set([...prev.errorSteps, step])) }));
+        return;
+      }
+    }
+
     setIsSavingQuestions(true);
     setStepError(null);
     try {
-      const id = await fileActions.ensureDraftId();
-      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+      // PUT metadata TRƯỚC → đọc `saved.rubric` → nhãn câu ghép GUID → RỒI mới dựng payload câu hỏi (R1b).
+      const { id, questions } = await persistDraftMetadata();
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(questions));
       questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
-      recordQuestionAliases(state.questions, updated.questions);
+      recordQuestionAliases(questions, updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -775,6 +870,7 @@ export function useCampaignWizard({
       setQuestionsSaved(true);
       toast.success(t('employer.campaigns.campaignQuestions.success.saved'));
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
       setStepError(
         getGenerateQuestionsErrorMessage(
           error,
@@ -785,13 +881,15 @@ export function useCampaignWizard({
       setIsSavingQuestions(false);
     }
   }, [
-    fileActions,
+    failIfUnresolvedCriteria,
     isDraftEditable,
     isGeneratingQuestions,
     isSavingQuestions,
+    mode,
     onUpdateQuestions,
+    persistDraftMetadata,
     recordQuestionAliases,
-    state.questions,
+    state,
     t,
   ]);
 
@@ -803,13 +901,15 @@ export function useCampaignWizard({
 
   const appendImportedQuestions = useCallback(async (items: CampaignQuestionImportItem[]) => {
     if (!isDraftEditable || isSavingQuestions) return;
-    const id = await fileActions.ensureDraftId();
+    // R1(b) — PUT metadata trước để rubric có GUID; cột `targetCriteria` của file resolve vào rubric ĐÃ ghép (id
+    // server), không vào id tạm còn trong closure.
+    const { id, rubric, questions: current } = await persistDraftMetadata();
     const isRequired = state.questionsPerSession == null;
-    const { accepted } = limitImportedQuestions(state.questions.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
+    const { accepted } = limitImportedQuestions(current.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
     // SC2 — truyền rubric hiện tại để cột `targetCriteria` (nếu file có) được resolve thành id thật
     // ngay lúc import; không có cột đó thì `resolveTargetCriterionIds` trả `ids: null` (không đổi).
-    const nextQuestions = [...state.questions, ...accepted.map((item) => importedItemToQuestion(item, isRequired, state.rubric))];
-    if (nextQuestions.length === state.questions.length) return;
+    const nextQuestions = [...current, ...accepted.map((item) => importedItemToQuestion(item, isRequired, rubric))];
+    if (nextQuestions.length === current.length) return;
     setIsSavingQuestions(true);
     setStepError(null);
     try {
@@ -825,10 +925,13 @@ export function useCampaignWizard({
       }));
       setQuestionsSaved(true);
       toast.success(t('employer.campaigns.campaignQuestions.success.imported'));
+    } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
+      throw error;
     } finally {
       setIsSavingQuestions(false);
     }
-  }, [fileActions, isDraftEditable, isSavingQuestions, onUpdateQuestions, recordQuestionAliases, setState, state.questions, state.questionsPerSession, state.rubric, t]);
+  }, [failIfUnresolvedCriteria, isDraftEditable, isSavingQuestions, onUpdateQuestions, persistDraftMetadata, recordQuestionAliases, setState, state.questionsPerSession, t]);
 
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
@@ -990,22 +1093,44 @@ export function useCampaignWizard({
     setActionError(null);
     setStepError(null);
 
+    let phase: 'create' | 'questions' = 'create';
     try {
-      const request = buildCampaignCreateRequest(snapshot());
+      const current = snapshot();
+      const request = buildCampaignCreateRequest(current);
       const created = await onCreateCampaign(request);
-
+      // Ghi `draftId` NGAY khi nháp đã tồn tại trên server — TRƯỚC nhánh PUT câu hỏi. PUT hỏng (mạng/400/id tạm)
+      // mà chưa ghi thì lần bấm Triển khai kế lại POST ⇒ campaign TRÙNG (Tester RISK-1); có id thì lần sau đi
+      // đường `handleUpdateDraft` (PUT metadata + câu hỏi lên đúng nháp này).
       setState((prev) => ({
         ...prev,
         draftId: created.id,
+        autosaveStatus: 'saved',
+        lastSavedAt: created.updatedAt ?? new Date().toISOString(),
+      }));
+      // R1(a) — POST bỏ nhãn id tạm có chủ đích (tiêu chí chưa có GUID); ghép `created.rubric` rồi PUT câu hỏi
+      // mang GUID nếu có nhãn — không thì chip HR vừa gắn mất ngay ở lượt Triển khai đầu tiên của create mode.
+      const adopted = adoptSavedRubric(created.rubric, { rubric: current.rubric, questions: current.questions });
+      let result = created;
+      if (adopted.questions.some((question) => question.targetCriterionIds?.length)) {
+        phase = 'questions';
+        const updated = await onUpdateQuestions(created.id, mapQuestionsToApiRequest(adopted.questions));
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+        recordQuestionAliases(adopted.questions, updated.questions);
+        result = updated;
+      }
+
+      setState((prev) => ({
+        ...prev,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
         completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
-      if (redirect) onAfterSubmit(created);
-      return created;
+      if (redirect) onAfterSubmit(result);
+      return result;
     } catch (error) {
-      const mapped = mapSubmitError(error, t, 'create');
+      if (failIfUnresolvedCriteria(error)) return null;
+      const mapped = mapSubmitError(error, t, phase);
       setActionError(mapped.message);
       if (mapped.step != null) {
         setState((prev) => ({
@@ -1019,7 +1144,7 @@ export function useCampaignWizard({
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
-  }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, snapshot, state, t]);
+  }, [adoptSavedRubric, failIfUnresolvedCriteria, isSubmitting, mode, onAfterSubmit, onCreateCampaign, onUpdateQuestions, recordQuestionAliases, snapshot, state, t]);
 
   /** Save Draft metadata + questions — used for edit mode and create-after-ensureDraft. */
   const handleUpdateDraft = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
@@ -1053,8 +1178,7 @@ export function useCampaignWizard({
     setActionError(null);
     setStepError(null);
 
-    const questionPayload = mapQuestionsToApiRequest(state.questions);
-    if (questionPayload.length === 0) {
+    if (!state.questions.some((question) => question.prompt.trim())) {
       requestLockRef.current = false;
       setIsSubmitting(false);
       setStepError(t('employer.campaigns.wizard.questionsRequired'));
@@ -1068,22 +1192,31 @@ export function useCampaignWizard({
 
     let metadataOk = metadataSaved;
     const currentSnapshot = snapshot();
+    // R1(b) — payload câu hỏi dựng SAU PUT metadata, từ bản đã ghép `saved.rubric` (trước đây dựng TRƯỚC và vứt
+    // response ⇒ nhãn trỏ tiêu chí vừa thêm ở bước 3 bị omit ⇒ câu lưu `null`, chip tắt im lặng khi Triển khai).
+    let questionsToPersist = state.questions;
 
     try {
       if (!metadataOk) {
         const dirtyPayload = baselineSnapshotRef.current
           ? buildDirtyUpdateRequest(baselineSnapshotRef.current, currentSnapshot)
           : buildCampaignUpdateRequest(currentSnapshot);
+        let rubricSnapshot = currentSnapshot.rubric;
         if (Object.keys(dirtyPayload).length > 0) {
-          await onUpdateCampaign(campaignId, dirtyPayload);
+          const saved = await onUpdateCampaign(campaignId, dirtyPayload);
+          const adopted = adoptSavedRubric(saved.rubric, { rubric: rubricSnapshot, questions: questionsToPersist });
+          rubricSnapshot = adopted.rubric;
+          questionsToPersist = adopted.questions;
         }
         metadataOk = true;
         setMetadataSaved(true);
-        baselineSnapshotRef.current = currentSnapshot;
+        baselineSnapshotRef.current = { ...currentSnapshot, rubric: rubricSnapshot, questions: questionsToPersist };
       }
 
+      const questionPayload = mapQuestionsToApiRequest(questionsToPersist);
       const updated = await onUpdateQuestions(campaignId, questionPayload);
       questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(questionsToPersist, updated.questions);
       setQuestionsSaved(true);
       setMetadataSaved(false);
       setQuestionsSaved(false);
@@ -1101,6 +1234,7 @@ export function useCampaignWizard({
       if (redirect) onAfterSubmit(updated);
       return updated;
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return null;
       if (metadataOk && !questionsSaved) {
         setMetadataSaved(true);
         setQuestionsSaved(false);
@@ -1130,7 +1264,9 @@ export function useCampaignWizard({
       setIsSubmitting(false);
     }
   }, [
+    adoptSavedRubric,
     campaignId,
+    failIfUnresolvedCriteria,
     isDraftEditable,
     isSubmitting,
     metadataSaved,
@@ -1139,6 +1275,7 @@ export function useCampaignWizard({
     onUpdateCampaign,
     onUpdateQuestions,
     questionsSaved,
+    recordQuestionAliases,
     snapshot,
     state,
     t,
@@ -1158,6 +1295,7 @@ export function useCampaignWizard({
       toast.success(t('employer.campaigns.wizard.updateSuccess'));
       onAfterSubmit(updated);
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
       setActionError(t('employer.campaigns.wizard.partialUpdateQuestionsFailed'));
       const mapped = mapSubmitError(error, t, 'questions');
       if (mapped.step != null) {
@@ -1171,7 +1309,7 @@ export function useCampaignWizard({
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
-  }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
+  }, [campaignId, failIfUnresolvedCriteria, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
 
   /**
    * CAMP-19 — "lưu rồi mới chấm". Wizard KHÔNG PUT thước đo/câu hỏi lên server cho tới lúc Phát hành
@@ -1230,38 +1368,9 @@ export function useCampaignWizard({
     setStepError(null);
     let phase: 'create' | 'update' | 'questions' = 'create';
     try {
-      const id = await fileActions.ensureDraftId();
-
-      phase = 'update';
-      const currentSnapshot = snapshot();
-      const baseline = baselineSnapshotRef.current;
       // SC2 · T9 — bộ câu hỏi đem PUT ở pha sau; nhãn tiêu chí trong đó có thể trỏ vào id TẠM của tiêu chí
-      // vừa thêm ở bước 3, và chỉ resolve được sau khi PUT metadata trả về id server (xem serverIdAdoption).
-      let questionsToPersist = state.questions;
-      if (!baseline || hasCampaignUpdateChanges(baseline, currentSnapshot)) {
-        const payload = baseline
-          ? buildDirtyUpdateRequest(baseline, currentSnapshot)
-          : buildCampaignUpdateRequest(currentSnapshot);
-        let rubricSnapshot = currentSnapshot.rubric;
-        if (Object.keys(payload).length > 0) {
-          const saved = await onUpdateCampaign(id, payload);
-          // Ghép id tạm → id server theo TÊN từ chính response PUT (BE replace-all mint id mới cho tiêu chí
-          // không echo id). Không làm thì nhãn câu hỏi trỏ id tạm bị lọc rớt ở PUT câu hỏi ngay bên dưới.
-          const adopted = adoptServerCriterionIds(currentSnapshot.rubric, saved.rubric ?? []);
-          if (adopted.idMap.size > 0) {
-            rubricSnapshot = adopted.rubric;
-            questionsToPersist = remapQuestionTargetIds(state.questions, adopted.idMap);
-            setState((prev) => ({
-              ...prev,
-              rubric: adoptServerCriterionIds(prev.rubric, saved.rubric ?? []).rubric,
-              questions: remapQuestionTargetIds(prev.questions, adopted.idMap),
-            }));
-          }
-        }
-        // Baseline mang id ĐÃ resolve — không thì lần chấm thử kế thấy payload "có id" ≠ baseline "không id"
-        // và PUT metadata lại dù HR không đổi gì.
-        baselineSnapshotRef.current = { ...currentSnapshot, rubric: rubricSnapshot, questions: questionsToPersist };
-      }
+      // vừa thêm ở bước 3, và chỉ resolve được sau khi PUT metadata trả về id server (xem `persistDraftMetadata`).
+      const { id, questions: questionsToPersist } = await persistDraftMetadata((next) => { phase = next; });
 
       phase = 'questions';
       let savedAt: string | undefined;
@@ -1282,6 +1391,7 @@ export function useCampaignWizard({
       setState((prev) => ({ ...prev, autosaveStatus: 'saved', lastSavedAt }));
       return id;
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return null;
       const mapped = mapSubmitError(error, t, phase);
       setActionError(mapped.message);
       if (mapped.step != null) {
@@ -1297,7 +1407,7 @@ export function useCampaignWizard({
       setIsPersistingForPreview(false);
     }
   }, [
-    fileActions,
+    failIfUnresolvedCriteria,
     isDraftEditable,
     isEnsuringDraft,
     isGeneratingQuestions,
@@ -1305,10 +1415,9 @@ export function useCampaignWizard({
     isSavingQuestions,
     isSubmitting,
     mode,
-    onUpdateCampaign,
     onUpdateQuestions,
+    persistDraftMetadata,
     recordQuestionAliases,
-    snapshot,
     state,
     t,
   ]);
