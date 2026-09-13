@@ -60,6 +60,7 @@ export function CampaignDetailQuestionsSection({ campaign, onEditCriteria }: Cam
         <p className="text-xs text-muted-foreground">
           {t(isDraft ? 'employer.campaigns.detail.questions.description' : 'employer.campaigns.detail.questions.descriptionLocked')}
         </p>
+        <p className="text-xs text-muted-foreground">{t('employer.campaigns.detail.questionBank').replace('{{k}}', String(campaign.questionBank?.questionsPerSession ?? campaign.questionsPerSession ?? campaign.questions.length)).replace('{{total}}', String(campaign.questionBank?.total ?? campaign.questions.length)).replace('{{always}}', String(campaign.questionBank?.alwaysAsked ?? campaign.questions.filter((item) => item.isRequired).length)).replace('{{groups}}', String(campaign.questionBank?.groups?.length ?? new Set(campaign.questions.map((item) => item.questionGroup || 'Chung')).size))}</p>
 
         {questions.length === 0 ? (
           <p className="text-sm text-muted-foreground" data-testid="campaign-detail-questions-empty">

@@ -3,7 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../../types/campaignManagement.types';
+import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
 import type { FailedCampaignInvitation } from '../../types/campaign.api.types';
 import type { CampaignInfoState, CampaignSettingsState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
@@ -13,6 +13,7 @@ import { inviteSlotShortfall, slotsOutsideCampaignWindow } from '../../utils/cam
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { CampaignReviewSlotsTable } from './review/CampaignReviewSlotsTable';
 import { CampaignReviewDeployOptions, useStartNowOnDeploy } from './review/CampaignReviewDeployOptions';
+import { QuestionPreviewSummaryLine } from './review/QuestionPreviewSummaryLine';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState; jd: JobDescriptionState; rubric: RubricCriterion[]; questions: CampaignQuestion[];
@@ -22,13 +23,6 @@ interface CampaignReviewStepProps {
   isSubmitting?: boolean; submitDisabled?: boolean; disableForBlockingIssues?: boolean;
   hasPartialDeploy?: boolean; onRetryInvitations?: () => void; invitationFailures?: FailedCampaignInvitation[];
   invitationFailureReason?: string | null; canRetryInvitations?: boolean;
-  /**
-   * CAMP-19 — vẫn khai đủ 3 prop này vì `CampaignWizardStepContent` (ngoài phạm vi T12) còn
-   * truyền chúng xuống. Card chấm thử compact (`RubricPreviewMount variant="compact"`) đã bị
-   * GỠ khỏi bước Review (T12 R2) — T10 sẽ mount `QuestionPreviewSummaryLine` vào chỗ đã chừa
-   * bên dưới, và có thể sẽ không cần cả 3 prop này; giữ nguyên chữ ký để không phá call site.
-   */
-  campaignStatus?: EmployerCampaignStatus | null; onBeforeRun?: () => Promise<string | null>; currentRubricVersion?: number | null;
 }
 
 interface BlockingItem { key: string; label: string; step: number; }
@@ -44,12 +38,7 @@ export function CampaignReviewStep({
   submitLabel, submittingLabel, isSubmitting = false, submitDisabled = false, disableForBlockingIssues = false,
   hasPartialDeploy = false, onRetryInvitations,
   invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true,
-  campaignStatus, onBeforeRun, currentRubricVersion,
 }: CampaignReviewStepProps) {
-  // Chưa dùng ở đây (xem doc prop ở trên) — T10 sẽ đọc khi mount QuestionPreviewSummaryLine.
-  void campaignStatus;
-  void onBeforeRun;
-  void currentRubricVersion;
   const { t } = useLanguage();
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
   // T12 R2: đang TẢI hoặc LỖI ⇒ coi như "chưa biết ca nào" (`[]`), KHÔNG PHẢI "0 ca thật" —
@@ -135,9 +124,8 @@ export function CampaignReviewStep({
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={`${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} onEdit={() => onGoToStep(5)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
-        {/* T10: <QuestionPreviewSummaryLine campaignId={campaignId} questions={questions} /> */}
-        {/* Hợp đồng chờ FE-A: { campaignId: string | null; questions: CampaignQuestion[] } —
-            `campaignId` ở component này là `string | undefined`, nối bằng `campaignId ?? null`. */}
+        {/* SC2 · D-1 — bước 8 chỉ TÓM TẮT chấm thử theo câu (n/K câu đã thử · m câu chưa gắn tiêu chí), không chặn Phát hành. */}
+        <QuestionPreviewSummaryLine campaignId={campaignId ?? null} questions={questions} rubric={rubric} onGoToQuestions={() => onGoToStep(3)} />
         {hasPartialDeploy ? null : <CampaignReviewDeployOptions startNow={startNow} slotCount={slots.length} formattedStart={formattedStart} disabled={isSubmitting} />}
         <section className="rounded-xl border border-info/30 bg-info/5 p-4">
           <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p>{startNow.checked ? <p className="font-medium text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedStartNow').replace('{{start}}', formattedStart)}</p> : null}<p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>

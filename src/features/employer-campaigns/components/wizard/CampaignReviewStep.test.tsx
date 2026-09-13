@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CampaignReviewStep } from './CampaignReviewStep';
 import { createEmptyJdState } from '../../types/campaignWizard.types';
 import { useCampaignDeployOptionsStore } from '../../stores/campaignDeployOptionsStore';
@@ -42,6 +42,15 @@ const slotsQueryState = vi.hoisted(() => ({
   data: [] as CampaignSlotResponse[] | undefined,
   isLoading: false,
   isError: false,
+}));
+// SC2 · T15 — `QuestionPreviewSummaryLine` (mount ở bước 8) đọc lịch sử chấm thử qua `useRubricPreview`
+// (react-query). Mock để test không cần QueryClientProvider; `runs` mutable cho test khoá chỗ ĐẤU DÂY.
+const previewHook = vi.hoisted(() => ({ runs: [] as unknown[], args: [] as unknown[] }));
+vi.mock('../../hooks/useRubricPreview', () => ({
+  useRubricPreview: (options: unknown) => {
+    previewHook.args.push(options);
+    return { runs: previewHook.runs, latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null, run: vi.fn(), clearError: vi.fn() };
+  },
 }));
 vi.mock('../../hooks/useCampaignSlots', () => ({
   useCampaignSlots: () => ({
@@ -285,26 +294,42 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
 // `QuestionPreviewSummaryLine` vào chỗ đã chừa placeholder trong `CampaignReviewStep.tsx`. Bản
 // thân `RubricPreviewMount`/`RubricPreviewCard` KHÔNG bị đổi (FE-A sở hữu, gỡ compact ở đó) —
 // đây chỉ là chỗ GỌI nó bị bỏ, nên test chuyển hướng sang khẳng định "không còn ở đây nữa".
-describe('CampaignReviewStep — chấm thử thước đo compact KHÔNG còn render (T12 R2, thay CAMP-19)', () => {
+describe('CampaignReviewStep — chấm thử theo câu: bước 8 chỉ TÓM TẮT (SC2 · D-1 · T15 mount)', () => {
   const rubricWithLevels: RubricCriterion[] = [
-    { id: 'c1', name: 'Depth', description: '', weight: 100, maxScore: 5, levels: [{ score: 0, descriptor: 'none' }, { score: 5, descriptor: 'top' }] },
+    { id: 'c1', name: 'Depth', description: '', weight: 100, maxScore: 5, scoringScope: 'WhenTargeted', levels: [{ score: 0, descriptor: 'none' }, { score: 5, descriptor: 'top' }] },
   ];
 
-  it('dù truyền đủ campaignId/campaignStatus/onBeforeRun, card compact vẫn KHÔNG xuất hiện', () => {
-    render(
-      <CampaignReviewStep
-        {...baseProps}
-        campaignId="cmp-1"
-        campaignStatus="draft"
-        rubric={rubricWithLevels}
-        questions={twentyQuestions}
-        questionsPerSession={5}
-        onBeforeRun={async () => 'cmp-1'}
-      />,
-    );
+  beforeEach(() => { previewHook.runs = []; previewHook.args = []; });
+
+  it('card compact cũ KHÔNG còn; dòng tóm tắt hiện n/K đọc từ useRubricPreview đúng campaignId, link về bước 4', () => {
+    // 2 lượt Succeeded cùng câu q-1 ⇒ n = 1 câu (đếm CÂU, không đếm LƯỢT); q-2 chưa gắn nhãn ⇒ m = 1.
+    previewHook.runs = [
+      { id: 'r1', status: 'Succeeded', questionId: '11111111-1111-4111-8111-111111111111' },
+      { id: 'r2', status: 'Succeeded', questionId: '11111111-1111-4111-8111-111111111111' },
+    ];
+    const questions: CampaignQuestion[] = [
+      { id: '11111111-1111-4111-8111-111111111111', prompt: 'Q1', skill: 'x', difficulty: 'middle', source: 'manual', isRequired: false, targetCriterionIds: ['c1'] },
+      { id: '22222222-2222-4222-8222-222222222222', prompt: 'Q2', skill: 'x', difficulty: 'middle', source: 'manual', isRequired: false, targetCriterionIds: null },
+    ];
+    const onGoToStep = vi.fn();
+    render(<CampaignReviewStep {...baseProps} campaignId="cmp-1" rubric={rubricWithLevels} questions={questions} questionsPerSession={2} onGoToStep={onGoToStep} />);
     expect(screen.queryByTestId('preview-compact-status')).not.toBeInTheDocument();
     expect(screen.queryByTestId('preview-soft-warning')).not.toBeInTheDocument();
+    const summary = screen.getByTestId('question-preview-summary');
+    expect(summary).toHaveAttribute('role', 'status');
+    expect(previewHook.args[0]).toEqual({ campaignId: 'cmp-1' });
+    expect(summary).toHaveTextContent('employer.campaigns.review.previewSummary.count');
+    expect(summary).toHaveTextContent('employer.campaigns.review.previewSummary.unlabeled');
+    fireEvent.click(within(summary).getByRole('button', { name: 'employer.campaigns.review.previewSummary.goToQuestions' }));
+    expect(onGoToStep).toHaveBeenCalledWith(3);
+    // Thuần thông tin — không chặn Phát hành.
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
+  });
+
+  it('chưa lưu nháp (campaignId null) ⇒ dòng tóm tắt vẫn hiện, hook nhận campaignId null (không gọi mạng)', () => {
+    render(<CampaignReviewStep {...baseProps} campaignId={undefined} rubric={rubricWithLevels} questions={twentyQuestions} questionsPerSession={5} />);
+    expect(screen.getByTestId('question-preview-summary')).toBeInTheDocument();
+    expect(previewHook.args[0]).toEqual({ campaignId: null });
   });
 });
 
