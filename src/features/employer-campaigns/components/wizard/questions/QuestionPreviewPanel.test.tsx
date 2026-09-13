@@ -9,7 +9,10 @@ import type { RubricPreviewRun, UseQuestionPreviewApi } from '../../../types/rub
 import { goodRun, sample, score } from '../../../mocks/rubricPreview.fixtures';
 import { QuestionPreviewPanel } from './QuestionPreviewPanel';
 
-vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'vi' }) }));
+const messages: Record<string, string> = {
+  'employer.campaigns.questionCard.preview.quota.free': 'Còn {{n}} lượt miễn phí cho câu này',
+};
+vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => messages[key] ?? key, language: 'vi' }) }));
 afterEach(() => cleanup());
 
 const LEVELS = [{ score: 0, descriptor: 'Trống hoàn toàn' }, { score: 5, descriptor: 'Xuất sắc toàn diện' }];
@@ -98,7 +101,8 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
 
   it('quota hiển thị THEO CÂU: chưa có lượt cho câu này ⇒ "Còn 1 lượt" (không phải 3 của campaign)', () => {
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={api({ freeRunsRemaining: 1, latest: null, runs: [] })} />);
-    expect(screen.getByTestId('question-preview-quota')).toHaveTextContent('employer.campaigns.questionCard.preview.quota.free');
+    // Quota campaign-level (freeRunsForVersion) sẽ hiện 3 ở đúng ca này — số phải là 1 (per-question, W1).
+    expect(screen.getByTestId('question-preview-quota')).toHaveTextContent('Còn 1 lượt miễn phí cho câu này');
     expect(screen.queryByText('employer.campaigns.questionCard.preview.quota.paid')).not.toBeInTheDocument();
   });
 
