@@ -54,30 +54,30 @@ export function QuestionCardHeader({ question, index, total, open, disabled, tar
             {prompt || t('employer.campaigns.questionCard.emptyPrompt')}
           </span>
           <span className="flex flex-wrap items-center gap-1.5">
-            <span className="rounded-lg border border-satin px-2 py-0.5 text-xs text-muted-foreground">
+            <span className="whitespace-nowrap rounded-lg border border-satin px-2 py-0.5 text-xs text-muted-foreground">
               {question.questionGroup || t('employer.campaigns.campaignQuestions.question.commonGroup')}
             </span>
-            <span className={cn('inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium', isAi ? 'border-foreground bg-foreground text-background' : 'border-satin bg-surface-base text-muted-foreground')}>
+            <span className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-medium', isAi ? 'border-foreground bg-foreground text-background' : 'border-satin bg-surface-base text-muted-foreground')}>
               {isAi ? <Sparkles className="size-3" aria-hidden /> : <User className="size-3" aria-hidden />}
               {isAi ? t('employer.campaigns.campaignQuestions.source.aiGenerated') : t('employer.campaigns.campaignQuestions.source.customHr')}
             </span>
             {visibleNames.map((name) => (
-              <span key={name} className="rounded-lg border border-info/30 bg-info-bg px-2 py-0.5 text-xs text-info" data-testid="question-card-criterion-chip">
+              <span key={name} className="whitespace-nowrap rounded-lg border border-info/30 bg-info-bg px-2 py-0.5 text-xs text-info" data-testid="question-card-criterion-chip">
                 {name}
               </span>
             ))}
             {hiddenCount > 0 ? (
-              <span className="rounded-lg border border-info/30 bg-info-bg px-2 py-0.5 text-xs text-info" data-testid="question-card-criterion-more">
+              <span className="whitespace-nowrap rounded-lg border border-info/30 bg-info-bg px-2 py-0.5 text-xs text-info" data-testid="question-card-criterion-more">
                 {t('employer.campaigns.questionCard.moreCriteria').replace('{{n}}', String(hiddenCount))}
               </span>
             ) : null}
             {runningPosition != null ? (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" data-testid="question-card-running">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground" data-testid="question-card-running">
                 <Loader2 className="size-3 animate-spin" aria-hidden />
                 {t('employer.campaigns.questionCard.previewRunning').replace('{{n}}', String(runningPosition))}
               </span>
             ) : hasPreviewRun ? (
-              <span className="inline-flex items-center gap-1 text-xs text-success" data-testid="question-card-preview-done">
+              <span className="inline-flex items-center gap-1 text-xs text-success whitespace-nowrap" data-testid="question-card-preview-done">
                 <CheckCircle2 className="size-3" aria-hidden />
                 {t('employer.campaigns.questionCard.previewDone')}
               </span>
