@@ -60,6 +60,7 @@ import {
   CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { adoptServerCriterionIds, buildQuestionIdAliases, remapQuestionTargetIds } from '../utils/serverIdAdoption';
 import {
   CampaignInvitationDeployError,
   CampaignRequestError,
@@ -487,6 +488,19 @@ export function useCampaignWizard({
   const questionsPersistKeyRef = useRef<string | null>(
     mode === 'edit' ? questionsPersistKey(state.questions) : null,
   );
+  // SC2 · T9 — id câu đúc cục bộ (`client-…`) → id server, ghi mỗi lần `PUT …/questions` trả về. Card chấm thử
+  // giữ id câu từ lúc bấm nút (closure) nên sau khi lưu phải tra lại ở đây (`resolveQuestionId`), không thì
+  // `useRubricPreview` lọc id không-GUID thành null ⇒ BE chấm câu ĐẦU TIÊN thay cho câu HR đang đứng.
+  const questionIdAliasRef = useRef<Map<string, string>>(new Map());
+  const recordQuestionAliases = useCallback((sent: CampaignQuestion[], saved: CampaignQuestion[]) => {
+    for (const [localId, serverId] of buildQuestionIdAliases(sent, saved)) {
+      questionIdAliasRef.current.set(localId, serverId);
+    }
+  }, []);
+  const resolveQuestionId = useCallback(
+    (localId: string): string => questionIdAliasRef.current.get(localId) ?? localId,
+    [],
+  );
 
   useEffect(() => {
     if (mode !== 'edit' || !campaign?.id) return;
@@ -748,6 +762,7 @@ export function useCampaignWizard({
       const id = await fileActions.ensureDraftId();
       const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
       questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(state.questions, updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -773,6 +788,7 @@ export function useCampaignWizard({
     isGeneratingQuestions,
     isSavingQuestions,
     onUpdateQuestions,
+    recordQuestionAliases,
     state.questions,
     t,
   ]);
@@ -797,6 +813,7 @@ export function useCampaignWizard({
     try {
       const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(nextQuestions));
       questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(nextQuestions, updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -809,7 +826,7 @@ export function useCampaignWizard({
     } finally {
       setIsSavingQuestions(false);
     }
-  }, [fileActions, isDraftEditable, isSavingQuestions, onUpdateQuestions, setState, state.questions, state.questionsPerSession, t]);
+  }, [fileActions, isDraftEditable, isSavingQuestions, onUpdateQuestions, recordQuestionAliases, setState, state.questions, state.questionsPerSession, state.rubric, t]);
 
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
@@ -1216,21 +1233,40 @@ export function useCampaignWizard({
       phase = 'update';
       const currentSnapshot = snapshot();
       const baseline = baselineSnapshotRef.current;
+      // SC2 · T9 — bộ câu hỏi đem PUT ở pha sau; nhãn tiêu chí trong đó có thể trỏ vào id TẠM của tiêu chí
+      // vừa thêm ở bước 3, và chỉ resolve được sau khi PUT metadata trả về id server (xem serverIdAdoption).
+      let questionsToPersist = state.questions;
       if (!baseline || hasCampaignUpdateChanges(baseline, currentSnapshot)) {
         const payload = baseline
           ? buildDirtyUpdateRequest(baseline, currentSnapshot)
           : buildCampaignUpdateRequest(currentSnapshot);
+        let rubricSnapshot = currentSnapshot.rubric;
         if (Object.keys(payload).length > 0) {
-          await onUpdateCampaign(id, payload);
+          const saved = await onUpdateCampaign(id, payload);
+          // Ghép id tạm → id server theo TÊN từ chính response PUT (BE replace-all mint id mới cho tiêu chí
+          // không echo id). Không làm thì nhãn câu hỏi trỏ id tạm bị lọc rớt ở PUT câu hỏi ngay bên dưới.
+          const adopted = adoptServerCriterionIds(currentSnapshot.rubric, saved.rubric ?? []);
+          if (adopted.idMap.size > 0) {
+            rubricSnapshot = adopted.rubric;
+            questionsToPersist = remapQuestionTargetIds(state.questions, adopted.idMap);
+            setState((prev) => ({
+              ...prev,
+              rubric: adoptServerCriterionIds(prev.rubric, saved.rubric ?? []).rubric,
+              questions: remapQuestionTargetIds(prev.questions, adopted.idMap),
+            }));
+          }
         }
-        baselineSnapshotRef.current = currentSnapshot;
+        // Baseline mang id ĐÃ resolve — không thì lần chấm thử kế thấy payload "có id" ≠ baseline "không id"
+        // và PUT metadata lại dù HR không đổi gì.
+        baselineSnapshotRef.current = { ...currentSnapshot, rubric: rubricSnapshot, questions: questionsToPersist };
       }
 
       phase = 'questions';
       let savedAt: string | undefined;
-      if (state.questions.length > 0 && questionsPersistKey(state.questions) !== questionsPersistKeyRef.current) {
-        const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+      if (questionsToPersist.length > 0 && questionsPersistKey(questionsToPersist) !== questionsPersistKeyRef.current) {
+        const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(questionsToPersist));
         questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+        recordQuestionAliases(questionsToPersist, updated.questions);
         savedAt = updated.updatedAt;
         setState((prev) => ({
           ...prev,
@@ -1269,6 +1305,7 @@ export function useCampaignWizard({
     mode,
     onUpdateCampaign,
     onUpdateQuestions,
+    recordQuestionAliases,
     snapshot,
     state,
     t,
@@ -1409,6 +1446,7 @@ export function useCampaignWizard({
     retryQuestionsUpdate,
     persistForPreview,
     isPersistingForPreview,
+    resolveQuestionId,
     campaignId,
     campaignStatus,
     partialDeploy,

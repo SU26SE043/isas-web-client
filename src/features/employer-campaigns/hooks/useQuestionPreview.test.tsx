@@ -192,3 +192,52 @@ describe('useQuestionPreview — run() POST đúng câu đã truyền vào hook'
     expect(runMock).toHaveBeenCalledWith('c1', { questionId: null, customAnswer: null });
   });
 });
+
+describe('useQuestionPreview — SC2 · T9: resolveQuestionId sau beforeRun (câu vừa được lưu mới có id server)', () => {
+  const SERVER_ID = '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40';
+
+  it('beforeRun HOÀN TẤT rồi mới POST, và POST mang id server do resolveQuestionId trả về (không phải null)', async () => {
+    runMock.mockResolvedValue(makeRun({ id: 'run-new', questionId: SERVER_ID }));
+    const order: string[] = [];
+    const beforeRun = vi.fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      order.push('beforeRun:done');
+      return 'c-1';
+    });
+    runMock.mockImplementation(async () => { order.push('POST'); return makeRun({ id: 'run-new', questionId: SERVER_ID }); });
+    const resolveQuestionId = vi.fn((id: string) => (id === 'client-abc' ? SERVER_ID : id));
+    const { result } = renderHook(
+      () => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun, resolveQuestionId }),
+      { wrapper },
+    );
+    await act(async () => { await result.current.run('Bài'); });
+    expect(order).toEqual(['beforeRun:done', 'POST']);
+    expect(resolveQuestionId).toHaveBeenCalledWith('client-abc');
+    expect(runMock).toHaveBeenCalledWith('c-1', { questionId: SERVER_ID, customAnswer: 'Bài' });
+  });
+
+  it('có resolver mà sau khi lưu vẫn không có id server ⇒ KHÔNG POST (không để BE chấm câu đầu tiên), báo lỗi, clearError dọn được', async () => {
+    const beforeRun = vi.fn(async () => 'c-1');
+    const resolveQuestionId = vi.fn((id: string) => id);
+    const { result } = renderHook(
+      () => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun, resolveQuestionId }),
+      { wrapper },
+    );
+    let returned: unknown = 'x';
+    await act(async () => { returned = await result.current.run(); });
+    expect(returned).toBeNull();
+    expect(runMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(result.current.error?.code).toBe('noQuestions'));
+    act(() => result.current.clearError());
+    await waitFor(() => expect(result.current.error).toBeNull());
+  });
+
+  it('không có resolver ⇒ hành vi cũ nguyên (id không-GUID ⇒ gửi null), beforeRun vẫn gọi trước', async () => {
+    runMock.mockResolvedValue(makeRun());
+    const beforeRun = vi.fn(async () => 'c-1');
+    const { result } = renderHook(() => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun }), { wrapper });
+    await act(async () => { await result.current.run(); });
+    expect(beforeRun).toHaveBeenCalledTimes(1);
+    expect(runMock).toHaveBeenCalledWith('c-1', { questionId: null, customAnswer: null });
+  });
+});
