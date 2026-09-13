@@ -1770,6 +1770,11 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.review.previewSummary.unsaved': 'Chưa lưu nháp — chấm thử từng câu ở bước 4 sau khi lưu.',
     'employer.campaigns.review.previewSummary.optional': 'Chấm thử không bắt buộc để phát hành.',
     'employer.campaigns.review.previewSummary.goToQuestions': 'Sang bước 4',
+    'employer.campaigns.detail.questions.title': 'Câu hỏi & chấm thử',
+    'employer.campaigns.detail.questions.description': 'Mỗi câu chấm thử riêng trên đúng các tiêu chí nó được chấm. Sửa nội dung, nhãn tiêu chí hay câu mẫu thì mở trình soạn (bước 4).',
+    'employer.campaigns.detail.questions.descriptionLocked': 'Chiến dịch đã mở — câu hỏi khoá sửa để mọi ứng viên làm cùng một đề; chấm thử vẫn chạy được trên bản thước đo hiện tại.',
+    'employer.campaigns.detail.questions.empty': 'Chưa có câu hỏi nào.',
+    'employer.campaigns.detail.questions.editQuestion': 'Sửa câu này',
   },
   en: {
     'employer.campaigns.nav.campaigns': 'Campaigns',
@@ -3540,5 +3545,10 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.review.previewSummary.unsaved': 'Draft not saved yet — test-score each question in step 4 after saving.',
     'employer.campaigns.review.previewSummary.optional': 'Test-scoring is not required to publish.',
     'employer.campaigns.review.previewSummary.goToQuestions': 'Go to step 4',
+    'employer.campaigns.detail.questions.title': 'Questions & test-scoring',
+    'employer.campaigns.detail.questions.description': 'Each question is test-scored on exactly the criteria it is scored on. To edit the text, criteria labels or sample answer, open the editor (step 4).',
+    'employer.campaigns.detail.questions.descriptionLocked': 'The campaign is open — questions are locked so every candidate gets the same set; test-scoring still runs on the current rubric version.',
+    'employer.campaigns.detail.questions.empty': 'No questions yet.',
+    'employer.campaigns.detail.questions.editQuestion': 'Edit this question',
   },
 };
