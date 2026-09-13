@@ -74,6 +74,30 @@ function renderEdit() {
   return renderHook(() => useCampaignWizard({ mode: 'edit', campaign: campaignResponse(), ...handlers }));
 }
 
+/** datetime-local (giá trị ô "Giờ mở" ở bước 1) cách hiện tại `hours` giờ. */
+function localInHours(hours: number): string {
+  const date = new Date(Date.now() + hours * 3_600_000);
+  const pad = (v: number) => String(v).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** Create-mode: CHƯA có nháp lúc HR tick ở bước 8 ⇒ key = `new|startsAt`; nháp chỉ sinh ra trong handleFinalSubmit. */
+function renderCreate(startsAt: string) {
+  const hook = renderHook(() => useCampaignWizard({ mode: 'create', ...handlers }));
+  act(() => {
+    hook.result.current.patchInfo({ title: 'Backend Dev', domain: 'backend', language: 'vi', startsAt, expiresAt: localInHours(24 * 30) });
+    hook.result.current.patchJd({ inputMethod: 'text', jdText: 'JD dài đủ' });
+    hook.result.current.setRubric([
+      { id: 'new-a', name: 'Giao tiếp', description: '', weight: 60, maxScore: 10 },
+      { id: 'new-b', name: 'Kỹ thuật', description: '', weight: 40, maxScore: 10 },
+    ]);
+    hook.result.current.setQuestions([
+      { id: 'client-1', prompt: 'Q1', skill: '', difficulty: 'middle', source: 'manual', isRequired: true },
+    ]);
+  });
+  return hook;
+}
+
 describe('handleFinalSubmit → onDeployCampaign(…, { startNow }) (T13 R2)', () => {
   it('HR chưa đụng checkbox + giờ mở ≤ 24h ⇒ mặc định D-6: startNow=true', async () => {
     const { result } = renderEdit();
@@ -117,6 +141,25 @@ describe('handleFinalSubmit → onDeployCampaign(…, { startNow }) (T13 R2)', (
     expect(toastMock.success).toHaveBeenCalledWith('employer.campaigns.wizard.deploy.deploySuccess');
     expect(toastMock.error).not.toHaveBeenCalled();
     expect(result.current.actionError).toBeNull();
+    expect(handlers.onAfterSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  // Tester T13-M2: đọc store theo `saved.id` (id nháp vừa tạo) thay vì `state.draftId` (lúc HR tick) vẫn
+  // XANH khi mọi test đều edit-mode — vì hai giá trị đó trùng nhau. Create-mode tách chúng ra: HR tick
+  // khi CHƯA có nháp (key `new|startsAt`), handleFinalSubmit mới tạo nháp `c-new` ⇒ đọc theo id mới là
+  // đọc hụt ⇒ rơi về mặc định D-6 — nên giờ mở đặt XA hơn 24h để mặc định (false) KHÁC lựa chọn (true).
+  it('create-mode: tick ở bước 8 khi chưa có nháp (key new|startsAt) ⇒ nháp sinh ra trong submit, onDeployCampaign vẫn nhận { startNow: true }', async () => {
+    handlers.onCreateCampaign.mockResolvedValue(campaignResponse({ id: 'c-new', questions: [] }));
+    const startsAt = localInHours(72);
+    const { result } = renderCreate(startsAt);
+    expect(result.current.campaignId).toBeNull();
+    expect(result.current.state.info.startsAt).toBe(startsAt);
+    act(() => { useCampaignDeployOptionsStore.getState().setChoice(startNowChoiceKey(undefined, startsAt), true); });
+
+    await act(async () => { await result.current.handleFinalSubmit(); });
+
+    expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
+    expect(handlers.onDeployCampaign).toHaveBeenCalledWith('c-new', [], { startNow: true });
     expect(handlers.onAfterSubmit).toHaveBeenCalledTimes(1);
   });
 

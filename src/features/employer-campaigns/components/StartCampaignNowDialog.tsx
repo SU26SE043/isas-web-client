@@ -42,8 +42,9 @@ export function StartCampaignNowDialog({ formattedStart, onConfirm, busy = false
       await onConfirm();
       setOpen(false);
     } catch {
-      // Trang cha (`CampaignDetailPage.handleStartNow`) đã toast lỗi; giữ hộp thoại mở để HR
-      // đọc rồi tự quyết thử lại hay huỷ — không ném tiếp ra event handler.
+      // Chỉ tới được khi caller NÉM. Caller hiện tại (`CampaignDetailPage.handleStartNow`) tự
+      // catch + toast rồi resolve ⇒ với nó hộp thoại ĐÓNG kể cả khi start-now lỗi (HR đọc lỗi qua
+      // toast). Nhánh này là lưới an toàn cho caller khác: không để lỗi lọt ra event handler.
     } finally {
       setIsSubmitting(false);
     }
