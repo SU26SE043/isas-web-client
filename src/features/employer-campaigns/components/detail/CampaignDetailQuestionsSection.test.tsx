@@ -24,7 +24,7 @@ vi.mock('../../hooks/useQuestionPreview', () => ({
     hook.args.push(options);
     const api: UseQuestionPreviewApi = {
       runs: [], latest: null, isLoadingHistory: false, isRunning: false, runningQuestionId: null, freeRunsRemaining: 1, error: null,
-      run: vi.fn(async () => null), clearError: vi.fn(),
+      run: vi.fn(async () => null), clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn(),
       ...(hook.api[options.questionId as string] ?? {}),
     };
     return api;

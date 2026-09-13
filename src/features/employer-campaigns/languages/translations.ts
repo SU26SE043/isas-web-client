@@ -1687,6 +1687,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.rubricPreview.confirm.descriptionUnknown': 'Lưu sẽ tạo một bản thước đo mới, chỉ áp cho ứng viên thi sau; người đã thi giữ bản họ đã dùng.',
     'employer.campaigns.rubricPreview.confirm.confirm': 'Lưu & chấm thử',
     'employer.campaigns.rubricPreview.confirm.paidTitle': 'Lượt này trừ 1 credit tổ chức',
+    'employer.campaigns.rubricPreview.confirm.maybePaidTitle': 'Lượt này có thể trừ 1 credit tổ chức',
     'employer.campaigns.rubricPreview.confirm.paidDescription': 'Đã dùng hết 3 lượt miễn phí của bản thước đo này. Credit trừ ở đây cũng là credit ứng viên dùng để thi.',
     'employer.campaigns.rubricPreview.confirm.cancel': 'Huỷ',
     'employer.campaigns.rubricPreview.result.header': 'Lượt {{n}} · thước đo v{{version}} · {{date}}',
@@ -1751,6 +1752,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.rubricPreview.error.noCriteria': 'Chiến dịch chưa có tiêu chí chấm.',
     'employer.campaigns.rubricPreview.error.notFound': 'Không tìm thấy chiến dịch — tải lại trang.',
     'employer.campaigns.rubricPreview.error.unknown': 'Chấm thử không chạy được.',
+    'employer.campaigns.rubricPreview.error.billingConfirmRequired': 'Lượt này trừ credit tổ chức — cần xác nhận trước khi chạy.',
 
     // SC2 · T9 — card câu hỏi bước 4: mở/đóng, nhãn tiêu chí, câu mẫu, chấm thử theo câu, bao phủ.
     'employer.campaigns.questionCard.emptyPrompt': '(chưa có nội dung)',
@@ -1777,6 +1779,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.preview.quota.paid': '1 credit tổ chức / lượt',
     'employer.campaigns.questionCard.preview.quota.hint': 'Mỗi câu có 1 lượt miễn phí trên mỗi bản thước đo; sửa mốc rồi lưu ⇒ bản mới có lượt miễn phí mới.',
     'employer.campaigns.questionCard.preview.confirm.paidDescription': 'Đã dùng hết lượt miễn phí của câu này trên bản thước đo hiện tại. Credit trừ ở đây cũng là credit ứng viên dùng để thi.',
+    'employer.campaigns.questionCard.preview.confirm.unknownDescription': 'Chưa xác định được câu này còn lượt miễn phí không (lịch sử đang tải hoặc đã quá 20 lượt). Nếu đã hết, lượt này trừ 1 credit tổ chức.',
     'employer.campaigns.questionCard.preview.blocked.emptyPrompt': 'Nhập nội dung câu hỏi trước khi chấm thử.',
     'employer.campaigns.questionCard.preview.blocked.runningOther': 'Đang chấm câu #{{n}} — chờ xong rồi chấm câu này.',
     'employer.campaigns.questionCard.preview.history': 'Các lượt trước của câu này',
@@ -3484,6 +3487,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.rubricPreview.confirm.descriptionUnknown': 'Saving creates a new rubric version, applied only to candidates who interview afterwards; those who already did keep the version they were scored with.',
     'employer.campaigns.rubricPreview.confirm.confirm': 'Save & test-score',
     'employer.campaigns.rubricPreview.confirm.paidTitle': 'This run costs 1 organization credit',
+    'employer.campaigns.rubricPreview.confirm.maybePaidTitle': 'This run may cost 1 organization credit',
     'employer.campaigns.rubricPreview.confirm.paidDescription': 'All 3 free runs for this rubric version are used. Credits spent here are the same credits candidates use to take the interview.',
     'employer.campaigns.rubricPreview.confirm.cancel': 'Cancel',
     'employer.campaigns.rubricPreview.result.header': 'Run {{n}} · rubric v{{version}} · {{date}}',
@@ -3548,6 +3552,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.rubricPreview.error.noCriteria': 'The campaign has no scoring criteria.',
     'employer.campaigns.rubricPreview.error.notFound': 'Campaign not found — reload the page.',
     'employer.campaigns.rubricPreview.error.unknown': 'Test scoring could not run.',
+    'employer.campaigns.rubricPreview.error.billingConfirmRequired': 'This run costs organization credit — confirm before running.',
 
     // SC2 · T9 — step-4 question card: collapse, criterion labels, sample answer, per-question preview, coverage.
     'employer.campaigns.questionCard.emptyPrompt': '(no content yet)',
@@ -3574,6 +3579,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.preview.quota.paid': '1 organisation credit / run',
     'employer.campaigns.questionCard.preview.quota.hint': 'Each question gets 1 free run per rubric version; edit anchors and save ⇒ the new version gets a fresh free run.',
     'employer.campaigns.questionCard.preview.confirm.paidDescription': 'The free run for this question on the current rubric version is used up. Credits spent here are the same credits candidates use to take the interview.',
+    'employer.campaigns.questionCard.preview.confirm.unknownDescription': 'We cannot tell yet whether this question still has a free run (history is loading or exceeds 20 runs). If it is used up, this run costs 1 organization credit.',
     'employer.campaigns.questionCard.preview.blocked.emptyPrompt': 'Enter the question text before test-scoring.',
     'employer.campaigns.questionCard.preview.blocked.runningOther': 'Scoring question #{{n}} — wait for it to finish before scoring this one.',
     'employer.campaigns.questionCard.preview.history': 'Earlier runs for this question',

@@ -99,6 +99,8 @@ export function inertPreview(overrides: Partial<UseRubricPreviewApi> = {}): UseR
     error: null,
     run: async () => null,
     clearError: () => undefined,
+    billingConfirm: null,
+    clearBillingConfirm: () => undefined,
     ...overrides,
   };
 }

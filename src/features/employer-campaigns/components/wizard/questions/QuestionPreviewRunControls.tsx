@@ -16,11 +16,18 @@ export interface QuestionPreviewRunControlsProps {
   /** Campaign đang mở + có bước lưu ⇒ hỏi trước: lưu tạo bản thước đo mới cho ứng viên thi sau. */
   requireConfirm: boolean;
   currentRubricVersion: number | null;
-  /** Quota THEO CÂU (D-4: 1 lượt miễn phí / câu / bản thước đo). `null` = không biết. */
+  /**
+   * Quota THEO CÂU (D-4: 1 lượt miễn phí / câu / bản thước đo). `null` = KHÔNG BIẾT (lịch sử đang tải / cửa sổ
+   * 20 lượt đầy) ⇒ HỎI trước khi chạy như ca hết lượt (R3a) — không đoán "còn 1" rồi trừ credit im lặng.
+   */
   freeRunsLeft: number | null;
+  /** R3(c) — BE 409 PREVIEW_BILLING_CONFIRM_REQUIRED cho lượt vừa bấm ⇒ mở hộp thoại; đồng ý ⇒ gọi lại có cờ. */
+  billingConfirmPending?: boolean;
+  onCancelBillingConfirm?: () => void;
   disabled: boolean;
   isRunning: boolean;
-  onRun: (customAnswer: string | null) => void;
+  /** `confirmBilled` = HR đã đồng ý trừ credit (hộp thoại trả phí / không rõ quota / BE đòi xác nhận). */
+  onRun: (customAnswer: string | null, confirmBilled: boolean) => void;
 }
 
 /**
@@ -35,6 +42,8 @@ export function QuestionPreviewRunControls({
   requireConfirm,
   currentRubricVersion,
   freeRunsLeft,
+  billingConfirmPending = false,
+  onCancelBillingConfirm,
   disabled,
   isRunning,
   onRun,
@@ -45,14 +54,22 @@ export function QuestionPreviewRunControls({
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const customValue = customEdited ?? sampleAnswer;
   const paid = freeRunsLeft != null && freeRunsLeft <= 0;
+  const unknown = freeRunsLeft == null;
+  // Hộp thoại ở chế độ "trừ credit" khi: FE biết đã hết lượt · FE không biết · BE vừa từ chối vì chưa xác nhận.
+  const charge = paid || unknown || billingConfirmPending;
+  const dialogOpen = confirmOpen || billingConfirmPending;
 
-  const fire = () => onRun(customValue.trim() ? customValue.trim() : null);
+  const fire = (confirmBilled: boolean) => onRun(customValue.trim() ? customValue.trim() : null, confirmBilled);
   const submit = () => {
-    if (requireConfirm || paid) {
+    if (requireConfirm || paid || unknown) {
       setConfirmOpen(true);
       return;
     }
-    fire();
+    fire(false);
+  };
+  const closeDialog = () => {
+    setConfirmOpen(false);
+    if (billingConfirmPending) onCancelBillingConfirm?.();
   };
 
   const baseLabel = savesBeforeRun ? t('employer.campaigns.rubricPreview.runSave') : t('employer.campaigns.rubricPreview.run');
@@ -60,10 +77,13 @@ export function QuestionPreviewRunControls({
   const versionSentence = currentRubricVersion != null
     ? t('employer.campaigns.rubricPreview.confirm.description').replace('{{next}}', String(currentRubricVersion + 1)).replace('{{current}}', String(currentRubricVersion))
     : t('employer.campaigns.rubricPreview.confirm.descriptionUnknown');
-  const confirmDescription = [
-    paid ? t('employer.campaigns.questionCard.preview.confirm.paidDescription') : null,
-    requireConfirm ? versionSentence : null,
-  ].filter(Boolean).join(' ');
+  const chargeSentence = paid || billingConfirmPending
+    ? t('employer.campaigns.questionCard.preview.confirm.paidDescription')
+    : unknown ? t('employer.campaigns.questionCard.preview.confirm.unknownDescription') : null;
+  const confirmDescription = [chargeSentence, requireConfirm ? versionSentence : null].filter(Boolean).join(' ');
+  const dialogTitle = paid || billingConfirmPending
+    ? t('employer.campaigns.rubricPreview.confirm.paidTitle')
+    : unknown ? t('employer.campaigns.rubricPreview.confirm.maybePaidTitle') : t('employer.campaigns.rubricPreview.confirm.title');
 
   return (
     <div className="space-y-3">
@@ -96,15 +116,16 @@ export function QuestionPreviewRunControls({
       {paid ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.questionCard.preview.quota.hint')}</p> : null}
 
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={paid ? t('employer.campaigns.rubricPreview.confirm.paidTitle') : t('employer.campaigns.rubricPreview.confirm.title')}
+        open={dialogOpen}
+        onOpenChange={(open) => { if (!open) closeDialog(); }}
+        title={dialogTitle}
         description={confirmDescription}
-        confirmLabel={paid ? runLabel : t('employer.campaigns.rubricPreview.confirm.confirm')}
+        confirmLabel={paid || billingConfirmPending ? t('employer.campaigns.rubricPreview.runPaid').replace('{{label}}', baseLabel) : baseLabel}
         cancelLabel={t('employer.campaigns.rubricPreview.confirm.cancel')}
         onConfirm={() => {
-          setConfirmOpen(false);
-          fire();
+          closeDialog();
+          // Đồng ý ở chế độ trừ credit ⇒ gửi cờ; chỉ xác nhận bản thước đo (còn lượt miễn phí) ⇒ không.
+          fire(charge);
         }}
       />
     </div>

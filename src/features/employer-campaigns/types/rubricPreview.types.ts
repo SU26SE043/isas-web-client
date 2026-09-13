@@ -14,6 +14,25 @@ export interface RubricPreviewRequest {
   questionId?: string | null;
   /** Bài thứ 4 HR tự dán — bài duy nhất không do bộ chấm viết, là đối chứng cho self-scoring bias. */
   customAnswer?: string | null;
+  /**
+   * R3/I7 — HR ĐÃ đồng ý trừ credit. Lượt SẼ bị tính phí mà cờ không `true` ⇒ BE **409**
+   * `{ code: "PREVIEW_BILLING_CONFIRM_REQUIRED", freeRunsRemaining, questionId }` — không row, không reserve, không
+   * gọi AI. Mặc định false (vắng khoá) — FE không đoán quota nữa: quota đếm ở BE, FE chỉ hỏi rồi gửi cờ.
+   */
+  confirmBilled?: boolean;
+}
+
+/** Mã BE trả trong thân 409 khi lượt sẽ trừ credit mà chưa có `confirmBilled: true`. */
+export const PREVIEW_BILLING_CONFIRM_REQUIRED = 'PREVIEW_BILLING_CONFIRM_REQUIRED';
+
+/**
+ * R3 — BE từ chối vì chưa xác nhận trả phí. KHÔNG phải lỗi (không hiện banner): hook giữ lại `input` để UI mở hộp
+ * thoại, HR đồng ý ⇒ gọi lại CÙNG input + `confirmBilled: true`.
+ */
+export interface RubricPreviewBillingConfirm {
+  freeRunsRemaining: number;
+  questionId: string | null;
+  input: RubricPreviewRequest;
 }
 
 export interface RubricPreviewCriterion {
@@ -79,6 +98,7 @@ export interface RubricPreviewRun {
 /** Lỗi đã phân loại để UI hiện LÝ DO thay vì toast chung. */
 export type RubricPreviewError =
   | { code: 'missingLevels'; criteria: string[]; message: string }
+  | { code: 'billingConfirmRequired'; freeRunsRemaining: number; questionId: string | null; message: string }
   | { code: 'noQuestions' | 'noCriteria' | 'closed' | 'running' | 'noCredit' | 'aiFailed' | 'notFound' | 'unknown'; message: string };
 
 /** Vì sao chưa chạy được — tính ở FE TRƯỚC khi gọi API (không đốt lượt để nhận 400). */
@@ -124,7 +144,13 @@ export interface UseRubricPreviewApi {
   isRunning: boolean;
   freeRunsRemaining: number | null;
   error: RubricPreviewError | null;
-  /** Gọi `beforeRun` (lưu thước đo + câu hỏi) rồi POST. Trả null khi lỗi (error đã set). */
+  /**
+   * R3 — BE 409 PREVIEW_BILLING_CONFIRM_REQUIRED ở lượt vừa gọi: UI mở hộp thoại; đồng ý ⇒ `run({ ...input,
+   * confirmBilled: true })`; huỷ ⇒ `clearBillingConfirm`. Không tính là `error`.
+   */
+  billingConfirm: RubricPreviewBillingConfirm | null;
+  clearBillingConfirm: () => void;
+  /** Gọi `beforeRun` (lưu thước đo + câu hỏi) rồi POST. Trả null khi lỗi (error đã set) HOẶC khi BE đòi xác nhận trả phí. */
   run: (input: RubricPreviewRequest) => Promise<RubricPreviewRun | null>;
   clearError: () => void;
 }
@@ -143,10 +169,16 @@ export interface UseQuestionPreviewApi {
   isRunning: boolean;
   /** id câu đang có lượt `Running` (null khi không có lượt nào đang chạy). Dùng để khoá nút Ở NHỮNG CÂU KHÁC. */
   runningQuestionId: string | null;
-  /** Quota còn lại CHO ĐÚNG CÂU NÀY — null khi hook không gắn với câu cụ thể (`questionId: null`). */
+  /**
+   * Quota còn lại CHO ĐÚNG CÂU NÀY. `null` = KHÔNG BIẾT (hook không gắn câu cụ thể · lịch sử đang tải · cửa sổ 20
+   * lượt đã đầy toàn lượt câu khác) ⇒ UI HỎI trước khi chạy (R3a). Số thật chỉ BE biết; FE không đoán "còn 1".
+   */
   freeRunsRemaining: number | null;
   error: RubricPreviewError | null;
-  /** POST cho ĐÚNG câu đã truyền vào hook; `customAnswer` = bài HR tự dán (band Custom). */
-  run: (customAnswer?: string | null) => Promise<RubricPreviewRun | null>;
+  /** Xem `UseRubricPreviewApi.billingConfirm`. */
+  billingConfirm: RubricPreviewBillingConfirm | null;
+  clearBillingConfirm: () => void;
+  /** POST cho ĐÚNG câu đã truyền vào hook; `customAnswer` = bài HR tự dán (band Custom); `confirmBilled` = HR đã đồng ý trừ credit. */
+  run: (customAnswer?: string | null, options?: { confirmBilled?: boolean }) => Promise<RubricPreviewRun | null>;
   clearError: () => void;
 }

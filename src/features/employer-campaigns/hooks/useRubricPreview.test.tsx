@@ -207,6 +207,48 @@ describe('useRubricPreview — run()', () => {
   });
 });
 
+describe('useRubricPreview — R3/I7: 409 PREVIEW_BILLING_CONFIRM_REQUIRED không phải lỗi, giữ input để gọi lại có cờ', () => {
+  const Q = '9c1f0a2e-4d6b-4a71-8f3c-1b2d5e7a9c40';
+  const confirmRequired = () => axiosError(409, { code: 'PREVIEW_BILLING_CONFIRM_REQUIRED', freeRunsRemaining: 0, questionId: Q });
+
+  it('409 confirm-required ⇒ trả null, error VẪN null, billingConfirm mang input đã resolve; KHÔNG tải lại lịch sử (BE không tạo row)', async () => {
+    runMock.mockRejectedValueOnce(confirmRequired());
+    const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });
+    await waitFor(() => expect(historyMock).toHaveBeenCalledTimes(1));
+    let returned: RubricPreviewRun | null = makeRun();
+    await act(async () => { returned = await result.current.run({ questionId: Q, customAnswer: 'x' }); });
+    expect(returned).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.billingConfirm).toEqual({ freeRunsRemaining: 0, questionId: Q, input: { questionId: Q, customAnswer: 'x' } });
+    expect(historyMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('gọi lại với { ...input, confirmBilled: true } ⇒ POST mang cờ, billingConfirm được dọn; clearBillingConfirm dọn khi huỷ', async () => {
+    runMock.mockRejectedValueOnce(confirmRequired()).mockResolvedValueOnce(makeRun({ id: 'paid', questionId: Q, billed: true }));
+    const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });
+    await act(async () => { await result.current.run({ questionId: Q }); });
+    const pending = result.current.billingConfirm;
+    expect(pending).not.toBeNull();
+    await act(async () => { await result.current.run({ ...pending!.input, confirmBilled: true }); });
+    expect(runMock).toHaveBeenLastCalledWith('c1', { questionId: Q, confirmBilled: true });
+    expect(result.current.billingConfirm).toBeNull();
+
+    runMock.mockRejectedValueOnce(confirmRequired());
+    await act(async () => { await result.current.run({ questionId: Q }); });
+    expect(result.current.billingConfirm).not.toBeNull();
+    act(() => result.current.clearBillingConfirm());
+    expect(result.current.billingConfirm).toBeNull();
+  });
+
+  it('409 KHÔNG mang code ⇒ vẫn là lỗi (closed/running) như trước, billingConfirm null', async () => {
+    runMock.mockRejectedValue(axiosError(409, 'Chiến dịch Closed không chạy chấm thử được.'));
+    const { result } = renderHook(() => useRubricPreview({ campaignId: 'c1' }), { wrapper });
+    await act(async () => { await result.current.run({}); });
+    expect(result.current.error).toMatchObject({ code: 'closed' });
+    expect(result.current.billingConfirm).toBeNull();
+  });
+});
+
 describe('useRubricPreview — questionId phải là GUID server', () => {
   // Id đúc cục bộ (`question-N`) chưa qua PUT không tồn tại trên server ⇒ BE 400 "không thuộc chiến dịch";
   // gửi null để BE tự lấy câu đầu tiên thay vì đốt một lượt vào lỗi.

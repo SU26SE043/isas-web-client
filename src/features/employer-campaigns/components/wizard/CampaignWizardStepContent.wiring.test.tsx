@@ -18,7 +18,7 @@ const criteriaStepSpy = vi.fn();
 const manualListSpy = vi.fn();
 const useRubricPreviewSpy = vi.fn(() => ({
   runs: [], latest: null, isLoadingHistory: false, isRunning: false, freeRunsRemaining: null, error: null,
-  run: async () => null, clearError: () => undefined,
+  run: async () => null, clearError: () => undefined, billingConfirm: null, clearBillingConfirm: () => undefined,
 }));
 vi.mock('./CampaignCriteriaStepV2', async (importOriginal) => {
   const mod = await importOriginal<typeof import('./CampaignCriteriaStepV2')>();

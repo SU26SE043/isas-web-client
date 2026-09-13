@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isServerEntityId } from '../utils/campaignQuestionLimits';
 import type {
+  RubricPreviewBillingConfirm,
   RubricPreviewError,
   RubricPreviewRequest,
   RubricPreviewRun,
@@ -43,6 +44,7 @@ function latestOf(runs: RubricPreviewRun[]): RubricPreviewRun | null {
 export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs): UseRubricPreviewApi {
   const queryClient = useQueryClient();
   const [error, setError] = useState<RubricPreviewError | null>(null);
+  const [billingConfirm, setBillingConfirm] = useState<RubricPreviewBillingConfirm | null>(null);
 
   const history = useQuery({
     queryKey: rubricPreviewQueryKey(campaignId),
@@ -65,6 +67,7 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
 
   const run = useCallback(async (input: RubricPreviewRequest): Promise<RubricPreviewRun | null> => {
     setError(null);
+    setBillingConfirm(null);
     let id = campaignId;
     if (beforeRun) {
       const persisted = await beforeRun();
@@ -90,7 +93,18 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
       await queryClient.invalidateQueries({ queryKey: key });
       return created;
     } catch (cause) {
-      setError(mapRubricPreviewError(cause));
+      const mapped = mapRubricPreviewError(cause);
+      if (mapped.code === 'billingConfirmRequired') {
+        // R3/I7 — KHÔNG phải lỗi: BE chưa reserve, chưa gọi AI, chỉ đòi HR xác nhận. Giữ ĐÚNG input đã resolve
+        // (questionId server) để lượt gọi lại chỉ cần thêm `confirmBilled: true`.
+        setBillingConfirm({
+          freeRunsRemaining: mapped.freeRunsRemaining,
+          questionId: mapped.questionId ?? questionId ?? null,
+          input: { ...input, questionId },
+        });
+        return null;
+      }
+      setError(mapped);
       // BE ghi lượt `Failed` (không tính quota, không trừ credit) TRƯỚC khi trả 502 ⇒ tải lại lịch sử để màn
       // hình khớp server ngay, không đợi reload. Lỗi 400/402/409 không tạo row — invalidate thừa là vô hại.
       await queryClient.invalidateQueries({ queryKey: rubricPreviewQueryKey(id) });
@@ -99,6 +113,7 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
   }, [beforeRun, campaignId, mutateAsync, queryClient]);
 
   const clearError = useCallback(() => setError(null), []);
+  const clearBillingConfirm = useCallback(() => setBillingConfirm(null), []);
 
   return {
     runs,
@@ -107,6 +122,8 @@ export function useRubricPreview({ campaignId, beforeRun }: UseRubricPreviewArgs
     isRunning: isPending || latest?.status === 'Running',
     freeRunsRemaining: latest?.freeRunsRemaining ?? null,
     error,
+    billingConfirm,
+    clearBillingConfirm,
     run,
     clearError,
   };

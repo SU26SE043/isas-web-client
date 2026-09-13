@@ -21,6 +21,7 @@ import {
   FREE_RUNS_PER_QUESTION,
   FREE_RUNS_PER_VERSION,
   freeRunsForQuestion,
+  RUBRIC_PREVIEW_HISTORY_WINDOW,
   freeRunsForVersion,
   hasVerifiedRun,
   latestSeenRubricVersion,
@@ -222,7 +223,20 @@ describe('helpers', () => {
     // Chưa có lượt nào của q-3 ⇒ trần mặc định.
     expect(freeRunsForQuestion(runs, 2, 'q-3')).toBe(FREE_RUNS_PER_QUESTION);
     // Trần tuỳ chỉnh qua tham số thứ 4.
-    expect(freeRunsForQuestion(runs, 2, 'q-3', 3)).toBe(3);
+    expect(freeRunsForQuestion(runs, 2, 'q-3', { freeRunsPerQuestion: 3 })).toBe(3);
+  });
+
+  // R3(a)/I7 — "không thấy lượt" ≠ "chưa dùng lượt": trả 1 ở hai ca này là đoán, và đoán sai thì POST không
+  // confirm ⇒ trừ credit im lặng. `null` = không biết ⇒ UI hỏi; BE đếm thật.
+  it('freeRunsForQuestion: KHÔNG thấy lượt của câu ⇒ null khi lịch sử đang tải HOẶC cửa sổ 20 lượt đã đầy; THẤY lượt thì vẫn tin số dù cửa sổ đầy', () => {
+    const others = Array.from({ length: RUBRIC_PREVIEW_HISTORY_WINDOW }, (_, i) => goodRun({ id: `o${i}`, questionId: 'q-other', rubricVersion: 2, freeRunsRemaining: 0 }));
+    expect(freeRunsForQuestion([], 2, 'q-1', { historyLoading: true })).toBeNull();
+    expect(freeRunsForQuestion(others, 2, 'q-1', { historyWindowFull: true })).toBeNull();
+    // Chưa tải xong nhưng đã có sẵn lượt của câu này trong cache ⇒ số thật vẫn dùng được.
+    expect(freeRunsForQuestion([goodRun({ questionId: 'q-1', rubricVersion: 2, freeRunsRemaining: 0 })], 2, 'q-1', { historyLoading: true })).toBe(0);
+    expect(freeRunsForQuestion([goodRun({ questionId: 'q-1', rubricVersion: 2, freeRunsRemaining: 1 }), ...others], 2, 'q-1', { historyWindowFull: true })).toBe(1);
+    // Không tải, cửa sổ chưa đầy, không thấy lượt ⇒ chưa dùng thật ⇒ trần mặc định.
+    expect(freeRunsForQuestion(others.slice(0, 3), 2, 'q-1', { historyLoading: false, historyWindowFull: false })).toBe(FREE_RUNS_PER_QUESTION);
   });
 });
 

@@ -210,21 +210,40 @@ export function freeRunsForVersion(
  */
 export const FREE_RUNS_PER_QUESTION = 1;
 
+/** BE trả tối đa 20 lượt mới nhất — lượt của một câu có thể nằm NGOÀI cửa sổ này. */
+export const RUBRIC_PREVIEW_HISTORY_WINDOW = 20;
+
+export interface FreeRunsForQuestionOptions {
+  freeRunsPerQuestion?: number;
+  /** Lịch sử chưa về ⇒ không biết câu này đã dùng lượt chưa. */
+  historyLoading?: boolean;
+  /** Cửa sổ lịch sử (toàn campaign) đã đầy ⇒ lượt của câu này có thể bị đẩy ra ngoài. */
+  historyWindowFull?: boolean;
+}
+
 /**
  * Số lượt miễn phí còn lại cho ĐÚNG câu hỏi này. `runs` là danh sách lượt (không cần lọc sẵn theo
  * câu — hàm tự tìm lượt MỚI NHẤT của đúng `questionId`, giả định `runs` đã sắp mới nhất trước, đúng
  * thứ tự `getRubricPreviewHistory` trả về). Không có `questionId` (chưa chọn câu cụ thể) ⇒ `null` —
  * quota là khái niệm PER-QUESTION, không có câu thì không có gì để đếm.
+ *
+ * R3(a) — KHÔNG THẤY lượt của câu này KHÔNG có nghĩa là "chưa dùng": lịch sử đang tải, hoặc cửa sổ 20 lượt đã đầy
+ * toàn lượt câu khác (lượt của câu này rơi ra ngoài) ⇒ trả `null` = "không biết" ⇒ UI hỏi trước khi chạy, BE
+ * mới là nơi đếm thật (409 nếu chưa xác nhận). Trước đây trả 1 ⇒ POST không confirm ⇒ trừ credit im lặng (I7).
  */
 export function freeRunsForQuestion(
   runs: RubricPreviewRun[],
   rubricVersion: number | null,
   questionId: string | null,
-  freeRunsPerQuestion: number = FREE_RUNS_PER_QUESTION,
+  options: FreeRunsForQuestionOptions = {},
 ): number | null {
+  const { freeRunsPerQuestion = FREE_RUNS_PER_QUESTION, historyLoading = false, historyWindowFull = false } = options;
   if (!questionId) return null;
   const latestForQuestion = runs.find((run) => run.questionId === questionId) ?? null;
-  if (!latestForQuestion) return freeRunsPerQuestion;
+  if (!latestForQuestion) {
+    if (historyLoading || historyWindowFull) return null;
+    return freeRunsPerQuestion;
+  }
   if (rubricVersion != null && latestForQuestion.rubricVersion !== rubricVersion) return freeRunsPerQuestion;
   return latestForQuestion.freeRunsRemaining;
 }

@@ -2,15 +2,16 @@ import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
-import type {
-  RubricPreviewBand,
-  RubricPreviewCriterion,
-  RubricPreviewError,
-  RubricPreviewRequest,
-  RubricPreviewRun,
-  RubricPreviewSample,
-  RubricPreviewSampleScore,
-  RubricPreviewStatus,
+import {
+  PREVIEW_BILLING_CONFIRM_REQUIRED,
+  type RubricPreviewBand,
+  type RubricPreviewCriterion,
+  type RubricPreviewError,
+  type RubricPreviewRequest,
+  type RubricPreviewRun,
+  type RubricPreviewSample,
+  type RubricPreviewSampleScore,
+  type RubricPreviewStatus,
 } from '../types/rubricPreview.types';
 
 /**
@@ -199,6 +200,14 @@ function errorMessage(error: unknown): string {
   return typeof error === 'string' ? error.trim() : '';
 }
 
+/** Thân JSON của lỗi HTTP (đọc cả `{ data: {...} }` bọc ngoài — mẫu `getDeployErrorData`). */
+function errorBody(error: unknown): Record<string, unknown> | null {
+  if (!axios.isAxiosError(error)) return null;
+  const raw = record(error.response?.data);
+  if (!raw) return null;
+  return record(raw.data) ?? raw;
+}
+
 /** Phân loại lỗi để UI hiện LÝ DO thay vì toast chung. `message` luôn là nguyên văn BE. */
 export function mapRubricPreviewError(error: unknown): RubricPreviewError {
   const status = getApiStatusCode(error);
@@ -214,7 +223,19 @@ export function mapRubricPreviewError(error: unknown): RubricPreviewError {
     return { code: 'unknown', message };
   }
   if (status === 402) return { code: 'noCredit', message };
-  if (status === 409) return { code: lower.includes('đang có') ? 'running' : 'closed', message };
+  if (status === 409) {
+    // R3/I7 — BE đòi xác nhận trả phí: đọc theo `code` (không theo câu chữ), kèm `freeRunsRemaining`/`questionId`.
+    const body = errorBody(error);
+    if (text(body?.code ?? body?.Code) === PREVIEW_BILLING_CONFIRM_REQUIRED) {
+      return {
+        code: 'billingConfirmRequired',
+        freeRunsRemaining: number(body?.freeRunsRemaining ?? body?.FreeRunsRemaining, 0),
+        questionId: nullableText(body?.questionId ?? body?.QuestionId),
+        message,
+      };
+    }
+    return { code: lower.includes('đang có') ? 'running' : 'closed', message };
+  }
   if (status === 502) return { code: 'aiFailed', message };
   if (status === 404) return { code: 'notFound', message };
   return { code: 'unknown', message };
@@ -229,6 +250,9 @@ export async function runRubricPreview(
     {
       questionId: req.questionId ?? null,
       customAnswer: req.customAnswer?.trim() ? req.customAnswer.trim() : null,
+      // Chỉ gửi khi HR đã đồng ý — vắng khoá = false (mặc định BE). Không gửi `false` tường minh để body lượt
+      // miễn phí giữ nguyên hình dạng cũ.
+      ...(req.confirmBilled === true ? { confirmBilled: true } : {}),
     },
     // POST ĐỒNG BỘ 20–60s (timeout BE 180s) — trần client mặc định ngắn hơn sẽ huỷ đúng lúc AI sắp xong.
     { timeout: 180_000 },

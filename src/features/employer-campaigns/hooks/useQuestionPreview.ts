@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { RubricPreviewError, RubricPreviewRequest, RubricPreviewRun, UseQuestionPreviewApi } from '../types/rubricPreview.types';
 import { isServerEntityId } from '../utils/campaignQuestionLimits';
-import { freeRunsForQuestion } from '../utils/rubricPreviewVerdict';
+import { freeRunsForQuestion, RUBRIC_PREVIEW_HISTORY_WINDOW } from '../utils/rubricPreviewVerdict';
 import { getRubricPreviewHistory } from '../services/campaignRubricPreview.service';
 import { rubricPreviewQueryKey, useRubricPreview } from './useRubricPreview';
 
@@ -99,9 +99,14 @@ export function useQuestionPreview({
   const runningQuestionId = base.latest?.status === 'Running' ? base.latest.questionId : null;
 
   const run = useCallback(
-    async (customAnswer?: string | null) => {
+    async (customAnswer?: string | null, options?: { confirmBilled?: boolean }) => {
       setLocalError(null);
-      const input: RubricPreviewRequest = { questionId, customAnswer: customAnswer ?? null };
+      const input: RubricPreviewRequest = {
+        questionId,
+        customAnswer: customAnswer ?? null,
+        // R3 — chỉ đính cờ khi HR đã đồng ý; vắng khoá = false (body lượt miễn phí giữ nguyên hình dạng).
+        ...(options?.confirmBilled ? { confirmBilled: true } : {}),
+      };
       pendingRef.current = input;
       try {
         return await base.run(input);
@@ -122,8 +127,15 @@ export function useQuestionPreview({
     isLoadingHistory: base.isLoadingHistory,
     isRunning: base.isRunning,
     runningQuestionId,
-    freeRunsRemaining: freeRunsForQuestion(runs, currentRubricVersion, questionId),
+    // R3(a) — `null` khi KHÔNG BIẾT: lịch sử đang tải, hoặc cửa sổ 20 lượt (TOÀN campaign — `base.runs`, không phải
+    // `runs` đã lọc theo câu) đã đầy mà không thấy lượt của câu này ⇒ UI hỏi trước; BE đếm thật (409 nếu chưa xác nhận).
+    freeRunsRemaining: freeRunsForQuestion(runs, currentRubricVersion, questionId, {
+      historyLoading: base.isLoadingHistory,
+      historyWindowFull: base.runs.length >= RUBRIC_PREVIEW_HISTORY_WINDOW,
+    }),
     error: base.error ?? localError,
+    billingConfirm: base.billingConfirm,
+    clearBillingConfirm: base.clearBillingConfirm,
     run,
     clearError,
   };
