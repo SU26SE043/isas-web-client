@@ -91,8 +91,11 @@ export function unwrapCampaignDetailPayload(data: unknown): unknown {
   return data;
 }
 
-/** SC2 — chuỗi lạ/rỗng ⇒ `undefined` (coi như vắng, mapper hạ tầng sẽ mặc định 'Always'). */
-function parseScoringScope(value: unknown): RubricScoringScope | undefined {
+/**
+ * SC2 — chuỗi lạ/rỗng ⇒ `undefined` (coi như vắng, mapper hạ tầng sẽ mặc định 'Always'). NGUỒN DUY NHẤT của
+ * luật parse scope trên FE — `campaignCriteria.service` (bộ chuẩn) dùng lại, không giữ bản inline riêng.
+ */
+export function parseScoringScope(value: unknown): RubricScoringScope | undefined {
   return value === 'Always' || value === 'WhenTargeted' ? value : undefined;
 }
 

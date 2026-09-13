@@ -20,10 +20,16 @@ export function CriterionScopeToggle({ scope, disabled = false, onChange }: Crit
   const { t } = useLanguage();
   const isAlways = scope !== 'WhenTargeted';
   const hint = t('employer.campaigns.wizard.rubric.scope.hint');
+  // Bấm lại segment đang chọn thì KHÔNG phát `onChange`: wizard đánh dấu `autosaveStatus: 'dirty'` ("Chưa lưu")
+  // ở mọi lần setRubric — một cú bấm không đổi gì mà nhãn đổi là báo oan.
+  const select = (next: RubricScoringScope) => {
+    if (next === (isAlways ? 'Always' : 'WhenTargeted')) return;
+    onChange(next);
+  };
 
   const optionClass = (active: boolean) =>
     cn(
-      'rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ease-out',
+      'rounded-lg px-2 py-1 text-xs font-medium transition-colors duration-200 ease-out',
       active ? 'bg-surface-raised text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
       disabled && 'cursor-not-allowed opacity-60',
     );
@@ -34,7 +40,7 @@ export function CriterionScopeToggle({ scope, disabled = false, onChange }: Crit
         type="button"
         aria-pressed={isAlways}
         disabled={disabled}
-        onClick={() => onChange('Always')}
+        onClick={() => select('Always')}
         className={optionClass(isAlways)}
       >
         {t('employer.campaigns.wizard.rubric.scope.always')}
@@ -43,7 +49,7 @@ export function CriterionScopeToggle({ scope, disabled = false, onChange }: Crit
         type="button"
         aria-pressed={!isAlways}
         disabled={disabled}
-        onClick={() => onChange('WhenTargeted')}
+        onClick={() => select('WhenTargeted')}
         className={optionClass(!isAlways)}
       >
         {t('employer.campaigns.wizard.rubric.scope.whenTargeted')}

@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import type { RubricLevel } from '@/features/rubrics/types/rubric.types';
+import { parseScoringScope } from '../utils/campaignMapper';
 
 export type CampaignCriteriaPreviewCriterion = {
   id: string;
@@ -60,7 +61,6 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
         const descriptor = text(parsed?.descriptor ?? parsed?.Descriptor);
         return descriptor ? [{ score: number(parsed?.score ?? parsed?.Score), descriptor }] : [];
       });
-      const rawScope = row.scoringScope ?? row.ScoringScope;
       return [{
         id: text(row.id ?? row.Id, `system-${index + 1}`),
         name: text(row.name ?? row.Name),
@@ -69,7 +69,7 @@ export function parseCampaignCriteriaPreview(data: unknown): CampaignCriteriaPre
         maxScore: number(row.maxScore ?? row.MaxScore, 10),
         levelCount: number(row.levelCount ?? row.LevelCount, levels.length),
         levels,
-        scoringScope: rawScope === 'Always' || rawScope === 'WhenTargeted' ? rawScope : undefined,
+        scoringScope: parseScoringScope(row.scoringScope ?? row.ScoringScope),
       }];
     }),
   };

@@ -27,15 +27,25 @@ describe('CriterionScopeToggle', () => {
     expect(screen.getByRole('button', { name: `${K}.whenTargeted` })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('bấm WhenTargeted ⇒ onChange("WhenTargeted"); bấm Always ⇒ onChange("Always")', () => {
+  it('bấm WhenTargeted ⇒ onChange("WhenTargeted"); bấm Always (khi đang WhenTargeted) ⇒ onChange("Always")', () => {
     const onChange = vi.fn();
-    render(<CriterionScopeToggle scope="Always" onChange={onChange} />);
+    const { rerender } = render(<CriterionScopeToggle scope="Always" onChange={onChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: `${K}.whenTargeted` }));
     expect(onChange).toHaveBeenCalledWith('WhenTargeted');
 
+    // Tiền đề đổi có chủ đích (correction T8): component là controlled, bấm lại segment ĐANG chọn không phát
+    // onChange (tránh nhãn "Chưa lưu" oan) ⇒ phải rerender với scope mới rồi mới bấm Always.
+    rerender(<CriterionScopeToggle scope="WhenTargeted" onChange={onChange} />);
     fireEvent.click(screen.getByRole('button', { name: `${K}.always` }));
     expect(onChange).toHaveBeenCalledWith('Always');
+  });
+
+  it('bấm lại segment đang chọn ⇒ KHÔNG phát onChange', () => {
+    const onChange = vi.fn();
+    render(<CriterionScopeToggle scope="Always" onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: `${K}.always` }));
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('tooltip giải thích hậu quả có mặt (title trên vùng công tắc)', () => {

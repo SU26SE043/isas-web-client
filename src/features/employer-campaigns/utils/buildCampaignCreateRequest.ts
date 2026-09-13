@@ -85,9 +85,10 @@ export function mapQuestionsToApiRequest(
         questionText: item.prompt.trim(),
         isRequired: item.isRequired,
         ...(item.questionGroup?.trim() ? { questionGroup: item.questionGroup.trim() } : {}),
-        // SC2 — PUT ba trạng thái: `undefined`/`null` domain ⇒ khoá VẮNG (giữ nguyên nhãn server đang
-        // có); mảng thật (kể cả `[]`) ⇒ gửi nguyên, đã lọc id KHÔNG phải GUID server (tiêu chí vừa
-        // thêm tay trong CÙNG lượt lưu chưa có id thật ⇒ gửi id đó sẽ 400 "không thuộc chiến dịch").
+        // SC2 — PUT BA nhánh (xem `normalizeTargetCriterionIdsForRequest`): `undefined`/`null` ⇒ khoá VẮNG
+        // (giữ nguyên nhãn server đang có) · `[]` thật ⇒ gửi `[]` (HR đã chủ động "chỉ Always") · mảng có
+        // phần tử ⇒ gửi phần đã lọc GUID, nhưng nếu lọc xong RỖNG (toàn id tạm — tiêu chí vừa thêm tay trong
+        // CÙNG lượt lưu, gửi id đó sẽ 400 "không thuộc chiến dịch") ⇒ cũng OMIT khoá, KHÔNG gửi `[]`.
         // Bỏ HẲN khoá khi vắng (không gán `undefined`) — `toHaveProperty` thấy khoá dù giá trị undefined.
         ...(targetCriterionIds !== undefined ? { targetCriterionIds } : {}),
         // CAMP-16 kiểu 3 trạng thái CỦA RIÊNG field này: `undefined` domain (chưa từng đọc) ⇒ bỏ khoá;
