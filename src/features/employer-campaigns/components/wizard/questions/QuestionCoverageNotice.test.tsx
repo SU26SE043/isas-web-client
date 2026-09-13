@@ -17,7 +17,8 @@ const rubric: RubricCriterion[] = [
   { id: 'c-b', name: 'Chiều sâu', description: '', weight: 30, maxScore: 5, scoringScope: 'WhenTargeted' },
   { id: 'c-c', name: 'Thiết kế', description: '', weight: 30, maxScore: 5, scoringScope: 'WhenTargeted' },
 ];
-const q = (id: string, targets: string[] | null): CampaignQuestion => ({ id, prompt: 'Q', skill: '', difficulty: 'middle', source: 'manual', isRequired: true, targetCriterionIds: targets });
+// isRequired=false: câu bắt buộc luôn được rút ⇒ không bao giờ rơi tiêu chí (BUG-2) — K-rule chỉ có nghĩa với câu tuỳ chọn.
+const q = (id: string, targets: string[] | null): CampaignQuestion => ({ id, prompt: 'Q', skill: '', difficulty: 'middle', source: 'manual', isRequired: false, targetCriterionIds: targets });
 
 describe('QuestionCoverageNotice', () => {
   it('có rubric ⇒ bao phủ tính CỤC BỘ (nhãn chưa lưu vẫn tính), bỏ qua số server', () => {
@@ -40,6 +41,14 @@ describe('QuestionCoverageNotice', () => {
     render(<QuestionCoverageNotice questions={[q('q1', ['c-b']), q('q2', ['c-c'])]} questionsPerSession={1} rubric={rubric} />);
     expect(screen.getByTestId('question-k-rule')).toHaveTextContent('employer.campaigns.questionCard.coverage.kRule');
     expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('BUG-2: câu bắt buộc chiếm khe — K=2, q4 bắt buộc KHÔNG nhãn + q1 [B] + q2 [C] ⇒ chặn; q4 bắt buộc [C] ⇒ KHÔNG chặn', () => {
+    const { unmount } = render(<QuestionCoverageNotice questions={[{ ...q('q4', null), isRequired: true }, q('q1', ['c-b']), q('q2', ['c-c'])]} questionsPerSession={2} rubric={rubric} />);
+    expect(screen.getByTestId('question-k-rule')).toBeInTheDocument();
+    unmount();
+    render(<QuestionCoverageNotice questions={[{ ...q('q4', ['c-c']), isRequired: true }, q('q1', ['c-b']), q('q2', ['c-c'])]} questionsPerSession={2} rubric={rubric} />);
+    expect(screen.queryByTestId('question-k-rule')).not.toBeInTheDocument();
   });
 
   it('K-rule server (chuỗi có tiền tố K_BELOW_CRITERIA_GROUPS) ⇒ khối lỗi, bỏ tiền tố mã; cảnh báo mềm KHÔNG vào đây', () => {

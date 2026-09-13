@@ -1784,7 +1784,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.coverage.title': 'Tiêu chí chưa có câu nào nhắm tới',
     'employer.campaigns.questionCard.coverage.item': '{{name}} — sẽ bị loại khỏi điểm nếu không câu nào nhắm tới.',
     'employer.campaigns.questionCard.coverage.kRuleTitle': 'Chặn phát hành',
-    'employer.campaigns.questionCard.coverage.kRule': 'Số câu mỗi buổi ({{k}}) nhỏ hơn số tiêu chí chính được câu hỏi nhắm tới ({{n}}) — mỗi buổi sẽ có tiêu chí không câu nào hỏi tới. Tăng số câu mỗi buổi hoặc bớt tiêu chí chính.',
+    'employer.campaigns.questionCard.coverage.kRule': 'Số câu mỗi buổi ({{k}}) trừ {{r}} câu bắt buộc không đủ chỗ cho {{n}} tiêu chí chính chưa được câu bắt buộc phủ — mỗi buổi sẽ có tiêu chí không câu nào hỏi tới. Tăng số câu mỗi buổi, bớt câu bắt buộc hoặc bớt tiêu chí chính.',
     // ── SC2 · T10 (D-1) · bước 8 tóm tắt + trang chi tiết dùng card theo câu ────────────────────
     'employer.campaigns.review.previewSummary.count': 'Đã chấm thử {{n}}/{{k}} câu.',
     'employer.campaigns.review.previewSummary.unlabeled': '{{m}} câu chưa gắn tiêu chí.',
@@ -3580,7 +3580,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.coverage.title': 'Criteria no question targets',
     'employer.campaigns.questionCard.coverage.item': '{{name}} — will be dropped from the score if no question targets it.',
     'employer.campaigns.questionCard.coverage.kRuleTitle': 'Publish blocked',
-    'employer.campaigns.questionCard.coverage.kRule': 'Questions per session ({{k}}) is lower than the number of primary criteria questions target ({{n}}) — every session would leave a criterion unasked. Raise questions per session or reduce primary criteria.',
+    'employer.campaigns.questionCard.coverage.kRule': 'Questions per session ({{k}}) minus {{r}} required questions leaves no room for the {{n}} primary criteria not covered by required questions — every session would leave a criterion unasked. Raise questions per session, reduce required questions or primary criteria.',
     // ── SC2 · T10 (D-1) · step 8 summary + detail page per-question cards ──────────────────────
     'employer.campaigns.review.previewSummary.count': 'Test-scored {{n}}/{{k}} questions.',
     'employer.campaigns.review.previewSummary.unlabeled': '{{m}} questions not yet labeled with criteria.',

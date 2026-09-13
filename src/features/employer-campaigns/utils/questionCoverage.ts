@@ -43,23 +43,40 @@ export function splitQuestionBankWarnings(warnings: string[]): { blocking: strin
 
 /**
  * Số "tiêu chí CHÍNH" distinct = `targetCriterionIds[0]` của mỗi câu có nhãn (cùng định nghĩa với selector
- * rút đều của BE). K (số câu mỗi buổi) nhỏ hơn số này ⇒ mỗi buổi chắc chắn có tiêu chí không câu nào hỏi.
+ * rút đều của BE — một câu chỉ đếm vào MỘT rổ).
  */
 export function primaryCriteriaCount(questions: CampaignQuestion[]): number {
+  return primaryCriteriaOf(questions).size;
+}
+
+function primaryCriteriaOf(questions: CampaignQuestion[]): Set<string> {
   const primary = new Set<string>();
   for (const question of questions) {
     const first = question.targetCriterionIds?.[0];
     if (first) primary.add(first);
   }
-  return primary.size;
+  return primary;
 }
 
-/** K-rule tính cục bộ; `null` = không vi phạm (K null = thi hết bộ ⇒ mọi câu đều được hỏi). */
+/**
+ * K-rule tính cục bộ — mirror BE `QuestionBankSummary.Build` (SC2 · BUG-2): câu BẮT BUỘC luôn được rút nên
+ * (a) chiếm khe: khe còn lại = `K − |required|`; (b) tiêu chí chính chúng nhắm coi như ĐÃ phủ. Chặn khi
+ * `K − |required| < |tiêu chí chính của câu KHÔNG bắt buộc ∖ tiêu chí chính của câu bắt buộc|`. Không có câu bắt
+ * buộc ⇒ suy biến về `K < distinct tiêu chí chính`. `null` = không vi phạm (K null = thi hết bộ ⇒ mọi câu đều
+ * được hỏi). Đây là lý do "K ≥ số tiêu chí" chưa đủ: một câu bắt buộc không nhãn ăn mất khe, tiêu chí còn lại
+ * bị rơi cho MỌI ứng viên mà không ai báo.
+ */
 export function computeLocalKRule(
   questions: CampaignQuestion[],
   questionsPerSession: number | null | undefined,
-): { k: number; primary: number } | null {
+): { k: number; required: number; uncovered: number } | null {
   if (questionsPerSession == null) return null;
-  const primary = primaryCriteriaCount(questions);
-  return questionsPerSession < primary ? { k: questionsPerSession, primary } : null;
+  const required = questions.filter((question) => question.isRequired);
+  const optional = questions.filter((question) => !question.isRequired);
+  const covered = primaryCriteriaOf(required);
+  const uncovered = [...primaryCriteriaOf(optional)].filter((id) => !covered.has(id)).length;
+  const slots = questionsPerSession - required.length;
+  // `uncovered === 0` ⇒ không có tiêu chí nào rơi (câu bắt buộc phủ hết) — ca `|required| > K` đã có cảnh báo
+  // riêng "số câu bắt buộc nhiều hơn số câu mỗi buổi" (CAMP-22), không báo K-rule chồng lên.
+  return uncovered > 0 && slots < uncovered ? { k: questionsPerSession, required: required.length, uncovered } : null;
 }

@@ -26,7 +26,7 @@ export function QuestionCoverageNotice({ questions, questionsPerSession, rubric,
   const localK = computeLocalKRule(questions, questionsPerSession);
   const { blocking } = splitQuestionBankWarnings(questionBankWarnings);
   const kMessages = localK
-    ? [t('employer.campaigns.questionCard.coverage.kRule').replace('{{k}}', String(localK.k)).replace('{{n}}', String(localK.primary))]
+    ? [t('employer.campaigns.questionCard.coverage.kRule').replace('{{k}}', String(localK.k)).replace('{{r}}', String(localK.required)).replace('{{n}}', String(localK.uncovered))]
     : blocking;
 
   if (coverage.length === 0 && kMessages.length === 0) return null;

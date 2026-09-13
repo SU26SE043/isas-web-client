@@ -76,6 +76,6 @@ test('lùi bước: dữ liệu đã nhập phải còn nguyên, và chụp từ
   await page.getByRole('button', { name: /^Back$/i }).click();
   await expect(page.getByRole('button', { name: /Add criterion/i })).toBeEnabled();
   await page.getByRole('button', { name: /^Next$/i }).click();
-  await expect(page.getByText(/How do you test React components/i)).toBeVisible();
+  await expect(page.getByText(/How do you test React components/i).first()).toBeVisible(); // SC2: card in prompt ở header (trigger) + ô sửa trong panel
   await shot(page, '10-lui-roi-tien-cau-hoi-con');
 });

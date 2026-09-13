@@ -53,7 +53,7 @@ test.describe('CMP4 employer campaign wizard', () => {
     await chooser.setFiles({ name: 'questions.csv', mimeType: 'text/csv', buffer: Buffer.from('question_text,sample_answer,is_required,nhom\n"How do you test React components?",,true,Testing\n"How do you handle loading states?",,true,UX\n') });
     await expect(page.getByRole('dialog')).toContainText(/Read 2 rows; 2 valid rows/i);
     await page.getByRole('button', { name: /Import 2 rows/i }).click();
-    await expect(page.getByText(/How do you test React components/i)).toBeVisible();
+    await expect(page.getByText(/How do you test React components/i).first()).toBeVisible(); // SC2: card in prompt ở header (trigger) + ô sửa trong panel
     await page.getByLabel('Draw from pool').check();
     await page.getByLabel('Placement').first().selectOption('pool');
     await page.getByRole('spinbutton', { name: 'Draw' }).fill('1');
