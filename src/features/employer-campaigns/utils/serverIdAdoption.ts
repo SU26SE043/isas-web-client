@@ -14,6 +14,8 @@ function normalizeName(name: string): string {
  * KHÔNG echo id tạm nên BE không biết "tiêu chí này là tiêu chí kia". Chỉ đụng tiêu chí CHƯA có id server;
  * tiêu chí đã mang GUID giữ nguyên (BE HĐ-5: echo id ⇒ giữ id). Chỉ thay `id`, giữ nguyên mọi field local
  * (mốc/mô tả HR đang gõ), không lấy bản server đè lên.
+ * FACT T9-R3 (P1, tiềm ẩn): hai tiêu chí tạm trùng tên khác hoa/thường ghép về CÙNG một GUID — hôm nay BE 400
+ * (tên tiêu chí trùng) chặn hộ trước khi tới đây; nếu BE nới, phải ghép theo thứ tự xuất hiện thay vì `byName`.
  */
 export function adoptServerCriterionIds(
   local: RubricCriterion[],
@@ -39,7 +41,8 @@ export function adoptServerCriterionIds(
 
 /**
  * Viết lại nhãn câu hỏi theo `idMap` (id tạm → id server). Id tạm KHÔNG resolve được thì BỎ — cùng ngữ nghĩa
- * BE `TrimDanglingQuestionTargets`: tiêu chí đó không còn tồn tại. `null` giữ `null` (I2: chưa gắn nhãn ≠ `[]`);
+ * BE `TrimDanglingQuestionTargets`: tiêu chí đó không còn tồn tại (FACT T9-R3 P8: nhãn toàn id tạm không resolve
+ * ⇒ `[]` ⇒ PUT gửi `[]` = chỉ Always, thay vì omit như T7). `null` giữ `null` (I2: chưa gắn nhãn ≠ `[]`);
  * mảng giữ nguyên tham chiếu khi không có gì đổi để không làm bẩn `autosaveStatus`/re-render vô ích.
  */
 export function remapQuestionTargetIds(

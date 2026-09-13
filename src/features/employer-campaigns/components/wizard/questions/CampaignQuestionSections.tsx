@@ -4,6 +4,7 @@ import type { CampaignQuestion, RubricCriterion } from '../../../types/campaignM
 import type { QuestionPreviewContext } from '../../../types/questionPreview.types';
 import { CampaignQuestionCard } from './CampaignQuestionCard';
 import { CampaignQuestionCardMount } from './CampaignQuestionCardMount';
+import { remapKeys, useQuestionIdMigration } from './useQuestionIdMigration';
 
 interface CampaignQuestionSectionsProps {
   questions: CampaignQuestion[];
@@ -33,6 +34,8 @@ interface CampaignQuestionSectionsProps {
  */
 export function useQuestionCardOpenState(questions: CampaignQuestion[], initialOpenQuestionId?: string | null) {
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  // Câu vừa được server cấp id (sau PUT) ⇒ đổi khoá mở/đóng theo, KHÔNG để card HR đang làm tự đóng (F2).
+  useQuestionIdMigration(questions, (aliases) => setOpenMap((prev) => remapKeys(prev, aliases)));
   useEffect(() => {
     const fresh = questions.filter((question) => !(question.id in openMap) && !question.prompt.trim());
     if (fresh.length === 0) return;

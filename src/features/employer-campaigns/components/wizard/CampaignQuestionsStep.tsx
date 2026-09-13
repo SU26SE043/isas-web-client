@@ -17,6 +17,7 @@ import { CampaignQuestionModeControls } from './questions/CampaignQuestionModeCo
 import { QuestionImportControl, type QuestionImportControlHandle } from './questions/QuestionImportControl';
 import { QuestionCoverageNotice } from './questions/QuestionCoverageNotice';
 import { useQuestionDrawMode } from './questions/useQuestionDrawMode';
+import { useQuestionIdMigration } from './questions/useQuestionIdMigration';
 
 /** SC2 · T9 — phần ngữ cảnh chấm thử mà màn cha cung cấp; Step tự thêm `questions` + state "câu đang chạy". */
 export type CampaignQuestionsPreviewProps = Omit<QuestionPreviewContext, 'questions' | 'runningQuestionId' | 'onRunningChange'>;
@@ -94,6 +95,9 @@ export function CampaignQuestionsStep({
   const listRef = useRef<HTMLUListElement | null>(null);
   // POST chấm thử chạy 20–60s trong MỘT card; các card khác chỉ biết qua state này (mutation là per-instance).
   const [runningQuestionId, setRunningQuestionId] = useState<string | null>(null);
+  // Lượt đang bay được khoá theo id câu lúc bấm; PUT trong `beforeRun` re-key `client-…` → GUID ⇒ đổi theo (F2),
+  // nếu không mọi card khác báo "Đang chấm câu #?" và header câu đang chấm mất badge.
+  useQuestionIdMigration(questions, (aliases) => setRunningQuestionId((prev) => (prev && aliases.get(prev)) || prev));
   const previewCtx: QuestionPreviewContext | undefined = preview
     ? { ...preview, questions, runningQuestionId, onRunningChange: setRunningQuestionId }
     : undefined;

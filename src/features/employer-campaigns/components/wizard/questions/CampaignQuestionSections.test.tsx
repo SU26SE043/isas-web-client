@@ -52,6 +52,20 @@ describe('CampaignQuestionSections — trạng thái mở/đóng cục bộ + de
     expect(panelOf('new')).not.toHaveAttribute('hidden');
   });
 
+  it('correction T9-R3 (F2): câu được server cấp id (client-2 → GUID cùng nội dung) ⇒ card đó VẪN mở, card đầu vẫn đóng như HR để', () => {
+    const S1 = '11111111-1111-4111-8111-111111111111';
+    const S2 = '22222222-2222-4222-8222-222222222222';
+    const before = [q('client-1', 'Câu một'), q('client-2', 'Câu hai')];
+    const { rerender } = render(<CampaignQuestionSections questions={before} isDraft drawMode={false} {...handlers} />);
+    fireEvent.click(screen.getByRole('button', { name: /Câu hai/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Câu một/ }));
+    expect(panelOf('client-2')).not.toHaveAttribute('hidden');
+    expect(panelOf('client-1')).toHaveAttribute('hidden');
+    rerender(<CampaignQuestionSections questions={[q(S1, 'Câu một'), q(S2, 'Câu hai')]} isDraft drawMode={false} {...handlers} />);
+    expect(panelOf(S2)).not.toHaveAttribute('hidden');
+    expect(panelOf(S1)).toHaveAttribute('hidden');
+  });
+
   it('không previewCtx ⇒ card thường (không panel chấm thử, không cần QueryClient); không rubric ⇒ không picker', () => {
     render(<CampaignQuestionSections questions={[q('a')]} isDraft drawMode={false} {...handlers} />);
     expect(screen.queryByTestId('question-preview-panel')).not.toBeInTheDocument();

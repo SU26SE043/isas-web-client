@@ -7,6 +7,7 @@ import type { CampaignQuestion, RubricCriterion } from '../../../types/campaignM
 import type { QuestionPreviewContext } from '../../../types/questionPreview.types';
 import type { RubricPreviewRun, UseQuestionPreviewApi } from '../../../types/rubricPreview.types';
 import { goodRun, sample, score } from '../../../mocks/rubricPreview.fixtures';
+import { parseRubricPreviewRun } from '../../../services/campaignRubricPreview.service';
 import { QuestionPreviewPanel } from './QuestionPreviewPanel';
 
 const messages: Record<string, string> = {
@@ -141,6 +142,18 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     expect(rows).toHaveLength(5);
     expect(rows.map((row) => row.textContent?.includes('Tiêu chí design'))).not.toContain(true);
     expect(screen.getAllByText('88%').length).toBeGreaterThan(0);
+  });
+
+  it('ĐẦU-CUỐI (correction T9-R3 F1): JSON BE có scopedCriterionIds=[S1,S2] qua parser THẬT, nhãn HIỆN TẠI của câu là [S3] ⇒ bảng hiện S1,S2 (sự thật BE thắng nhãn hiện tại)', () => {
+    // Nếu parser rụng field ⇒ rơi về suy cục bộ: Always(4) + depth = 5 hàng — khác hẳn 2 hàng.
+    const run = parseRubricPreviewRun(JSON.parse(JSON.stringify({ ...sevenRun({ id: 'run-be' }), scopedCriterionIds: ['c-comm', 'c-fluency'] })));
+    expect(run.scopedCriterionIds).toEqual(['c-comm', 'c-fluency']);
+    render(<QuestionPreviewPanel question={{ ...question, targetCriterionIds: ['c-depth'] }} index={0} ctx={ctx()} preview={api({ runs: [run], latest: run })} />);
+    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.details.show' }));
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.textContent)).toEqual([expect.stringContaining('Tiêu chí comm'), expect.stringContaining('Tiêu chí fluency')]);
+    expect(rows.some((row) => row.textContent?.includes('Tiêu chí depth'))).toBe(false);
   });
 
   it('lượt cũ không mang scopedCriterionIds ⇒ lọc theo nhãn câu cục bộ (Always 4 + depth = 5 hàng); không crash', () => {

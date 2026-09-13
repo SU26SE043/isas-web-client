@@ -205,13 +205,19 @@ describe('useQuestionPreview — SC2 · T9: resolveQuestionId sau beforeRun (câ
       return 'c-1';
     });
     runMock.mockImplementation(async () => { order.push('POST'); return makeRun({ id: 'run-new', questionId: SERVER_ID }); });
-    const resolveQuestionId = vi.fn((id: string) => (id === 'client-abc' ? SERVER_ID : id));
+    // correction T9-R3 (F3): resolver KHÔNG được là bảng tĩnh — alias local→server chỉ tồn tại SAU khi `beforeRun`
+    // (PUT) xong. Bảng tĩnh khiến phép hoist resolve lên TRƯỚC `await beforeRun()` vẫn xanh, trong khi production
+    // sẽ chặn mọi lượt chấm thử ĐẦU TIÊN (alias chưa có ⇒ id vẫn `client-…` ⇒ báo lỗi, không POST).
+    const resolveQuestionId = vi.fn((id: string) => {
+      order.push('resolve');
+      return id === 'client-abc' && order.includes('beforeRun:done') ? SERVER_ID : id;
+    });
     const { result } = renderHook(
       () => useQuestionPreview({ campaignId: 'c-1', questionId: 'client-abc', beforeRun, resolveQuestionId }),
       { wrapper },
     );
     await act(async () => { await result.current.run('Bài'); });
-    expect(order).toEqual(['beforeRun:done', 'POST']);
+    expect(order).toEqual(['beforeRun:done', 'resolve', 'POST']);
     expect(resolveQuestionId).toHaveBeenCalledWith('client-abc');
     expect(runMock).toHaveBeenCalledWith('c-1', { questionId: SERVER_ID, customAnswer: 'Bài' });
   });

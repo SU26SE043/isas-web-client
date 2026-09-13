@@ -109,6 +109,9 @@ export function mapQuestionsToApiRequest(
  * `new-xxxx` — tiêu chí vừa thêm tay trong CÙNG lượt lưu, chưa có id server) ⇒ OMIT khoá, KHÔNG
  * gửi `[]`. Gửi `[]` ở ca thứ ba sẽ bị BE đọc thành "XOÁ nhãn" (W1) trong khi ý định thật là
  * "chưa resolve được, đừng đụng nhãn đang có trên server" — hai ý khác hẳn nhau.
+ * FACT T9-R3 (P8): ca thứ ba nay chỉ còn tới được khi PUT câu hỏi chạy TRƯỚC `remapQuestionTargetIds` — sau
+ * `persistForPreview`, id tạm không resolve được đã bị `remapQuestionTargetIds` CẮT ⇒ tới đây là `[]` gốc ⇒ gửi
+ * `[]` (= chỉ Always), KHÔNG omit như T7; đổi ngữ nghĩa tường minh, nhất quán với BE cắt dangling.
  */
 function normalizeTargetCriterionIdsForRequest(
   value: string[] | null | undefined,
