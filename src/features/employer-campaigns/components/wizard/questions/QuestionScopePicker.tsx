@@ -39,11 +39,11 @@ export function QuestionScopePicker({ questionId, rubric, value, disabled = fals
     : t('employer.campaigns.questionCard.scope.alwaysNone');
 
   const toggle = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    // Giữ thứ tự theo rubric (tiêu chí CHÍNH = phần tử đầu, BE dùng cho selector rút đều) chứ không theo thứ tự bấm.
-    onChange(targetable.filter((criterion) => next.has(criterion.id)).map((criterion) => criterion.id));
+    // R8 — GIỮ thứ tự nhãn hiện có (tiêu chí CHÍNH = phần tử đầu, BE dùng cho selector rút đều): thêm ⇒ nối cuối,
+    // bỏ ⇒ xoá tại chỗ. Trước đây sắp lại theo thứ tự rubric ⇒ thêm 1 chip vào câu AI [B, A] thành [A, B, C] — tiêu chí
+    // chính đổi từ B sang A mà HR không hề bấm vào B hay A.
+    const current = value ?? [];
+    onChange(selected.has(id) ? current.filter((item) => item !== id) : [...current, id]);
   };
 
   const stateLine = value == null
