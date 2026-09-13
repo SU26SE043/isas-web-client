@@ -22,7 +22,7 @@ interface CampaignWizardFormProps {
   onReplaceFiles: (campaignId: string, files: { jdFile?: File | null; criteriaFile?: File | null }) => Promise<EmployerCampaign>;
   onDownloadFile: (campaignId: string, fileType: 'jd' | 'criteria') => Promise<import('../../utils/campaignFiles').BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
-  onDeployCampaign: (campaignId: string, emails: string[]) => Promise<import('../../types/campaignManagement.types').CampaignDeployResult>;
+  onDeployCampaign: (campaignId: string, emails: string[], options?: import('../../types/campaignManagement.types').CampaignDeployOptions) => Promise<import('../../types/campaignManagement.types').CampaignDeployResult>;
   onSendInvitations: (campaignId: string, emails: string[]) => Promise<import('../../types/campaign.api.types').CreateCampaignInvitationsResponse>;
 }
 

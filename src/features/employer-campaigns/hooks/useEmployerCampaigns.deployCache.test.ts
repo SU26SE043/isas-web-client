@@ -34,11 +34,11 @@ describe('deployCampaignAndSyncCache', () => {
   });
 
   it('deploy thành công ⇒ cache chi tiết là bản ĐÃ deploy, danh sách bị đánh dấu stale', async () => {
-    deployCampaign.mockResolvedValue({ campaign: active, warnings: [], invitations: null });
+    deployCampaign.mockResolvedValue({ campaign: active, warnings: [], invitations: null, startNow: 'skipped' });
 
     const result = await deployCampaignAndSyncCache(queryClient, 'c-1', ['a@x.vn']);
 
-    expect(deployCampaign).toHaveBeenCalledWith('c-1', ['a@x.vn']);
+    expect(deployCampaign).toHaveBeenCalledWith('c-1', ['a@x.vn'], undefined);
     expect(result.campaign).toBe(active);
     expect(queryClient.getQueryData(employerCampaignDetailQueryKey('c-1'))).toEqual(active);
     const list = queryClient.getQueryCache().find({ queryKey: [...EMPLOYER_CAMPAIGNS_QUERY_KEY, '', 'all'] });
@@ -52,6 +52,28 @@ describe('deployCampaignAndSyncCache', () => {
       CampaignInvitationDeployError,
     );
     expect(queryClient.getQueryData(employerCampaignDetailQueryKey('c-1'))).toEqual(active);
+  });
+
+  // T13 R2 — options đi thẳng xuống service; cache là bản ĐÃ start-now (startsAt=now), không phải bản publish.
+  it('startNow=true ⇒ forward options xuống service và cache chi tiết là bản ĐÃ start-now', async () => {
+    const startedNow = { id: 'c-1', status: 'active', title: 'Nháp', startsAt: '2026-09-13T10:00:00.000Z' } as unknown as EmployerCampaign;
+    deployCampaign.mockResolvedValue({ campaign: startedNow, warnings: [], invitations: null, startNow: 'done' });
+
+    const result = await deployCampaignAndSyncCache(queryClient, 'c-1', [], { startNow: true });
+
+    expect(deployCampaign).toHaveBeenCalledWith('c-1', [], { startNow: true });
+    expect(result.startNow).toBe('done');
+    expect(queryClient.getQueryData(employerCampaignDetailQueryKey('c-1'))).toEqual(startedNow);
+  });
+
+  it('mời hụt SAU start-now ⇒ cache lấy error.campaign — tức bản đã start-now, không phải bản nháp', async () => {
+    const startedNow = { id: 'c-1', status: 'active', title: 'Nháp', startsAt: '2026-09-13T10:00:00.000Z' } as unknown as EmployerCampaign;
+    deployCampaign.mockRejectedValue(new CampaignInvitationDeployError('INVITATIONS_FAILED', startedNow, ['a@x.vn'], 502));
+
+    await expect(deployCampaignAndSyncCache(queryClient, 'c-1', ['a@x.vn'], { startNow: true })).rejects.toBeInstanceOf(
+      CampaignInvitationDeployError,
+    );
+    expect(queryClient.getQueryData(employerCampaignDetailQueryKey('c-1'))).toEqual(startedNow);
   });
 
   it('lỗi KHÁC (publish hỏng) ⇒ giữ nguyên cache nháp — không được nói dối là đã mở', async () => {

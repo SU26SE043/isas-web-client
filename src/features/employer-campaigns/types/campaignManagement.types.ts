@@ -113,8 +113,23 @@ export interface PublishResult {
   warnings: string[];
 }
 
+/** T13 R2 — tuỳ chọn lúc triển khai từ wizard (D-3 quick-deploy). */
+export interface CampaignDeployOptions {
+  /** Sau publish, gọi `POST /campaign/{id}/start-now` rồi mới mời (thứ tự publish → start-now → mời). */
+  startNow?: boolean;
+}
+
+/**
+ * Kết quả bước "Mở ngay" trong deploy: `done` = đã kéo giờ mở về hiện tại · `failed` = publish
+ * xong nhưng start-now lỗi (I7: KHÔNG ném, vẫn mời) · `skipped` = không yêu cầu.
+ */
+export type CampaignDeployStartNowOutcome = 'done' | 'failed' | 'skipped';
+
 export interface CampaignDeployResult extends PublishResult {
   invitations: import('./campaign.api.types').CreateCampaignInvitationsResponse | null;
+  startNow: CampaignDeployStartNowOutcome;
+  /** Chỉ có khi `startNow === 'failed'` — để banner/toast nói được vì sao. */
+  startNowError?: { status?: number; message: string };
 }
 
 export interface InviteRejectedEmail {

@@ -39,7 +39,9 @@ import type {
   EmployerCampaign,
   InviteResolution,
   PublishResult,
+  CampaignDeployOptions,
   CampaignDeployResult,
+  CampaignDeployStartNowOutcome,
 } from '../types/campaignManagement.types';
 import {
   mapCampaignResponseToEmployerCampaign,
@@ -497,10 +499,41 @@ export const campaignManagementService = {
     return { campaign: mapped, warnings: readPublishWarnings(response.data) };
   },
 
-  /** Publish first, then send the draft invitation list. Never sends before publish succeeds. */
-  async deployCampaign(id: string, emails: string[]): Promise<CampaignDeployResult> {
+  /**
+   * Thứ tự CỐ ĐỊNH: publish → (startNow ? start-now : bỏ qua) → mời. Never sends before publish
+   * succeeds. T13 R2 (D-3): start-now đứng TRƯỚC mời để thư mời ứng viên nhận mang giờ mở đã kéo
+   * về hiện tại; đứng SAU thì backend phải gửi thêm thư "OpenedEarly" báo lại giờ mới cho từng người.
+   *
+   * I7 — start-now LỖI KHÔNG NÉM: publish đã xong, mời vẫn phải chạy y như không có start-now;
+   * kết quả ghi `startNow: 'failed'` (+ status/message) để wizard nói "đã phát hành & mời, chưa mở
+   * được ngay" thay vì hiện như deploy hỏng. `campaign` trả về là bản ĐÃ start-now khi 'done'
+   * (Active + startsAt=now) — kể cả trên `CampaignInvitationDeployError` khi mời hụt — vì cache chi
+   * tiết được sync từ chính đối tượng đó (xem `deployCampaignAndSyncCache`).
+   */
+  async deployCampaign(id: string, emails: string[], options?: CampaignDeployOptions): Promise<CampaignDeployResult> {
     const published = await this.publishCampaign(id);
-    if (emails.length === 0) return { ...published, invitations: null };
+    let campaign = published.campaign;
+    let startNow: CampaignDeployStartNowOutcome = 'skipped';
+    let startNowError: CampaignDeployResult['startNowError'];
+    if (options?.startNow) {
+      try {
+        campaign = await this.startCampaignNow(id);
+        startNow = 'done';
+      } catch (error) {
+        startNow = 'failed';
+        startNowError = {
+          status: error instanceof CampaignRequestError ? error.status : getApiStatusCode(error),
+          message: error instanceof Error ? error.message : 'START_NOW_FAILED',
+        };
+      }
+    }
+    const base: Omit<CampaignDeployResult, 'invitations'> = {
+      campaign,
+      warnings: published.warnings,
+      startNow,
+      ...(startNowError ? { startNowError } : {}),
+    };
+    if (emails.length === 0) return { ...base, invitations: null };
     let invitations: CreateCampaignInvitationsResponse;
     try {
       invitations = await this.createCampaignInvitations(id, { emails });
@@ -509,13 +542,13 @@ export const campaignManagementService = {
       const body = axios.isAxiosError(error) ? error.response?.data : error instanceof CampaignRequestError ? error.message : undefined;
       throw new CampaignInvitationDeployError(
         error instanceof Error ? error.message : 'INVITATIONS_FAILED',
-        published.campaign,
+        campaign,
         emails,
         status,
         body,
       );
     }
-    return { ...published, invitations };
+    return { ...base, invitations };
   },
 
   /** Live: POST /api/v1/campaign/{id}/start-now — open a future campaign immediately. */

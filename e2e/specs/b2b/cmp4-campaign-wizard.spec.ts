@@ -89,6 +89,29 @@ test.describe('CMP4 employer campaign wizard', () => {
     expect(harness.invitationCalls).toBe(1);
   });
 
+  test('T13: ticking "Open immediately on deploy" inserts start-now between publish and invitations', async ({ page }) => {
+    // Mock campaign mở năm 2099 (xa hơn 24h) ⇒ checkbox TẮT mặc định (D-6) — phải tự tick.
+    // Test đầu tiên ở trên (không tick, startsAt xa) là đối chứng: events = ['publish','invitations'].
+    const harness = await installCampaignApi(page);
+    await loginAs(page, 'OrgAdmin');
+    await page.goto(`/employer/campaigns/${campaignId}/edit`);
+    await expect(page.getByRole('button', { name: 'Review' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Invite candidates' }).click();
+    await page.getByLabel('Candidate email list').fill('candidate@example.com');
+    await page.getByRole('button', { name: 'Review' }).click();
+    const startNow = page.getByRole('checkbox', { name: /Open immediately on deploy/i });
+    await expect(startNow).toBeEnabled();
+    await expect(startNow).not.toBeChecked();
+    await startNow.check();
+    await expect(page.getByText(/Opens immediately on deploy/i)).toBeVisible();
+    await page.getByRole('button', { name: /^Deploy campaign$/i }).last().click();
+    // ⚠ `toHaveURL(/campaigns/{id}/)` cũng khớp chính URL wizard `/edit` ⇒ phải chờ THOÁT khỏi
+    // wizard rồi mới đọc events, không thì đọc giữa lúc "Deploying…" và thấy mảng rỗng.
+    await expect(page).not.toHaveURL(/\/edit(\?|$)/);
+    await expect.poll(() => harness.events).toEqual(['publish', 'start-now', 'invitations']);
+    expect(harness.invitationCalls).toBe(1);
+  });
+
   test('keeps the partial-deploy retry banner after leaving and returning to Review', async ({ page }) => {
     const harness = await installCampaignApi(page);
     harness.setInvitationFailure(true);
