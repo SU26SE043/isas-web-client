@@ -294,6 +294,30 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
 // `QuestionPreviewSummaryLine` vào chỗ đã chừa placeholder trong `CampaignReviewStep.tsx`. Bản
 // thân `RubricPreviewMount`/`RubricPreviewCard` KHÔNG bị đổi (FE-A sở hữu, gỡ compact ở đó) —
 // đây chỉ là chỗ GỌI nó bị bỏ, nên test chuyển hướng sang khẳng định "không còn ở đây nữa".
+describe('CampaignReviewStep — K-rule ở bước 8: chữ người đọc, tính từ state, chặn triển khai (SC2 · D-5)', () => {
+  const rubricWT: RubricCriterion[] = [
+    { id: 'c-a', name: 'A', description: '', weight: 50, maxScore: 5, scoringScope: 'WhenTargeted' },
+    { id: 'c-b', name: 'B', description: '', weight: 50, maxScore: 5, scoringScope: 'WhenTargeted' },
+  ];
+  const q = (id: string, targets: string[] | null): CampaignQuestion => ({ id, prompt: 'Q ' + id, skill: 'x', difficulty: 'middle', source: 'manual', isRequired: false, targetCriterionIds: targets });
+
+  it('K=1 < 2 tiêu chí được nhắm ⇒ mục chặn dùng copy kRule (không mã máy), link về bước 4, nút Triển khai KHÓA', () => {
+    render(<CampaignReviewStep {...baseProps} rubric={rubricWT} questions={[q('q1', ['c-a']), q('q2', ['c-b'])]} questionsPerSession={1} questionBankWarnings={['K_BELOW_CRITERIA_GROUPS: questions_per_session (1) …']} disableForBlockingIssues />);
+    const item = screen.getByRole('button', { name: /employer\.campaigns\.questionCard\.coverage\.kRule/ });
+    expect(item).toBeInTheDocument();
+    expect(screen.queryByText(/K_BELOW_CRITERIA_GROUPS/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeDisabled();
+  });
+
+  it('server chặn nhưng state đã sửa (K=2 ≥ 2) ⇒ KHÔNG chặn; cảnh báo mềm của server vẫn hiện, không kèm dòng K-rule', () => {
+    render(<CampaignReviewStep {...baseProps} rubric={rubricWT} questions={[q('q1', ['c-a']), q('q2', ['c-b'])]} questionsPerSession={2} questionBankWarnings={['K_BELOW_CRITERIA_GROUPS: cũ', 'Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).']} disableForBlockingIssues />);
+    expect(screen.queryByRole('button', { name: /coverage\.kRule/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).')).toBeInTheDocument();
+    expect(screen.queryByText(/K_BELOW_CRITERIA_GROUPS/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
+  });
+});
+
 describe('CampaignReviewStep — chấm thử theo câu: bước 8 chỉ TÓM TẮT (SC2 · D-1 · T15 mount)', () => {
   const rubricWithLevels: RubricCriterion[] = [
     { id: 'c1', name: 'Depth', description: '', weight: 100, maxScore: 5, scoringScope: 'WhenTargeted', levels: [{ score: 0, descriptor: 'none' }, { score: 5, descriptor: 'top' }] },

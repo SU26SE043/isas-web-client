@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CampaignQuestion, RubricCriterion } from '../types/campaignManagement.types';
-import { computeLocalCoverageWarnings, computeLocalKRule, isKRuleWarning, primaryCriteriaCount, splitQuestionBankWarnings } from './questionCoverage';
+import { computeLocalCoverageWarnings, computeLocalKRule, formatKRuleMessage, isKRuleWarning, primaryCriteriaCount, splitQuestionBankWarnings } from './questionCoverage';
 
 const rubric: RubricCriterion[] = [
   { id: 'c-always', name: 'Giao tiếp', description: '', weight: 30, maxScore: 5, scoringScope: 'Always' },
@@ -78,5 +78,24 @@ describe('K-rule cục bộ + tách warning server', () => {
     expect(isKRuleWarning('K_BELOW_CRITERIA_GROUPS: x')).toBe(true);
     expect(blocking).toEqual(['questions_per_session (2) nhỏ hơn số tiêu chí chính (3).']);
     expect(soft).toEqual(['Số câu bắt buộc (3) nhiều hơn số câu mỗi buổi (2).']);
+  });
+});
+
+describe('formatKRuleMessage — chữ cho người đọc (bước 4 + bước 8 dùng chung)', () => {
+  const t = (key: string) => ({
+    'employer.campaigns.questionCard.coverage.kRule': 'K={{k}}{{req}} N={{n}} NEED={{need}}',
+    'employer.campaigns.questionCard.coverage.kRuleRequired': ' R={{r}}',
+  })[key] ?? key;
+  it('không câu bắt buộc ⇒ không chèn vế R; need = R + N', () => {
+    expect(formatKRuleMessage(t, { k: 2, required: 0, uncovered: 3 })).toBe('K=2 N=3 NEED=3');
+  });
+  it('có câu bắt buộc ⇒ chèn vế R và need cộng cả R', () => {
+    expect(formatKRuleMessage(t, { k: 2, required: 1, uncovered: 2 })).toBe('K=2 R=1 N=2 NEED=3');
+  });
+  it('bản vi/en thật không chứa mã máy hay tên cột', () => {
+    // Nhắc: câu này hiện thẳng cho HR; mã `K_BELOW_CRITERIA_GROUPS`/`questions_per_session` là của API.
+    const bad = /K_BELOW_CRITERIA_GROUPS|questions_per_session|nhãn\[0\]/;
+    const vi = 'Mỗi ứng viên chỉ thi {{k}} câu{{req}}, nhưng các câu hỏi đang nhắm tới {{n}} tiêu chí khác nhau';
+    expect(vi).not.toMatch(bad);
   });
 });

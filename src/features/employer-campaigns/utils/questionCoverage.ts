@@ -98,3 +98,20 @@ export function computeLocalKRule(
   // riêng "số câu bắt buộc nhiều hơn số câu mỗi buổi" (CAMP-22), không báo K-rule chồng lên.
   return uncovered > 0 && slots < uncovered ? { k: questionsPerSession, required: required.length, uncovered } : null;
 }
+
+/**
+ * Câu K-rule cho NGƯỜI đọc (bước 4 + bước 8 dùng chung một chữ): nói bằng "mỗi ứng viên chỉ thi K câu" và
+ * "câu hỏi đang nhắm tới N tiêu chí", kèm 3 cách sửa cụ thể — không nêu mã `K_BELOW_CRITERIA_GROUPS`,
+ * không nêu tên cột. `need` = số câu mỗi buổi tối thiểu để mọi tiêu chí đều được hỏi (= R + N).
+ */
+export function formatKRuleMessage(
+  t: (key: string) => string,
+  rule: { k: number; required: number; uncovered: number },
+): string {
+  const req = rule.required > 0 ? t('employer.campaigns.questionCard.coverage.kRuleRequired').replace('{{r}}', String(rule.required)) : '';
+  return t('employer.campaigns.questionCard.coverage.kRule')
+    .replace('{{k}}', String(rule.k))
+    .replace('{{req}}', req)
+    .replace('{{n}}', String(rule.uncovered))
+    .replace('{{need}}', String(rule.required + rule.uncovered));
+}

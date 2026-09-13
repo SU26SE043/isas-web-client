@@ -1,7 +1,7 @@
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion, RubricCriterion } from '../../../types/campaignManagement.types';
 import type { QuestionCoverageWarning } from '../../../types/questionPreview.types';
-import { computeLocalCoverageWarnings, computeLocalKRule, splitQuestionBankWarnings } from '../../../utils/questionCoverage';
+import { computeLocalCoverageWarnings, computeLocalKRule, formatKRuleMessage, splitQuestionBankWarnings } from '../../../utils/questionCoverage';
 
 export interface QuestionCoverageNoticeProps {
   questions: CampaignQuestion[];
@@ -27,7 +27,7 @@ export function QuestionCoverageNotice({ questions, questionsPerSession, rubric,
   const localK = computeLocalKRule(questions, questionsPerSession, rubric);
   const { blocking } = splitQuestionBankWarnings(questionBankWarnings);
   const kMessages = localK
-    ? [t('employer.campaigns.questionCard.coverage.kRule').replace('{{k}}', String(localK.k)).replace('{{r}}', String(localK.required)).replace('{{n}}', String(localK.uncovered))]
+    ? [formatKRuleMessage(t, localK)]
     : blocking;
 
   if (coverage.length === 0 && kMessages.length === 0) return null;
