@@ -1764,6 +1764,12 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.coverage.item': '{{name}} — sẽ bị loại khỏi điểm nếu không câu nào nhắm tới.',
     'employer.campaigns.questionCard.coverage.kRuleTitle': 'Chặn phát hành',
     'employer.campaigns.questionCard.coverage.kRule': 'Số câu mỗi buổi ({{k}}) nhỏ hơn số tiêu chí chính được câu hỏi nhắm tới ({{n}}) — mỗi buổi sẽ có tiêu chí không câu nào hỏi tới. Tăng số câu mỗi buổi hoặc bớt tiêu chí chính.',
+    // ── SC2 · T10 (D-1) · bước 8 tóm tắt + trang chi tiết dùng card theo câu ────────────────────
+    'employer.campaigns.review.previewSummary.count': 'Đã chấm thử {{n}}/{{k}} câu.',
+    'employer.campaigns.review.previewSummary.unlabeled': '{{m}} câu chưa gắn tiêu chí.',
+    'employer.campaigns.review.previewSummary.unsaved': 'Chưa lưu nháp — chấm thử từng câu ở bước 4 sau khi lưu.',
+    'employer.campaigns.review.previewSummary.optional': 'Chấm thử không bắt buộc để phát hành.',
+    'employer.campaigns.review.previewSummary.goToQuestions': 'Sang bước 4',
   },
   en: {
     'employer.campaigns.nav.campaigns': 'Campaigns',
@@ -3528,5 +3534,11 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.questionCard.coverage.item': '{{name}} — will be dropped from the score if no question targets it.',
     'employer.campaigns.questionCard.coverage.kRuleTitle': 'Publish blocked',
     'employer.campaigns.questionCard.coverage.kRule': 'Questions per session ({{k}}) is lower than the number of primary criteria questions target ({{n}}) — every session would leave a criterion unasked. Raise questions per session or reduce primary criteria.',
+    // ── SC2 · T10 (D-1) · step 8 summary + detail page per-question cards ──────────────────────
+    'employer.campaigns.review.previewSummary.count': 'Test-scored {{n}}/{{k}} questions.',
+    'employer.campaigns.review.previewSummary.unlabeled': '{{m}} questions not yet labeled with criteria.',
+    'employer.campaigns.review.previewSummary.unsaved': 'Draft not saved yet — test-score each question in step 4 after saving.',
+    'employer.campaigns.review.previewSummary.optional': 'Test-scoring is not required to publish.',
+    'employer.campaigns.review.previewSummary.goToQuestions': 'Go to step 4',
   },
 };
