@@ -9,8 +9,9 @@ import type { CampaignInfoState, CampaignSettingsState, JobDescriptionState } fr
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import { calculateAdaptiveQuestionBudget } from '../../utils/campaignAdaptiveBudget';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
+import { inviteSlotShortfall, slotsOutsideCampaignWindow } from '../../utils/campaignCapacityChecks';
 import { CampaignWizardNav } from './CampaignWizardNav';
-import { RubricPreviewMount } from './preview/RubricPreviewMount';
+import { CampaignReviewSlotsTable } from './review/CampaignReviewSlotsTable';
 
 interface CampaignReviewStepProps {
   info: CampaignInfoState; jd: JobDescriptionState; rubric: RubricCriterion[]; questions: CampaignQuestion[];
@@ -20,9 +21,16 @@ interface CampaignReviewStepProps {
   isSubmitting?: boolean; submitDisabled?: boolean; disableForBlockingIssues?: boolean;
   hasPartialDeploy?: boolean; onRetryInvitations?: () => void; invitationFailures?: FailedCampaignInvitation[];
   invitationFailureReason?: string | null; canRetryInvitations?: boolean;
-  /** CAMP-19 — chấm thử thước đo (biến thể compact + cảnh báo mềm, KHÔNG chặn Phát hành). Tuỳ chọn: thiếu ⇒ card ở trạng thái chặn. */
+  /**
+   * CAMP-19 — vẫn khai đủ 3 prop này vì `CampaignWizardStepContent` (ngoài phạm vi T12) còn
+   * truyền chúng xuống. Card chấm thử compact (`RubricPreviewMount variant="compact"`) đã bị
+   * GỠ khỏi bước Review (T12 R2) — T10 sẽ mount `QuestionPreviewSummaryLine` vào chỗ đã chừa
+   * bên dưới, và có thể sẽ không cần cả 3 prop này; giữ nguyên chữ ký để không phá call site.
+   */
   campaignStatus?: EmployerCampaignStatus | null; onBeforeRun?: () => Promise<string | null>; currentRubricVersion?: number | null;
 }
+
+interface BlockingItem { key: string; label: string; step: number; }
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -35,24 +43,60 @@ export function CampaignReviewStep({
   submitLabel, submittingLabel, isSubmitting = false, submitDisabled = false, disableForBlockingIssues = false,
   hasPartialDeploy = false, onRetryInvitations,
   invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true,
-  campaignStatus = null, onBeforeRun, currentRubricVersion,
+  campaignStatus, onBeforeRun, currentRubricVersion,
 }: CampaignReviewStepProps) {
+  // Chưa dùng ở đây (xem doc prop ở trên) — T10 sẽ đọc khi mount QuestionPreviewSummaryLine.
+  void campaignStatus;
+  void onBeforeRun;
+  void currentRubricVersion;
   const { t } = useLanguage();
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
+  // T12 R2: đang TẢI hoặc LỖI ⇒ coi như "chưa biết ca nào" (`[]`), KHÔNG PHẢI "0 ca thật" —
+  // không thể chặn triển khai bằng dữ liệu ca CHƯA CÓ. Nhánh 0-ca của `inviteSlotShortfall`/
+  // `slotsOutsideCampaignWindow` tự nhiên trả "không có gì để chặn" cho đúng ca này, nên
+  // KHÔNG cần đọc `slotsQuery.isLoading`/`isError` ở đâu khác trong file này.
   const slots = slotsQuery.data ?? [];
-  const capacity = campaignSlotCapacity(slots).total;
+  const slotCapacitySummary = campaignSlotCapacity(slots);
+  const capacity = slotCapacitySummary.total;
+  const assignedCount = slots.reduce((sum, slot) => sum + slot.assignedCount, 0);
+  const outsideWindowSlots = slotsOutsideCampaignWindow(slots, info.startsAt, info.expiresAt);
+  const slotShortfall = inviteSlotShortfall(slots, inviteEmails.length);
   const adaptiveBudget = calculateAdaptiveQuestionBudget(
     questionsPerSession ?? questions.length,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
     settings.maxQuestions,
   );
-  const blocking = [
-    !jd.jdText.trim() && !jd.fileName && !jd.serverUploaded ? { label: t('employer.campaigns.wizard.jdTextRequired'), step: 1 } : null,
-    rubric.length === 0 ? { label: t('employer.campaigns.wizard.criteriaRequired'), step: 2 } : null,
-    questions.length === 0 ? { label: t('employer.campaigns.wizard.questionsRequired'), step: 3 } : null,
-  ].filter((item): item is { label: string; step: number } => Boolean(item));
+  const blocking: BlockingItem[] = [
+    !jd.jdText.trim() && !jd.fileName && !jd.serverUploaded ? { key: 'jd', label: t('employer.campaigns.wizard.jdTextRequired'), step: 1 } : null,
+    rubric.length === 0 ? { key: 'rubric', label: t('employer.campaigns.wizard.criteriaRequired'), step: 2 } : null,
+    questions.length === 0 ? { key: 'questions', label: t('employer.campaigns.wizard.questionsRequired'), step: 3 } : null,
+    // T12 R2 — hai mục mới CÙNG step=5 ("Sức chứa & ca thi", index 5 = bước 6) nên phải có
+    // `key` riêng: `<li key={item.step}>` cũ sẽ đụng nhau khi hai mục có cùng step.
+    slotShortfall > 0
+      ? {
+          key: 'slotShortfall',
+          label: t('employer.campaigns.wizard.deploy.blockSlotShortfall')
+            .replace('{{inviting}}', String(inviteEmails.length))
+            .replace('{{available}}', String(slotCapacitySummary.available)),
+          step: 5,
+        }
+      : null,
+    outsideWindowSlots.length > 0
+      ? {
+          key: 'slotOutsideWindow',
+          label: t('employer.campaigns.wizard.deploy.blockSlotOutsideWindow').replace('{{n}}', String(outsideWindowSlots.length)),
+          step: 5,
+        }
+      : null,
+  ].filter((item): item is BlockingItem => Boolean(item));
   const deployDisabled = submitDisabled || isSubmitting || (hasPartialDeploy && !canRetryInvitations) || (!hasPartialDeploy && ((disableForBlockingIssues && blocking.length > 0) || adaptiveBudget.exceedsLimit));
+  const scheduleValue = slots.length > 0
+    ? t('employer.campaigns.wizard.deploy.scheduleSlots')
+        .replace('{{n}}', String(slots.length))
+        .replace('{{assigned}}', String(assignedCount))
+        .replace('{{capacity}}', String(capacity))
+    : t('employer.campaigns.wizard.deploy.scheduleNoSlots');
 
   return (
     <SectionPanel icon={<Rocket className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.deploy.title')} description={t('employer.campaigns.wizard.deploy.description')} footer={<CampaignWizardNav onBack={onBack} onNext={onSubmit} nextLabel={isSubmitting ? submittingLabel : submitLabel} nextDisabled={deployDisabled} isSaving={isSubmitting} backDisabled={isSubmitting} />}>
@@ -67,7 +111,8 @@ export function CampaignReviewStep({
             {canRetryInvitations && onRetryInvitations ? <Button type="button" variant="outline" className="mt-3" disabled={isSubmitting} loading={isSubmitting} onClick={onRetryInvitations}>{t('employer.campaigns.wizard.deploy.retryInvitations')}</Button> : null}
           </AlertDescription>
         </Alert> : null}
-        {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.step}><button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button></li>)}</ul></section> : null}
+        {blocking.length ? <section className="rounded-lg border border-error/30 bg-error-bg px-4 py-3 text-sm text-foreground"><h3 className="mb-1 font-medium leading-none">{t('employer.campaigns.wizard.deploy.blockingTitle')}</h3><ul className="list-inside list-disc space-y-1 text-muted-foreground">{blocking.map((item) => <li key={item.key}><button type="button" className="underline" onClick={() => onGoToStep(item.step)}>{item.label}</button></li>)}</ul></section> : null}
+        {slots.length > 0 ? <CampaignReviewSlotsTable slots={slots} outsideIds={outsideWindowSlots.map((slot) => slot.id)} /> : null}
         {questionBankWarnings.length ? <Alert variant="warning"><AlertTitle>{t('employer.campaigns.wizard.deploy.warningTitle')}</AlertTitle><AlertDescription><ul className="list-inside list-disc">{questionBankWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></AlertDescription></Alert> : null}
         {settings.adaptiveEnabled ? <section className="frame-satin space-y-2 rounded-xl bg-surface-overlay p-4" aria-label={t('employer.campaigns.wizard.review.adaptiveBudget')}>
           <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</h3><span className="text-sm text-muted-foreground">{adaptiveBudget.requestedTotal} / {adaptiveBudget.limit}</span></div>
@@ -82,9 +127,11 @@ export function CampaignReviewStep({
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCriteria')} value={`${rubric.length} · ${Math.round(rubric.reduce((sum, item) => sum + Number(item.weight), 0))}%`} onEdit={() => onGoToStep(2)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryQuestions')} value={`${questions.length} · ${questionsPerSession ?? t('employer.campaigns.wizard.deploy.allQuestions')}`} onEdit={() => onGoToStep(3)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={`${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={`${formatDate(info.startsAt)} · ${slots.length} · ${capacity}`} onEdit={() => onGoToStep(5)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} onEdit={() => onGoToStep(5)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
-        <RubricPreviewMount variant="compact" campaignId={campaignId ?? null} campaignStatus={campaignStatus} rubric={rubric} questions={questions} passScorePct={info.passScorePct} onBeforeRun={onBeforeRun} onGoToCriteria={() => onGoToStep(2)} onGoToQuestions={() => onGoToStep(3)} currentRubricVersion={currentRubricVersion} />
+        {/* T10: <QuestionPreviewSummaryLine campaignId={campaignId} questions={questions} /> */}
+        {/* Hợp đồng chờ FE-A: { campaignId: string | null; questions: CampaignQuestion[] } —
+            `campaignId` ở component này là `string | undefined`, nối bằng `campaignId ?? null`. */}
         <section className="rounded-xl border border-info/30 bg-info/5 p-4">
           <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
           <Button type="button" className="mt-4" disabled={deployDisabled} loading={isSubmitting} onClick={onSubmit}>{isSubmitting ? submittingLabel : submitLabel}</Button>
