@@ -14,8 +14,8 @@ import { useLanguage } from '@/shared/languages';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
-import { candidateScreeningStatusLabelKey } from '../../utils/candidateScreeningStatus';
 import { canSelectCandidate, getCandidateRanks, verificationRiskTranslationKey } from './screeningUtils';
+import { CandidateStatusCell } from './CandidateStatusCell';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -31,6 +31,7 @@ interface CandidateRankingTableProps {
   allowIneligibleSelection?: boolean;
   onRescreen?: (candidateId: string) => void;
   rescreeningCandidateId?: string | null;
+  allowMissingEmailSelection?: boolean;
 }
 
 export function CandidateRankingTable({
@@ -47,6 +48,7 @@ export function CandidateRankingTable({
   allowIneligibleSelection = false,
   onRescreen,
   rescreeningCandidateId = null,
+  allowMissingEmailSelection = false,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
@@ -54,7 +56,7 @@ export function CandidateRankingTable({
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
 
   const selectableIds = candidates
-    .filter((item) => allowIneligibleSelection ? canSelectCandidate({ ...item, eligible: true }) : canSelectCandidate(item))
+    .filter((item) => canSelectRow(item, allowIneligibleSelection, allowMissingEmailSelection))
     .map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
@@ -128,8 +130,8 @@ export function CandidateRankingTable({
         <TableBody>
           {groupedCandidates.flatMap((group) => group.items).slice((page - 1) * pageSize, page * pageSize).map((item, index) => {
             const selectable = allowIneligibleSelection
-              ? canSelectCandidate({ ...item, eligible: true })
-              : canSelectCandidate(item);
+              ? canSelectRow(item, true, allowMissingEmailSelection)
+              : canSelectRow(item, false, allowMissingEmailSelection);
             const emailDraft = emailDrafts[item.id] ?? item.email ?? '';
             const emailDirty = emailDraft.trim().toLowerCase() !== (item.email ?? '').trim().toLowerCase();
             return (
@@ -192,25 +194,11 @@ export function CandidateRankingTable({
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
                 </TableCell>
                 <TableCell className="text-foreground">
-                  <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
-                  {item.status.toLowerCase() === 'analysisfailed' ? (
-                    <>
-                      {item.rejectReason ? <p className="mt-1 text-xs text-error">{item.rejectReason}</p> : null}
-                      {onRescreen ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="mt-2"
-                          loading={rescreeningCandidateId === item.id}
-                          disabled={rescreeningCandidateId === item.id}
-                          onClick={() => onRescreen(item.id)}
-                        >
-                          {t('employer.campaigns.screening.actions.rescreen')}
-                        </Button>
-                      ) : null}
-                    </>
-                  ) : null}
+                  <CandidateStatusCell
+                    candidate={item}
+                    onRescreen={onRescreen}
+                    rescreeningCandidateId={rescreeningCandidateId}
+                  />
                 </TableCell>
                 <TableCell>
                   <Button
@@ -237,6 +225,19 @@ export function CandidateRankingTable({
         onPageSizeChange={setPageSize}
       />
     </div>
+  );
+}
+
+function canSelectRow(
+  item: CampaignCandidateListItem,
+  allowIneligibleSelection: boolean,
+  allowMissingEmailSelection: boolean,
+) {
+  const candidate = allowIneligibleSelection ? { ...item, eligible: true } : item;
+  return canSelectCandidate(
+    allowMissingEmailSelection && !candidate.email
+      ? { ...candidate, email: 'missing-email@invalid.local' }
+      : candidate,
   );
 }
 

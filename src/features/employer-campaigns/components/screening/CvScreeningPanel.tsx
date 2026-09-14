@@ -1,12 +1,11 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
-import { useCampaignInvitationStore } from '../../stores/campaignInvitationStore';
 import { CandidateFilterBar } from './CandidateFilterBar';
 import { CandidateRankingTable } from './CandidateRankingTable';
 import { CandidateAnalysisProgress } from './CandidateAnalysisProgress';
+import { CandidateSelectionActionBar } from './CandidateSelectionActionBar';
 import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
@@ -26,10 +25,6 @@ export function hasScoredCandidate(candidates: Pick<CampaignCandidateListItem, '
 
 export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = false, hideInvitationAction = false, onAddCandidates }: CvScreeningPanelProps) {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-  const setInvitationCandidates = useCampaignInvitationStore(
-    (store) => store.setSelectedCandidates,
-  );
   const screeningEnabled = isActive || allowDraftScreening;
   const state = useCvScreeningPanelState(campaignId, screeningEnabled);
 
@@ -146,58 +141,18 @@ export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = f
             allowIneligibleSelection={allowDraftScreening}
             onRescreen={(candidateId) => void state.rescreenMutation.mutateAsync(candidateId)}
             rescreeningCandidateId={state.rescreenMutation.isPending ? state.rescreenMutation.variables : null}
+            allowMissingEmailSelection={!onAddCandidates}
           />
-          {/* hideInvitationAction chỉ ẩn đường ĐIỀU HƯỚNG sang trang mời; có onAddCandidates
-              (wizard bước 7) thì vẫn phải render, không thì chọn xong không có nút nào. */}
-          {state.selectedCandidateIds.size > 0 && (!hideInvitationAction || onAddCandidates) ? (
-            <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
-              <p className="text-sm text-muted-foreground">
-                {t('employer.campaigns.screening.ranking.selected').replace(
-                  '{count}',
-                  String(state.selectedCandidateIds.size),
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => state.setSelectedCandidateIds(new Set())}
-                >
-                  {t('employer.campaigns.screening.ranking.clearSelection')}
-                </Button>
-                <Button
-                  type="button"
-                  disabled={!screeningEnabled}
-                  onClick={() => {
-                    const candidates = state.candidates
-                      .filter((candidate) => state.selectedCandidateIds.has(candidate.id))
-                      .filter(
-                        (candidate): candidate is typeof candidate & { email: string } =>
-                          Boolean(candidate.email),
-                      )
-                      .map((candidate) => ({
-                        id: candidate.id,
-                        fullName: candidate.fullName ?? undefined,
-                        email: candidate.email,
-                        matchScore: candidate.overallMatchScore ?? undefined,
-                        source: 'cv-screening' as const,
-                      }));
-                    if (onAddCandidates) {
-                      onAddCandidates(
-                        state.candidates.filter((candidate) => state.selectedCandidateIds.has(candidate.id)),
-                      );
-                      return;
-                    }
-                    setInvitationCandidates(campaignId, candidates);
-                    navigate(`/employer/campaigns/${campaignId}/invitations?tab=invite`);
-                  }}
-                >
-                  {t(onAddCandidates
-                    ? 'employer.campaigns.screening.invitation.addToList'
-                    : 'employer.campaigns.screening.invitation.continue')}
-                </Button>
-              </div>
-            </div>
+          {!hideInvitationAction || onAddCandidates ? (
+            <CandidateSelectionActionBar
+              campaignId={campaignId}
+              candidates={state.candidates}
+              selectedIds={state.selectedCandidateIds}
+              isActive={isActive}
+              onClear={() => state.setSelectedCandidateIds(new Set())}
+              onAddCandidates={onAddCandidates}
+              onRefetch={state.candidatesQuery.refetch}
+            />
           ) : null}
           </>
         )}

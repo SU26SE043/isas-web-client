@@ -82,7 +82,8 @@ export function CampaignInviteEmailPage() {
               <CampaignSummaryBar campaign={campaign} />
               <CvScreeningPanel
                 campaignId={campaign.id}
-                isActive={campaign.status === 'active' || campaign.status === 'draft'}
+                isActive={campaign.status === 'active'}
+                allowDraftScreening={campaign.status === 'draft'}
               />
             </div>
             <div hidden={tab !== 'invite'}>

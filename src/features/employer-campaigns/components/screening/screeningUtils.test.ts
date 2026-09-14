@@ -9,7 +9,7 @@ const candidate = (id: string, overallMatchScore: number | null): CampaignCandid
 });
 
 describe('getCandidateRanks', () => {
-  it('assigns the same rank to equal percentages and skips occupied ranks', () => {
+  it('assigns sequential ranks in the server response order', () => {
     const ranks = getCandidateRanks([
       candidate('one', 70),
       candidate('two', 70),
@@ -20,10 +20,10 @@ describe('getCandidateRanks', () => {
 
     expect([...ranks.entries()]).toEqual([
       ['one', 1],
-      ['two', 1],
+      ['two', 2],
       ['three', 3],
-      ['four', 3],
-      ['five', 3],
+      ['four', 4],
+      ['five', 5],
     ]);
   });
 
@@ -40,13 +40,13 @@ describe('verification risk labels', () => {
     expect(verificationRiskTranslationKey('High')).toBe('employer.campaigns.screening.verificationRisk.High');
   });
 
-  it('keeps ineligible candidates below eligible candidates even with a higher score', () => {
+  it('does not reorder candidates by eligibility or score', () => {
     const ranks = getCandidateRanks([
       { ...candidate('ineligible', 99), eligible: false },
       { ...candidate('eligible', 70), eligible: true },
     ]);
 
-    expect(ranks.get('eligible')).toBe(1);
-    expect(ranks.get('ineligible')).toBe(2);
+    expect(ranks.get('ineligible')).toBe(1);
+    expect(ranks.get('eligible')).toBe(2);
   });
 });
