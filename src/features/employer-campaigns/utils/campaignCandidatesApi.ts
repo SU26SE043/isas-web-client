@@ -117,6 +117,7 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     email: pickString(record, 'email', 'Email') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'Unknown',
     overallMatchScore: pickNumber(record, 'overallMatchScore', 'OverallMatchScore') ?? null,
+    rejectReason: pickString(record, 'rejectReason', 'RejectReason') ?? null,
     skills,
     verificationRisk: (pickString(record, 'verificationRisk', 'VerificationRisk') as CampaignCandidateListItem['verificationRisk']) ?? null,
     screeningVersion: pickNumber(record, 'screeningVersion', 'ScreeningVersion') ?? null,

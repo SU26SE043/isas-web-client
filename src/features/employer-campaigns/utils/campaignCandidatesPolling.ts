@@ -8,7 +8,10 @@ export function getCampaignCandidatesRefetchInterval(
   if (!candidates?.length) return false;
 
   const hasPendingScreening = candidates.some(
-    (candidate) => candidate.status === 'Analyzing' || candidate.status === 'Filtered',
+    (candidate) => {
+      const status = candidate.status.toLowerCase();
+      return status === 'analyzing' || status === 'filtered';
+    },
   );
 
   return hasPendingScreening ? CAMPAIGN_CANDIDATES_POLL_INTERVAL_MS : false;

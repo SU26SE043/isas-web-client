@@ -29,6 +29,8 @@ interface CandidateRankingTableProps {
   onUpdateEmail?: (candidateId: string, email: string) => Promise<void>;
   updatingCandidateId?: string | null;
   allowIneligibleSelection?: boolean;
+  onRescreen?: (candidateId: string) => void;
+  rescreeningCandidateId?: string | null;
 }
 
 export function CandidateRankingTable({
@@ -43,6 +45,8 @@ export function CandidateRankingTable({
   onUpdateEmail,
   updatingCandidateId = null,
   allowIneligibleSelection = false,
+  onRescreen,
+  rescreeningCandidateId = null,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
@@ -175,17 +179,37 @@ export function CandidateRankingTable({
                   {item.missingMustHave?.length ? <p className="text-xs text-warning">{t('employer.campaigns.screening.ranking.missingMustHave')}: {item.missingMustHave.join(', ')}</p> : null}
                 </TableCell>
                 <TableCell className="font-semibold text-foreground">
-                  {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>{item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}</span>
+                    {item.verificationRisk ? (
+                      <Badge variant={item.verificationRisk === 'High' ? 'destructive' : item.verificationRisk === 'Medium' ? 'warning' : 'success'}>
+                        {t(verificationRiskTranslationKey(item.verificationRisk))}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
                 </TableCell>
                 <TableCell className="text-foreground">
                   <div>{t(candidateScreeningStatusLabelKey(item.status))}</div>
-                  {item.verificationRisk ? (
-                    <div className="text-xs text-warning-foreground">
-                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {t(verificationRiskTranslationKey(item.verificationRisk))}
-                    </div>
+                  {item.status.toLowerCase() === 'analysisfailed' ? (
+                    <>
+                      {item.rejectReason ? <p className="mt-1 text-xs text-error">{item.rejectReason}</p> : null}
+                      {onRescreen ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          loading={rescreeningCandidateId === item.id}
+                          disabled={rescreeningCandidateId === item.id}
+                          onClick={() => onRescreen(item.id)}
+                        >
+                          {t('employer.campaigns.screening.actions.rescreen')}
+                        </Button>
+                      ) : null}
+                    </>
                   ) : null}
                 </TableCell>
                 <TableCell>
@@ -218,5 +242,5 @@ export function CandidateRankingTable({
 
 export function isUnreadable(item: CampaignCandidateListItem): boolean {
   const status = item.status.toLowerCase();
-  return status === 'analyzing' || status === 'failed' || status === 'filtered' || item.overallMatchScore == null;
+  return status === 'analyzing' || status === 'analysisfailed' || status === 'filtered' || item.overallMatchScore == null;
 }

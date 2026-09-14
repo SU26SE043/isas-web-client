@@ -646,6 +646,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.description':
       'Danh sách CV đã được phân tích và xếp hạng theo mức độ phù hợp với chiến dịch.',
     'employer.campaigns.screening.ranking.count': '{count} ứng viên',
+    'employer.campaigns.screening.ranking.filteredRankNote': 'Hạng trong danh sách đang lọc',
     'employer.campaigns.screening.ranking.matchScore': 'Điểm phù hợp',
     'employer.campaigns.screening.ranking.skills': 'Kỹ năng',
     'employer.campaigns.screening.ranking.status': 'Trạng thái',
@@ -663,6 +664,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.clearFilters': 'Xóa bộ lọc',
     'employer.campaigns.screening.ranking.itemLabel': 'ứng viên',
     'employer.campaigns.screening.ranking.verificationRisk': 'Cờ xác minh',
+    'employer.campaigns.screening.analysisProgress': 'Đang phân tích {{pending}}/{{total}} · xong {{completed}} · lỗi {{errors}}',
     'employer.campaigns.screening.ranking.group.eligible': 'ĐỦ ĐIỀU KIỆN',
     'employer.campaigns.screening.ranking.group.ineligible': 'THIẾU ĐIỀU KIỆN BẮT BUỘC',
     'employer.campaigns.screening.ranking.group.unreadable': 'CHƯA ĐỌC ĐƯỢC',
@@ -2427,6 +2429,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.description':
       'CVs analyzed and ranked by their fit for this campaign.',
     'employer.campaigns.screening.ranking.count': '{count} candidates',
+    'employer.campaigns.screening.ranking.filteredRankNote': 'Rank within the filtered list',
     'employer.campaigns.screening.ranking.matchScore': 'Match score',
     'employer.campaigns.screening.ranking.skills': 'Skills',
     'employer.campaigns.screening.ranking.status': 'Status',
@@ -2444,6 +2447,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.screening.ranking.clearFilters': 'Clear filters',
     'employer.campaigns.screening.ranking.itemLabel': 'candidates',
     'employer.campaigns.screening.ranking.verificationRisk': 'Verification flag',
+    'employer.campaigns.screening.analysisProgress': 'Analyzing {{pending}}/{{total}} · done {{completed}} · errors {{errors}}',
     'employer.campaigns.screening.ranking.group.eligible': 'ELIGIBLE',
     'employer.campaigns.screening.ranking.group.ineligible': 'MISSING REQUIRED CONDITIONS',
     'employer.campaigns.screening.ranking.group.unreadable': 'COULD NOT READ',

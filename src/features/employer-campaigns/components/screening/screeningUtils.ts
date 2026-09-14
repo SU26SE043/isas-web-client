@@ -10,31 +10,16 @@ export function canSelectCandidate(item: CampaignCandidateListItem): boolean {
   return true;
 }
 
-/**
- * Builds competition ranks from the candidate match percentages.
- * Candidates with the same score share a rank; unscored candidates are unranked.
- */
+/** Server returns candidates in score order; preserve that order for display ranks. */
 export function getCandidateRanks(
   candidates: CampaignCandidateListItem[],
 ): Map<string, number> {
   const ranks = new Map<string, number>();
-  const scoredCandidates = candidates
-    .filter((candidate) => candidate.overallMatchScore != null)
-    .sort((left, right) => {
-      const eligibilityOrder = Number(right.eligible !== false) - Number(left.eligible !== false);
-      return eligibilityOrder || right.overallMatchScore! - left.overallMatchScore!;
-    });
-  let scoredPosition = 0;
-  let previousScore: number | null = null;
-  let previousRank = 0;
-
-  scoredCandidates.forEach((candidate) => {
-    const score = candidate.overallMatchScore ?? null;
-    scoredPosition += 1;
-    const rank = score === previousScore ? previousRank : scoredPosition;
+  let rank = 0;
+  candidates.forEach((candidate) => {
+    if (candidate.overallMatchScore == null) return;
+    rank += 1;
     ranks.set(candidate.id, rank);
-    previousScore = score;
-    previousRank = rank;
   });
 
   return ranks;
@@ -61,6 +46,33 @@ export function formatFileSize(bytes: number): string {
 
 export function verificationRiskTranslationKey(risk: string): string {
   return `employer.campaigns.screening.verificationRisk.${risk}`;
+}
+
+export type CandidateAnalysisProgress = {
+  total: number;
+  pending: number;
+  completed: number;
+  errors: number;
+};
+
+export function getCandidateAnalysisProgress(
+  candidates: CampaignCandidateListItem[],
+  trackedCandidateIds?: ReadonlySet<string>,
+): CandidateAnalysisProgress {
+  const tracked = trackedCandidateIds?.size
+    ? candidates.filter((candidate) => trackedCandidateIds.has(candidate.id))
+    : candidates;
+  const isStatus = (candidate: CampaignCandidateListItem, status: string) =>
+    candidate.status.toLowerCase() === status.toLowerCase();
+
+  return {
+    total: tracked.length,
+    pending: tracked.filter(
+      (candidate) => isStatus(candidate, 'Analyzing') || isStatus(candidate, 'Filtered'),
+    ).length,
+    completed: tracked.filter((candidate) => isStatus(candidate, 'Analyzed')).length,
+    errors: tracked.filter((candidate) => isStatus(candidate, 'AnalysisFailed')).length,
+  };
 }
 
 export type PendingCvFile = {

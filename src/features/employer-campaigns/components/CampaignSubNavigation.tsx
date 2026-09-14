@@ -13,6 +13,7 @@ export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationP
   const [searchParams] = useSearchParams();
   const base = `/employer/campaigns/${campaign.id}`;
   const canOperate = campaign.status === 'active';
+  const canScreen = campaign.status === 'active' || campaign.status === 'draft';
   const canViewHistory = campaign.status !== 'draft';
   const activeTab =
     searchParams.get('tab') ?? (mode === 'overview' ? 'details' : 'cv-screening');
@@ -43,7 +44,7 @@ export function CampaignSubNavigation({ campaign, mode }: CampaignSubNavigationP
             id: 'cv-screening',
             label: t('employer.campaigns.workspace.screening'),
             to: `${base}/invitations?tab=cv-screening`,
-            enabled: canOperate,
+            enabled: canScreen,
           },
           {
             id: 'invite',

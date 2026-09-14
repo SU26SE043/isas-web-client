@@ -389,6 +389,7 @@ export type CampaignCandidateListItem = {
   email?: string | null;
   status: string;
   overallMatchScore?: number | null;
+  rejectReason?: string | null;
   skills?: string[] | null;
   verificationRisk?: VerificationRisk | null;
   screeningVersion?: number | null;

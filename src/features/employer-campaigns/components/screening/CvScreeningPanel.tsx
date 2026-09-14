@@ -6,7 +6,7 @@ import { useLanguage } from '@/shared/languages';
 import { useCampaignInvitationStore } from '../../stores/campaignInvitationStore';
 import { CandidateFilterBar } from './CandidateFilterBar';
 import { CandidateRankingTable } from './CandidateRankingTable';
-import { CandidateUploadSummary } from './CandidateUploadSummary';
+import { CandidateAnalysisProgress } from './CandidateAnalysisProgress';
 import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
@@ -63,7 +63,12 @@ export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = f
         canAnalyze={state.canAnalyze}
         isActive={screeningEnabled}
       />
-      {state.uploadSummary ? <CandidateUploadSummary summary={state.uploadSummary} /> : null}
+      {state.uploadSummary ? (
+        <CandidateAnalysisProgress
+          candidates={state.candidates}
+          trackedCandidateIds={new Set(state.uploadSummary.candidates.map((candidate) => candidate.id))}
+        />
+      ) : null}
 
       <section className="space-y-4 border-t border-satin pt-5">
         <div>
@@ -83,6 +88,11 @@ export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = f
           <p className="mt-1 text-sm text-muted-foreground">
             {t('employer.campaigns.screening.ranking.description')}
           </p>
+          {state.hasActiveFilters ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('employer.campaigns.screening.ranking.filteredRankNote')}
+            </p>
+          ) : null}
         </div>
 
         {state.candidatesQuery.isLoading ? (
@@ -134,6 +144,8 @@ export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = f
             }}
             updatingCandidateId={state.updateCandidateMutation.isPending ? state.updateCandidateMutation.variables?.candidateId : null}
             allowIneligibleSelection={allowDraftScreening}
+            onRescreen={(candidateId) => void state.rescreenMutation.mutateAsync(candidateId)}
+            rescreeningCandidateId={state.rescreenMutation.isPending ? state.rescreenMutation.variables : null}
           />
           {/* hideInvitationAction chỉ ẩn đường ĐIỀU HƯỚNG sang trang mời; có onAddCandidates
               (wizard bước 7) thì vẫn phải render, không thì chọn xong không có nút nào. */}
