@@ -322,7 +322,11 @@ export function mapSubmitError(
     return { message: t('employer.campaigns.wizard.campaignNotFound'), step: null };
   }
   if (status === 409) {
-    return { message: t('employer.campaigns.wizard.notDraftEditable'), step: null };
+    // 409 của Campaign KHÔNG chỉ có "không phải Draft": guard sàng CV (đổi domain/language/luật lọc
+    // khi đã có ứng viên), đổi K/câu hỏi ngoài Draft, seniority… đều trả plain-text nêu đúng lý do.
+    // Dán đè bằng câu "chỉ sửa được khi Draft" là nói sai với HR (đo trên dev 14/09: campaign VẪN Draft
+    // mà banner bảo không phải Draft). Có lời server thì dùng lời server.
+    return { message: preferApiMessage ? message : t('employer.campaigns.wizard.notDraftEditable'), step: null };
   }
   if (status === 400) {
     if (/ADAPTIVE_BUDGET_TOO_SMALL/i.test(message)) {

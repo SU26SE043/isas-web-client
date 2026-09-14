@@ -33,6 +33,28 @@ describe('campaign wizard API error step mapping', () => {
     expect(resolveCampaignErrorStep('request: jdText is required', 'create')).toBe(1);
   });
 
+  it('409 có lời server (plain-text) thì hiện đúng lời đó, không dán đè "chỉ sửa được khi Draft"', () => {
+    // Đo trên dev 14/09: Draft đã sàng 1 CV → PUT echo domain → BE 409 nêu rõ lý do, FE lại báo
+    // "Chỉ có thể chỉnh sửa đầy đủ chiến dịch khi đang ở trạng thái Draft" — campaign VẪN là Draft.
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 409,
+      statusText: 'Conflict',
+      headers: {},
+      config: {} as never,
+      data: 'Không sửa được trường quyết định cách AI sàng/chấm CV khi campaign đã có ứng viên.',
+    };
+    expect(mapSubmitError(error, (key) => key, 'update')).toEqual({
+      message: 'Không sửa được trường quyết định cách AI sàng/chấm CV khi campaign đã có ứng viên.',
+      step: null,
+    });
+
+    // Không có body ⇒ vẫn rơi về câu mặc định.
+    const bare = new axios.AxiosError('Request failed');
+    bare.response = { status: 409, statusText: 'Conflict', headers: {}, config: {} as never, data: '' };
+    expect(mapSubmitError(bare, (key) => key, 'update').message).toBe('employer.campaigns.wizard.notDraftEditable');
+  });
+
   it('preserves the adaptive budget details from a 400 response', () => {
     const error = new axios.AxiosError('Request failed');
     error.response = {

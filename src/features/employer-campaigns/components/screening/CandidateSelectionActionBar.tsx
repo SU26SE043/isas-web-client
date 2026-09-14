@@ -58,7 +58,7 @@ export function CandidateSelectionActionBar({
   return (
     <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-satin bg-surface-elevated px-4 py-3">
       <p className="text-sm text-muted-foreground">
-        {t('employer.campaigns.screening.ranking.selected').replace('{{count}}', String(selectedIds.size))}
+        {t('employer.campaigns.screening.ranking.selected').replace('{count}', String(selectedIds.size))}
       </p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={onClear}>

@@ -12,7 +12,12 @@ const toastError = vi.fn();
 vi.mock('@/shared/languages', () => ({
   // t trả về key, trừ mẫu có placeholder để kiểm được lý do thất bại đi vào toast.
   useLanguage: () => ({
-    t: (key: string) => (key === 'employer.campaigns.screening.invitation.failedReason' ? '{{candidate}}: {{reason}}' : key),
+    t: (key: string) =>
+      key === 'employer.campaigns.screening.invitation.failedReason'
+        ? '{{candidate}}: {{reason}}'
+        : key === 'employer.campaigns.screening.ranking.selected'
+          ? 'Đã chọn {count} ứng viên' // NGUYÊN VĂN khoá thật: placeholder MỘT ngoặc
+          : key,
     language: 'vi' as const,
   }),
 }));
@@ -34,6 +39,17 @@ const c = (id: string, email: string | null = `${id}@x.local`): CampaignCandidat
  * Trước bản này component không có test ⇒ mutation "bỏ refetch" chạy qua xanh — bịt ở đây.
  */
 describe('CandidateSelectionActionBar', () => {
+  it('dòng "Đã chọn N ứng viên" nội suy đúng — khoá i18n dùng {count} MỘT ngoặc, không phải {{count}}', () => {
+    // Trước bản này code replace('{{count}}') trên khoá '{count}' ⇒ HR thấy nguyên văn "Đã chọn {count} ứng viên"
+    // (đo trên dev 14/09). Không lỗi, không cảnh báo; check:i18n không bắt vì nó chỉ so khoá giữa 2 ngôn ngữ.
+    render(
+      <CandidateSelectionActionBar campaignId="c-1" candidates={[c('a'), c('b')]} selectedIds={new Set(['a', 'b'])}
+        isActive onClear={vi.fn()} onRefetch={vi.fn().mockResolvedValue(undefined)} />,
+    );
+    expect(screen.getByText('Đã chọn 2 ứng viên')).toBeInTheDocument();
+    expect(screen.queryByText(/\{count\}/)).toBeNull();
+  });
+
   it('Active: bấm mời ⇒ mutate đúng candidateIds, toast, clear, REFETCH', async () => {
     mutateAsync.mockResolvedValue({ invited: [{ candidateId: 'a', invitationId: 'i', email: 'a@x.local' }], failed: [] });
     const onClear = vi.fn(); const onRefetch = vi.fn().mockResolvedValue(undefined);

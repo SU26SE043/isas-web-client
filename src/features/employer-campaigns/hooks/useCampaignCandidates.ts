@@ -6,6 +6,7 @@ import type {
   UpdateCampaignCandidatePayload,
 } from '../types/campaign.api.types';
 import { getCampaignCandidatesRefetchInterval } from '../utils/campaignCandidatesPolling';
+import { EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY } from './useCampaignInvitations';
 
 export {
   campaignResultKeys,
@@ -92,6 +93,11 @@ export function useInviteCampaignCandidates(campaignId: string | undefined) {
     onSuccess: () => {
       if (!campaignId) return;
       invalidateCampaignCandidates(queryClient, campaignId);
+      // Mời từ shortlist tạo campaign_invitations thật ⇒ tab "Danh sách lời mời" phải thấy ngay.
+      // Đo trên dev 14/09: mời 1 ứng viên xong, tab lời mời vẫn 3 dòng cho tới khi bấm "Làm mới".
+      void queryClient.invalidateQueries({
+        queryKey: [...EMPLOYER_CAMPAIGN_INVITATIONS_QUERY_KEY, campaignId],
+      });
     },
   });
 }
