@@ -172,11 +172,15 @@ export function useRoadmapWizardFlow() {
       });
       const firstLessonId = created.milestones?.flatMap((milestone) => milestone.lessons)[0]?.id;
       if (created.id && firstLessonId) {
-        // Deliberately fire-and-forget: closing the tab forfeits warming the cache, and a fast click can briefly duplicate the AI request. The backend idempotency guard keeps the result correct; the narrow extra-cost window is accepted for a faster first lesson.
+        // Fire-and-forget cache warm. Since 2026-09-15 the backend prewarms lesson 1 itself and
+        // single-flights concurrent generations, so this prefetch only joins that in-flight work.
+        // `retry: false` is deliberate: the global default (3 retries) would re-issue a full
+        // ~20–50s AI generation up to three more times on a 502 with nobody watching.
         void queryClient.prefetchQuery({
           queryKey: learningLessonQueryKey(created.id, firstLessonId),
           queryFn: () => roadmapService.getLesson(created.id as string, firstLessonId),
           staleTime: 60_000,
+          retry: false,
         }).catch(() => {});
       }
       await invalidateLearningRoadmaps(queryClient);

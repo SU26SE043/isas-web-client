@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateTimeLocalInput } from '@/components/ui/date-time-local-input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignSlotRequest, CampaignSlotResponse } from '../../types/campaign.api.types';
@@ -97,24 +98,28 @@ export function CampaignSlotDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="slot-starts-at">{t('employer.campaigns.slots.startsAt')}</Label>
-              <Input
+              <DateTimeLocalInput
                 id="slot-starts-at"
-                type="datetime-local"
                 required
                 value={values.startsAt}
+                datePlaceholder={t('employer.campaigns.form.datePlaceholder')}
+                dateAriaLabel={t('employer.campaigns.form.dateAriaLabel')}
+                timeAriaLabel={t('employer.campaigns.form.timeAriaLabel')}
                 aria-invalid={Boolean(errorKey || errorText)}
-                onChange={(event) => setValues((prev) => ({ ...prev, startsAt: event.target.value }))}
+                onChange={(value) => setValues((prev) => ({ ...prev, startsAt: value }))}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="slot-ends-at">{t('employer.campaigns.slots.endsAt')}</Label>
-              <Input
+              <DateTimeLocalInput
                 id="slot-ends-at"
-                type="datetime-local"
                 required
                 value={values.endsAt}
+                datePlaceholder={t('employer.campaigns.form.datePlaceholder')}
+                dateAriaLabel={t('employer.campaigns.form.dateAriaLabel')}
+                timeAriaLabel={t('employer.campaigns.form.timeAriaLabel')}
                 aria-invalid={Boolean(errorKey || errorText)}
-                onChange={(event) => setValues((prev) => ({ ...prev, endsAt: event.target.value }))}
+                onChange={(value) => setValues((prev) => ({ ...prev, endsAt: value }))}
               />
             </div>
           </div>

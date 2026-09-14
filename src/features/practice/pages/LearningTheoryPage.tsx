@@ -55,7 +55,15 @@ export function LearningTheoryPage() {
     return (
       <div className="min-h-full overflow-y-auto bg-surface-base">
         <TheorySkeleton />
-        <span className="sr-only">{t('practice.learningPath.loadingTheory')}</span>
+        {/* Visible, not sr-only: the first open of a lesson is a ~20–40s AI generation. Grey bars alone
+            read as "stuck"; measured on prod, users reloaded mid-generation. */}
+        <p
+          role="status"
+          className="mx-auto max-w-[900px] px-4 pb-8 text-sm text-muted-foreground sm:px-6 lg:px-10"
+        >
+          {t('practice.learningPath.loadingTheory')}{' '}
+          <span className="text-caption">{t('practice.learningPath.loadingTheoryHint')}</span>
+        </p>
       </div>
     );
   }
