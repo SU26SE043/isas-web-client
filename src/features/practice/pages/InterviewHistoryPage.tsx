@@ -3,9 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
 import { useLanguage } from '@/shared/languages';
-import { InterviewHistoryCompareBar } from '../components/history/InterviewHistoryCompareBar';
 import { PracticeHistoryContent } from '../components/history/PracticeHistoryContent';
-import { PracticeHistoryStatCard } from '../components/history/PracticeHistoryStatCard';
+import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { PracticeHistoryToolbar } from '../components/history/PracticeHistoryToolbar';
 import { usePracticeSessionHistory } from '../hooks/usePracticeSessionHistory';
 import type {
@@ -17,6 +16,7 @@ import {
   computePracticeHistoryPageStats,
   filterAndSortPracticeHistory,
 } from '../utils/practiceSessionHistoryActions';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function InterviewHistoryPage() {
   const navigate = useNavigate();
@@ -32,8 +32,6 @@ export function InterviewHistoryPage() {
   const [currentCursor, setCurrentCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
   const [pageIndex, setPageIndex] = useState(1);
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const historyQuery = usePracticeSessionHistory({
     cursor: currentCursor ?? undefined,
@@ -89,44 +87,28 @@ export function InterviewHistoryPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-5">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              {t('practice.history.title')}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t('practice.history.subtitle')}</p>
-          </div>
-          <Button type="button" render={<Link to="/practice" />}>
-            {t('practice.history.newPractice')}
-          </Button>
-        </header>
+      <div className="app-page space-y-5">
+        <PageHeader
+          title={t('practice.history.title')}
+          description={t('practice.history.subtitle')}
+          actions={
+            <Button type="button" render={<Link to="/practice" />}>
+              {t('practice.history.newPractice')}
+            </Button>
+          }
+        />
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageCount')}
-            value={String(stats.pageCount)}
-          />
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageCompleted')}
-            value={String(stats.completed)}
-            tone="success"
-          />
-          <PracticeHistoryStatCard
-            label={t('practice.history.stats.pageInProgress')}
-            value={String(stats.inProgress)}
-            tone="warning"
-          />
-          <PracticeHistoryStatCard
+        <StatGrid columns={4}>
+          <StatCard size="sm" label={t('practice.history.stats.pageCount')} value={String(stats.pageCount)} />
+          <StatCard size="sm" label={t('practice.history.stats.pageCompleted')} value={String(stats.completed)} tone="success" />
+          <StatCard size="sm" label={t('practice.history.stats.pageInProgress')} value={String(stats.inProgress)} tone="warning" />
+          <StatCard
+            size="sm"
             label={t('practice.history.stats.pageAvgScore')}
-            value={
-              stats.avgScore == null
-                ? t('practice.history.scoreUnavailable')
-                : stats.avgScore.toFixed(1)
-            }
+            value={stats.avgScore == null ? t('practice.history.scoreUnavailable') : stats.avgScore.toFixed(1)}
             tone="info"
           />
-        </div>
+        </StatGrid>
 
         <PracticeHistoryToolbar
           search={search}
@@ -134,7 +116,6 @@ export function InterviewHistoryPage() {
           source={source}
           sort={sort}
           isFetching={historyQuery.isFetching}
-          compareMode={compareMode}
           dateFilter={dateFilter || undefined}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
@@ -146,32 +127,12 @@ export function InterviewHistoryPage() {
           }}
           onSortChange={setSort}
           onRefresh={() => void historyQuery.refetch()}
-          onToggleCompareMode={() => {
-            setCompareMode((value) => !value);
-            setSelectedIds([]);
-          }}
           onClearDateFilter={() => {
             const next = new URLSearchParams(searchParams);
             next.delete('date');
             setSearchParams(next);
           }}
         />
-
-        {compareMode ? (
-          <InterviewHistoryCompareBar
-            selectedCount={selectedIds.length}
-            onCompare={() => {
-              if (selectedIds.length !== 2) return;
-              navigate(
-                `/candidate/practice/history/compare?left=${selectedIds[0]}&right=${selectedIds[1]}`,
-              );
-            }}
-            onCancel={() => {
-              setCompareMode(false);
-              setSelectedIds([]);
-            }}
-          />
-        ) : null}
 
         {historyQuery.data || historyQuery.isLoading || historyQuery.isError ? (
           <PracticeHistoryContent
@@ -181,21 +142,12 @@ export function InterviewHistoryPage() {
             pageItems={pageItems}
             visibleItems={visibleItems}
             hasActiveFilters={hasActiveFilters}
-            compareMode={compareMode}
-            selectedIds={selectedIds}
             pageIndex={pageIndex}
             pageSize={pageSize}
             canGoPrevious={cursorHistory.length > 0}
             canGoNext={Boolean(nextCursor)}
             onRetry={() => void historyQuery.refetch()}
             onClearFilters={clearFilters}
-            onToggleCompare={(id) => {
-              setSelectedIds((current) => {
-                if (current.includes(id)) return current.filter((item) => item !== id);
-                if (current.length >= 2) return [current[1], id];
-                return [...current, id];
-              });
-            }}
             onViewResult={(id) => navigate(`/candidate/practice/history/${id}`)}
             onResume={(id) => navigate(`/interview/${id}/room`)}
             onPrevious={() => {

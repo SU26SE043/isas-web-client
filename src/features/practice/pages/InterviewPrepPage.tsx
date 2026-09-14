@@ -10,7 +10,6 @@ import { useInterviewGate } from '../hooks/useInterviewGate';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { useInterviewFlowSession } from '../hooks/useInterviewFlowSession';
 import { InterviewFlowShell } from '../components/flow/InterviewFlowShell';
-import { InterviewGatePanel } from '../components/flow/InterviewGatePanel';
 import { PreparationChecklistStep } from '../components/preparation/PreparationChecklistStep';
 import { DeviceCheckStep } from '../components/preparation/DeviceCheckStep';
 import { WaitingRoomStep } from '../components/preparation/WaitingRoomStep';
@@ -51,7 +50,6 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
   const subStep = parseSubStep(searchParams.get('step'));
   const isCampaignSession = Boolean(sessionId && isCampaignSessionId(sessionId));
   const learningContext = getLearningSessionRouteContext(searchParams);
-  const isLearningSession = Boolean(learningContext);
   const cancelHref = learningContext
     ? `/candidate/learning/roadmaps/${learningContext.roadmapId}`
     : '/candidate/dashboard';
@@ -197,15 +195,6 @@ export const InterviewPrepPage: React.FC<InterviewPrepPageProps> = ({ onCampaign
         </div>
       ) : sessionQuery.data && subStep === 'prepare' ? (
         <div className="space-y-5">
-          {!isLearningSession ? (
-            <InterviewGatePanel
-              meetsProfileGate={gate.meetsProfileGate}
-              hasCredits={gate.hasCredits}
-              completenessPercent={gate.completenessPercent}
-              creditsRemaining={gate.tokenAvailable}
-              reserveEstimate={gate.reserveEstimate}
-            />
-          ) : null}
           <PreparationChecklistStep
             consentAccepted={consentAccepted}
             consentKey={consentKey}

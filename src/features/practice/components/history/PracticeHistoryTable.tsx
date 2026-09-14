@@ -27,9 +27,6 @@ import { PracticeHistoryRowActions } from './PracticeHistoryRowActions';
 
 interface PracticeHistoryTableProps {
   items: PracticeSessionHistoryItem[];
-  compareMode?: boolean;
-  selectedIds?: string[];
-  onToggleCompare?: (id: string) => void;
   onViewResult: (id: string) => void;
   onResume: (id: string) => void;
 }
@@ -44,9 +41,6 @@ const statusClass = {
 
 export function PracticeHistoryTable({
   items,
-  compareMode = false,
-  selectedIds = [],
-  onToggleCompare,
   onViewResult,
   onResume,
 }: PracticeHistoryTableProps) {
@@ -55,23 +49,23 @@ export function PracticeHistoryTable({
   return (
     <>
       <div className="hidden md:block">
-        <Table className="min-w-[900px]">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
-              {compareMode ? <TableHead className="w-10" scope="col" /> : null}
-              <TableHead scope="col">{t('practice.history.columns.jobCategory')}</TableHead>
+              {/* Cột tiêu đề là cột co giãn duy nhất; các cột ngày/giờ/điểm/thao tác không bẻ dòng. */}
+              <TableHead className="min-w-[14rem]" scope="col">{t('practice.history.columns.jobCategory')}</TableHead>
               {/* L1: trước đây dùng `filterStatus` ("Lọc trạng thái") — đó là nhãn của Ô LỌC,
                   không phải tiêu đề cột, nên header bảng ghi thẳng "LỌC TRẠNG THÁI". */}
               <TableHead scope="col">{t('practice.history.columns.status')}</TableHead>
-              <TableHead scope="col">{t('practice.history.columns.createdAt')}</TableHead>
-              <TableHead className="hidden lg:table-cell" scope="col">
+              <TableHead className="w-0" scope="col">{t('practice.history.columns.createdAt')}</TableHead>
+              <TableHead className="hidden w-0 lg:table-cell" scope="col">
                 {t('practice.history.columns.completedAt')}
               </TableHead>
-              <TableHead className="hidden lg:table-cell" scope="col">
+              <TableHead className="hidden w-0 lg:table-cell" scope="col">
                 {t('practice.history.duration')}
               </TableHead>
-              <TableHead scope="col">{t('practice.history.score')}</TableHead>
-              <TableHead className="text-right" scope="col">
+              <TableHead className="w-0" scope="col">{t('practice.history.score')}</TableHead>
+              <TableHead className="w-0 text-right" scope="col">
                 {t('practice.history.columns.actions')}
               </TableHead>
             </TableRow>
@@ -79,24 +73,11 @@ export function PracticeHistoryTable({
           <TableBody>
             {items.map((item) => {
               const group = getPracticeHistoryStatusGroup(item.status);
-              const canCompare = group === 'completed' && item.overallScore != null;
-              const selected = selectedIds.includes(item.id);
               const minutes = practiceSessionDurationMinutes(item);
 
               return (
-                <TableRow key={item.id} data-state={selected ? 'selected' : undefined}>
-                  {compareMode ? (
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        disabled={!canCompare}
-                        aria-label={t('practice.compare.selectItem')}
-                        onChange={() => onToggleCompare?.(item.id)}
-                      />
-                    </TableCell>
-                  ) : null}
-                  <TableCell>
+                <TableRow key={item.id}>
+                  <TableCell className="max-w-[24rem]">
                     <PracticeSessionTitle item={item} />
                   </TableCell>
                   <TableCell>
@@ -104,27 +85,26 @@ export function PracticeHistoryTable({
                       {t(practiceSessionStatusLabelKey(item.status))}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                     {formatSessionDateTime(item.createdAt, language) ||
                       t('practice.history.dateUnknown')}
                   </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                  <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
                     {item.completedAt
                       ? formatSessionDateTime(item.completedAt, language)
                       : t('practice.history.notCompleted')}
                   </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                  <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
                     {formatDurationLabel(minutes, t)}
                   </TableCell>
-                  <TableCell className="font-semibold tabular-nums text-foreground">
+                  <TableCell className="whitespace-nowrap font-semibold tabular-nums text-foreground">
                     {group === 'pendingScore' && item.overallScore == null
                       ? t('practice.history.scoring')
                       : formatOverallScoreLabel(item.overallScore, t)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="whitespace-nowrap text-right">
                     <PracticeHistoryRowActions
                       item={item}
-                      compareMode={compareMode}
                       onViewResult={onViewResult}
                       onResume={onResume}
                     />
@@ -154,15 +134,6 @@ export function PracticeHistoryTable({
                     </Badge>
                   </div>
                 </div>
-                {compareMode ? (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(item.id)}
-                    disabled={!(group === 'completed' && item.overallScore != null)}
-                    aria-label={t('practice.compare.selectItem')}
-                    onChange={() => onToggleCompare?.(item.id)}
-                  />
-                ) : null}
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -182,16 +153,13 @@ export function PracticeHistoryTable({
                   </dd>
                 </div>
               </dl>
-              {!compareMode ? (
-                <div className="mt-3">
-                  <PracticeHistoryRowActions
-                    item={item}
-                    compareMode={false}
-                    onViewResult={onViewResult}
-                    onResume={onResume}
-                  />
-                </div>
-              ) : null}
+              <div className="mt-3">
+                <PracticeHistoryRowActions
+                  item={item}
+                  onViewResult={onViewResult}
+                  onResume={onResume}
+                />
+              </div>
             </article>
           );
         })}

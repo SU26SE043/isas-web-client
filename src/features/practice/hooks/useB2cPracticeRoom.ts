@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import {
-  getPracticeSession,
-  submitPracticeAnswer,
-  submitPracticeSession,
-} from '../services/b2cPracticeSession.service';
+import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
-import { readCampaignInterviewSession } from '@/features/campaigns/utils/campaignInterviewSession';
+import { loadRoomSession } from './loadRoomSession';
 
 // Brief enough to let the "time's up" state paint before the auto-submit
 // request fires, but short enough not to add a needless extra second on top
@@ -115,23 +111,9 @@ export function useB2cPracticeRoom(
     [store.currentQuestionId, store.questions],
   );
 
-  // SỐ HIỆU HIỂN THỊ — cấp một lần lúc câu xuất hiện lần đầu, không bao giờ tính lại.
-  //
-  // Không dùng vị trí trong mảng: backend cố ý đánh `orderNo` có KHOẢNG TRỐNG (câu gốc nhận 1, 5,
-  // 9… — xem `SeedOrderStride`) để chuỗi đào sâu chèn vào giữa, và trả về đã sắp theo `orderNo`.
-  // Câu đào sâu của câu 1 mang `orderNo = 2` nên nó chen vào GIỮA mảng ⇒ câu gốc thứ hai tụt từ chỉ
-  // số 1 xuống 2 ⇒ nhãn của một câu ĐÃ HIỆN đổi từ "Câu 2" thành "Câu 3" ngay trước mắt ứng viên.
-  //
-  // Khoảng trống là thứ backend cần; cái sai là lấy vị trí mảng làm số hiệu. Map dưới đây cấp số
-  // tăng dần theo THỨ TỰ XUẤT HIỆN, nên câu đã hiện giữ số vĩnh viễn và câu mới luôn nhận số kế tiếp.
-  const displayNumbersRef = useRef(new Map<string, number>());
-  const displayNumbers = useMemo(() => {
-    const assigned = displayNumbersRef.current;
-    for (const question of store.questions) {
-      if (!assigned.has(question.id)) assigned.set(question.id, assigned.size + 1);
-    }
-    return assigned;
-  }, [store.questions]);
+  // SỐ HIỆU HIỂN THỊ: panel tự tính phân cấp (1 · 1.1 · 2 …) từ `kind` + thứ tự mảng (`questionNumbering`);
+  // hook chỉ cấp `currentIndex` để tô đậm vòng tròn. Lịch sử: từng đếm theo thứ tự xuất hiện (map cấp số lúc
+  // hydrate) ⇒ câu đào sâu hiện "Câu hỏi 6 / 6" với vòng tròn 2 tô đậm (đo dev 2026-09-12).
 
   // Chữ đã nằm trong store và render độc lập. Audio bắt đầu tải ngay khi có
   // questionId (kể cả trong countdown), nhưng chỉ được phát sau gate bắt đầu.
@@ -210,21 +192,8 @@ export function useB2cPracticeRoom(
       }
       store.setStage('interviewing');
       try {
-        const campaignSession = readCampaignInterviewSession(sessionId);
-        if (campaignSession) {
-          store.hydrateFromSession({
-            id: sessionId,
-            status: 'InProgress',
-            questions: campaignSession.questions.map((question) => ({
-              ...question,
-              kind: 'question',
-            })),
-            answers: [],
-            result: null,
-          });
-          return;
-        }
-        const session = await getPracticeSession(sessionId);
+        // B2B lẫn B2C đều hỏi server (marker B2B không có câu trả lời — xem `loadRoomSession`).
+        const session = await loadRoomSession(sessionId);
         if (cancelled) return;
         store.hydrateFromSession(session);
       } catch {
@@ -460,20 +429,11 @@ export function useB2cPracticeRoom(
     stage: store.stage,
     questions: store.questions,
     currentQuestion,
-    // Vị trí trong mảng — vẫn dùng cho điều hướng và tô đậm bước, KHÔNG còn đóng vai số hiệu.
+    // Vị trí trong mảng — tô đậm bước ở stepper; số hiệu phân cấp do panel tính (`questionNumbering`).
     currentIndex: Math.max(
       0,
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
-    displayNumber: store.currentQuestionId
-      ? displayNumbers.get(store.currentQuestionId) ?? displayNumbers.size
-      : 1,
-    // Mẫu số = số câu ứng viên đã CHỌN, không phải số câu đang có trong mảng. `questions.length`
-    // phình lên mỗi lần câu đào sâu về ⇒ "Câu 1/2" thành "Câu 1/3" rồi "1/4" mà không ai bấm gì.
-    // Buổi giao ít hơn thì dừng ở "Câu 4/20" — trung thực hơn một mẫu số nhảy.
-    plannedTotal: store.session?.questionCount && store.session.questionCount > 0
-      ? store.session.questionCount
-      : store.questions.length,
     remainingSeconds: effectiveRemainingSeconds,
     answersByQuestionId: store.answersByQuestionId,
     questionStates: store.questionStates,

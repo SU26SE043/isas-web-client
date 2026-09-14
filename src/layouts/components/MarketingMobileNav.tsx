@@ -40,7 +40,7 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
             {item.isHash ? (
               <a
                 href={item.href}
-                className="nav-link focus-ring block rounded-md px-2 py-3"
+                className="nav-link focus-ring block rounded-lg px-2 py-3"
                 onClick={onClose}
               >
                 {t(item.labelKey)}
@@ -48,7 +48,7 @@ export const MarketingMobileNav: React.FC<MarketingMobileNavProps> = ({
             ) : (
               <Link
                 to={item.href}
-                className="nav-link focus-ring block rounded-md px-2 py-3"
+                className="nav-link focus-ring block rounded-lg px-2 py-3"
                 onClick={onClose}
               >
                 {t(item.labelKey)}

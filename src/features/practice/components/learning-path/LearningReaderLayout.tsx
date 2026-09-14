@@ -30,7 +30,7 @@ function LearningReaderShell() {
     const isNotFound = errorStatus === 404;
     const isForbidden = errorStatus === 403;
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           variant={isForbidden ? 'no-permission' : 'no-results'}

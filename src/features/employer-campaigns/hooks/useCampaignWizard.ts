@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import { DEFAULT_RUBRIC } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignQuestion,
   EmployerCampaign,
@@ -12,6 +12,7 @@ import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
   CampaignUpdateRequest,
+  CampaignQuestionImportItem,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
 import {
@@ -20,6 +21,7 @@ import {
   buildDirtyUpdateRequest,
   mapQuestionsToApiRequest,
   resolveDomainOption,
+  UnresolvedCriterionIdError,
   type CampaignWizardSubmitSnapshot,
 } from '../utils/buildCampaignCreateRequest';
 import {
@@ -29,6 +31,7 @@ import {
 import {
   createDefaultSettingsState,
   createEmptyCriteriaFileState,
+  createEmptyHardFiltersState,
   createEmptyJdState,
   decimalWeightsToPercent,
 } from '../types/campaignWizard.types';
@@ -36,10 +39,14 @@ import type {
   CampaignInfoState,
   CampaignSettingsState,
   CampaignWizardPersistedState,
+  CampaignHardFiltersState,
   CriteriaFileState,
   JobDescriptionState,
 } from '../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEP_COUNT } from '../components/wizard/campaignWizard.steps';
+import {
+  CAMPAIGN_WIZARD_STEP_COUNT,
+  canNavigateToWizardStep,
+} from '../components/wizard/campaignWizard.steps';
 import { useCampaignFileActions } from './useCampaignFileActions';
 import type { BlobDownloadResult, CampaignFileType } from '../utils/campaignFiles';
 import {
@@ -47,14 +54,70 @@ import {
   getGenerateQuestionsErrorMessage,
 } from '../utils/generateQuestionsError';
 import {
+  CAMPAIGN_QUESTION_HARD_MAX,
   defaultGenerateCount,
-  effectiveMaxQuestions,
   hasWizardJd,
-  removePlaceholderQuestion,
   validateGenerateCount,
+  CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
+import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { adoptServerRubric, buildQuestionIdAliases, pruneQuestionTargetIds } from '../utils/serverIdAdoption';
+import {
+  CampaignInvitationDeployError,
+  CampaignRequestError,
+} from '../services/campaignManagement.service';
+import type { FailedCampaignInvitation } from '../types/campaign.api.types';
+import {
+  importedItemToQuestion,
+  limitImportedQuestions,
+  validImportedQuestions,
+} from '../utils/campaignQuestionImport';
+import { resolveStartNowOnDeploy, startNowChoiceKey } from '../utils/campaignStartNow';
+import { readCampaignDeployOptions } from '../stores/campaignDeployOptionsStore';
 
 export type CampaignFormMode = 'create' | 'edit';
+
+export type PartialDeployState = {
+  campaignId: string;
+  campaign: EmployerCampaign;
+};
+
+export function buildInvitationRetryRequest(
+  partialDeploy: PartialDeployState | null,
+  currentEmails: readonly string[],
+): { campaignId: string; emails: string[] } | null {
+  if (!partialDeploy) return null;
+  return { campaignId: partialDeploy.campaignId, emails: [...currentEmails] };
+}
+
+function getInvitationErrorBody(error: unknown): unknown {
+  if (error instanceof CampaignInvitationDeployError) return error.body;
+  if (error instanceof CampaignRequestError) return error.message;
+  return axios.isAxiosError(error) ? error.response?.data : undefined;
+}
+
+export function getInvitationFailureMessage(error: unknown, fallback: string): string {
+  const raw = getInvitationErrorBody(error);
+  const body = raw && typeof raw === 'object' && !Array.isArray(raw)
+    ? ((raw as Record<string, unknown>).data && typeof (raw as Record<string, unknown>).data === 'object'
+      ? (raw as Record<string, unknown>).data
+      : raw) as Record<string, unknown>
+    : null;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
+  if (typeof body?.message === 'string' && body.message.trim()) return body.message.trim();
+  if (typeof body?.error === 'string' && body.error.trim()) return body.error.trim();
+  if (axios.isAxiosError(error)) {
+    const message = getApiErrorMessage(error, '');
+    if (message.trim()) return message.trim();
+  }
+  return fallback;
+}
+
+function getInvitationErrorStatus(error: unknown): number | undefined {
+  if (error instanceof CampaignInvitationDeployError) return error.status;
+  if (error instanceof CampaignRequestError) return error.status;
+  return getApiStatusCode(error);
+}
 
 function pad2(value: number): string {
   return String(value).padStart(2, '0');
@@ -72,9 +135,13 @@ function parseCampaignDate(value?: string | null): Date | null {
 }
 
 function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
+  // Giờ mở mặc định = NGAY BÂY GIỜ (tròn phút), không cộng thêm 1 giờ. Cộng 1h là luật tự bịa:
+  // HR tạo chiến dịch xong thêm ca thi ngay (ca 16:26 khi giờ mở mặc định 17:24) thì bị BE 400
+  // "khung giờ bắt đầu trước khi chiến dịch mở" mà không hiểu vì sao (đo trên dev 14/09). BE không
+  // đòi giờ mở ở tương lai; giờ mở ≤ lúc triển khai ⇒ chiến dịch mở ngay (start-now tự no-op).
   const start = parseCampaignDate(campaign?.startsAt) ?? (() => {
     const next = new Date();
-    next.setMinutes(next.getMinutes() + 60);
+    next.setSeconds(0, 0);
     return next;
   })();
   const end =
@@ -89,8 +156,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
   return {
     title: campaign?.title ?? '',
     domain: resolveDomainOption(campaign?.domain ?? campaign?.company),
-    location: campaign?.location === '—' ? '' : campaign?.location ?? '',
-    locationCoordinates: null,
+    language: campaign?.locale ?? 'vi',
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
     passScorePct: campaign?.passScorePct ?? null,
@@ -109,17 +175,17 @@ function defaultSettings(campaign?: EmployerCampaign | null): CampaignSettingsSt
     adaptiveEnabled: campaign.adaptiveEnabled ?? base.adaptiveEnabled,
     maxFollowUps: campaign.maxFollowUps ?? base.maxFollowUps,
     maxQuestions: campaign.maxQuestions ?? base.maxQuestions,
+    maxDeepPerQuestion: campaign.maxDeepPerQuestion ?? base.maxDeepPerQuestion,
   };
 }
 
 function buildInitialState(
   campaign?: EmployerCampaign | null,
   mode: CampaignFormMode = 'create',
+  initialStep?: number,
 ): CampaignWizardPersistedState {
   const hasJdText = Boolean(campaign?.jobDescription?.trim());
-  const initialRubric = decimalWeightsToPercent(
-    campaign?.rubric?.length ? campaign.rubric : DEFAULT_RUBRIC,
-  );
+  const initialRubric = decimalWeightsToPercent(campaign?.rubric?.length ? campaign.rubric : []);
   return {
     info: defaultInfo(campaign),
     jd: {
@@ -129,16 +195,28 @@ function buildInitialState(
             inputMethod: 'text' as const,
             jdText: campaign?.jobDescription ?? '',
             fileStatus: 'uploaded' as const,
+            extractedText: campaign?.jobDescription?.trim().slice(0, 200) ?? '',
           }
         : {}),
     },
+    hardFilters: {
+      ...createEmptyHardFiltersState(),
+      requiredSkills: campaign?.requiredSkills ?? [],
+      keywordsAny: campaign?.keywordsAny ?? [],
+      minYearsExperience: campaign?.minYearsExperience ?? null,
+    },
     criteria: createEmptyCriteriaFileState(),
     rubric: initialRubric,
+    // Sửa sẵn bộ tiêu chí từ server (chế độ edit) ⇒ coi như đã tuỳ chỉnh.
+    rubricCustomized: initialRubric.length > 0,
     questions: campaign?.questions?.length ? campaign.questions : [],
+    inviteEmails: campaign?.invitedEmails ?? [],
     questionCount: 5,
+    questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
-    currentStep: 0,
-    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6] : [],
+    // Chỉ chế độ edit mới mở thẳng vào một bước (mọi bước đã hoàn thành); create luôn đi từ bước 1.
+    currentStep: mode === 'edit' && initialStep != null ? Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, initialStep)) : 0,
+    completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6, 7] : [],
     errorSteps: [],
     draftId: campaign?.id,
     autosaveStatus: 'idle',
@@ -150,10 +228,35 @@ function toSnapshot(state: CampaignWizardPersistedState): CampaignWizardSubmitSn
   return {
     info: state.info,
     jd: state.jd,
+    hardFilters: state.hardFilters,
     rubric: state.rubric,
     questions: state.questions,
+    questionsPerSession: state.questionsPerSession,
     settings: state.settings,
   };
+}
+
+/**
+ * Dấu vân tay của bộ câu hỏi NHƯ SERVER ĐANG GIỮ — dùng để biết `persistForPreview` có phải PUT
+ * câu hỏi lại không. Serialize đúng payload gửi đi (id chỉ giữ khi là id server) nên một câu vừa
+ * sửa prompt, đổi nhóm, hay còn mang id client (`client-…`) đều làm vân tay lệch.
+ */
+export function questionsPersistKey(questions: CampaignQuestion[]): string {
+  // `omit`: vân tay chỉ để SO SÁNH, không phải payload gửi đi — và nó được tính cả trong render (khởi tạo ref),
+  // nên KHÔNG được ném khi nhãn còn id tạm (HR vừa thêm tiêu chí ở bước 3 mà chưa lưu) — R1(c) chỉ ném ở PUT thật.
+  return JSON.stringify(mapQuestionsToApiRequest(questions, { unresolvedTargets: 'omit' }));
+}
+
+/**
+ * `buildDirtyUpdateRequest` LUÔN echo `title`/`domain` (BE đòi) nên `Object.keys(dirty).length`
+ * không bao giờ là 0 — không dùng nó để hỏi "có gì đổi không". So hai payload ĐẦY ĐỦ thay vào đó.
+ */
+export function hasCampaignUpdateChanges(
+  baseline: CampaignWizardSubmitSnapshot,
+  current: CampaignWizardSubmitSnapshot,
+): boolean {
+  return JSON.stringify(buildCampaignUpdateRequest(baseline))
+    !== JSON.stringify(buildCampaignUpdateRequest(current));
 }
 
 function markCompleted(completed: number[], step: number) {
@@ -195,7 +298,7 @@ export function resolveCampaignErrorStep(
   return null;
 }
 
-function mapSubmitError(
+export function mapSubmitError(
   error: unknown,
   t: (key: string) => string,
   kind: 'create' | 'update' | 'questions',
@@ -223,9 +326,33 @@ function mapSubmitError(
     return { message: t('employer.campaigns.wizard.campaignNotFound'), step: null };
   }
   if (status === 409) {
-    return { message: t('employer.campaigns.wizard.notDraftEditable'), step: null };
+    // 409 của Campaign KHÔNG chỉ có "không phải Draft": guard sàng CV (đổi domain/language/luật lọc
+    // khi đã có ứng viên), đổi K/câu hỏi ngoài Draft, seniority… đều trả plain-text nêu đúng lý do.
+    // Dán đè bằng câu "chỉ sửa được khi Draft" là nói sai với HR (đo trên dev 14/09: campaign VẪN Draft
+    // mà banner bảo không phải Draft). Có lời server thì dùng lời server.
+    return { message: preferApiMessage ? message : t('employer.campaigns.wizard.notDraftEditable'), step: null };
   }
   if (status === 400) {
+    if (/ADAPTIVE_BUDGET_TOO_SMALL/i.test(message)) {
+      const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
+      const body = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+      const nested = body.data && typeof body.data === 'object' ? (body.data as Record<string, unknown>) : body;
+      const numberFrom = (key: string, pattern: RegExp) => {
+        const value = nested[key];
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        return Number(message.match(pattern)?.[1] ?? NaN);
+      };
+      const need = numberFrom('need', /(?:need|required|cần)\D*(\d+)/i);
+      const have = numberFrom('have', /(?:have|available|hiện có)\D*(\d+)/i);
+      const questions = numberFrom('questions', /(?:questions|câu hỏi)\D*(\d+)/i);
+      const deep = numberFrom('deep', /(?:deep|depth|độ sâu)\D*(\d+)/i);
+      const safeNeed = Number.isFinite(need) ? need : 0;
+      const safeHave = Number.isFinite(have) ? have : questions;
+      const safeQuestions = Number.isFinite(questions) ? questions : safeHave;
+      const safeDeep = Number.isFinite(deep) ? deep : 0;
+      const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
+      return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount)).replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed)), step: 3 };
+    }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {
       const fallbackKey =
@@ -252,9 +379,59 @@ function mapSubmitError(
   };
 }
 
+function getDeployErrorData(error: unknown): { status?: number; raw: unknown; nested: Record<string, unknown> | null } {
+  const status = getApiStatusCode(error);
+  const raw = axios.isAxiosError(error) ? error.response?.data : undefined;
+  const body = raw && typeof raw === 'object' ? raw as Record<string, unknown> : null;
+  const nested = body?.data && typeof body.data === 'object' ? body.data as Record<string, unknown> : body;
+  return { status, raw, nested };
+}
+
+function adaptiveDeployWarning(nested: Record<string, unknown>, t: (key: string) => string): string {
+  const numberFrom = (key: string, pattern: RegExp) => {
+    const value = nested[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    return Number(String(nested.message ?? '').match(pattern)?.[1] ?? NaN);
+  };
+  const need = numberFrom('need', /(?:need|required|cần)\D*(\d+)/i);
+  const have = numberFrom('have', /(?:have|available|hiện có)\D*(\d+)/i);
+  const questions = numberFrom('questions', /(?:questions|câu hỏi)\D*(\d+)/i);
+  const deep = numberFrom('deep', /(?:deep|depth|độ sâu)\D*(\d+)/i);
+  const safeQuestions = Number.isFinite(questions) ? questions : 0;
+  const safeDeep = Number.isFinite(deep) ? deep : 0;
+  const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
+  return t('employer.campaigns.wizard.adaptiveBudgetTooSmall')
+    .replace('{questions}', String(safeQuestions))
+    .replace('{deep}', String(safeDeep))
+    .replace('{need}', String(Number.isFinite(need) ? need : 0))
+    .replace('{have}', String(Number.isFinite(have) ? have : safeQuestions))
+    .replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount))
+    .replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed));
+}
+
+export function getDeployWarnings(error: unknown, t: (key: string) => string): string[] {
+  const { status, raw, nested } = getDeployErrorData(error);
+  const code = typeof nested?.code === 'string' ? nested.code : '';
+  const warnings = Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
+  if (code === 'QUESTION_BANK_INVALID') return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings];
+  if (code === 'ADAPTIVE_BUDGET_TOO_SMALL' && nested) return [adaptiveDeployWarning(nested, t), ...warnings];
+  if (status === 409 && typeof raw === 'string' && raw.trim()) return [raw.trim()];
+  return [];
+}
+
+export function mapDeployError(error: unknown, t: (key: string) => string): string {
+  const warnings = getDeployWarnings(error, t);
+  if (warnings.length) return warnings.join(' ');
+  return t('employer.campaigns.wizard.deploy.deployFailed');
+}
+
 interface UseCampaignWizardArgs {
   campaign?: EmployerCampaign | null;
   mode: CampaignFormMode;
+  /** Bước mở đầu (0-based) — chỉ có hiệu lực ở chế độ edit; dùng cho deep-link `?step=` từ trang chi tiết. */
+  initialStep?: number;
   onCreateCampaign: (input: CampaignCreateRequest) => Promise<EmployerCampaign>;
   onUpdateCampaign: (campaignId: string, payload: CampaignUpdateRequest) => Promise<EmployerCampaign>;
   onUpdateQuestions: (
@@ -262,6 +439,7 @@ interface UseCampaignWizardArgs {
     questions: CampaignCreateQuestionRequest[],
   ) => Promise<EmployerCampaign>;
   onGenerateQuestions: (params: GenerateCampaignQuestionsParams) => Promise<EmployerCampaign>;
+  onImportQuestions: (campaignId: string, file: File) => Promise<import('../types/campaign.api.types').CampaignQuestionImportResult>;
   onUploadFiles: (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -275,30 +453,41 @@ interface UseCampaignWizardArgs {
     fileType: CampaignFileType,
   ) => Promise<BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
+  onDeployCampaign: (campaignId: string, emails: string[], options?: import('../types/campaignManagement.types').CampaignDeployOptions) => Promise<import('../types/campaignManagement.types').CampaignDeployResult>;
+  onSendInvitations: (campaignId: string, emails: string[]) => Promise<import('../types/campaign.api.types').CreateCampaignInvitationsResponse>;
 }
 
 export function useCampaignWizard({
   campaign,
   mode,
+  initialStep,
   onCreateCampaign,
   onUpdateCampaign,
   onUpdateQuestions,
   onGenerateQuestions,
+  onImportQuestions,
   onUploadFiles,
   onReplaceFiles,
   onDownloadFile,
   onAfterSubmit,
+  onDeployCampaign,
+  onSendInvitations,
 }: UseCampaignWizardArgs) {
   const { t } = useLanguage();
   const [state, setState] = useState<CampaignWizardPersistedState>(() =>
-    buildInitialState(campaign, mode),
+    buildInitialState(campaign, mode, initialStep),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [isSavingQuestions, setIsSavingQuestions] = useState(false);
   const [isEnsuringDraft, setIsEnsuringDraft] = useState(false);
+  const [isPersistingForPreview, setIsPersistingForPreview] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [partialDeploy, setPartialDeploy] = useState<PartialDeployState | null>(null);
+  const [invitationFailures, setInvitationFailures] = useState<FailedCampaignInvitation[]>([]);
+  const [invitationFailureReason, setInvitationFailureReason] = useState<string | null>(null);
+  const [canRetryInvitations, setCanRetryInvitations] = useState(true);
   const [metadataSaved, setMetadataSaved] = useState(false);
   const [questionsSaved, setQuestionsSaved] = useState(false);
   const requestLockRef = useRef(false);
@@ -306,6 +495,24 @@ export function useCampaignWizard({
   const hydratedIdRef = useRef<string | null>(campaign?.id ?? null);
   const baselineSnapshotRef = useRef<CampaignWizardSubmitSnapshot | null>(
     mode === 'edit' ? toSnapshot(state) : null,
+  );
+  // Vân tay bộ câu hỏi server đang giữ (xem `questionsPersistKey`). null = chưa từng xác nhận
+  // (create mode: draft POST có gửi câu hỏi nhưng state vẫn mang id client ⇒ phải PUT một lần).
+  const questionsPersistKeyRef = useRef<string | null>(
+    mode === 'edit' ? questionsPersistKey(state.questions) : null,
+  );
+  // SC2 · T9 — id câu đúc cục bộ (`client-…`) → id server, ghi mỗi lần `PUT …/questions` trả về. Card chấm thử
+  // giữ id câu từ lúc bấm nút (closure) nên sau khi lưu phải tra lại ở đây (`resolveQuestionId`), không thì
+  // `useRubricPreview` lọc id không-GUID thành null ⇒ BE chấm câu ĐẦU TIÊN thay cho câu HR đang đứng.
+  const questionIdAliasRef = useRef<Map<string, string>>(new Map());
+  const recordQuestionAliases = useCallback((sent: CampaignQuestion[], saved: CampaignQuestion[]) => {
+    for (const [localId, serverId] of buildQuestionIdAliases(sent, saved)) {
+      questionIdAliasRef.current.set(localId, serverId);
+    }
+  }, []);
+  const resolveQuestionId = useCallback(
+    (localId: string): string => questionIdAliasRef.current.get(localId) ?? localId,
+    [],
   );
 
   useEffect(() => {
@@ -315,6 +522,7 @@ export function useCampaignWizard({
     const next = buildInitialState(campaign, 'edit');
     setState(next);
     baselineSnapshotRef.current = toSnapshot(next);
+    questionsPersistKeyRef.current = questionsPersistKey(next.questions);
     setMetadataSaved(false);
     setQuestionsSaved(false);
   }, [campaign, mode]);
@@ -329,6 +537,13 @@ export function useCampaignWizard({
     return t(`employer.campaigns.form.domain.${state.info.domain}`);
   }, [state.info.domain, t]);
 
+  const jobCategory = useMemo(() => {
+    if (state.info.domain === 'backend') return 'BE';
+    if (state.info.domain === 'frontend') return 'FE';
+    if (state.info.domain === 'business-analyst') return 'BA';
+    return null;
+  }, [state.info.domain]);
+
   const campaignId = state.draftId ?? campaign?.id ?? null;
   const campaignStatus = campaign?.status ?? null;
   const isDraftEditable = mode === 'create' || campaignStatus === 'draft';
@@ -339,6 +554,14 @@ export function useCampaignWizard({
 
   const patchJd = useCallback((patch: Partial<JobDescriptionState>) => {
     setState((prev) => ({ ...prev, jd: { ...prev.jd, ...patch }, autosaveStatus: 'dirty' }));
+  }, []);
+
+  const patchHardFilters = useCallback((patch: Partial<CampaignHardFiltersState>) => {
+    setState((prev) => ({
+      ...prev,
+      hardFilters: { ...prev.hardFilters, ...patch },
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const patchCriteria = useCallback((patch: Partial<CriteriaFileState>) => {
@@ -376,21 +599,48 @@ export function useCampaignWizard({
     snapshot,
   });
 
+  // R2 — rubric đổi ⇒ cắt nhãn câu về ⊆ id tiêu chí còn tồn tại. HR xoá tiêu chí X ở bước 3: BE replace-all cắt X
+  // trong DB ngay ở PUT metadata, rồi PUT …/questions mang lại GUID X ⇒ 400 "không thuộc chiến dịch" — Triển khai
+  // hỏng mà không thấy vì sao. Cắt ở nguồn (state) + cắt lần nữa theo `saved.rubric` trước mọi PUT câu hỏi.
   const setRubric = useCallback((rubric: RubricCriterion[]) => {
-    setState((prev) => ({ ...prev, rubric, autosaveStatus: 'dirty' }));
+    setState((prev) => ({
+      ...prev,
+      rubric,
+      questions: pruneQuestionTargetIds(prev.questions, new Set(rubric.map((item) => item.id))),
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const resetRubric = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      rubric: decimalWeightsToPercent(DEFAULT_RUBRIC),
+      rubric: [],
+      // Bộ chuẩn nạp lại mang id `system-N` MỚI ⇒ mọi nhãn cũ đều trỏ tiêu chí không còn ⇒ cắt (null giữ null).
+      questions: pruneQuestionTargetIds(prev.questions, new Set()),
+      rubricCustomized: false,
       autosaveStatus: 'dirty',
       errorSteps: clearError(prev.errorSteps, 2),
     }));
   }, []);
 
+  const customizeRubric = useCallback(() => {
+    setState((prev) => ({ ...prev, rubricCustomized: true }));
+  }, []);
+
   const setQuestionCount = useCallback((questionCount: number) => {
     setState((prev) => ({ ...prev, questionCount }));
+  }, []);
+
+  const setQuestionsPerSession = useCallback((value: number | null) => {
+    setState((prev) => ({ ...prev, questionsPerSession: value, autosaveStatus: 'dirty' }));
+  }, []);
+
+  const setInviteEmails = useCallback((emails: string[]) => {
+    setState((prev) => ({
+      ...prev,
+      inviteEmails: Array.from(new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))),
+      autosaveStatus: 'dirty',
+    }));
   }, []);
 
   const setQuestions = useCallback((questions: CampaignQuestion[]) => {
@@ -401,6 +651,76 @@ export function useCampaignWizard({
       errorSteps: clearError(prev.errorSteps, 3),
     }));
   }, []);
+
+  /**
+   * R1 — MỘT chỗ ghép rubric server về state (id tạm → GUID, nhãn câu theo, GUID chết bị cắt), dùng chung cho
+   * mọi đường nhận rubric từ server. Trả bản ghép tính từ `local` (closure của caller — dựng payload PUT câu hỏi
+   * TỪ ĐÓ, không từ `state` cũ), đồng thời setState trên `prev` (state mới nhất).
+   */
+  const adoptSavedRubric = useCallback((
+    serverRubric: RubricCriterion[] | null | undefined,
+    local: { rubric: RubricCriterion[]; questions: CampaignQuestion[] },
+  ) => {
+    const next = adoptServerRubric(local, serverRubric);
+    setState((prev) => {
+      const own = adoptServerRubric({ rubric: prev.rubric, questions: prev.questions }, serverRubric);
+      if (own.rubric === prev.rubric && own.questions === prev.questions) return prev;
+      return { ...prev, rubric: own.rubric, questions: own.questions };
+    });
+    return next;
+  }, []);
+
+  /**
+   * R1(c) — nhãn câu còn id tạm lúc dựng payload PUT câu hỏi = đường lưu quên ghép id server. Hiện lỗi ở bước
+   * Câu hỏi (không phải "lưu thành công" rồi mất nhãn). Trả true khi đã xử lý.
+   */
+  const failIfUnresolvedCriteria = useCallback((error: unknown): boolean => {
+    if (!(error instanceof UnresolvedCriterionIdError)) return false;
+    setStepError(t('employer.campaigns.wizard.questions.unresolvedCriterionIds'));
+    setState((prev) => ({
+      ...prev,
+      currentStep: 3,
+      errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
+    }));
+    return true;
+  }, [t]);
+
+  /**
+   * R1(b) — đảm bảo nháp tồn tại VÀ thước đo trên server khớp state (PUT metadata khi lệch baseline), rồi trả
+   * snapshot ĐÃ ghép id server để caller dựng payload câu hỏi từ đó. Là phần "lưu thước đo" của `persistForPreview`,
+   * tách ra để Lưu câu hỏi / import CSV dùng chung — trước đây hai đường đó PUT câu hỏi mà KHÔNG PUT metadata,
+   * nên tiêu chí vừa thêm ở bước 3 chưa có GUID ⇒ nhãn trỏ vào nó bị omit.
+   * `onPhase('update')` báo caller đã qua bước tạo nháp (để map lỗi đúng pha).
+   */
+  const persistDraftMetadata = useCallback(async (
+    onPhase?: (phase: 'update') => void,
+  ): Promise<{ id: string; rubric: RubricCriterion[]; questions: CampaignQuestion[] }> => {
+    const { id, adopted } = await fileActions.ensureDraft();
+    onPhase?.('update');
+    const current: CampaignWizardSubmitSnapshot = adopted
+      ? { ...snapshot(), rubric: adopted.rubric, questions: adopted.questions }
+      : snapshot();
+    let rubric = current.rubric;
+    let questions = current.questions;
+    const baseline = baselineSnapshotRef.current;
+    if (!baseline || hasCampaignUpdateChanges(baseline, current)) {
+      const payload = baseline
+        ? buildDirtyUpdateRequest(baseline, current)
+        : buildCampaignUpdateRequest(current);
+      if (Object.keys(payload).length > 0) {
+        const saved = await onUpdateCampaign(id, payload);
+        // Ghép id tạm → id server theo TÊN từ chính response PUT (BE replace-all mint id mới cho tiêu chí không echo
+        // id) + cắt nhãn trỏ GUID chết. Không làm thì nhãn câu hỏi trỏ id tạm bị chặn ở PUT câu hỏi ngay bên dưới.
+        const next = adoptSavedRubric(saved.rubric, { rubric, questions });
+        rubric = next.rubric;
+        questions = next.questions;
+      }
+      // Baseline mang id ĐÃ resolve — không thì lần lưu kế thấy payload "có id" ≠ baseline "không id" và PUT metadata
+      // lại dù HR không đổi gì.
+      baselineSnapshotRef.current = { ...current, rubric, questions };
+    }
+    return { id, rubric, questions };
+  }, [adoptSavedRubric, fileActions, onUpdateCampaign, snapshot]);
 
   const generateQuestionsWithAi = useCallback(
     async (options?: { useDefaultCount?: boolean }) => {
@@ -417,39 +737,28 @@ export function useCampaignWizard({
       const useDefaultCount = Boolean(options?.useDefaultCount);
       let count: number | undefined;
       if (!useDefaultCount) {
-        const validated = validateGenerateCount(
-          state.questionCount,
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        const validated = validateGenerateCount(state.questionCount);
         if (!validated.ok) {
           const key =
-            validated.code === 'countCampaignMax'
-              ? 'employer.campaigns.campaignQuestions.validation.countCampaignMax'
-              : validated.code === 'countMaximum'
-                ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
-                : validated.code === 'countPositive'
-                  ? 'employer.campaigns.campaignQuestions.validation.countPositive'
-                  : validated.code === 'countInteger'
-                    ? 'employer.campaigns.campaignQuestions.validation.countInteger'
-                    : 'employer.campaigns.campaignQuestions.validation.countRequired';
+            validated.code === 'countMaximum'
+              ? 'employer.campaigns.campaignQuestions.validation.countMaximum'
+              : validated.code === 'countPositive'
+                ? 'employer.campaigns.campaignQuestions.validation.countPositive'
+                : validated.code === 'countInteger'
+                  ? 'employer.campaigns.campaignQuestions.validation.countInteger'
+                  : 'employer.campaigns.campaignQuestions.validation.countRequired';
           setStepError(
             t(key)
-              .replace('{{max}}', String(validated.max ?? effectiveMaxQuestions(null)))
-              .replace(
-                '{{maxQuestions}}',
-                String(validated.max ?? effectiveMaxQuestions(null)),
-              ),
+              .replace('{{max}}', String(validated.max ?? CAMPAIGN_AI_GENERATE_MAX)),
           );
           return;
         }
         count = validated.count;
       } else {
-        // Keep the system-default path inside the campaign limit as well.
-        // The API's omitted-count default can otherwise return more questions
-        // than the wizard allows, which leaves both Save and Continue disabled.
-        count = defaultGenerateCount(
-          state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-        );
+        // Số mặc định bám trần MỘT LƯỢT GỌI AI (backend MaxGeneratedQuestions = 20),
+        // KHÔNG phải trần ngân hàng đề (200) và cũng không phải settings.maxQuestions
+        // (số câu một buổi thi, CHECK 0..20 ở DB). Ba con số khác bản chất nhau.
+        count = defaultGenerateCount();
       }
 
       generateLockRef.current = true;
@@ -461,14 +770,16 @@ export function useCampaignWizard({
           campaignId: id,
           count,
         });
-        const generated = removePlaceholderQuestion(
-          updated.questions,
-          t('employer.campaigns.wizard.placeholderQuestion'),
-        );
+        const generatedQuestions = updated.questions.map((question) => ({
+          ...question,
+          isRequired: state.questionsPerSession == null,
+        }));
+        // Server giữ `updated.questions`; state giữ bản đã ép isRequired ⇒ lệch là PUT lại khi chấm thử.
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
         setState((prev) => ({
           ...prev,
           draftId: updated.id,
-          questions: generated.questions,
+          questions: generatedQuestions,
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
@@ -481,13 +792,8 @@ export function useCampaignWizard({
           },
         }));
         setQuestionsSaved(true);
-        const received = generated.questions.length;
-        if (generated.removedCount > 0) {
-          toast(
-            t('employer.campaigns.campaignQuestions.success.generatedPlaceholderRemoved')
-              .replace('{{count}}', String(received)),
-          );
-        } else if (received < count) {
+        const received = updated.questions.length;
+        if (received < count) {
           toast(
             t('employer.campaigns.campaignQuestions.success.generatedLimited')
               .replace('{{requested}}', String(count))
@@ -517,7 +823,7 @@ export function useCampaignWizard({
       onGenerateQuestions,
       state.jd,
       state.questionCount,
-      state.settings.maxQuestions,
+      state.questionsPerSession,
       t,
     ],
   );
@@ -532,9 +838,7 @@ export function useCampaignWizard({
       setStepError(t('employer.campaigns.campaignQuestions.validation.questionRequired'));
       return;
     }
-    const max = effectiveMaxQuestions(
-      state.settings.maxQuestions > 0 ? state.settings.maxQuestions : null,
-    );
+    const max = CAMPAIGN_QUESTION_HARD_MAX;
     if (state.questions.length > max) {
       setStepError(
         t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
@@ -545,11 +849,25 @@ export function useCampaignWizard({
       return;
     }
 
+    // R1(b) — thước đo phải HỢP LỆ vì lưu câu hỏi nay PUT metadata trước (cùng luật `persistForPreview`).
+    const validationMode = mode === 'create' && state.draftId ? 'edit' : mode;
+    for (const step of [0, 2]) {
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      if (errorKey) {
+        setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
+        setState((prev) => ({ ...prev, currentStep: step, errorSteps: Array.from(new Set([...prev.errorSteps, step])) }));
+        return;
+      }
+    }
+
     setIsSavingQuestions(true);
     setStepError(null);
     try {
-      const id = await fileActions.ensureDraftId();
-      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(state.questions));
+      // PUT metadata TRƯỚC → đọc `saved.rubric` → nhãn câu ghép GUID → RỒI mới dựng payload câu hỏi (R1b).
+      const { id, questions } = await persistDraftMetadata();
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(questions));
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(questions, updated.questions);
       setState((prev) => ({
         ...prev,
         draftId: updated.id,
@@ -560,6 +878,7 @@ export function useCampaignWizard({
       setQuestionsSaved(true);
       toast.success(t('employer.campaigns.campaignQuestions.success.saved'));
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
       setStepError(
         getGenerateQuestionsErrorMessage(
           error,
@@ -570,21 +889,61 @@ export function useCampaignWizard({
       setIsSavingQuestions(false);
     }
   }, [
-    fileActions,
+    failIfUnresolvedCriteria,
     isDraftEditable,
     isGeneratingQuestions,
     isSavingQuestions,
+    mode,
     onUpdateQuestions,
-    state.questions,
-    state.settings.maxQuestions,
+    persistDraftMetadata,
+    recordQuestionAliases,
+    state,
     t,
   ]);
 
+  const importQuestionsFromCsv = useCallback(async (file: File) => {
+    if (!isDraftEditable) throw new Error('CAMPAIGN_NOT_DRAFT');
+    const id = await fileActions.ensureDraftId();
+    return onImportQuestions(id, file);
+  }, [fileActions, isDraftEditable, onImportQuestions]);
+
+  const appendImportedQuestions = useCallback(async (items: CampaignQuestionImportItem[]) => {
+    if (!isDraftEditable || isSavingQuestions) return;
+    // R1(b) — PUT metadata trước để rubric có GUID; cột `targetCriteria` của file resolve vào rubric ĐÃ ghép (id
+    // server), không vào id tạm còn trong closure.
+    const { id, rubric, questions: current } = await persistDraftMetadata();
+    const isRequired = state.questionsPerSession == null;
+    const { accepted } = limitImportedQuestions(current.length, validImportedQuestions({ totalRows: items.length, items, errors: [] }));
+    // SC2 — truyền rubric hiện tại để cột `targetCriteria` (nếu file có) được resolve thành id thật
+    // ngay lúc import; không có cột đó thì `resolveTargetCriterionIds` trả `ids: null` (không đổi).
+    const nextQuestions = [...current, ...accepted.map((item) => importedItemToQuestion(item, isRequired, rubric))];
+    if (nextQuestions.length === current.length) return;
+    setIsSavingQuestions(true);
+    setStepError(null);
+    try {
+      const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(nextQuestions));
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(nextQuestions, updated.questions);
+      setState((prev) => ({
+        ...prev,
+        draftId: updated.id,
+        questions: updated.questions,
+        lastSavedAt: updated.updatedAt,
+        autosaveStatus: 'saved',
+      }));
+      setQuestionsSaved(true);
+      toast.success(t('employer.campaigns.campaignQuestions.success.imported'));
+    } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
+      throw error;
+    } finally {
+      setIsSavingQuestions(false);
+    }
+  }, [failIfUnresolvedCriteria, isDraftEditable, isSavingQuestions, onUpdateQuestions, persistDraftMetadata, recordQuestionAliases, setState, state.questionsPerSession, t]);
+
   const addManualQuestion = useCallback(() => {
     setState((prev) => {
-      const max = effectiveMaxQuestions(
-        prev.settings.maxQuestions > 0 ? prev.settings.maxQuestions : null,
-      );
+      const max = CAMPAIGN_QUESTION_HARD_MAX;
       if (prev.questions.length >= max) {
         setStepError(
           t('employer.campaigns.campaignQuestions.validation.questionLimit').replace(
@@ -604,7 +963,7 @@ export function useCampaignWizard({
             skill: '',
             difficulty: 'middle' as const,
             source: 'manual' as const,
-            isRequired: true,
+            isRequired: prev.questionsPerSession == null,
           },
         ],
         autosaveStatus: 'dirty',
@@ -644,19 +1003,20 @@ export function useCampaignWizard({
   }, []);
 
   const goToStep = useCallback((step: number) => {
+    if (!canNavigateToWizardStep(step, state.currentStep, state.completedSteps)) return;
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, step)),
     }));
     setStepError(null);
-  }, []);
+  }, [state.completedSteps, state.currentStep]);
 
   const goNext = useCallback(async () => {
     if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions || isEnsuringDraft) return;
     const step = state.currentStep;
     const errorKey = validateCampaignWizardStep(state, step, { mode });
     if (errorKey) {
-      setStepError(t(errorKey));
+      setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         errorSteps: Array.from(new Set([...prev.errorSteps, prev.currentStep])),
@@ -721,19 +1081,19 @@ export function useCampaignWizard({
   ]);
 
   /** POST create only when no Draft exists yet (file upload may have created one already). */
-  const handleCreateCampaign = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return;
+  const handleCreateCampaign = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting || mode !== 'create' || state.draftId) return null;
 
     const validation = validateAllCampaignWizardSteps(state, { mode: 'create' });
     if (!validation.isValid) {
       const first = validation.errors[0];
-      setStepError(t(first.messageKey));
+      setStepError(t(first.messageKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -741,21 +1101,44 @@ export function useCampaignWizard({
     setActionError(null);
     setStepError(null);
 
+    let phase: 'create' | 'questions' = 'create';
     try {
-      const request = buildCampaignCreateRequest(snapshot());
+      const current = snapshot();
+      const request = buildCampaignCreateRequest(current);
       const created = await onCreateCampaign(request);
-
+      // Ghi `draftId` NGAY khi nháp đã tồn tại trên server — TRƯỚC nhánh PUT câu hỏi. PUT hỏng (mạng/400/id tạm)
+      // mà chưa ghi thì lần bấm Triển khai kế lại POST ⇒ campaign TRÙNG (Tester RISK-1); có id thì lần sau đi
+      // đường `handleUpdateDraft` (PUT metadata + câu hỏi lên đúng nháp này).
       setState((prev) => ({
         ...prev,
         draftId: created.id,
         autosaveStatus: 'saved',
+        lastSavedAt: created.updatedAt ?? new Date().toISOString(),
+      }));
+      // R1(a) — POST bỏ nhãn id tạm có chủ đích (tiêu chí chưa có GUID); ghép `created.rubric` rồi PUT câu hỏi
+      // mang GUID nếu có nhãn — không thì chip HR vừa gắn mất ngay ở lượt Triển khai đầu tiên của create mode.
+      const adopted = adoptSavedRubric(created.rubric, { rubric: current.rubric, questions: current.questions });
+      let result = created;
+      if (adopted.questions.some((question) => question.targetCriterionIds?.length)) {
+        phase = 'questions';
+        const updated = await onUpdateQuestions(created.id, mapQuestionsToApiRequest(adopted.questions));
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+        recordQuestionAliases(adopted.questions, updated.questions);
+        result = updated;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(t('employer.campaigns.wizard.createSuccess'));
-      onAfterSubmit(created);
+      if (redirect) onAfterSubmit(result);
+      return result;
     } catch (error) {
-      const mapped = mapSubmitError(error, t, 'create');
+      if (failIfUnresolvedCriteria(error)) return null;
+      const mapped = mapSubmitError(error, t, phase);
       setActionError(mapped.message);
       if (mapped.step != null) {
         setState((prev) => ({
@@ -764,23 +1147,24 @@ export function useCampaignWizard({
           errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
         }));
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
-  }, [isSubmitting, mode, onAfterSubmit, onCreateCampaign, snapshot, state, t]);
+  }, [adoptSavedRubric, failIfUnresolvedCriteria, isSubmitting, mode, onAfterSubmit, onCreateCampaign, onUpdateQuestions, recordQuestionAliases, snapshot, state, t]);
 
   /** Save Draft metadata + questions — used for edit mode and create-after-ensureDraft. */
-  const handleUpdateDraft = useCallback(async () => {
-    if (requestLockRef.current || isSubmitting) return;
-    if (mode === 'create' && !state.draftId) return;
+  const handleUpdateDraft = useCallback(async (redirect = true): Promise<EmployerCampaign | null> => {
+    if (requestLockRef.current || isSubmitting) return null;
+    if (mode === 'create' && !state.draftId) return null;
     if (!campaignId) {
       setActionError(t('employer.campaigns.wizard.campaignNotFound'));
-      return;
+      return null;
     }
     if (!isDraftEditable) {
       setActionError(t('employer.campaigns.wizard.notDraftEditable'));
-      return;
+      return null;
     }
 
     const validation = validateAllCampaignWizardSteps(state, {
@@ -788,13 +1172,13 @@ export function useCampaignWizard({
     });
     if (!validation.isValid) {
       const first = validation.errors[0];
-      setStepError(t(first.messageKey));
+      setStepError(t(first.messageKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
         ...prev,
         currentStep: first.step,
         errorSteps: Array.from(new Set([...prev.errorSteps, ...validation.errors.map((e) => e.step)])),
       }));
-      return;
+      return null;
     }
 
     requestLockRef.current = true;
@@ -802,8 +1186,7 @@ export function useCampaignWizard({
     setActionError(null);
     setStepError(null);
 
-    const questionPayload = mapQuestionsToApiRequest(state.questions);
-    if (questionPayload.length === 0) {
+    if (!state.questions.some((question) => question.prompt.trim())) {
       requestLockRef.current = false;
       setIsSubmitting(false);
       setStepError(t('employer.campaigns.wizard.questionsRequired'));
@@ -812,26 +1195,36 @@ export function useCampaignWizard({
         currentStep: 3,
         errorSteps: Array.from(new Set([...prev.errorSteps, 3])),
       }));
-      return;
+      return null;
     }
 
     let metadataOk = metadataSaved;
     const currentSnapshot = snapshot();
+    // R1(b) — payload câu hỏi dựng SAU PUT metadata, từ bản đã ghép `saved.rubric` (trước đây dựng TRƯỚC và vứt
+    // response ⇒ nhãn trỏ tiêu chí vừa thêm ở bước 3 bị omit ⇒ câu lưu `null`, chip tắt im lặng khi Triển khai).
+    let questionsToPersist = state.questions;
 
     try {
       if (!metadataOk) {
         const dirtyPayload = baselineSnapshotRef.current
           ? buildDirtyUpdateRequest(baselineSnapshotRef.current, currentSnapshot)
           : buildCampaignUpdateRequest(currentSnapshot);
+        let rubricSnapshot = currentSnapshot.rubric;
         if (Object.keys(dirtyPayload).length > 0) {
-          await onUpdateCampaign(campaignId, dirtyPayload);
+          const saved = await onUpdateCampaign(campaignId, dirtyPayload);
+          const adopted = adoptSavedRubric(saved.rubric, { rubric: rubricSnapshot, questions: questionsToPersist });
+          rubricSnapshot = adopted.rubric;
+          questionsToPersist = adopted.questions;
         }
         metadataOk = true;
         setMetadataSaved(true);
-        baselineSnapshotRef.current = currentSnapshot;
+        baselineSnapshotRef.current = { ...currentSnapshot, rubric: rubricSnapshot, questions: questionsToPersist };
       }
 
+      const questionPayload = mapQuestionsToApiRequest(questionsToPersist);
       const updated = await onUpdateQuestions(campaignId, questionPayload);
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+      recordQuestionAliases(questionsToPersist, updated.questions);
       setQuestionsSaved(true);
       setMetadataSaved(false);
       setQuestionsSaved(false);
@@ -839,15 +1232,17 @@ export function useCampaignWizard({
         ...prev,
         autosaveStatus: 'saved',
         lastSavedAt: new Date().toISOString(),
-        completedSteps: markCompleted(prev.completedSteps, 6),
+        completedSteps: markCompleted(prev.completedSteps, 7),
       }));
       toast.success(
         mode === 'create'
           ? t('employer.campaigns.wizard.createSuccess')
           : t('employer.campaigns.wizard.updateSuccess'),
       );
-      onAfterSubmit(updated);
+      if (redirect) onAfterSubmit(updated);
+      return updated;
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return null;
       if (metadataOk && !questionsSaved) {
         setMetadataSaved(true);
         setQuestionsSaved(false);
@@ -871,12 +1266,15 @@ export function useCampaignWizard({
           }));
         }
       }
+      return null;
     } finally {
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
   }, [
+    adoptSavedRubric,
     campaignId,
+    failIfUnresolvedCriteria,
     isDraftEditable,
     isSubmitting,
     metadataSaved,
@@ -885,6 +1283,7 @@ export function useCampaignWizard({
     onUpdateCampaign,
     onUpdateQuestions,
     questionsSaved,
+    recordQuestionAliases,
     snapshot,
     state,
     t,
@@ -898,11 +1297,13 @@ export function useCampaignWizard({
     try {
       const questionPayload = mapQuestionsToApiRequest(state.questions);
       const updated = await onUpdateQuestions(campaignId, questionPayload);
+      questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
       setMetadataSaved(false);
       setQuestionsSaved(false);
       toast.success(t('employer.campaigns.wizard.updateSuccess'));
       onAfterSubmit(updated);
     } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return;
       setActionError(t('employer.campaigns.wizard.partialUpdateQuestionsFailed'));
       const mapped = mapSubmitError(error, t, 'questions');
       if (mapped.step != null) {
@@ -916,15 +1317,204 @@ export function useCampaignWizard({
       requestLockRef.current = false;
       setIsSubmitting(false);
     }
-  }, [campaignId, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
+  }, [campaignId, failIfUnresolvedCriteria, isSubmitting, metadataSaved, onAfterSubmit, onUpdateQuestions, state.questions, t]);
 
-  const handleFinalSubmit = useCallback(() => {
-    if (mode === 'create' && !state.draftId) {
-      void handleCreateCampaign();
-      return;
+  /**
+   * CAMP-19 — "lưu rồi mới chấm". Wizard KHÔNG PUT thước đo/câu hỏi lên server cho tới lúc Phát hành
+   * (`autosaveStatus: 'dirty'` chỉ là nhãn), trong khi BE chấm thử bộ ĐANG LƯU trong DB ⇒ bấm chấm
+   * thử mà chưa lưu là BE chấm bộ cũ còn màn hình hiện bộ mới — sai im lặng.
+   *
+   * Thứ tự: validate bước 0+2+3 (KHÔNG `validateAllCampaignWizardSteps` — nó kéo cả bước 5, mà
+   * `maxCandidates` mặc định null nên sẽ chặn oan người còn đang ở bước tiêu chí) → ensureDraft
+   * → PUT metadata nếu có thay đổi thật → PUT câu hỏi nếu vân tay lệch → trả campaignId.
+   *
+   * CỐ Ý không đụng `metadataSaved`/`questionsSaved`: đó là cờ RETRY sau khi Phát hành hỏng nửa
+   * chừng — `handleUpdateDraft` đọc `metadataSaved === true` nghĩa là "bỏ qua PUT metadata", nên
+   * bật nó ở đây là làm rơi im lặng mọi chỉnh sửa HR gõ SAU lần chấm thử, đúng lúc bấm Phát hành.
+   * Ghi `baselineSnapshotRef` là đủ: diff lần Phát hành sẽ tự nhỏ lại.
+   */
+  const persistForPreview = useCallback(async (): Promise<string | null> => {
+    if (
+      requestLockRef.current
+      || isSubmitting
+      || isPersistingForPreview
+      || isGeneratingQuestions
+      || isSavingQuestions
+      || isEnsuringDraft
+    ) {
+      return null;
     }
-    void handleUpdateDraft();
-  }, [handleCreateCampaign, handleUpdateDraft, mode, state.draftId]);
+    if (!isDraftEditable) {
+      setActionError(t('employer.campaigns.wizard.notDraftEditable'));
+      return null;
+    }
+
+    const validationMode = mode === 'create' && state.draftId ? 'edit' : mode;
+    // Bước 0 đi kèm vì cả hai đường ghi đều cần nó: `ensureDraftId` tự validate rồi ném Error mang
+    // i18n key (rơi vào "tạo thất bại" chung nếu không bắt trước), còn `buildCampaignUpdateRequest`
+    // ném DOMAIN_REQUIRED. Mode-aware nên edit không bị chặn bởi ngày bắt đầu đã qua.
+    // Bước 3 chỉ validate khi ĐÃ có câu hỏi: "AI đề xuất mốc" (CAMP-16) cũng đi qua đường lưu này ở ngay bước 3
+    // của wizard tạo mới — lúc chưa có câu hỏi nào — mà BE `levels/suggest` chỉ cần tiêu chí. Chấm thử thì cần câu hỏi,
+    // nhưng card đã chặn ở FE (`noQuestions`) trước khi gọi tới đây ⇒ không có đường nào lưu rồi POST hụt.
+    const stepsToValidate = state.questions.length > 0 ? [0, 2, 3] : [0, 2];
+    for (const step of stepsToValidate) {
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      if (errorKey) {
+        setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
+        setState((prev) => ({
+          ...prev,
+          currentStep: step,
+          errorSteps: Array.from(new Set([...prev.errorSteps, step])),
+        }));
+        return null;
+      }
+    }
+
+    requestLockRef.current = true;
+    setIsPersistingForPreview(true);
+    setActionError(null);
+    setStepError(null);
+    let phase: 'create' | 'update' | 'questions' = 'create';
+    try {
+      // SC2 · T9 — bộ câu hỏi đem PUT ở pha sau; nhãn tiêu chí trong đó có thể trỏ vào id TẠM của tiêu chí
+      // vừa thêm ở bước 3, và chỉ resolve được sau khi PUT metadata trả về id server (xem `persistDraftMetadata`).
+      const { id, questions: questionsToPersist } = await persistDraftMetadata((next) => { phase = next; });
+
+      phase = 'questions';
+      let savedAt: string | undefined;
+      if (questionsToPersist.length > 0 && questionsPersistKey(questionsToPersist) !== questionsPersistKeyRef.current) {
+        const updated = await onUpdateQuestions(id, mapQuestionsToApiRequest(questionsToPersist));
+        questionsPersistKeyRef.current = questionsPersistKey(updated.questions);
+        recordQuestionAliases(questionsToPersist, updated.questions);
+        savedAt = updated.updatedAt;
+        setState((prev) => ({
+          ...prev,
+          draftId: updated.id,
+          // id server thay id client — `questionId` của lượt chấm thử phải là id ĐÃ LƯU.
+          questions: updated.questions,
+        }));
+      }
+
+      const lastSavedAt = savedAt ?? new Date().toISOString();
+      setState((prev) => ({ ...prev, autosaveStatus: 'saved', lastSavedAt }));
+      return id;
+    } catch (error) {
+      if (failIfUnresolvedCriteria(error)) return null;
+      const mapped = mapSubmitError(error, t, phase);
+      setActionError(mapped.message);
+      if (mapped.step != null) {
+        setState((prev) => ({
+          ...prev,
+          currentStep: mapped.step!,
+          errorSteps: Array.from(new Set([...prev.errorSteps, mapped.step!])),
+        }));
+      }
+      return null;
+    } finally {
+      requestLockRef.current = false;
+      setIsPersistingForPreview(false);
+    }
+  }, [
+    failIfUnresolvedCriteria,
+    isDraftEditable,
+    isEnsuringDraft,
+    isGeneratingQuestions,
+    isPersistingForPreview,
+    isSavingQuestions,
+    isSubmitting,
+    mode,
+    onUpdateQuestions,
+    persistDraftMetadata,
+    recordQuestionAliases,
+    state,
+    t,
+  ]);
+
+  const handleFinalSubmit = useCallback(async () => {
+    const saved = mode === 'create' && !state.draftId
+      ? await handleCreateCampaign(false)
+      : await handleUpdateDraft(false);
+    if (!saved) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setInvitationFailures([]);
+    setInvitationFailureReason(null);
+    setCanRetryInvitations(true);
+    try {
+      // T13 R2 — "Mở ngay khi triển khai": đọc lựa chọn HR (+ blocker) từ store của bước Review theo
+      // ĐÚNG key lúc HR tick (`state.draftId` TRƯỚC khi handleCreateCampaign gán id mới, cùng giờ mở).
+      const startNow = resolveStartNowOnDeploy({
+        ...readCampaignDeployOptions(startNowChoiceKey(state.draftId, state.info.startsAt)),
+        startsAt: state.info.startsAt,
+      });
+      const deployed = await onDeployCampaign(saved.id, state.inviteEmails, { startNow });
+      // Không phải deploy hỏng: publish + mời đã chạy, chỉ bước mở ngay hụt ⇒ toast trung tính,
+      // trỏ HR về trang Chi tiết (nút "Mở ngay") thay vì banner đỏ.
+      if (deployed.startNow === 'failed') toast(t('employer.campaigns.wizard.deploy.startNowFailedAfterDeploy'), { icon: '⚠️', duration: 8000 });
+      const failedInvitations = deployed.invitations?.failed ?? [];
+      if (failedInvitations.length > 0) {
+        setPartialDeploy({ campaignId: saved.id, campaign: deployed.campaign });
+        setInvitationFailures(failedInvitations);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
+      setPartialDeploy(null);
+      toast.success(t('employer.campaigns.wizard.deploy.deploySuccess'));
+      onAfterSubmit(deployed.campaign);
+    } catch (error) {
+      if (error instanceof CampaignInvitationDeployError) {
+        setPartialDeploy({ campaignId: saved.id, campaign: error.campaign });
+        setInvitationFailures([]);
+        setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+        setCanRetryInvitations(![400, 403].includes(error.status ?? -1));
+        setActionError(null);
+        return;
+      }
+      const status = getApiStatusCode(error);
+      setPartialDeploy(null);
+      setInvitationFailures([]);
+      setInvitationFailureReason(null);
+      setCanRetryInvitations(true);
+      setActionError(status === 409
+          ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
+            ? error.response.data.trim()
+            : t('employer.campaigns.wizard.deploy.deployConflict'))
+          : mapDeployError(error, t));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [handleCreateCampaign, handleUpdateDraft, mode, onAfterSubmit, onDeployCampaign, state.draftId, state.info.startsAt, state.inviteEmails, t]);
+
+  const retryDeployInvitations = useCallback(async () => {
+    const pendingDeploy = partialDeploy;
+    const retryRequest = buildInvitationRetryRequest(pendingDeploy, state.inviteEmails);
+    if (!retryRequest || !pendingDeploy || isSubmitting || !canRetryInvitations) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setInvitationFailureReason(null);
+    try {
+      const invitations = await onSendInvitations(retryRequest.campaignId, retryRequest.emails);
+      if (invitations.failed.length > 0) {
+        setInvitationFailures(invitations.failed);
+        setInvitationFailureReason(null);
+        setCanRetryInvitations(true);
+        return;
+      }
+      toast.success(t('employer.campaigns.wizard.deploy.invitationRetrySuccess'));
+      onAfterSubmit(pendingDeploy.campaign);
+      setPartialDeploy(null);
+      setInvitationFailures([]);
+      setCanRetryInvitations(true);
+    } catch (error) {
+      const status = getInvitationErrorStatus(error);
+      setInvitationFailures([]);
+      setInvitationFailureReason(getInvitationFailureMessage(error, t('employer.campaigns.wizard.deploy.invitationFailed')));
+      setCanRetryInvitations(![400, 403].includes(status ?? -1));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [canRetryInvitations, isSubmitting, onAfterSubmit, onSendInvitations, partialDeploy, state.inviteEmails, t]);
 
   return {
     state,
@@ -949,8 +1539,10 @@ export function useCampaignWizard({
     isDraftEditable,
     totalWeight,
     domainLabel,
+    jobCategory,
     patchInfo,
     patchJd,
+    patchHardFilters,
     patchCriteria,
     patchSettings,
     selectJdFile: fileActions.selectJdFile,
@@ -962,10 +1554,15 @@ export function useCampaignWizard({
     canReplaceFiles: fileActions.canReplaceFiles,
     setRubric,
     resetRubric,
+    customizeRubric,
     setQuestionCount,
+    setQuestionsPerSession,
+    setInviteEmails,
     setQuestions,
     generateQuestionsWithAi,
     saveQuestionsNow,
+    importQuestionsFromCsv,
+    appendImportedQuestions,
     addManualQuestion,
     updateQuestion,
     removeQuestion,
@@ -975,6 +1572,16 @@ export function useCampaignWizard({
     goToStep,
     handleFinalSubmit,
     retryQuestionsUpdate,
+    persistForPreview,
+    isPersistingForPreview,
+    resolveQuestionId,
+    campaignId,
+    campaignStatus,
+    partialDeploy,
+    invitationFailures,
+    invitationFailureReason,
+    canRetryInvitations,
+    retryDeployInvitations,
   };
 }
 

@@ -39,7 +39,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
         <dl className="grid gap-4 sm:grid-cols-2">
           {rows.map((row) => (
             <div key={row.label} className="flex gap-3">
-              <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-muted-foreground">
+              <span className="frame-satin-soft flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] text-muted-foreground">
                 <row.icon className="size-4" aria-hidden />
               </span>
               <div className="min-w-0 space-y-1">

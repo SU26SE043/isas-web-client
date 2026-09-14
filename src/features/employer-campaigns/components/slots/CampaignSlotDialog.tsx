@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignSlotRequest, CampaignSlotResponse } from '../../types/campaign.api.types';
 import {
-  getCampaignSlotErrorKey,
+  resolveCampaignSlotErrorMessage,
   toCampaignSlotRequest,
   toSlotDatetimeLocal,
   validateCampaignSlot,
@@ -56,12 +56,14 @@ export function CampaignSlotDialog({
 }: CampaignSlotDialogProps) {
   const { t } = useLanguage();
   const [values, setValues] = useState(() => defaultValues(slot));
-  const [errorKey, setErrorKey] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);   // khoá i18n (validate phía client)
+  const [errorText, setErrorText] = useState<string | null>(null); // câu server (400 nêu lý do)
 
   useEffect(() => {
     if (!open) return;
     setValues(defaultValues(slot));
     setErrorKey(null);
+    setErrorText(null);
   }, [open, slot]);
 
   const submit = async (event: React.FormEvent) => {
@@ -69,13 +71,15 @@ export function CampaignSlotDialog({
     const code = validateCampaignSlot(values, slot?.assignedCount ?? 0);
     if (code) {
       setErrorKey(`employer.campaigns.slots.validation.${code}`);
+      setErrorText(null);
       return;
     }
     try {
       await onSave(toCampaignSlotRequest(values));
       onOpenChange(false);
     } catch (error) {
-      setErrorKey(getCampaignSlotErrorKey(error, slot ? 'update' : 'create'));
+      setErrorKey(null);
+      setErrorText(resolveCampaignSlotErrorMessage(error, slot ? 'update' : 'create', t));
     }
   };
 
@@ -98,7 +102,7 @@ export function CampaignSlotDialog({
                 type="datetime-local"
                 required
                 value={values.startsAt}
-                aria-invalid={Boolean(errorKey)}
+                aria-invalid={Boolean(errorKey || errorText)}
                 onChange={(event) => setValues((prev) => ({ ...prev, startsAt: event.target.value }))}
               />
             </div>
@@ -109,7 +113,7 @@ export function CampaignSlotDialog({
                 type="datetime-local"
                 required
                 value={values.endsAt}
-                aria-invalid={Boolean(errorKey)}
+                aria-invalid={Boolean(errorKey || errorText)}
                 onChange={(event) => setValues((prev) => ({ ...prev, endsAt: event.target.value }))}
               />
             </div>
@@ -124,7 +128,7 @@ export function CampaignSlotDialog({
               min={slot?.assignedCount ? Math.max(1, slot.assignedCount) : 1}
               step={1}
               value={values.capacity}
-              aria-invalid={Boolean(errorKey)}
+              aria-invalid={Boolean(errorKey || errorText)}
               onChange={(event) => setValues((prev) => ({ ...prev, capacity: event.target.value }))}
             />
             {slot?.assignedCount ? (
@@ -134,7 +138,9 @@ export function CampaignSlotDialog({
             ) : null}
           </div>
 
-          {errorKey ? <p role="alert" className="text-sm text-error">{t(errorKey)}</p> : null}
+          {errorKey || errorText ? (
+            <p role="alert" className="text-sm text-error">{errorText ?? t(errorKey!)}</p>
+          ) : null}
 
           <DialogFooter>
             <Button type="button" variant="outline" disabled={isSaving} onClick={() => onOpenChange(false)}>

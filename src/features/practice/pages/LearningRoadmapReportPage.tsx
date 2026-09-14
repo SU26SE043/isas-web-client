@@ -8,6 +8,7 @@ import { SkillRadarChart } from '../components/SkillRadarChart';
 import { RoadmapProgressChart } from '../components/RoadmapProgressChart';
 import { LevelEvaluationRow, ListBlock } from '../components/RoadmapReportBlocks';
 import { roadmapPracticeService } from '../services/roadmapPractice.service';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function LearningRoadmapReportPage() {
   const { roadmapId = '' } = useParams();
@@ -30,7 +31,7 @@ export function LearningRoadmapReportPage() {
 
   if (isError || !data) {
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           title={t('practice.learningPath.errorTitle')}
@@ -74,16 +75,8 @@ export function LearningRoadmapReportPage() {
   const threshold = data.levelEvaluation[0]?.levelThreshold ?? null;
 
   return (
-    <div className="page-container page-section min-h-full space-y-6 py-8">
-      <header className="space-y-2">
-        <p className="text-caption text-muted-foreground">{kindLabel}</p>
-        <h1 className="heading-primary text-3xl text-foreground">
-          {t('practice.learningPath.roadmapReportTitle')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('practice.learningPath.roadmapReportSubtitle')}
-        </p>
-      </header>
+    <div className="app-page min-h-full space-y-6">
+      <PageHeader eyebrow={kindLabel} title={t('practice.learningPath.roadmapReportTitle')} description={t('practice.learningPath.roadmapReportSubtitle')} />
 
       {isInterim ? (
         <section

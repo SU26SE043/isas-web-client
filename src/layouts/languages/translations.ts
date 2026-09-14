@@ -6,6 +6,8 @@ export const layoutTranslations: TranslationDictionary = {
     'language.vietnamese': 'Tiếng Việt',
     'language.english': 'Tiếng Anh',
 
+    'sidebar.expand': 'Mở rộng thanh bên',
+    'sidebar.collapse': 'Thu gọn thanh bên',
     'nav.home': 'Trang chủ',
     'nav.features': 'Tính năng',
     'nav.pricing': 'Bảng giá',
@@ -16,7 +18,6 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.profile': 'Cá nhân',
     'nav.signIn': 'Đăng nhập',
     'nav.signUp': 'Đăng ký',
-    'nav.getStarted': 'Bắt đầu ngay',
     'nav.logout': 'Đăng xuất',
 
     'footer.description': 'Nền tảng tiên phong trong việc ứng dụng AI vào đánh giá năng lực và huấn luyện phỏng vấn tại Việt Nam.',
@@ -26,8 +27,6 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.pricing': 'Bảng giá',
     'footer.enterprise': 'Doanh nghiệp',
     'footer.support': 'Hỗ trợ',
-    'footer.helpCenter': 'Trung tâm trợ giúp',
-    'footer.guide': 'Hướng dẫn sử dụng',
     'footer.privacy': 'Chính sách bảo mật',
     'footer.terms': 'Điều khoản dịch vụ',
     'footer.newsletter': 'Bản tin',
@@ -35,23 +34,14 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.emailPlaceholder': 'Email của bạn',
     'footer.subscribe': 'Đăng ký',
     'footer.rightsReserved': 'PIpraint. Bảo lưu mọi quyền.',
-
-    'common.accessDenied': 'Không có quyền truy cập',
-    'common.accessDeniedDescription': 'Vai trò của bạn không được phép truy cập trang này.',
-    'common.goBack': 'Quay lại',
-    'common.perPage': '/ trang',
-    'common.itemsPerPage': 'Số mục mỗi trang',
-
-    'route.authShell': 'Nhóm route xác thực — shell Phase 0',
-    'route.enterpriseShell': 'Nhóm route Doanh nghiệp — shell Phase 0',
-    'route.adminShell': 'Nhóm route quản trị — shell Phase 0',
-    'auth.loginPrompt': 'Đăng nhập để tiếp tục sử dụng PIpraint.',
   },
   en: {
     'language.label': 'Language',
     'language.vietnamese': 'Tiếng Việt',
     'language.english': 'English',
 
+    'sidebar.expand': 'Expand sidebar',
+    'sidebar.collapse': 'Collapse sidebar',
     'nav.home': 'Home',
     'nav.features': 'Features',
     'nav.pricing': 'Pricing',
@@ -62,7 +52,6 @@ export const layoutTranslations: TranslationDictionary = {
     'nav.profile': 'Profile',
     'nav.signIn': 'Sign in',
     'nav.signUp': 'Sign up',
-    'nav.getStarted': 'Get started',
     'nav.logout': 'Logout',
 
     'footer.description': 'A pioneering platform applying AI to competency assessment and interview coaching in Vietnam.',
@@ -72,8 +61,6 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.pricing': 'Pricing',
     'footer.enterprise': 'Enterprise',
     'footer.support': 'Support',
-    'footer.helpCenter': 'Help center',
-    'footer.guide': 'User guide',
     'footer.privacy': 'Privacy policy',
     'footer.terms': 'Terms of service',
     'footer.newsletter': 'Newsletter',
@@ -81,16 +68,5 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.emailPlaceholder': 'Your email',
     'footer.subscribe': 'Subscribe',
     'footer.rightsReserved': 'PIpraint. All rights reserved.',
-
-    'common.accessDenied': 'Access denied',
-    'common.accessDeniedDescription': 'Your role is not allowed to access this page.',
-    'common.goBack': 'Go back',
-    'common.perPage': 'per page',
-    'common.itemsPerPage': 'Items per page',
-
-    'route.authShell': 'Auth route group — Phase 0 shell',
-    'route.enterpriseShell': 'Enterprise route group — Phase 0 shell',
-    'route.adminShell': 'Admin route group — Phase 0 shell',
-    'auth.loginPrompt': 'Sign in to continue to PIpraint.',
   },
 };

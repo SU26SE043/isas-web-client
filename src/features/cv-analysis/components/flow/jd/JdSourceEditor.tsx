@@ -120,6 +120,8 @@ export function JdSourceEditor({ workspace, highlight, onClearHighlight }: JdSou
           {highlight ? (
             <>
               {jdText.slice(0, highlight.start)}
+              {/* radius-exempt: <mark> là highlight chữ, không phải control/surface/pill.
+                  Bán kính 12px trên dòng chữ ~21px, lại vỡ thành nhiều mảnh khi xuống dòng. */}
               <mark ref={markRef} className="rounded-sm bg-info/35 text-transparent">
                 {jdText.slice(highlight.start, highlight.end)}
               </mark>

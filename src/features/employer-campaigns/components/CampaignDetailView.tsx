@@ -1,17 +1,14 @@
-/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 */
 import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
   CalendarDays,
   Clock3,
   LayoutGrid,
-  ListChecks,
   MessageSquareText,
   Settings,
   Trophy,
   UsersRound,
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
@@ -20,6 +17,10 @@ import { CampaignSlotsPanel } from './slots/CampaignSlotsPanel';
 import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
+import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
+import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
+import { useCampaignSlots } from '../hooks/useCampaignSlots';
+import { CampaignDetailQuestionsSection } from './detail/CampaignDetailQuestionsSection';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -30,6 +31,10 @@ interface CampaignDetailViewProps {
   onChangeStatus: (status: CampaignStatusUpdateRequest['status']) => Promise<void>;
   onDelete?: () => Promise<void>;
   embedded?: boolean;
+  onStartNow?: () => Promise<void>;
+  startingNow?: boolean;
+  /** Mở wizard ở bước Tiêu chí để khai mốc (chỉ Draft — wizard từ chối campaign đã mở). */
+  onEditCriteria?: () => void;
 }
 
 export function CampaignDetailView({
@@ -40,8 +45,15 @@ export function CampaignDetailView({
   onChangeStatus,
   onDelete,
   embedded = false,
+  onStartNow,
+  startingNow = false,
+  onEditCriteria,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
+  // T13 R2 — cùng query key với CampaignSlotsPanel bên dưới (React Query dedup, không thêm request):
+  // "Mở ngay" phải nhìn thấy ca để khoá. Đang tải/lỗi ⇒ 0 (backend vẫn chặn 409 làm lớp hai).
+  const slotsQuery = useCampaignSlots(campaign.id);
+  const slotCount = slotsQuery.data?.length ?? 0;
   const isDraft = campaign.status === 'draft';
   const hasDetailActions =
     campaign.status === 'draft' ||
@@ -69,29 +81,7 @@ export function CampaignDetailView({
           />
         </div> : null}
 
-        {isDraft ? (
-          <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
-            {t('employer.campaigns.detail.inviteAfterPublish')}
-          </p>
-        ) : null}
-
-        {published ? (
-          <Alert variant="success">
-            <AlertDescription>{t('employer.campaigns.detail.publishSuccess')}</AlertDescription>
-          </Alert>
-        ) : null}
-        {warnings.length > 0 ? (
-          <Alert variant="warning">
-            <AlertDescription>
-              <p className="font-medium">{t('employer.campaigns.detail.publishBlocked')}</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                {warnings.map((warning) => (
-                  <li key={warning}>{t(`employer.campaigns.detail.warning.${warning}`)}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <CampaignDetailStatusNotices campaign={campaign} published={published} warnings={warnings} formattedStart={formattedStart} onStartNow={onStartNow} startingNow={startingNow} slotCount={slotCount} />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
           <Card className="frame-satin bg-info/[0.035]">
             <CardHeader className="pb-3">
@@ -109,7 +99,9 @@ export function CampaignDetailView({
                 <CampaignDetailMetric
                   icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
-                  value={`${campaign.applicants}/${campaign.capacity}`}
+                  // capacity=0 (`campaignMapper.ts` sentinel cho `maxCandidates` chưa khai — nay
+                  // TUỲ CHỌN) nghĩa là "không trần riêng", không phải "sức chứa bằng không".
+                  value={`${campaign.cvCount ?? 0}/${campaign.capacity > 0 ? campaign.capacity : '—'}`}
                 />
                 <CampaignDetailMetric
                   icon={Clock3}
@@ -144,8 +136,6 @@ export function CampaignDetailView({
               </p>
               <p className="flex items-center gap-2">
                 <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
-                <span>{t('employer.campaigns.form.company')}:</span>
-                <strong className="font-semibold text-foreground">{campaign.company}</strong>
               </p>
               <p className="text-muted-foreground">
                 {t('employer.campaigns.form.passScorePct')}:{' '}
@@ -177,6 +167,7 @@ export function CampaignDetailView({
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
+        <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
           title={t('employer.campaigns.detail.rubric')}
           icon={Trophy}
@@ -186,29 +177,17 @@ export function CampaignDetailView({
             {campaign.rubric.map((item) => (
               <div key={item.id} className="rounded-lg border border-satin bg-surface-overlay px-3 py-2">
                 <p className="text-sm font-medium text-foreground">
-                  {item.name} ·{' '}
+                  {item.name} · {item.levels?.length ? `${item.levels.length} ${t('employer.campaigns.detail.rubricLevels')}` : t('employer.campaigns.detail.rubricNoLevels')} · {item.minPct != null ? `${t('employer.campaigns.detail.rubricFloor')} ${item.minPct}%` : t('employer.campaigns.detail.rubricNoFloor')} ·{' '}
                   {Number(item.weight) <= 1
                     ? `${Math.round(Number(item.weight) * 100)}%`
-                    : `${item.weight}%`}
+                    : `${Math.round(Number(item.weight) * 100) / 100}%`}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               </div>
             ))}
           </div>
         </CollapsibleDetailCard>
-        <CollapsibleDetailCard
-          title={t('employer.campaigns.detail.questions')}
-          icon={ListChecks}
-          className="frame-satin bg-chart-cat-6/[0.025]"
-        >
-          <div className="space-y-2">
-            {campaign.questions.map((item, index) => (
-              <p key={item.id} className="text-sm text-foreground">
-                {index + 1}. {item.prompt}
-              </p>
-            ))}
-          </div>
-        </CollapsibleDetailCard>
+        <CampaignDetailQuestionsSection campaign={campaign} onEditCriteria={isDraft ? onEditCriteria : undefined} />
       </div>
   );
 
@@ -216,10 +195,9 @@ export function CampaignDetailView({
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px]">{content}</div>
+      <div className="app-page">{content}</div>
     </div>
-  );
-}
+  ); }
 
 function IconTitle({
   children,

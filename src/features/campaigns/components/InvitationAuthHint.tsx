@@ -11,12 +11,12 @@ export function InvitationAuthHint({ invitePath, token, onSavePendingToken }: In
   const { t } = useLanguage();
 
   return (
-    <p className="mx-auto max-w-3xl text-center text-sm text-zinc-500">
+    <p className="mx-auto max-w-3xl text-center text-sm text-muted-foreground">
       {t('campaigns.invite.authRequiredHint')}{' '}
       <Link
         to="/login"
         state={{ from: { pathname: invitePath } }}
-        className="font-medium text-zinc-100 underline-offset-4 hover:underline"
+        className="font-medium text-foreground underline-offset-4 hover:underline"
         onClick={() => onSavePendingToken(token)}
       >
         {t('campaigns.invite.signIn')}
@@ -25,7 +25,7 @@ export function InvitationAuthHint({ invitePath, token, onSavePendingToken }: In
       <Link
         to="/register"
         state={{ from: { pathname: invitePath } }}
-        className="font-medium text-zinc-100 underline-offset-4 hover:underline"
+        className="font-medium text-foreground underline-offset-4 hover:underline"
         onClick={() => onSavePendingToken(token)}
       >
         {t('campaigns.invite.register')}

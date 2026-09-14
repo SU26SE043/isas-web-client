@@ -6,6 +6,7 @@ import { useLanguage } from '@/shared/languages';
 import { paymentService } from '../services/payment.service';
 import type { PackageResponse } from '../types/payment.types';
 import { paymentKeys } from '../hooks/useMyPaymentOrders';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export const SubscriptionPlansPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,12 +18,8 @@ export const SubscriptionPlansPage: React.FC = () => {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-7xl space-y-8">
-        <header className="space-y-2">
-          <p className="text-label text-muted-foreground">{t('payment.plans.title')}</p>
-          <h1 className="heading-primary text-3xl text-foreground">{t('payment.plans.title')}</h1>
-          <p className="body-text text-sm text-muted-foreground">{t('payment.plans.subtitle')}</p>
-        </header>
+      <div className="app-page space-y-8">
+        <PageHeader title={t('payment.plans.title')} description={t('payment.plans.subtitle')} />
 
         {query.isLoading ? (
           <div className="flex min-h-48 items-center justify-center"><Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden /></div>

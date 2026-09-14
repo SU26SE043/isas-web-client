@@ -3,6 +3,8 @@ import {
   buildCandidateListParams,
   isAbsoluteHttpUrl,
   parseCampaignResultsResponse,
+  parseCampaignTranscriptResponse,
+  parseCampaignOverrideHistoryResponse,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -151,6 +153,33 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.unscoredFlagged).toEqual([]);
   });
 
+  it('preserves RNK1 result context fields without inventing legacy values', () => {
+    const parsed = parseCampaignResultsResponse({
+      campaignId: 'camp-rnk1',
+      questionsPerSession: 5,
+      questionBankTotal: 20,
+      currentRubricVersion: 3,
+      results: [{
+        candidateId: 'c1', sessionId: 's1', scoredAt: '2026-09-02T10:00:00Z',
+        totalScore: 72, aiScore: 70, answered: 4, totalQuestions: 8,
+        seedAnswered: 4, seedTotal: 5, skipPenalty: true,
+        cvMatchScore: 81, cvVerificationRisk: 'High', cvScreeningVersion: 1,
+        belowCutoff: [{ criterionId: 'r1', name: 'Frontend', pct: 42, minPct: 50, matchedBy: 'id' }],
+        policyName: 'weighted_avg_pct', policyVersion: 2, scoreFallback: true,
+      }],
+    });
+    expect(parsed).toMatchObject({ questionsPerSession: 5, questionBankTotal: 20, currentRubricVersion: 3 });
+    expect(parsed.results[0]).toMatchObject({
+      answered: 4, totalQuestions: 8, seedAnswered: 4, seedTotal: 5,
+      skipPenalty: true, cvMatchScore: 81, cvVerificationRisk: 'High',
+      cvScreeningVersion: 1, policyName: 'weighted_avg_pct', policyVersion: 2, scoreFallback: true,
+    });
+    expect(parsed.results[0]?.belowCutoff).toEqual([
+      { criterionId: 'r1', name: 'Frontend', pct: 42, minPct: 50, matchedBy: 'id' },
+    ]);
+    expect(parsed.results[0]?.answered).not.toBeNull();
+  });
+
   it('parses the latest CV screening ranking fields', () => {
     const item = parseCandidateListItem({
       id: 'c1',
@@ -200,5 +229,16 @@ describe('campaignCandidatesApi', () => {
     });
 
     expect(parsed.results.map((item) => item.result)).toEqual(['Pass', 'Fail']);
+  });
+
+  it('parses additive transcript fields and tolerant history entries', () => {
+    const transcript = parseCampaignTranscriptResponse({
+      SessionId: 's1', Questions: [{ QuestionId: 'q1', OrderNo: 1, Content: 'Q', NeedsReview: true, AnswerId: 'a1', Kind: 'Clarify', AnswerStatus: 'Scored', HasAudio: true, DurationSec: 12, DeliveryMetrics: { SpeechRateWpm: 180, PauseCount: 2, FillerBreakdown: { uh: 1 } }, Scores: [{ CriterionId: 'c1', Score: 4, MaxScore: 5 }] }],
+    });
+    expect(transcript.questions[0]).toMatchObject({ answerId: 'a1', kind: 'Clarify', hasAudio: true, durationSec: 12, deliveryMetrics: { speechRateWpm: 180, fillerBreakdown: { uh: 1 } } });
+    const history = parseCampaignOverrideHistoryResponse({ data: { sessionId: 's1', items: [{ id: 'h1', kind: 'Set', score: 60, result: 'Fail', note: 'reason', actorUserId: 'u1', actorEmail: null, at: '2026-09-11T08:37:00Z', source: 'Live' }, { id: 'h2', kind: 'Clear', score: null, result: null, note: 'clear', actorUserId: 'u1', at: '2026-09-11T08:00:00Z', source: 'AuditBackfill' }] } });
+    expect(history.items).toHaveLength(2);
+    expect(history.items[1]?.kind).toBe('Clear');
+    expect(history.items[0]?.actorEmail).toBeNull();
   });
 });

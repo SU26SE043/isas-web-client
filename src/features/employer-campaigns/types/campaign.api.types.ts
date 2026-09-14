@@ -17,6 +17,7 @@ export type CampaignJobNeed = {
   needId: string;
   category: JobNeedCategory | string;
   text: string;
+  isMustHave?: boolean;
   source?: 'AiSuggested' | 'HrEdited' | string | null;
 };
 
@@ -27,8 +28,11 @@ export type CampaignRubricCriterionResponse = {
   weight: number;
   description?: string | null;
   maxScore?: number | null;
+  minPct?: number | null;
   source?: CampaignCriterionSource | string | null;
   levels?: RubricLevel[] | null;
+  /** SC2 — 'Always' | 'WhenTargeted'; vắng ⇒ coi như 'Always'. */
+  scoringScope?: 'Always' | 'WhenTargeted' | string | null;
 };
 
 export type CampaignQuestionResponse = {
@@ -39,7 +43,11 @@ export type CampaignQuestionResponse = {
   difficulty?: string | null;
   source?: CampaignQuestionSource | string | null;
   isRequired?: boolean | null;
+  questionGroup?: string | null;
   hrEditedAt?: string | null;
+  /** SC2 — id các `CampaignRubricCriterionResponse` (WhenTargeted) câu này nhắm tới. null = chưa gắn nhãn. */
+  targetCriterionIds?: string[] | null;
+  sampleAnswer?: string | null;
 };
 
 export type CampaignCandidateResponse = {
@@ -60,16 +68,30 @@ export type CampaignResponse = {
   orgId?: string | null;
   title: string;
   domain?: string | null;
+  /** Legacy fixture-only field; live mapper intentionally ignores it. */
   company?: string | null;
   location?: string | null;
-  mode?: string | null;
   status: CampaignStatus | string;
   language?: CampaignLanguage | string | null;
+  /** Legacy fixture-only fields; live mapper intentionally ignores them. */
+  mode?: string | null;
+  candidates?: CampaignCandidateResponse[] | null;
   seniority?: CampaignSeniority | string | null;
-  summary?: string | null;
   jobDescription?: string | null;
   capacity?: number | null;
-  applicants?: number | null;
+  questionBank?: {
+    total?: number | null;
+    alwaysAsked?: number | null;
+    questionsPerSession?: number | null;
+    groups?: Array<{ name: string; count: number }>;
+    warnings?: string[];
+    /** SC2 — tiêu chí WhenTargeted không câu nào nhắm; KHÔNG chặn publish. */
+    coverageWarnings?: Array<{ criterionId: string; name: string }>;
+  } | null;
+  cvCount?: number | null;
+  invitedCount?: number | null;
+  completedCount?: number | null;
+  /** Legacy fixture-only alias; live contract uses cvCount. */
   applicantCount?: number | null;
   maxCandidates?: number | null;
   deadline?: string | null;
@@ -85,34 +107,39 @@ export type CampaignResponse = {
   groundingEnabled?: boolean | null;
   maxConcurrentInterviews?: number | null;
   maxDeepPerQuestion?: number | null;
+  skipPenalty?: boolean | null;
+  /** CAMP-18 — phiên bản thước đo hiện hành (`CampaignResponse.RubricVersion`). */
+  rubricVersion?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
-  locale?: string | null;
+  questionsPerSession?: number | null;
   organizationId?: string | null;
-  welcomeMessage?: string | null;
-  completionMessage?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   rubric?: CampaignRubricCriterionResponse[] | null;
   criteria?: CampaignRubricCriterionResponse[] | null;
   jobNeeds?: CampaignJobNeed[] | null;
   criteriaText?: string | null;
+  requiredSkills?: string[] | null;
+  keywordsAny?: string[] | null;
+  minYearsExperience?: number | null;
   jdText?: string | null;
   questions?: CampaignQuestionResponse[] | null;
-  candidates?: CampaignCandidateResponse[] | null;
-  invitedEmails?: string[] | null;
-  proctoring?: CampaignProctoringResponse | null;
 };
 
 /** Shared criterion DTO for create/update. */
 export type CampaignCreateCriterionRequest = {
+  id?: string;
   name: string;
   description?: string | null;
   /** Decimal 0 < weight <= 1 */
   weight: number;
   maxScore: number;
+  minPct?: number | null;
   /** Existing server-authored anchors must be echoed on replace-all updates. */
   levels?: RubricLevel[];
+  /** SC2 — vắng ⇒ server mặc định 'Always'. */
+  scoringScope?: 'Always' | 'WhenTargeted';
 };
 
 export type CampaignCreateQuestionRequest = {
@@ -121,6 +148,14 @@ export type CampaignCreateQuestionRequest = {
   questionText: string;
   source?: CampaignQuestionSource;
   isRequired: boolean;
+  questionGroup?: string | null;
+  /**
+   * SC2 — PUT /questions ba trạng thái: khoá VẮNG (`undefined`) = GIỮ NGUYÊN · `[]` = XOÁ nhãn ·
+   * `[ids]` = THAY. Id phải thuộc `campaign_criteria` hiện tại, ngược lại BE trả 400.
+   */
+  targetCriterionIds?: string[];
+  /** CAMP-16 ba trạng thái: `undefined` = không gửi · `null` = GIỮ NGUYÊN · `''` = XOÁ · chuỗi = đặt. */
+  sampleAnswer?: string | null;
 };
 
 /** PUT /api/v1/campaign/{id}/questions — full replace array body. */
@@ -130,6 +165,31 @@ export type GenerateCampaignQuestionsParams = {
   campaignId: string;
   /** When omitted, backend uses its default count. */
   count?: number;
+};
+
+export type CampaignQuestionImportItem = {
+  rowNumber: number;
+  questionText: string;
+  sampleAnswer?: string | null;
+  isRequired?: boolean | null;
+  questionGroup?: string | null;
+  /**
+   * SC2 — TÊN tiêu chí (chưa resolve id) từ cột `targetCriteria` của file import, phân tách `|`
+   * hoặc `;`. `resolveTargetCriterionIds` (campaignQuestionImport.ts) đối chiếu với rubric hiện tại.
+   */
+  targetCriteriaNames?: string[] | null;
+  error?: string | null;
+};
+
+export type CampaignQuestionImportError = {
+  rowNumber: number;
+  message: string;
+};
+
+export type CampaignQuestionImportResult = {
+  totalRows: number;
+  items: CampaignQuestionImportItem[];
+  errors: CampaignQuestionImportError[];
 };
 
 /** POST /api/v1/campaign — create Draft after wizard completes (Employer). */
@@ -151,9 +211,16 @@ export type CampaignCreateRequest = {
   maxFollowUps?: number | null;
   /** Cap on total questions (0–20). Independent of adaptive interview. */
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   jdText?: string | null;
   criteriaText?: string | null;
+  /** CV must contain every listed skill. Omit when unchanged. */
+  requiredSkills?: string[] | null;
+  /** CV must contain at least one listed keyword. Omit when unchanged. */
+  keywordsAny?: string[] | null;
+  /** 0 clears the rule; omit when unchanged. */
+  minYearsExperience?: number | null;
   criteria?: CampaignCreateCriterionRequest[] | null;
   startsAt: string;
   expiresAt: string;
@@ -189,6 +256,7 @@ export type CampaignUpdateRequest = {
   maxConcurrentInterviews?: number | null;
   maxFollowUps?: number | null;
   maxQuestions?: number | null;
+  questionsPerSession?: number | null;
   maxDeepPerQuestion?: number | null;
   passScorePct?: number | null;
   jdText?: string;
@@ -321,9 +389,14 @@ export type CampaignCandidateListItem = {
   email?: string | null;
   status: string;
   overallMatchScore?: number | null;
+  rejectReason?: string | null;
   skills?: string[] | null;
   verificationRisk?: VerificationRisk | null;
   screeningVersion?: number | null;
+  eligible?: boolean | null;
+  missingMustHave?: string[] | null;
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PUT /api/v1/campaign/{id}/job-needs — replace-all, Draft only. */
@@ -331,6 +404,7 @@ export type UpdateCampaignJobNeedsRequest = {
   needId?: string;
   category: JobNeedCategory;
   text: string;
+  isMustHave?: boolean;
 };
 
 export type CandidateEvidence = {
@@ -359,6 +433,10 @@ export type CampaignCandidateDetail = {
   bonusSignals: string[];
   verificationRisk?: VerificationRisk | null;
   verifyQuestions: string[];
+  eligible?: boolean | null;
+  missingMustHave?: string[];
+  mustHaveMet?: number | null;
+  mustHaveTotal?: number | null;
 };
 
 /** PATCH /api/v1/campaign/{id}/candidates/{candidateId} — only changed fields. */
@@ -370,6 +448,7 @@ export type UpdateCampaignCandidatePayload = {
 /** POST /api/v1/campaign/{id}/candidates/invite */
 export type InviteCampaignCandidatesRequest = {
   candidateIds: string[];
+  includeIneligible?: boolean;
 };
 
 export type InvitedCandidateResult = {
@@ -402,6 +481,14 @@ export type CampaignResultFlag = {
   source: CampaignResultFlagSource;
 };
 
+export type CampaignResultBelowCutoff = {
+  criterionId: string | null;
+  name: string;
+  pct: number;
+  minPct: number;
+  matchedBy: 'id' | 'name';
+};
+
 export type CampaignScoredResult = {
   rank: number;
   candidateId: string;
@@ -419,6 +506,18 @@ export type CampaignScoredResult = {
   result: CampaignResultStatus;
   scoredAt: string;
   flags: CampaignResultFlag[];
+  answered?: number | null;
+  totalQuestions?: number | null;
+  seedAnswered?: number | null;
+  seedTotal?: number | null;
+  skipPenalty?: boolean | null;
+  cvMatchScore?: number | null;
+  cvVerificationRisk?: string | null;
+  cvScreeningVersion?: number | null;
+  belowCutoff?: CampaignResultBelowCutoff[];
+  policyName?: string | null;
+  policyVersion?: number | null;
+  scoreFallback?: boolean | null;
 };
 
 /** Spec alias — same shape as CampaignScoredResult. */
@@ -440,6 +539,9 @@ export type CampaignResultsResponse = {
   results: CampaignScoredResult[];
   /** v5: flagged candidates without scored ranking rows. */
   unscoredFlagged: CampaignUnscoredFlaggedResult[];
+  questionsPerSession?: number | null;
+  questionBankTotal?: number;
+  currentRubricVersion?: number | null;
 };
 
 export type CampaignResultExportFormat = 'csv' | 'pdf';
@@ -450,6 +552,7 @@ export type TranscriptCriterionScore = {
   score: number;
   maxScore?: number | null;
   reasoning?: string | null;
+  levelMatched?: number | null;
 };
 
 export type TranscriptQuestion = {
@@ -458,12 +561,44 @@ export type TranscriptQuestion = {
   content: string;
   transcript?: string | null;
   needsReview: boolean;
+  answerId: string | null;
+  kind: 'Seed' | 'FollowUp' | 'Clarify' | 'NewQuestion';
+  answerStatus: 'Uploaded' | 'Scoring' | 'Scored' | 'Failed' | 'Skipped' | null;
+  rejectReason: string | null;
+  durationSec: number | null;
+  hasAudio: boolean;
+  sampleAnswer: string | null;
+  deliveryMetrics: {
+    speechRateWpm: number | null;
+    pauseCount: number | null;
+    longestPauseSec: number | null;
+    silenceRatio: number | null;
+    fillerCount: number | null;
+    fillerBreakdown: Record<string, number>;
+  } | null;
   scores: TranscriptCriterionScore[];
 };
 
 export type CampaignTranscriptResponse = {
   sessionId: string;
   questions: TranscriptQuestion[];
+};
+
+export type CampaignResultOverrideHistoryItem = {
+  id: string;
+  kind: 'Set' | 'Clear';
+  score: number | null;
+  result: CampaignResultStatus;
+  note: string;
+  actorUserId: string;
+  actorEmail: string | null;
+  at: string;
+  source: 'Live' | 'AuditBackfill';
+};
+
+export type CampaignResultOverrideHistoryResponse = {
+  sessionId: string;
+  items: CampaignResultOverrideHistoryItem[];
 };
 
 export type OverrideCampaignResultPayload = {

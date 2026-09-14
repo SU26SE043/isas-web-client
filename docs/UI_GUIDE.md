@@ -1,4 +1,4 @@
-# UI Guide — Premium Dark Monochrome Design System
+# UI Guide — Premium Light Monochrome Design System
 
 **Bắt buộc đọc file này trước khi generate hoặc chỉnh sửa giao diện.**
 
@@ -6,30 +6,34 @@
 
 ## Nguyên tắc
 
-- **Dark mode only** — không light mode, không theme switcher
+- **Light monochrome only** — nền trắng, không dark mode, không theme switcher
 - **Monochrome** — White, Black, Gray + **satin silver** cho khung (structural chrome)
-- **Bright black base** — nền page không dùng pure `#000`; dùng charcoal sáng (#141416)
+- **White base** — nền page dùng `surface-base`; màu thật luôn lấy từ `src/styles/colors.css`
 - **Satin silver frames** — mọi table/card/panel/input dùng viền brushed aluminum (low contrast), **không** glossy chrome, **không** accent hue
 - **Depth** qua surface layers + glass + satin edge highlight
 - **Inspiration:** Linear, Vercel Dashboard, GitHub Dark, Stripe (spacing/hierarchy) + industrial satin metal edges
 - **Semantic colors** chỉ cho trạng thái (success/error/warning/info)
 
-## Surface elevation (bright black)
+## Surface elevation (light monochrome)
 
 | Token / Class | Hex | Dùng cho |
 |---------------|-----|----------|
-| `surface-base` / `bg-surface-base` | `#141416` | Page background (bright black) |
-| `surface-sunken` | `#101012` | Sidebar base |
-| `surface-raised` | `#1c1c20` | Cards, panels |
-| `surface-overlay` | `#222228` | Inputs, hover, nested |
-| `surface-elevated` | `#2a2a30` | Modals, dropdowns, active nav |
-| `surface-highlight` | `#34343c` | Strong hover |
+| `surface-base` / `bg-surface-base` | source token | Page background |
+| `surface-sunken` | source token | Recessed groups |
+| `surface-raised` | source token | Cards and panels |
+| `surface-overlay` | source token | Inputs, hover, nested groups |
+| `surface-elevated` | source token | Modals and dropdowns |
+| `surface-highlight` | source token | Skeleton and strong highlight |
 | `glass-panel` | glass + satin edge | Elevated glass cards |
 | `glass-table-container` / `GlassTableContainer` | specular edge glow + diagonal shine | **Preferred** wrapper for data tables |
 | `glass-sidebar` | sunken + blur | Dashboard sidebars |
 | `glass-topbar` | base + blur | Sticky engagement / top chrome |
 
-Không flat pure black cho page chrome. Auth frozen surfaces vẫn inherit token — **không** đổi layout auth (decision 0009).
+Không dùng hardcoded surface hex. Auth frozen surfaces vẫn inherit token — **không** đổi layout auth (decision 0009).
+
+Màu thật và alias nằm ở `src/styles/colors.css`; tài liệu này chỉ mô tả vai trò của token.
+
+Lịch sử: 03/09/2026 chuyển từ dark sang light monochrome; nếu bạn đọc thấy hướng dẫn nào nói dark mode, nó lạc hậu.
 
 ## Satin silver borders (bắt buộc cho khung)
 
@@ -94,9 +98,9 @@ Primary CTA vẫn trắng trên đen. Dùng scale light / main / dark cho hover 
 
 | Class | Mô tả |
 |-------|--------|
-| `page-container` | max-w-7xl, responsive padding |
-| `page-section` | Vertical section padding |
-| `dashboard-content` | Dashboard main area padding |
+| `app-page` | **Wrapper mọi trang trong app** (candidate · employer · admin): max-w 80rem, canh giữa, padding ngang `clamp(1rem,4vw,2rem)`, padding dọc `clamp(1.5rem,3vw,2.5rem)`. Đừng viết `mx-auto max-w-* py-*` cạnh nó — class này nằm sau utility trong cascade nên các token đó chết. |
+| `page-container` | Marketing: max-w 80rem + padding ngang |
+| `page-section` | Marketing: padding dọc lớn `clamp(2.5rem,6vw,5rem)` |
 
 ## Components
 
@@ -314,6 +318,55 @@ Giữ mặc định hiện tại. Chỉ sửa copy/i18n, validation, API, a11y/s
 9. **Không redesign login / sign-up / auth modal** — và **không fork** UI auth theo module; luôn reuse template dùng chung (Frozen UI surfaces / decision 0009)
 10. **Không fork style ô chọn / section glass** — luôn import từ `selection-option` / `section-panel`
 11. **Bright black + satin silver** — nền `#141416` family; viền brushed aluminum low-contrast
+
+## Bo góc — theo VAI TRÒ (bắt buộc)
+
+Trước khi có mục này, `src` dùng **7 giá trị** bo góc khác nhau ở 981 chỗ, và ngay trong bộ
+primitive `Input` là 16px còn `Button` 12px — hai thứ luôn đứng cạnh nhau lại khác bo góc.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| control | `rounded-lg` | 12 | input · textarea · select · button · ô nhập bất kỳ |
+| nested surface | `rounded-xl` | 16 | thẻ nằm TRONG một panel (thẻ tiêu chí, thẻ câu hỏi) |
+| surface | `rounded-2xl` | 20 | `SectionPanel` · `Card` · `Dialog` · `SelectionOption` |
+| pill | `rounded-full` | — | badge · avatar · chấm trạng thái · thanh tiến độ |
+
+Quy tắc: **surface bọc ngoài luôn bo lớn hơn thứ nằm trong nó**. Không thêm giá trị thứ năm
+(`rounded-md`, `rounded-sm`, `rounded-3xl`, `rounded-4xl` đã bị gỡ). Bo một phía
+(`rounded-t-*`, `rounded-b-*`) không thuộc thang này.
+
+⚠ Luật áp cho **cả CSS**: `border-radius: var(--radius-sm|md)` bị cấm — 5 utility `.btn-*`
+trong `src/index.css` từng dùng `--radius-md` (8px) trong khi primitive `Button` là 12px, nên
+một `<Button>` và một `<button class="btn-primary">` đứng cạnh nhau khác bo góc.
+
+⚠ `rounded` **trần** (không dấu gạch) cố ý không bị bắt: trong `src` nó gần như chỉ dùng cho ô
+tick `size-4 rounded` — hộp 16px ép lên 12px sẽ bị kẹp thành gần TRÒN, mà tròn nghĩa là "chọn
+một" (radio) chứ không phải "chọn nhiều".
+
+Kiểm tra: `npm run check:radius` — phạm vi gác là **cả `src`**.
+
+> Bản đầu của mục này ghi *"đừng bật cả `src`, sẽ đỏ 900+ chỗ"* — **con số đó sai**: nó đếm
+> mọi `rounded-*` kể cả hợp lệ. Số **vi phạm** thật lúc mở scope là **68** (`rounded-md` 50 ·
+> `rounded-3xl` 12 · `rounded-sm` 6), đã dọn xong.
+
+**Ngoại lệ** — `radius-exempt: <lý do>` trong comment ngay trên dòng (hoặc cuối chính dòng đó).
+Chỉ dùng cho vật thể **không thuộc bốn vai trò**: mark văn bản, ô data-viz. Lý do có thật, không
+phải để làm lưới xanh — ép ô heatmap 11px lên bán kính 12px thì trình duyệt kẹp về nửa cạnh và
+ô vuông thành **hình tròn**, tức lưới làm hỏng đúng thứ nó định bảo vệ. `radius-exempt` trống
+không được chấp nhận.
+
+## Chip icon — theo VAI TRÒ
+
+Cùng lý do với bo góc: `src` đang dùng **5 cỡ chip** (`size-7/9/10/12/14`) cho cùng một loại
+vật thể, nên cùng một wizard có bước chip 28px, bước 36px, bước 48px.
+
+| Vai trò | Class | px | Dùng cho |
+|---------|-------|----|----------|
+| tile | `size-14` | 56 | `SelectionOption`, ô trống lớn (drop zone) |
+| panel header | `size-10` | 40 | chip icon trên header `SectionPanel` |
+| inline | `size-9` | 36 | chip trong một hàng danh sách (số thứ tự, icon tiêu chí) |
+
+Glyph bên trong chip: `size-4` cho `inline`/`panel header`, `size-5`–`size-6` cho `tile`.
 
 ## File size (bắt buộc)
 

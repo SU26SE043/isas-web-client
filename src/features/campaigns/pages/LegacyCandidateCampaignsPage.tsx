@@ -6,6 +6,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useLanguage } from '@/shared/languages';
 import { campaignService } from '../services/campaign.service';
 import type { CandidateCampaignInvite } from '../types/campaign.types';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 export function LegacyCandidateCampaignsPage() {
   const { t } = useLanguage();
@@ -39,14 +40,8 @@ export function LegacyCandidateCampaignsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-5xl space-y-6">
-        <header className="space-y-2">
-          <p className="text-label text-muted-foreground">{t('campaigns.my.eyebrow')}</p>
-          <h1 className="heading-primary text-3xl text-foreground">
-            {t('campaigns.my.invitedTitle')}
-          </h1>
-          <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('campaigns.my.subtitle')}</p>
-        </header>
+      <div className="app-page space-y-6">
+        <PageHeader eyebrow={t('campaigns.my.eyebrow')} title={t('campaigns.my.invitedTitle')} description={t('campaigns.my.subtitle')} />
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">

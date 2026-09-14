@@ -37,7 +37,7 @@ export function LegacyMagicLinkLandingPage() {
 
   if (!hasHydrated || isLoading || authLoading || (hasPersistedToken && !user)) {
     return (
-      <div className="page-container page-section flex min-h-[70vh] items-center justify-center">
+      <div className="app-page flex min-h-[70vh] items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
         <span className="sr-only">{t('ds.loading.page')}</span>
       </div>
@@ -45,11 +45,11 @@ export function LegacyMagicLinkLandingPage() {
   }
 
   if (!invite) {
-    return <div className="page-container page-section min-h-[70vh]"><InviteExpiredState variant="invalid" /></div>;
+    return <div className="app-page min-h-[70vh]"><InviteExpiredState variant="invalid" /></div>;
   }
 
   if (invite.status === 'expired') {
-    return <div className="page-container page-section min-h-[70vh]"><InviteExpiredState variant="expired" /></div>;
+    return <div className="app-page min-h-[70vh]"><InviteExpiredState variant="expired" /></div>;
   }
 
   if (!isAuthenticated || !user) {
@@ -62,7 +62,7 @@ export function LegacyMagicLinkLandingPage() {
   }
 
   if (user.email.toLowerCase() !== invite.candidateEmail.toLowerCase()) {
-    return <div className="page-container page-section min-h-[70vh]"><InviteExpiredState variant="invalid" /></div>;
+    return <div className="app-page min-h-[70vh]"><InviteExpiredState variant="invalid" /></div>;
   }
 
   return <Navigate to={`/candidate/campaigns?highlight=${encodeURIComponent(token)}`} replace />;

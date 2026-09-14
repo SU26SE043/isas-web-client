@@ -44,7 +44,7 @@ export function getResultFlagCount(flags: CampaignResultFlag[]): number {
 
 export function formatResultScore(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return '—';
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  return `${Number.isInteger(value) ? String(value) : value.toFixed(1)}%`;
 }
 
 export function formatResultDateTime(value: string | null | undefined, locale: string): string {
@@ -141,7 +141,7 @@ export function parseOverrideScoreInput(value: string): {
   const trimmed = value.trim();
   if (!trimmed) return { score: null, error: false };
   const parsed = Number(trimmed.replace(',', '.'));
-  if (!Number.isFinite(parsed) || parsed < 0) return { score: null, error: true };
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return { score: null, error: true };
   return { score: parsed, error: false };
 }
 

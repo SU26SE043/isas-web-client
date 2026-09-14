@@ -12,7 +12,6 @@ export function CampaignSummaryBar({ campaign }: { campaign: EmployerCampaign })
 
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-xl border border-satin bg-surface-raised px-4 py-3">
-      <span className="font-medium text-foreground">{campaign.domain}</span>
       {items.map(({ icon: Icon, value }) => (
         <span key={value} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
           <Icon className="size-4" aria-hidden />

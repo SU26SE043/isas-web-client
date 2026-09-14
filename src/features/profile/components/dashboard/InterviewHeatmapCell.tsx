@@ -26,6 +26,8 @@ export const InterviewHeatmapCell: React.FC<InterviewHeatmapCellProps> = ({
       onFocus={(event) => cell.inYear && onHover(cell, event.currentTarget.getBoundingClientRect())}
       onBlur={() => onHover(null, null)}
       className={cn(
+        // radius-exempt: ô heatmap 11–12px. Thang vai trò nhỏ nhất là 12px, trình duyệt
+        // kẹp về nửa cạnh ⇒ ô vuông thành HÌNH TRÒN, mất luôn dạng lưới lịch của biểu đồ.
         'size-[11px] rounded-sm transition-transform duration-150 sm:size-3',
         cell.inYear ? ACTIVITY_LEVEL_CLASS[level] : 'bg-transparent',
         cell.inYear && cell.count > 0

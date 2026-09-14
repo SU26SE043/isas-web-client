@@ -63,7 +63,7 @@ describe('practiceSessionHistoryActions', () => {
   });
 
   it('clamps limit between 1 and 500', () => {
-    expect(clampPracticeHistoryLimit(undefined)).toBe(5);
+    expect(clampPracticeHistoryLimit(undefined)).toBe(20);
     expect(clampPracticeHistoryLimit(0)).toBe(1);
     expect(clampPracticeHistoryLimit(999)).toBe(500);
   });

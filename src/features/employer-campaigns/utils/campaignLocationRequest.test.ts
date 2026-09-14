@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
+import { createEmptyHardFiltersState } from '../types/campaignWizard.types';
 import {
   buildCampaignCreateRequest,
   buildDirtyUpdateRequest,
@@ -7,13 +8,12 @@ import {
 } from './buildCampaignCreateRequest';
 import { validateCampaignWizardStep } from './validateCampaignWizard';
 
-function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSubmitSnapshot {
+function snapshot(): CampaignWizardSubmitSnapshot {
   return {
     info: {
       title: 'Frontend hiring',
       domain: 'frontend',
-      location,
-      locationCoordinates: { latitude: 10.7769, longitude: 106.7009 },
+      language: 'vi',
       maxCandidates: 20,
       timeLimitMinutes: 60,
       passScorePct: 70,
@@ -34,6 +34,7 @@ function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSub
       serverUploaded: false,
       isDownloading: false,
     },
+    hardFilters: createEmptyHardFiltersState(),
     rubric: [{ id: 'r1', name: 'React', description: '', weight: 100, maxScore: 10 }],
     questions: [{
       id: 'client-q1',
@@ -53,10 +54,14 @@ function snapshot(location = '  2 Hải Triều, Quận 1  '): CampaignWizardSub
   };
 }
 
-function persisted(location: string): CampaignWizardPersistedState {
-  const base = snapshot(location);
+function persisted(): CampaignWizardPersistedState {
+  const base = snapshot();
   return {
     ...base,
+    // CMP3: cờ "đã tuỳ chỉnh bộ tiêu chí" nay nằm ở wizard state (trước là useState trong bước 3,
+    // nên quay lại bước là mất) — fixture kiểu PersistedState phải khai nó.
+    rubricCustomized: false,
+    hardFilters: base.hardFilters ?? createEmptyHardFiltersState(),
     criteria: {
       criteriaFile: null,
       fileName: null,
@@ -68,6 +73,7 @@ function persisted(location: string): CampaignWizardPersistedState {
       isDownloading: false,
     },
     questionCount: 5,
+    inviteEmails: [],
     currentStep: 0,
     completedSteps: [],
     errorSteps: [],
@@ -75,21 +81,90 @@ function persisted(location: string): CampaignWizardPersistedState {
   };
 }
 
-describe('campaign location request contract', () => {
-  it('does not send unsupported location fields in the create payload', () => {
+describe('campaign wizard request contract', () => {
+  it('sends the selected interview language while retaining the time limit', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildCampaignCreateRequest(current)).toMatchObject({
+      language: 'en',
+      timeLimitMinutes: 60,
+    });
+  });
+
+  it('keeps all mode explicit with a null draw count', () => {
+    const current = snapshot();
+    current.questionsPerSession = null;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBeNull();
+  });
+
+  it('sends the computed draw count for pool mode', () => {
+    const current = snapshot();
+    current.questionsPerSession = 5;
+
+    expect(buildCampaignCreateRequest(current).questionsPerSession).toBe(5);
+  });
+
+  it('sends interview language changes in a dirty update', () => {
+    const current = snapshot();
+    current.info.language = 'en';
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      language: 'en',
+    });
+  });
+
+  it('blocks the information step when interview language is missing', () => {
+    const current = persisted();
+    current.info.language = '';
+
+    expect(validateCampaignWizardStep(current, 0)).toBe(
+      'employer.campaigns.wizard.languageRequired',
+    );
+  });
+
+  it('does not send the deprecated location field in the create payload', () => {
     const request = buildCampaignCreateRequest(snapshot());
     expect(request).not.toHaveProperty('location');
-    expect(request).not.toHaveProperty('locationCoordinates');
   });
 
-  it('does not send location changes in a dirty update', () => {
-    const dirty = buildDirtyUpdateRequest(snapshot('Old address'), snapshot('New address'));
-    expect(dirty).toEqual({});
+  it('does not send deprecated location changes in a dirty update', () => {
+    const dirty = buildDirtyUpdateRequest(snapshot(), snapshot());
+    expect(dirty).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+    });
+    expect(dirty).not.toHaveProperty('location');
   });
 
-  it('allows a blank campaign location because the API does not persist it', () => {
-    expect(validateCampaignWizardStep(persisted('  '), 0)).toBe(
+  it('echoes live endpoint identity fields for partial metadata updates', () => {
+    const current = snapshot();
+    current.info.passScorePct = 75;
+
+    expect(buildDirtyUpdateRequest(snapshot(), current)).toMatchObject({
+      title: 'Frontend hiring',
+      domain: 'Frontend',
+      passScorePct: 75,
+    });
+  });
+
+  it('does not require a location in the campaign information step', () => {
+    expect(validateCampaignWizardStep(persisted(), 0)).toBe(
       null,
     );
+  });
+
+  it('giờ mở đã qua KHÔNG chặn bước 1 (kể cả create) — BE không có luật đó, giờ mở ≤ lúc triển khai = mở ngay', () => {
+    // Trước 14/09: mặc định giờ mở = lúc mở wizard + 1h (luật tự bịa) VÀ create chặn "giờ mở đã qua"
+    // — HR điền 8 bước xong (>30s) là bị đá về bước 1, còn thêm ca thi ngay thì bị 400 "trước khi
+    // chiến dịch mở". Bỏ cả hai.
+    const current = persisted();
+    current.info.startsAt = '2020-01-01T09:00';
+    current.info.expiresAt = '2020-02-01T09:00';
+    expect(validateCampaignWizardStep(current, 0, { mode: 'create' })).toBeNull();
+    expect(validateCampaignWizardStep(current, 0, { mode: 'edit' })).toBeNull();
   });
 });

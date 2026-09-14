@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { UserRole } from '../types/auth.types';
 import {
+  getRequestedReturnPath,
   getPostLoginPath,
   getProfileHomePath,
   isPathAllowedForRole,
@@ -87,5 +88,36 @@ describe('resolvePostLoginPath', () => {
       '/invitations/abc-token',
     );
     expect(resolvePostLoginPath(UserRole.CANDIDATE, '/invite/abc-token')).toBe('/invite/abc-token');
+  });
+});
+
+describe('getRequestedReturnPath — đăng nhập từ modal quay lại đúng trang', () => {
+  it('ưu tiên state.from do RequireAuth / link trên trang mời đặt', () => {
+    expect(getRequestedReturnPath({ from: { pathname: '/invite/abc' } }, '/pricing')).toBe('/invite/abc');
+    // Cả hai đều là trang mời ⇒ vẫn phải là state.from (mutation đảo ưu tiên từng XANH vì ca trên
+    // không phân biệt được — /pricing rơi khỏi regex nên from thắng "nhờ may").
+    expect(getRequestedReturnPath({ from: { pathname: '/invite/abc' } }, '/invite/other')).toBe('/invite/abc');
+  });
+
+  it('không có state ⇒ lấy trang đang mở modal NẾU là trang mời (header marketing mở tại chỗ)', () => {
+    expect(getRequestedReturnPath(null, '/invite/abc')).toBe('/invite/abc');
+    expect(getRequestedReturnPath(undefined, '/invitations/abc')).toBe('/invitations/abc');
+  });
+
+  it('trang marketing khác (/, /pricing, /enterprise) không tính — về nhà theo vai như cũ', () => {
+    // /enterprise nằm trong allowlist employer (redirect legacy) ⇒ trả về nó là đưa employer quay
+    // lại trang marketing thay vì dashboard — review 2026-09-11.
+    expect(getRequestedReturnPath(null, '/')).toBeUndefined();
+    expect(getRequestedReturnPath(null, '/pricing')).toBeUndefined();
+    expect(getRequestedReturnPath(null, '/enterprise')).toBeUndefined();
+    expect(getRequestedReturnPath(null, '/invite')).toBeUndefined();
+    expect(getRequestedReturnPath(null, '')).toBeUndefined();
+    expect(getRequestedReturnPath(null, undefined)).toBeUndefined();
+  });
+
+  it('đường lấy từ trang hiện tại vẫn bị resolvePostLoginPath gác theo vai', () => {
+    // Ứng viên đăng nhập trên trang mời ⇒ quay lại trang mời; employer thì về dashboard employer.
+    expect(resolvePostLoginPath(UserRole.CANDIDATE, getRequestedReturnPath(null, '/invite/abc'))).toBe('/invite/abc');
+    expect(resolvePostLoginPath(UserRole.ORG_ADMIN, getRequestedReturnPath(null, '/invite/abc'))).toBe('/employer/dashboard');
   });
 });

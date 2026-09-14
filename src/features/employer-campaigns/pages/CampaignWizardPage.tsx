@@ -1,20 +1,37 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/shared/languages';
-import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { useQueryClient } from '@tanstack/react-query';
+import { deployCampaignAndSyncCache, useEmployerCampaign } from '../hooks/useEmployerCampaigns';
 import { CampaignWizardForm } from '../components/wizard/CampaignWizardForm';
 import type {
   CampaignCreateQuestionRequest,
   CampaignCreateRequest,
+  CampaignQuestionImportResult,
   CampaignUpdateRequest,
   GenerateCampaignQuestionsParams,
 } from '../types/campaign.api.types';
+import type { CampaignDeployOptions } from '../types/campaignManagement.types';
 import { campaignManagementService } from '../services/campaignManagement.service';
+
+export function parseWizardStepParam(raw: string | null): number | undefined {
+  if (raw == null || !/^\d+$/.test(raw)) return undefined;
+  const oneBased = Number(raw);
+  return oneBased >= 1 ? oneBased - 1 : undefined;
+}
+
+/** `?question=<id>` (SC2 · T9) — id câu hỏi cần mở ở bước 4; rỗng/rác ⇒ không mở gì (id lạ đã bị Sections bỏ qua). */
+export function parseWizardQuestionParam(raw: string | null): string | null {
+  const value = raw?.trim() ?? '';
+  return value ? value : null;
+}
 
 export function CampaignWizardPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const {
     campaign,
@@ -31,6 +48,9 @@ export function CampaignWizardPage() {
   } = useEmployerCampaign(id);
   const mode = id ? 'edit' : 'create';
   const isEditing = mode === 'edit';
+  // `?step=3` = "Bước 3/8" như người dùng thấy (1-based); hook nhận 0-based. Rác/ngoài dải ⇒ bỏ qua, mở bước 1.
+  const initialStep = parseWizardStepParam(searchParams.get('step'));
+  const initialQuestionId = parseWizardQuestionParam(searchParams.get('question'));
 
   const handleCreateCampaign = async (input: CampaignCreateRequest) => {
     return createCampaign(input);
@@ -51,6 +71,10 @@ export function CampaignWizardPage() {
     return campaignManagementService.generateCampaignQuestions(params);
   };
 
+  const handleImportQuestions = async (campaignId: string, file: File): Promise<CampaignQuestionImportResult> => {
+    return campaignManagementService.importCampaignQuestions(campaignId, file);
+  };
+
   const handleUploadFiles = async (
     campaignId: string,
     files: { jdFile?: File | null; criteriaFile?: File | null },
@@ -67,6 +91,15 @@ export function CampaignWizardPage() {
 
   const handleDownloadFile = async (campaignId: string, fileType: 'jd' | 'criteria') => {
     return downloadFile(campaignId, fileType);
+  };
+
+  const handleDeployCampaign = async (campaignId: string, emails: string[], options?: CampaignDeployOptions) => {
+    // Đồng bộ cache chi tiết ngay sau deploy — xem chú thích tại deployCampaignAndSyncCache.
+    return deployCampaignAndSyncCache(queryClient, campaignId, emails, options);
+  };
+
+  const handleSendInvitations = async (campaignId: string, emails: string[]) => {
+    return campaignManagementService.createCampaignInvitations(campaignId, { emails });
   };
 
   const goToDetail = (campaignId: string) => {
@@ -129,14 +162,19 @@ export function CampaignWizardPage() {
     <CampaignWizardForm
       campaign={campaign}
       mode={mode}
+      initialStep={initialStep}
+      initialQuestionId={initialQuestionId}
       onCreateCampaign={handleCreateCampaign}
       onUpdateCampaign={handleUpdateCampaign}
       onUpdateQuestions={handleUpdateQuestions}
       onGenerateQuestions={handleGenerateQuestions}
+      onImportQuestions={handleImportQuestions}
       onUploadFiles={handleUploadFiles}
       onReplaceFiles={handleReplaceFiles}
       onDownloadFile={handleDownloadFile}
       onAfterSubmit={(next) => goToDetail(next.id)}
+      onDeployCampaign={handleDeployCampaign}
+      onSendInvitations={handleSendInvitations}
     />
   );
 }

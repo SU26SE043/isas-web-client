@@ -3,6 +3,7 @@ import type { CampaignResultItem } from '../types/campaign.api.types';
 import {
   defaultExportFileName,
   filterAndSortResults,
+  formatResultScore,
   getResultFlagCount,
   hasResultOverride,
   parseOverrideScoreInput,
@@ -67,6 +68,14 @@ describe('campaignResultsActions', () => {
     expect(parseOverrideScoreInput('')).toEqual({ score: null, error: false });
     expect(parseOverrideScoreInput('85.5')).toEqual({ score: 85.5, error: false });
     expect(parseOverrideScoreInput('-1').error).toBe(true);
+    expect(parseOverrideScoreInput('101').error).toBe(true);
+    expect(parseOverrideScoreInput('100')).toEqual({ score: 100, error: false });
+  });
+
+  it('formats result scores on the shared percentage scale', () => {
+    expect(formatResultScore(72)).toBe('72%');
+    expect(formatResultScore(72.5)).toBe('72.5%');
+    expect(formatResultScore(null)).toBe('—');
   });
 
   it('builds export fallback filenames for csv and pdf', () => {

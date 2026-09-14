@@ -1,9 +1,10 @@
+import axios from 'axios';
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiStatusCode } from '@/shared/api/apiError';
-import { mockDelay } from '@/shared/mock';
-import { DEFAULT_PROCTORING, MOCK_CAMPAIGN_INVITATIONS, MOCK_EMPLOYER_CAMPAIGNS, QUESTION_BANK } from '../mocks/campaignManagement.fixtures';
+import { DEFAULT_PROCTORING } from '../mocks/campaignManagement.fixtures';
 import type {
   CampaignCreateQuestionRequest,
+  CampaignQuestionImportResult,
   CampaignCreateRequest,
   CreateCampaignInvitationsRequest,
   CreateCampaignInvitationsResponse,
@@ -20,24 +21,26 @@ import type {
   CampaignResultExportFormat,
   CampaignResultsResponse,
   CampaignTranscriptResponse,
+  CampaignResultOverrideHistoryResponse,
   GenerateCampaignQuestionsParams,
   OverrideCampaignResultPayload,
   GetCampaignInvitationsQuery,
   InviteCampaignCandidatesRequest,
   InviteCampaignCandidatesResponse,
   UpdateCampaignCandidatePayload,
-  UpdateCampaignJobNeedsRequest,
   ReissuedCampaignInvitation,
 } from '../types/campaign.api.types';
 import { parseCampaignSlot, parseCampaignSlots } from '../utils/campaignSlots';
 import type {
   CampaignCandidateRow,
-  CampaignDraftInput,
   CampaignFilters,
   CampaignQuestion,
   EmployerCampaign,
   InviteResolution,
   PublishResult,
+  CampaignDeployOptions,
+  CampaignDeployResult,
+  CampaignDeployStartNowOutcome,
 } from '../types/campaignManagement.types';
 import {
   mapCampaignResponseToEmployerCampaign,
@@ -57,6 +60,7 @@ import {
   buildCandidateListParams,
   parseCampaignResultsResponse,
   parseCampaignTranscriptResponse,
+  parseCampaignOverrideHistoryResponse,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -65,8 +69,9 @@ import {
 } from '../utils/campaignCandidatesApi';
 import { parseCampaignInvitationsPage, readNextCursorHeader } from '../utils/campaignInvitationsApi';
 import { campaignManagementEndpoints } from './campaignManagement.endpoints';
+import { isCampaignCsvFile, parseCampaignQuestionImport } from '../utils/campaignQuestionImport';
 
-let campaigns = [...MOCK_EMPLOYER_CAMPAIGNS];
+let campaigns: EmployerCampaign[] = [];
 
 /** Live Campaign API expects a Guid; mock/slug ids must not hit the network. */
 const CAMPAIGN_GUID_RE =
@@ -86,12 +91,33 @@ export class CampaignRequestError extends Error {
   }
 }
 
+export class CampaignInvitationDeployError extends Error {
+  readonly campaign: EmployerCampaign;
+  readonly emails: string[];
+  readonly status?: number;
+  readonly body?: unknown;
+  constructor(
+    message: string,
+    campaign: EmployerCampaign,
+    emails: string[],
+    status?: number,
+    body?: unknown,
+  ) {
+    super(message);
+    this.name = 'CampaignInvitationDeployError';
+    this.campaign = campaign;
+    this.emails = emails;
+    this.status = status;
+    this.body = body;
+  }
+}
+
 function matchesFilters(campaign: EmployerCampaign, filters: CampaignFilters) {
   const query = filters.query.trim().toLowerCase();
   const matchesQuery =
     !query ||
-    [campaign.title, campaign.company, campaign.location, campaign.summary].some((value) =>
-      value.toLowerCase().includes(query),
+    [campaign.title, campaign.domain, campaign.jobDescription].some((value) =>
+      value?.toLowerCase().includes(query),
     );
   const matchesStatus = filters.status === 'all' || campaign.status === filters.status;
   return matchesQuery && matchesStatus;
@@ -175,6 +201,18 @@ function unwrapInviteByEmailPayload(data: unknown): CreateCampaignInvitationsRes
   return { created, failed };
 }
 
+function readPublishWarnings(data: unknown): string[] {
+  const root = data && typeof data === 'object' && !Array.isArray(data)
+    ? data as Record<string, unknown>
+    : null;
+  const nested = root?.data && typeof root.data === 'object' && !Array.isArray(root.data)
+    ? root.data as Record<string, unknown>
+    : root;
+  return Array.isArray(nested?.warnings)
+    ? nested.warnings.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+    : [];
+}
+
 export const campaignManagementService = {
   /**
    * Live: GET /api/v1/campaign → CampaignResponse[] (Bearer employer token via apiClient).
@@ -242,11 +280,6 @@ export const campaignManagementService = {
     return campaigns.find((item) => item.id === id);
   },
 
-  async listQuestions(): Promise<CampaignQuestion[]> {
-    await mockDelay(150);
-    return QUESTION_BANK;
-  },
-
   /**
    * Live: POST /api/v1/campaign (Bearer employer) → create Draft.
    * Body matches CampaignCreateRequest (title, domain, schedule, optional JD/criteria, questions).
@@ -307,25 +340,6 @@ export const campaignManagementService = {
   },
 
   /**
-   * Mock update of an existing Draft only. New campaigns must use createCampaign (live POST)
-   * so the URL id is a real Guid — never a client-generated slug.
-   */
-  async saveDraft(input: CampaignDraftInput, id?: string): Promise<EmployerCampaign> {
-    if (!id) {
-      throw new CampaignRequestError(400, 'Use createCampaign for new drafts');
-    }
-    await mockDelay(500);
-    const now = new Date().toISOString();
-    const proctoring = input.proctoring ?? DEFAULT_PROCTORING;
-    const existing = campaigns.find((campaign) => campaign.id === id);
-    if (!existing) throw new Error('CAMPAIGN_NOT_FOUND');
-    if (existing.status !== 'draft') throw new Error('ONLY_DRAFT_EDITABLE');
-    const updated = { ...existing, ...input, proctoring, updatedAt: now };
-    campaigns = campaigns.map((campaign) => (campaign.id === id ? updated : campaign));
-    return updated;
-  },
-
-  /**
    * Live: PUT /api/v1/campaign/{id} — update Draft metadata / JD / criteria.
    * Questions are updated separately via updateCampaignQuestions.
    */
@@ -355,6 +369,8 @@ export const campaignManagementService = {
         ? existing.questions.map((item) => ({
             questionText: item.prompt,
             isRequired: true,
+            targetCriterionIds: item.targetCriterionIds ?? undefined,
+            sampleAnswer: item.sampleAnswer,
           }))
         : undefined,
     });
@@ -394,6 +410,7 @@ export const campaignManagementService = {
             description: item.description || null,
             weight: Number(item.weight) > 1 ? Number(item.weight) / 100 : Number(item.weight),
             maxScore: item.maxScore,
+            scoringScope: item.scoringScope,
           }))
         : undefined,
       jdText: existing?.jobDescription,
@@ -434,6 +451,28 @@ export const campaignManagementService = {
     return mapped;
   },
 
+  /** Live: POST /api/v1/campaign/{id}/questions/import — multipart `file`, Draft only. */
+  async importCampaignQuestions(id: string, file: File): Promise<CampaignQuestionImportResult> {
+    if (!isCampaignCsvFile(file)) {
+      throw new CampaignRequestError(400, 'IMPORT_NOT_CSV');
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<unknown>(
+      campaignManagementEndpoints.questionsImport(id),
+      formData,
+      {
+        transformRequest: [
+          (data: unknown, headers?: Record<string, unknown>) => {
+            if (data instanceof FormData && headers) delete headers['Content-Type'];
+            return data;
+          },
+        ],
+      },
+    );
+    return parseCampaignQuestionImport(response.data);
+  },
+
   /** @deprecated Prefer updateCampaignQuestions with API DTOs. */
   async saveCampaignQuestions(
     id: string,
@@ -459,7 +498,69 @@ export const campaignManagementService = {
     }
     const mapped = mapCampaignResponseToEmployerCampaign(parsed);
     campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
-    return { campaign: mapped, warnings: [] };
+    return { campaign: mapped, warnings: readPublishWarnings(response.data) };
+  },
+
+  /**
+   * Thứ tự CỐ ĐỊNH: publish → (startNow ? start-now : bỏ qua) → mời. Never sends before publish
+   * succeeds. T13 R2 (D-3): start-now đứng TRƯỚC mời để thư mời ứng viên nhận mang giờ mở đã kéo
+   * về hiện tại; đứng SAU thì backend phải gửi thêm thư "OpenedEarly" báo lại giờ mới cho từng người.
+   *
+   * I7 — start-now LỖI KHÔNG NÉM: publish đã xong, mời vẫn phải chạy y như không có start-now;
+   * kết quả ghi `startNow: 'failed'` (+ status/message) để wizard nói "đã phát hành & mời, chưa mở
+   * được ngay" thay vì hiện như deploy hỏng. `campaign` trả về là bản ĐÃ start-now khi 'done'
+   * (Active + startsAt=now) — kể cả trên `CampaignInvitationDeployError` khi mời hụt — vì cache chi
+   * tiết được sync từ chính đối tượng đó (xem `deployCampaignAndSyncCache`).
+   */
+  async deployCampaign(id: string, emails: string[], options?: CampaignDeployOptions): Promise<CampaignDeployResult> {
+    const published = await this.publishCampaign(id);
+    let campaign = published.campaign;
+    let startNow: CampaignDeployStartNowOutcome = 'skipped';
+    let startNowError: CampaignDeployResult['startNowError'];
+    if (options?.startNow) {
+      try {
+        campaign = await this.startCampaignNow(id);
+        startNow = 'done';
+      } catch (error) {
+        startNow = 'failed';
+        startNowError = {
+          status: error instanceof CampaignRequestError ? error.status : getApiStatusCode(error),
+          message: error instanceof Error ? error.message : 'START_NOW_FAILED',
+        };
+      }
+    }
+    const base: Omit<CampaignDeployResult, 'invitations'> = {
+      campaign,
+      warnings: published.warnings,
+      startNow,
+      ...(startNowError ? { startNowError } : {}),
+    };
+    if (emails.length === 0) return { ...base, invitations: null };
+    let invitations: CreateCampaignInvitationsResponse;
+    try {
+      invitations = await this.createCampaignInvitations(id, { emails });
+    } catch (error) {
+      const status = error instanceof CampaignRequestError ? error.status : getApiStatusCode(error);
+      const body = axios.isAxiosError(error) ? error.response?.data : error instanceof CampaignRequestError ? error.message : undefined;
+      throw new CampaignInvitationDeployError(
+        error instanceof Error ? error.message : 'INVITATIONS_FAILED',
+        campaign,
+        emails,
+        status,
+        body,
+      );
+    }
+    return { ...base, invitations };
+  },
+
+  /** Live: POST /api/v1/campaign/{id}/start-now — open a future campaign immediately. */
+  async startCampaignNow(id: string): Promise<EmployerCampaign> {
+    const response = await apiClient.post<unknown>(campaignManagementEndpoints.startNow(id), undefined);
+    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
+    if (!parsed?.id?.trim()) throw new Error('Invalid start-now response');
+    const mapped = mapCampaignResponseToEmployerCampaign(parsed);
+    campaigns = [mapped, ...campaigns.filter((item) => item.id !== mapped.id)];
+    return mapped;
   },
 
   /**
@@ -523,8 +624,7 @@ export const campaignManagementService = {
     query?: GetCampaignInvitationsQuery,
   ): Promise<CampaignInvitationsPage> {
     if (!isLiveCampaignId(id)) {
-      await mockDelay(200);
-      return { items: MOCK_CAMPAIGN_INVITATIONS, nextCursor: null };
+      throw new CampaignRequestError(400, 'Invalid campaign id');
     }
 
     const response = await apiClient.get<unknown>(campaignManagementEndpoints.invitations(id), {
@@ -843,24 +943,6 @@ export const campaignManagementService = {
     });
   },
 
-  /** Live: PUT /api/v1/campaign/{id}/job-needs — replace-all array body. */
-  async updateCampaignJobNeeds(
-    id: string,
-    jobNeeds: UpdateCampaignJobNeedsRequest[],
-  ): Promise<EmployerCampaign> {
-    const body = jobNeeds
-      .map((item) => ({
-        ...(item.needId?.trim() ? { needId: item.needId.trim() } : {}),
-        category: item.category,
-        text: item.text.trim(),
-      }))
-      .filter((item) => item.text.length > 0);
-    const response = await apiClient.put<unknown>(campaignManagementEndpoints.jobNeeds(id), body);
-    const parsed = parseCampaignResponse(unwrapCampaignDetailPayload(response.data));
-    if (!parsed) throw new Error('Invalid job needs response');
-    return mapCampaignResponseToEmployerCampaign(parsed);
-  },
-
   /** Live: POST /api/v1/campaign/{id}/candidates/{candidateId}/rescreen (202). */
   async rescreenCampaignCandidate(id: string, candidateId: string): Promise<void> {
     await apiClient.post(campaignManagementEndpoints.candidateRescreen(id, candidateId), undefined, {
@@ -900,7 +982,7 @@ export const campaignManagementService = {
     }
     const response = await apiClient.post<unknown>(
       campaignManagementEndpoints.inviteCandidates(id),
-      { candidateIds } satisfies InviteCampaignCandidatesRequest,
+      { candidateIds, ...(payload.includeIneligible ? { includeIneligible: true } : {}) } satisfies InviteCampaignCandidatesRequest,
     );
     return parseInviteByCandidateIdsResponse(response.data);
   },
@@ -948,6 +1030,31 @@ export const campaignManagementService = {
       campaignManagementEndpoints.resultTranscript(id, sessionId),
     );
     return parseCampaignTranscriptResponse(response.data);
+  },
+
+  async getCampaignResultOverrideHistory(
+    id: string,
+    sessionId: string,
+  ): Promise<CampaignResultOverrideHistoryResponse> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.resultOverrideHistory(id, sessionId),
+    );
+    return parseCampaignOverrideHistoryResponse(response.data);
+  },
+
+  async getCampaignResultAnswerAudio(
+    id: string,
+    sessionId: string,
+    answerId: string,
+  ): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+      campaignManagementEndpoints.resultAnswerAudio(id, sessionId, answerId),
+      { responseType: 'blob' },
+    );
+    if (!(response.data instanceof Blob) || response.data.size <= 0) {
+      throw new CampaignRequestError(404, 'RESULT_ANSWER_AUDIO_NOT_FOUND');
+    }
+    return response.data;
   },
 
   /**

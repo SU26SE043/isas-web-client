@@ -122,3 +122,23 @@ export function getCampaignSlotErrorKey(
   if (status === 400) return 'employer.campaigns.slots.errors.invalid';
   return `employer.campaigns.slots.errors.${action}`;
 }
+
+/**
+ * Câu lỗi hiện cho HR. Backend trả 400 kèm plain-text NÊU ĐÚNG LÝ DO ("Khung giờ bắt đầu trước khi
+ * chiến dịch mở (17:24 14/09/2026 giờ VN)", "…kết thúc sau khi chiến dịch đóng…"); dán đè bằng câu
+ * chung "Thông tin khung giờ không hợp lệ." là giấu mất thứ duy nhất HR cần để sửa (đo trên dev 14/09:
+ * HR đặt ca 16:26 trong khi chiến dịch mở 17:24, không biết vì sao). Có lời server thì dùng lời server;
+ * mã lỗi nội bộ (CampaignRequestError/không có body) vẫn đi qua khoá i18n như cũ.
+ */
+export function resolveCampaignSlotErrorMessage(
+  error: unknown,
+  action: 'load' | 'create' | 'update' | 'delete',
+  t: (key: string) => string,
+): string {
+  const key = getCampaignSlotErrorKey(error, action);
+  if (key === 'employer.campaigns.slots.errors.invalid') {
+    const serverMessage = getApiErrorMessage(error, '').trim();
+    if (serverMessage) return serverMessage;
+  }
+  return t(key);
+}

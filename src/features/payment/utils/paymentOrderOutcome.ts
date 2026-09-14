@@ -21,9 +21,9 @@ export function normalizePaymentStatusToken(status: string): string {
   } as Record<string, string>)[token] ?? token;
 }
 
-/** Prefer `paymentStatus` from OrderResponse; fall back to `status` when absent. */
-export function getOrderPaymentStatus(order: Pick<PaymentOrderDetail, 'paymentStatus' | 'status'>): string {
-  return order.paymentStatus ?? order.status ?? '';
+export function getOrderPaymentStatus(order: Pick<PaymentOrderDetail, 'status' | 'paymentStatus'>): string {
+  // The live contract has one status; the fallback keeps legacy preview data readable.
+  return order.status ?? order.paymentStatus ?? '';
 }
 
 export function resolvePaymentOutcome(status: string): PaymentOutcome {

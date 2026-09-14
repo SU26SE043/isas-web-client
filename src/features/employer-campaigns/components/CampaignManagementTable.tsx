@@ -42,16 +42,14 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <TableRow key={campaign.id} className="group">
                 <TableCell>
                   <p className="max-w-[320px] truncate font-semibold text-foreground">{campaign.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {campaign.location} · {t(`employer.campaigns.mode.${campaign.mode}`)}
-                  </p>
                 </TableCell>
                 <TableCell>
                   <CampaignManagementStatusBadge status={campaign.status} />
                 </TableCell>
                 <TableCell>{formatDate(campaign.deadline, language)}</TableCell>
                 <TableCell>
-                  {campaign.applicants}/{campaign.capacity}
+                  {/* capacity=0 = "không trần riêng" (maxCandidates tuỳ chọn), không phải 0 chỗ. */}
+                  {campaign.cvCount ?? 0}/{campaign.capacity > 0 ? campaign.capacity : '—'}
                 </TableCell>
                 <TableCell>{formatDate(campaign.updatedAt, language)}</TableCell>
                 <TableCell>
@@ -67,17 +65,18 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
                       <Eye className="size-3.5" aria-hidden />
                       {t('employer.campaigns.list.view')}{' '}
                     </Link>
+                    {/* Cùng cấp với "Xem": nút đen duy nhất trên trang là "Tạo chiến dịch" ở đầu trang. */}
                     <Link
-                        to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
-                        className={cn(
-                          buttonVariants({ size: 'sm' }),
-                          'bg-foreground text-background shadow-sm',
-                          'hover:bg-foreground/85',
-                        )}
-                      >
-                        <Send className="size-3.5" aria-hidden />
-                        {t('employer.campaigns.list.invite')}
-                      </Link>
+                      to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
+                      className={cn(
+                        buttonVariants({ variant: 'outline', size: 'sm' }),
+                        'border-foreground/30 bg-foreground/[0.06] text-foreground shadow-sm',
+                        'hover:border-foreground/50 hover:bg-foreground/10',
+                      )}
+                    >
+                      <Send className="size-3.5" aria-hidden />
+                      {t('employer.campaigns.list.invite')}
+                    </Link>
                   </div>
                 </TableCell>
               </TableRow>
@@ -95,12 +94,10 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-semibold text-foreground">{campaign.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{campaign.location}</p>
               </div>
               <CampaignManagementStatusBadge status={campaign.status} />
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">{campaign.summary}</p>
-            <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-white/8 py-3 text-xs">
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-subtle py-3 text-xs">
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.deadline')}</dt>
                 <dd className="mt-1 font-medium text-foreground">{formatDate(campaign.deadline, language)}</dd>
@@ -108,7 +105,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               <div>
                 <dt className="text-muted-foreground">{t('employer.campaigns.list.capacity')}</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {campaign.applicants}/{campaign.capacity}
+                  {campaign.cvCount ?? 0}/{campaign.capacity > 0 ? campaign.capacity : '—'}
                 </dd>
               </div>
             </dl>
@@ -122,7 +119,7 @@ export function CampaignManagementTable({ campaigns }: { campaigns: EmployerCamp
               </Link>
               <Link
                 to={`/employer/campaigns/${campaign.id}/invitations?tab=cv-screening`}
-                className={cn(buttonVariants(), 'w-full')}
+                className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
               >
                 <Send className="size-4" aria-hidden />
                 {t('employer.campaigns.list.invite')}

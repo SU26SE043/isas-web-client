@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { AppPagination, DEFAULT_PAGE_SIZE } from '@/components/ui/app-pagination';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import {
   Table,
@@ -11,8 +11,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
-import { canSelectCandidate, getCandidateRanks } from './screeningUtils';
+import { canSelectCandidate, getCandidateRanks, verificationRiskTranslationKey } from './screeningUtils';
+import { CandidateStatusCell } from './CandidateStatusCell';
 
 interface CandidateRankingTableProps {
   candidates: CampaignCandidateListItem[];
@@ -23,6 +26,12 @@ interface CandidateRankingTableProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   onChooseFiles: () => void;
+  onUpdateEmail?: (candidateId: string, email: string) => Promise<void>;
+  updatingCandidateId?: string | null;
+  allowIneligibleSelection?: boolean;
+  onRescreen?: (candidateId: string) => void;
+  rescreeningCandidateId?: string | null;
+  allowMissingEmailSelection?: boolean;
 }
 
 export function CandidateRankingTable({
@@ -34,16 +43,32 @@ export function CandidateRankingTable({
   hasActiveFilters,
   onClearFilters,
   onChooseFiles,
+  onUpdateEmail,
+  updatingCandidateId = null,
+  allowIneligibleSelection = false,
+  onRescreen,
+  rescreeningCandidateId = null,
+  allowMissingEmailSelection = false,
 }: CandidateRankingTableProps) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
 
-  const selectableIds = candidates.filter(canSelectCandidate).map((item) => item.id);
+  const selectableIds = candidates
+    .filter((item) => canSelectRow(item, allowIneligibleSelection, allowMissingEmailSelection))
+    .map((item) => item.id);
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
-  const pageItems = candidates.slice((page - 1) * pageSize, page * pageSize);
   const candidateRanks = getCandidateRanks(candidates);
+  const hasMustHave = candidates.some((item) => (item.mustHaveTotal ?? 0) > 0);
+  const groupedCandidates = hasMustHave
+    ? [
+        { key: 'eligible', title: t('employer.campaigns.screening.ranking.group.eligible'), items: candidates.filter((item) => item.eligible !== false && !isUnreadable(item)) },
+        { key: 'ineligible', title: t('employer.campaigns.screening.ranking.group.ineligible'), items: candidates.filter((item) => item.eligible === false) },
+        { key: 'unreadable', title: t('employer.campaigns.screening.ranking.group.unreadable'), items: candidates.filter((item) => item.eligible !== false && isUnreadable(item)) },
+      ].filter((group) => group.items.length > 0)
+    : [{ key: 'all', title: '', items: candidates }];
 
   useEffect(() => {
     setPage(1);
@@ -103,10 +128,16 @@ export function CandidateRankingTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageItems.map((item) => {
-            const selectable = canSelectCandidate(item);
+          {groupedCandidates.flatMap((group) => group.items).slice((page - 1) * pageSize, page * pageSize).map((item, index) => {
+            const selectable = allowIneligibleSelection
+              ? canSelectRow(item, true, allowMissingEmailSelection)
+              : canSelectRow(item, false, allowMissingEmailSelection);
+            const emailDraft = emailDrafts[item.id] ?? item.email ?? '';
+            const emailDirty = emailDraft.trim().toLowerCase() !== (item.email ?? '').trim().toLowerCase();
             return (
-              <TableRow key={item.id}>
+              <Fragment key={item.id}>
+                {groupedCandidates.length > 1 && index === groupedCandidates.slice(0, groupedCandidates.findIndex((entry) => entry.items.some((candidate) => candidate.id === item.id))).reduce((sum, entry) => sum + entry.items.length, 0) ? <TableRow><TableCell colSpan={7} className="bg-surface-elevated font-semibold text-foreground">{groupedCandidates.find((entry) => entry.items.some((candidate) => candidate.id === item.id))?.title}</TableCell></TableRow> : null}
+              <TableRow>
                 <TableCell>
                   <input
                     type="checkbox"
@@ -122,21 +153,52 @@ export function CandidateRankingTable({
                 </TableCell>
                 <TableCell>
                   <p className="font-medium text-foreground">{item.fullName ?? '—'}</p>
-                  <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>
+                  {onUpdateEmail ? (
+                    <div className="mt-2 flex max-w-sm items-center gap-2">
+                      <Input
+                        type="email"
+                        value={emailDraft}
+                        placeholder="candidate@example.com"
+                        aria-label={t('employer.campaigns.screening.ranking.email')}
+                        onChange={(event) => setEmailDrafts((current) => ({ ...current, [item.id]: event.target.value }))}
+                        disabled={updatingCandidateId === item.id}
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={!emailDirty || updatingCandidateId === item.id}
+                        loading={updatingCandidateId === item.id}
+                        onClick={() => void onUpdateEmail(item.id, emailDraft)}
+                      >
+                        {t('employer.campaigns.screening.ranking.saveEmail')}
+                      </Button>
+                    </div>
+                  ) : <p className="text-xs text-muted-foreground">{item.email ?? '—'}</p>}
+                  {item.eligible === false ? <Badge variant="warning">{t('employer.campaigns.screening.ranking.ineligible')}</Badge> : null}
+                  {item.mustHaveTotal ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.screening.ranking.mustHaveCount').replace('{{met}}', String(item.mustHaveMet ?? 0)).replace('{{total}}', String(item.mustHaveTotal))}</p> : null}
+                  {item.missingMustHave?.length ? <p className="text-xs text-warning">{t('employer.campaigns.screening.ranking.missingMustHave')}: {item.missingMustHave.join(', ')}</p> : null}
                 </TableCell>
                 <TableCell className="font-semibold text-foreground">
-                  {item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>{item.overallMatchScore != null ? `${item.overallMatchScore}%` : '—'}</span>
+                    {item.verificationRisk ? (
+                      <Badge variant={item.verificationRisk === 'High' ? 'destructive' : item.verificationRisk === 'Medium' ? 'warning' : 'success'}>
+                        {t(verificationRiskTranslationKey(item.verificationRisk))}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {item.skills?.length ? item.skills.slice(0, 3).join(', ') : '—'}
                 </TableCell>
                 <TableCell className="text-foreground">
-                  <div>{item.status}</div>
-                  {item.verificationRisk ? (
-                    <div className="text-xs text-warning-foreground">
-                      {t('employer.campaigns.screening.ranking.verificationRisk')}: {item.verificationRisk}
-                    </div>
-                  ) : null}
+                  <CandidateStatusCell
+                    candidate={item}
+                    onRescreen={onRescreen}
+                    rescreeningCandidateId={rescreeningCandidateId}
+                  />
                 </TableCell>
                 <TableCell>
                   <Button
@@ -149,6 +211,7 @@ export function CandidateRankingTable({
                   </Button>
                 </TableCell>
               </TableRow>
+              </Fragment>
             );
           })}
         </TableBody>
@@ -163,4 +226,22 @@ export function CandidateRankingTable({
       />
     </div>
   );
+}
+
+function canSelectRow(
+  item: CampaignCandidateListItem,
+  allowIneligibleSelection: boolean,
+  allowMissingEmailSelection: boolean,
+) {
+  const candidate = allowIneligibleSelection ? { ...item, eligible: true } : item;
+  return canSelectCandidate(
+    allowMissingEmailSelection && !candidate.email
+      ? { ...candidate, email: 'missing-email@invalid.local' }
+      : candidate,
+  );
+}
+
+export function isUnreadable(item: CampaignCandidateListItem): boolean {
+  const status = item.status.toLowerCase();
+  return status === 'analyzing' || status === 'analysisfailed' || status === 'filtered' || item.overallMatchScore == null;
 }

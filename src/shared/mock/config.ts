@@ -13,13 +13,13 @@
  * specs can run without a gateway. Other live domains (e.g. cv-analysis) keep HTTP
  * so E2E route stubs continue to work.
  */
+// `profile`/`admin` từng là domain mock (fixture hồ sơ + bảng quản trị giả) — gỡ 2026-09-13 cùng
+// các màn đó. `enterprise` còn lại chỉ nuôi luồng briefing/magic-link legacy của ứng viên (e2e mock).
 export type MockDataDomain =
   | 'practice'
   | 'cv-analysis'
-  | 'profile'
   | 'enterprise'
-  | 'payment'
-  | 'admin';
+  | 'payment';
 
 /** Domains wired to the real gateway today (auth is always live — not listed here). */
 export const LIVE_API_DOMAINS: readonly MockDataDomain[] = ['cv-analysis', 'practice', 'payment'];

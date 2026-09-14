@@ -104,7 +104,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     >
       {step === 'email' && (
         <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.forgotTitle')}</h1>
+          <h1 className="text-3xl sm:text-4xl heading-primary mb-4 tracking-tight">{t('auth.forgotTitle')}</h1>
           <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
             {t('auth.forgotDescription')}
           </p>
@@ -132,7 +132,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
       {step === 'otp' && (
         <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.verifyOtpTitle')}</h1>
+          <h1 className="text-3xl sm:text-4xl heading-primary mb-4 tracking-tight">{t('auth.verifyOtpTitle')}</h1>
           <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
             {t('auth.verifyOtpDescription')}
           </p>
@@ -167,7 +167,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
       {step === 'reset' && (
         <>
-          <h1 className="text-4xl heading-primary mb-4 tracking-tight">{t('auth.resetPasswordTitle')}</h1>
+          <h1 className="text-3xl sm:text-4xl heading-primary mb-4 tracking-tight">{t('auth.resetPasswordTitle')}</h1>
           <p className="text-sm text-muted-foreground mb-8 text-center font-medium leading-relaxed">
             {t('auth.resetPasswordDescription')}
           </p>

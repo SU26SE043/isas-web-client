@@ -125,7 +125,7 @@ export function PaymentOrderDetailFields({
       </DetailRow>
 
       <DetailRow icon={Wallet} label={t('payment.orders.amount')}>
-        {order.priceVnd != null ? `${formatVnd(order.priceVnd, locale)} VND` : '--'}
+        {order.amountVnd != null ? `${formatVnd(order.amountVnd, locale)} VND` : '--'}
       </DetailRow>
 
       <DetailRow icon={Package} label={t('payment.orders.package')}>

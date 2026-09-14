@@ -121,7 +121,7 @@ function ExportOption({
       role="menuitem"
       disabled={disabled}
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-white/[0.05] disabled:opacity-50"
+      className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-overlay disabled:opacity-50"
     >
       <span className="mt-0.5 text-muted-foreground">{icon}</span>
       <span>

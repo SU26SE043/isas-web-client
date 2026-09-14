@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
-import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { useLanguage } from '../shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
@@ -41,14 +40,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
             className={`flex h-14 items-center border-b border-subtle px-3 ${isCollapsed ? 'justify-center' : 'justify-center sm:justify-between sm:gap-2'}`}
           >
             {!isCollapsed ? (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+              <Link to="/" className="focus-ring hidden rounded-lg sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             ) : null}
             <button
               type="button"
               onClick={() => setIsCollapsed((value) => !value)}
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
               aria-pressed={isCollapsed}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-surface-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
             >
@@ -84,7 +83,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
                     {item.label}
                   </span>
                   {isCollapsed ? (
-                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-md border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
+                    <span className="pointer-events-none absolute left-full z-50 ml-2 hidden rounded-lg border border-subtle bg-surface-elevated px-2 py-1 text-xs font-medium text-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100 lg:block">
                       {item.label}
                     </span>
                   ) : null}
@@ -94,25 +93,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
           </nav>
 
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
-            <div
-              className={navLinkClassName(false, isCollapsed)}
-              title={isCollapsed ? t('engagement.nav.notifications') : undefined}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('button')) return;
-                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
-              }}
-            >
-              <NotificationBell scope="candidate" panelPlacement="sidebar" variant="sidebar" />
-              <span
-                className={[
-                  'overflow-hidden whitespace-nowrap transition-all duration-300',
-                  isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
-                ].join(' ')}
-                aria-hidden={isCollapsed}
-              >
-                {t('engagement.nav.notifications')}
-              </span>
-            </div>
             <div
               className={[
                 'flex items-center rounded-xl py-2.5',
@@ -147,11 +127,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ sectionTitleKe
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
+        {/* `overflow-x-clip` chứ KHÔNG `overflow-hidden`: hidden biến main thành scroll container ⇒ mọi
+            `position: sticky` bên trong (header reader bài học, thanh công cụ trang) không bao giờ dính —
+            cùng lỗi đã đo ở layout employer (rail ở y = −675 sau khi cuộn). */}
+        <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
+          {/* Chỉ tiêu đề khu vực — toggle ngôn ngữ đã có ở sidebar, đặt thêm ở đây là hai nút VI/EN trên cùng một màn. */}
           {sectionTitleKey ? (
-            <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
+            <header className="flex h-14 shrink-0 items-center border-b border-subtle bg-surface-base/90 px-4 backdrop-blur-md sm:px-6">
               <span className="truncate text-sm font-medium text-muted-foreground">{t(sectionTitleKey)}</span>
-              <LanguageToggle compact />
             </header>
           ) : null}
           <div className="min-w-0">

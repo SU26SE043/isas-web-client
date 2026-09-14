@@ -1,106 +1,109 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { Download } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/patterns/PageHeader';
+import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
-import { AnalyticsBars } from '../components/AnalyticsBars';
+import { EmployerAnalyticsBandChart } from '../components/EmployerAnalyticsBandChart';
+import { EmployerAnalyticsCampaignTable } from '../components/EmployerAnalyticsCampaignTable';
+import { EmployerAnalyticsFilters } from '../components/EmployerAnalyticsFilters';
+import { EmployerAnalyticsFlagsTable } from '../components/EmployerAnalyticsFlagsTable';
+import { EmployerAnalyticsFunnelChart } from '../components/EmployerAnalyticsFunnelChart';
+import { EmployerAnalyticsScreeningCard } from '../components/EmployerAnalyticsScreeningCard';
+import { EmployerAnalyticsEmpty, EmployerAnalyticsError, EmployerAnalyticsSkeleton } from '../components/EmployerAnalyticsStates';
+import { EmployerAnalyticsStats } from '../components/EmployerAnalyticsStats';
+import { EmployerAnalyticsTrendChart } from '../components/EmployerAnalyticsTrendChart';
 import { useEmployerAnalytics } from '../hooks/useEmployerAnalytics';
-import type { AnalyticsFilters, ExportFormat, PipelineStatus } from '../types/employerAnalytics.types';
+import type { EmployerAnalyticsGranularity, EmployerAnalyticsPreset } from '../types/employerAnalytics.types';
+import { fillAnalyticsBuckets, resolveAnalyticsPeriod } from '../utils/employerAnalyticsMetrics';
 
-const statuses: Array<PipelineStatus | 'all'> = [
-  'all',
-  'invited',
-  'invite_pending',
-  'in_progress',
-  'paused_violation',
-  'auto_submitted',
-  'completed',
-];
-
+/**
+ * Phân tích tuyển dụng theo tổ chức — dữ liệu THẬT từ `GET /api/v1/campaign/analytics`.
+ * Số tổng (thẻ · phễu · phân bố · sàng CV · cờ · từng chiến dịch) = trạng thái hiện tại của cả org;
+ * chỉ "Hoạt động theo kỳ" đổi theo kỳ/nhóm đã chọn. Kỳ tính phía client theo UTC rồi gửi `from`/`to`.
+ */
 export function EmployerAnalyticsPage() {
-  const { t } = useLanguage();
-  const [message, setMessage] = useState('');
-  const [searchParams] = useSearchParams();
-  const [filters, setFilters] = useState<AnalyticsFilters>({ dateRange: '30d', status: 'all' });
-  const stableFilters = useMemo(() => filters, [filters]);
-  const { analytics, isLoading, exportAnalytics } = useEmployerAnalytics(searchParams.get('campaignId') ?? undefined, stableFilters);
+  const { t, language } = useLanguage();
+  const [preset, setPreset] = useState<EmployerAnalyticsPreset>('30d');
+  const [groupBy, setGroupBy] = useState<EmployerAnalyticsGranularity>('day');
+  // Tính một lần cho mỗi preset — khoá query phải ổn định giữa các render, không trôi theo `new Date()`.
+  const period = useMemo(() => resolveAnalyticsPeriod(preset, new Date()), [preset]);
+  const analytics = useEmployerAnalytics({ ...period, groupBy });
+  const status = getApiStatusCode(analytics.error);
+  const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(value));
 
-  const runExport = async (format: ExportFormat, rows?: number) => {
-    const result = await exportAnalytics(format, rows ?? analytics?.exportableRows ?? 0);
-    setMessage(t(result.messageKey));
-  };
+  const data = analytics.data;
+  // Điền theo granularity CỦA DỮ LIỆU (không theo select): lúc đổi nhóm, `keepPreviousData` còn giữ bộ
+  // bucket theo nhóm cũ — điền lưới mới lên bucket cũ sẽ ra biểu đồ trộn hai lưới trong vài trăm ms.
+  const dataGranularity: EmployerAnalyticsGranularity = data?.granularity === 'month' ? 'month' : 'day';
+  const buckets = useMemo(
+    () => (data ? fillAnalyticsBuckets(data.buckets, data.from, data.to, dataGranularity) : []),
+    [data, dataGranularity],
+  );
+  const isEmptyOrg = data != null && data.campaigns.total === 0;
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-label text-muted-foreground">{t('employerAnalytics.analytics.eyebrow')}</p>
-            <h1 className="heading-primary text-3xl text-foreground">{t('employerAnalytics.analytics.title')}</h1>
-            <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('employerAnalytics.analytics.subtitle')}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => runExport('csv')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportCsv')}</Button>
-            <Button onClick={() => runExport('pdf')}><Download className="size-4" aria-hidden /> {t('employerAnalytics.analytics.exportPdf')}</Button>
-          </div>
-        </header>
+      <div className="app-page space-y-6">
+        <PageHeader
+          title={t('employerAnalytics.page.title')}
+          description={t('employerAnalytics.page.description')}
+          actions={
+            <EmployerAnalyticsFilters
+              preset={preset}
+              groupBy={groupBy}
+              isFetching={analytics.isFetching}
+              onPresetChange={setPreset}
+              onGroupByChange={setGroupBy}
+              onRefresh={() => void analytics.refetch()}
+            />
+          }
+        />
 
-        {message ? <Alert variant="info"><AlertDescription>{message}</AlertDescription></Alert> : null}
-        <div className="grid gap-3 rounded-xl border border-subtle bg-surface-raised p-4 md:grid-cols-2">
-          <Select label={t('employerAnalytics.analytics.dateRange')} value={filters.dateRange} onChange={(dateRange) => setFilters({ ...filters, dateRange: dateRange as AnalyticsFilters['dateRange'] })}>
-            {(['30d', '90d', 'ytd'] as const).map((range) => <option key={range} value={range}>{t(`employerAnalytics.analytics.dateRange.${range}`)}</option>)}
-          </Select>
-          <Select label={t('employerAnalytics.pipeline.status')} value={filters.status} onChange={(status) => setFilters({ ...filters, status: status as AnalyticsFilters['status'] })}>
-            {statuses.map((status) => <option key={status} value={status}>{t(`employerAnalytics.status.${status}`)}</option>)}
-          </Select>
-        </div>
+        {data ? (
+          <p className="text-sm text-muted-foreground" data-testid="employer-analytics-range">
+            {t('employerAnalytics.page.range').replace('{from}', formatDate(data.from)).replace('{to}', formatDate(data.to))}
+            {analytics.isPlaceholderData ? ` · ${t('employerAnalytics.page.refreshing')}` : null}
+          </p>
+        ) : null}
 
-        {isLoading || !analytics ? (
-          <Skeleton className="h-96 w-full" />
-        ) : (
-          <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Metric label={t('employerAnalytics.analytics.totalCandidates')} value={analytics.totalCandidates} hint={`${analytics.exportableRows} ${t('employerAnalytics.analytics.rows')}`} />
-              <Metric label={t('employerAnalytics.analytics.completionRate')} value={`${analytics.completionRate}%`} hint={t('employerAnalytics.analytics.weeklyTrend')} />
-              <Metric label={t('employerAnalytics.analytics.averageScore')} value={analytics.averageScore} hint={t('employerAnalytics.analytics.scoreDistribution')} />
-              <Metric label={t('employerAnalytics.analytics.timeToHire')} value={analytics.timeToHireDays} hint={t('employerAnalytics.analytics.dateRange.30d')} />
+        {analytics.isPending ? <EmployerAnalyticsSkeleton /> : null}
+        {analytics.isError && !data ? (
+          <EmployerAnalyticsError status={status} onRetry={() => void analytics.refetch()} />
+        ) : null}
+        {data && isEmptyOrg ? <EmployerAnalyticsEmpty /> : null}
+        {data && !isEmptyOrg ? (
+          <div className={analytics.isPlaceholderData ? 'space-y-6 opacity-60 transition-opacity' : 'space-y-6'} aria-busy={analytics.isPlaceholderData}>
+            <section aria-label={t('employerAnalytics.page.title')} data-testid="employer-analytics-stats">
+              <EmployerAnalyticsStats data={data} />
+            </section>
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              <EmployerAnalyticsFunnelChart data={data} />
+              <EmployerAnalyticsScreeningCard data={data} />
+              <EmployerAnalyticsFlagsTable flags={data.interviews.flagsBySignal} />
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <AnalyticsBars title={t('employerAnalytics.analytics.funnel')} items={analytics.funnel.map((item) => ({ label: t(`employerAnalytics.status.${item.status}`), value: item.count }))} />
-              <AnalyticsBars title={t('employerAnalytics.analytics.scoreDistribution')} items={analytics.scoreDistribution.map((item) => ({ label: item.band, value: item.count }))} />
-              <AnalyticsBars title={t('employerAnalytics.analytics.topSkills')} items={analytics.topSkills.map((item) => ({ label: item.skill, value: item.demand, hint: '%' }))} max={100} />
-              <AnalyticsBars title={t('employerAnalytics.analytics.weeklyTrend')} items={analytics.weeklyTrend.map((item) => ({ label: item.week, value: item.completed }))} />
+              <EmployerAnalyticsBandChart
+                id="employer-analytics-interview-bands"
+                title={t('employerAnalytics.distribution.interviewTitle')}
+                description={t('employerAnalytics.distribution.interviewDescription')}
+                bands={data.interviews.scoreDistribution}
+                colorIndex={0}
+              />
+              <EmployerAnalyticsBandChart
+                id="employer-analytics-fit-bands"
+                title={t('employerAnalytics.distribution.fitTitle')}
+                description={t('employerAnalytics.distribution.fitDescription')}
+                bands={data.screening.fitDistribution}
+                colorIndex={1}
+              />
             </div>
-          </>
-        )}
+            <EmployerAnalyticsTrendChart buckets={buckets} granularity={dataGranularity} />
+            {/* Bảng 8 cột cần trọn chiều ngang; nhét vào lưới 2 cột ở 1280px là cắt mất Passed/Median sau thanh cuộn. */}
+            <EmployerAnalyticsCampaignTable rows={data.perCampaign} />
+          </div>
+        ) : null}
       </div>
     </div>
-  );
-}
-
-function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (value: string) => void; children: ReactNode }) {
-  return (
-    <label className="grid gap-2 text-sm font-medium text-foreground">
-      {label}
-      <select className="h-10 rounded-lg border border-input bg-surface-overlay px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function Metric({ label, value, hint }: { label: string; value: string | number; hint: string }) {
-  return (
-    <Card className="border border-subtle bg-surface-raised">
-      <CardContent className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      </CardContent>
-    </Card>
   );
 }

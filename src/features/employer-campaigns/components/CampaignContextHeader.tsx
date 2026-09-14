@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react';
+import { ArrowLeft, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
@@ -49,12 +49,10 @@ export function CampaignContextHeader({
       <header className="frame-satin rounded-xl bg-surface-raised px-4 py-4 sm:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="heading-primary [overflow-wrap:anywhere] text-2xl text-foreground sm:text-3xl">
+            {/* Lĩnh vực chỉ in MỘT lần — ở dòng meta bên dưới (trước đây còn một phụ đề ngay dưới h1 nữa). */}
+            <h1 className="heading-primary wrap-anywhere text-2xl text-foreground sm:text-3xl">
               {campaign.title}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {campaign.domain || campaign.summary}
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <CampaignManagementStatusBadge status={campaign.status} />
@@ -65,12 +63,6 @@ export function CampaignContextHeader({
         </div>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{campaign.domain}</span>
-          {campaign.location ? (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-4" aria-hidden />
-              {campaign.location}
-            </span>
-          ) : null}
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-4" aria-hidden />
             {remainingLabel} · {deadline}

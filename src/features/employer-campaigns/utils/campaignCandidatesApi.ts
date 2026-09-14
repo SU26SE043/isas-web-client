@@ -3,10 +3,14 @@ import type {
   CampaignCandidateListItem,
   CandidateEvidence,
   CampaignResultFlag,
+  CampaignResultBelowCutoff,
   CampaignResultStatus,
   CampaignResultsResponse,
   CampaignScoredResult,
   CampaignTranscriptResponse,
+  CampaignResultOverrideHistoryResponse,
+  CampaignResultOverrideHistoryItem,
+  TranscriptQuestion,
   CampaignUnscoredFlaggedResult,
   CandidateListQuery,
   CandidateUploadResponse,
@@ -113,9 +117,14 @@ export function parseCandidateListItem(raw: unknown): CampaignCandidateListItem 
     email: pickString(record, 'email', 'Email') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'Unknown',
     overallMatchScore: pickNumber(record, 'overallMatchScore', 'OverallMatchScore') ?? null,
+    rejectReason: pickString(record, 'rejectReason', 'RejectReason') ?? null,
     skills,
     verificationRisk: (pickString(record, 'verificationRisk', 'VerificationRisk') as CampaignCandidateListItem['verificationRisk']) ?? null,
     screeningVersion: pickNumber(record, 'screeningVersion', 'ScreeningVersion') ?? null,
+    eligible: typeof (record.eligible ?? record.Eligible) === 'boolean' ? Boolean(record.eligible ?? record.Eligible) : null,
+    missingMustHave: Array.isArray(record.missingMustHave ?? record.MissingMustHave) ? (record.missingMustHave ?? record.MissingMustHave) as string[] : null,
+    mustHaveMet: pickNumber(record, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(record, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 
@@ -176,6 +185,10 @@ export function parseCandidateDetail(data: unknown): CampaignCandidateDetail | n
     bonusSignals: parseStringArray(body.bonusSignals ?? body.BonusSignals),
     verificationRisk: (pickString(body, 'verificationRisk', 'VerificationRisk') as CampaignCandidateDetail['verificationRisk']) ?? null,
     verifyQuestions: parseStringArray(body.verifyQuestions ?? body.VerifyQuestions),
+    eligible: typeof (body.eligible ?? body.Eligible) === 'boolean' ? Boolean(body.eligible ?? body.Eligible) : null,
+    missingMustHave: Array.isArray(body.missingMustHave ?? body.MissingMustHave) ? (body.missingMustHave ?? body.MissingMustHave) as string[] : [],
+    mustHaveMet: pickNumber(body, 'mustHaveMet', 'MustHaveMet') ?? null,
+    mustHaveTotal: pickNumber(body, 'mustHaveTotal', 'MustHaveTotal') ?? null,
   };
 }
 
@@ -243,6 +256,26 @@ function parseCampaignResultFlags(raw: unknown): CampaignResultFlag[] {
   return flags;
 }
 
+function parseBelowCutoff(raw: unknown): CampaignResultBelowCutoff[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const name = pickString(record, 'name', 'Name');
+    const pct = pickNumber(record, 'pct', 'Pct');
+    const minPct = pickNumber(record, 'minPct', 'MinPct');
+    if (!name || pct == null || minPct == null) return [];
+    const matchedBy = pickString(record, 'matchedBy', 'MatchedBy');
+    return [{
+      criterionId: pickString(record, 'criterionId', 'CriterionId') ?? null,
+      name,
+      pct,
+      minPct,
+      matchedBy: matchedBy === 'name' ? 'name' : 'id',
+    }];
+  });
+}
+
 function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -296,6 +329,22 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
         result,
         scoredAt,
         flags: parseCampaignResultFlags(record.flags ?? record.Flags),
+        answered: pickNumber(record, 'answered', 'Answered') ?? null,
+        totalQuestions: pickNumber(record, 'totalQuestions', 'TotalQuestions') ?? null,
+        seedAnswered: pickNumber(record, 'seedAnswered', 'SeedAnswered') ?? null,
+        seedTotal: pickNumber(record, 'seedTotal', 'SeedTotal') ?? null,
+        skipPenalty: typeof (record.skipPenalty ?? record.SkipPenalty) === 'boolean'
+          ? Boolean(record.skipPenalty ?? record.SkipPenalty)
+          : null,
+        cvMatchScore: pickNumber(record, 'cvMatchScore', 'CvMatchScore') ?? null,
+        cvVerificationRisk: pickString(record, 'cvVerificationRisk', 'CvVerificationRisk') ?? null,
+        cvScreeningVersion: pickNumber(record, 'cvScreeningVersion', 'CvScreeningVersion') ?? null,
+        belowCutoff: parseBelowCutoff(record.belowCutoff ?? record.BelowCutoff),
+        policyName: pickString(record, 'policyName', 'PolicyName') ?? null,
+        policyVersion: pickNumber(record, 'policyVersion', 'PolicyVersion') ?? null,
+        scoreFallback: typeof (record.scoreFallback ?? record.ScoreFallback) === 'boolean'
+          ? Boolean(record.scoreFallback ?? record.ScoreFallback)
+          : null,
       };
     })
     .filter((item): item is CampaignScoredResult => item != null);
@@ -313,6 +362,9 @@ export function parseCampaignResultsResponse(data: unknown): CampaignResultsResp
     totalCandidates: pickNumber(body, 'totalCandidates', 'TotalCandidates') ?? results.length,
     results,
     unscoredFlagged,
+    questionsPerSession: pickNumber(body, 'questionsPerSession', 'QuestionsPerSession') ?? null,
+    questionBankTotal: pickNumber(body, 'questionBankTotal', 'QuestionBankTotal') ?? undefined,
+    currentRubricVersion: pickNumber(body, 'currentRubricVersion', 'CurrentRubricVersion') ?? null,
   };
 }
 
@@ -343,6 +395,7 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
                 score,
                 maxScore: pickNumber(scoreRecord, 'maxScore', 'MaxScore') ?? null,
                 reasoning: pickString(scoreRecord, 'reasoning', 'Reasoning') ?? null,
+                levelMatched: pickNumber(scoreRecord, 'levelMatched', 'LevelMatched') ?? null,
               };
             })
             .filter((score): score is NonNullable<typeof score> => score != null)
@@ -353,6 +406,14 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
         content,
         transcript: pickString(record, 'transcript', 'Transcript') ?? null,
         needsReview: Boolean(record.needsReview ?? record.NeedsReview),
+        answerId: pickString(record, 'answerId', 'AnswerId') ?? null,
+        kind: parseQuestionKind(pickString(record, 'kind', 'Kind')),
+        answerStatus: parseAnswerStatus(pickString(record, 'answerStatus', 'AnswerStatus')),
+        rejectReason: pickString(record, 'rejectReason', 'RejectReason') ?? null,
+        durationSec: pickNumber(record, 'durationSec', 'DurationSec') ?? null,
+        hasAudio: Boolean(record.hasAudio ?? record.HasAudio),
+        sampleAnswer: pickString(record, 'sampleAnswer', 'SampleAnswer') ?? null,
+        deliveryMetrics: parseDeliveryMetrics(record.deliveryMetrics ?? record.DeliveryMetrics),
         scores,
       };
     })
@@ -360,6 +421,66 @@ export function parseCampaignTranscriptResponse(data: unknown): CampaignTranscri
     .sort((a, b) => a.orderNo - b.orderNo);
 
   return { sessionId, questions };
+}
+
+function parseQuestionKind(value: string | undefined): TranscriptQuestion['kind'] {
+  return value === 'FollowUp' || value === 'Clarify' || value === 'NewQuestion' ? value : 'Seed';
+}
+
+function parseAnswerStatus(value: string | undefined): TranscriptQuestion['answerStatus'] {
+  return value === 'Uploaded' || value === 'Scoring' || value === 'Scored' || value === 'Failed' || value === 'Skipped'
+    ? value
+    : null;
+}
+
+function parseDeliveryMetrics(raw: unknown): TranscriptQuestion['deliveryMetrics'] {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const breakdown = asRecord(record.fillerBreakdown ?? record.FillerBreakdown);
+  return {
+    speechRateWpm: pickNumber(record, 'speechRateWpm', 'SpeechRateWpm') ?? null,
+    pauseCount: pickNumber(record, 'pauseCount', 'PauseCount') ?? null,
+    longestPauseSec: pickNumber(record, 'longestPauseSec', 'LongestPauseSec') ?? null,
+    silenceRatio: pickNumber(record, 'silenceRatio', 'SilenceRatio') ?? null,
+    fillerCount: pickNumber(record, 'fillerCount', 'FillerCount') ?? null,
+    fillerBreakdown: Object.fromEntries(
+      Object.entries(breakdown ?? {}).flatMap(([key, value]) => {
+        const parsed = asNumber(value);
+        return parsed == null ? [] : [[key, parsed]];
+      }),
+    ),
+  };
+}
+
+export function parseCampaignOverrideHistoryResponse(
+  data: unknown,
+): CampaignResultOverrideHistoryResponse {
+  const root = asRecord(data);
+  const body = asRecord(root?.data) ?? root ?? {};
+  const items = unwrapArrayPayload(body.items ?? body.Items)
+    .map((item): CampaignResultOverrideHistoryItem | null => {
+      const record = asRecord(item);
+      if (!record) return null;
+      const id = pickString(record, 'id', 'Id');
+      const at = pickString(record, 'at', 'At');
+      const actorUserId = pickString(record, 'actorUserId', 'ActorUserId');
+      const kind = pickString(record, 'kind', 'Kind');
+      if (!id || !at || !actorUserId || (kind !== 'Set' && kind !== 'Clear')) return null;
+      const resultRaw = pickString(record, 'result', 'Result');
+      return {
+        id,
+        kind,
+        score: pickNumber(record, 'score', 'Score') ?? null,
+        result: resultRaw === 'Pass' || resultRaw === 'Fail' ? resultRaw : null,
+        note: pickString(record, 'note', 'Note') ?? '',
+        actorUserId,
+        actorEmail: pickString(record, 'actorEmail', 'ActorEmail') ?? null,
+        at,
+        source: pickString(record, 'source', 'Source') === 'AuditBackfill' ? 'AuditBackfill' : 'Live',
+      };
+    })
+    .filter((item): item is CampaignResultOverrideHistoryItem => item != null);
+  return { sessionId: pickString(body, 'sessionId', 'SessionId') ?? '', items };
 }
 
 /** Only treat absolute http(s) URLs as safe download links. */

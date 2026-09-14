@@ -126,6 +126,7 @@ export interface PaymentOrder {
   tokens: number;
   amountUsd: number;
   priceVnd?: number;
+  amountVnd?: number;
   status: PaymentOrderStatus;
   checkoutUrl: string | null;
   createdAt: string;
@@ -145,15 +146,9 @@ export interface OrderResponse {
   status: string;
   checkoutUrl: string | null;
   packageName?: string;
-  priceVnd?: number;
   interviewCredits?: number | null;
   createdAt?: string;
-  paymentStatus?: string;
-  orderStatus?: string;
   paidAt?: string;
-  paymentMethod?: string;
-  transactionId?: string;
-  failureReason?: string;
 }
 
 /** Normalized order detail for payment result screens (`GET /api/v1/payment/order/{id}`). */
@@ -162,8 +157,11 @@ export interface PaymentOrderDetail {
   packageId: string;
   packageName?: string;
   status: string;
+  /** @deprecated Compatibility for legacy fixtures; live parser uses status only. */
   paymentStatus?: string;
+  /** @deprecated Compatibility for legacy fixtures; live parser uses status only. */
   orderStatus?: string;
+  /** @deprecated Compatibility for legacy fixtures; live parser uses amountVnd. */
   priceVnd?: number;
   interviewCredits?: number | null;
   createdAt?: string;

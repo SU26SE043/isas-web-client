@@ -29,7 +29,7 @@ function EvidenceColumn({
 }) {
   const { t } = useLanguage();
   return (
-    <section className="frame-satin rounded-3xl bg-surface-raised p-5 sm:p-6">
+    <section className="frame-satin rounded-2xl bg-surface-raised p-5 sm:p-6">
       <div className="flex items-start gap-3">
         {icon}
         <div>
@@ -61,7 +61,7 @@ export function CvEvidenceInsights({ analysis, onViewCv }: CvEvidenceInsightsPro
 
   if (total === 0) {
     return (
-      <section className="frame-satin rounded-3xl bg-surface-raised p-6 sm:p-8">
+      <section className="frame-satin rounded-2xl bg-surface-raised p-6 sm:p-8">
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-warning">
             <SearchX className="size-5" aria-hidden />

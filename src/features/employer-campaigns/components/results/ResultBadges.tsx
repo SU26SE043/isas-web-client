@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultItem, CampaignResultStatus } from '../../types/campaign.api.types';
@@ -8,6 +9,7 @@ import {
   hasResultOverride,
 } from '../../utils/campaignResultsActions';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
+import { ResultsCriterionCutoff } from './ResultsContextStrip';
 
 export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) {
   const { t } = useLanguage();
@@ -28,9 +30,14 @@ export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) 
   );
 }
 
-export function ResultOverrideBadge({ item }: { item: CampaignResultItem }) {
+/**
+ * Badge "HR đã điều chỉnh" — tooltip (title) mang giờ + lý do để HR đọc ngay trên bảng.
+ * `hideNone`: không render chữ "Chưa điều chỉnh" khi đứng trong ô điểm (ở đó im lặng = không có gì để nói).
+ */
+export function ResultOverrideBadge({ item, hideNone = false }: { item: CampaignResultItem; hideNone?: boolean }) {
   const { t, language } = useLanguage();
   if (!hasResultOverride(item)) {
+    if (hideNone) return null;
     return (
       <span className="text-xs text-muted-foreground">
         {t('employer.campaigns.results.override.none')}
@@ -38,10 +45,10 @@ export function ResultOverrideBadge({ item }: { item: CampaignResultItem }) {
     );
   }
   const title = item.overriddenAt
-    ? t('employer.campaigns.results.override.at').replace(
+    ? t('employer.campaigns.results.override.badgeTooltip').replace(
         '{{time}}',
         formatResultDateTime(item.overriddenAt, language),
-      )
+      ).replace('{{note}}', item.overrideNote?.trim() || t('employer.campaigns.results.override.unchanged'))
     : undefined;
   return (
     <Badge
@@ -80,23 +87,49 @@ export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
   );
 }
 
+/**
+ * Ô "Điểm chính thức" của bảng: điểm chốt + điểm AI gốc + số câu gốc đã trả lời + badge HR (kèm tooltip lý do).
+ * Đây là ô DUY NHẤT nói về điểm/điều chỉnh trên một hàng — trước đây "Điểm AI" và "HR đã điều chỉnh" còn
+ * lặp lại ở hai cột riêng, làm bảng 9 cột tràn khung 1440 và cột dính phải đè lên "Thời gian chấm".
+ */
 export function ResultScoreCells({ item }: { item: CampaignResultItem }) {
   const { t } = useLanguage();
-  const adjusted = item.totalScore !== item.aiScore || hasResultOverride(item);
   return (
     <>
       <span className="text-base font-semibold tabular-nums text-foreground">
         {formatResultScore(item.totalScore)}
       </span>
-      <div className="space-y-0.5 text-xs text-muted-foreground">
-        <p>
+      <div className="mt-0.5 space-y-1 text-xs text-muted-foreground">
+        <p className="whitespace-nowrap">
           {t('employer.campaigns.results.aiScore')}: {formatResultScore(item.aiScore)}
+          {item.seedAnswered != null && item.seedTotal != null
+            ? ` · ${item.seedAnswered}/${item.seedTotal} ${t('employer.campaigns.results.context.seedQuestions')}`
+            : ''}
         </p>
-        {adjusted ? (
-          <p className="text-info">{t('employer.campaigns.results.override.badge')}</p>
-        ) : null}
+        <ResultOverrideBadge item={item} hideNone />
       </div>
     </>
+  );
+}
+
+export function ResultCandidateMeta({ item }: { item: CampaignResultItem }) {
+  const { t } = useLanguage();
+  return (
+    <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+      {item.cvMatchScore != null ? (
+        <p title={t('employer.campaigns.results.context.cvHint')}>
+          CV {formatResultScore(item.cvMatchScore)} · {t('employer.campaigns.results.context.cvRisk')} {item.cvVerificationRisk ?? '—'}
+          {item.cvScreeningVersion === 1 ? ` ${t('employer.campaigns.results.context.legacyScale')}` : ''}
+        </p>
+      ) : null}
+      {item.scoreFallback === true ? (
+        <p className="flex items-center gap-1 text-warning">
+          <TriangleAlert className="size-3.5" aria-hidden />
+          {t('employer.campaigns.results.context.fallback')}
+        </p>
+      ) : null}
+      <ResultsCriterionCutoff item={item} />
+    </div>
   );
 }
 

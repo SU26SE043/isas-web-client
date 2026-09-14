@@ -2,21 +2,14 @@ import { Clock } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { formatTimerSeconds, getTimerColorClass, getTimerSeverity } from '../utils/questionTimer';
+import { numberQuestions } from '@/shared/utils/questionNumbering';
 import type { PracticeQuestionResponse, QuestionAnswerState } from '../types/b2cPracticeSession.types';
 
 interface InterviewQuestionPanelProps {
-  /** Vị trí trong mảng — dùng để tô đậm bước, KHÔNG dùng làm số hiệu (xem `displayNumber`). */
+  /** Vị trí trong mảng của câu đang hiện — tô đậm vòng tròn stepper. */
   currentIndex: number;
+  /** Chỉ dùng khi chưa có `questions` (dựng vòng tròn rỗng). */
   totalQuestions: number;
-  /**
-   * Số hiệu hiển thị, cấp theo THỨ TỰ XUẤT HIỆN và không bao giờ đổi sau khi câu đã hiện.
-   *
-   * Vắng ⇒ rơi về `currentIndex + 1` (hành vi cũ): câu đào sâu chèn vào giữa mảng sẽ đổi nhãn của
-   * một câu ĐÃ HIỆN. Mọi call site trong phòng phỏng vấn phải truyền prop này.
-   */
-  displayNumber?: number;
-  /** Số câu ứng viên đã chọn. Vắng ⇒ rơi về độ dài mảng, thứ phình lên mỗi lần có câu đào sâu. */
-  plannedTotal?: number;
   remainingSeconds: number;
   question?: PracticeQuestionResponse | null;
   questionStates?: Record<string, QuestionAnswerState>;
@@ -31,8 +24,6 @@ interface InterviewQuestionPanelProps {
 export function InterviewQuestionPanel({
   currentIndex,
   totalQuestions,
-  displayNumber,
-  plannedTotal,
   remainingSeconds,
   question,
   questionStates,
@@ -48,6 +39,11 @@ export function InterviewQuestionPanel({
   const steps = questions?.length
     ? questions
     : Array.from({ length: Math.max(totalQuestions, 1) }, () => null);
+  // Số hiệu PHÂN CẤP (1 · 1.1 · 1.2 · 2 · 2.1 …) tính từ `kind` + thứ tự mảng — nhãn "Câu hỏi N / M" và vòng
+  // tròn stepper đọc CÙNG map này; mẫu số = số câu GỐC (không phình khi câu đào sâu về). Xem `questionNumbering`.
+  const numbering = numberQuestions(questions ?? []);
+  const labelOf = (id: string | undefined, index: number) => (id && numbering.labels.get(id)) || String(index + 1);
+  const total = numbering.rootCount || Math.max(totalQuestions, steps.length, 1);
 
   return (
     <section
@@ -58,8 +54,8 @@ export function InterviewQuestionPanel({
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium text-muted-foreground">
             {t('practice.room.questionOf')
-              .replace('{current}', String(displayNumber ?? currentIndex + 1))
-              .replace('{total}', String(plannedTotal ?? Math.max(totalQuestions, steps.length, 1)))}
+              .replace('{current}', labelOf(question?.id, currentIndex))
+              .replace('{total}', String(total))}
           </p>
           {question?.kind ? (
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{question.kind}</p>
@@ -111,9 +107,9 @@ export function InterviewQuestionPanel({
 
       <ol className="flex flex-wrap items-center justify-center gap-0 pt-1" aria-label={t('practice.room.progressLabel')}>
         {steps.map((item, index) => {
-          const step = index + 1;
-          const isActive = index === currentIndex;
           const qid = item?.id;
+          const step = labelOf(qid, index);
+          const isActive = index === currentIndex;
           const state = qid && questionStates ? questionStates[qid] : undefined;
           const isSubmitted = state === 'submitted' || (!state && index < currentIndex);
           const isUnanswered = state === 'unanswered';
@@ -132,14 +128,14 @@ export function InterviewQuestionPanel({
               ) : null}
               <span
                 className={cn(
-                  'flex size-8 items-center justify-center rounded-full border text-xs font-semibold',
+                  'flex h-8 min-w-8 items-center justify-center rounded-full border px-1.5 text-xs font-semibold tabular-nums',
                   isActive && 'border-white bg-white text-black',
                   isSubmitted && !isActive && 'border-success/50 bg-success/15 text-success',
                   isUnanswered && !isActive && 'border-error/50 bg-error/10 text-error',
                   !isActive && !isSubmitted && !isUnanswered && 'border-satin bg-transparent text-muted-foreground',
                 )}
                 aria-current={isActive ? 'step' : undefined}
-                aria-label={`${t('practice.room.questionOf').replace('{current}', String(step)).replace('{total}', String(steps.length))}: ${label}`}
+                aria-label={`${t('practice.room.questionOf').replace('{current}', step).replace('{total}', String(total))}: ${label}`}
               >
                 {step}
               </span>

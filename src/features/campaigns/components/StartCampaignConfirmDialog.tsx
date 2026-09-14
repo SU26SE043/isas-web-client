@@ -34,7 +34,7 @@ export function StartCampaignConfirmDialog({
           <DialogDescription>{t('campaigns.detail.startConfirmBody')}</DialogDescription>
         </DialogHeader>
         {errorMessage ? (
-          <p className="text-sm text-rose-400" role="alert">
+          <p className="text-sm text-error" role="alert">
             {errorMessage}
           </p>
         ) : null}

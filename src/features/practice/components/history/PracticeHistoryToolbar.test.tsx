@@ -24,13 +24,11 @@ function renderToolbar(
       source={overrides.source ?? 'all'}
       sort="newest"
       isFetching={false}
-      compareMode={false}
       onSearchChange={() => {}}
       onStatusChange={() => {}}
       onSourceChange={overrides.onSourceChange ?? (() => {})}
       onSortChange={() => {}}
       onRefresh={() => {}}
-      onToggleCompareMode={() => {}}
     />,
   );
 }

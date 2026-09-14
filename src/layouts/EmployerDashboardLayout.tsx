@@ -6,7 +6,6 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { buildEmployerNavItems, filterEmployerNavItems } from './employerNavItems';
-import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
@@ -50,7 +49,7 @@ export const EmployerDashboardLayout: React.FC = () => {
             )}
           >
             {!isCollapsed && (
-              <Link to="/" className="focus-ring hidden rounded-md sm:block">
+              <Link to="/" className="focus-ring hidden rounded-lg sm:block">
                 <BrandLogo className="h-7" />
               </Link>
             )}
@@ -94,25 +93,6 @@ export const EmployerDashboardLayout: React.FC = () => {
 
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
             <div
-              className={navLinkClassName(false, isCollapsed)}
-              title={isCollapsed ? t('engagement.nav.notifications') : undefined}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('button')) return;
-                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
-              }}
-            >
-              <NotificationBell scope="employer" panelPlacement="sidebar" variant="sidebar" />
-              <span
-                className={cn(
-                  'overflow-hidden whitespace-nowrap transition-all duration-300',
-                  isCollapsed ? 'w-0 opacity-0' : 'w-0 opacity-0 sm:w-auto sm:opacity-100',
-                )}
-                aria-hidden={isCollapsed}
-              >
-                {t('engagement.nav.notifications')}
-              </span>
-            </div>
-            <div
               className={cn(
                 'flex items-center rounded-xl py-2.5',
                 isCollapsed ? 'justify-center px-0' : 'justify-center px-0 sm:justify-start sm:px-3',
@@ -139,7 +119,10 @@ export const EmployerDashboardLayout: React.FC = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
+        {/* `overflow-x-clip` chứ KHÔNG `overflow-hidden`: hidden biến main thành scroll container ⇒ mọi
+            `position: sticky` bên trong (rail câu hỏi, header wizard, thanh chọn CV) không bao giờ dính —
+            đo bằng getBoundingClientRect trên trang Đánh giá chi tiết (rail ở y = −675 sau khi cuộn). */}
+        <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
           <Outlet />
         </main>
       </div>

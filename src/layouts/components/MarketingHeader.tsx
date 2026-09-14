@@ -27,18 +27,18 @@ export const MarketingHeader: React.FC = () => {
       <header className="glass-topbar sticky top-0 z-50 border-b">
         <div className="page-container">
           <div className="flex h-16 items-center justify-between gap-4">
-            <Link to="/" className="flex shrink-0 items-center focus-ring rounded-md">
+            <Link to="/" className="flex shrink-0 items-center focus-ring rounded-lg">
               <BrandLogo />
             </Link>
 
             <nav className="hidden items-center gap-6 lg:gap-8 md:flex" aria-label={t('nav.main')}>
               {desktopNavLinks.map((item) =>
                 item.isHash ? (
-                  <a key={item.labelKey} className="nav-link focus-ring rounded-md" href={item.href}>
+                  <a key={item.labelKey} className="nav-link focus-ring rounded-lg" href={item.href}>
                     {t(item.labelKey)}
                   </a>
                 ) : (
-                  <Link key={item.labelKey} className="nav-link focus-ring rounded-md" to={item.href}>
+                  <Link key={item.labelKey} className="nav-link focus-ring rounded-lg" to={item.href}>
                     {t(item.labelKey)}
                   </Link>
                 ),

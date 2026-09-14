@@ -80,7 +80,7 @@ export function ProfileFileUploadCard({
     <article
       className={cn(
         'flex h-full min-h-[220px] flex-col rounded-lg border border-dashed border-satin bg-surface-overlay p-4 transition-colors',
-        isDragging && 'border-[var(--satin-border-hover)] bg-white/[0.03]',
+        isDragging && 'border-[var(--satin-border-hover)] bg-surface-overlay',
         busy && 'pointer-events-none opacity-70',
       )}
       onDragOver={(event) => {

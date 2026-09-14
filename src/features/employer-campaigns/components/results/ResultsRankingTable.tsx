@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -19,6 +20,8 @@ import {
   ResultStatusBadge,
   candidateDisplayEmail,
   candidateDisplayName,
+  ResultCandidateMeta,
+  ResultScoreCells,
 } from './ResultBadges';
 import { ResultsActionsMenu } from './ResultsActionsMenu';
 
@@ -36,28 +39,31 @@ export function ResultsRankingTable({
   onClearOverride,
 }: ResultsRankingTableProps) {
   const { t, language } = useLanguage();
+  const scoreHeader = (
+    <Tooltip content={t('employer.campaigns.results.columns.totalScoreHint')}>
+      <span className="cursor-help underline decoration-dotted underline-offset-4">
+        {t('employer.campaigns.results.columns.totalScore')}
+      </span>
+    </Tooltip>
+  );
 
   return (
     <>
-      <div className="hidden md:block">
-        <Table className="min-w-[980px]">
+      <div className="hidden lg:block">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
-              <TableHead>{t('employer.campaigns.results.columns.rank')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.rank')}</TableHead>
               <TableHead>{t('employer.campaigns.results.columns.candidate')}</TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.totalScore')}</TableHead>
-              <TableHead className="hidden lg:table-cell">
-                {t('employer.campaigns.results.columns.aiScore')}
-              </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.result')}</TableHead>
-              <TableHead className="hidden xl:table-cell">
-                {t('employer.campaigns.results.columns.override')}
-              </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.flags')}</TableHead>
-              <TableHead className="hidden lg:table-cell">
+              <TableHead className="whitespace-nowrap">{scoreHeader}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.result')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('employer.campaigns.results.columns.flags')}</TableHead>
+              <TableHead className="whitespace-nowrap">
                 {t('employer.campaigns.results.columns.scoredAt')}
               </TableHead>
-              <TableHead>{t('employer.campaigns.results.columns.actions')}</TableHead>
+              <TableHead className="table-sticky-end">
+                {t('employer.campaigns.results.columns.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -69,28 +75,23 @@ export function ResultsRankingTable({
                 <TableCell>
                   <p className="font-medium text-foreground">{candidateDisplayName(item, t)}</p>
                   <p className="text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
+                  <ResultCandidateMeta item={item} />
                 </TableCell>
-                <TableCell className="text-base font-semibold tabular-nums text-foreground">
-                  {formatResultScore(item.totalScore)}
-                </TableCell>
-                <TableCell className="hidden tabular-nums text-muted-foreground lg:table-cell">
-                  {formatResultScore(item.aiScore)}
+                <TableCell className="align-top">
+                  <ResultScoreCells item={item} />
                 </TableCell>
                 <TableCell>
                   <ResultStatusBadge result={item.result} />
                 </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  <ResultOverrideBadge item={item} />
-                </TableCell>
                 <TableCell>
                   <ResultFlagsCell item={item} />
                 </TableCell>
-                <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   {formatResultDateTime(item.scoredAt, language)}
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button type="button" size="sm" variant="outline" onClick={() => onViewDetails(item)}>
+                <TableCell className="table-sticky-end">
+                  <div className="flex items-center gap-1.5">
+                    <Button type="button" size="sm" variant="outline" className="whitespace-nowrap" onClick={() => onViewDetails(item)}>
                       {t('employer.campaigns.results.actions.viewDetails')}
                     </Button>
                     <ResultsActionsMenu
@@ -107,7 +108,7 @@ export function ResultsRankingTable({
         </Table>
       </div>
 
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-3 lg:hidden">
         {items.map((item) => (
           <article
             key={`${item.candidateId}-${item.sessionId}`}
@@ -130,9 +131,10 @@ export function ResultsRankingTable({
             <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">
-                  {t('employer.campaigns.results.columns.totalScore')}
+                  {scoreHeader}
                 </dt>
                 <dd className="font-semibold tabular-nums">{formatResultScore(item.totalScore)}</dd>
+                <ResultCandidateMeta item={item} />
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">

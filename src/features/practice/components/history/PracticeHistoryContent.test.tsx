@@ -19,15 +19,12 @@ function renderContent(overrides: { hasActiveFilters: boolean }) {
         pageItems={[]}
         visibleItems={[]}
         hasActiveFilters={overrides.hasActiveFilters}
-        compareMode={false}
-        selectedIds={[]}
         pageIndex={1}
         pageSize={5}
         canGoPrevious={false}
         canGoNext={false}
         onRetry={() => {}}
         onClearFilters={() => {}}
-        onToggleCompare={() => {}}
         onViewResult={() => {}}
         onResume={() => {}}
         onPrevious={() => {}}

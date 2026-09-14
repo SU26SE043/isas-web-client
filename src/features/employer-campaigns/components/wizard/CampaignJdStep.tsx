@@ -14,7 +14,6 @@ import { useLanguage } from '@/shared/languages';
 import type { JobDescriptionState, JobDescriptionMethod } from '../../types/campaignWizard.types';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
-import { CampaignCriteriaTextField } from './jd/CampaignCriteriaTextField';
 import { CampaignFilePanel } from './jd/CampaignFilePanel';
 import { JobDescriptionMethodTabs } from './jd/JobDescriptionMethodTabs';
 import { JobDescriptionTextEditor } from './jd/JobDescriptionTextEditor';
@@ -66,7 +65,19 @@ export function CampaignJdStep({
 
   const confirmMethodChange = () => {
     if (!pendingMethod) return;
-    onChange({ inputMethod: pendingMethod });
+    // Hộp thoại đã nói rõ "dữ liệu sẽ mất" — nay phải XOÁ THẬT. Bản trước chỉ đổi inputMethod:
+    // gõ JD bằng chữ rồi chuyển sang tab Tải file thì jdText còn nguyên, mà backend ưu tiên text
+    // (C11: `if (request.JdText is not null) { JDText = ...; JDFileUrl = null; }`) ⇒ file vừa tải
+    // bị vứt IM LẶNG trong khi giao diện vẫn báo "đã tải lên". Chiều ngược lại cũng vậy.
+    onChange(
+      pendingMethod === 'file'
+        ? { inputMethod: pendingMethod, jdText: '' }
+        : {
+            inputMethod: pendingMethod,
+            jdFile: null, fileName: null, fileSize: null,
+            fileStatus: 'idle', fileError: null, uploadProgress: null, serverUploaded: false,
+          },
+    );
     setPendingMethod(null);
   };
 
@@ -74,6 +85,7 @@ export function CampaignJdStep({
     <SectionPanel
       icon={<FileText className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.jd')}
+      description={t('employer.campaigns.wizard.jdDescription')}
       footer={
         <CampaignWizardNav
           onBack={onBack}
@@ -124,6 +136,8 @@ export function CampaignJdStep({
               retryLabel={t('employer.campaigns.wizard.jdRetryUpload')}
               chooseOtherLabel={t('employer.campaigns.wizard.jdChooseOther')}
               supportLabel={t('employer.campaigns.wizard.jdFormats')}
+              previewText={jd.extractedText ?? ''}
+              previewLabel={t('employer.campaigns.wizard.jdExtractedPreview')}
               onFileSelect={onSelectFile}
               onRetry={onRetryUpload}
               onDownload={onDownload}
@@ -146,10 +160,6 @@ export function CampaignJdStep({
           />
         )}
 
-        <CampaignCriteriaTextField
-          value={jd.criteriaText}
-          onChange={(criteriaText) => onChange({ criteriaText })}
-        />
       </div>
 
       <Dialog open={pendingMethod != null} onOpenChange={(open) => !open && setPendingMethod(null)}>

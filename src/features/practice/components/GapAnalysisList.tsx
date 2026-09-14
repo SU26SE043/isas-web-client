@@ -26,7 +26,7 @@ const SkillGapCard = memo(function SkillGapCard({
   const progressWidth = getProgressWidth(item.currentLevel);
 
   return (
-    <article className="rounded-3xl border border-subtle bg-surface-raised p-6 shadow-sm">
+    <article className="rounded-2xl border border-subtle bg-surface-raised p-6 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-surface-raised/5 px-3 py-1 text-xs font-semibold text-foreground">
@@ -48,11 +48,11 @@ const SkillGapCard = memo(function SkillGapCard({
           </div>
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{t('practice.gap.target')}</span>
-            <span className="font-semibold text-[#A97D00]">{item.targetLevel}%</span>
+            <span className="font-semibold text-warning">{item.targetLevel}%</span>
           </div>
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{t('practice.gap.gap')}</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-white">
+            <span className="inline-flex items-center gap-1 font-semibold text-foreground">
               <ArrowUpRight className="h-4 w-4 text-foreground" />
               {gap}%
             </span>
@@ -116,7 +116,7 @@ export const GapAnalysisList = memo(function GapAnalysisList({
   const { t } = useLanguage();
 
   return (
-    <section aria-labelledby="gap-analysis-title" className="rounded-3xl border border-subtle bg-surface-raised p-6 shadow-sm">
+    <section aria-labelledby="gap-analysis-title" className="rounded-2xl border border-subtle bg-surface-raised p-6 shadow-sm">
       <div className="mb-6">
         <h2 id="gap-analysis-title" className="heading-secondary text-2xl text-foreground">
           {t('practice.result.gapAnalysis')}

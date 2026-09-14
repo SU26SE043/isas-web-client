@@ -10,13 +10,15 @@ export const campaignManagementEndpoints = {
   create: CAMPAIGN_API_PREFIX,
   detail: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   publish: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/publish`,
+  startNow: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/start-now`,
   status: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/status`,
   update: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   delete: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}`,
   questions: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions`,
-  jobNeeds: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/job-needs`,
   questionsGenerate: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/generate`,
+  questionsImport: (id: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/questions/import`,
   files: (id: string) => `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files`,
   filesDownload: (id: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/files/download`,
@@ -40,6 +42,10 @@ export const campaignManagementEndpoints = {
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/export`,
   resultTranscript: (id: string, sessionId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/transcript`,
+  resultOverrideHistory: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override-history`,
+  resultAnswerAudio: (id: string, sessionId: string, answerId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/audio`,
   resultOverride: (id: string, sessionId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override`,
 } as const;

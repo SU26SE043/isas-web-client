@@ -80,8 +80,8 @@ export function AudioRecorderBody({
 
       <div
         className={cn(
-          'relative flex size-32 items-center justify-center rounded-full border border-info/70 bg-gradient-to-br from-info/25 via-indigo-500/20 to-violet-500/30 shadow-[0_0_34px_-8px_rgba(99,102,241,0.95)] sm:size-36',
-          isRecording && 'border-destructive/70 shadow-[0_0_34px_-8px_rgba(239,68,68,0.95)]',
+          'relative flex size-32 items-center justify-center rounded-full border border-info/70 bg-gradient-to-br from-info/25 via-info-500/20 to-info-500/30 shadow-none sm:size-36',
+          isRecording && 'border-destructive/70 shadow-none',
         )}
       >
         <span className="absolute -inset-3 rounded-full border border-info/20" aria-hidden />
@@ -104,8 +104,8 @@ export function AudioRecorderBody({
 
       <div className="flex w-full max-w-[560px] items-center gap-3" aria-hidden>
         <span className="size-1.5 rounded-full bg-info shadow-[0_0_12px_var(--color-info)]" />
-        <span className="h-px flex-1 bg-gradient-to-r from-info/40 via-satin to-violet-400/50" />
-        <span className="size-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_var(--color-violet-400)]" />
+        <span className="h-px flex-1 bg-gradient-to-r from-info/40 via-satin to-info-400/50" />
+        <span className="size-1.5 rounded-full bg-info-400 shadow-[0_0_12px_var(--color-info-400)]" />
       </div>
 
       {isRecording ? (
@@ -139,3 +139,4 @@ export function AudioRecorderBody({
     </div>
   );
 }
+

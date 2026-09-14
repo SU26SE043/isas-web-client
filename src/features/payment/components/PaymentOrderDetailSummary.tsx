@@ -64,7 +64,7 @@ export function PaymentOrderDetailSummary({
       <div className="space-y-2">
         <p className="text-label text-muted-foreground">{t('payment.orders.totalAmount')}</p>
         <p className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          {order.priceVnd != null ? `${formatVnd(order.priceVnd, locale)} VND` : '--'}
+          {order.amountVnd != null ? `${formatVnd(order.amountVnd, locale)} VND` : '--'}
         </p>
       </div>
 

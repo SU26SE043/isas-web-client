@@ -23,7 +23,7 @@ export function flowStepMarkerClass(status: FlowStepStatus): string {
     case 'processing':
       return 'border-info bg-info-bg text-info';
     case 'current':
-      return 'border-white bg-white text-black';
+      return 'border-foreground bg-foreground text-background';
     default:
       return 'border-satin bg-transparent text-muted-foreground';
   }
@@ -53,7 +53,7 @@ export function flowStepConnectorClass(status: FlowStepStatus): string {
     case 'processing':
       return 'bg-info/40';
     default:
-      return 'bg-white/10';
+      return 'bg-border';
   }
 }
 

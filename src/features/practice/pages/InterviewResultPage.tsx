@@ -135,13 +135,13 @@ export const InterviewResultPage: React.FC = () => {
         {state === 'scoring' ? <ResultScoringPanel /> : null}
 
         {state === 'loading' ? (
-          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-subtle bg-surface-raised shadow-sm">
+          <div className="flex min-h-[50vh] items-center justify-center rounded-2xl border border-subtle bg-surface-raised shadow-sm">
             <p className="body-text text-sm font-medium text-foreground">{t('practice.result.loading')}</p>
           </div>
         ) : null}
 
         {error ? (
-          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-error/20 bg-error-bg p-6 shadow-sm">
+          <div className="flex min-h-[50vh] items-center justify-center rounded-2xl border border-error/20 bg-error-bg p-6 shadow-sm">
             <div className="max-w-xl text-center">
               <AlertCircle className="mx-auto h-10 w-10 text-error" />
               <h2 className="heading-secondary mt-4 text-2xl text-error">{t('practice.result.errorTitle')}</h2>

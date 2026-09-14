@@ -79,3 +79,70 @@ describe('useB2cPracticeInterviewStore appendQuestion', () => {
     expect(useB2cPracticeInterviewStore.getState().questions).toHaveLength(2);
   });
 });
+
+describe('useB2cPracticeInterviewStore hydrateFromSession — quay lại buổi dở', () => {
+  beforeEach(() => {
+    useB2cPracticeInterviewStore.getState().reset();
+  });
+
+  const seeds = [makeQuestion('q-1', 1), makeQuestion('q-2', 5), makeQuestion('q-3', 9)];
+
+  it('nạp lại câu trả lời server đã giữ và đứng ở câu ĐẦU TIÊN chưa trả lời, không phải câu 1', () => {
+    // Đo trên dev 2026-09-12: buổi nộp 8/9 câu, "Tiếp tục" cho ra 9/9 câu chưa trả lời và 4 lượt nộp thêm
+    // đè lên câu 1–4 (INT-3 upload lại = ghi đè, điểm cũ bị xoá). Nguyên nhân: hydrate đặt answersByQuestionId = {}.
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scored', transcript: 'đã nói' },
+        { questionId: 'q-2', answerId: 'a-2', status: 'Scoring' },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.currentQuestionId).toBe('q-3');
+    expect(state.answersByQuestionId['q-1']).toMatchObject({ answerId: 'a-1', questionId: 'q-1', status: 'Scored', transcript: 'đã nói' });
+    expect(state.answersByQuestionId['q-2']).toMatchObject({ answerId: 'a-2', status: 'Scoring' });
+    expect(state.answersByQuestionId['q-3']).toBeUndefined();
+    expect(state.questionStates).toEqual({ 'q-1': 'submitted', 'q-2': 'submitted', 'q-3': 'reading_question' });
+    expect(state.interviewComplete).toBe(false);
+    expect(state.stage).toBe('interviewing');
+  });
+
+  it('bỏ qua dòng answers không có answerId (câu chưa nộp mà server vẫn liệt kê)', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scored' },
+        { questionId: 'q-2', answerId: null, status: null },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.currentQuestionId).toBe('q-2');
+    expect(state.answersByQuestionId['q-2']).toBeUndefined();
+    expect(state.questionStates['q-2']).toBe('reading_question');
+  });
+
+  it('mọi câu đã trả lời ⇒ interviewComplete=true, đứng ở câu cuối để nút Kết thúc hiện ra', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: seeds.map((q, i) => ({ questionId: q.id, answerId: `a-${i}`, status: 'Scored' })),
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.interviewComplete).toBe(true);
+    expect(state.stage).toBe('ready_to_finish');
+    expect(state.currentQuestionId).toBe('q-3');
+    expect(Object.values(state.questionStates)).toEqual(['submitted', 'submitted', 'submitted']);
+  });
+
+  it('không có answers (buổi mới / answers=null) ⇒ hành vi cũ: câu 1, chưa hoàn tất', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({ ...makeSession(seeds), answers: null });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.currentQuestionId).toBe('q-1');
+    expect(state.answersByQuestionId).toEqual({});
+    expect(state.interviewComplete).toBe(false);
+    expect(state.questionStates).toEqual({ 'q-1': 'reading_question', 'q-2': 'not_started', 'q-3': 'not_started' });
+  });
+});

@@ -12,7 +12,6 @@ const mocks = vi.hoisted(() => ({
   readParsedText: vi.fn(),
   getJdRequirements: vi.fn(),
   analyze: vi.fn(),
-  markCvUploaded: vi.fn(),
   navigate: vi.fn(),
 }));
 
@@ -30,10 +29,6 @@ vi.mock('../services/cvAnalysis.service', async (importOriginal) => {
     },
   };
 });
-
-vi.mock('@/features/profile/services/profile.service', () => ({
-  profileService: { markCvUploaded: mocks.markCvUploaded },
-}));
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
@@ -69,7 +64,6 @@ function pdf(name: string) {
 
 beforeEach(() => {
   Object.values(mocks).forEach((mock) => mock.mockReset());
-  mocks.markCvUploaded.mockResolvedValue(undefined);
   mocks.readParsedText.mockResolvedValue({ status: 'completed', parsedText: JD_BODY });
   mocks.analyze.mockResolvedValue({
     id: 'analysis-1',

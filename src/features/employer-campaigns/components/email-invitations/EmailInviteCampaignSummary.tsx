@@ -26,7 +26,8 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.status'),
-      value: campaign.status,
+      // Cùng khoá dịch với CampaignManagementStatusBadge — trước đây in thẳng 'active' cạnh badge đã dịch.
+      value: t(`employer.campaigns.status.${campaign.status}`),
     },
     {
       label: t('employer.campaigns.emailInvitations.summary.expiresAt'),
@@ -51,7 +52,7 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
 
   return (
     <section className="frame-satin relative overflow-hidden rounded-2xl bg-surface-raised p-5 sm:p-6">
-      <div className="pointer-events-none absolute -right-6 -top-8 size-40 rounded-full bg-violet-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-6 -top-8 size-40 rounded-full bg-info-500/10 blur-3xl" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="heading-secondary text-base text-foreground">
@@ -81,3 +82,4 @@ export function EmailInviteCampaignSummary({ campaign }: EmailInviteCampaignSumm
     </section>
   );
 }
+

@@ -2,7 +2,7 @@ import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const ProfileViewLoading: React.FC = () => (
-  <div className="dashboard-content min-h-full space-y-4" aria-busy="true">
+  <div className="app-page min-h-full space-y-4" aria-busy="true">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-2">
         <Skeleton className="h-4 w-32" />

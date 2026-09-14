@@ -65,7 +65,7 @@ export function LearningTheoryPage() {
     const isForbidden = errorStatus === 403;
     const isAiFailure = errorStatus === 502;
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           variant={isForbidden ? 'no-permission' : 'no-results'}
@@ -110,7 +110,7 @@ export function LearningTheoryPage() {
 
   if (!roadmap) {
     return (
-      <div className="page-container page-section min-h-[50vh]">
+      <div className="app-page min-h-[50vh]">
         <EmptyState
           className="frame-satin mx-auto max-w-lg"
           title={t('practice.learningPath.errorTitle')}
@@ -136,7 +136,8 @@ export function LearningTheoryPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <header className="space-y-2 border-b border-subtle pb-6">
           <p className="text-caption text-muted-foreground">{t('practice.learningPath.theory')}</p>
-          <h1 className="heading-primary text-3xl text-foreground sm:text-4xl">{title}</h1>
+          {/* Tiêu đề bài học thường rất dài (đo 375px: 7 dòng ở 30px) — 2xl mobile, 4xl từ sm. */}
+          <h1 className="heading-primary text-2xl text-foreground wrap-anywhere sm:text-4xl">{title}</h1>
           {opened.apiStatus === 'Done' ? (
             <p className="text-sm text-success">{t('practice.learningPath.lessonDoneHint')}</p>
           ) : null}

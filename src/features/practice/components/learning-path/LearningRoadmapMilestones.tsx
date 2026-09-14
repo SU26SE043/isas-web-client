@@ -24,10 +24,10 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
         const locked = milestone.status === 'locked';
         const milestoneTitle = language === 'vi' ? milestone.titleVi : milestone.title;
         return (
-          <section key={milestone.id} className="rounded-2xl border border-info/55 bg-surface-raised/80 p-5 shadow-[0_18px_50px_-35px_rgba(59,130,246,0.8)] backdrop-blur-sm sm:p-6">
+          <section key={milestone.id} className="rounded-2xl border border-info/55 bg-surface-raised/80 p-5 shadow-none backdrop-blur-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="flex items-center gap-3 heading-secondary text-lg text-foreground">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-violet-400/50 bg-violet-500/10 text-violet-300"><Star className="size-5" aria-hidden /></span>
+                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-info-400/50 bg-info-500/10 text-info-300"><Star className="size-5" aria-hidden /></span>
                 {t('practice.learningPath.milestone').replace('{n}', String(milestone.order))} · {milestoneTitle}
               </h2>
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -64,7 +64,7 @@ export function LearningRoadmapMilestones({ roadmap, language, launchingLessonId
                 const canOpenPractice = !locked && !roadmap.readOnly && (lessonItem.practiceStatus === 'available' || lessonItem.apiStatus === 'Practicing');
                 const reportLink = lessonItem.practiceReportId ? `/candidate/learning/roadmaps/${roadmap.id}/lessons/${lessonItem.id}/report` : null;
                 return (
-                  <li key={lessonItem.id} className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-[inset_3px_0_0_rgba(124,58,237,0.9)]">
+                  <li key={lessonItem.id} className="rounded-xl border border-info/30 bg-surface-overlay/70 px-4 py-4 shadow-none">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="flex items-center gap-3 font-medium text-foreground"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-info/40 bg-info/10 text-info"><LessonIcon index={lessonIndex} /></span>{lessonTitle}</p>
@@ -97,3 +97,4 @@ function LessonIcon({ index }: { index: number }) {
   const Icon = [FileCode2, Database, BrainCircuit][index % 3] ?? BookOpen;
   return <Icon className="size-5" aria-hidden />;
 }
+

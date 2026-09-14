@@ -11,7 +11,9 @@ import { CampaignContextHeader } from '../components/CampaignContextHeader';
 import { CampaignResultsPanel } from '../components/results/CampaignResultsPanel';
 import { InvitationHistoryPanel } from '../components/email-invitations/InvitationHistoryPanel';
 import { useEmployerCampaign } from '../hooks/useEmployerCampaigns';
+import { getDeployWarnings, mapDeployError } from '../hooks/useCampaignWizard';
 import { campaignManagementService } from '../services/campaignManagement.service';
+import { getInvitationApiErrorMessage } from '../utils/invitationApiError';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 
 export function CampaignDetailPage() {
@@ -19,10 +21,11 @@ export function CampaignDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const { campaign, isLoading, isError, errorStatus, reload, publish, updateStatus, deleteCampaign } =
+  const { campaign, isLoading, isError, errorStatus, reload, publish, startNow, updateStatus, deleteCampaign } =
     useEmployerCampaign(id);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
+  const [startingNow, setStartingNow] = useState(false);
   const tab = searchParams.get('tab') ?? 'details';
 
   if (tab !== 'details' && tab !== 'candidates' && tab !== 'results') {
@@ -39,10 +42,11 @@ export function CampaignDetailPage() {
         toast.success(t('employer.campaigns.detail.publishSuccess'));
         reload();
       }
-    } catch {
+    } catch (error) {
       setPublished(false);
-      setWarnings([]);
-      toast.error(t('employer.campaigns.wizard.publishFailed'));
+      const warnings = getDeployWarnings(error, t);
+      setWarnings(warnings);
+      toast.error(mapDeployError(error, t));
       throw new Error('PUBLISH_FAILED');
     }
   };
@@ -78,6 +82,23 @@ export function CampaignDetailPage() {
     }
   };
 
+  const handleStartNow = async () => {
+    if (!campaign || startingNow) return;
+    setStartingNow(true);
+    try {
+      await startNow(campaign.id);
+      toast.success(t('employer.campaigns.detail.startNowSuccess'));
+      reload();
+    } catch (error) {
+      const status = campaignManagementService.getErrorStatus(error);
+      toast.error(status === 409
+        ? getInvitationApiErrorMessage(error, t('employer.campaigns.detail.startNowFailed'))
+        : t('employer.campaigns.detail.startNowFailed'));
+    } finally {
+      setStartingNow(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!campaign) return;
     try {
@@ -93,7 +114,7 @@ export function CampaignDetailPage() {
   if (isLoading) {
     return (
       <div className="h-full overflow-y-auto bg-surface-base">
-        <div className="page-container page-section mx-auto max-w-6xl space-y-3" aria-busy="true">
+        <div className="app-page space-y-3" aria-busy="true">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-96 w-full" />
         </div>
@@ -156,7 +177,7 @@ export function CampaignDetailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-[1440px] space-y-5">
+      <div className="app-page space-y-5">
         <CampaignContextHeader
           campaign={campaign}
           mode="overview"
@@ -169,8 +190,11 @@ export function CampaignDetailPage() {
               published={published}
               warnings={warnings}
               onPublish={handlePublish}
+              onStartNow={handleStartNow}
+              startingNow={startingNow}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}
+              onEditCriteria={() => navigate(`/employer/campaigns/${campaign.id}/edit?step=3`)}
               embedded
             />
           </div>
@@ -178,6 +202,7 @@ export function CampaignDetailPage() {
             <CampaignResultsPanel
               campaignId={campaign.id}
               passScorePct={campaign.passScorePct}
+              rubric={campaign.rubric}
               enabled
             />
           </div>
@@ -198,7 +223,7 @@ function DetailShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-6xl space-y-6">
+      <div className="app-page space-y-6">
         <Link to="/employer/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
           {t('employer.campaigns.detail.back')}
         </Link>

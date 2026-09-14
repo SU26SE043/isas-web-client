@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest';
+import {
+  calculateAdaptiveQuestionBudget,
+  CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+} from './campaignAdaptiveBudget';
+
+describe('calculateAdaptiveQuestionBudget', () => {
+  it('keeps a static interview at its base count', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 3, false)).toMatchObject({
+      requestedTotal: 5,
+      effectiveTotal: 5,
+      exceedsLimit: false,
+    });
+  });
+
+  it('calculates five questions at depth two as fifteen', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true).requestedTotal).toBe(15);
+  });
+
+  it('flags six questions at depth three as over the limit', () => {
+    expect(calculateAdaptiveQuestionBudget(6, 3, true)).toMatchObject({
+      requestedTotal: 24,
+      effectiveTotal: CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+      exceedsLimit: true,
+    });
+  });
+
+  it('uses the full twenty-question fixed set when all mode has no draw count', () => {
+    expect(calculateAdaptiveQuestionBudget(20, 3, true)).toMatchObject({
+      requestedTotal: 80,
+      maxBaseQuestionCount: 5,
+      exceedsLimit: true,
+    });
+  });
+
+  it('keeps five questions at depth three within the limit', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 3, true)).toMatchObject({
+      requestedTotal: 20,
+      exceedsLimit: false,
+    });
+  });
+
+  it('shows only the number when adaptive depth is zero', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 0, true).requestedTotal).toBe(5);
+  });
+
+  it('uses the campaign maxQuestions setting as the adaptive budget limit', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, 10)).toMatchObject({
+      limit: 10,
+      requestedTotal: 15,
+      effectiveTotal: 10,
+      maxBaseQuestionCount: 3,
+      exceedsLimit: true,
+    });
+  });
+
+  it('falls back to the system limit when maxQuestions is missing or invalid', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, 0).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
+    expect(calculateAdaptiveQuestionBudget(5, 2, true, null).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
+  });
+
+  it('normalizes invalid negative inputs before calculating', () => {
+    expect(calculateAdaptiveQuestionBudget(-2, -3, true)).toMatchObject({
+      baseQuestionCount: 0,
+      maxDeepPerQuestion: 0,
+      requestedTotal: 0,
+    });
+  });
+});

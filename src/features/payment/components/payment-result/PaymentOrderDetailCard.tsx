@@ -27,43 +27,21 @@ function buildDetailRows(
 ): DetailRow[] {
   const rows: DetailRow[] = [{ label: t('payment.result.orderId'), value: order.orderId }];
 
-  const paymentStatus = getOrderPaymentStatus(order);
-  if (paymentStatus) {
-    rows.push({
-      label: t('payment.result.paymentStatus'),
-      value: paymentStatus,
-      emphasize: true,
-    });
-  }
 
-  if (order.orderStatus) {
-    rows.push({ label: t('payment.result.orderStatus'), value: order.orderStatus });
-  } else if (order.status && order.status !== paymentStatus) {
-    rows.push({ label: t('payment.result.orderStatus'), value: order.status });
-  }
-
-  if (order.priceVnd != null && order.priceVnd > 0) {
+  if (order.amountVnd != null && order.amountVnd > 0) {
     rows.push({
       label: t('payment.result.amount'),
-      value: `${formatVnd(order.priceVnd, locale)} VND`,
+      value: `${formatVnd(order.amountVnd, locale)} VND`,
     });
   }
 
   if (variant === 'success') {
-    if (order.paymentMethod) {
-      rows.push({ label: t('payment.result.paymentMethod'), value: order.paymentMethod });
-    }
     if (order.paidAt) {
       rows.push({
         label: t('payment.result.paidAt'),
         value: formatPaymentDate(order.paidAt, locale),
       });
     }
-    if (order.transactionId) {
-      rows.push({ label: t('payment.result.transactionId'), value: order.transactionId });
-    }
-  } else if (order.failureReason) {
-    rows.push({ label: t('payment.result.failureReason'), value: order.failureReason });
   }
 
   return rows;

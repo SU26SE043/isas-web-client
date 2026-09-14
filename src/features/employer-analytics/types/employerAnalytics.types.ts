@@ -1,76 +1,110 @@
-export type PipelineStatus =
-  | 'invited'
-  | 'invite_pending'
-  | 'in_progress'
-  | 'paused_violation'
-  | 'auto_submitted'
-  | 'completed';
+/**
+ * Hợp đồng `GET /api/v1/campaign/analytics` (phân tích tuyển dụng theo TỔ CHỨC).
+ *
+ * Stock vs flow: mọi khối `campaigns` / `screening` / `invitations` / `interviews` / `perCampaign` là
+ * trạng thái HIỆN TẠI của cả org (không lọc theo kỳ); chỉ `buckets` là dòng chảy trong `[from, to)`.
+ */
+export type EmployerAnalyticsGranularity = 'day' | 'month';
 
-export type PipelineSortKey = 'rank' | 'score' | 'completedAt' | 'status';
-export type ScoreBand = 'all' | 'top' | 'mid' | 'risk';
-export type ExportFormat = 'csv' | 'pdf';
+/** Kỳ do client chọn; `from`/`to` tính phía client (UTC) rồi gửi lên. */
+export type EmployerAnalyticsPreset = '30d' | '90d' | 'ytd';
 
-export interface PipelineFilters {
-  search: string;
-  status: PipelineStatus | 'all';
-  scoreBand: ScoreBand;
-  sortBy: PipelineSortKey;
+export interface EmployerAnalyticsParams {
+  from?: string;
+  to?: string;
+  groupBy?: EmployerAnalyticsGranularity;
 }
 
-export interface PipelineCandidate {
-  id: string;
+export interface EmployerAnalyticsStatusCount {
+  /** Enum string phía BE (`CampaignStatus` / `CvSubmissionStatus`). */
+  status: string;
+  count: number;
+}
+
+/** Band điểm: `0-19 · 20-39 · 40-59 · 60-79 · 80-100` (biên dưới bao gồm, 100 rơi vào band cuối). */
+export interface EmployerAnalyticsBandCount {
+  band: string;
+  count: number;
+}
+
+export type EmployerAnalyticsRisk = 'Low' | 'Medium' | 'High';
+
+export interface EmployerAnalyticsRiskCount {
+  risk: string;
+  count: number;
+}
+
+export interface EmployerAnalyticsSkillCount {
+  skill: string;
+  count: number;
+}
+
+export interface EmployerAnalyticsSignalCount {
+  signalType: string;
+  count: number;
+}
+
+export interface EmployerAnalyticsBucket {
+  periodStart: string;
+  campaignsCreated: number;
+  invitationsSent: number;
+  joins: number;
+  interviewsStarted: number;
+  scored: number;
+}
+
+export interface EmployerAnalyticsCampaignRow {
   campaignId: string;
-  candidateCode: string;
-  name: string;
-  email: string;
-  role: string;
-  status: PipelineStatus;
-  score: number;
-  rank: number;
-  completedAt: string;
-  location: string;
-  experienceYears: number;
-  skills: string[];
-  summary: string;
-  blindHiring: boolean;
-  shortlisted: boolean;
-  internalNotes: string[];
-  sessionId?: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  invited: number;
+  joined: number;
+  started: number;
+  scored: number;
+  passed: number;
+  medianScore: number | null;
 }
 
-export interface CandidateReport {
-  candidateId: string;
-  reviewed: boolean;
-  score: number;
-  overrideScore: number | null;
-  overrideNote: string | null;
-  recommendation: 'strong_yes' | 'yes' | 'hold' | 'no';
-  breakdown: Array<{ label: string; value: number }>;
-  rubricEvidence: Array<{ criterion: string; weight: number; score: number; evidence: string }>;
-  strengths: string[];
-  risks: string[];
-  transcriptHighlights: string[];
-}
-
-export interface AnalyticsFilters {
-  dateRange: '30d' | '90d' | 'ytd';
-  status: PipelineStatus | 'all';
-}
-
-export interface AnalyticsSnapshot {
-  totalCandidates: number;
-  completionRate: number;
-  averageScore: number;
-  timeToHireDays: number;
-  exportableRows: number;
-  funnel: Array<{ status: PipelineStatus; count: number }>;
-  scoreDistribution: Array<{ band: string; count: number }>;
-  topSkills: Array<{ skill: string; demand: number; averageScore: number }>;
-  weeklyTrend: Array<{ week: string; completed: number; shortlisted: number }>;
-}
-
-export interface ExportResult {
-  ok: boolean;
-  async: boolean;
-  messageKey: string;
+export interface EmployerAnalytics {
+  from: string;
+  to: string;
+  granularity: string;
+  campaigns: {
+    total: number;
+    byStatus: EmployerAnalyticsStatusCount[];
+  };
+  screening: {
+    submissions: number;
+    analyzed: number;
+    byStatus: EmployerAnalyticsStatusCount[];
+    medianFitScore: number | null;
+    fitDistribution: EmployerAnalyticsBandCount[];
+    riskBySeverity: EmployerAnalyticsRiskCount[];
+    topSkills: EmployerAnalyticsSkillCount[];
+  };
+  invitations: {
+    total: number;
+    queued: number;
+    sent: number;
+    joined: number;
+    expired: number;
+    revoked: number;
+  };
+  interviews: {
+    joined: number;
+    started: number;
+    inProgress: number;
+    completed: number;
+    scored: number;
+    pendingScore: number;
+    passed: number;
+    failed: number;
+    undetermined: number;
+    medianScore: number | null;
+    scoreDistribution: EmployerAnalyticsBandCount[];
+    flagsBySignal: EmployerAnalyticsSignalCount[];
+  };
+  buckets: EmployerAnalyticsBucket[];
+  perCampaign: EmployerAnalyticsCampaignRow[];
 }

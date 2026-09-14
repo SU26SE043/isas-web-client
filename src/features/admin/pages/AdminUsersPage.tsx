@@ -100,7 +100,6 @@ export function AdminUsersPage() {
 
   return (
     <AdminPageShell
-      eyebrow="SCR-ADM-070"
       title={t('admin.users.title')}
       description={t('admin.users.description')}
       actions={query.data ? <p className="text-sm text-muted-foreground">{t('admin.directory.pageCount').replace('{count}', String(query.data.items.length))}</p> : null}

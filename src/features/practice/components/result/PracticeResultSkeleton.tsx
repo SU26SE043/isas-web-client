@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function PracticeResultSkeleton() {
   return (
-    <div className="page-container page-section mx-auto max-w-7xl space-y-8 py-8">
+    <div className="app-page space-y-8">
       <div className="space-y-3">
         <Skeleton className="h-5 w-28" />
         <Skeleton className="h-9 w-2/3 max-w-xl" />

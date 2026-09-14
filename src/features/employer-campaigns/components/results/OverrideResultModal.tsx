@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip } from '@/components/ui/tooltip';
 import { useLanguage } from '@/shared/languages';
 import { useOverrideCampaignResult } from '../../hooks/useCampaignResults';
 import type { CampaignResultItem } from '../../types/campaign.api.types';
@@ -106,11 +107,26 @@ export function OverrideResultModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="override-score">{t('employer.campaigns.results.override.score')}</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="override-score">{t('employer.campaigns.results.override.score')}</Label>
+                <Tooltip content={t('employer.campaigns.results.override.scoreHelp')}>
+                  <span
+                    tabIndex={0}
+                    aria-label={t('employer.campaigns.results.override.scoreHelp')}
+                    className="cursor-help text-xs text-muted-foreground underline decoration-dotted underline-offset-4"
+                  >
+                    ?
+                  </span>
+                </Tooltip>
+              </div>
               <Input
                 id="override-score"
                 inputMode="decimal"
                 value={scoreInput}
+                min={0}
+                max={100}
+                step="0.1"
+                type="number"
                 onChange={(event) => setScoreInput(event.target.value)}
                 placeholder={t('employer.campaigns.results.override.scorePlaceholder')}
                 aria-invalid={scoreError || parsed.error}
@@ -141,8 +157,8 @@ export function OverrideResultModal({
                     onClick={() => setResultChoice(value)}
                     className={
                       resultChoice === value
-                        ? 'rounded-lg border border-satin bg-white/[0.08] px-3 py-2 text-sm text-foreground'
-                        : 'rounded-lg border border-subtle px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.04]'
+                        ? 'rounded-lg border border-foreground bg-foreground px-3 py-2 text-sm text-background'
+                        : 'rounded-lg border border-subtle px-3 py-2 text-sm text-muted-foreground hover:bg-surface-overlay'
                     }
                   >
                     {t(key)}

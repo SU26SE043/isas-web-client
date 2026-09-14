@@ -36,8 +36,8 @@ const CARD_STYLE: Record<
   },
   Joined: {
     icon: UserPlus,
-    wrap: 'border-violet-400/25 bg-violet-500/5',
-    iconWrap: 'bg-violet-500/15 text-violet-300',
+    wrap: 'border-info-400/25 bg-info-500/5',
+    iconWrap: 'bg-info-500/15 text-info-300',
   },
   Expired: {
     icon: Clock3,
@@ -95,3 +95,4 @@ export function InvitationStatusSummary({ items, hasMore }: InvitationStatusSumm
     </section>
   );
 }
+

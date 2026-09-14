@@ -1,5 +1,6 @@
 import type { CampaignDomainOption } from '../components/wizard/campaignWizard.steps';
 import type { CampaignQuestion, RubricCriterion } from './campaignManagement.types';
+import type { CampaignLanguage } from './campaign.api.types';
 
 export type JobDescriptionMethod = 'file' | 'text';
 
@@ -32,12 +33,23 @@ export type JobDescriptionState = {
   jdText: string;
   /** Freeform criteria notes captured alongside JD (step 1); maps to API `criteriaText`. */
   criteriaText: string;
+  /** First 200 characters extracted by the server after a PDF upload. */
+  extractedText?: string;
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
   uploadProgress: number | null;
   /** True after at least one successful server upload (POST/PUT …/files). */
   serverUploaded: boolean;
   isDownloading: boolean;
+};
+
+export type CampaignHardFiltersState = {
+  requiredSkills: string[];
+  keywordsAny: string[];
+  minYearsExperience: number | null;
+  requiredSkillsTouched: boolean;
+  keywordsAnyTouched: boolean;
+  minYearsExperienceTouched: boolean;
 };
 
 /** @deprecated Alias kept for gradual rename. */
@@ -47,9 +59,8 @@ export type JdAnalysisState = JobDescriptionState;
 export type CampaignInfoState = {
   title: string;
   domain: CampaignDomainOption | '';
-  location: string;
-  /** Browser-only map marker; CampaignService persists only `location`. */
-  locationCoordinates: LocationCoordinates | null;
+  /** Interview language, independent from the user's UI language. */
+  language?: CampaignLanguage | '';
   maxCandidates: number | null;
   timeLimitMinutes: number;
   /** Optional 0–100; null = HR decides. */
@@ -57,11 +68,6 @@ export type CampaignInfoState = {
   startsAt: string;
   expiresAt: string;
   timezone: string;
-};
-
-export type LocationCoordinates = {
-  latitude: number;
-  longitude: number;
 };
 
 /** New step 4 — moved out of Info (antiCheat) and net-new proctoring/adaptive fields. */
@@ -73,6 +79,7 @@ export type CampaignSettingsState = {
   maxFollowUps: number;
   /** 0..20; only sent to API when adaptiveEnabled. */
   maxQuestions: number;
+  maxDeepPerQuestion?: number;
 };
 
 export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
@@ -80,12 +87,23 @@ export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'failed' | 'dirty';
 export type CampaignWizardPersistedState = {
   info: CampaignInfoState;
   jd: JobDescriptionState;
+  hardFilters: CampaignHardFiltersState;
   criteria: CriteriaFileState;
   /** Weights as UI percents (0–100); convert on submit. */
   rubric: RubricCriterion[];
+  /**
+   * Người dùng đã bấm "Tùy chỉnh bộ tiêu chí" chưa. Đây là QUYẾT ĐỊNH của họ nên phải sống
+   * ở wizard state, không phải useState trong bước 3: mọi bước đều render có điều kiện
+   * ({step === N ? … : null}) nên rời bước là component bị huỷ, quay lại thì initializer
+   * `rubric.length > 0` chạy lại và tự bật thành true — bảng tự mở khoá.
+   */
+  rubricCustomized: boolean;
   questions: CampaignQuestion[];
+  /** Email list collected in step 7; invitations are sent only during deploy. */
+  inviteEmails: string[];
   /** Count used by the "generate with AI" action on the Questions step. */
   questionCount: number;
+  questionsPerSession?: number | null;
   settings: CampaignSettingsState;
   currentStep: number;
   completedSteps: number[];
@@ -137,11 +155,23 @@ export function createEmptyJdState(): JobDescriptionState {
     fileSize: null,
     jdText: '',
     criteriaText: '',
+    extractedText: '',
     fileStatus: 'idle',
     fileError: null,
     uploadProgress: null,
     serverUploaded: false,
     isDownloading: false,
+  };
+}
+
+export function createEmptyHardFiltersState(): CampaignHardFiltersState {
+  return {
+    requiredSkills: [],
+    keywordsAny: [],
+    minYearsExperience: null,
+    requiredSkillsTouched: false,
+    keywordsAnyTouched: false,
+    minYearsExperienceTouched: false,
   };
 }
 
@@ -165,6 +195,7 @@ export function createDefaultSettingsState(): CampaignSettingsState {
     adaptiveEnabled: false,
     maxFollowUps: 2,
     maxQuestions: 5,
+    maxDeepPerQuestion: 0,
   };
 }
 

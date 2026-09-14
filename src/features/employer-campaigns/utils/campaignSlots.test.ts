@@ -1,8 +1,10 @@
+import axios from 'axios';
 import { describe, expect, it } from 'vitest';
 import { CampaignRequestError } from '../services/campaignManagement.service';
 import {
   campaignSlotCapacity,
   getCampaignSlotErrorKey,
+  resolveCampaignSlotErrorMessage,
   parseCampaignSlots,
   toCampaignSlotRequest,
   validateCampaignSlot,
@@ -65,6 +67,26 @@ describe('campaignSlots', () => {
     );
     expect(getCampaignSlotErrorKey(new CampaignRequestError(409, 'Conflict'), 'delete')).toBe(
       'employer.campaigns.slots.errors.deleteRunning',
+    );
+  });
+
+  it('400 có lời server (plain-text) thì hiện ĐÚNG lý do, không dán đè "không hợp lệ"', () => {
+    // Đo trên dev 14/09: HR đặt ca 16:26 khi chiến dịch mở 17:24 → BE 400 "Khung giờ bắt đầu trước khi
+    // chiến dịch mở (17:24 14/09/2026 giờ VN)", FE chỉ báo "Thông tin khung giờ không hợp lệ." ⇒ HR bó tay.
+    const error = new axios.AxiosError('Request failed');
+    error.response = {
+      status: 400, statusText: 'Bad Request', headers: {}, config: {} as never,
+      data: 'Khung giờ bắt đầu trước khi chiến dịch mở (17:24 14/09/2026 giờ VN).',
+    };
+    expect(resolveCampaignSlotErrorMessage(error, 'create', (k) => k)).toBe(
+      'Khung giờ bắt đầu trước khi chiến dịch mở (17:24 14/09/2026 giờ VN).',
+    );
+    // Không có body ⇒ vẫn rơi về khoá i18n; 409 vẫn là khoá overlap.
+    expect(resolveCampaignSlotErrorMessage(new CampaignRequestError(400, ''), 'create', (k) => k)).toBe(
+      'employer.campaigns.slots.errors.invalid',
+    );
+    expect(resolveCampaignSlotErrorMessage(new CampaignRequestError(409, 'Conflict'), 'create', (k) => k)).toBe(
+      'employer.campaigns.slots.errors.overlap',
     );
   });
 });

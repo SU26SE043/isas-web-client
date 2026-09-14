@@ -22,6 +22,15 @@ import {
   type CampaignFileType,
 } from '../utils/campaignFiles';
 import { validateCampaignWizardStep } from '../utils/validateCampaignWizard';
+import { adoptServerRubric, type RubricAdoption } from '../utils/serverIdAdoption';
+
+/**
+ * R1(a) — kết quả `ensureDraft`: `adopted` chỉ khác null khi CHÍNH lời gọi này vừa POST tạo nháp, và là bản
+ * ghép id server tính từ snapshot ĐÃ GỬI (closure của caller) — caller dựng payload PUT từ đó thay vì từ
+ * `state` cũ (state đã setState nhưng closure chưa thấy: dùng closure cũ ⇒ PUT criteria KHÔNG echo id ⇒ BE
+ * replace-all mint GUID mới ⇒ GUID vừa ghép vào state thành GUID CHẾT).
+ */
+export type EnsureDraftResult = { id: string; adopted: RubricAdoption | null };
 
 type FilePayload = { jdFile?: File | null; criteriaFile?: File | null };
 
@@ -75,7 +84,7 @@ export function useCampaignFileActions({
   snapshot,
 }: UseCampaignFileActionsArgs) {
   const draftIdRef = useRef<string | null>(state.draftId ?? campaign?.id ?? null);
-  const draftEnsureRef = useRef<Promise<string> | null>(null);
+  const draftEnsureRef = useRef<Promise<EnsureDraftResult> | null>(null);
   const jdLockRef = useRef(false);
   const criteriaLockRef = useRef(false);
   const jdDownloadLockRef = useRef(false);
@@ -85,8 +94,8 @@ export function useCampaignFileActions({
     draftIdRef.current = state.draftId ?? campaign?.id ?? null;
   }, [campaign?.id, state.draftId]);
 
-  const ensureDraftId = useCallback(async (): Promise<string> => {
-    if (draftIdRef.current) return draftIdRef.current;
+  const ensureDraft = useCallback(async (): Promise<EnsureDraftResult> => {
+    if (draftIdRef.current) return { id: draftIdRef.current, adopted: null };
 
     if (!draftEnsureRef.current) {
       draftEnsureRef.current = (async () => {
@@ -94,30 +103,27 @@ export function useCampaignFileActions({
         if (infoError) throw new Error(infoError);
 
         const base = snapshot();
-        const questions =
-          base.questions.length > 0
-            ? base.questions
-            : [
-                {
-                  id: 'placeholder',
-                  prompt: t('employer.campaigns.wizard.placeholderQuestion'),
-                  skill: '',
-                  difficulty: 'middle' as const,
-                  source: 'manual' as const,
-                  isRequired: true,
-                },
-              ];
+        const questions = base.questions;
         const created = await onCreateCampaign(
           buildCampaignCreateRequest({ ...base, questions }),
         );
         draftIdRef.current = created.id;
-        setState((prev) => ({
-          ...prev,
-          draftId: created.id,
-          lastSavedAt: created.updatedAt,
-          autosaveStatus: 'saved',
-        }));
-        return created.id;
+        // R1(a) — POST trả bộ tiêu chí ĐÃ có id server: ghép ngay vào state (id tạm → GUID, nhãn câu theo) để mọi
+        // đường lưu sau (Triển khai · Lưu câu hỏi · AI sinh câu) thấy GUID. Trước đây chỉ `persistForPreview` ghép,
+        // nên create mode giữ id tạm cho tới lúc Lưu & chấm thử ⇒ nhãn mất im lặng ở mọi đường khác.
+        const adopted = adoptServerRubric({ rubric: base.rubric, questions }, created.rubric);
+        setState((prev) => {
+          const own = adoptServerRubric({ rubric: prev.rubric, questions: prev.questions }, created.rubric);
+          return {
+            ...prev,
+            rubric: own.rubric,
+            questions: own.questions,
+            draftId: created.id,
+            lastSavedAt: created.updatedAt,
+            autosaveStatus: 'saved',
+          };
+        });
+        return { id: created.id, adopted };
       })().finally(() => {
         draftEnsureRef.current = null;
       });
@@ -125,6 +131,8 @@ export function useCampaignFileActions({
 
     return draftEnsureRef.current;
   }, [onCreateCampaign, setState, snapshot, state, t]);
+
+  const ensureDraftId = useCallback(async (): Promise<string> => (await ensureDraft()).id, [ensureDraft]);
 
   const sendJdFile = useCallback(
     async (file: File) => {
@@ -142,11 +150,12 @@ export function useCampaignFileActions({
       });
       try {
         const id = await ensureDraftId();
+        let updated: EmployerCampaign;
         if (replace) {
-          await onReplaceFiles(id, { jdFile: file });
+          updated = await onReplaceFiles(id, { jdFile: file });
           toast.success(t('employer.campaigns.files.replaceSuccess'));
         } else {
-          await onUploadFiles(id, { jdFile: file });
+          updated = await onUploadFiles(id, { jdFile: file });
           toast.success(t('employer.campaigns.files.uploadSuccess'));
         }
         patchJd({
@@ -154,6 +163,7 @@ export function useCampaignFileActions({
           fileError: null,
           uploadProgress: 100,
           serverUploaded: true,
+          extractedText: updated.jobDescription?.trim().slice(0, 200) ?? '',
         });
         setStepError(null);
       } catch (error) {
@@ -361,6 +371,7 @@ export function useCampaignFileActions({
     retryCriteriaUpload,
     downloadJdFile: () => void downloadCampaignPdf('jd'),
     downloadCriteriaFile: () => void downloadCampaignPdf('criteria'),
+    ensureDraft,
     ensureDraftId,
     isJdBusy:
       state.jd.fileStatus === 'uploading' ||

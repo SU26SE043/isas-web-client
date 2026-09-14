@@ -1,11 +1,22 @@
 import { Settings } from 'lucide-react';
+import { SelectionOption } from '@/components/ui/selection-option';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignSettingsState } from '../../types/campaignWizard.types';
+import {
+  calculateAdaptiveQuestionBudget,
+  CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+} from '../../utils/campaignAdaptiveBudget';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
+
+const ADAPTIVE_PRESETS = [
+  { key: 'off', followUps: 0 },
+  { key: 'light', followUps: 1 },
+  { key: 'deep', followUps: 5 },
+] as const;
 
 interface CampaignSettingsStepProps {
   settings: CampaignSettingsState;
@@ -14,6 +25,7 @@ interface CampaignSettingsStepProps {
   onBack: () => void;
   onNext: () => void;
   isSaving?: boolean;
+  questionCount?: number;
 }
 
 function ToggleRow({
@@ -53,8 +65,15 @@ export function CampaignSettingsStep({
   onBack,
   onNext,
   isSaving,
+  questionCount = 0,
 }: CampaignSettingsStepProps) {
   const { t } = useLanguage();
+  const adaptiveBudget = calculateAdaptiveQuestionBudget(
+    questionCount,
+    settings.maxDeepPerQuestion,
+    settings.adaptiveEnabled,
+    settings.maxQuestions,
+  );
 
   return (
     <SectionPanel
@@ -99,6 +118,33 @@ export function CampaignSettingsStep({
 
         {settings.adaptiveEnabled ? (
           <section className="grid gap-4 rounded-xl border border-satin bg-surface-overlay p-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.adaptiveDepth')}</p>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {ADAPTIVE_PRESETS.map((preset) => {
+                  const depth = preset.key === 'light' ? 1 : preset.key === 'deep' ? 3 : 0;
+                  return (
+                    <SelectionOption
+                      key={preset.key}
+                      title={t(`employer.campaigns.form.adaptivePreset.${preset.key}`)}
+                      description={`d=${depth}`}
+                      selected={settings.maxDeepPerQuestion === depth}
+                      disabled={isSaving}
+                      onClick={() => onChange({ maxDeepPerQuestion: depth, maxFollowUps: preset.followUps })}
+                      showChevron={false}
+                    />
+                  );
+                })}
+              </div>
+              {adaptiveBudget.exceedsLimit ? (
+                <p role="alert" className="text-sm text-warning">
+                  {t('employer.campaigns.form.adaptiveBudgetWarning').replace(
+                    '{max}',
+                    String(adaptiveBudget.maxBaseQuestionCount),
+                  )}
+                </p>
+              ) : null}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="settings-max-follow-ups">{t('employer.campaigns.form.maxFollowUps')}</Label>
               <Input
@@ -120,13 +166,13 @@ export function CampaignSettingsStep({
                 id="settings-max-questions"
                 type="number"
                 min={0}
-                max={20}
+                max={CAMPAIGN_ADAPTIVE_QUESTION_LIMIT}
                 step={1}
                 disabled={isSaving}
                 value={settings.maxQuestions}
                 onChange={(e) =>
                   onChange({
-                    maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                    maxQuestions: Number(e.target.value) || 0,
                   })
                 }
               />
@@ -139,13 +185,13 @@ export function CampaignSettingsStep({
               id="settings-max-questions"
               type="number"
               min={0}
-              max={20}
+              max={CAMPAIGN_ADAPTIVE_QUESTION_LIMIT}
               step={1}
               disabled={isSaving}
               value={settings.maxQuestions}
               onChange={(e) =>
                 onChange({
-                  maxQuestions: Math.min(20, Math.max(0, Number(e.target.value) || 0)),
+                  maxQuestions: Number(e.target.value) || 0,
                 })
               }
             />

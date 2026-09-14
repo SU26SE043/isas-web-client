@@ -69,7 +69,7 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
       : null;
 
   return (
-    <section className="frame-satin relative isolate overflow-hidden rounded-3xl border border-satin bg-surface-raised p-5 sm:p-7 lg:p-8">
+    <section className="frame-satin relative isolate overflow-hidden rounded-2xl border border-satin bg-surface-raised p-5 sm:p-7 lg:p-8">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_78%_18%,rgba(59,130,246,0.1),transparent_30%),radial-gradient(circle_at_12%_100%,rgba(255,255,255,0.04),transparent_34%)]"

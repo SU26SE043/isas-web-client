@@ -17,6 +17,13 @@ export interface SectionPanelProps {
 /**
  * Project-wide glass section shell (header + body + optional footer).
  * Use for multi-step wizards, setup flows, and self-contained form sections.
+ *
+ * Đầu mục chỉ có MỘT dấu hiệu: chip icon (tuỳ chọn) — đúng hợp đồng header
+ * trong docs/UI_GUIDE.md ("icon tuỳ chọn + title + description").
+ * KHÔNG thêm lại thanh dọc `before:` cạnh <h2>: nó giống hệt nhau ở mọi panel
+ * (không mang thông tin, khác chip icon đổi theo từng bước), chồng lên chip
+ * thành hai lớp trang trí, và `pl-4` của nó chỉ nằm trên <h2> nên đẩy title
+ * lệch phải 16px so với description.
  */
 export function SectionPanel({
   title,
@@ -45,7 +52,7 @@ export function SectionPanel({
   return (
     <section
       className={cn(
-        'relative frame-satin flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-info/35 bg-[radial-gradient(circle_at_100%_0%,rgba(37,99,235,0.12),transparent_28%),var(--glass-bg)] backdrop-blur-xl shadow-[0_24px_70px_-42px_rgba(59,130,246,0.9)]',
+        'relative frame-satin flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--satin-inset)]',
         className,
       )}
     >
@@ -53,12 +60,14 @@ export function SectionPanel({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className={icon ? 'flex items-start gap-4' : undefined}>
             {icon ? (
-              <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-foreground">
+              <span className="frame-satin-soft mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-foreground">
                 {icon}
               </span>
             ) : null}
             <div className="min-w-0">
-              <h2 className="relative pl-4 text-xl font-bold tracking-tight text-foreground before:absolute before:left-0 before:top-1 before:h-6 before:w-1 before:rounded-full before:bg-gradient-to-b before:from-info before:to-violet-400 sm:text-2xl">{title}</h2>
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {title}
+              </h2>
               {description ? (
                 <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                   {description}

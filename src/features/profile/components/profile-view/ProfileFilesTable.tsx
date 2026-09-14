@@ -75,7 +75,7 @@ export function ProfileFilesTable({
             <input
               ref={selectAllRef}
               type="checkbox"
-              className="size-4 rounded-sm border-satin bg-surface-base accent-white"
+              className="size-4 border-satin bg-surface-base accent-white"
               checked={isAllSelected}
               disabled={isSelectionDisabled || isBusy}
               aria-label={t('profile.view.selectAllAria')}
@@ -102,7 +102,7 @@ export function ProfileFilesTable({
               <TableCell>
                 <input
                   type="checkbox"
-                  className="size-4 rounded-sm border-satin bg-surface-base accent-white"
+                  className="size-4 border-satin bg-surface-base accent-white"
                   checked={isSelected}
                   disabled={isSelectionDisabled || isBusy}
                   aria-label={t('profile.view.selectFileCheckboxAria').replace('{name}', file.originalName)}

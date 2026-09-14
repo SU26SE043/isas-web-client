@@ -1,35 +1,19 @@
 import React, { useMemo } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
-  Activity,
-  Bell,
-  BookOpen,
-  Bot,
   Briefcase,
   Building2,
-  CircleHelp,
-  ClipboardCheck,
   ClipboardList,
   CreditCard,
-  DatabaseBackup,
-  FileText,
-  Flag,
   Gauge,
-  HeartPulse,
-  LifeBuoy,
-  LockKeyhole,
   LogOut,
-  Settings,
-  Shield,
   SlidersHorizontal,
   Target,
   Users,
-  Wrench,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
-import { NotificationBell } from '@/features/engagement/components/NotificationBell';
 import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
@@ -53,31 +37,10 @@ export const AdminDashboardLayout: React.FC = () => {
       { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
       { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
       { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/roles', label: t('admin.nav.roles'), icon: <Shield className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/permissions', label: t('admin.nav.permissions'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/approvals', label: t('admin.nav.approvals'), icon: <ClipboardCheck className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/candidates', label: t('admin.nav.candidates'), icon: <Users className="h-4 w-4" aria-hidden /> },
       { to: '/admin/campaigns', label: t('admin.nav.campaigns'), icon: <Briefcase className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/content', label: t('admin.nav.content'), icon: <FileText className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/learning', label: t('admin.nav.learning'), icon: <BookOpen className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/ai-config', label: t('admin.nav.aiConfig'), icon: <Bot className="h-4 w-4" aria-hidden /> },
       { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
       { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
       { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notification-templates', label: t('admin.nav.templates'), icon: <Bell className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/reports', label: t('admin.nav.reports'), icon: <FileText className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/audit-logs', label: t('admin.nav.audit'), icon: <LockKeyhole className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/system-config', label: t('admin.nav.systemConfig'), icon: <Settings className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/feature-flags', label: t('admin.nav.flags'), icon: <Flag className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/monitoring', label: t('admin.nav.monitoring'), icon: <Activity className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/health', label: t('admin.nav.health'), icon: <HeartPulse className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/backups', label: t('admin.nav.backups'), icon: <DatabaseBackup className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/maintenance', label: t('admin.nav.maintenance'), icon: <Wrench className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/support-tickets', label: t('admin.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/notifications', label: t('engagement.nav.notifications'), icon: <Bell className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/settings', label: t('engagement.nav.settings'), icon: <Settings className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/help', label: t('engagement.nav.help'), icon: <CircleHelp className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/support', label: t('engagement.nav.support'), icon: <LifeBuoy className="h-4 w-4" aria-hidden /> },
     ],
     [t],
   );
@@ -87,7 +50,7 @@ export const AdminDashboardLayout: React.FC = () => {
       <div className="flex min-h-screen">
         <aside className="glass-sidebar sticky top-0 flex h-screen w-[4.5rem] shrink-0 flex-col border-r sm:w-72">
           <div className="flex items-center justify-center border-b border-subtle px-3 py-4 sm:justify-between">
-            <Link to="/" className="focus-ring hidden rounded-md sm:block"><BrandLogo className="h-7" /></Link>
+            <Link to="/" className="focus-ring hidden rounded-lg sm:block"><BrandLogo className="h-7" /></Link>
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:hidden">AD</span>
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
@@ -101,18 +64,6 @@ export const AdminDashboardLayout: React.FC = () => {
             </div>
           </nav>
           <div className="shrink-0 space-y-1 border-t border-subtle p-3">
-            <div
-              className={navLinkClassName(false)}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('button')) return;
-                event.currentTarget.querySelector<HTMLButtonElement>('button')?.click();
-              }}
-            >
-              <NotificationBell scope="admin" panelPlacement="sidebar" variant="sidebar" />
-              <span className="hidden text-sm sm:inline">
-                {t('engagement.nav.notifications')}
-              </span>
-            </div>
             <div className="hidden items-center rounded-xl py-2.5 sm:flex sm:justify-start sm:px-3">
               <LanguageToggle compact />
             </div>
@@ -122,7 +73,10 @@ export const AdminDashboardLayout: React.FC = () => {
             </SidebarLogoutButton>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 overflow-hidden bg-surface-page">
+        {/* `overflow-x-clip` chứ KHÔNG `overflow-hidden`: hidden biến main thành scroll container ⇒ mọi
+            `position: sticky` bên trong (header reader bài học, thanh công cụ trang) không bao giờ dính —
+            cùng lỗi đã đo ở layout employer (rail ở y = −675 sau khi cuộn). */}
+        <main className="min-w-0 flex-1 overflow-x-clip bg-surface-page">
           <Outlet />
         </main>
       </div>

@@ -76,7 +76,7 @@ export function CvUploadZone({
             'focus-visible:ring-offset-surface-overlay disabled:cursor-not-allowed disabled:opacity-50',
           )}
           aria-label={t('employer.campaigns.screening.upload.selectFiles')}
-          disabled={!isActive || isAnalyzing}
+          disabled={isAnalyzing}
           onClick={() => inputRef.current?.click()}
         >
           <Upload className="size-7" aria-hidden />
@@ -94,7 +94,7 @@ export function CvUploadZone({
           multiple
           className="sr-only"
           tabIndex={-1}
-          disabled={!isActive || isAnalyzing}
+          disabled={isAnalyzing}
           onChange={(event) => {
             if (event.target.files?.length) addFiles(event.target.files);
             event.target.value = '';

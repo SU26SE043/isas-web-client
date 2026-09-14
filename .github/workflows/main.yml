@@ -40,6 +40,9 @@ jobs:
       - name: UI file size
         run: npm run check:ui-size
 
+      - name: Radius scale
+        run: npm run check:radius
+
       # 5. Build thử dự án xem có bị lỗi Crash không
       - name: Test Build
         run: npm run build

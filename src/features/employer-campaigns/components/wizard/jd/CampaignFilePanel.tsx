@@ -28,6 +28,8 @@ interface CampaignFilePanelProps {
   retryLabel: string;
   chooseOtherLabel: string;
   supportLabel: string;
+  previewText?: string;
+  previewLabel?: string;
   onFileSelect: (file: File | null) => void;
   onRetry?: () => void;
   onDownload?: () => void;
@@ -95,7 +97,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
           aria-disabled={busy}
           className={cn(
             'group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl glass-well px-6 py-10 text-center',
-            dragging && 'border-[var(--satin-border-hover)] bg-white/[0.05]',
+            dragging && 'border-[var(--satin-border-hover)] bg-surface-overlay',
             busy && 'pointer-events-none opacity-70',
           )}
           onClick={openPicker}
@@ -116,7 +118,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
             pick(e.dataTransfer.files?.[0] ?? null);
           }}
         >
-          <span className="frame-satin-soft mb-4 flex size-12 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground">
+          <span className="frame-satin-soft mb-4 flex size-14 items-center justify-center rounded-2xl bg-surface-overlay text-muted-foreground">
             {status === 'uploading' ? (
               <Spinner className="size-6 border-muted border-t-foreground" label={uploadingLabel} />
             ) : (
@@ -139,7 +141,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
       ) : null}
 
       {hasFile && !showUploadedCard ? (
-        <div className="frame-satin flex items-start gap-3 rounded-xl bg-white/[0.04] px-4 py-3">
+        <div className="frame-satin flex items-start gap-3 rounded-xl bg-surface-overlay px-4 py-3">
           <FileText className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">{displayName}</p>
@@ -147,7 +149,7 @@ export function CampaignFilePanel(props: CampaignFilePanelProps) {
               <p className="mt-1 text-xs text-muted-foreground">{uploadingLabel}</p>
             ) : null}
             {status === 'failed' ? (
-              <span className="mt-1 inline-flex rounded-md border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
+              <span className="mt-1 inline-flex rounded-lg border border-error/30 bg-error-bg px-2.5 py-1 text-xs text-error">
                 {failureLabel}
               </span>
             ) : null}

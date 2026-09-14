@@ -20,7 +20,7 @@ export function ReportCategoryAccordion({
   const headerId = useId();
 
   return (
-    <section className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70 transition-colors hover:bg-zinc-900">
+    <section className="overflow-hidden rounded-xl border border-satin bg-surface-raised transition-colors hover:bg-surface-overlay">
       <h2 className="m-0">
         <button
           type="button"
@@ -30,14 +30,14 @@ export function ReportCategoryAccordion({
           onClick={() => setOpen((value) => !value)}
           className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]"
         >
-          <span className="heading-secondary text-base text-zinc-100">{title}</span>
+          <span className="heading-secondary text-base text-foreground">{title}</span>
           <span className="flex items-center gap-3">
-            <span className="rounded-full border border-zinc-800 bg-zinc-950/60 px-2.5 py-0.5 text-xs font-semibold text-zinc-400">
+            <span className="rounded-full border border-satin bg-surface-overlay px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               {count}
             </span>
             <ChevronDown
               className={cn(
-                'size-4 text-zinc-400 transition-transform motion-reduce:transition-none',
+                'size-4 text-muted-foreground transition-transform motion-reduce:transition-none',
                 open && 'rotate-180',
               )}
               aria-hidden
@@ -50,7 +50,7 @@ export function ReportCategoryAccordion({
           id={panelId}
           role="region"
           aria-labelledby={headerId}
-          className="space-y-2 border-t border-zinc-800 px-5 py-4 motion-safe:animate-in motion-safe:fade-in motion-reduce:animate-none"
+          className="space-y-2 border-t border-satin px-5 py-4 motion-safe:animate-in motion-safe:fade-in motion-reduce:animate-none"
         >
           {children}
         </div>

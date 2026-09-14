@@ -1,21 +1,16 @@
 import type {
-  CampaignCandidateResponse,
-  CampaignProctoringResponse,
   CampaignQuestionResponse,
   CampaignResponse,
   CampaignRubricCriterionResponse,
   CampaignJobNeed,
 } from '../types/campaign.api.types';
 import type {
-  CampaignCandidateRow,
-  CampaignCandidateStatus,
-  CampaignLocale,
   CampaignProctoringConfig,
   CampaignQuestion,
   EmployerCampaign,
-  EmployerCampaignMode,
   EmployerCampaignStatus,
   RubricCriterion,
+  RubricScoringScope,
 } from '../types/campaignManagement.types';
 
 const LIST_DEFAULT_PROCTORING: CampaignProctoringConfig = {
@@ -39,6 +34,11 @@ function asNumber(value: unknown): number | undefined {
     return Number(value);
   }
   return undefined;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
 }
 
 function pickString(record: Record<string, unknown>, ...keys: string[]): string | undefined {
@@ -91,6 +91,14 @@ export function unwrapCampaignDetailPayload(data: unknown): unknown {
   return data;
 }
 
+/**
+ * SC2 — chuỗi lạ/rỗng ⇒ `undefined` (coi như vắng, mapper hạ tầng sẽ mặc định 'Always'). NGUỒN DUY NHẤT của
+ * luật parse scope trên FE — `campaignCriteria.service` (bộ chuẩn) dùng lại, không giữ bản inline riêng.
+ */
+export function parseScoringScope(value: unknown): RubricScoringScope | undefined {
+  return value === 'Always' || value === 'WhenTargeted' ? value : undefined;
+}
+
 function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
   if (!Array.isArray(raw)) return [];
   const result: CampaignRubricCriterionResponse[] = [];
@@ -108,8 +116,10 @@ function parseRubric(raw: unknown): CampaignRubricCriterionResponse[] {
       weight,
       description: pickString(record, 'description', 'Description') ?? null,
       maxScore: pickNumber(record, 'maxScore', 'MaxScore') ?? null,
+      minPct: pickNumber(record, 'minPct', 'MinPct', 'minimumPct', 'MinimumPct'),
       source: pickString(record, 'source', 'Source') ?? null,
       levels,
+      scoringScope: parseScoringScope(record.scoringScope ?? record.ScoringScope) ?? null,
     });
   });
   return result;
@@ -125,6 +135,12 @@ function parseRubricLevels(raw: unknown): CampaignRubricCriterionResponse['level
     return score != null && descriptor ? [{ score, descriptor }] : [];
   });
   return levels;
+}
+
+/** SC2 — `Guid[] | null`. Chuỗi/số lẫn vào mảng bị loại (defensive); mảng rỗng hợp lệ (đã gắn nhãn nhưng không target gì). */
+function parseTargetCriterionIds(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  return raw.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
 }
 
 function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
@@ -149,8 +165,8 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
       id: pickString(record, 'id', 'Id') ?? `question-${index}`,
       questionText: prompt,
       prompt,
-      skill: pickString(record, 'skill', 'Skill') ?? null,
-      difficulty: pickString(record, 'difficulty', 'Difficulty') ?? null,
+      skill: null,
+      difficulty: null,
       source: pickString(record, 'source', 'Source') ?? null,
       isRequired:
         typeof record.isRequired === 'boolean'
@@ -158,43 +174,25 @@ function parseQuestions(raw: unknown): CampaignQuestionResponse[] {
           : typeof record.IsRequired === 'boolean'
             ? record.IsRequired
             : null,
+      questionGroup: pickString(record, 'questionGroup', 'QuestionGroup') ?? null,
       hrEditedAt: pickString(record, 'hrEditedAt', 'HrEditedAt') ?? null,
+      targetCriterionIds: parseTargetCriterionIds(record.targetCriterionIds ?? record.TargetCriterionIds),
+      sampleAnswer: pickString(record, 'sampleAnswer', 'SampleAnswer') ?? null,
     });
   });
   return result;
 }
 
-function parseCandidates(raw: unknown): CampaignCandidateResponse[] {
+/** SC2 — tiêu chí WhenTargeted không câu nào nhắm; camelCase-first, PascalCase fallback (BE mới, chưa tin tuyệt đối casing). */
+function parseCoverageWarnings(raw: unknown): Array<{ criterionId: string; name: string }> {
   if (!Array.isArray(raw)) return [];
-  const result: CampaignCandidateResponse[] = [];
-  for (const item of raw) {
-    const record = asRecord(item);
-    if (!record) continue;
-    const email = pickString(record, 'email', 'Email');
-    if (!email) continue;
-    result.push({
-      email,
-      displayName: pickString(record, 'displayName', 'DisplayName', 'fullName', 'FullName') ?? null,
-      candidateId: pickString(record, 'candidateId', 'CandidateId') ?? null,
-      status: pickString(record, 'status', 'Status') ?? null,
-    });
-  }
-  return result;
-}
-
-function parseInvitedEmails(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item) => asString(item)).filter((item): item is string => Boolean(item));
-}
-
-function parseProctoring(raw: unknown): CampaignProctoringResponse | null {
-  const record = asRecord(raw);
-  if (!record) return null;
-  return {
-    faceCaptureIntervalSeconds: pickNumber(record, 'faceCaptureIntervalSeconds', 'FaceCaptureIntervalSeconds') ?? null,
-    faceSimilarityThreshold: pickNumber(record, 'faceSimilarityThreshold', 'FaceSimilarityThreshold') ?? null,
-    maxViolations: pickNumber(record, 'maxViolations', 'MaxViolations') ?? null,
-  };
+  return raw.flatMap((entry) => {
+    const record = asRecord(entry);
+    if (!record) return [];
+    const criterionId = pickString(record, 'criterionId', 'CriterionId');
+    const name = pickString(record, 'name', 'Name');
+    return criterionId && name ? [{ criterionId, name }] : [];
+  });
 }
 
 function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
@@ -209,6 +207,7 @@ function parseJobNeeds(raw: unknown): CampaignJobNeed[] {
       needId,
       category: pickString(record, 'category', 'Category') ?? 'Technical',
       text,
+      isMustHave: pickBoolean(record, 'isMustHave', 'IsMustHave') ?? false,
       source: pickString(record, 'source', 'Source') ?? null,
     }];
   });
@@ -226,19 +225,20 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     title,
     domain: pickString(record, 'domain', 'Domain') ?? null,
     orgId: pickString(record, 'orgId', 'OrgId', 'organizationId', 'OrganizationId') ?? null,
-    company: pickString(record, 'company', 'Company') ?? null,
-    location: pickString(record, 'location', 'Location') ?? null,
-    mode: pickString(record, 'mode', 'Mode', 'workingMode', 'WorkingMode') ?? null,
     status: pickString(record, 'status', 'Status') ?? 'draft',
     language: pickString(record, 'language', 'Language') ?? null,
     seniority: pickString(record, 'seniority', 'Seniority') ?? null,
-    summary: pickString(record, 'summary', 'Summary', 'description', 'Description') ?? null,
     jobDescription: pickString(record, 'jobDescription', 'JobDescription', 'jdText', 'JdText') ?? null,
     jdText: pickString(record, 'jdText', 'JdText') ?? null,
     criteriaText: pickString(record, 'criteriaText', 'CriteriaText') ?? null,
+    requiredSkills: asStringArray(record.requiredSkills ?? record.RequiredSkills),
+    keywordsAny: asStringArray(record.keywordsAny ?? record.KeywordsAny),
+    minYearsExperience: pickNumber(record, 'minYearsExperience', 'MinYearsExperience') ?? null,
     capacity: pickNumber(record, 'capacity', 'Capacity', 'maxCandidates', 'MaxCandidates') ?? null,
-    applicants: pickNumber(record, 'applicants', 'Applicants', 'applicantCount', 'ApplicantCount') ?? null,
-    applicantCount: pickNumber(record, 'applicantCount', 'ApplicantCount') ?? null,
+    questionBank: (() => { const bank = asRecord(record.questionBank ?? record.QuestionBank); return bank ? { total: pickNumber(bank, 'total', 'Total'), alwaysAsked: pickNumber(bank, 'alwaysAsked', 'AlwaysAsked'), questionsPerSession: pickNumber(bank, 'questionsPerSession', 'QuestionsPerSession'), groups: Array.isArray(bank.groups) ? bank.groups as Array<{ name: string; count: number }> : [], warnings: Array.isArray(bank.warnings) ? asStringArray(bank.warnings) : [], coverageWarnings: parseCoverageWarnings(bank.coverageWarnings ?? bank.CoverageWarnings) } : null; })(),
+    cvCount: pickNumber(record, 'cvCount', 'CvCount') ?? null,
+    invitedCount: pickNumber(record, 'invitedCount', 'InvitedCount') ?? null,
+    completedCount: pickNumber(record, 'completedCount', 'CompletedCount') ?? null,
     maxCandidates: pickNumber(record, 'maxCandidates', 'MaxCandidates') ?? null,
     deadline: pickString(record, 'deadline', 'Deadline', 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
     endDate: pickString(record, 'endDate', 'EndDate', 'expiresAt', 'ExpiresAt') ?? null,
@@ -255,19 +255,16 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     maxConcurrentInterviews: pickNumber(record, 'maxConcurrentInterviews', 'MaxConcurrentInterviews') ?? null,
     maxFollowUps: pickNumber(record, 'maxFollowUps', 'MaxFollowUps') ?? null,
     maxQuestions: pickNumber(record, 'maxQuestions', 'MaxQuestions') ?? null,
+    questionsPerSession: pickNumber(record, 'questionsPerSession', 'QuestionsPerSession') ?? null,
     maxDeepPerQuestion: pickNumber(record, 'maxDeepPerQuestion', 'MaxDeepPerQuestion') ?? null,
-    locale: pickString(record, 'locale', 'Locale') ?? null,
+    skipPenalty: pickBoolean(record, 'skipPenalty', 'SkipPenalty') ?? null,
+    rubricVersion: pickNumber(record, 'rubricVersion', 'RubricVersion') ?? null,
     organizationId: pickString(record, 'organizationId', 'OrganizationId') ?? null,
-    welcomeMessage: pickString(record, 'welcomeMessage', 'WelcomeMessage') ?? null,
-    completionMessage: pickString(record, 'completionMessage', 'CompletionMessage') ?? null,
     createdAt: pickString(record, 'createdAt', 'CreatedAt') ?? null,
     updatedAt: pickString(record, 'updatedAt', 'UpdatedAt') ?? null,
     rubric: parseRubric(record.criteria ?? record.Criteria ?? record.rubric ?? record.Rubric),
     jobNeeds: parseJobNeeds(record.jobNeeds ?? record.JobNeeds),
     questions: parseQuestions(record.questions ?? record.Questions),
-    candidates: parseCandidates(record.candidates ?? record.Candidates),
-    invitedEmails: parseInvitedEmails(record.invitedEmails ?? record.InvitedEmails),
-    proctoring: parseProctoring(record.proctoring ?? record.Proctoring),
   };
 }
 
@@ -286,30 +283,6 @@ function mapStatus(value: string): EmployerCampaignStatus {
   return 'draft';
 }
 
-function mapMode(value: string | null | undefined): EmployerCampaignMode {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'hybrid') return 'hybrid';
-  if (normalized === 'onsite' || normalized === 'on-site' || normalized === 'on_site') return 'onsite';
-  return 'remote';
-}
-
-function mapLocale(value: string | null | undefined): CampaignLocale {
-  return value?.trim().toLowerCase() === 'en' ? 'en' : 'vi';
-}
-
-function mapDifficulty(value: string | null | undefined): CampaignQuestion['difficulty'] {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'senior') return 'senior';
-  if (normalized === 'junior') return 'junior';
-  return 'middle';
-}
-
-function mapCandidateStatus(value: string | null | undefined): CampaignCandidateStatus {
-  const normalized = (value ?? '').trim().toLowerCase();
-  if (normalized === 'invited' || normalized === 'linked') return 'invited';
-  return 'invite_pending';
-}
-
 function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined): RubricCriterion[] {
   return (items ?? []).map((item, index) => ({
     id: item.id?.trim() || `criterion-${index}`,
@@ -317,7 +290,12 @@ function mapRubric(items: CampaignRubricCriterionResponse[] | null | undefined):
     weight: item.weight,
     description: item.description?.trim() || '',
     maxScore: item.maxScore != null && Number(item.maxScore) > 0 ? Number(item.maxScore) : 10,
+    minPct: item.minPct ?? null,
     levels: item.levels?.length ? item.levels : undefined,
+    // SC2 — vắng/lạ đã được `parseScoringScope` chuẩn hoá thành null ở `parseRubric`; mặc định 'Always'
+    // NGAY TẠI ĐÂY (không để undefined trôi xuống UI) — mọi tiêu chí ĐANG SỐNG trong wizard đều phải
+    // có một scope tường minh để `scopedCriteriaForQuestion` không phải đoán lại lần nữa.
+    scoringScope: item.scoringScope === 'WhenTargeted' ? 'WhenTargeted' : 'Always',
   }));
 }
 
@@ -329,63 +307,44 @@ function mapQuestions(items: CampaignQuestionResponse[] | null | undefined): Cam
   return (items ?? []).map((item, index) => ({
     id: item.id?.trim() || `question-${index}`,
     prompt: item.questionText?.trim() || item.prompt?.trim() || '',
-    skill: item.skill?.trim() || '',
-    difficulty: mapDifficulty(item.difficulty),
+    skill: '',
+    difficulty: 'middle',
     source: mapQuestionSource(item.source),
     isRequired: item.isRequired ?? true,
+    questionGroup: item.questionGroup ?? null,
+    // SC2 — `null` khi server chưa gắn nhãn (GET luôn trả `null`, không phải `undefined`), giữ
+    // NGUYÊN phân biệt với `[]` (đã gắn nhãn rỗng) — xem doc trên `CampaignQuestion.targetCriterionIds`.
+    targetCriterionIds: item.targetCriterionIds ?? null,
+    sampleAnswer: item.sampleAnswer ?? null,
   }));
-}
-
-function mapCandidates(items: CampaignCandidateResponse[] | null | undefined): CampaignCandidateRow[] {
-  return (items ?? []).map((item) => ({
-    email: item.email,
-    displayName: item.displayName?.trim() || undefined,
-    candidateId: item.candidateId?.trim() || undefined,
-    status: mapCandidateStatus(item.status),
-  }));
-}
-
-function mapProctoring(value: CampaignProctoringResponse | null | undefined): CampaignProctoringConfig {
-  return {
-    faceCaptureIntervalSeconds:
-      value?.faceCaptureIntervalSeconds ?? LIST_DEFAULT_PROCTORING.faceCaptureIntervalSeconds,
-    faceSimilarityThreshold:
-      value?.faceSimilarityThreshold ?? LIST_DEFAULT_PROCTORING.faceSimilarityThreshold,
-    maxViolations: value?.maxViolations ?? LIST_DEFAULT_PROCTORING.maxViolations,
-  };
 }
 
 /** Map API campaign → UI model used by list / detail screens. */
 export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): EmployerCampaign {
   const now = new Date().toISOString();
   const capacity = item.capacity ?? item.maxCandidates ?? 0;
-  const candidates = mapCandidates(item.candidates);
-  const applicants = item.applicants ?? item.applicantCount ?? candidates.length;
   const deadline = item.deadline ?? item.endDate ?? now;
-  const invitedEmails =
-    item.invitedEmails && item.invitedEmails.length > 0
-      ? item.invitedEmails
-      : candidates.map((row) => row.email);
 
   return {
     id: item.id,
     title: item.title,
     domain: item.domain?.trim() || undefined,
-    company: item.company?.trim() || item.domain?.trim() || '—',
-    location: item.location?.trim() || '—',
-    mode: mapMode(item.mode),
+    locale: item.language?.toLowerCase() === 'en' ? 'en' : 'vi',
     status: mapStatus(item.status),
-    summary: item.summary?.trim() || '',
     jobDescription: item.jobDescription?.trim() || '',
     capacity,
-    applicants,
+    cvCount: item.cvCount ?? null,
+    invitedCount: item.invitedCount ?? null,
+    completedCount: item.completedCount ?? null,
     deadline,
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
     passScorePct: item.passScorePct ?? null,
+    skipPenalty: item.skipPenalty ?? null,
+    rubricVersion: item.rubricVersion ?? null,
     antiCheatEnabled:
       item.antiCheatEnabled ??
-      (mapProctoring(item.proctoring).maxViolations > 0),
+      LIST_DEFAULT_PROCTORING.maxViolations > 0,
     faceVerifyEnabled: item.faceVerifyEnabled ?? false,
     adaptiveEnabled: item.adaptiveEnabled ?? false,
     groundingEnabled: item.groundingEnabled ?? false,
@@ -393,16 +352,16 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     maxDeepPerQuestion: item.maxDeepPerQuestion ?? null,
     maxFollowUps: item.maxFollowUps ?? null,
     maxQuestions: item.maxQuestions ?? null,
-    locale: mapLocale(item.locale),
+    questionsPerSession: item.questionsPerSession ?? null,
+    questionBank: item.questionBank,
+    questionBankWarnings: item.questionBank?.warnings ?? [],
     rubric: mapRubric(item.rubric),
     questions: mapQuestions(item.questions),
     jobNeeds: item.jobNeeds ?? [],
-    invitedEmails,
-    candidates,
-    proctoring: mapProctoring(item.proctoring),
-    welcomeMessage: item.welcomeMessage?.trim() || '',
-    completionMessage: item.completionMessage?.trim() || '',
+    requiredSkills: item.requiredSkills ?? [],
+    keywordsAny: item.keywordsAny ?? [],
+    minYearsExperience: item.minYearsExperience ?? null,
     createdAt: item.createdAt ?? now,
-    updatedAt: item.updatedAt ?? item.createdAt ?? now,
-  };
+    updatedAt: item.createdAt ?? now,
+  } as EmployerCampaign;
 }

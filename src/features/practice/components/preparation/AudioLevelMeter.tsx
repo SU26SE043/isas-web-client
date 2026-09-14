@@ -16,7 +16,7 @@ export function AudioLevelMeter({ level, label }: AudioLevelMeterProps) {
           <span
             key={index}
             className={cn(
-              'w-2 rounded-sm transition-[height,background-color] duration-100',
+              'w-2 rounded-full transition-[height,background-color] duration-100',
               index < activeBars ? 'bg-success' : 'bg-white/10',
             )}
             style={{ height: `${((index + 1) / bars) * 100}%` }}

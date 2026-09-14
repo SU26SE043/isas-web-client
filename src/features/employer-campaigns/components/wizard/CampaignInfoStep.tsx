@@ -4,10 +4,12 @@ import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInfoState } from '../../types/campaignWizard.types';
+import type { CampaignLanguage } from '../../types/campaign.api.types';
 import { CAMPAIGN_DOMAIN_OPTIONS, type CampaignDomainOption } from './campaignWizard.steps';
 import { CampaignInfoScheduleSection } from './CampaignInfoScheduleSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
+import { WizardSection } from './WizardSection';
 
 interface CampaignInfoStepProps {
   info: CampaignInfoState;
@@ -21,148 +23,66 @@ interface CampaignInfoStepProps {
 const selectClass =
   'h-9 w-full rounded-lg border border-satin bg-surface-overlay px-3 text-sm text-foreground outline-none focus-visible:border-[var(--border-focus)]';
 
-export function CampaignInfoStep({
-  info,
-  error,
-  onChange,
-  onNext,
-  onCancel,
-  isSaving,
-}: CampaignInfoStepProps) {
+export function CampaignInfoStep({ info, error, onChange, onNext, onCancel, isSaving }: CampaignInfoStepProps) {
   const { t } = useLanguage();
+  const f = 'employer.campaigns.form';
 
   return (
     <SectionPanel
       icon={<Briefcase className="size-4" aria-hidden />}
       title={t('employer.campaigns.wizard.steps.info')}
+      description={t(`${f}.timezoneNote`)}
       footer={
-        <CampaignWizardNav
-          onCancel={onCancel}
-          onNext={onNext}
-          isSaving={isSaving}
-          nextDisabled={isSaving}
-          backDisabled={isSaving}
-        />
+        <CampaignWizardNav onCancel={onCancel} onNext={onNext} isSaving={isSaving} nextDisabled={isSaving} backDisabled={isSaving} />
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {error ? <FieldError message={error} /> : null}
 
-        <section className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t('employer.campaigns.form.section.general')}
-          </h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="campaign-title">{t('employer.campaigns.form.title')}</Label>
+        <WizardSection title={t(`${f}.group.position`)} hint={t(`${f}.group.positionHint`)}>
+          <div className="grid gap-4 @xs:grid-cols-2">
+            <div className="space-y-1.5 @xs:col-span-2">
+              <Label htmlFor="campaign-title">{t(`${f}.title`)}</Label>
               <Input
                 id="campaign-title"
                 value={info.title}
                 maxLength={255}
-                placeholder={t('employer.campaigns.form.titlePlaceholder')}
+                placeholder={t(`${f}.titlePlaceholder`)}
                 onChange={(e) => onChange({ title: e.target.value })}
                 aria-invalid={!!error && !info.title.trim()}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="campaign-domain">{t('employer.campaigns.form.domain')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-domain">{t(`${f}.domain`)}</Label>
               <select
                 id="campaign-domain"
                 className={selectClass}
                 value={info.domain}
-                onChange={(e) =>
-                  onChange({ domain: e.target.value as CampaignDomainOption | '' })
-                }
+                onChange={(e) => onChange({ domain: e.target.value as CampaignDomainOption | '' })}
               >
-                <option value="">{t('employer.campaigns.form.domainPlaceholder')}</option>
+                <option value="">{t(`${f}.domainPlaceholder`)}</option>
                 {CAMPAIGN_DOMAIN_OPTIONS.map((domain) => (
-                  <option key={domain} value={domain}>
-                    {t(`employer.campaigns.form.domain.${domain}`)}
-                  </option>
+                  <option key={domain} value={domain}>{t(`${f}.domain.${domain}`)}</option>
                 ))}
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="campaign-max">{t('employer.campaigns.form.maxCandidates')}</Label>
-              <Input
-                id="campaign-max"
-                type="number"
-                min={1}
-                step={1}
-                value={info.maxCandidates ?? ''}
-                placeholder={t('employer.campaigns.form.maxCandidatesPlaceholder')}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({
-                    maxCandidates: raw === '' ? null : Math.max(1, Number(raw) || 1),
-                  });
-                }}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="campaign-pass-score">{t('employer.campaigns.form.passScorePct')}</Label>
-              <div className="flex flex-wrap gap-4 text-sm text-foreground">
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="pass-score-mode"
-                    className="size-4 border-satin"
-                    checked={info.passScorePct != null}
-                    onChange={() => onChange({ passScorePct: info.passScorePct ?? 70 })}
-                  />
-                  {t('employer.campaigns.form.passScoreSystem')}
-                </label>
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="pass-score-mode"
-                    className="size-4 border-satin"
-                    checked={info.passScorePct == null}
-                    onChange={() => onChange({ passScorePct: null })}
-                  />
-                  {t('employer.campaigns.form.passScoreHrDecide')}
-                </label>
-              </div>
-              {info.passScorePct != null ? (
-                <Input
-                  id="campaign-pass-score"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={info.passScorePct}
-                  placeholder={t('employer.campaigns.form.passScorePlaceholder')}
-                  onChange={(e) => {
-                    onChange({
-                      passScorePct: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
-                    });
-                  }}
-                />
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t('employer.campaigns.form.passScoreHrDecideHelp')}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="campaign-time-limit">{t('employer.campaigns.form.timeLimitMinutes')}</Label>
-              <Input
-                id="campaign-time-limit"
-                type="number"
-                min={1}
-                step={1}
-                value={info.timeLimitMinutes}
-                onChange={(e) =>
-                  onChange({ timeLimitMinutes: Math.max(1, Number(e.target.value) || 1) })
-                }
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-language">{t(`${f}.interviewLanguage`)}</Label>
+              <select
+                id="campaign-language"
+                className={selectClass}
+                value={info.language ?? ''}
+                onChange={(e) => onChange({ language: e.target.value as CampaignLanguage | '' })}
+              >
+                <option value="">{t(`${f}.interviewLanguagePlaceholder`)}</option>
+                <option value="vi">{t(`${f}.interviewLanguage.vi`)}</option>
+                <option value="en">{t(`${f}.interviewLanguage.en`)}</option>
+              </select>
             </div>
           </div>
-        </section>
+        </WizardSection>
 
         <CampaignInfoScheduleSection info={info} onChange={onChange} />
       </div>

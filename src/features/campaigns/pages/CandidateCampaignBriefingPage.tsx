@@ -60,7 +60,7 @@ export function CandidateCampaignBriefingPage() {
 
   if (notFound || !briefing) {
     return (
-      <div className="page-container page-section mx-auto max-w-3xl space-y-4 py-12 text-center">
+      <div className="app-page space-y-4 text-center">
         <h1 className="heading-primary text-2xl text-foreground">{t('campaigns.invite.notFound')}</h1>
         <p className="text-sm text-muted-foreground">{t('campaigns.invite.notFoundHint')}</p>
         <Link to="/candidate/campaigns" className="btn-secondary inline-flex">
@@ -72,7 +72,7 @@ export function CandidateCampaignBriefingPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-4xl space-y-4 py-6">
+      <div className="app-page space-y-4">
         <Link to="/candidate/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
           {t('campaigns.my.backToList')}
         </Link>

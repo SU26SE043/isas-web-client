@@ -105,7 +105,7 @@ function MenuItem({
       className={
         danger
           ? 'block w-full rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10'
-          : 'block w-full rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-white/[0.05]'
+          : 'block w-full rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-surface-overlay'
       }
     >
       {label}

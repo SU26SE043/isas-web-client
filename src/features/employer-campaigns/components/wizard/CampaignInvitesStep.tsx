@@ -1,0 +1,145 @@
+import { useEffect, useMemo, useState } from 'react';
+import { UsersRound } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { SectionPanel } from '@/components/ui/section-panel';
+import { useLanguage } from '@/shared/languages';
+import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
+import type { EmployerCampaign } from '../../types/campaignManagement.types';
+import type { CampaignHardFiltersState } from '../../types/campaignWizard.types';
+import { CampaignHardFilterSection } from './CampaignHardFilterSection';
+import { CampaignWizardNav } from './CampaignWizardNav';
+import { WizardNumberField } from './WizardNumberField';
+import { CvScreeningPanel } from '../screening/CvScreeningPanel';
+
+type InviteTab = 'email' | 'cv';
+
+interface CampaignInvitesStepProps {
+  campaignId: string | null;
+  campaign?: EmployerCampaign | null;
+  timeLimitMinutes?: number;
+  onTimeLimitChange?: (value: number | null) => void;
+  error?: string | null;
+  hardFilters: CampaignHardFiltersState;
+  inviteEmails: string[];
+  onHardFiltersChange: (patch: Partial<CampaignHardFiltersState>) => void;
+  onInviteEmailsChange: (emails: string[]) => void;
+  onBack: () => void;
+  onNext: () => void;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseEmails(value: string): string[] {
+  return Array.from(new Set(value.split(/[\s,;]+/).map((email) => email.trim().toLowerCase()).filter(Boolean)));
+}
+
+export function CampaignInvitesStep({
+  campaignId,
+  campaign,
+  timeLimitMinutes,
+  onTimeLimitChange,
+  error,
+  hardFilters,
+  inviteEmails,
+  onHardFiltersChange,
+  onInviteEmailsChange,
+  onBack,
+  onNext,
+}: CampaignInvitesStepProps) {
+  const { t } = useLanguage();
+  const [tab, setTab] = useState<InviteTab>('email');
+  const [emailText, setEmailText] = useState(inviteEmails.join('\n'));
+
+  // ⚠ CHỈ đồng bộ ngược khi danh sách đổi từ BÊN NGOÀI (nạp nháp, thêm từ tab CV).
+  // Bản trước phụ thuộc identity của mảng: mỗi lần gõ, saveEmails gọi onInviteEmailsChange,
+  // hook luôn dựng mảng MỚI ⇒ effect chạy ⇒ ghi đè textarea bằng danh sách đã LỌC ⇒ ký tự
+  // đang gõ dở (chưa thành email hợp lệ) biến mất ngay khi vừa gõ.
+  useEffect(() => {
+    const typed = parseEmails(emailText).filter((email) => EMAIL_RE.test(email));
+    const same =
+      typed.length === inviteEmails.length && typed.every((email, index) => email === inviteEmails[index]);
+    if (same) return;
+    setEmailText(inviteEmails.join('\n'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteEmails]);
+
+  const validEmails = useMemo(
+    () => parseEmails(emailText).filter((email) => EMAIL_RE.test(email)),
+    [emailText],
+  );
+  const invalidCount = parseEmails(emailText).filter((email) => !EMAIL_RE.test(email)).length;
+  const saveEmails = (value: string) => {
+    setEmailText(value);
+    onInviteEmailsChange(parseEmails(value).filter((email) => EMAIL_RE.test(email)));
+  };
+  const addScreenedCandidates = (candidates: CampaignCandidateListItem[]) => {
+    const candidateEmails = candidates.map((candidate) => candidate.email?.trim().toLowerCase() ?? '').filter(Boolean);
+    const merged = Array.from(new Set([...inviteEmails, ...candidateEmails]));
+    onInviteEmailsChange(merged);
+    setEmailText(merged.join('\n'));
+    setTab('email');
+  };
+
+  return (
+    <SectionPanel
+      icon={<UsersRound className="size-4" aria-hidden />}
+      title={t('employer.campaigns.wizard.invites.title')}
+      description={t('employer.campaigns.wizard.invites.description')}
+      footer={<CampaignWizardNav onBack={onBack} onNext={onNext} />}
+    >
+      <div className="space-y-5">
+        <Alert variant="info">
+          <AlertTitle>{t('employer.campaigns.wizard.invites.notSentTitle')}</AlertTitle>
+          <AlertDescription>{t('employer.campaigns.wizard.invites.notSentDescription')}</AlertDescription>
+        </Alert>
+
+        <div className="flex flex-wrap gap-2 border-b border-satin" role="tablist" aria-label={t('employer.campaigns.wizard.invites.tabsLabel')}>
+          <button type="button" role="tab" aria-selected={tab === 'email'} onClick={() => setTab('email')} className={`border-b-2 px-3 py-2 text-sm ${tab === 'email' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground'}`}>
+            {t('employer.campaigns.wizard.invites.emailTab')} <span className="text-xs">({validEmails.length})</span>
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'cv'} onClick={() => setTab('cv')} className={`border-b-2 px-3 py-2 text-sm ${tab === 'cv' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground'}`}>
+            {t('employer.campaigns.wizard.invites.cvTab')} <span className="text-xs">({inviteEmails.length})</span>
+          </button>
+        </div>
+
+        {tab === 'email' ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="campaign-wizard-invite-emails">{t('employer.campaigns.wizard.invites.emailLabel')}</Label>
+              <textarea id="campaign-wizard-invite-emails" value={emailText} onChange={(event) => saveEmails(event.target.value)} placeholder={t('employer.campaigns.wizard.invites.emailPlaceholder')} className="min-h-36 w-full rounded-lg border border-satin bg-surface-base p-3 text-sm text-foreground outline-none focus-visible:border-foreground" />
+              <p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.emailHint').replace('{{count}}', String(validEmails.length))}</p>
+              {invalidCount > 0 ? <p className="text-xs text-error">{t('employer.campaigns.wizard.invites.invalidEmailCount').replace('{{count}}', String(invalidCount))}</p> : null}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryReady')}</p><p className="mt-1 text-xl font-semibold text-foreground">{validEmails.length}</p></div>
+              <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryInvalid')}</p><p className="mt-1 text-xl font-semibold text-foreground">{invalidCount}</p></div>
+              <div className="frame-satin rounded-lg p-3"><p className="text-xs text-muted-foreground">{t('employer.campaigns.wizard.invites.summaryExpiry')}</p><p className="mt-1 text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.invites.summaryAtDeploy')}</p></div>
+            </div>
+            {/* Thời lượng bài thi sống ở đây vì nó CHỈ đi vào thư mời (`IInvitationEmailPublisher`),
+                không hề gửi sang InterviewService ⇒ nó không ràng buộc buổi thi. Trước đây nó chỉ
+                được HIỆN ở bước này, còn ô nhập thì không tồn tại ở đâu cả ⇒ vĩnh viễn kẹt ở 60. */}
+            <div className="@container grid gap-4 @md:grid-cols-2">
+              <WizardNumberField
+                id="campaign-time-limit"
+                label={t('employer.campaigns.form.timeLimitMinutes')}
+                suffix={t('employer.campaigns.form.minutesSuffix')}
+                help={t('employer.campaigns.form.timeLimitHelp')}
+                value={timeLimitMinutes ?? campaign?.durationMinutes ?? null}
+                min={1}
+                invalid={Boolean(error) && !timeLimitMinutes}
+                onChange={(value) => onTimeLimitChange?.(value == null ? null : Math.max(1, value))}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+             {!campaignId ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.saveDraftFirst')}</AlertDescription></Alert> : null}
+             {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hideInvitationAction onAddCandidates={addScreenedCandidates} /> : null}
+             <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
+           </div>
+         )}
+       </div>
+     </SectionPanel>
+  );
+}

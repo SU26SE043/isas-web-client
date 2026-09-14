@@ -59,13 +59,13 @@ export function EmailInviteResultPanel({
       </div>
 
       {failed.length === 0 && created.length > 0 ? (
-        <p className="rounded-md border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
+        <p className="rounded-lg border border-satin bg-surface-overlay px-4 py-3 text-sm text-muted-foreground">
           {t('employer.campaigns.emailInvitations.result.noFailures')}
         </p>
       ) : null}
 
       {created.length > 0 ? (
-        <section className="space-y-3 rounded-md border border-success/30 bg-surface-raised p-4">
+        <section className="space-y-3 rounded-xl border border-success/30 bg-surface-raised p-4">
           <h3 className="text-sm font-semibold text-success">
             {t('employer.campaigns.emailInvitations.result.createdSection')}
           </h3>
@@ -73,7 +73,7 @@ export function EmailInviteResultPanel({
             {created.map((item) => (
               <li
                 key={item.id || item.email}
-                className="flex items-start gap-3 rounded-md border border-satin bg-surface-overlay px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-3 py-2.5"
               >
                 <Mail className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
                 <div className="min-w-0 flex-1 space-y-1">
@@ -99,7 +99,7 @@ export function EmailInviteResultPanel({
       ) : null}
 
       {failed.length > 0 ? (
-        <section className="space-y-3 rounded-md border border-error/30 bg-surface-raised p-4">
+        <section className="space-y-3 rounded-xl border border-error/30 bg-surface-raised p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-error">
               {t('employer.campaigns.emailInvitations.result.failedSection')}
@@ -119,7 +119,7 @@ export function EmailInviteResultPanel({
             {failed.map((item) => (
               <li
                 key={`${item.email}-${item.reason}`}
-                className="flex items-start gap-3 rounded-md border border-satin bg-surface-overlay px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-satin bg-surface-overlay px-3 py-2.5"
               >
                 <XCircle className="mt-0.5 size-4 shrink-0 text-error" aria-hidden />
                 <div className="min-w-0 flex-1 space-y-1">

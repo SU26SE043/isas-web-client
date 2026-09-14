@@ -8,6 +8,7 @@ import { isPlaywrightRuntime } from '@/shared/mock/config';
 import { MyCampaignCard } from '../components/MyCampaignCard';
 import { useMyCampaigns } from '../hooks/useMyCampaigns';
 import { LegacyCandidateCampaignsPage } from './LegacyCandidateCampaignsPage';
+import { PageHeader } from '@/components/patterns/PageHeader';
 
 function LiveCandidateCampaignsPage() {
   const { t } = useLanguage();
@@ -42,12 +43,8 @@ function LiveCandidateCampaignsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-surface-base">
-      <div className="page-container page-section mx-auto max-w-5xl space-y-6">
-        <header className="space-y-2">
-          <p className="text-label text-muted-foreground">{t('campaigns.my.eyebrow')}</p>
-          <h1 className="heading-primary text-3xl text-foreground">{t('campaigns.my.title')}</h1>
-          <p className="body-text max-w-3xl text-sm text-muted-foreground">{t('campaigns.my.subtitle')}</p>
-        </header>
+      <div className="app-page space-y-6">
+        <PageHeader eyebrow={t('campaigns.my.eyebrow')} title={t('campaigns.my.title')} description={t('campaigns.my.subtitle')} />
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
@@ -58,8 +55,8 @@ function LiveCandidateCampaignsPage() {
         ) : null}
 
         {isError ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-5 py-10 text-center">
-            <p className="text-sm text-rose-400">{t('campaigns.my.loadError')}</p>
+          <div className="rounded-xl border border-satin bg-surface-raised px-5 py-10 text-center">
+            <p className="text-sm text-error">{t('campaigns.my.loadError')}</p>
             <Button
               type="button"
               className="mt-4"
@@ -74,11 +71,11 @@ function LiveCandidateCampaignsPage() {
         ) : null}
 
         {!isLoading && !isError && sortedCampaigns.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 px-6 py-12 text-center">
-            <BriefcaseBusiness className="size-10 text-zinc-500" aria-hidden />
-            <h2 className="heading-secondary text-lg text-zinc-100">{t('campaigns.my.emptyTitle')}</h2>
-            <p className="max-w-md text-sm text-zinc-400">{t('campaigns.my.emptyDescription')}</p>
-            <p className="text-sm text-zinc-500">{t('campaigns.my.emptyHint')}</p>
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-satin bg-surface-raised px-6 py-12 text-center">
+            <BriefcaseBusiness className="size-10 text-muted-foreground" aria-hidden />
+            <h2 className="heading-secondary text-lg text-foreground">{t('campaigns.my.emptyTitle')}</h2>
+            <p className="max-w-md text-sm text-muted-foreground">{t('campaigns.my.emptyDescription')}</p>
+            <p className="text-sm text-muted-foreground">{t('campaigns.my.emptyHint')}</p>
           </div>
         ) : null}
 

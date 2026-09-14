@@ -5,7 +5,6 @@ import { UserRole } from '@/features/auth/types/auth.types';
 import { RequireRole } from '@/routes/RequireRole';
 import { PracticeEntryPage } from '@/features/practice/pages/PracticeEntryPage';
 import { PracticeInterviewPage } from '@/features/practice/pages/PracticeInterviewPage';
-import { InterviewResultPage } from '@/features/practice/pages/InterviewResultPage';
 import { CampaignInterviewPreparationPage } from '@/features/campaigns/pages/CampaignInterviewPreparationPage';
 import { DeviceCheckPage } from '@/features/practice/pages/DeviceCheckPage';
 import { TermsAcceptancePage } from '@/features/practice/pages/TermsAcceptancePage';
@@ -23,7 +22,6 @@ export const interviewRoutes: RouteObject[] = [
         children: [{ path: '/practice', element: <PracticeEntryPage /> }],
       },
       { path: '/practice/result', element: <PracticeSessionResultPage /> },
-      { path: '/practice/interview/:id', element: <InterviewResultPage /> },
       {
         element: <FullscreenLayout />,
         children: [

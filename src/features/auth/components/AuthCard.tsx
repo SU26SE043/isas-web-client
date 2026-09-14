@@ -12,7 +12,7 @@ interface AuthCardProps {
 export function AuthCard({ title, description, children, footer }: AuthCardProps) {
   return (
     <div className="surface-raised w-full rounded-xl border border-subtle p-6 sm:p-8">
-      <Link to="/" className="mb-6 inline-flex focus-ring rounded-md">
+      <Link to="/" className="mb-6 inline-flex focus-ring rounded-lg">
         <BrandLogo />
       </Link>
       <h1 className="heading-primary text-2xl">{title}</h1>

@@ -1,7 +1,18 @@
 import type { CampaignWizardPersistedState } from '../types/campaignWizard.types';
 import { validateCampaignPdf } from './campaignFiles';
+import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
+import { validateCriterionLevels } from './criterionLevelRules';
 
-const LAST_STEP_INDEX = 6;
+const LAST_STEP_INDEX = 7;
+// Trần số câu MỘT BUỔI THI (`settings.maxQuestions`, gồm cả câu đào sâu) — khớp CHECK
+// `ck_practice_sessions_max_questions_range` = `max_questions BETWEEN 0 AND 20`
+// (`Isas.InterviewService/Configurations/PracticeSessionConfiguration.cs:44`).
+//
+// ⚠ Số 20 này KHÔNG liên quan `CAMPAIGN_QUESTION_HARD_MAX` (trần ngân hàng đề = 200) hay
+// `CAMPAIGN_AI_GENERATE_MAX` (trần một lượt gọi AI = 20). Ba đại lượng, ba hằng. Gộp cái
+// này vào trần AI vì "cùng bằng 20" là nối một ràng buộc DB vào một trần chi phí token:
+// bên nào đổi trước cũng làm bên kia sai mà không gì báo, và sai ở đây thì INSERT session
+// vỡ CHECK — tức SAU khi đã trừ credit (PAY-5).
 const MAX_QUESTIONS_LIMIT = 20;
 export const MAX_CAMPAIGN_TITLE_LENGTH = 255;
 export const MAX_CRITERION_NAME_LENGTH = 255;
@@ -37,11 +48,12 @@ function pushError(
 export function validateCampaignWizardStep(
   state: CampaignWizardPersistedState,
   step: number,
-  options?: { mode?: 'create' | 'edit' },
+  // `mode` giữ trong chữ ký cho các call-site/tests hiện có; từ 14/09 không còn luật nào phân biệt
+  // create/edit ở bước 1 (bỏ chặn "giờ mở đã qua").
+  _options?: { mode?: 'create' | 'edit' },
 ): string | null {
   const { info, jd, questions, rubric, settings } = state;
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
-  const mode = options?.mode ?? 'create';
 
   if (step === 0) {
     if (!info.title.trim()) return 'employer.campaigns.wizard.titleRequired';
@@ -49,34 +61,41 @@ export function validateCampaignWizardStep(
       return 'employer.campaigns.wizard.titleTooLong';
     }
     if (!info.domain) return 'employer.campaigns.wizard.domainRequired';
+    if (!info.language) return 'employer.campaigns.wizard.languageRequired';
+    if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
+    if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
+    // KHÔNG chặn giờ mở "đã qua": BE không có luật đó (giờ mở ≤ lúc triển khai ⇒ mở ngay), và với
+    // giờ mở mặc định = lúc mở wizard thì HR điền 8 bước xong là "quá khứ" ⇒ bị đá về bước 1 vô cớ.
+    return null;
+  }
+
+  // Luật lọc cứng nay nằm ở BƯỚC 7 ("Cấu hình chi tiết"), không còn ở bước 2 — CMP3-F3 đã dời
+  // ô nhập đi. Để lỗi ở bước 2 thì bấm "Triển khai" sẽ đá người dùng về bước 2, nơi KHÔNG CÒN
+  // ô nào để sửa, kèm thông điệp nói về số năm kinh nghiệm.
+  // Trần ứng viên nay ở bước "Sức chứa & ca thi", và LÀ TUỲ CHỌN — bắt buộc chỉ chặn HR
+  // triển khai nhanh mà chưa cần biết con số này. Backend `maxCandidates` là `int?` không
+  // bắt buộc: null = không trần riêng, rơi về trần của gói (`entitlement.MaxCandidatesCap`).
+  // ⚠ Ở chế độ SỬA, bỏ trống KHÔNG xoá được trần đã lưu — `buildCampaignCreateRequest` chỉ
+  // gửi khoá này khi có giá trị dương, và BE chỉ ghi khi payload mang khoá đó (`HasValue`).
+  // Cảnh báo mềm cho ca đó nằm ở `CampaignCapacitySection` (UI), không phải lỗi chặn ở đây.
+  if (step === 5) {
+    if (info.maxCandidates == null) return null;
+    if (info.maxCandidates <= 0) return 'employer.campaigns.form.maxCandidatesInvalid';
+    if (!Number.isInteger(info.maxCandidates)) return 'employer.campaigns.form.integerRequired';
+    return null;
+  }
+
+  if (step === 6) {
     if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
       return 'employer.campaigns.wizard.timeLimitRequired';
-    }
-    if (info.maxCandidates != null && info.maxCandidates <= 0) {
-      return 'employer.campaigns.form.maxCandidatesInvalid';
-    }
-    if (info.maxCandidates != null && !Number.isInteger(info.maxCandidates)) {
-      return 'employer.campaigns.form.integerRequired';
     }
     if (!Number.isInteger(info.timeLimitMinutes)) {
       return 'employer.campaigns.form.integerRequired';
     }
-    if (info.passScorePct != null && (info.passScorePct < 0 || info.passScorePct > 100)) {
-      return 'employer.campaigns.form.passScoreInvalid';
+    const minYears = state.hardFilters?.minYearsExperience;
+    if (minYears != null && (!Number.isInteger(minYears) || minYears < 0 || minYears > 60)) {
+      return 'employer.campaigns.wizard.hardFilters.minYearsInvalid';
     }
-    if (info.passScorePct != null && !Number.isInteger(info.passScorePct)) {
-      return 'employer.campaigns.form.integerRequired';
-    }
-    if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
-    if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
-    // Past startsAt only blocks create — edit may keep an already-saved schedule.
-    if (mode === 'create') {
-      const startsAtMs = new Date(info.startsAt).getTime();
-      if (!Number.isNaN(startsAtMs) && startsAtMs < Date.now() - 30_000) {
-        return 'employer.campaigns.wizard.startsAtInPast';
-      }
-    }
-    return null;
   }
 
   if (step === 1) {
@@ -130,13 +149,33 @@ export function validateCampaignWizardStep(
     if (rubric.some((item) => Number(item.maxScore) > 10)) {
       return 'employer.campaigns.wizard.rubric.maxScoreTooHigh';
     }
+    // Mốc điểm là TUỲ CHỌN (CAMP-14): không có mốc thì KHÔNG chặn. Nhưng đã có mốc thì phải
+    // đúng luật CAMP-17, nếu không backend trả 400 lúc PUT/publish — sau khi HR đã đi hết
+    // wizard. Đặt SAU kiểm `maxScore` vì luật mốc đo theo chính thang đó.
+    if (
+      rubric.some(
+        (item) =>
+          (item.levels?.length ?? 0) > 0 &&
+          !validateCriterionLevels(item.levels ?? [], Number(item.maxScore)).ok,
+      )
+    ) {
+      return 'employer.campaigns.wizard.rubric.levelsInvalid';
+    }
+    // Ngưỡng Đạt/Không đạt của CHÍNH bảng điểm này ⇒ lỗi phải nổ ở bước có ô nhập nó.
+    if (info.passScorePct != null && (info.passScorePct < 0 || info.passScorePct > 100)) {
+      return 'employer.campaigns.form.passScoreInvalid';
+    }
+    if (info.passScorePct != null && !Number.isInteger(info.passScorePct)) {
+      return 'employer.campaigns.form.integerRequired';
+    }
     return null;
   }
 
   if (step === 3) {
     if (questions.length === 0) return 'employer.campaigns.wizard.questionsRequired';
     if (questions.some((q) => !q.prompt.trim())) return 'employer.campaigns.form.required';
-    if (settings.maxQuestions > 0 && questions.length > settings.maxQuestions) {
+    // Trần KÍCH THƯỚC ngân hàng đề (200) — không phải settings.maxQuestions.
+    if (questions.length > CAMPAIGN_QUESTION_HARD_MAX) {
       return 'employer.campaigns.wizard.questionsExceedMax';
     }
     return null;
@@ -163,7 +202,7 @@ export function validateCampaignWizardStep(
     return null;
   }
 
-  // Steps 5 (Slots) and 6 (Review) have no persisted wizard fields.
+  // Steps 5 (Slots), 6 (Invites), and 7 (Review) have no blocking draft fields.
   return null;
 }
 
