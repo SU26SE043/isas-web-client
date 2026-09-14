@@ -20,7 +20,11 @@ export function CvFlowUploadedFilesPanel({
   onSelect,
 }: CvFlowUploadedFilesPanelProps) {
   const { t } = useLanguage();
-  const { files, isLoading, error, reload } = useInterviewFiles();
+  // Keep the CV and JD pickers isolated at the API boundary. The defensive
+  // client-side filter below remains useful for older responses, but fetching
+  // the shared list without a type filter allowed JD records to leak into the
+  // CV picker during pagination/cache updates.
+  const { files, isLoading, error, reload } = useInterviewFiles({ fileType });
 
   const filteredFiles = files.filter(
     (file) => String(file.fileType).toLowerCase() === fileType,
