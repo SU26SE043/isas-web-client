@@ -25,8 +25,16 @@ import {
 } from '../utils/buildCreateCvAnalysisRequest';
 import { cvAnalysisEndpoints } from './cvAnalysis.endpoints';
 
-/** AI extraction is user-facing and interactive — never let it hang (J21). */
-export const JD_REQUIREMENTS_TIMEOUT_MS = 20_000;
+/**
+ * AI extraction is user-facing and interactive — never let it hang (J21).
+ *
+ * 60s, not 20s: measured on prod 2026-09-14 the backend took 9.8–37.3s per call
+ * (Gemini thinking on a Vietnamese JD + grounding). At 20s the client gave up on
+ * 3/8 calls while the server still finished — and billed — every one of them,
+ * so "retry" just burned another call. The gateway cuts at 100s and the
+ * InterviewService→AIService client at 180s; 60s leaves headroom under both.
+ */
+export const JD_REQUIREMENTS_TIMEOUT_MS = 60_000;
 
 /**
  * Opt out of the shared 429 auto-retry in `createApiClient`, which sleeps for
