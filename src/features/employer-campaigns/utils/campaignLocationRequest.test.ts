@@ -156,4 +156,15 @@ describe('campaign wizard request contract', () => {
       null,
     );
   });
+
+  it('giờ mở đã qua KHÔNG chặn bước 1 (kể cả create) — BE không có luật đó, giờ mở ≤ lúc triển khai = mở ngay', () => {
+    // Trước 14/09: mặc định giờ mở = lúc mở wizard + 1h (luật tự bịa) VÀ create chặn "giờ mở đã qua"
+    // — HR điền 8 bước xong (>30s) là bị đá về bước 1, còn thêm ca thi ngay thì bị 400 "trước khi
+    // chiến dịch mở". Bỏ cả hai.
+    const current = persisted();
+    current.info.startsAt = '2020-01-01T09:00';
+    current.info.expiresAt = '2020-02-01T09:00';
+    expect(validateCampaignWizardStep(current, 0, { mode: 'create' })).toBeNull();
+    expect(validateCampaignWizardStep(current, 0, { mode: 'edit' })).toBeNull();
+  });
 });

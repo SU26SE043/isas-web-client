@@ -48,11 +48,12 @@ function pushError(
 export function validateCampaignWizardStep(
   state: CampaignWizardPersistedState,
   step: number,
-  options?: { mode?: 'create' | 'edit' },
+  // `mode` giữ trong chữ ký cho các call-site/tests hiện có; từ 14/09 không còn luật nào phân biệt
+  // create/edit ở bước 1 (bỏ chặn "giờ mở đã qua").
+  _options?: { mode?: 'create' | 'edit' },
 ): string | null {
   const { info, jd, questions, rubric, settings } = state;
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
-  const mode = options?.mode ?? 'create';
 
   if (step === 0) {
     if (!info.title.trim()) return 'employer.campaigns.wizard.titleRequired';
@@ -63,13 +64,8 @@ export function validateCampaignWizardStep(
     if (!info.language) return 'employer.campaigns.wizard.languageRequired';
     if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
     if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
-    // Past startsAt only blocks create — edit may keep an already-saved schedule.
-    if (mode === 'create') {
-      const startsAtMs = new Date(info.startsAt).getTime();
-      if (!Number.isNaN(startsAtMs) && startsAtMs < Date.now() - 30_000) {
-        return 'employer.campaigns.wizard.startsAtInPast';
-      }
-    }
+    // KHÔNG chặn giờ mở "đã qua": BE không có luật đó (giờ mở ≤ lúc triển khai ⇒ mở ngay), và với
+    // giờ mở mặc định = lúc mở wizard thì HR điền 8 bước xong là "quá khứ" ⇒ bị đá về bước 1 vô cớ.
     return null;
   }
 

@@ -135,9 +135,13 @@ function parseCampaignDate(value?: string | null): Date | null {
 }
 
 function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
+  // Giờ mở mặc định = NGAY BÂY GIỜ (tròn phút), không cộng thêm 1 giờ. Cộng 1h là luật tự bịa:
+  // HR tạo chiến dịch xong thêm ca thi ngay (ca 16:26 khi giờ mở mặc định 17:24) thì bị BE 400
+  // "khung giờ bắt đầu trước khi chiến dịch mở" mà không hiểu vì sao (đo trên dev 14/09). BE không
+  // đòi giờ mở ở tương lai; giờ mở ≤ lúc triển khai ⇒ chiến dịch mở ngay (start-now tự no-op).
   const start = parseCampaignDate(campaign?.startsAt) ?? (() => {
     const next = new Date();
-    next.setMinutes(next.getMinutes() + 60);
+    next.setSeconds(0, 0);
     return next;
   })();
   const end =
