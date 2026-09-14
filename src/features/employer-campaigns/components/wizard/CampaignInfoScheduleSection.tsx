@@ -1,6 +1,6 @@
 import { CalendarClock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
+import { DateTimeLocalInput } from '@/components/ui/date-time-local-input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignInfoState } from '../../types/campaignWizard.types';
@@ -30,11 +30,25 @@ export function CampaignInfoScheduleSection({ info, onChange }: CampaignInfoSche
       <div className="grid gap-4 @xs:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="campaign-starts">{t(`${f}.startsAt`)}</Label>
-          <Input id="campaign-starts" type="datetime-local" value={info.startsAt} onChange={(e) => onChange({ startsAt: e.target.value })} />
+          <DateTimeLocalInput
+            id="campaign-starts"
+            value={info.startsAt}
+            datePlaceholder={t(`${f}.datePlaceholder`)}
+            dateAriaLabel={t(`${f}.dateAriaLabel`)}
+            timeAriaLabel={t(`${f}.timeAriaLabel`)}
+            onChange={(value) => onChange({ startsAt: value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="campaign-expires">{t(`${f}.expiresAt`)}</Label>
-          <Input id="campaign-expires" type="datetime-local" value={info.expiresAt} onChange={(e) => onChange({ expiresAt: e.target.value })} />
+          <DateTimeLocalInput
+            id="campaign-expires"
+            value={info.expiresAt}
+            datePlaceholder={t(`${f}.datePlaceholder`)}
+            dateAriaLabel={t(`${f}.dateAriaLabel`)}
+            timeAriaLabel={t(`${f}.timeAriaLabel`)}
+            onChange={(value) => onChange({ expiresAt: value })}
+          />
         </div>
       </div>
 
