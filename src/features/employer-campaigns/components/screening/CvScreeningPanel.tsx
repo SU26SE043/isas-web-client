@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,38 +10,28 @@ import { CandidateUploadSummary } from './CandidateUploadSummary';
 import { CvScreeningModals } from './CvScreeningModals';
 import { CvUploadZone } from './CvUploadZone';
 import { toCandidateListItem, useCvScreeningPanelState } from './useCvScreeningPanelState';
-import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
-import type { CampaignJobNeed } from '../../types/campaign.api.types';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 
 interface CvScreeningPanelProps {
   campaignId: string;
   isActive: boolean;
-  hasJobNeeds: boolean;
-  jobNeeds?: CampaignJobNeed[];
   allowDraftScreening?: boolean;
   hideInvitationAction?: boolean;
   onAddCandidates?: (candidates: CampaignCandidateListItem[]) => void;
-  onScoredCandidatesChange?: (hasScoredCandidates: boolean) => void;
 }
 
 export function hasScoredCandidate(candidates: Pick<CampaignCandidateListItem, 'overallMatchScore'>[]): boolean {
   return candidates.some((candidate) => candidate.overallMatchScore != null);
 }
 
-export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds = [], allowDraftScreening = false, hideInvitationAction = false, onAddCandidates, onScoredCandidatesChange }: CvScreeningPanelProps) {
+export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = false, hideInvitationAction = false, onAddCandidates }: CvScreeningPanelProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const setInvitationCandidates = useCampaignInvitationStore(
     (store) => store.setSelectedCandidates,
   );
   const screeningEnabled = isActive || allowDraftScreening;
-  const state = useCvScreeningPanelState(campaignId, screeningEnabled, hasJobNeeds);
-  const hasScoredCandidates = hasScoredCandidate(state.candidates);
-
-  useEffect(() => {
-    onScoredCandidatesChange?.(hasScoredCandidates);
-  }, [hasScoredCandidates, onScoredCandidatesChange]);
+  const state = useCvScreeningPanelState(campaignId, screeningEnabled);
 
   const handleAnalyze = async () => {
     if (!state.canAnalyze) return;
@@ -66,13 +55,6 @@ export function CvScreeningPanel({ campaignId, isActive, hasJobNeeds, jobNeeds =
           <AlertDescription>{state.analyzeError}</AlertDescription>
         </Alert>
       ) : null}
-      {!hasJobNeeds ? (
-        <Alert variant="warning">
-          <AlertDescription>{t('employer.campaigns.screening.errors.jobNeedsRequired')}</AlertDescription>
-        </Alert>
-      ) : null}
-      <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable={!hasScoredCandidates} />
-
       <CvUploadZone
         files={state.pendingFiles}
         onFilesChange={state.setPendingFiles}

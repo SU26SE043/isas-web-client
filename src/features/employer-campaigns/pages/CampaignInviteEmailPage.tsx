@@ -83,8 +83,6 @@ export function CampaignInviteEmailPage() {
               <CvScreeningPanel
                 campaignId={campaign.id}
                 isActive={campaign.status === 'active'}
-                hasJobNeeds={campaign.jobNeeds.length > 0}
-                jobNeeds={campaign.jobNeeds}
               />
             </div>
             <div hidden={tab !== 'invite'}>

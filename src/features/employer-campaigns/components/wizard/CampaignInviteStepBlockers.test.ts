@@ -31,17 +31,8 @@ describe('CMP3 — bước 7 Mời ứng viên', () => {
     expect(effect.length).toBeGreaterThan(0);
   });
 
-  it('gợi ý nhu cầu công việc phải đọc mảng jobNeeds và LƯU lại', () => {
-    // Response là { jobNeeds: [...] } — không có id/title nên parseCampaignResponse trả null
-    // ⇒ bản trước ném lỗi ở mọi lần gọi dù server trả 200. Và endpoint CHỈ ĐỌC, nên không lưu
-    // tiếp thì chốt CMP3-B1 phía server vẫn chặn sàng CV bằng 409.
-    const source = read('/services/campaignManagement.service.ts');
-    const fn = source.slice(source.indexOf('async suggestCampaignJobNeeds'));
-    const body = fn.slice(0, fn.indexOf('async rescreenCampaignCandidate'));
-    expect(body.includes('parseCampaignResponse'), 'không được parse như CampaignResponse').toBe(false);
-    expect(body.includes('jobNeeds'), 'phải đọc mảng jobNeeds').toBe(true);
-    expect(body.includes('updateCampaignJobNeeds'), 'phải lưu qua PUT /job-needs').toBe(true);
-  });
+  // SCR1: nhu cầu là chi tiết nội bộ do backend suy ra từ JD; không còn UI hay lời gọi
+  // suggest/save job-needs ở bước mời. Giữ các tiền đề còn kiểm tra hành vi của bước này.
 
   it('tick chọn ứng viên ở tab Lọc từ CV phải có nút đưa vào danh sách mời', () => {
     // Bước 7 truyền ĐỒNG THỜI hideInvitationAction và onAddCandidates; nếu khối bị ẩn theo

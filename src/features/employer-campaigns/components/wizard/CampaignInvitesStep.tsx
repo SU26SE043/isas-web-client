@@ -1,16 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Info, Settings2, UsersRound } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { UsersRound } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
-import { campaignManagementService } from '../../services/campaignManagement.service';
-import type { CampaignCandidateListItem, CampaignJobNeed } from '../../types/campaign.api.types';
+import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
 import type { CampaignHardFiltersState } from '../../types/campaignWizard.types';
-import { CampaignJobNeedsCard } from '../CampaignJobNeedsCard';
 import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { WizardNumberField } from './WizardNumberField';
@@ -24,7 +20,6 @@ interface CampaignInvitesStepProps {
   timeLimitMinutes?: number;
   onTimeLimitChange?: (value: number | null) => void;
   error?: string | null;
-  jdText: string;
   hardFilters: CampaignHardFiltersState;
   inviteEmails: string[];
   onHardFiltersChange: (patch: Partial<CampaignHardFiltersState>) => void;
@@ -45,7 +40,6 @@ export function CampaignInvitesStep({
   timeLimitMinutes,
   onTimeLimitChange,
   error,
-  jdText,
   hardFilters,
   inviteEmails,
   onHardFiltersChange,
@@ -56,11 +50,6 @@ export function CampaignInvitesStep({
   const { t } = useLanguage();
   const [tab, setTab] = useState<InviteTab>('email');
   const [emailText, setEmailText] = useState(inviteEmails.join('\n'));
-  const [configOpen, setConfigOpen] = useState(false);
-  const [jobNeeds, setJobNeeds] = useState<CampaignJobNeed[]>(campaign?.jobNeeds ?? []);
-  const [hasScoredCandidates, setHasScoredCandidates] = useState(false);
-  const [suggesting, setSuggesting] = useState(false);
-  const [suggestError, setSuggestError] = useState(false);
 
   // ⚠ CHỈ đồng bộ ngược khi danh sách đổi từ BÊN NGOÀI (nạp nháp, thêm từ tab CV).
   // Bản trước phụ thuộc identity của mảng: mỗi lần gõ, saveEmails gọi onInviteEmailsChange,
@@ -74,28 +63,6 @@ export function CampaignInvitesStep({
     setEmailText(inviteEmails.join('\n'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteEmails]);
-
-  useEffect(() => {
-    setJobNeeds(campaign?.jobNeeds ?? []);
-    setHasScoredCandidates(false);
-  }, [campaign?.id, campaign?.jobNeeds]);
-
-  // ⚠ Chỉ thử gợi ý MỘT lần cho mỗi chiến dịch. Bản trước để `suggesting` vừa trong deps vừa
-  // được set trong effect: khi API lỗi hoặc trả danh sách rỗng thì điều kiện thoát
-  // `jobNeeds.length > 0` không bao giờ thoả, `finally` hạ cờ lại kích effect ⇒ POST /job-needs/suggest
-  // lặp vô hạn. Đây là lời gọi GHI dữ liệu và tốn token AI, không phải một truy vấn đọc vô hại.
-  const suggestedForRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (tab !== 'cv' || !campaignId || jobNeeds.length > 0 || !jdText.trim()) return;
-    if (suggestedForRef.current === campaignId) return;
-    suggestedForRef.current = campaignId;
-    setSuggesting(true);
-    setSuggestError(false);
-    void campaignManagementService.suggestCampaignJobNeeds(campaignId)
-      .then((updated) => setJobNeeds(updated.jobNeeds))
-      .catch(() => setSuggestError(true))
-      .finally(() => setSuggesting(false));
-  }, [campaignId, jdText, jobNeeds.length, tab]);
 
   const validEmails = useMemo(
     () => parseEmails(emailText).filter((email) => EMAIL_RE.test(email)),
@@ -167,28 +134,12 @@ export function CampaignInvitesStep({
           </div>
         ) : (
           <div className="space-y-4">
-            {suggesting ? <Alert variant="info"><AlertDescription>{t('employer.campaigns.wizard.invites.suggestingNeeds')}</AlertDescription></Alert> : null}
-            {suggestError ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.suggestFailed')}</AlertDescription></Alert> : null}
-            {!campaignId ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.saveDraftFirst')}</AlertDescription></Alert> : null}
-            {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hasJobNeeds={jobNeeds.length > 0} jobNeeds={jobNeeds} hideInvitationAction onAddCandidates={addScreenedCandidates} onScoredCandidatesChange={setHasScoredCandidates} /> : null}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-info/30 bg-info/5 p-4 text-sm">
-              <div className="flex items-start gap-2"><Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><p className="text-muted-foreground">{t('employer.campaigns.wizard.invites.aiReference')}</p></div>
-              <Button type="button" variant="outline" onClick={() => setConfigOpen(true)}><Settings2 className="size-4" aria-hidden />{t('employer.campaigns.wizard.invites.configure')}</Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Dialog open={configOpen} onOpenChange={setConfigOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader><DialogTitle>{t('employer.campaigns.wizard.invites.configureTitle')}</DialogTitle><DialogDescription>{t('employer.campaigns.wizard.invites.configureDescription')}</DialogDescription></DialogHeader>
-          <div className="space-y-5">
-            {campaignId ? <CampaignJobNeedsCard key={campaignId} campaignId={campaignId} initialNeeds={jobNeeds} editable={!hasScoredCandidates} onSaved={(updated) => setJobNeeds(updated.jobNeeds)} /> : null}
-            <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
-          </div>
-          <DialogFooter><Button type="button" onClick={() => setConfigOpen(false)}>{t('employer.campaigns.wizard.invites.configureDone')}</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </SectionPanel>
+             {!campaignId ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.saveDraftFirst')}</AlertDescription></Alert> : null}
+             {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hideInvitationAction onAddCandidates={addScreenedCandidates} /> : null}
+             <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
+           </div>
+         )}
+       </div>
+     </SectionPanel>
   );
 }

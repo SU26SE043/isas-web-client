@@ -27,7 +27,6 @@ vi.mock('../hooks/useCampaignSlots', () => ({
 // Các card con gọi service/react-query riêng — không thuộc khe nối đang đo, cắt để test không cần provider.
 vi.mock('./slots/CampaignSlotsPanel', () => ({ CampaignSlotsPanel: () => null }));
 vi.mock('./CampaignAttachmentsCard', () => ({ CampaignAttachmentsCard: () => null }));
-vi.mock('./CampaignJobNeedsCard', () => ({ CampaignJobNeedsCard: () => null }));
 // SC2 T10 thay `CampaignRubricPreviewSection` bằng section card theo câu (cần Router + react-query) — cùng lý do cắt.
 vi.mock('./detail/CampaignDetailQuestionsSection', () => ({ CampaignDetailQuestionsSection: () => null }));
 vi.mock('./CampaignScoringRulesCard', () => ({ CampaignScoringRulesCard: () => null }));

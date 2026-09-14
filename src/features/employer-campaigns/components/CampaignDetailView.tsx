@@ -18,7 +18,6 @@ import { CampaignDetailMetric } from './CampaignDetailMetric';
 import { CampaignOverviewDescription } from './CampaignOverviewDescription';
 import { CollapsibleDetailCard } from './CollapsibleDetailCard';
 import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
-import { CampaignJobNeedsCard } from './CampaignJobNeedsCard';
 import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
 import { useCampaignSlots } from '../hooks/useCampaignSlots';
 import { CampaignDetailQuestionsSection } from './detail/CampaignDetailQuestionsSection';
@@ -167,8 +166,6 @@ export function CampaignDetailView({
         <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} />
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
-
-        <CampaignJobNeedsCard key={campaign.id} campaignId={campaign.id} initialNeeds={campaign.jobNeeds} editable={isDraft} />
 
         <CampaignScoringRulesCard campaign={campaign} />
         <CollapsibleDetailCard
