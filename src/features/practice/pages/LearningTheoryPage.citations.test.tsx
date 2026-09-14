@@ -119,3 +119,39 @@ describe('LearningTheoryPage — khối nguồn kiểm chứng', () => {
     expect(vi.mocked(useLearningLesson)).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * Lần mở đầu tiên là một lượt AI ~20–40s (đo prod 2026-09-14: 38–52s). Dòng chờ phải NHÌN THẤY —
+ * trước bản này nó là `sr-only`, người học chỉ thấy các thanh xám và tưởng trang treo rồi reload
+ * (ngay đó là một lượt sinh nữa). Mutation: trả dòng chờ về `sr-only` → ĐỎ.
+ */
+describe('LearningTheoryPage — đang sinh bài', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it('hiện dòng chờ có ước lượng thời gian, không chỉ skeleton', () => {
+    vi.mocked(useLearningRoadmapDetail).mockReturnValue({
+      data: { id: 'rm-1', milestones: [] },
+      isLoading: false, isError: false, error: null, refetch: vi.fn(), isFetching: false,
+    } as unknown as ReturnType<typeof useLearningRoadmapDetail>);
+    vi.mocked(useLearningLesson).mockReturnValue({
+      data: undefined, isLoading: true, isError: false, error: null, refetch: vi.fn(), isFetching: true,
+    } as unknown as ReturnType<typeof useLearningLesson>);
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={['/candidate/learning/roadmaps/rm-1/lessons/ls-1']}>
+          <Routes>
+            <Route path="/candidate/learning/roadmaps/:roadmapId/lessons/:lessonId" element={<LearningTheoryPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('practice.learningPath.loadingTheory');
+    expect(status).toHaveTextContent('practice.learningPath.loadingTheoryHint');
+    expect(status).not.toHaveClass('sr-only');
+  });
+});

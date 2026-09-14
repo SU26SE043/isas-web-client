@@ -7,8 +7,11 @@ const { navigateMock, createRoadmapMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
+const { prefetchQueryMock } = vi.hoisted(() => ({
+  prefetchQueryMock: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ prefetchQuery: vi.fn().mockResolvedValue(undefined) }),
+  useQueryClient: () => ({ prefetchQuery: prefetchQueryMock }),
 }));
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key }) }));
 vi.mock('../services/learning.service', () => ({ learningService: { createRoadmap: createRoadmapMock } }));
@@ -85,3 +88,25 @@ describe('useRoadmapWizardFlow', () => {
     });
   });
 });
+
+describe('useRoadmapWizardFlow — prefetch bài 1', () => {
+  /**
+   * Prefetch chỉ để làm ấm cache (backend đã prewarm bài 1 + single-flight). `retry: false` là
+   * chủ đích: mặc định toàn cục (3 lần) sẽ bắn lại một lượt sinh AI ~20–50s tới ba lần nữa khi 502
+   * mà không ai nhìn. Mutation: bỏ `retry: false` → ĐỎ.
+   */
+  it('prefetch bài đầu với retry: false', async () => {
+    createRoadmapMock.mockResolvedValue({
+      id: 'created-roadmap',
+      milestones: [{ id: 'm1', lessons: [{ id: 'lesson-1' }, { id: 'lesson-2' }] }],
+    });
+    const { result } = renderHook(() => useRoadmapWizardFlow());
+    act(() => result.current.handleSelectDomain('frontend'));
+    await act(async () => {
+      await result.current.handleCreate();
+    });
+    await waitFor(() => expect(prefetchQueryMock).toHaveBeenCalledTimes(1));
+    expect(prefetchQueryMock.mock.calls[0][0]).toMatchObject({ retry: false, staleTime: 60_000 });
+  });
+});
+
