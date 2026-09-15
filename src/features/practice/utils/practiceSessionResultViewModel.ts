@@ -6,6 +6,7 @@ import type {
   PracticeSessionResponse,
   PracticeSessionResult,
   PracticeSpeakingMetrics,
+  FocusEventSummary,
 } from '../types/b2cPracticeSession.types';
 
 export type PracticeSessionResultViewModel = {
@@ -34,6 +35,10 @@ export type PracticeSessionResultViewModel = {
   hasResult: boolean;
   cvVsAnswerSummary?: string;
   benchmark?: PracticeBenchmark | null;
+  focusTrackingEnabled: boolean;
+  focusEvents: FocusEventSummary[] | null | undefined;
+  focusLeaveCount?: number;
+  focusLeavePlacement?: 'firstHalf' | 'secondHalf' | 'spread';
 };
 
 export type CriteriaResultViewModel = {
@@ -212,6 +217,21 @@ export function mapPracticeSessionResponseToViewModel(
       ? overallCriteria
       : aggregateCriteriaFromQuestions(questions);
 
+  const focusLeaveCount = Array.isArray(session.focusEvents)
+    ? session.focusEvents.reduce((sum, event) => sum + event.count, 0)
+    : undefined;
+  let focusLeavePlacement: PracticeSessionResultViewModel['focusLeavePlacement'];
+  if (Array.isArray(session.focusEvents) && session.focusEvents.length && session.createdAt && session.completedAt) {
+    const start = new Date(session.createdAt).getTime();
+    const end = new Date(session.completedAt).getTime();
+    const midpoint = start + (end - start) / 2;
+    const firstAt = Math.min(...session.focusEvents.map((event) => new Date(event.firstAt).getTime()));
+    const lastAt = Math.max(...session.focusEvents.map((event) => new Date(event.lastAt).getTime()));
+    if (Number.isFinite(start) && Number.isFinite(end) && Number.isFinite(firstAt) && Number.isFinite(lastAt)) {
+      focusLeavePlacement = lastAt < midpoint ? 'firstHalf' : firstAt > midpoint ? 'secondHalf' : 'spread';
+    }
+  }
+
   return {
     id: session.id,
     title: jobCategory ?? '',
@@ -238,6 +258,10 @@ export function mapPracticeSessionResponseToViewModel(
     hasResult: Boolean(result),
     cvVsAnswerSummary: result?.cvVsAnswer?.summary?.trim() || undefined,
     benchmark: result?.benchmark ?? null,
+    focusTrackingEnabled: session.focusTrackingEnabled === true,
+    focusEvents: session.focusEvents,
+    focusLeaveCount,
+    focusLeavePlacement,
   };
 }
 

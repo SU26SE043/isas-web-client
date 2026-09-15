@@ -10,6 +10,20 @@ import {
 } from '../mocks/sessionTopics.fixtures';
 
 describe('mapPracticeSessionResponse', () => {
+  it('preserves null versus empty focus event summaries and filters malformed entries', () => {
+    expect(mapPracticeSessionResponse({ focusEvents: null, questions: [] }).focusEvents).toBeNull();
+    expect(mapPracticeSessionResponse({ focusEvents: [], questions: [] }).focusEvents).toEqual([]);
+    expect(mapPracticeSessionResponse({
+      focusEvents: [
+        { signalType: 'tab_switch', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:01:00Z' },
+        { signalType: 'unknown', count: 1, firstAt: 'x', lastAt: 'x' },
+        { signalType: 'paste', firstAt: 'x', lastAt: 'x' },
+      ],
+      questions: [],
+    }).focusEvents).toEqual([
+      { signalType: 'tab_switch', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:01:00Z' },
+    ]);
+  });
   it('maps session id, questions, and result fields', () => {
     const mapped = mapPracticeSessionResponse({
       sessionId: 's1',

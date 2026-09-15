@@ -14,6 +14,8 @@ import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
 import { QuestionStartCountdown } from './QuestionStartCountdown';
 import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
+import { useB2cFocusTracking } from '../hooks/useB2cFocusTracking';
+import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { mapModalToCardStatus, resolveAnswerCardStatus } from '../utils/resolveAnswerCardStatus';
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
@@ -38,6 +40,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     answerRecorderOpen: recorderOpen,
     onAutoSubmitRequest: requestAutoSubmit,
   });
+  const focusTrackingEnabled = useB2cPracticeInterviewStore((state) => state.focusTrackingEnabled);
+  useB2cFocusTracking(sessionId, focusTrackingEnabled, room.phase);
   const interviewCompleteToastRef = useRef(false);
   const mockSubmitCountRef = useRef(0);
   useEffect(() => {

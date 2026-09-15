@@ -31,6 +31,7 @@ interface B2cPracticeInterviewState {
   speechWarning: string | null;
   lastNextAction: SubmitPracticeAnswerResponse['nextAction'] | null;
   interviewComplete: boolean;
+  focusTrackingEnabled: boolean;
 
   hydrateFromSession: (session: PracticeSessionResponse) => void;
   setCurrentQuestion: (questionId: string, timeLimitSec?: number) => void;
@@ -61,6 +62,7 @@ const initialState = {
   speechWarning: null as string | null,
   lastNextAction: null as SubmitPracticeAnswerResponse['nextAction'] | null,
   interviewComplete: false,
+  focusTrackingEnabled: false,
 };
 
 export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((set, get) => ({
@@ -106,6 +108,7 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
       speechWarning: null,
       lastNextAction: null,
       interviewComplete: allAnswered,
+      focusTrackingEnabled: session.focusTrackingEnabled === true,
     });
   },
 
@@ -193,7 +196,7 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
       stage: value ? 'ready_to_finish' : get().stage,
     }),
 
-  updateSession: (session) => set({ session, sessionId: session.id }),
+  updateSession: (session) => set({ session, sessionId: session.id, focusTrackingEnabled: session.focusTrackingEnabled === true }),
 
   reset: () => set({ ...initialState }),
 }));
