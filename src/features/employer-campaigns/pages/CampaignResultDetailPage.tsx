@@ -13,7 +13,6 @@ import {
 } from '../hooks/useCampaignResults';
 import { getTranscriptErrorKey } from '../utils/campaignResultsActions';
 import { resultNeighbors } from '../utils/resultDetailViewModel';
-import { ProctoringAnalysis } from '../components/results/ProctoringAnalysis';
 import { ResultDetailHeader } from '../components/results/detail/ResultDetailHeader';
 import { ResultDetailMetrics } from '../components/results/detail/ResultDetailMetrics';
 import { ResultOverrideHistory } from '../components/results/detail/ResultOverrideHistory';
@@ -118,7 +117,6 @@ export function CampaignResultDetailPage() {
             <ResultQuestionNav groups={questionGroups} labels={questionLabels} />
           </div>
         )}
-        <ProctoringAnalysis flags={item.flags} />
       </main>
     </div>
   );
