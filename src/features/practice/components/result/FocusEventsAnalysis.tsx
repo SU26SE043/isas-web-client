@@ -4,11 +4,11 @@ import type { FocusEventSummary } from '../../types/b2cPracticeSession.types';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatResultTime } from '../../utils/practiceSessionResultFormat';
 
-function FocusMetric({ icon: Icon, label, hint, value }: { icon: typeof AppWindow; label: string; hint: string; value: number }) {
+function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'paste'; icon: typeof AppWindow; label: string; hint: string; value: number }) {
   return (
     <div className="rounded-xl border border-satin bg-surface-overlay p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground"><Icon className="size-5 text-muted-foreground" aria-hidden />{label}</div>
-      <p className={`mt-4 text-3xl font-semibold tabular-nums ${value > 0 ? 'text-warning' : 'text-foreground'}`}>{String(value).padStart(2, '0')}</p>
+      <p data-testid={`focus-metric-${id}`} className={`mt-4 text-3xl font-semibold tabular-nums ${value > 0 ? 'text-warning' : 'text-foreground'}`}>{String(value).padStart(2, '0')}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
   );
@@ -32,11 +32,12 @@ export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewM
     ? t('practice.result.focusTracking.message').replace('{{n}}', String(count)).replace('{{placement}}', placement ? `, ${placement}` : '')
     : t('practice.result.focusTracking.empty');
 
+  // Không bọc frame: nội dung nằm TRONG Dialog đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
   return (
-    <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
+    <section>
       <div className="grid gap-3 sm:grid-cols-2">
-        <FocusMetric icon={AppWindow} value={windowCount} label={t('practice.result.focusTracking.group.window')} hint={t('practice.result.focusTracking.group.windowHint')} />
-        <FocusMetric icon={ClipboardPaste} value={pasteCount} label={t('practice.result.focusTracking.group.paste')} hint={t('practice.result.focusTracking.group.pasteHint')} />
+        <FocusMetric id="window" icon={AppWindow} value={windowCount} label={t('practice.result.focusTracking.group.window')} hint={t('practice.result.focusTracking.group.windowHint')} />
+        <FocusMetric id="paste" icon={ClipboardPaste} value={pasteCount} label={t('practice.result.focusTracking.group.paste')} hint={t('practice.result.focusTracking.group.pasteHint')} />
       </div>
       <ul className="mt-4 space-y-2">
         {events.map((event) => {
