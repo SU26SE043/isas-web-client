@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultItem, TranscriptQuestion } from '../../../types/campaign.api.types';
 import { candidateDisplayEmail, candidateDisplayName, ResultStatusBadge } from '../ResultBadges';
+import { ProctoringFlagsButton } from './ProctoringFlagsButton';
 
 /**
  * Header trang "Đánh giá chi tiết": chiến dịch (eyebrow) · tên + email ứng viên · hạng/kết quả/số câu cần soi
@@ -38,6 +39,7 @@ export function ResultDetailHeader({ campaignName, item, total, questions, previ
           <Badge variant="outline" className={reviewCount ? 'border-warning/30 bg-warning/10 text-warning' : ''}>
             {t('employer.campaigns.results.detail.needsReview').replace('{{count}}', String(reviewCount))}
           </Badge>
+          <ProctoringFlagsButton flags={item.flags} />
         </div>
       </div>
       <nav className="flex gap-2" aria-label={t('employer.campaigns.results.detail.candidateNavigation')}>

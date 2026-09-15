@@ -76,5 +76,6 @@ export function buildCreatePracticeSessionRequest(
       state.adaptiveEnabled && state.maxDeepPerQuestion !== null
         ? state.maxDeepPerQuestion
         : undefined,
+    ...(state.focusTrackingEnabled ? { focusTrackingEnabled: true } : {}),
   };
 }

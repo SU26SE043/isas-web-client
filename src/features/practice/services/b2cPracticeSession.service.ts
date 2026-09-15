@@ -9,6 +9,7 @@ import type {
   PracticeJobCategory,
   PracticeLanguage,
   PracticeSessionOptions,
+  FocusSignalType,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.types';
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
@@ -82,9 +83,22 @@ function buildMockSession(payload: CreatePracticeSessionRequest): PracticeSessio
     questions,
     result: null,
     answers: [],
+    focusTrackingEnabled: Boolean(payload.focusTrackingEnabled),
+    focusEvents: payload.focusTrackingEnabled ? [] : null,
   };
   mockSessions.set(sessionId, session);
   return session;
+}
+
+export async function recordFocusEvent(sessionId: string, signalType: FocusSignalType): Promise<void> {
+  if (usesMockData('practice')) return;
+  try {
+    await apiClient.post(b2cPracticeSessionEndpoints.focusEvents(sessionId), { signalType }, {
+      validateStatus: (status) => status === 204,
+    });
+  } catch {
+    // Focus tracking is coaching telemetry; an unavailable endpoint must never interrupt practice.
+  }
 }
 
 export async function createPracticeSession(

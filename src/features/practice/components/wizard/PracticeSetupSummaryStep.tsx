@@ -13,26 +13,23 @@ import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import { PracticeSessionTopics } from '../PracticeSessionTopics';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
-
+import { FocusTrackingOptIn } from './FocusTrackingOptIn';
 const JOB_LABEL: Record<PracticeJobCategory, string> = {
   FE: 'practice.setup.jobCategory.FE',
   BE: 'practice.setup.jobCategory.BE',
   BA: 'practice.setup.jobCategory.BA',
 };
-
 const TIME_LABEL: Record<PracticeTimeLimitSec, string> = {
   60: 'practice.setup.timeLimit.60',
   120: 'practice.setup.timeLimit.120',
   240: 'practice.setup.timeLimit.240',
 };
-
 const SENIORITY_LABEL: Record<PracticeSeniority, string> = {
   Fresher: 'practice.wizard.level.fresher',
   Junior: 'practice.wizard.level.junior',
   Middle: 'practice.wizard.level.middle',
   Senior: 'practice.wizard.level.senior',
 };
-
 export interface PracticeSetupSummaryStepProps {
   jobCategory: PracticeJobCategory | null;
   cvFile: UploadedCvFile | null;
@@ -44,6 +41,7 @@ export interface PracticeSetupSummaryStepProps {
   questionCount: number;
   adaptiveEnabled: boolean;
   maxDeepPerQuestion: number | null;
+  focusTrackingEnabled?: boolean;
   criteria: PracticeRubricCriterion[];
   canStart: boolean;
   isCreating: boolean;
@@ -53,8 +51,8 @@ export interface PracticeSetupSummaryStepProps {
   onEditCriteria: () => void;
   onStart: () => void;
   onClearError: () => void;
+  onFocusTrackingChange?: (enabled: boolean) => void;
 }
-
 function createErrorKey(code: CreatePracticeSessionErrorCode): string {
   switch (code) {
     case 'job_category_required':
@@ -89,6 +87,7 @@ export function PracticeSetupSummaryStep({
   questionCount,
   adaptiveEnabled,
   maxDeepPerQuestion,
+  focusTrackingEnabled,
   criteria,
   canStart,
   isCreating,
@@ -98,6 +97,7 @@ export function PracticeSetupSummaryStep({
   onEditCriteria,
   onStart,
   onClearError,
+  onFocusTrackingChange,
 }: PracticeSetupSummaryStepProps) {
   const { t } = useLanguage();
 
@@ -243,6 +243,7 @@ export function PracticeSetupSummaryStep({
           </div>
         ) : null}
       </section>
+      <FocusTrackingOptIn enabled={focusTrackingEnabled === true} onChange={onFocusTrackingChange ?? (() => undefined)} disabled={isCreating} />
     </PracticeWizardStepCard>
   );
 }

@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
 import { formatResultTime } from '../../utils/campaignResultsActions';
-import { getReviewPriority, REVIEW_PRIORITY_CLASS } from '../../utils/proctoringFlagPriority';
+import { flagTypeLabelKey, getReviewPriority, REVIEW_PRIORITY_CLASS } from '../../utils/proctoringFlagPriority';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
@@ -75,7 +75,7 @@ export function UnscoredFlaggedSection({
                         {item.flags.map((flag) => (
                           <li key={`${flag.type}-${flag.count}-${flag.note ?? ''}`} className={`rounded-lg border px-3 py-2 ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}>
                             <p className="font-medium">
-                              {flag.type}: {flag.count}
+                              {flagTypeLabelKey(flag.type) ? t(flagTypeLabelKey(flag.type) as string) : flag.type}: {flag.count}
                             </p>
                             <ResultFlagSourceLabel flag={flag} />
                             {flag.note?.trim() ? (

@@ -14,6 +14,8 @@ import type {
   PracticeSessionTopic,
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
+  FocusEventSummary,
+  FocusSignalType,
 } from '../types/b2cPracticeSession.types';
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -40,6 +42,21 @@ function pickNumber(...values: unknown[]): number | undefined {
 function pickStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
+function mapFocusEvents(raw: unknown): FocusEventSummary[] | null | undefined {
+  if (raw === null) return null;
+  if (!Array.isArray(raw)) return undefined;
+  const signalTypes: FocusSignalType[] = ['tab_switch', 'paste', 'focus_lost'];
+  return raw.map((entry) => {
+    const item = asRecord(entry);
+    const signalType = pickString(item.signalType);
+    const count = pickNumber(item.count);
+    const firstAt = pickString(item.firstAt);
+    const lastAt = pickString(item.lastAt);
+    if (!signalTypes.includes(signalType as FocusSignalType) || count == null || !firstAt || !lastAt) return null;
+    return { signalType: signalType as FocusSignalType, count, firstAt, lastAt };
+  }).filter((item): item is FocusEventSummary => item !== null);
 }
 
 function mapCitations(raw: unknown): PracticeQuestionCitation[] | null | undefined {
@@ -829,6 +846,8 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     questions,
     result,
     answers: enrichedAnswers,
+    focusTrackingEnabled: typeof data.focusTrackingEnabled === 'boolean' ? data.focusTrackingEnabled : undefined,
+    focusEvents: mapFocusEvents(data.focusEvents),
   };
 }
 

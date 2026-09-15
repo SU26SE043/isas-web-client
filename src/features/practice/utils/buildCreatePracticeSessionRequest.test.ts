@@ -22,6 +22,10 @@ const baseState = (): PracticeSetupState => ({
 });
 
 describe('buildCreatePracticeSessionRequest', () => {
+  it('only sends focus tracking when explicitly enabled', () => {
+    expect(buildCreatePracticeSessionRequest({ ...baseState(), focusTrackingEnabled: false })).not.toHaveProperty('focusTrackingEnabled');
+    expect(buildCreatePracticeSessionRequest({ ...baseState(), focusTrackingEnabled: true })).toHaveProperty('focusTrackingEnabled', true);
+  });
   it('requires jobCategory', () => {
     expect(() =>
       buildCreatePracticeSessionRequest({ ...baseState(), jobCategory: null }),

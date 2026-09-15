@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatScore } from '../../utils/practiceSessionResultFormat';
+import { FocusSummaryTile } from './FocusSummaryTile';
 
 function scoreTone(score: number | undefined, maxScore: number) {
   if (score == null) return 'text-muted-foreground';
@@ -143,7 +144,9 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      {/* Ô "Rời khỏi buổi" chỉ có khi buổi bật theo dõi (focusEvents là mảng); buổi cũ/không bật
+          (null) giữ ĐÚNG lưới 3 cột như trước — 3 ô trong lưới 4 cột là hụt một cột bên phải. */}
+      <div className={cn('mt-5 grid gap-3', Array.isArray(view.focusEvents) ? 'sm:grid-cols-4' : 'sm:grid-cols-3')}>
         <StatCard
           icon={<ClipboardCheck className="size-6" aria-hidden />}
           label={t('practice.result.answered')}
@@ -165,6 +168,7 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
           }
           tone="neutral"
         />
+        <FocusSummaryTile view={view} />
       </div>
     </section>
   );

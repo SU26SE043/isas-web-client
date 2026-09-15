@@ -3,13 +3,17 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
 import { formatResultTime, getResultFlagCount } from '../../utils/campaignResultsActions';
 import {
+  flagTypeLabelKey,
   getReviewPriority,
+  isWindowFlag,
   REVIEW_PRIORITY_CLASS,
 } from '../../utils/proctoringFlagPriority';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
+  /** true = nằm trong popup (ProctoringFlagsButton): bỏ khung + tiêu đề vì dialog đã có tiêu đề riêng. */
+  embedded?: boolean;
 }
 
 const TIME_FLAG_TYPES = new Set([
@@ -23,21 +27,22 @@ function normalizedFlagType(type: string) {
   return type.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
+export function ProctoringAnalysis({ flags, embedded = false }: ProctoringAnalysisProps) {
   const { t, language } = useLanguage();
   const totalViolations = getResultFlagCount(flags);
   const timeViolations = getResultFlagCount(
     flags.filter((flag) => TIME_FLAG_TYPES.has(normalizedFlagType(flag.type))),
   );
-  // Ranking is the source of truth for the total. Any non-time event belongs
-  // to the existing window/focus metric, even when the backend adds a new
-  // event name that the frontend has not seen yet.
-  const windowViolations = Math.max(0, totalViolations - timeViolations);
+  // Ô "cửa sổ" CHỈ đếm cờ rời màn thi (tab/focus/fullscreen). Công thức cũ `tổng − thời gian` gộp cả
+  // cờ mặt/camera/monitoring vào "Lần chuyển tab hoặc rời cửa sổ" ⇒ số nói dối nhãn (13 thay vì 5).
+  // Cờ loại mới backend thêm sau KHÔNG tự rơi vào đây — nó vẫn hiện ở danh sách chip bên dưới.
+  const windowViolations = getResultFlagCount(flags.filter((flag) => isWindowFlag(flag.type)));
   const hasViolations = totalViolations > 0;
   const hasServerFlags = flags.some((flag) => flag.source === 'Server');
 
   return (
-    <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
+    <section className={embedded ? 'space-y-0' : 'frame-satin rounded-xl bg-surface-raised p-4 sm:p-5'}>
+      {embedded ? null : (
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-warning/25 bg-warning-bg text-warning">
           <TriangleAlert className="size-4" aria-hidden />
@@ -51,6 +56,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
           </p>
         </div>
       </div>
+      )}
 
       {hasServerFlags ? (
         <p className="mt-3 rounded-lg border border-satin bg-surface-overlay p-3 text-xs leading-relaxed text-muted-foreground">
@@ -58,7 +64,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 sm:grid-cols-2 ${embedded ? 'mt-1' : 'mt-4'}`}>
         <ProctoringMetric
           icon={AppWindow}
           value={windowViolations}
@@ -93,7 +99,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
                 className={`rounded-lg border px-3 py-2 text-xs ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}
               >
                 <p className="font-medium">
-                  {flag.type}: {flag.count}
+                  {flagLabel(flag.type, t)}: {flag.count}
                   <ResultFlagSourceLabel flag={flag} />
                 </p>
                 {flag.note?.trim() ? <p className="mt-1 text-current/80">{flag.note.trim()}</p> : null}
@@ -111,6 +117,12 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
       ) : null}
     </section>
   );
+}
+
+/** Nhãn người-đọc; loại lạ in khoá thô (không nuốt) để HR vẫn thấy có cờ. */
+function flagLabel(type: string, t: (key: string) => string): string {
+  const key = flagTypeLabelKey(type);
+  return key ? t(key) : type;
 }
 
 function ProctoringMetric({
