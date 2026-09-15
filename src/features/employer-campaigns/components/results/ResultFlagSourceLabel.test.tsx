@@ -30,7 +30,7 @@ describe('ResultFlagSourceLabel', () => {
     renderWithLanguage(<ProctoringAnalysis flags={[serverFlag]} />);
 
     expect(screen.getByText('Hệ thống ghi nhận')).toBeTruthy();
-    expect(screen.getByText('monitoring_gap: 1')).toBeTruthy();
+    expect(screen.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
     expect(screen.getByText(/Cờ 'Hệ thống ghi nhận' do máy chủ/)).toBeTruthy();
   });
 
@@ -75,8 +75,8 @@ describe('ResultFlagSourceLabel', () => {
     );
 
     expect(screen.getByText('Hệ thống ghi nhận')).toBeTruthy();
-    expect(screen.getByText('monitoring_gap: 1')).toBeTruthy();
-    expect(screen.getByText('tab_switch: 1')).toBeTruthy();
+    expect(screen.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
+    expect(screen.getByText('Rời tab thi: 1')).toBeTruthy();
     expect(screen.getAllByText('Hệ thống ghi nhận')).toHaveLength(1);
   });
 });
