@@ -29,6 +29,16 @@ export function formatResultDateTime(value?: string | null, locale = 'vi'): stri
   }).format(date);
 }
 
+export function formatResultTime(value: string | null | undefined, locale: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export function formatScore(score?: number | null, maxScore?: number | null): string {
   if (score == null || !Number.isFinite(score)) return '—';
   const max = maxScore != null && Number.isFinite(maxScore) ? maxScore : null;

@@ -9,6 +9,7 @@ import {
   formatSessionDuration,
   getSessionStatusGroup,
 } from '../../utils/practiceSessionResultFormat';
+import { FocusEventsButton } from './FocusEventsButton';
 
 const statusClass = {
   graded: 'border-success/30 bg-success/10 text-success',
@@ -61,6 +62,7 @@ export function SessionResultHeader({ view }: { view: PracticeSessionResultViewM
             <Badge variant="outline" className={cn('font-semibold', statusClass[group])}>
               {statusLabel}
             </Badge>
+            <FocusEventsButton view={view} />
           </div>
         </div>
       </div>
