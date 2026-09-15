@@ -12,6 +12,8 @@ import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 
 interface ProctoringAnalysisProps {
   flags: CampaignResultFlag[];
+  /** true = nằm trong popup (ProctoringFlagsButton): bỏ khung + tiêu đề vì dialog đã có tiêu đề riêng. */
+  embedded?: boolean;
 }
 
 const TIME_FLAG_TYPES = new Set([
@@ -25,7 +27,7 @@ function normalizedFlagType(type: string) {
   return type.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
+export function ProctoringAnalysis({ flags, embedded = false }: ProctoringAnalysisProps) {
   const { t, language } = useLanguage();
   const totalViolations = getResultFlagCount(flags);
   const timeViolations = getResultFlagCount(
@@ -39,7 +41,8 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
   const hasServerFlags = flags.some((flag) => flag.source === 'Server');
 
   return (
-    <section className="frame-satin rounded-xl bg-surface-raised p-4 sm:p-5">
+    <section className={embedded ? 'space-y-0' : 'frame-satin rounded-xl bg-surface-raised p-4 sm:p-5'}>
+      {embedded ? null : (
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-warning/25 bg-warning-bg text-warning">
           <TriangleAlert className="size-4" aria-hidden />
@@ -53,6 +56,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
           </p>
         </div>
       </div>
+      )}
 
       {hasServerFlags ? (
         <p className="mt-3 rounded-lg border border-satin bg-surface-overlay p-3 text-xs leading-relaxed text-muted-foreground">
@@ -60,7 +64,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 sm:grid-cols-2 ${embedded ? 'mt-1' : 'mt-4'}`}>
         <ProctoringMetric
           icon={AppWindow}
           value={windowViolations}
