@@ -78,6 +78,16 @@ export interface CreatePracticeSessionRequest {
   adaptiveEnabled?: boolean;
   /** 1..`maxDeepPerQuestionMax`. Bỏ trống = giữ mặc định server. KHÔNG gửi 0 — server từ chối. */
   maxDeepPerQuestion?: number;
+  focusTrackingEnabled?: boolean;
+}
+
+export type FocusSignalType = 'tab_switch' | 'paste' | 'focus_lost';
+
+export interface FocusEventSummary {
+  signalType: FocusSignalType;
+  count: number;
+  firstAt: string;
+  lastAt: string;
 }
 
 export interface PracticeSetupState {
@@ -98,6 +108,7 @@ export interface PracticeSetupState {
   adaptiveEnabled: boolean;
   /** null = chưa biết dải server cho phép ⇒ không gửi, để server tự quyết. */
   maxDeepPerQuestion: number | null;
+  focusTrackingEnabled?: boolean;
 }
 
 export interface PracticeQuestionResponse {
@@ -294,6 +305,8 @@ export interface PracticeSessionResponse {
   questions: PracticeQuestionResponse[];
   result?: PracticeSessionResult | null;
   answers?: PracticeAnswerReview[] | null;
+  focusTrackingEnabled?: boolean;
+  focusEvents?: FocusEventSummary[] | null;
 }
 
 export interface SubmitPracticeAnswerInput {

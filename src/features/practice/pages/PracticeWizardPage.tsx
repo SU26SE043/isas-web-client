@@ -128,6 +128,7 @@ export function PracticeWizardPage() {
           questionCount={flow.questionCount}
           adaptiveEnabled={flow.adaptiveEnabled}
           maxDeepPerQuestion={flow.maxDeepPerQuestion}
+          focusTrackingEnabled={flow.focusTrackingEnabled}
           criteria={flow.rubricCriteria.filter((criterion) => flow.rubricCriterionIds.includes(criterion.id))}
           canStart={flow.canStart}
           isCreating={flow.isCreatingSession}
@@ -137,6 +138,7 @@ export function PracticeWizardPage() {
           onEditCriteria={() => flow.goToStep(6)}
           onStart={() => void flow.handleStart()}
           onClearError={flow.clearCreateError}
+          onFocusTrackingChange={flow.setFocusTrackingEnabled}
         />
       ) : null}
 
