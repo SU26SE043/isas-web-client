@@ -3,7 +3,9 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
 import { formatResultTime, getResultFlagCount } from '../../utils/campaignResultsActions';
 import {
+  flagTypeLabelKey,
   getReviewPriority,
+  isWindowFlag,
   REVIEW_PRIORITY_CLASS,
 } from '../../utils/proctoringFlagPriority';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
@@ -29,10 +31,10 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
   const timeViolations = getResultFlagCount(
     flags.filter((flag) => TIME_FLAG_TYPES.has(normalizedFlagType(flag.type))),
   );
-  // Ranking is the source of truth for the total. Any non-time event belongs
-  // to the existing window/focus metric, even when the backend adds a new
-  // event name that the frontend has not seen yet.
-  const windowViolations = Math.max(0, totalViolations - timeViolations);
+  // Ô "cửa sổ" CHỈ đếm cờ rời màn thi (tab/focus/fullscreen). Công thức cũ `tổng − thời gian` gộp cả
+  // cờ mặt/camera/monitoring vào "Lần chuyển tab hoặc rời cửa sổ" ⇒ số nói dối nhãn (13 thay vì 5).
+  // Cờ loại mới backend thêm sau KHÔNG tự rơi vào đây — nó vẫn hiện ở danh sách chip bên dưới.
+  const windowViolations = getResultFlagCount(flags.filter((flag) => isWindowFlag(flag.type)));
   const hasViolations = totalViolations > 0;
   const hasServerFlags = flags.some((flag) => flag.source === 'Server');
 
@@ -93,7 +95,7 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
                 className={`rounded-lg border px-3 py-2 text-xs ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}
               >
                 <p className="font-medium">
-                  {flag.type}: {flag.count}
+                  {flagLabel(flag.type, t)}: {flag.count}
                   <ResultFlagSourceLabel flag={flag} />
                 </p>
                 {flag.note?.trim() ? <p className="mt-1 text-current/80">{flag.note.trim()}</p> : null}
@@ -111,6 +113,12 @@ export function ProctoringAnalysis({ flags }: ProctoringAnalysisProps) {
       ) : null}
     </section>
   );
+}
+
+/** Nhãn người-đọc; loại lạ in khoá thô (không nuốt) để HR vẫn thấy có cờ. */
+function flagLabel(type: string, t: (key: string) => string): string {
+  const key = flagTypeLabelKey(type);
+  return key ? t(key) : type;
 }
 
 function ProctoringMetric({
