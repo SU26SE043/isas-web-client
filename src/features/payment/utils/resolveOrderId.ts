@@ -13,3 +13,15 @@ export function isValidOrderId(orderId: string): boolean {
 export function isResolvableOrderId(orderId: string): boolean {
   return isValidOrderId(orderId);
 }
+
+/**
+ * PayOS chuyển hướng về `cancelUrl` kèm `cancel=true&status=CANCELLED` (doc payOS "Return URL").
+ * Không đọc hai tham số này thì trang callback không phân biệt được "đã trả" với "đã huỷ" và cứ poll
+ * `/status` 45 lần × 2s — mỗi lần là 1 call PayOS từ backend — rồi mới báo thất bại (đo prod:
+ * 404/427 dòng bằng chứng đối soát là rác poll). `status` của PayOS là chữ HOA; so không phân biệt hoa/thường.
+ */
+export function isCancelReturn(searchParams: URLSearchParams): boolean {
+  const cancel = (searchParams.get('cancel') ?? '').trim().toLowerCase();
+  const status = (searchParams.get('status') ?? '').trim().toUpperCase();
+  return cancel === 'true' || status === 'CANCELLED' || status === 'CANCELED';
+}

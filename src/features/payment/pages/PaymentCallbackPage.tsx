@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { paymentService } from '../services/payment.service';
 import { useInvalidateTokenWallet } from '../hooks/useTokenWallet';
-import { isValidOrderId, resolveOrderIdFromSearch } from '../utils/resolveOrderId';
+import { isCancelReturn, isValidOrderId, resolveOrderIdFromSearch } from '../utils/resolveOrderId';
 import { isPaymentSuccessStatus } from '../utils/paymentOrderOutcome';
 import { paymentKeys } from '../hooks/useMyPaymentOrders';
 
@@ -24,6 +24,22 @@ export const PaymentCallbackPage: React.FC = () => {
     }
 
     let active = true;
+
+    // Người dùng bấm Huỷ trên trang PayOS → về đây với `cancel=true&status=CANCELLED`. KHÔNG poll 90s:
+    // hỏi trạng thái ĐÚNG MỘT lần (để backend đối soát PayOS và đóng đơn `Cancelled` ngay — nếu PayOS xác
+    // nhận link đã huỷ) rồi sang trang thất bại. Lỗi khi hỏi cũng sang thất bại: đơn Pending sẽ được
+    // sweeper phía server đóng, không cần người dùng chờ ở đây.
+    if (isCancelReturn(searchParams)) {
+      void paymentService.getOrderStatus(orderId)
+        .catch(() => undefined)
+        .then(() => {
+          if (active) navigate(`/payment/failed?orderId=${encodeURIComponent(orderId)}`, { replace: true });
+        });
+      return () => {
+        active = false;
+      };
+    }
+
     void paymentService.pollOrderStatus(orderId)
       .then((status) => {
         if (!active) return;
@@ -45,7 +61,7 @@ export const PaymentCallbackPage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [invalidateWallet, navigate, orderId, queryClient]);
+  }, [invalidateWallet, navigate, orderId, queryClient, searchParams]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-base px-4">
