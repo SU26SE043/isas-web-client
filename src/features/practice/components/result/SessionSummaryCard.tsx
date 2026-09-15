@@ -144,7 +144,9 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-4">
+      {/* Ô "Rời khỏi buổi" chỉ có khi buổi bật theo dõi (focusEvents là mảng); buổi cũ/không bật
+          (null) giữ ĐÚNG lưới 3 cột như trước — 3 ô trong lưới 4 cột là hụt một cột bên phải. */}
+      <div className={cn('mt-5 grid gap-3', Array.isArray(view.focusEvents) ? 'sm:grid-cols-4' : 'sm:grid-cols-3')}>
         <StatCard
           icon={<ClipboardCheck className="size-6" aria-hidden />}
           label={t('practice.result.answered')}

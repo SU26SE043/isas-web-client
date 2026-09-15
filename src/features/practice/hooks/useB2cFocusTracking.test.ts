@@ -42,6 +42,26 @@ describe('useB2cFocusTracking', () => {
     expect(recordFocusEvent).toHaveBeenCalledTimes(2);
   });
 
+  it('không đếm ở countdown kể cả khi tab THẬT SỰ bị ẩn (D4)', () => {
+    // Ca cũ chỉ dispatch lúc visibilityState='visible' nên nhánh ghi không bao giờ chạy — test đúng vì lý do sai.
+    renderHook(() => useB2cFocusTracking('session-1', true, 'countdown'));
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(recordFocusEvent).not.toHaveBeenCalled();
+  });
+
+  it('hai lần hidden liên tiếp mà chưa visible lại chỉ tính MỘT (dedup theo chu kỳ, D3)', () => {
+    renderHook(() => useB2cFocusTracking('session-1', true, 'answering'));
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(recordFocusEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('does not react to blur or when disabled', () => {
     const { rerender } = renderHook(({ enabled, phase }: { enabled: boolean; phase: 'answering' | 'countdown' }) => useB2cFocusTracking('session-1', enabled, phase), {
       initialProps: { enabled: false, phase: 'answering' },

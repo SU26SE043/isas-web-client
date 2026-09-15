@@ -146,3 +146,26 @@ describe('useB2cPracticeInterviewStore hydrateFromSession — quay lại buổi 
     expect(state.questionStates).toEqual({ 'q-1': 'reading_question', 'q-2': 'not_started', 'q-3': 'not_started' });
   });
 });
+
+describe('useB2cPracticeInterviewStore hydrateFromSession — cờ ghi nhận mất tập trung', () => {
+  beforeEach(() => {
+    useB2cPracticeInterviewStore.getState().reset();
+  });
+
+  it('chép focusTrackingEnabled=true từ session (đường tạo mới 201 LẪN đường resume đọc server)', () => {
+    useB2cPracticeInterviewStore
+      .getState()
+      .hydrateFromSession({ ...makeSession([makeQuestion('q1', 1)]), focusTrackingEnabled: true, focusEvents: [] });
+    expect(useB2cPracticeInterviewStore.getState().focusTrackingEnabled).toBe(true);
+  });
+
+  it('session không có cờ (client/BE cũ) hoặc false → tắt; hydrate lại buổi khác không giữ cờ cũ', () => {
+    useB2cPracticeInterviewStore
+      .getState()
+      .hydrateFromSession({ ...makeSession([makeQuestion('q1', 1)]), focusTrackingEnabled: true });
+    useB2cPracticeInterviewStore
+      .getState()
+      .hydrateFromSession({ ...makeSession([makeQuestion('q1', 1)]), id: 'session-2' });
+    expect(useB2cPracticeInterviewStore.getState().focusTrackingEnabled).toBe(false);
+  });
+});
