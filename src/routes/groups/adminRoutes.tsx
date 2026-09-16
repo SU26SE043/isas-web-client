@@ -8,6 +8,7 @@ import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganization
 import { AdminOrdersPage } from '@/features/admin/pages/AdminOrdersPage';
 import { AdminKnowledgePage } from '@/features/admin/pages/AdminKnowledgePage';
 import { AdminGrantsPage } from '@/features/admin/pages/AdminGrantsPage';
+import { AdminPlansPage } from '@/features/admin/pages/AdminPlansPage';
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 import { AdminPromptsPage } from '@/features/admin/pages/AdminPromptsPage';
 import { AdminRubricsPage } from '@/features/admin/pages/AdminRubricsPage';
@@ -36,6 +37,7 @@ export const adminRoutes: RouteObject[] = [
               { path: 'billing', element: <AdminBillingPage /> },
               { path: 'orders', element: <AdminOrdersPage /> },
               { path: 'grants', element: <AdminGrantsPage /> },
+              { path: 'plans', element: <AdminPlansPage /> },
               { path: 'users', element: <AdminUsersPage /> },
               { path: 'organizations', element: <AdminOrganizationsPage /> },
               { path: 'campaigns', element: <AdminCampaignsPage /> },

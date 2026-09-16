@@ -11,6 +11,7 @@ import {
   Target,
   BookOpen,
   Gift,
+  Package,
   ReceiptText,
   Users,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ export const AdminDashboardLayout: React.FC = () => {
         { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
         { to: '/admin/orders', label: t('admin.nav.orders'), icon: <ReceiptText className="h-4 w-4" aria-hidden /> },
         { to: '/admin/grants', label: t('admin.nav.grants'), icon: <Gift className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/plans', label: t('admin.nav.plans'), icon: <Package className="h-4 w-4" aria-hidden /> },
       ] },
       { key: 'aiQuality', items: [
         { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
