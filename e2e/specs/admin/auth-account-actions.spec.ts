@@ -39,7 +39,8 @@ test('Admin bans, unbans, and resets a user password through Auth', async ({ pag
   await page.goto('/admin/users');
 
   await page.getByRole('button', { name: 'Ban account' }).click();
-  await expect(page.getByText(/access tokens remain valid until expiry/i)).toBeVisible();
+  // Copy nói bằng hậu quả người dùng thấy (không còn 'access token').
+  await expect(page.getByText(/up to 15 more minutes/i)).toBeVisible();
   await page.getByLabel('Reason (optional)').fill('Policy violation');
   await page.getByRole('dialog').getByRole('button', { name: 'Ban account' }).click();
   await expect(page.getByText('Account banned.')).toBeVisible();
@@ -55,10 +56,10 @@ test('Admin bans, unbans, and resets a user password through Auth', async ({ pag
   expect(requests[1]?.path).toBe('/api/v1/auth/admin/users/user-1/unban');
 
   await page.getByRole('button', { name: 'Reset password' }).click();
-  await expect(page.getByText(/refresh tokens will be revoked/i)).toBeVisible();
+  await expect(page.getByText(/signed out at its next renewal/i)).toBeVisible();
   await page.getByLabel('New password').fill('StrongPass123!');
   await page.getByRole('dialog').getByRole('button', { name: 'Reset password' }).click();
-  await expect(page.getByText(/all refresh tokens revoked/i)).toBeVisible();
+  await expect(page.getByText(/every session of this account signed out/i)).toBeVisible();
   expect(requests[2]).toEqual({
     path: '/api/v1/auth/admin/users/user-1/reset-password',
     body: { newPassword: 'StrongPass123!' },
