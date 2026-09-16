@@ -136,16 +136,26 @@ export type RoadmapThreshold = { level: string; effectivePct: number; defaultPct
 export type RoadmapThresholdUpdateInput = { thresholds: Record<string, number> };
 
 export type KnowledgeSource = { id: string; title: string; jobCategory?: string | null; sourceType: 'Context7' | 'Url' | 'Manual' | string; sourceRef?: string | null; reputation?: string | null; status: 'Active' | 'Archived' | string; chunkCount: number; createdAt: string };
-export type CreateKnowledgeInput = { title: string; jobCategory?: string; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
+// BE `CreateKnowledgeRequest`: title/jobCategory/sourceType đều `[Required]` và DTO từ chối khoá lạ — không có field tuỳ chọn ngoài url/content.
+export type CreateKnowledgeInput = { title: string; jobCategory: 'BA' | 'BE' | 'FE'; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
 export type Context7Library = { id: string; title: string; reputation?: string | null; snippets: number };
 export type IngestContext7Input = { libraryId: string; topics: string[]; jobCategory: string };
 
 export type AdminOrder = { id: string; ownerType: number; ownerId: string; kind: number; packageId?: string | null; invoiceId?: string | null; status: number; amountVnd: number; payosOrderCode: number; expiredAt: string; paidAt?: string | null; createdAt: string; refundedAt?: string | null; refundReason?: string | null; refundGatewayRef?: string | null; refundSettledAt?: string | null; payoutStatus?: string | null; payoutFailureReason?: string | null };
 export type AdminOrderParams = { status?: number; ownerType?: number; refundSettlement?: number; cursor?: string; limit?: number };
 export type Package = { id: string; name: string; type: number; priceVnd: number; interviewCredits?: number | null; durationDays?: number | null; planId?: string | null; audience?: number | null; isActive: boolean; createdAt: string };
-export type PackageInput = Omit<Package, 'id' | 'createdAt' | 'isActive'> & { isActive?: boolean };
+/**
+ * `CreatePackageRequest` / `UpdatePackageRequest` (Payment) đều `[JsonUnmappedMemberHandling(Disallow)]`: gửi thừa
+ * `isActive` khi tạo hay `type` khi sửa là 400. OneTime KHÔNG được mang `planId`/`audience`; Subscription bắt buộc
+ * `durationDays` + `planId` + `audience` khớp plan (`PackageService.ValidateAsync`).
+ */
+export type CreatePackageInput = { name: string; type: number; priceVnd: number; interviewCredits?: number | null; durationDays?: number | null; planId?: string | null; audience?: number | null };
+export type UpdatePackageInput = { name?: string; priceVnd?: number; interviewCredits?: number | null; durationDays?: number | null; isActive?: boolean; planId?: string | null; audience?: number | null };
 export type Plan = { id: string; audience: number; code: string; name: string; rank: number; interviewFunding: number; monthlyQuota?: number | null; adaptiveEnabled: boolean; adaptiveMaxQuestions?: number | null; adaptiveMaxFollowups?: number | null; groundingEnabled: boolean; selfConsistencyN: number; cvAnalysisIncluded: boolean; repoAnalysisIncluded: boolean; roadmapEnabled: boolean; maxQuestionsCap?: number | null; maxActiveCampaigns?: number | null; maxCandidatesCap?: number | null; postpaidEligible: boolean; seatCount?: number | null; entitlementsVersion: number; isActive: boolean };
-export type PlanInput = Omit<Plan, 'id' | 'entitlementsVersion'> & { entitlementsJson: string };
+/** `PlanRequest` ghi đè CẢ `entitlementsJson` lẫn `entitlementsVersion` mỗi lần PUT ⇒ khi sửa phải echo lại, không có ô sửa JSON. */
+export type PlanInput = Omit<Plan, 'id'> & { entitlementsJson: string };
+/** `PlanResponse` (BE-D3 trả thêm `entitlementsJson`; bản cũ không có ⇒ optional). */
+export type PlanWithEntitlements = Plan & { entitlementsJson?: string };
 export type RefundInput = { reason: string; gatewayRef?: string; allowPartialClawback: boolean; settledNow: boolean };
 export type RefundSettleInput = { gatewayRef?: string };
 export type CreditGrantInput = { ownerType: number; ownerId: string; credits: number; note: string; idempotencyKey?: string };
@@ -159,7 +169,14 @@ export type SubscriptionGrantInput = { ownerType: number; ownerId: string; planI
 export type CreditAccount = { ownerType: number; ownerId: string; paymentMode: number; status: number; remainingCredits: number; reservedCredits: number; freeCreditsGranted: number; walletExists: boolean };
 export type SetPaymentModeResult = { ownerType: number; ownerId: string; paymentMode: number; creditLimit: number | null; remainingCredits: number; reservedCredits: number };
 export type InvoiceResult = { id: string; ownerType: number; ownerId: string; periodStart: string; periodEnd: string; interviewCount: number; unitPrice: number; amount: number; status: number; createdAt: string };
-export type CreditTransaction = Record<string, unknown>;
+/** `CreditTransactionResponse` — `reason` là SỐ: 0=Purchase 1=Consume 2=Refund 3=FreeGrant 4=PromoGrant. */
+export type CreditTransaction = { id: string; delta: number; reason: number; orderId?: string | null; sessionId?: string | null; reversesTransactionId?: string | null; createdAt: string };
+/** `GrantCreditResponse` (POST admin/credits/grant). Lần gọi lặp cùng `idempotencyKey` trả lại khoản CŨ (BE không xét `credits`). */
+export type GrantCreditResult = { ownerType: number; ownerId: string; creditsGranted: number; remainingCredits: number; transactionId?: string | null };
+/** Entity `Subscription` trả thẳng từ POST admin/subscriptions/grant — chỉ khai field màn hình dùng. `status` 0=Active 1=Expired 2=Cancelled · `source` 0=Purchase 1=AdminGrant. */
+export type SubscriptionGrantResult = { id: string; ownerType: number; ownerId: string; planId?: string | null; audience: number; tierCode: string; tierRank: number; interviewFunding: number; monthlyQuota?: number | null; source: number; status: number; activatedAt: string; expiresAt: string };
+/** `PostpaidOverviewRow` — worklist admin; `alertLevel` 0=None 1=ApproachingLimit 2=InvoiceIssued 3=DueSoon 4=Overdue (số tăng theo mức khẩn). */
+export type PostpaidOverviewRow = { ownerId: string; creditLimit: number | null; periodUsage: number; reservedCredits: number; headroom: number | null; pendingAmountVnd: number; unpaidInvoiceCount: number; hasOverdue: boolean; lastInvoicePeriodEnd: string | null; alertLevel?: number };
 export type AdminRevenueBucket = { periodStart: string; amountVnd: number; orderCount: number };
 export type AdminRevenueFunnel = {
   createdCount: number; paidCount: number; failedCount: number; expiredCount: number;
@@ -176,5 +193,17 @@ export type AdminFinanceSnapshot = {
   outstandingReceivables: { issuedVnd: number; issuedCount: number; overdueVnd: number; overdueCount: number; totalVnd: number };
   mrrVnd: number; activeSubscriptionCount: number;
 };
-export type AdminAiUsageAnalytics = Record<string, unknown>;
-export type AdminTrafficAnalytics = Record<string, unknown>;
+/** `AiUsageReportResponse` (F22) — chi phí là USD; VND cùng kỳ lấy từ `AdminRevenueAnalytics.aiCostVnd`. */
+export type AdminAiUsageOperationRow = { operation: string; calls: number; promptTokens: number; outputTokens: number; totalTokens: number; audioSeconds: number; costUsd: number };
+export type AdminAiUsageBucket = { periodStart: string; calls: number; totalTokens: number; costUsd: number };
+export type AdminAiUsageAnalytics = {
+  from: string; to: string; granularity: string; totalCalls: number; promptTokens: number; outputTokens: number; totalTokens: number;
+  audioSeconds: number; totalCostUsd: number; resourceUrls?: { proposed: number; rejected: number; rejectedRate: number } | null;
+  byOperation: AdminAiUsageOperationRow[]; buckets: AdminAiUsageBucket[];
+};
+/** `GET payment/admin/traffic` (FR18) — object ẩn danh phía BE; `routeId` là route YARP của gateway, không phải path thô. */
+export type AdminTrafficSummary = { requests: number; errors4xx: number; errors5xx: number; avgDurationMs: number | null; maxDurationMs: number | null };
+export type AdminTrafficAnalytics = {
+  from: string; to: string; granularity: string; totals: AdminTrafficSummary;
+  byRoute: Array<{ routeId: string; summary: AdminTrafficSummary }>; buckets: Array<{ periodStart: string; summary: AdminTrafficSummary }>;
+};

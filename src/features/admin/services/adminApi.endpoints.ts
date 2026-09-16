@@ -26,6 +26,7 @@ export const adminApiEndpoints = {
   packages: `${payment}/package`,
   package: (id: string) => `${payment}/package/${encodeURIComponent(id)}`,
   invoicesClose: `${payment}/admin/invoices/close`,
+  postpaidOverview: `${payment}/admin/invoices/postpaid-overview`,
   revenue: `${payment}/admin/revenue`,
   financeSnapshot: `${payment}/admin/finance-snapshot`,
   aiUsage: `${payment}/admin/ai-usage`,
