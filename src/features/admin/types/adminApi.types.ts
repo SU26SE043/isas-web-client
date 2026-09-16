@@ -13,7 +13,12 @@ export type InterviewAdminAnalytics = {
   buckets: Array<{ periodStart: string; created: number; scored: number; failed: number; abandoned: number }>;
 };
 
-export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null };
+/**
+ * `defaultBody` (2026-09-16): bản mặc định trong mã AIService — `""` = khe THÊM mặc định trống;
+ * chuỗi = câu mẫu (có thể chứa `{role}`/`{job_category}`); `null`/vắng = BE KHÔNG lấy được từ AIService
+ * (fail-open) — phải nói "chưa hiện được", không suy thành "mặc định trống".
+ */
+export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null; defaultBody?: string | null };
 export type UpdatePromptInput = { body: string; changeNote?: string };
 
 /**

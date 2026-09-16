@@ -97,4 +97,34 @@ describe('AdminPromptsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /admin\.prompts\.key\.scoring\.extra_guidance/ }));
     expect(await screen.findByText('admin.prompts.riskHint.scoring')).toBeInTheDocument();
   });
+
+  it('hiện BẢN MẶC ĐỊNH đang chạy ở cột trái và "Chép mặc định sang để sửa" điền vào ô sửa (bản cũ: ô trống câm)', async () => {
+    vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
+      { key: 'questions.intro', version: 0, body: null, defaultBody: 'Bạn là một interviewer chuyên nghiệp cho vị trí {role}.' },
+    ]);
+    vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
+    renderPage();
+    const defaultBox = await screen.findByLabelText('admin.prompts.defaultColumn');
+    expect(defaultBox).toHaveValue('Bạn là một interviewer chuyên nghiệp cho vị trí {role}.');
+    expect(defaultBox).toHaveAttribute('readonly');
+    expect(screen.getByText('admin.prompts.placeholderHint')).toBeInTheDocument();
+    expect(screen.getByLabelText('admin.prompts.body')).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: 'admin.prompts.copyDefault' }));
+    expect(screen.getByLabelText('admin.prompts.body')).toHaveValue('Bạn là một interviewer chuyên nghiệp cho vị trí {role}.');
+    expect(screen.queryByText('admin.prompts.defaultUnavailable')).not.toBeInTheDocument();
+  });
+
+  it('defaultBody = "" (khe THÊM) ⇒ nói "trống", KHÔNG có nút chép; defaultBody = null ⇒ nói "chưa lấy được", không giả vờ trống', async () => {
+    vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
+      { key: 'questions.guidance', version: 0, body: null, defaultBody: '' },
+      { key: 'scoring.persona', version: 0, body: null, defaultBody: null },
+    ]);
+    vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
+    renderPage();
+    expect(await screen.findByLabelText('admin.prompts.defaultColumn')).toHaveValue('admin.prompts.defaultEmpty');
+    expect(screen.queryByRole('button', { name: 'admin.prompts.copyDefault' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /admin\.prompts\.key\.scoring\.persona/ }));
+    expect(await screen.findByText('admin.prompts.defaultUnavailable')).toBeInTheDocument();
+    expect(screen.getByLabelText('admin.prompts.defaultColumn')).toHaveValue('admin.prompts.defaultUnavailableShort');
+  });
 });
