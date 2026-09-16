@@ -18,6 +18,12 @@ import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
 
 type NavItem = { to: string; label: string; icon: React.ReactNode; end?: boolean };
+/**
+ * Nhóm mục theo VIỆC của PlatformAdmin (đợt B, 2026-09-16): Vận hành · Tiền · Chất lượng AI. Nhóm "Hệ thống"
+ * (công tắc & trạng thái cờ) chờ đợt C — không dựng nhóm rỗng. Trước đó 8 mục phẳng: "Thước đo chấm điểm"
+ * đứng cạnh "Người dùng" nên admin không thấy 3 màn cấu hình AI là một cụm.
+ */
+type NavGroup = { key: 'operations' | 'money' | 'aiQuality'; items: NavItem[] };
 
 function navLinkClassName(isActive: boolean) {
   return cn(
@@ -31,16 +37,22 @@ function navLinkClassName(isActive: boolean) {
 export const AdminDashboardLayout: React.FC = () => {
   const { t } = useLanguage();
 
-  const navItems = useMemo<NavItem[]>(
+  const navGroups = useMemo<NavGroup[]>(
     () => [
-      { to: '/admin/dashboard', label: t('admin.nav.dashboard'), end: true, icon: <Gauge className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/campaigns', label: t('admin.nav.campaigns'), icon: <Briefcase className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
-      { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
+      { key: 'operations', items: [
+        { to: '/admin/dashboard', label: t('admin.nav.dashboard'), end: true, icon: <Gauge className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/users', label: t('admin.nav.users'), icon: <Users className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/organizations', label: t('admin.nav.organizations'), icon: <Building2 className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/campaigns', label: t('admin.nav.campaigns'), icon: <Briefcase className="h-4 w-4" aria-hidden /> },
+      ] },
+      { key: 'money', items: [
+        { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
+      ] },
+      { key: 'aiQuality', items: [
+        { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
+      ] },
     ],
     [t],
   );
@@ -54,12 +66,20 @@ export const AdminDashboardLayout: React.FC = () => {
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:hidden">AD</span>
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label} title={item.label} className={({ isActive }) => navLinkClassName(isActive)}>
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>
-                  <span className="hidden truncate sm:inline">{item.label}</span>
-                </NavLink>
+            <div className="space-y-4">
+              {navGroups.map((group, index) => (
+                <div key={group.key} role="group" aria-label={t(`admin.nav.group.${group.key}`)} className={cn(index > 0 && 'border-t border-subtle pt-4 sm:border-0 sm:pt-0')}>
+                  {/* Tên nhóm chỉ hiện khi sidebar rộng; sidebar thu gọn (icon) dùng đường kẻ ngăn nhóm. */}
+                  <p className="mb-1 hidden px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:block">{t(`admin.nav.group.${group.key}`)}</p>
+                  <div className="space-y-1">
+                    {group.items.map((item) => (
+                      <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label} title={item.label} className={({ isActive }) => navLinkClassName(isActive)}>
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>
+                        <span className="hidden truncate sm:inline">{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </nav>
