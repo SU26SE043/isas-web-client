@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
+import { AdminAiCostMetrics } from '../components/analytics/AdminAiCostMetrics';
 import { AdminAnalyticsChart } from '../components/analytics/AdminAnalyticsChart';
 import { AdminRevenueMetrics } from '../components/analytics/AdminRevenueMetrics';
 import { AdminRoleDistribution } from '../components/analytics/AdminRoleDistribution';
+import { AdminTrafficMetrics } from '../components/analytics/AdminTrafficMetrics';
 import { StatCard, StatGrid } from '@/components/patterns/StatCard';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { AdminStatusBadge } from '../components/AdminStatusBadge';
@@ -79,6 +81,7 @@ export function AdminDashboardPage() {
       ) : null}
 
       <AdminRevenueMetrics groupBy={revenueGroupBy} />
+      <AdminAiCostMetrics groupBy={revenueGroupBy} />
 
       {analytics.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -114,6 +117,7 @@ export function AdminDashboardPage() {
           </section>
         </>
       ) : null}
+      <AdminTrafficMetrics groupBy={revenueGroupBy} />
 
     </AdminPageShell>
   );
