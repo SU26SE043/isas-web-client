@@ -83,6 +83,10 @@ test('admin sees real level descriptors, saves only the allowed fields, and grad
   // (3) Tự thử: chưa có bài ⇒ nút Chấm tắt; chuyển "Paste" → dán bài → Chấm gửi ĐÚNG hợp đồng
   // (sampleQuestionId + customAnswer + includeAiSamples=false, KHÔNG deliveryMetrics) → hiện "Your answer",
   // nói rõ trôi chảy không chấm vì không có bản ghi; không có mục 3 bài AI.
+  // Panel tự thử nằm ở tab riêng; nút ở đầu trang mở nó và ghim ?tab=try vào URL.
+  await page.getByRole('button', { name: /Try the rubric yourself/ }).click();
+  await expect(page).toHaveURL(/tab=try/);
+  await expect(page.getByRole('tab', { name: 'Try the rubric yourself' })).toHaveAttribute('aria-selected', 'true');
   const grade = page.getByRole('button', { name: /Grade this answer/ });
   await expect(grade).toBeDisabled();
   await page.getByRole('button', { name: 'Paste', exact: true }).click();

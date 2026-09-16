@@ -44,7 +44,8 @@ function mockHappyPath() {
   vi.spyOn(adminRubricService, 'history').mockResolvedValue([{ version: 2, isActive: true, criteriaCount: 2, withLevelsCount: 1 }, { version: 1, isActive: false, criteriaCount: 2, withLevelsCount: 0 }]);
   vi.spyOn(adminRubricService, 'previewHistory').mockResolvedValue([]);
 }
-const renderPage = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><MemoryRouter><AdminRubricsPage /></MemoryRouter></QueryClientProvider>);
+const renderPage = (initialEntries = ['/admin/rubrics']) => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><MemoryRouter initialEntries={initialEntries}><AdminRubricsPage /></MemoryRouter></QueryClientProvider>);
+const openTryTab = () => fireEvent.click(screen.getByRole('tab', { name: 'admin.rubrics.tab.try' }));
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
@@ -121,6 +122,8 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
   it('tiêu chí thiếu mốc ⇒ CẢNH BÁO nêu tên nhưng KHÔNG chặn (BE mới biết tiêu chí nào do AI chấm; tiêu chí đo bằng số cố ý 0 mốc)', async () => {
     mockHappyPath();
     renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
     expect(await screen.findByText('admin.rubrics.preview.needsLevels')).toBeInTheDocument();
     // Chưa có bài ⇒ nút Chấm tắt (không phải vì thiếu mốc).
     expect(screen.getByRole('button', { name: 'admin.rubrics.try.run.free' })).toBeDisabled();
@@ -130,6 +133,8 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     mockHappyPath();
     const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(customRun);
     renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
     const runButton = await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
     fireEvent.change(screen.getByLabelText('admin.rubrics.preview.questionSample'), { target: { value: 'q-2' } });
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
@@ -151,6 +156,8 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     mockHappyPath();
     const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(run);
     renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
     const runButton = await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
     fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài tôi tự dán.' } });
@@ -166,6 +173,8 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
   it('đổi câu hỏi khi ĐÃ có bài ⇒ hỏi trước; huỷ thì giữ nguyên câu và bài', async () => {
     mockHappyPath();
     renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
     await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
     fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài đang gõ dở.' } });
@@ -175,5 +184,22 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     await waitFor(() => expect(screen.queryByText('admin.rubrics.try.changeQuestion.title')).not.toBeInTheDocument());
     expect(screen.getByLabelText('admin.rubrics.preview.questionSample')).toHaveValue('q-1');
     expect(screen.getByLabelText('admin.rubrics.try.mode.paste')).toHaveValue('Bài đang gõ dở.');
+  });
+
+  it('mặc định mở tab Mốc điểm (panel tự thử KHÔNG hiện); nút ở đầu trang nhảy sang tab tự thử; ?tab=try mở thẳng tab thử', async () => {
+    mockHappyPath();
+    const { unmount } = renderPage();
+    await screen.findByText(/Không trả lời hoặc lạc đề/);
+    expect(screen.queryByRole('region', { name: 'admin.rubrics.try.title' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'admin.rubrics.tab.levels' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /admin\.rubrics\.tab\.try/ }));   // nút header (kèm icon)
+    expect(await screen.findByRole('region', { name: 'admin.rubrics.try.title' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'admin.rubrics.tab.try' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByText(/Không trả lời hoặc lạc đề/)).not.toBeInTheDocument();          // bảng mốc ẩn khi ở tab thử
+    // Ở tab thử nút header không lặp lại chính nó — chỉ còn tab để quay về.
+    expect(screen.queryByRole('button', { name: /admin\.rubrics\.tab\.try/ })).not.toBeInTheDocument();
+    unmount();
+    renderPage(['/admin/rubrics?tab=try']);
+    expect(await screen.findByRole('region', { name: 'admin.rubrics.try.title' })).toBeInTheDocument();
   });
 });

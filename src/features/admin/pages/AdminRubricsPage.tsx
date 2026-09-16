@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { AdminPageShell } from '../components/AdminPageShell';
@@ -22,6 +24,9 @@ import { toAdminRubricUpsertInput } from '../utils/adminRubricApi';
  * Viết lại toàn bộ 2026-09-16: bản trước dùng hợp đồng tự bịa nên bảng luôn trống và PUT trả
  * 200 `changed:false` (không lưu gì). Xem `adminRubricApi.ts` cho luật parse-first.
  */
+type RubricTab = 'levels' | 'try';
+const TAB_CLASS = 'rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200';
+
 export function AdminRubricsPage() {
   const { t } = useLanguage();
   const [category, setCategory] = useState<AdminRubricJobCategory>('BE');
@@ -30,6 +35,15 @@ export function AdminRubricsPage() {
   const [confirm, setConfirm] = useState<'save' | 'reset' | 'discard' | null>(null);
   const [pendingSelect, setPendingSelect] = useState<{ category: AdminRubricJobCategory; language: AdminRubricLanguage } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Tab ghim vào URL (`?tab=try`) để nút ở đầu trang, link chia sẻ và tab trình duyệt mới đều mở đúng chỗ —
+  // panel tự thử từng nằm cuối trang dài 7 tiêu chí, người dùng phải cuộn mới biết nó tồn tại.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab: RubricTab = searchParams.get('tab') === 'try' ? 'try' : 'levels';
+  const showTab = (next: RubricTab) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'try') params.set('tab', 'try'); else params.delete('tab');
+    setSearchParams(params, { replace: true });
+  };
   const query = useAdminRubrics(category, language);
   const rubric = query.detail.data ?? null;
 
@@ -72,6 +86,7 @@ export function AdminRubricsPage() {
       description={t('admin.rubrics.description')}
       actions={
         <>
+          {tab !== 'try' ? <Button type="button" variant="secondary" disabled={!rubric} onClick={() => showTab('try')}>🎙 {t('admin.rubrics.tab.try')}</Button> : null}
           <Button type="button" variant="outline" disabled={!rubric || query.reset.isPending} onClick={() => setConfirm('reset')}>{t('admin.rubrics.reset')}</Button>
           <Button type="button" disabled={!dirty} loading={query.update.isPending} onClick={() => setConfirm('save')}>{t('admin.rubrics.save')}</Button>
         </>
@@ -98,11 +113,30 @@ export function AdminRubricsPage() {
             {dirty ? <Badge variant="warning">{t('admin.rubrics.dirty')}</Badge> : null}
             {dirty ? <Button type="button" variant="ghost" size="sm" onClick={() => setDraft(null)}>{t('admin.rubrics.discard')}</Button> : null}
           </div>
-          <Alert variant="info"><AlertDescription>{t('admin.rubrics.effectNote')}</AlertDescription></Alert>
-          <AdminRubricSuggestControls criteria={criteria} suggest={query.suggest} onApply={setDraft} />
-          <AdminRubricCriteriaTable criteria={criteria} onChange={setDraft} />
-          <AdminRubricPreviewPanel rubric={rubric} hasUnsavedChanges={dirty} preview={query.preview} history={query.previewHistory} />
-          <section className="rounded-xl border border-satin bg-surface-raised p-4" aria-label={t('admin.rubrics.history.title')}>
+          <div role="tablist" aria-label={t('admin.rubrics.tab.label')} className="inline-flex gap-1 rounded-xl border border-satin bg-surface-raised p-1">
+            {(['levels', 'try'] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                onClick={() => showTab(id)}
+                className={cn(TAB_CLASS, tab === id ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground')}
+              >
+                {t(`admin.rubrics.tab.${id}`)}
+              </button>
+            ))}
+          </div>
+          {tab === 'try' ? (
+            <AdminRubricPreviewPanel rubric={rubric} hasUnsavedChanges={dirty} preview={query.preview} history={query.previewHistory} />
+          ) : (
+            <>
+              <Alert variant="info"><AlertDescription>{t('admin.rubrics.effectNote')}</AlertDescription></Alert>
+              <AdminRubricSuggestControls criteria={criteria} suggest={query.suggest} onApply={setDraft} />
+              <AdminRubricCriteriaTable criteria={criteria} onChange={setDraft} />
+            </>
+          )}
+          {tab === 'levels' ? <section className="rounded-xl border border-satin bg-surface-raised p-4" aria-label={t('admin.rubrics.history.title')}>
             <h2 className="text-base font-medium text-foreground">{t('admin.rubrics.history.title')}</h2>
             {query.history.data?.length ? (
               <ol className="mt-2 space-y-1 text-sm text-muted-foreground">
@@ -114,7 +148,7 @@ export function AdminRubricsPage() {
                 ))}
               </ol>
             ) : <p className="mt-2 text-sm text-muted-foreground">{t('admin.rubrics.history.empty')}</p>}
-          </section>
+          </section> : null}
         </>
       ) : null}
 
