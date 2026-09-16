@@ -31,6 +31,9 @@ export function AdminPromptsPage() {
     [query.list.data],
   );
   const selected = prompts.find(({ item }) => item.key === selectedKey) ?? prompts[0];
+  const groups = PROMPT_GROUP_ORDER
+    .map((group) => ({ group, items: prompts.filter(({ info }) => info.group === group) }))
+    .filter(({ items }) => items.length > 0);
   const history = useAdminPromptHistory(selected?.item.key);
   const forbidden = getApiStatusCode(query.list.error) === 403;
   const error = query.list.error;
@@ -48,34 +51,40 @@ export function AdminPromptsPage() {
 
       {prompts.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="space-y-3 rounded-xl border border-satin bg-surface-raised p-3 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto">
-            {PROMPT_GROUP_ORDER.map((group) => {
-              const items = prompts.filter(({ info }) => info.group === group);
-              if (!items.length) return null;
-              return (
-                <section key={group}>
-                  <h2 className="px-2 py-2 text-xs uppercase text-muted-foreground">{t(`admin.prompts.group.${group}`)}</h2>
-                  {items.map(({ item, info }) => {
-                    const active = selected?.item.key === item.key;
-                    return (
-                      <button
-                        type="button"
-                        key={item.key}
-                        onClick={() => setSelectedKey(item.key)}
-                        aria-pressed={active}
-                        className={`w-full rounded-lg px-2 py-2 text-left text-sm transition ${active ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'}`}
-                      >
-                        <span className="block">{formatPromptLabel(t, info)}</span>
-                        <span className="block text-[11px] text-muted-foreground">
-                          {item.body === null ? t('admin.prompts.defaultBadge') : t('admin.prompts.customBadge')}
-                          {info.risk === 'scoring' ? ` · ${t('admin.prompts.risk.scoring')}` : ''}
+          <aside className="rounded-xl border border-satin bg-surface-raised p-2 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto">
+            {groups.map(({ group, items }, index) => (
+              <section key={group} className={index > 0 ? 'mt-3 border-t border-satin pt-3' : undefined}>
+                {/* Tên nhóm phải ĐỨNG RA khỏi 35 dòng mục: đậm, giãn chữ, màu chữ chính, kèm số mảnh —
+                    bản trước là xám nhạt cỡ xs, chìm hẳn (user: "category rõ ràng ra, in đậm tí"). */}
+                <h2 className="mb-1 flex items-center justify-between gap-2 px-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{t(`admin.prompts.group.${group}`)}</span>
+                  <span className="rounded-full bg-surface-overlay px-1.5 text-[11px] tabular-nums text-muted-foreground">{items.length}</span>
+                </h2>
+                {items.map(({ item, info }) => {
+                  const active = selected?.item.key === item.key;
+                  const custom = item.body !== null;
+                  const scoring = info.risk === 'scoring';
+                  return (
+                    <button
+                      type="button"
+                      key={item.key}
+                      onClick={() => setSelectedKey(item.key)}
+                      aria-pressed={active}
+                      className={`w-full rounded-lg border-l-2 px-2 py-1.5 text-left text-sm transition ${active ? 'border-info bg-surface-overlay font-medium text-foreground' : 'border-transparent text-muted-foreground hover:bg-surface-overlay/60 hover:text-foreground'}`}
+                    >
+                      <span className="block">{formatPromptLabel(t, info)}</span>
+                      {/* Dòng phụ CHỈ khi có gì khác thường — "Đang dùng bản mặc định" lặp 35 lần là nhiễu. */}
+                      {custom || scoring ? (
+                        <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px]">
+                          {custom ? <span className="text-info">{t('admin.prompts.customBadge')} · v{item.version}</span> : null}
+                          {scoring ? <span className="text-warning">{t('admin.prompts.risk.scoring')}</span> : null}
                         </span>
-                      </button>
-                    );
-                  })}
-                </section>
-              );
-            })}
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </section>
+            ))}
           </aside>
           <div className="space-y-6">
             {selected ? (
