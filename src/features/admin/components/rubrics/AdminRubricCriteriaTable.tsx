@@ -38,7 +38,7 @@ export function AdminRubricCriteriaTable({ criteria, onChange }: AdminRubricCrit
   return (
     <div className="overflow-x-auto rounded-xl border border-satin bg-surface-overlay/50">
       <table className="w-full min-w-[880px] text-sm">
-        <thead className="border-b border-white/10 bg-white/[0.04]">
+        <thead className="border-b border-satin bg-surface-overlay">
           <tr>
             {(['name', 'weightMax', 'description', 'levels'] as const).map((column) => (
               <th key={column} className="p-3 text-left text-xs uppercase text-foreground">{t(`admin.rubrics.column.${column}`)}</th>
