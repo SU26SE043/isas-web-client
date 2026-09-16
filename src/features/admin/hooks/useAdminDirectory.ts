@@ -27,12 +27,14 @@ export function useAdminOrganizations(params: GetAdminOrganizationsParams) {
   });
 }
 
-export function useAdminUsers(params: GetAdminUsersParams) {
+export function useAdminUsers(params: GetAdminUsersParams, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: adminDirectoryKeys.users(params),
     queryFn: () => adminDirectoryService.getAdminUsers(params),
     placeholderData: (previous) => previous,
     retry: retryDirectoryQuery,
+    // `enabled` cho ô tìm theo email (OwnerPicker): chưa đủ ký tự thì KHÔNG bắn request rỗng.
+    enabled: options.enabled ?? true,
   });
 }
 
