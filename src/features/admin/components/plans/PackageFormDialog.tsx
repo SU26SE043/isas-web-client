@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import type { CreatePackageInput, Package, PlanWithEntitlements, UpdatePackageInput } from '../../types/adminApi.types';
 import { PACKAGE_TYPE_ONE_TIME, PACKAGE_TYPE_SUBSCRIPTION, packageTypeKey, planAudienceKey } from '../../utils/adminBilling';
@@ -37,7 +38,8 @@ export function PackageFormDialog({ open, pkg, plans, loading, errorMessage, onC
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="pkg-type">{t('admin.plans.package.type')}</Label>
               <select id="pkg-type" className={SELECT_CLASS} value={state.type} disabled={loading || pkg !== null} onChange={(event) => set({ type: Number(event.target.value) })}>
-                <option value={PACKAGE_TYPE_ONE_TIME}>{t(packageTypeKey(PACKAGE_TYPE_ONE_TIME))}</option><option value={PACKAGE_TYPE_SUBSCRIPTION}>{t(packageTypeKey(PACKAGE_TYPE_SUBSCRIPTION))}</option>
+                <option value={PACKAGE_TYPE_ONE_TIME}>{t(packageTypeKey(PACKAGE_TYPE_ONE_TIME))}</option>
+                {isTieringUiEnabled() || subscription ? <option value={PACKAGE_TYPE_SUBSCRIPTION}>{t(packageTypeKey(PACKAGE_TYPE_SUBSCRIPTION))}</option> : null}
               </select></div>
             <div className="space-y-1.5"><Label htmlFor="pkg-name">{t('admin.plans.package.name')}</Label><Input id="pkg-name" value={state.name} disabled={loading} onChange={(event) => set({ name: event.target.value })} /></div>
             <div className="space-y-1.5"><Label htmlFor="pkg-price">{t('admin.plans.package.priceVnd')}</Label><Input id="pkg-price" type="number" inputMode="numeric" min={0} value={state.priceVnd} disabled={loading} onChange={(event) => set({ priceVnd: event.target.value })} /></div>

@@ -9,6 +9,8 @@ import type { Package, PlanWithEntitlements } from '../types/adminApi.types';
 import { AdminPlansPage } from './AdminPlansPage';
 
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'vi' }) }));
+// File này khoá hành vi KHI TIERING UI BẬT (tier/thuê bao hiện). Mặc định app đang ẩn — xem AdminTieringHidden.test.tsx.
+vi.mock('@/shared/config', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/shared/config')>()), isTieringUiEnabled: () => true }));
 
 // Shape `PlanResponse` (Payment, enum số): audience 0=B2C 1=B2B, interviewFunding 0=Credit 1=Metered.
 const base = { rank: 0, interviewFunding: 0, monthlyQuota: null, adaptiveEnabled: true, adaptiveMaxQuestions: null, adaptiveMaxFollowups: null, groundingEnabled: false, selfConsistencyN: 1, cvAnalysisIncluded: false, repoAnalysisIncluded: false, roadmapEnabled: false, maxQuestionsCap: null, maxActiveCampaigns: null, maxCandidatesCap: null, postpaidEligible: false, seatCount: null, entitlementsVersion: 1, isActive: true, entitlementsJson: '[]' };

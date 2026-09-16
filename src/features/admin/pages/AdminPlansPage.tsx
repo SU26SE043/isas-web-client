@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { cn } from '@/lib/utils';
 import { getApiErrorMessage } from '@/shared/api/apiError';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { PackageFormDialog } from '../components/plans/PackageFormDialog';
@@ -28,7 +29,9 @@ const TAB_CLASS = 'rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap tr
 export function AdminPlansPage() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab: Tab = searchParams.get('tab') === 'packages' ? 'packages' : 'plans';
+  // Tiering UI tắt ⇒ trang chỉ còn tab Gói bán (tier/plan tạm ẩn, xem isTieringUiEnabled); `?tab=plans` bị bỏ qua.
+  const showTiering = isTieringUiEnabled();
+  const tab: Tab = !showTiering || searchParams.get('tab') === 'packages' ? 'packages' : 'plans';
   const showTab = (next: Tab) => { const params = new URLSearchParams(searchParams); if (next === 'packages') params.set('tab', 'packages'); else params.delete('tab'); setSearchParams(params, { replace: true }); };
   const [includeInactive, setIncludeInactive] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -42,16 +45,16 @@ export function AdminPlansPage() {
   const saving = actions.createPlan.isPending || actions.updatePlan.isPending || actions.createPackage.isPending || actions.updatePackage.isPending;
 
   return (
-    <AdminPageShell title={t('admin.plans.title')} description={t('admin.plans.description')} actions={(
+    <AdminPageShell title={t(showTiering ? 'admin.plans.title' : 'admin.plans.titlePackagesOnly')} description={t(showTiering ? 'admin.plans.description' : 'admin.plans.descriptionPackagesOnly')} actions={(
       tab === 'plans'
         ? <Button type="button" onClick={() => setDialog({ kind: 'plan', plan: null })}>{t('admin.plans.createPlan')}</Button>
         : <Button type="button" onClick={() => setDialog({ kind: 'package', pkg: null })}>{t('admin.plans.createPackage')}</Button>
     )}>
-      <div role="tablist" aria-label={t('admin.plans.tab.label')} className="inline-flex gap-1 rounded-xl border border-satin bg-surface-raised p-1">
+      {showTiering ? <div role="tablist" aria-label={t('admin.plans.tab.label')} className="inline-flex gap-1 rounded-xl border border-satin bg-surface-raised p-1">
         {(['plans', 'packages'] as const).map((id) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => showTab(id)} className={cn(TAB_CLASS, tab === id ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground')}>{t(`admin.plans.tab.${id}`)}</button>
         ))}
-      </div>
+      </div> : null}
       {error && dialog === null ? <Alert variant="error"><AlertDescription>{error}</AlertDescription></Alert> : null}
 
       {tab === 'plans' ? (

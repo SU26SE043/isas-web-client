@@ -1,1 +1,1 @@
-export { env, getApiBaseUrl, isDevEnvironment, normalizeApiBaseUrl } from './env';
+export { env, getApiBaseUrl, isDevEnvironment, isTieringUiEnabled, normalizeApiBaseUrl } from './env';

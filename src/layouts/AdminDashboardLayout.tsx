@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { LanguageToggle } from './LanguageToggle';
 import { SidebarLogoutButton } from './components/SidebarLogoutButton';
@@ -40,6 +41,7 @@ function navLinkClassName(isActive: boolean) {
 
 export const AdminDashboardLayout: React.FC = () => {
   const { t } = useLanguage();
+  const tieringUi = isTieringUiEnabled();   // tắt ⇒ nhãn mục Tiền không nhắc thuê bao/tier (xem isTieringUiEnabled)
 
   const navGroups = useMemo<NavGroup[]>(
     () => [
@@ -52,8 +54,8 @@ export const AdminDashboardLayout: React.FC = () => {
       { key: 'money', items: [
         { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
         { to: '/admin/orders', label: t('admin.nav.orders'), icon: <ReceiptText className="h-4 w-4" aria-hidden /> },
-        { to: '/admin/grants', label: t('admin.nav.grants'), icon: <Gift className="h-4 w-4" aria-hidden /> },
-        { to: '/admin/plans', label: t('admin.nav.plans'), icon: <Package className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/grants', label: t(tieringUi ? 'admin.nav.grants' : 'admin.nav.grantsCreditOnly'), icon: <Gift className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/plans', label: t(tieringUi ? 'admin.nav.plans' : 'admin.nav.plansPackagesOnly'), icon: <Package className="h-4 w-4" aria-hidden /> },
       ] },
       { key: 'aiQuality', items: [
         { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
@@ -62,7 +64,7 @@ export const AdminDashboardLayout: React.FC = () => {
         { to: '/admin/knowledge', label: t('admin.nav.knowledge'), icon: <BookOpen className="h-4 w-4" aria-hidden /> },
       ] },
     ],
-    [t],
+    [t, tieringUi],
   );
 
   return (

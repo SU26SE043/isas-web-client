@@ -19,8 +19,8 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientTitle': 'Không đủ token',
     'payment.wallet.insufficientReserve': 'Cần ít nhất {amount} token khả dụng để tạo phiên luyện tập.',
 
-    'payment.plans.title': 'Gói token & đăng ký',
-    'payment.plans.subtitle': 'Chọn gói phù hợp. Giá hiển thị bằng USD.',
+    'payment.plans.title': 'Mua credit',
+    'payment.plans.subtitle': 'Chọn gói credit phù hợp. Giá hiển thị bằng VND, thanh toán qua PayOS.',
     'payment.plans.sectionSubtitle': 'Chọn gói và thanh toán ngay trên trang này.',
     'payment.plans.oneTime': 'Gói credit',
     'payment.plans.subscription': 'Đăng ký hàng tháng',
@@ -248,8 +248,8 @@ export const paymentTranslations: TranslationDictionary = {
     'payment.wallet.insufficientTitle': 'Insufficient tokens',
     'payment.wallet.insufficientReserve': 'You need at least {amount} available tokens to start a practice session.',
 
-    'payment.plans.title': 'Token packages & subscription',
-    'payment.plans.subtitle': 'Choose a plan. Prices are shown in USD.',
+    'payment.plans.title': 'Buy credits',
+    'payment.plans.subtitle': 'Pick a credit pack. Prices are in VND, paid via PayOS.',
     'payment.plans.sectionSubtitle': 'Choose a package and pay directly on this page.',
     'payment.plans.oneTime': 'Credit packages',
     'payment.plans.subscription': 'Monthly subscription',

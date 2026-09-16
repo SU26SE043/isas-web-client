@@ -11,6 +11,8 @@ import type { PlanWithEntitlements, SubscriptionGrantResult } from '../types/adm
 import { AdminGrantsPage } from './AdminGrantsPage';
 
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'vi' }) }));
+// File này khoá hành vi KHI TIERING UI BẬT (tier/thuê bao hiện). Mặc định app đang ẩn — xem AdminTieringHidden.test.tsx.
+vi.mock('@/shared/config', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/shared/config')>()), isTieringUiEnabled: () => true }));
 
 const ORG = '0610da24-1111-2222-3333-444444444444';
 // Shape `PlanResponse` (Payment): audience 1=B2B, interviewFunding 0=Credit.

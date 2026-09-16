@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { PackageCard } from '../../components/live/PackageCard';
 import { QuerySection } from '../../components/live/QuerySection';
@@ -20,6 +21,7 @@ export function EmployerPackagesPage() {
   const packages = useEmployerPackages();
   const createOrder = useCreateEmployerOrder();
   const submitLock = useRef(false);
+  const showTiering = isTieringUiEnabled();   // tắt ⇒ catalog chỉ còn gói credit, hàng chip lọc loại gói là thừa
   const items = (packages.data ?? []).filter((item) => filter === 'all' || item.type === filter);
   const error =
     createOrder.error instanceof Error && createOrder.error.message === 'CHECKOUT_URL_MISSING'
@@ -30,7 +32,7 @@ export function EmployerPackagesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      {showTiering ? <div className="flex flex-wrap gap-2">
         {([
           ['all', 'employerBilling.packages.all'],
           [PaymentPackageType.OneTime, 'employerBilling.packages.oneTime'],
@@ -44,7 +46,7 @@ export function EmployerPackagesPage() {
             {t(label)}
           </Button>
         ))}
-      </div>
+      </div> : null}
       {!canManage ? (
         <p className="text-sm text-muted-foreground">{t('employerBilling.packages.adminOnly')}</p>
       ) : null}

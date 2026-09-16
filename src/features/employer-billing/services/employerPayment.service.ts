@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/apiClient';
+import { isTieringUiEnabled } from '@/shared/config';
 import { isPlaywrightRuntime } from '@/shared/mock';
 import type {
   CreateOrderRequest,
@@ -12,6 +13,7 @@ import type {
   SubscriptionResponse,
   InvoiceResponse,
 } from '../types/employerPayment.types';
+import { PaymentPackageType } from '../types/employerPayment.types';
 import {
   parseAccount,
   parseOrder,
@@ -65,7 +67,10 @@ function pageParams(cursor?: string | null, limit = 20) {
 export const employerPaymentService = {
   async getPackages(): Promise<PackageResponse[]> {
     const response = await apiClient.get<unknown>(endpoint.packages);
-    return unwrapList(response.data).map(parsePackage).filter((item) => item.isActive);
+    // Gói thuê bao (tier) tạm ẩn khi tiering UI tắt — cùng luật với catalog candidate (payment.service).
+    return unwrapList(response.data)
+      .map(parsePackage)
+      .filter((item) => item.isActive && (isTieringUiEnabled() || item.type !== PaymentPackageType.Subscription));
   },
 
   async getPackageById(id: string): Promise<PackageResponse> {
