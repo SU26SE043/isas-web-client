@@ -16,10 +16,73 @@ export type InterviewAdminAnalytics = {
 export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null };
 export type UpdatePromptInput = { body: string; changeNote?: string };
 
-export type RubricLevel = { score: number; description: string };
-export type RubricCriterion = { id?: string; key: string; name?: string; levels: RubricLevel[] };
-export type RubricSet = { category: string; language: 'vi' | 'en'; version: number; criteria: RubricCriterion[]; updatedAt?: string | null; updatedBy?: string | null };
-export type RubricPreviewInput = { criterionKey: string; answer: string };
+/**
+ * Bộ chuẩn B2C do admin quản (BC-8) — hợp đồng KHỚP `AdminRubric.cs` + `AdminRubricPreview.cs`
+ * (InterviewService, camelCase, enum `JobCategory` là chuỗi `FE|BE|BA`).
+ *
+ * Bản trước của các type này viết theo tưởng tượng (`level.description`, `criterion.key`,
+ * `category`) trong khi BE trả `descriptor`, `id`, `jobCategory` ⇒ bảng mốc luôn trống, PUT gửi
+ * `descriptor` cũ nguyên xi nên BE thấy không đổi gì và trả 200 `changed:false` — admin tưởng đã
+ * lưu. Từ đây mọi tên trường phải lấy từ DTO BE, không đặt tên "cho dễ đọc".
+ */
+export type AdminRubricLanguage = 'vi' | 'en';
+export type AdminRubricJobCategory = 'FE' | 'BE' | 'BA';
+export type AdminRubricLevel = { score: number; descriptor: string };
+export type AdminRubricCriterion = {
+  id: string;
+  name: string;
+  description: string | null;
+  weight: number;
+  maxScore: number;
+  /** `Always` = chấm mọi câu · `WhenTargeted` = chỉ khi câu hỏi nhắm tới (INT-18). */
+  scoringScope: string;
+  /** `[]` = CHƯA khai mốc ⇒ chấm theo dải mặc định (hợp lệ, không phải lỗi). */
+  levels: AdminRubricLevel[];
+};
+export type AdminSampleQuestion = { id: string; text: string };
+export type AdminRubricSet = {
+  jobCategory: AdminRubricJobCategory;
+  language: AdminRubricLanguage;
+  version: number;
+  /** `false` sau PUT = nội dung y như bản đang chạy nên KHÔNG tạo phiên bản mới. */
+  changed: boolean;
+  criteria: AdminRubricCriterion[];
+  /** Câu mẫu để chấm thử — client CHỌN từ đây rồi gửi `sampleQuestionId` (không hardcode phía FE). */
+  sampleQuestions: AdminSampleQuestion[];
+};
+export type AdminRubricMatrixRow = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; version: number; criteriaCount: number; withLevelsCount: number };
+export type AdminRubricVersionItem = { version: number; isActive: boolean; criteriaCount: number; withLevelsCount: number };
+/** Body của `PUT /admin/rubrics/{jobCategory}` — CHỈ ba trường admin được sửa (name/weight/maxScore/scope khoá bằng cấu trúc ở BE). */
+export type AdminRubricCriterionInput = { id: string; description: string | null; levels: AdminRubricLevel[] | null };
+export type AdminRubricUpsertInput = { criteria: AdminRubricCriterionInput[] };
+export type AdminSuggestedCriterionLevels = { criterionId: string; name: string; maxScore: number; levels: AdminRubricLevel[] };
+export type AdminSuggestLevelsResponse = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; rubricVersion: number; criteria: AdminSuggestedCriterionLevels[] };
+export type AdminRubricPreviewRequest = { question?: string | null; customAnswer?: string | null; seniority?: string | null; sampleQuestionId?: string | null };
+export type AdminRubricPreviewStatus = 'Running' | 'Succeeded' | 'Failed';
+export type AdminRubricPreviewBand = 'Weak' | 'Good' | 'Excellent' | 'Custom';
+export type AdminRubricPreviewScore = { criterionId: string; criterionName: string; maxScore: number; expectedLevel: number; actualScore: number; levelMatched: number | null; reasoning: string | null };
+/** `expectedPct/actualPct` = TRUNG BÌNH CỘNG các tiêu chí (INT-10, B2C) — KHÔNG phải weighted như B2B. */
+export type AdminRubricPreviewSample = { band: AdminRubricPreviewBand; answerText: string; wordCount: number; expectedPct: number; actualPct: number; scores: AdminRubricPreviewScore[] };
+export type AdminRubricPreviewCriterion = { criterionId: string; name: string; weight: number; maxScore: number; levels: AdminRubricLevel[] };
+export type AdminRubricPreviewRun = {
+  id: string;
+  status: AdminRubricPreviewStatus;
+  jobCategory: AdminRubricJobCategory;
+  language: AdminRubricLanguage;
+  rubricVersion: number;
+  questionText: string;
+  rubricFingerprint: string;
+  promptVersion: number | null;
+  deliveryMetricsAvailable: boolean;
+  lengthParityWarning: boolean;
+  /** Lượt miễn phí còn lại cho (nghề, ngôn ngữ, phiên bản) — trần 5, hết ⇒ BE 429. */
+  freeRunsRemaining: number;
+  rubric: AdminRubricPreviewCriterion[];
+  samples: AdminRubricPreviewSample[];
+  errorReason: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
 
 /**
  * Ngưỡng ĐẠT của lộ trình theo cấp độ. Backend luôn trả một phần tử cho MỌI cấp độ.
