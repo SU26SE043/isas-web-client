@@ -62,12 +62,41 @@ export type AdminRubricCriterionInput = { id: string; description: string | null
 export type AdminRubricUpsertInput = { criteria: AdminRubricCriterionInput[] };
 export type AdminSuggestedCriterionLevels = { criterionId: string; name: string; maxScore: number; levels: AdminRubricLevel[] };
 export type AdminSuggestLevelsResponse = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; rubricVersion: number; criteria: AdminSuggestedCriterionLevels[] };
-export type AdminRubricPreviewRequest = { question?: string | null; customAnswer?: string | null; seniority?: string | null; sampleQuestionId?: string | null };
+/** Số đo cách nói (F11) của một bản ghi — khoá camelCase theo `DeliveryMetricsDto` (BE). */
+export type AdminDeliveryMetrics = {
+  metricsVersion: number | null;
+  audioSec: number | null;
+  speechSec: number | null;
+  wordCount: number | null;
+  speechRateWpm: number | null;
+  longestPauseSec: number | null;
+  pauseCount: number | null;
+  silenceRatio: number | null;
+  fillerCount: number | null;
+  fillerPer100Words: number | null;
+  fillerBreakdown: Record<string, number>;
+};
+/** Kết quả chép lời bản ghi của chính người dùng (POST …/preview/transcribe). `noSpeech` = VAD không thấy tiếng nói. */
+export type AdminPreviewTranscribeResult = { transcript: string; deliveryMetrics: AdminDeliveryMetrics | null; transcriptEngine: string | null; noSpeech: boolean };
+/**
+ * `includeAiSamples=false` ⇒ KHÔNG bắt AI viết 3 bài mẫu, chỉ chấm `customAnswer` (bắt buộc có).
+ * `deliveryMetrics` = số đo của chính bản ghi (echo từ bước chép lời) ⇒ BE đo luôn tiêu chí trôi chảy.
+ */
+export type AdminRubricPreviewRequest = {
+  question?: string | null;
+  customAnswer?: string | null;
+  seniority?: string | null;
+  sampleQuestionId?: string | null;
+  includeAiSamples?: boolean;
+  deliveryMetrics?: AdminDeliveryMetrics | null;
+};
 export type AdminRubricPreviewStatus = 'Running' | 'Succeeded' | 'Failed';
 export type AdminRubricPreviewBand = 'Weak' | 'Good' | 'Excellent' | 'Custom';
-export type AdminRubricPreviewScore = { criterionId: string; criterionName: string; maxScore: number; expectedLevel: number; actualScore: number; levelMatched: number | null; reasoning: string | null };
+/** `measured` = điểm ĐO từ bản ghi âm (không do AI chấm) — chỉ có ở bài Custom đi từ mic. */
+export type AdminRubricPreviewScore = { criterionId: string; criterionName: string; maxScore: number; expectedLevel: number; actualScore: number; levelMatched: number | null; reasoning: string | null; measured: boolean };
 /** `expectedPct/actualPct` = TRUNG BÌNH CỘNG các tiêu chí (INT-10, B2C) — KHÔNG phải weighted như B2B. */
-export type AdminRubricPreviewSample = { band: AdminRubricPreviewBand; answerText: string; wordCount: number; expectedPct: number; actualPct: number; scores: AdminRubricPreviewScore[] };
+/** `deliveryMetrics` chỉ có ở bài `Custom` đi từ bản ghi âm; 3 bài AI và bài dán tay luôn `null`. */
+export type AdminRubricPreviewSample = { band: AdminRubricPreviewBand; answerText: string; wordCount: number; expectedPct: number; actualPct: number; scores: AdminRubricPreviewScore[]; deliveryMetrics: AdminDeliveryMetrics | null };
 export type AdminRubricPreviewCriterion = { criterionId: string; name: string; weight: number; maxScore: number; levels: AdminRubricLevel[] };
 export type AdminRubricPreviewRun = {
   id: string;

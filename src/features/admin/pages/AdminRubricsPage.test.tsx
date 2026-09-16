@@ -31,9 +31,9 @@ const run: AdminRubricPreviewRun = {
   deliveryMetricsAvailable: false, lengthParityWarning: false, freeRunsRemaining: 4,
   rubric: [{ criterionId: 'c-1', name: 'Giao tiếp & trình bày', weight: 0.15, maxScore: 5, levels: rubric.criteria[0].levels }],
   samples: [
-    { band: 'Weak', answerText: 'bài yếu', wordCount: 20, expectedPct: 20, actualPct: 48.4, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 1, actualScore: 2, levelMatched: 2, reasoning: 'ngắn' }] },
-    { band: 'Good', answerText: 'bài khá', wordCount: 60, expectedPct: 60, actualPct: 66.4, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 3, actualScore: 3, levelMatched: 3, reasoning: 'ổn' }] },
-    { band: 'Excellent', answerText: 'bài xuất sắc', wordCount: 120, expectedPct: 100, actualPct: 70.2, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 5, actualScore: 4, levelMatched: 4, reasoning: 'tốt' }] },
+    { band: 'Weak', answerText: 'bài yếu', wordCount: 20, expectedPct: 20, actualPct: 48.4, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 1, actualScore: 2, levelMatched: 2, reasoning: 'ngắn', measured: false }], deliveryMetrics: null },
+    { band: 'Good', answerText: 'bài khá', wordCount: 60, expectedPct: 60, actualPct: 66.4, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 3, actualScore: 3, levelMatched: 3, reasoning: 'ổn', measured: false }], deliveryMetrics: null },
+    { band: 'Excellent', answerText: 'bài xuất sắc', wordCount: 120, expectedPct: 100, actualPct: 70.2, scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 5, actualScore: 4, levelMatched: 4, reasoning: 'tốt', measured: false }], deliveryMetrics: null },
   ],
   errorReason: null, createdAt: '2026-09-16T09:00:00Z', completedAt: '2026-09-16T09:00:40Z',
 };
@@ -111,31 +111,69 @@ describe('AdminRubricsPage — lưu', () => {
   });
 });
 
-describe('AdminRubricsPage — chấm thử', () => {
+describe('AdminRubricsPage — tự thử thước đo', () => {
+  const customRun: AdminRubricPreviewRun = {
+    ...run, id: 'r-2', deliveryMetricsAvailable: false,
+    samples: [{ band: 'Custom', answerText: 'Bài tôi tự dán.', wordCount: 4, expectedPct: 60, actualPct: 60, deliveryMetrics: null,
+      scores: [{ criterionId: 'c-1', criterionName: 'Giao tiếp & trình bày', maxScore: 5, expectedLevel: 3, actualScore: 3, levelMatched: 3, reasoning: 'có ý chính', measured: false }] }],
+  };
+
   it('tiêu chí thiếu mốc ⇒ CẢNH BÁO nêu tên nhưng KHÔNG chặn (BE mới biết tiêu chí nào do AI chấm; tiêu chí đo bằng số cố ý 0 mốc)', async () => {
     mockHappyPath();
     renderPage();
     expect(await screen.findByText('admin.rubrics.preview.needsLevels')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'admin.rubrics.preview.run' })).toBeEnabled();
+    // Chưa có bài ⇒ nút Chấm tắt (không phải vì thiếu mốc).
+    expect(screen.getByRole('button', { name: 'admin.rubrics.try.run.free' })).toBeDisabled();
   });
 
-  it('gửi {sampleQuestionId} theo hợp đồng BE (không phải {criterionKey, answer}) và RENDER 3 bài mẫu sau khi chạy', async () => {
-    const full: AdminRubricSet = { ...rubric, criteria: rubric.criteria.map((c) => (c.levels.length ? c : { ...c, levels: rubric.criteria[0].levels })) };
-    vi.spyOn(adminRubricService, 'list').mockResolvedValue(matrix);
-    vi.spyOn(adminRubricService, 'get').mockResolvedValue(full);
-    vi.spyOn(adminRubricService, 'history').mockResolvedValue([]);
-    vi.spyOn(adminRubricService, 'previewHistory').mockResolvedValue([]);
-    const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(run);
+  it('DÁN bài → chấm CHỈ bài của mình (includeAiSamples=false, không số đo) đúng hợp đồng BE, rồi RENDER "Bài của bạn" và nói rõ trôi chảy không chấm', async () => {
+    mockHappyPath();
+    const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(customRun);
     renderPage();
-    const runButton = await screen.findByRole('button', { name: 'admin.rubrics.preview.run' });
+    const runButton = await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
     fireEvent.change(screen.getByLabelText('admin.rubrics.preview.questionSample'), { target: { value: 'q-2' } });
-    fireEvent.change(screen.getByLabelText('admin.rubrics.preview.customAnswer'), { target: { value: 'Bài tôi tự dán.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
+    expect(screen.getByText('admin.rubrics.try.chip.noAudio')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài tôi tự dán.' } });
+    expect(runButton).toBeEnabled();
     fireEvent.click(runButton);
     await waitFor(() => expect(previewSpy).toHaveBeenCalledTimes(1));
-    expect(previewSpy.mock.calls[0]).toEqual(['BE', 'vi', { sampleQuestionId: 'q-2', customAnswer: 'Bài tôi tự dán.' }]);
-    expect(JSON.stringify(previewSpy.mock.calls[0][2])).not.toMatch(/criterionKey|"answer"/);
-    // Kết quả phải HIỆN: 3 dải Yếu/Khá/Xuất sắc của lượt vừa chạy.
-    expect(await screen.findByText('employer.campaigns.rubricPreview.band.Weak')).toBeInTheDocument();
+    expect(previewSpy.mock.calls[0]).toEqual(['BE', 'vi', { sampleQuestionId: 'q-2', customAnswer: 'Bài tôi tự dán.', includeAiSamples: false }]);
+    expect(JSON.stringify(previewSpy.mock.calls[0][2])).not.toMatch(/deliveryMetrics|criterionKey|"answer"/);
+    expect(await screen.findByLabelText('admin.rubrics.try.result.yours')).toBeInTheDocument();
+    expect(screen.getByText('admin.rubrics.try.result.fluencySkipped')).toBeInTheDocument();
+    expect(screen.getAllByText('có ý chính').length).toBeGreaterThan(0);   // trích dẫn (rút gọn + đầy đủ trong <details>)
+    // Không có bài AI ⇒ không có mục so sánh 3 bài.
+    expect(screen.queryByText('admin.rubrics.try.result.aiSection')).not.toBeInTheDocument();
+  });
+
+  it('bật "3 bài AI" ⇒ gửi includeAiSamples=true và lượt có bài AI hiện mục so sánh (3 dải Yếu/Khá/Xuất sắc)', async () => {
+    mockHappyPath();
+    const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(run);
+    renderPage();
+    const runButton = await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
+    fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài tôi tự dán.' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(runButton);
+    await waitFor(() => expect(previewSpy).toHaveBeenCalledTimes(1));
+    expect(previewSpy.mock.calls[0][2]).toMatchObject({ includeAiSamples: true, customAnswer: 'Bài tôi tự dán.' });
+    expect(await screen.findByText('admin.rubrics.try.result.aiSection')).toBeInTheDocument();
+    expect(screen.getByText('employer.campaigns.rubricPreview.band.Weak')).toBeInTheDocument();
     expect(screen.getByText('employer.campaigns.rubricPreview.band.Excellent')).toBeInTheDocument();
+  });
+
+  it('đổi câu hỏi khi ĐÃ có bài ⇒ hỏi trước; huỷ thì giữ nguyên câu và bài', async () => {
+    mockHappyPath();
+    renderPage();
+    await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
+    fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài đang gõ dở.' } });
+    fireEvent.change(screen.getByLabelText('admin.rubrics.preview.questionSample'), { target: { value: 'q-2' } });
+    expect(await screen.findByText('admin.rubrics.try.changeQuestion.title')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.cancel' }));
+    await waitFor(() => expect(screen.queryByText('admin.rubrics.try.changeQuestion.title')).not.toBeInTheDocument());
+    expect(screen.getByLabelText('admin.rubrics.preview.questionSample')).toHaveValue('q-1');
+    expect(screen.getByLabelText('admin.rubrics.try.mode.paste')).toHaveValue('Bài đang gõ dở.');
   });
 });

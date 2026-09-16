@@ -23,12 +23,20 @@ const run = {
   rubric: rubric.criteria.map((c) => ({ criterionId: c.id, name: c.name, weight: c.weight, maxScore: c.maxScore, levels: c.levels })),
   samples: ['Weak', 'Good', 'Excellent'].map((band, i) => ({
     band, answerText: `${band} sample answer`, wordCount: 40 * (i + 1), expectedPct: [20, 60, 100][i], actualPct: [48.4, 66.4, 70.2][i],
-    scores: rubric.criteria.map((c) => ({ criterionId: c.id, criterionName: c.name, maxScore: 5, expectedLevel: [1, 3, 5][i], actualScore: [2, 3, 4][i], levelMatched: [2, 3, 4][i], reasoning: 'because' })),
+    scores: rubric.criteria.map((c) => ({ criterionId: c.id, criterionName: c.name, maxScore: 5, expectedLevel: [1, 3, 5][i], actualScore: [2, 3, 4][i], levelMatched: [2, 3, 4][i], reasoning: 'because', measured: false })),
+    deliveryMetrics: null,
   })),
   errorReason: null, createdAt: '2026-09-16T09:00:00Z', completedAt: '2026-09-16T09:00:40Z',
 };
 
-test('admin sees real level descriptors, saves only the allowed fields, and runs a preview that renders', async ({ page }) => {
+// Lượt "tự thử": bài của CHÍNH người dùng (dán), không có 3 bài AI, có hàng đo trôi chảy giả lập là KHÔNG (dán tay).
+const customRun = {
+  ...run, id: 'r-2', deliveryMetricsAvailable: false,
+  samples: [{ band: 'Custom', answerText: 'My own answer.', wordCount: 3, expectedPct: 60, actualPct: 60, deliveryMetrics: null,
+    scores: rubric.criteria.map((c) => ({ criterionId: c.id, criterionName: c.name, maxScore: 5, expectedLevel: 3, actualScore: 3, levelMatched: 3, reasoning: 'has a main point', measured: false })) }],
+};
+
+test('admin sees real level descriptors, saves only the allowed fields, and grades their OWN pasted answer (no AI samples)', async ({ page }) => {
   const puts: unknown[] = [];
   const previews: unknown[] = [];
   await page.route('**/api/v1/interview/admin/rubrics**', async (route) => {
@@ -39,8 +47,9 @@ test('admin sees real level descriptors, saves only the allowed fields, and runs
     if (url.pathname.endsWith('/history')) return json([{ version: 2, isActive: true, criteriaCount: 2, withLevelsCount: 2 }]);
     if (url.pathname.endsWith('/preview')) {
       if (req.method() === 'GET') return json([]);
-      previews.push(req.postDataJSON());
-      return json(run);
+      const body = req.postDataJSON();
+      previews.push(body);
+      return json(body.includeAiSamples ? run : customRun);
     }
     if (req.method() === 'PUT') { puts.push(req.postDataJSON()); return json({ ...rubric, version: 3, changed: true }); }
     return json(rubric);
@@ -71,10 +80,26 @@ test('admin sees real level descriptors, saves only the allowed fields, and runs
   });
   expect(JSON.stringify(puts[0])).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"/);
 
-  // (3) Chấm thử: gửi sampleQuestionId (không phải criterionKey), kết quả 3 bài HIỆN.
-  await page.getByRole('button', { name: 'Run test' }).click();
-  await expect(page.getByText('Weak', { exact: true })).toBeVisible();
-  await expect(page.getByText('Excellent', { exact: true })).toBeVisible();
+  // (3) Tự thử: chưa có bài ⇒ nút Chấm tắt; chuyển "Paste" → dán bài → Chấm gửi ĐÚNG hợp đồng
+  // (sampleQuestionId + customAnswer + includeAiSamples=false, KHÔNG deliveryMetrics) → hiện "Your answer",
+  // nói rõ trôi chảy không chấm vì không có bản ghi; không có mục 3 bài AI.
+  const grade = page.getByRole('button', { name: /Grade this answer/ });
+  await expect(grade).toBeDisabled();
+  await page.getByRole('button', { name: 'Paste', exact: true }).click();
+  await page.getByLabel('Paste', { exact: true }).fill('My own answer.');
+  await expect(grade).toBeEnabled();
+  await grade.click();
+  await expect(page.getByRole('region', { name: 'Your answer' })).toBeVisible();
+  await expect(page.getByText(/A pasted answer has no recording/)).toBeVisible();
+  await expect(page.getByText(/Compared with 3 AI-written samples/)).toHaveCount(0);
   expect(previews).toHaveLength(1);
-  expect(previews[0]).toEqual({ sampleQuestionId: 'q-1' });
+  expect(previews[0]).toEqual({ sampleQuestionId: 'q-1', customAnswer: 'My own answer.', includeAiSamples: false });
+
+  // (4) Bật "3 bài AI" → lượt thứ hai mang includeAiSamples=true và mục so sánh hiện 3 dải.
+  await page.getByRole('checkbox').check();
+  await grade.click();
+  await expect(page.getByText(/Compared with 3 AI-written samples/)).toBeVisible();
+  await expect(page.getByText('Weak', { exact: true })).toBeVisible();
+  expect(previews).toHaveLength(2);
+  expect(previews[1]).toMatchObject({ includeAiSamples: true });
 });

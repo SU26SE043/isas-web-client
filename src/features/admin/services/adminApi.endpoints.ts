@@ -14,6 +14,7 @@ export const adminApiEndpoints = {
   rubricHistory: (category: string) => `${interview}/rubrics/${encodeURIComponent(category)}/history`,
   rubricSuggestLevels: (category: string) => `${interview}/rubrics/${encodeURIComponent(category)}/levels/suggest`,
   rubricPreview: (category: string) => `${interview}/rubrics/${encodeURIComponent(category)}/preview`,
+  rubricPreviewTranscribe: (category: string) => `${interview}/rubrics/${encodeURIComponent(category)}/preview/transcribe`,
   roadmapThresholds: `${interview}/roadmap-thresholds`,
   roadmapThreshold: (level: string) => `${interview}/roadmap-thresholds/${encodeURIComponent(level)}`,
   knowledge: `${interview}/knowledge`,

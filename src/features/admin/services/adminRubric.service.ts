@@ -8,6 +8,7 @@ import type {
 import {
   parseAdminRubricHistory,
   parseAdminRubricMatrix,
+  parseAdminPreviewTranscribe,
   parseAdminRubricPreviewHistory,
   parseAdminRubricPreviewRun,
   parseAdminRubricSet,
@@ -39,6 +40,12 @@ export const adminRubricService = {
     parseAdminSuggestLevels((await apiClient.post(adminApiEndpoints.rubricSuggestLevels(category), undefined, { params: params(language, seniority) })).data),
   preview: async (category: AdminRubricJobCategory, language: AdminRubricLanguage, input: AdminRubricPreviewRequest) =>
     parseAdminRubricPreviewRun((await apiClient.post(adminApiEndpoints.rubricPreview(category), input, { params: { language } })).data),
+  /** Chép lời bản ghi của chính người dùng — không tốn lượt, không lưu; timeout dài vì Whisper dự phòng chậm. */
+  transcribeForPreview: async (category: AdminRubricJobCategory, language: AdminRubricLanguage, file: Blob, fileName: string) => {
+    const form = new FormData();
+    form.append('file', file, fileName);
+    return parseAdminPreviewTranscribe((await apiClient.post(adminApiEndpoints.rubricPreviewTranscribe(category), form, { params: { language }, timeout: 130_000, headers: { 'Content-Type': 'multipart/form-data' } })).data);
+  },
   previewHistory: async (category: AdminRubricJobCategory, language: AdminRubricLanguage) =>
     parseAdminRubricPreviewHistory((await apiClient.get(adminApiEndpoints.rubricPreview(category), { params: { language } })).data),
 };

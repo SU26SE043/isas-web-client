@@ -1,6 +1,8 @@
 import type { RubricPreviewRun } from '@/features/employer-campaigns/types/rubricPreview.types';
 import { normalizeCriterionLevels } from '@/features/employer-campaigns/utils/criterionLevelRules';
 import type {
+  AdminDeliveryMetrics,
+  AdminPreviewTranscribeResult,
   AdminRubricCriterion,
   AdminRubricJobCategory,
   AdminRubricLanguage,
@@ -134,6 +136,26 @@ export function parseAdminSuggestLevels(raw: unknown): AdminSuggestLevelsRespons
   };
 }
 
+/** Số đo cách nói: mọi trường số đều có thể thiếu/null (bản ghi cũ, đường degrade) — không ném, để `null`. */
+export function parseAdminDeliveryMetrics(raw: unknown): AdminDeliveryMetrics | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const r = raw as Record<string, unknown>;
+  const breakdown = r.fillerBreakdown && typeof r.fillerBreakdown === 'object' && !Array.isArray(r.fillerBreakdown)
+    ? Object.fromEntries(Object.entries(r.fillerBreakdown as Record<string, unknown>).filter((entry): entry is [string, number] => typeof entry[1] === 'number'))
+    : {};
+  return {
+    metricsVersion: optNum(r, 'metricsVersion'), audioSec: optNum(r, 'audioSec'), speechSec: optNum(r, 'speechSec'),
+    wordCount: optNum(r, 'wordCount'), speechRateWpm: optNum(r, 'speechRateWpm'), longestPauseSec: optNum(r, 'longestPauseSec'),
+    pauseCount: optNum(r, 'pauseCount'), silenceRatio: optNum(r, 'silenceRatio'), fillerCount: optNum(r, 'fillerCount'),
+    fillerPer100Words: optNum(r, 'fillerPer100Words'), fillerBreakdown: breakdown,
+  };
+}
+
+export function parseAdminPreviewTranscribe(raw: unknown): AdminPreviewTranscribeResult {
+  const r = record(raw, 'transcribe');
+  return { transcript: str(r, 'transcript'), deliveryMetrics: parseAdminDeliveryMetrics(r.deliveryMetrics), transcriptEngine: optStr(r, 'transcriptEngine'), noSpeech: bool(r, 'noSpeech') };
+}
+
 export function parseAdminRubricPreviewRun(raw: unknown): AdminRubricPreviewRun {
   const r = record(raw, 'preview');
   const status = str(r, 'status');
@@ -166,8 +188,9 @@ export function parseAdminRubricPreviewRun(raw: unknown): AdminRubricPreviewRun 
         actualPct: num(s, 'actualPct'),
         scores: arr(s, 'scores').map((score) => {
           const sc = record(score, 'scores[]');
-          return { criterionId: str(sc, 'criterionId'), criterionName: str(sc, 'criterionName'), maxScore: num(sc, 'maxScore'), expectedLevel: num(sc, 'expectedLevel'), actualScore: num(sc, 'actualScore'), levelMatched: optNum(sc, 'levelMatched'), reasoning: optStr(sc, 'reasoning') };
+          return { criterionId: str(sc, 'criterionId'), criterionName: str(sc, 'criterionName'), maxScore: num(sc, 'maxScore'), expectedLevel: num(sc, 'expectedLevel'), actualScore: num(sc, 'actualScore'), levelMatched: optNum(sc, 'levelMatched'), reasoning: optStr(sc, 'reasoning'), measured: sc.measured === true };
         }),
+        deliveryMetrics: parseAdminDeliveryMetrics(s.deliveryMetrics),
       };
     }),
     errorReason: optStr(r, 'errorReason'),
