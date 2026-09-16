@@ -61,9 +61,12 @@ describe('AdminPromptsPage', () => {
     vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
     renderPage();
     expect((await screen.findAllByText('admin.prompts.key.questions.guidance')).length).toBeGreaterThan(0);
-    for (const dead of ['roadmap.guidance', 'lesson_theory.guidance', 'summarize_session.guidance', 'decide_next.guidance', 'criteria.guidance']) {
-      expect(screen.queryByText(dead)).not.toBeInTheDocument();
-    }
+    // Sidebar chỉ còn ĐÚNG 2 mục sống. Đo bằng số nút (aria-pressed) — không đo bằng "không thấy chuỗi khoá
+    // thô", vì khoá chết không có nhãn sẽ hiện là "admin.prompts.key.unknown" chứ không hiện khoá thô
+    // (mutation bỏ lọc từng XANH với phép đo cũ).
+    const items = screen.getAllByRole('button', { pressed: false }).concat(screen.getAllByRole('button', { pressed: true }));
+    expect(items).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /admin\.prompts\.key\.unknown/ })).not.toBeInTheDocument();
     // Nhãn người đọc thay khoá máy ở sidebar; khoá máy chỉ còn ở header editor (font-mono).
     expect(screen.getByRole('button', { name: /admin\.prompts\.key\.seniority\.profile/ })).toBeInTheDocument();
   });
