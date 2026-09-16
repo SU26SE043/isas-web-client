@@ -9,6 +9,7 @@ import {
   LogOut,
   SlidersHorizontal,
   Target,
+  ReceiptText,
   Users,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
@@ -47,6 +48,7 @@ export const AdminDashboardLayout: React.FC = () => {
       ] },
       { key: 'money', items: [
         { to: '/admin/billing', label: t('admin.nav.billing'), icon: <CreditCard className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/orders', label: t('admin.nav.orders'), icon: <ReceiptText className="h-4 w-4" aria-hidden /> },
       ] },
       { key: 'aiQuality', items: [
         { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },

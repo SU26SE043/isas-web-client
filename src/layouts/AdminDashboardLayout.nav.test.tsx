@@ -37,9 +37,9 @@ describe('AdminDashboardLayout — nav 3 nhóm', () => {
     const nav = screen.getByRole('navigation', { name: 'Admin' });
     const byName = (name: string) => within(nav).getByRole('group', { name });
     expect(linksOf(byName('admin.nav.group.operations'))).toEqual(['/admin/dashboard', '/admin/users', '/admin/organizations', '/admin/campaigns']);
-    expect(linksOf(byName('admin.nav.group.money'))).toEqual(['/admin/billing']);
+    expect(linksOf(byName('admin.nav.group.money'))).toEqual(['/admin/billing', '/admin/orders']);
     expect(linksOf(byName('admin.nav.group.aiQuality'))).toEqual(['/admin/rubrics', '/admin/prompts', '/admin/roadmap-thresholds']);
     // Không mục nào bị rơi hay nhân đôi khi chia nhóm.
-    expect(within(nav).getAllByRole('link')).toHaveLength(8);
+    expect(within(nav).getAllByRole('link')).toHaveLength(9);
   });
 });
