@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/shared/languages';
 import type { PromptTemplate } from '../../types/adminApi.types';
 
-/** `updatedBy` là Guid người sửa (BE chưa snapshot email — đợt B). Không in Guid thô ra mặt admin; giữ trong `title` để tra. */
+/** Người sửa hiện bằng EMAIL (`updatedByEmail`, BE snapshot lúc lưu — B4). Bản cũ/token thiếu claim ⇒ "không rõ người sửa"; Guid `updatedBy` chỉ giữ trong `title` để tra, không in ra mặt admin. */
 export function PromptHistoryList({ items, loading }: { items: PromptTemplate[]; loading: boolean }) {
   const { t, language } = useLanguage();
   const when = (iso: string | null | undefined) => {
@@ -19,7 +19,7 @@ export function PromptHistoryList({ items, loading }: { items: PromptTemplate[];
             {items.map((item) => (
               <li key={`${item.key}-${item.version}`} className="rounded-lg border border-subtle bg-surface-overlay/60 p-3">
                 <div className="flex justify-between gap-3 text-sm">
-                  <span title={item.updatedBy ?? undefined}>{item.updatedBy ? t('admin.prompts.adminActor') : t('admin.prompts.system')}</span>
+                  <span title={item.updatedBy ?? undefined}>{item.updatedByEmail ?? (item.updatedBy ? t('admin.prompts.unknownActor') : t('admin.prompts.system'))}</span>
                   <span className="text-muted-foreground">v{item.version} · {when(item.createdAt)}</span>
                 </div>
                 {item.changeNote ? <p className="mt-1 text-sm text-muted-foreground">{item.changeNote}</p> : null}

@@ -18,7 +18,7 @@ export type InterviewAdminAnalytics = {
  * chuỗi = câu mẫu (có thể chứa `{role}`/`{job_category}`); `null`/vắng = BE KHÔNG lấy được từ AIService
  * (fail-open) — phải nói "chưa hiện được", không suy thành "mặc định trống".
  */
-export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null; defaultBody?: string | null };
+export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null; defaultBody?: string | null; /** B4 (2026-09-16): email admin snapshot lúc lưu; `null` = bản cũ / token thiếu claim ⇒ hiện "không rõ", KHÔNG hiện Guid. */ updatedByEmail?: string | null };
 export type UpdatePromptInput = { body: string; changeNote?: string };
 
 /**
@@ -41,9 +41,16 @@ export type AdminRubricCriterion = {
   maxScore: number;
   /** `Always` = chấm mọi câu · `WhenTargeted` = chỉ khi câu hỏi nhắm tới (INT-18). */
   scoringScope: string;
+  /**
+   * `Ai` = LLM chấm, mốc là THƯỚC ĐO · `DeliveryMetrics` = tính từ số đo giọng nói (F11), không gửi LLM —
+   * mốc chỉ là lời giải nghĩa, chấm thử KHÔNG đòi. BE cũ không trả ⇒ parser mặc định `Ai` (chiều an toàn:
+   * đòi mốc thừa, không bỏ sót).
+   */
+  scoringMethod: AdminRubricScoringMethod;
   /** `[]` = CHƯA khai mốc ⇒ chấm theo dải mặc định (hợp lệ, không phải lỗi). */
   levels: AdminRubricLevel[];
 };
+export type AdminRubricScoringMethod = 'Ai' | 'DeliveryMetrics';
 export type AdminSampleQuestion = { id: string; text: string };
 export type AdminRubricSet = {
   jobCategory: AdminRubricJobCategory;

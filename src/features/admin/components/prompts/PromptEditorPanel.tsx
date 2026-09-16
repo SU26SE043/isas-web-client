@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,13 @@ export function PromptEditorPanel({ prompt, info, saving, onSave, onReset }: Pro
             <Badge variant={isDefault ? 'outline' : 'info'}>{isDefault ? t('admin.prompts.defaultBadge') : t('admin.prompts.customBadge')}</Badge>
           </div>
         </div>
+        {info.risk === 'scoring' ? (
+          // Khe đổi CÁCH CHẤM thì sửa xong phải thấy được hậu quả — đường ngắn nhất là tự nói/dán một bài rồi
+          // xem hệ chấm ra sao (tab thử, ghim URL). Khe SINH câu hỏi không có nút này: chấm thử không đo nó.
+          <Button render={<Link to="/admin/rubrics?tab=try" />} variant="outline" size="sm" className="shrink-0">
+            🎙 {t('admin.prompts.tryRubric')}
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{t(info.kind === 'replace' ? 'admin.prompts.kindHint.replace' : 'admin.prompts.kindHint.append')} {t('admin.prompts.effectHint')}</p>

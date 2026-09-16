@@ -74,14 +74,18 @@ describe('AdminPromptsPage', () => {
   it('khoá ĐẦU tự chọn cũng tải lịch sử (bản cũ: selectedKey khởi tạo rỗng ⇒ history disabled)', async () => {
     vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([prompt]);
     const history = vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([
-      { key: prompt.key, version: 1, body: 'x', updatedBy: '11111111-2222-3333-4444-555555555555', changeNote: 'lý do đổi', createdAt: '2026-09-16T01:02:03Z' },
+      { key: prompt.key, version: 2, body: 'y', updatedBy: '11111111-2222-3333-4444-555555555555', updatedByEmail: 'admin@isas.local', changeNote: 'lý do đổi', createdAt: '2026-09-16T01:02:03Z' },
+      // Bản cũ (trước B4) không có email ⇒ "không rõ người sửa", KHÔNG lộ Guid, KHÔNG gọi là "Hệ thống" (có người sửa, chỉ không biết ai).
+      { key: prompt.key, version: 1, body: 'x', updatedBy: '11111111-2222-3333-4444-555555555555', updatedByEmail: null, changeNote: 'lần đầu', createdAt: '2026-09-15T01:02:03Z' },
     ]);
     renderPage();
     expect(await screen.findByText('lý do đổi')).toBeInTheDocument();
     expect(history).toHaveBeenCalledWith(prompt.key);
-    // Không in Guid thô ra mặt admin.
+    // B4: hiện EMAIL người sửa; không in Guid thô ra mặt admin.
+    expect(screen.getByText('admin@isas.local')).toBeInTheDocument();
     expect(screen.queryByText('11111111-2222-3333-4444-555555555555')).not.toBeInTheDocument();
-    expect(screen.getByText('admin.prompts.adminActor')).toBeInTheDocument();
+    expect(screen.getByText('admin.prompts.unknownActor')).toBeInTheDocument();
+    expect(screen.queryByText('admin.prompts.system')).not.toBeInTheDocument();
   });
 
   it('khe CHẤM mang cảnh báo "ảnh hưởng điểm số"; khe SINH thì không', async () => {
@@ -94,8 +98,13 @@ describe('AdminPromptsPage', () => {
     // Sắp theo nhóm: questions trước scoring ⇒ khoá đầu là questions.guidance (không cảnh báo).
     await screen.findAllByText('admin.prompts.key.questions.guidance');
     expect(screen.queryByText('admin.prompts.riskHint.scoring')).not.toBeInTheDocument();
+    // Khe SINH: không có nút tự thử (chấm thử không đo thứ này).
+    expect(screen.queryByRole('button', { name: /admin\.prompts\.tryRubric/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /admin\.prompts\.key\.scoring\.extra_guidance/ }));
     expect(await screen.findByText('admin.prompts.riskHint.scoring')).toBeInTheDocument();
+    // Khe CHẤM: sửa xong phải thấy được hậu quả ⇒ nút nhảy thẳng sang tab tự thử (URL ghim `?tab=try`).
+    // `Button render={<Link/>}` gắn role="button" lên <a> ⇒ tìm theo role button rồi kiểm href.
+    expect(screen.getByRole('button', { name: /admin\.prompts\.tryRubric/ })).toHaveAttribute('href', '/admin/rubrics?tab=try');
   });
 
   it('ô ĐỔ SẴN đúng câu mặc định đang chạy; Lưu tắt khi chưa đổi gì, bật khi sửa và gửi đúng chữ đã sửa (bản cũ: ô trống câm)', async () => {
