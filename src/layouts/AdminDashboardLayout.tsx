@@ -9,6 +9,7 @@ import {
   LogOut,
   SlidersHorizontal,
   Target,
+  BookOpen,
   ReceiptText,
   Users,
 } from 'lucide-react';
@@ -54,6 +55,7 @@ export const AdminDashboardLayout: React.FC = () => {
         { to: '/admin/rubrics', label: t('admin.nav.rubrics'), icon: <ClipboardList className="h-4 w-4" aria-hidden /> },
         { to: '/admin/prompts', label: t('admin.nav.prompts'), icon: <SlidersHorizontal className="h-4 w-4" aria-hidden /> },
         { to: '/admin/roadmap-thresholds', label: t('admin.nav.roadmapThresholds'), icon: <Target className="h-4 w-4" aria-hidden /> },
+        { to: '/admin/knowledge', label: t('admin.nav.knowledge'), icon: <BookOpen className="h-4 w-4" aria-hidden /> },
       ] },
     ],
     [t],
