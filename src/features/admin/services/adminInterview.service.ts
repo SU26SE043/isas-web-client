@@ -17,5 +17,6 @@ export const adminInterviewService = {
   deleteKnowledge: async (id: string) => { await apiClient.delete(adminApiEndpoints.knowledgeItem(id)); },
   reindexKnowledge: async (id: string) => (await apiClient.post<KnowledgeSource>(adminApiEndpoints.knowledgeReindex(id))).data,
   searchContext7: async (libraryName: string, query?: string) => (await apiClient.get<Context7Library[]>(adminApiEndpoints.context7Search, { params: { libraryName, ...(query?.trim() ? { query: query.trim() } : {}) } })).data,
-  ingestContext7: async (input: IngestContext7Input) => (await apiClient.post<KnowledgeSource[]>(adminApiEndpoints.context7Ingest, input)).data,
+  // BE `Context7IngestAsync` trả MỘT nguồn (201 + `KnowledgeSourceResponse`), không phải mảng — khai mảng là bảng render 0 dòng im lặng.
+  ingestContext7: async (input: IngestContext7Input) => (await apiClient.post<KnowledgeSource>(adminApiEndpoints.context7Ingest, input)).data,
 };

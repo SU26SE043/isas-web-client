@@ -5,6 +5,10 @@ import { AdminBillingPage } from '@/features/admin/pages/AdminBillingPage';
 import { AdminCampaignsPage } from '@/features/admin/pages/AdminCampaignsPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
+import { AdminOrdersPage } from '@/features/admin/pages/AdminOrdersPage';
+import { AdminKnowledgePage } from '@/features/admin/pages/AdminKnowledgePage';
+import { AdminGrantsPage } from '@/features/admin/pages/AdminGrantsPage';
+import { AdminPlansPage } from '@/features/admin/pages/AdminPlansPage';
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 import { AdminPromptsPage } from '@/features/admin/pages/AdminPromptsPage';
 import { AdminRubricsPage } from '@/features/admin/pages/AdminRubricsPage';
@@ -31,12 +35,16 @@ export const adminRoutes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <AdminDashboardPage /> },
               { path: 'billing', element: <AdminBillingPage /> },
+              { path: 'orders', element: <AdminOrdersPage /> },
+              { path: 'grants', element: <AdminGrantsPage /> },
+              { path: 'plans', element: <AdminPlansPage /> },
               { path: 'users', element: <AdminUsersPage /> },
               { path: 'organizations', element: <AdminOrganizationsPage /> },
               { path: 'campaigns', element: <AdminCampaignsPage /> },
               { path: 'prompts', element: <AdminPromptsPage /> },
               { path: 'rubrics', element: <AdminRubricsPage /> },
               { path: 'roadmap-thresholds', element: <AdminRoadmapThresholdsPage /> },
+              { path: 'knowledge', element: <AdminKnowledgePage /> },
               { path: '*', element: <Navigate to="/admin/dashboard" replace /> },
             ],
           },

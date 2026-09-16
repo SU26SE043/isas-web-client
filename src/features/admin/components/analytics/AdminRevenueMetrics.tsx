@@ -8,16 +8,10 @@ import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { CHART_CATEGORICAL, CHART_GRID, CHART_TOOLTIP_STYLE } from '@/shared/charts/chartColors';
 import { useAdminRevenue } from '../../hooks/useAdminRevenue';
+import { compactAmount } from '../../utils/adminFormat';
 import type { AdminAnalyticsGranularity } from '../../types/adminAnalytics.types';
 
 const money = (value: number, locale: string) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
-const compactAmount = (value: number) => {
-  const absolute = Math.abs(value);
-  if (absolute >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(absolute >= 10_000_000_000 ? 0 : 1)}B`;
-  if (absolute >= 1_000_000) return `${(value / 1_000_000).toFixed(absolute >= 10_000_000 ? 0 : 1)}M`;
-  if (absolute >= 1_000) return `${(value / 1_000).toFixed(absolute >= 10_000 ? 0 : 1)}K`;
-  return String(Math.round(value));
-};
 
 export function AdminRevenueMetrics({ groupBy }: { groupBy: AdminAnalyticsGranularity }) {
   const { t, language } = useLanguage();

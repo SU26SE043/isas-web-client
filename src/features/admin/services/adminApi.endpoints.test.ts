@@ -22,5 +22,7 @@ describe('adminApiEndpoints', () => {
     expect(adminApiEndpoints.refundSettle('order-1')).toContain('/refund/settle');
     expect(adminApiEndpoints.refundPayout('order-1')).toContain('/refund/payout');
     expect(adminApiEndpoints.plans).toBe('/api/v1/payment/admin/plans');
+    expect(adminApiEndpoints.postpaidOverview).toBe('/api/v1/payment/admin/invoices/postpaid-overview');
+    expect(adminApiEndpoints.grantSubscription).toBe('/api/v1/payment/admin/subscriptions/grant');
   });
 });

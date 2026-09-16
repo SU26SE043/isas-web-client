@@ -13,13 +13,117 @@ export type InterviewAdminAnalytics = {
   buckets: Array<{ periodStart: string; created: number; scored: number; failed: number; abandoned: number }>;
 };
 
-export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null };
+/**
+ * `defaultBody` (2026-09-16): bản mặc định trong mã AIService — `""` = khe THÊM mặc định trống;
+ * chuỗi = câu mẫu (có thể chứa `{role}`/`{job_category}`); `null`/vắng = BE KHÔNG lấy được từ AIService
+ * (fail-open) — phải nói "chưa hiện được", không suy thành "mặc định trống".
+ */
+export type PromptTemplate = { key: string; version: number; body: string | null; updatedBy?: string | null; changeNote?: string | null; createdAt?: string | null; defaultBody?: string | null; /** B4 (2026-09-16): email admin snapshot lúc lưu; `null` = bản cũ / token thiếu claim ⇒ hiện "không rõ", KHÔNG hiện Guid. */ updatedByEmail?: string | null };
 export type UpdatePromptInput = { body: string; changeNote?: string };
 
-export type RubricLevel = { score: number; description: string };
-export type RubricCriterion = { id?: string; key: string; name?: string; levels: RubricLevel[] };
-export type RubricSet = { category: string; language: 'vi' | 'en'; version: number; criteria: RubricCriterion[]; updatedAt?: string | null; updatedBy?: string | null };
-export type RubricPreviewInput = { criterionKey: string; answer: string };
+/**
+ * Bộ chuẩn B2C do admin quản (BC-8) — hợp đồng KHỚP `AdminRubric.cs` + `AdminRubricPreview.cs`
+ * (InterviewService, camelCase, enum `JobCategory` là chuỗi `FE|BE|BA`).
+ *
+ * Bản trước của các type này viết theo tưởng tượng (`level.description`, `criterion.key`,
+ * `category`) trong khi BE trả `descriptor`, `id`, `jobCategory` ⇒ bảng mốc luôn trống, PUT gửi
+ * `descriptor` cũ nguyên xi nên BE thấy không đổi gì và trả 200 `changed:false` — admin tưởng đã
+ * lưu. Từ đây mọi tên trường phải lấy từ DTO BE, không đặt tên "cho dễ đọc".
+ */
+export type AdminRubricLanguage = 'vi' | 'en';
+export type AdminRubricJobCategory = 'FE' | 'BE' | 'BA';
+export type AdminRubricLevel = { score: number; descriptor: string };
+export type AdminRubricCriterion = {
+  id: string;
+  name: string;
+  description: string | null;
+  weight: number;
+  maxScore: number;
+  /** `Always` = chấm mọi câu · `WhenTargeted` = chỉ khi câu hỏi nhắm tới (INT-18). */
+  scoringScope: string;
+  /**
+   * `Ai` = LLM chấm, mốc là THƯỚC ĐO · `DeliveryMetrics` = tính từ số đo giọng nói (F11), không gửi LLM —
+   * mốc chỉ là lời giải nghĩa, chấm thử KHÔNG đòi. BE cũ không trả ⇒ parser mặc định `Ai` (chiều an toàn:
+   * đòi mốc thừa, không bỏ sót).
+   */
+  scoringMethod: AdminRubricScoringMethod;
+  /** `[]` = CHƯA khai mốc ⇒ chấm theo dải mặc định (hợp lệ, không phải lỗi). */
+  levels: AdminRubricLevel[];
+};
+export type AdminRubricScoringMethod = 'Ai' | 'DeliveryMetrics';
+export type AdminSampleQuestion = { id: string; text: string };
+export type AdminRubricSet = {
+  jobCategory: AdminRubricJobCategory;
+  language: AdminRubricLanguage;
+  version: number;
+  /** `false` sau PUT = nội dung y như bản đang chạy nên KHÔNG tạo phiên bản mới. */
+  changed: boolean;
+  criteria: AdminRubricCriterion[];
+  /** Câu mẫu để chấm thử — client CHỌN từ đây rồi gửi `sampleQuestionId` (không hardcode phía FE). */
+  sampleQuestions: AdminSampleQuestion[];
+};
+export type AdminRubricMatrixRow = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; version: number; criteriaCount: number; withLevelsCount: number };
+export type AdminRubricVersionItem = { version: number; isActive: boolean; criteriaCount: number; withLevelsCount: number };
+/** Body của `PUT /admin/rubrics/{jobCategory}` — CHỈ ba trường admin được sửa (name/weight/maxScore/scope khoá bằng cấu trúc ở BE). */
+export type AdminRubricCriterionInput = { id: string; description: string | null; levels: AdminRubricLevel[] | null };
+export type AdminRubricUpsertInput = { criteria: AdminRubricCriterionInput[] };
+export type AdminSuggestedCriterionLevels = { criterionId: string; name: string; maxScore: number; levels: AdminRubricLevel[] };
+export type AdminSuggestLevelsResponse = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; rubricVersion: number; criteria: AdminSuggestedCriterionLevels[] };
+/** Số đo cách nói (F11) của một bản ghi — khoá camelCase theo `DeliveryMetricsDto` (BE). */
+export type AdminDeliveryMetrics = {
+  metricsVersion: number | null;
+  audioSec: number | null;
+  speechSec: number | null;
+  wordCount: number | null;
+  speechRateWpm: number | null;
+  longestPauseSec: number | null;
+  pauseCount: number | null;
+  silenceRatio: number | null;
+  fillerCount: number | null;
+  fillerPer100Words: number | null;
+  fillerBreakdown: Record<string, number>;
+};
+/** Kết quả chép lời bản ghi của chính người dùng (POST …/preview/transcribe). `noSpeech` = VAD không thấy tiếng nói. */
+export type AdminPreviewTranscribeResult = { transcript: string; deliveryMetrics: AdminDeliveryMetrics | null; transcriptEngine: string | null; noSpeech: boolean };
+/**
+ * `includeAiSamples=false` ⇒ KHÔNG bắt AI viết 3 bài mẫu, chỉ chấm `customAnswer` (bắt buộc có).
+ * `deliveryMetrics` = số đo của chính bản ghi (echo từ bước chép lời) ⇒ BE đo luôn tiêu chí trôi chảy.
+ */
+export type AdminRubricPreviewRequest = {
+  question?: string | null;
+  customAnswer?: string | null;
+  seniority?: string | null;
+  sampleQuestionId?: string | null;
+  includeAiSamples?: boolean;
+  deliveryMetrics?: AdminDeliveryMetrics | null;
+};
+export type AdminRubricPreviewStatus = 'Running' | 'Succeeded' | 'Failed';
+export type AdminRubricPreviewBand = 'Weak' | 'Good' | 'Excellent' | 'Custom';
+/** `measured` = điểm ĐO từ bản ghi âm (không do AI chấm) — chỉ có ở bài Custom đi từ mic. */
+export type AdminRubricPreviewScore = { criterionId: string; criterionName: string; maxScore: number; expectedLevel: number; actualScore: number; levelMatched: number | null; reasoning: string | null; measured: boolean };
+/** `expectedPct/actualPct` = TRUNG BÌNH CỘNG các tiêu chí (INT-10, B2C) — KHÔNG phải weighted như B2B. */
+/** `deliveryMetrics` chỉ có ở bài `Custom` đi từ bản ghi âm; 3 bài AI và bài dán tay luôn `null`. */
+export type AdminRubricPreviewSample = { band: AdminRubricPreviewBand; answerText: string; wordCount: number; expectedPct: number; actualPct: number; scores: AdminRubricPreviewScore[]; deliveryMetrics: AdminDeliveryMetrics | null };
+export type AdminRubricPreviewCriterion = { criterionId: string; name: string; weight: number; maxScore: number; levels: AdminRubricLevel[] };
+export type AdminRubricPreviewRun = {
+  id: string;
+  status: AdminRubricPreviewStatus;
+  jobCategory: AdminRubricJobCategory;
+  language: AdminRubricLanguage;
+  rubricVersion: number;
+  questionText: string;
+  rubricFingerprint: string;
+  promptVersion: number | null;
+  deliveryMetricsAvailable: boolean;
+  lengthParityWarning: boolean;
+  /** Lượt miễn phí còn lại cho (nghề, ngôn ngữ, phiên bản) — trần 5, hết ⇒ BE 429. */
+  freeRunsRemaining: number;
+  rubric: AdminRubricPreviewCriterion[];
+  samples: AdminRubricPreviewSample[];
+  errorReason: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
 
 /**
  * Ngưỡng ĐẠT của lộ trình theo cấp độ. Backend luôn trả một phần tử cho MỌI cấp độ.
@@ -32,23 +136,47 @@ export type RoadmapThreshold = { level: string; effectivePct: number; defaultPct
 export type RoadmapThresholdUpdateInput = { thresholds: Record<string, number> };
 
 export type KnowledgeSource = { id: string; title: string; jobCategory?: string | null; sourceType: 'Context7' | 'Url' | 'Manual' | string; sourceRef?: string | null; reputation?: string | null; status: 'Active' | 'Archived' | string; chunkCount: number; createdAt: string };
-export type CreateKnowledgeInput = { title: string; jobCategory?: string; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
+// BE `CreateKnowledgeRequest`: title/jobCategory/sourceType đều `[Required]` và DTO từ chối khoá lạ — không có field tuỳ chọn ngoài url/content.
+export type CreateKnowledgeInput = { title: string; jobCategory: 'BA' | 'BE' | 'FE'; sourceType: 'Url' | 'Manual'; url?: string; content?: string };
 export type Context7Library = { id: string; title: string; reputation?: string | null; snippets: number };
 export type IngestContext7Input = { libraryId: string; topics: string[]; jobCategory: string };
 
 export type AdminOrder = { id: string; ownerType: number; ownerId: string; kind: number; packageId?: string | null; invoiceId?: string | null; status: number; amountVnd: number; payosOrderCode: number; expiredAt: string; paidAt?: string | null; createdAt: string; refundedAt?: string | null; refundReason?: string | null; refundGatewayRef?: string | null; refundSettledAt?: string | null; payoutStatus?: string | null; payoutFailureReason?: string | null };
 export type AdminOrderParams = { status?: number; ownerType?: number; refundSettlement?: number; cursor?: string; limit?: number };
 export type Package = { id: string; name: string; type: number; priceVnd: number; interviewCredits?: number | null; durationDays?: number | null; planId?: string | null; audience?: number | null; isActive: boolean; createdAt: string };
-export type PackageInput = Omit<Package, 'id' | 'createdAt' | 'isActive'> & { isActive?: boolean };
+/**
+ * `CreatePackageRequest` / `UpdatePackageRequest` (Payment) đều `[JsonUnmappedMemberHandling(Disallow)]`: gửi thừa
+ * `isActive` khi tạo hay `type` khi sửa là 400. OneTime KHÔNG được mang `planId`/`audience`; Subscription bắt buộc
+ * `durationDays` + `planId` + `audience` khớp plan (`PackageService.ValidateAsync`).
+ */
+export type CreatePackageInput = { name: string; type: number; priceVnd: number; interviewCredits?: number | null; durationDays?: number | null; planId?: string | null; audience?: number | null };
+export type UpdatePackageInput = { name?: string; priceVnd?: number; interviewCredits?: number | null; durationDays?: number | null; isActive?: boolean; planId?: string | null; audience?: number | null };
 export type Plan = { id: string; audience: number; code: string; name: string; rank: number; interviewFunding: number; monthlyQuota?: number | null; adaptiveEnabled: boolean; adaptiveMaxQuestions?: number | null; adaptiveMaxFollowups?: number | null; groundingEnabled: boolean; selfConsistencyN: number; cvAnalysisIncluded: boolean; repoAnalysisIncluded: boolean; roadmapEnabled: boolean; maxQuestionsCap?: number | null; maxActiveCampaigns?: number | null; maxCandidatesCap?: number | null; postpaidEligible: boolean; seatCount?: number | null; entitlementsVersion: number; isActive: boolean };
-export type PlanInput = Omit<Plan, 'id' | 'entitlementsVersion'> & { entitlementsJson: string };
+/** `PlanRequest` ghi đè CẢ `entitlementsJson` lẫn `entitlementsVersion` mỗi lần PUT ⇒ khi sửa phải echo lại, không có ô sửa JSON. */
+export type PlanInput = Omit<Plan, 'id'> & { entitlementsJson: string };
+/** `PlanResponse` (BE-D3 trả thêm `entitlementsJson`; bản cũ không có ⇒ optional). */
+export type PlanWithEntitlements = Plan & { entitlementsJson?: string };
 export type RefundInput = { reason: string; gatewayRef?: string; allowPartialClawback: boolean; settledNow: boolean };
 export type RefundSettleInput = { gatewayRef?: string };
 export type CreditGrantInput = { ownerType: number; ownerId: string; credits: number; note: string; idempotencyKey?: string };
 export type PaymentModeInput = { ownerType: number; ownerId: string; paymentMode: number; creditLimit?: number; note: string; allowStrandedCredits: boolean };
 export type SubscriptionGrantInput = { ownerType: number; ownerId: string; planId: string; durationDays: number; activatedAt?: string; idempotencyKey: string };
-export type CreditAccount = Record<string, unknown>;
-export type CreditTransaction = Record<string, unknown>;
+/**
+ * Payment serialize enum thành SỐ (không JsonStringEnumConverter): `OwnerType` 0=Org 1=User ·
+ * `PaymentMode` 0=Prepaid 1=Postpaid · `CreditAccountStatus` 0=Active 1=Suspended · `InvoiceStatus`
+ * 0=Issued 1=Paid 2=Overdue 3=Void. Bảng tra ở `adminBilling.ts`; đừng in số thô ra màn hình.
+ */
+export type CreditAccount = { ownerType: number; ownerId: string; paymentMode: number; status: number; remainingCredits: number; reservedCredits: number; freeCreditsGranted: number; walletExists: boolean };
+export type SetPaymentModeResult = { ownerType: number; ownerId: string; paymentMode: number; creditLimit: number | null; remainingCredits: number; reservedCredits: number };
+export type InvoiceResult = { id: string; ownerType: number; ownerId: string; periodStart: string; periodEnd: string; interviewCount: number; unitPrice: number; amount: number; status: number; createdAt: string };
+/** `CreditTransactionResponse` — `reason` là SỐ: 0=Purchase 1=Consume 2=Refund 3=FreeGrant 4=PromoGrant. */
+export type CreditTransaction = { id: string; delta: number; reason: number; orderId?: string | null; sessionId?: string | null; reversesTransactionId?: string | null; createdAt: string };
+/** `GrantCreditResponse` (POST admin/credits/grant). Lần gọi lặp cùng `idempotencyKey` trả lại khoản CŨ (BE không xét `credits`). */
+export type GrantCreditResult = { ownerType: number; ownerId: string; creditsGranted: number; remainingCredits: number; transactionId?: string | null };
+/** Entity `Subscription` trả thẳng từ POST admin/subscriptions/grant — chỉ khai field màn hình dùng. `status` 0=Active 1=Expired 2=Cancelled · `source` 0=Purchase 1=AdminGrant. */
+export type SubscriptionGrantResult = { id: string; ownerType: number; ownerId: string; planId?: string | null; audience: number; tierCode: string; tierRank: number; interviewFunding: number; monthlyQuota?: number | null; source: number; status: number; activatedAt: string; expiresAt: string };
+/** `PostpaidOverviewRow` — worklist admin; `alertLevel` 0=None 1=ApproachingLimit 2=InvoiceIssued 3=DueSoon 4=Overdue (số tăng theo mức khẩn). */
+export type PostpaidOverviewRow = { ownerId: string; creditLimit: number | null; periodUsage: number; reservedCredits: number; headroom: number | null; pendingAmountVnd: number; unpaidInvoiceCount: number; hasOverdue: boolean; lastInvoicePeriodEnd: string | null; alertLevel?: number };
 export type AdminRevenueBucket = { periodStart: string; amountVnd: number; orderCount: number };
 export type AdminRevenueFunnel = {
   createdCount: number; paidCount: number; failedCount: number; expiredCount: number;
@@ -65,5 +193,17 @@ export type AdminFinanceSnapshot = {
   outstandingReceivables: { issuedVnd: number; issuedCount: number; overdueVnd: number; overdueCount: number; totalVnd: number };
   mrrVnd: number; activeSubscriptionCount: number;
 };
-export type AdminAiUsageAnalytics = Record<string, unknown>;
-export type AdminTrafficAnalytics = Record<string, unknown>;
+/** `AiUsageReportResponse` (F22) — chi phí là USD; VND cùng kỳ lấy từ `AdminRevenueAnalytics.aiCostVnd`. */
+export type AdminAiUsageOperationRow = { operation: string; calls: number; promptTokens: number; outputTokens: number; totalTokens: number; audioSeconds: number; costUsd: number };
+export type AdminAiUsageBucket = { periodStart: string; calls: number; totalTokens: number; costUsd: number };
+export type AdminAiUsageAnalytics = {
+  from: string; to: string; granularity: string; totalCalls: number; promptTokens: number; outputTokens: number; totalTokens: number;
+  audioSeconds: number; totalCostUsd: number; resourceUrls?: { proposed: number; rejected: number; rejectedRate: number } | null;
+  byOperation: AdminAiUsageOperationRow[]; buckets: AdminAiUsageBucket[];
+};
+/** `GET payment/admin/traffic` (FR18) — object ẩn danh phía BE; `routeId` là route YARP của gateway, không phải path thô. */
+export type AdminTrafficSummary = { requests: number; errors4xx: number; errors5xx: number; avgDurationMs: number | null; maxDurationMs: number | null };
+export type AdminTrafficAnalytics = {
+  from: string; to: string; granularity: string; totals: AdminTrafficSummary;
+  byRoute: Array<{ routeId: string; summary: AdminTrafficSummary }>; buckets: Array<{ periodStart: string; summary: AdminTrafficSummary }>;
+};
