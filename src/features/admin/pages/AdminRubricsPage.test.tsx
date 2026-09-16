@@ -24,6 +24,7 @@ const rubric: AdminRubricSet = {
 const matrix: AdminRubricMatrixRow[] = [
   { jobCategory: 'BE', language: 'vi', version: 2, criteriaCount: 2, withLevelsCount: 1 },
   { jobCategory: 'FE', language: 'vi', version: 1, criteriaCount: 7, withLevelsCount: 7 },
+  { jobCategory: 'FE', language: 'en', version: 1, criteriaCount: 7, withLevelsCount: 0 },
 ];
 const run: AdminRubricPreviewRun = {
   id: 'r-1', status: 'Succeeded', jobCategory: 'BE', language: 'vi', rubricVersion: 2, questionText: 'Giải thích index trong PostgreSQL.', rubricFingerprint: 'fp', promptVersion: null,
@@ -55,6 +56,9 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
     expect(screen.getByText('admin.rubrics.levels.none')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'admin.rubrics.category.FE · admin.rubrics.lang.vi' })).toBeInTheDocument();
     expect(getSpy.mock.calls[0]).toEqual(['BE', 'vi']);
+    // Ma trận phải phủ CẢ HAI ngôn ngữ trong một lượt gọi — gọi kèm `?language=vi` thì 3 ô English rơi về "chưa tải được" (đo trên dev).
+    expect(vi.mocked(adminRubricService.list)).toHaveBeenCalledWith();
+    expect(screen.getByRole('button', { name: 'admin.rubrics.category.FE · admin.rubrics.lang.en' })).toHaveTextContent('admin.rubrics.matrix.missing');
     // Lịch sử phiên bản có mặt (fetch về phải HIỆN, không để trong hook).
     expect(screen.getByText('admin.rubrics.history.active')).toBeInTheDocument();
   });
@@ -108,11 +112,11 @@ describe('AdminRubricsPage — lưu', () => {
 });
 
 describe('AdminRubricsPage — chấm thử', () => {
-  it('chặn chấm thử khi còn tiêu chí thiếu mốc và nêu TÊN tiêu chí (BE sẽ 400)', async () => {
+  it('tiêu chí thiếu mốc ⇒ CẢNH BÁO nêu tên nhưng KHÔNG chặn (BE mới biết tiêu chí nào do AI chấm; tiêu chí đo bằng số cố ý 0 mốc)', async () => {
     mockHappyPath();
     renderPage();
     expect(await screen.findByText('admin.rubrics.preview.needsLevels')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'admin.rubrics.preview.run' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'admin.rubrics.preview.run' })).toBeEnabled();
   });
 
   it('gửi {sampleQuestionId} theo hợp đồng BE (không phải {criterionKey, answer}) và RENDER 3 bài mẫu sau khi chạy', async () => {

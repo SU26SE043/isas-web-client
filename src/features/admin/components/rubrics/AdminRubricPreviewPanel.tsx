@@ -39,6 +39,9 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
   const [seniority, setSeniority] = useState('');
   const [viewingId, setViewingId] = useState<string | null>(null);
 
+  // Chỉ CẢNH BÁO, không chặn: BE chỉ đòi mốc ở tiêu chí do AI chấm (`MeasuredCriteriaSplit.ForAi`) — tiêu chí
+  // đo bằng số (độ trôi chảy, F11) cố ý 0 mốc, mà DTO admin chưa lộ `scoringMethod` nên FE không phân biệt được.
+  // Chặn cứng ở đây là khoá chấm thử với mọi bộ chuẩn ĐÚNG (đo trên dev: 6/7 có mốc là trạng thái chuẩn).
   const missingLevels = useMemo(() => rubric.criteria.filter((c) => c.levels.length < 2).map((c) => c.name), [rubric.criteria]);
   const runs = history.data ?? [];
   const latest = preview.data ?? runs[0] ?? null;
@@ -46,7 +49,7 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
   const freeRuns = latest && latest.rubricVersion === rubric.version ? latest.freeRunsRemaining : null;
   const employerRuns = useMemo(() => runs.map(toEmployerPreviewRun), [runs]);
 
-  const canRun = missingLevels.length === 0 && !preview.isPending && (questionMode === 'sample' ? Boolean(sampleQuestionId) || rubric.sampleQuestions.length === 0 : customQuestion.trim().length > 0);
+  const canRun = !preview.isPending && (questionMode === 'sample' ? Boolean(sampleQuestionId) || rubric.sampleQuestions.length === 0 : customQuestion.trim().length > 0);
   const run = () => {
     const input: AdminRubricPreviewRequest = {
       ...(questionMode === 'custom' ? { question: customQuestion.trim() } : sampleQuestionId ? { sampleQuestionId } : {}),

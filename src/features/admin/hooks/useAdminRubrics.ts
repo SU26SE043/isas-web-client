@@ -5,7 +5,7 @@ import type { AdminRubricJobCategory, AdminRubricLanguage, AdminRubricPreviewReq
 
 export const adminRubricKeys = {
   all: ['admin-rubrics'] as const,
-  matrix: (language: string) => ['admin-rubrics', 'matrix', language] as const,
+  matrix: () => ['admin-rubrics', 'matrix'] as const,
   detail: (category: string, language: string) => ['admin-rubrics', category, language] as const,
   history: (category: string, language: string) => ['admin-rubrics', 'history', category, language] as const,
   previewHistory: (category: string, language: string) => ['admin-rubrics', 'preview-history', category, language] as const,
@@ -14,7 +14,7 @@ const retry = (count: number, error: unknown) => getApiStatusCode(error) === 401
 
 export function useAdminRubrics(category: AdminRubricJobCategory, language: AdminRubricLanguage) {
   const queryClient = useQueryClient();
-  const matrix = useQuery({ queryKey: adminRubricKeys.matrix(language), queryFn: () => adminRubricService.list(language), retry });
+  const matrix = useQuery({ queryKey: adminRubricKeys.matrix(), queryFn: () => adminRubricService.list(), retry });
   const detail = useQuery({ queryKey: adminRubricKeys.detail(category, language), queryFn: () => adminRubricService.get(category, language), retry });
   const history = useQuery({ queryKey: adminRubricKeys.history(category, language), queryFn: () => adminRubricService.history(category, language), retry });
   const previewHistory = useQuery({ queryKey: adminRubricKeys.previewHistory(category, language), queryFn: () => adminRubricService.previewHistory(category, language), retry });

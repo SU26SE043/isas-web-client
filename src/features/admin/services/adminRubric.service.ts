@@ -23,8 +23,9 @@ import { adminApiEndpoints } from './adminApi.endpoints';
 const params = (language: AdminRubricLanguage, seniority?: string) => ({ language, ...(seniority?.trim() ? { seniority: seniority.trim() } : {}) });
 
 export const adminRubricService = {
-  list: async (language: AdminRubricLanguage) =>
-    parseAdminRubricMatrix((await apiClient.get(adminApiEndpoints.rubricMatrix, { params: { language } })).data),
+  /** KHÔNG truyền `language`: BE trả cả 6 ô (3 nghề × vi/en); truyền thì chỉ 3 ô của ngôn ngữ đó (đo trên dev: 3 ô English "Chưa tải được"). */
+  list: async () =>
+    parseAdminRubricMatrix((await apiClient.get(adminApiEndpoints.rubricMatrix)).data),
   get: async (category: AdminRubricJobCategory, language: AdminRubricLanguage) =>
     parseAdminRubricSet((await apiClient.get(adminApiEndpoints.rubric(category), { params: { language } })).data),
   history: async (category: AdminRubricJobCategory, language: AdminRubricLanguage) =>
