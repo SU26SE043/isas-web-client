@@ -88,6 +88,8 @@ export function parseAdminRubricCriterion(raw: unknown): AdminRubricCriterion {
     weight: num(r, 'weight'),
     maxScore: num(r, 'maxScore'),
     scoringScope: str(r, 'scoringScope'),
+    // Chỉ nhận đúng 2 giá trị BE khai; thiếu/lạ ⇒ `Ai` (đòi mốc thừa còn hơn bỏ sót — chiều an toàn).
+    scoringMethod: r.scoringMethod === 'DeliveryMetrics' ? 'DeliveryMetrics' : 'Ai',
     // `null` từ BE = chưa khai mốc — chuẩn hoá về `[]` để UI chỉ có MỘT cách nói "chưa có mốc".
     levels: Array.isArray(r.levels) ? r.levels.map(parseAdminRubricLevel) : [],
   };

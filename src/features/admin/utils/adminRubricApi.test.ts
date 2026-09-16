@@ -22,6 +22,7 @@ const beRubric = {
   criteria: [
     { id: 'c-1', name: 'Giao tiếp & trình bày', description: 'Rõ ràng, có cấu trúc.', weight: 0.15, maxScore: 5, scoringScope: 'Always', levels: [{ score: 0, descriptor: 'Không trả lời hoặc hoàn toàn lạc đề, không có ý nào liên quan.' }, { score: 5, descriptor: 'Trình bày mạch lạc, có mở-thân-kết và ví dụ minh hoạ cụ thể.' }] },
     { id: 'c-2', name: 'Chiều sâu kỹ thuật', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', levels: null },
+    { id: 'c-3', name: 'Độ trôi chảy & tự tin', description: null, weight: 0.1, maxScore: 5, scoringScope: 'Always', scoringMethod: 'DeliveryMetrics', levels: null },
   ],
   sampleQuestions: [{ id: 'q-1', text: 'Giải thích index trong PostgreSQL.' }],
 };
@@ -37,6 +38,14 @@ describe('parseAdminRubricSet — hợp đồng khớp DTO backend', () => {
 
   it('`levels: null` (chưa khai mốc) chuẩn hoá về [] — không phải lỗi', () => {
     expect(parseAdminRubricSet(beRubric).criteria[1].levels).toEqual([]);
+  });
+
+  it('`scoringMethod`: đọc đúng `DeliveryMetrics`; THIẾU (BE cũ) hay giá trị lạ ⇒ `Ai` — chiều an toàn là đòi mốc thừa, không bỏ sót', () => {
+    const set = parseAdminRubricSet(beRubric);
+    expect(set.criteria[2].scoringMethod).toBe('DeliveryMetrics');
+    expect(set.criteria[0].scoringMethod).toBe('Ai');                 // thiếu khoá
+    const weird = { ...beRubric, criteria: [{ ...beRubric.criteria[0], scoringMethod: 'Measured' }] };
+    expect(parseAdminRubricSet(weird).criteria[0].scoringMethod).toBe('Ai');   // giá trị lạ không được nâng thành "đo"
   });
 
   it('NÉM khi payload mang shape cũ của FE (`description` thay `descriptor`) — hợp đồng lệch phải đổ, không im', () => {
@@ -59,9 +68,11 @@ describe('toAdminRubricUpsertInput — body PUT chỉ mang 3 trường BE nhận
       criteria: [
         { id: 'c-1', description: 'Rõ ràng, có cấu trúc.', levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] },
         { id: 'c-2', description: null, levels: null },
+        { id: 'c-3', description: null, levels: null },
       ],
     });
-    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"|"description":"x/);
+    // BE B10 (Disallow) sẽ 400 nếu body mang khoá lạ — kể cả `scoringMethod` mới thêm ở chiều đọc.
+    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"|"scoringMethod"|"description":"x/);
   });
 
   it('mô tả toàn khoảng trắng ⇒ null (BE coi rỗng = không có mô tả)', () => {
@@ -89,7 +100,7 @@ describe('mergeAdminSuggestedLevels — ghép theo criterionId', () => {
   it('replaceAll: ghi đè cả c-1; id lạ bị bỏ, không đẻ tiêu chí mới', () => {
     const merged = mergeAdminSuggestedLevels(set.criteria, suggested, 'replaceAll');
     expect(merged[0].levels[0].descriptor).toMatch(/^AI0/);
-    expect(merged).toHaveLength(2);
+    expect(merged).toHaveLength(3);
   });
 });
 

@@ -52,9 +52,17 @@ export function AdminRubricCriteriaTable({ criteria, onChange }: AdminRubricCrit
                 <Tooltip content={t('admin.rubrics.lockedHint')}>
                   <span className="block">{c.name}</span>
                 </Tooltip>
-                <Badge variant={c.scoringScope === 'WhenTargeted' ? 'info' : 'outline'} className="mt-1">
-                  {t(c.scoringScope === 'WhenTargeted' ? 'admin.rubrics.scope.WhenTargeted' : 'admin.rubrics.scope.Always')}
-                </Badge>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <Badge variant={c.scoringScope === 'WhenTargeted' ? 'info' : 'outline'}>
+                    {t(c.scoringScope === 'WhenTargeted' ? 'admin.rubrics.scope.WhenTargeted' : 'admin.rubrics.scope.Always')}
+                  </Badge>
+                  {c.scoringMethod === 'DeliveryMetrics' ? (
+                    // Tiêu chí ĐO từ bản ghi (F11): hệ tự tính, không gửi AI ⇒ mốc chỉ để giải nghĩa bậc.
+                    <Tooltip content={t('admin.rubrics.measured.hint')}>
+                      <Badge variant="secondary">{t('admin.rubrics.measured.badge')}</Badge>
+                    </Tooltip>
+                  ) : null}
+                </div>
               </th>
               <td className="w-32 p-3 text-muted-foreground">
                 <Tooltip content={t('admin.rubrics.lockedHint')}>
@@ -81,9 +89,14 @@ export function AdminRubricCriteriaTable({ criteria, onChange }: AdminRubricCrit
                       </li>
                     ))}
                   </ol>
+                ) : c.scoringMethod === 'DeliveryMetrics' ? (
+                  <p className="text-xs text-muted-foreground">{t('admin.rubrics.measured.noLevelsNeeded')}</p>
                 ) : (
                   <p className="text-xs text-warning">{t('admin.rubrics.levels.none')}</p>
                 )}
+                {c.levels.length && c.scoringMethod === 'DeliveryMetrics' ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{t('admin.rubrics.measured.levelsExplainOnly')}</p>
+                ) : null}
                 <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setEditingId(c.id)} aria-label={`${t('admin.rubrics.levels.edit')} ${c.name}`}>
                   {t(c.levels.length ? 'admin.rubrics.levels.edit' : 'admin.rubrics.levels.add')}
                 </Button>

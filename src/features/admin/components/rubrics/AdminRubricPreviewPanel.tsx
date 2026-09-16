@@ -35,8 +35,12 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
   const [viewingId, setViewingId] = useState<string | null>(null);
   const flow = useRubricTryFlow({ category: rubric.jobCategory, language: rubric.language, preview });
 
-  // Chỉ CẢNH BÁO, không chặn: BE chỉ đòi mốc ở tiêu chí do AI chấm; tiêu chí đo bằng số cố ý 0 mốc.
-  const missingLevels = useMemo(() => rubric.criteria.filter((c) => c.levels.length < 2).map((c) => c.name), [rubric.criteria]);
+  // Chỉ CẢNH BÁO, không chặn, và CHỈ với tiêu chí AI chấm: tiêu chí đo bằng số (`DeliveryMetrics`) cố ý
+  // 0 mốc — BE không đòi (`MeasuredCriteriaSplit.ForAi`), nêu tên nó ở đây là báo thiếu một thứ không cần.
+  const missingLevels = useMemo(
+    () => rubric.criteria.filter((c) => c.scoringMethod !== 'DeliveryMetrics' && c.levels.length < 2).map((c) => c.name),
+    [rubric.criteria],
+  );
   const runs = history.data ?? [];
   const latest = preview.data ?? runs[0] ?? null;
   const viewing = (viewingId ? runs.find((run) => run.id === viewingId) : null) ?? latest;

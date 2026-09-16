@@ -16,8 +16,10 @@ const LONG = (s: string) => `${s} ${'x'.repeat(24)}`;
 const rubric: AdminRubricSet = {
   jobCategory: 'BE', language: 'vi', version: 2, changed: false,
   criteria: [
-    { id: 'c-1', name: 'Giao tiếp & trình bày', description: 'Rõ ràng.', weight: 0.15, maxScore: 5, scoringScope: 'Always', levels: [{ score: 0, descriptor: LONG('Không trả lời hoặc lạc đề') }, { score: 5, descriptor: LONG('Mạch lạc, có ví dụ') }] },
-    { id: 'c-2', name: 'Chiều sâu kỹ thuật', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', levels: [] },
+    { id: 'c-1', name: 'Giao tiếp & trình bày', description: 'Rõ ràng.', weight: 0.15, maxScore: 5, scoringScope: 'Always', scoringMethod: 'Ai', levels: [{ score: 0, descriptor: LONG('Không trả lời hoặc lạc đề') }, { score: 5, descriptor: LONG('Mạch lạc, có ví dụ') }] },
+    { id: 'c-2', name: 'Chiều sâu kỹ thuật', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', scoringMethod: 'Ai', levels: [] },
+    // Tiêu chí ĐO (F11): hệ tự tính từ bản ghi, không gửi AI ⇒ 0 mốc là bình thường, không được báo thiếu.
+    { id: 'c-3', name: 'Độ trôi chảy & tự tin', description: null, weight: 0.1, maxScore: 5, scoringScope: 'Always', scoringMethod: 'DeliveryMetrics', levels: [] },
   ],
   sampleQuestions: [{ id: 'q-1', text: 'Giải thích index trong PostgreSQL.' }, { id: 'q-2', text: 'Transaction isolation là gì?' }],
 };
@@ -54,7 +56,10 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
     const getSpy = vi.mocked(adminRubricService.get);
     renderPage();
     expect(await screen.findByText(/Không trả lời hoặc lạc đề/)).toBeInTheDocument();
-    expect(screen.getByText('admin.rubrics.levels.none')).toBeInTheDocument();
+    // Đúng MỘT tiêu chí AI thiếu mốc (c-2); tiêu chí đo (c-3) 0 mốc nhưng hiện "không cần mốc" + badge "hệ tự đo", KHÔNG phải cảnh báo.
+    expect(screen.getAllByText('admin.rubrics.levels.none')).toHaveLength(1);
+    expect(screen.getByText('admin.rubrics.measured.noLevelsNeeded')).toBeInTheDocument();
+    expect(screen.getByText('admin.rubrics.measured.badge')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'admin.rubrics.category.FE · admin.rubrics.lang.vi' })).toBeInTheDocument();
     expect(getSpy.mock.calls[0]).toEqual(['BE', 'vi']);
     // Ma trận phải phủ CẢ HAI ngôn ngữ trong một lượt gọi — gọi kèm `?language=vi` thì 3 ô English rơi về "chưa tải được" (đo trên dev).
@@ -83,9 +88,10 @@ describe('AdminRubricsPage — lưu', () => {
       criteria: [
         { id: 'c-1', description: 'Rõ ràng.', levels: rubric.criteria[0].levels },
         { id: 'c-2', description: 'Đo độ sâu hiểu biết kỹ thuật.', levels: null },
+        { id: 'c-3', description: null, levels: null },
       ],
     });
-    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"/);
+    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"|"scoringMethod"/);
     expect(await screen.findByText('admin.rubrics.saveSuccess')).toBeInTheDocument();
   });
 
@@ -127,6 +133,20 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     expect(await screen.findByText('admin.rubrics.preview.needsLevels')).toBeInTheDocument();
     // Chưa có bài ⇒ nút Chấm tắt (không phải vì thiếu mốc).
     expect(screen.getByRole('button', { name: 'admin.rubrics.try.run.free' })).toBeDisabled();
+  });
+
+  it('CHỈ tiêu chí đo (DeliveryMetrics) thiếu mốc ⇒ KHÔNG cảnh báo — BE không đòi mốc ở tiêu chí hệ tự đo', async () => {
+    mockHappyPath();
+    vi.mocked(adminRubricService.get).mockResolvedValue({
+      ...rubric,
+      // c-2 (AI) nay có mốc ⇒ thứ duy nhất còn 0 mốc là c-3 (đo).
+      criteria: rubric.criteria.map((c) => (c.id === 'c-2' ? { ...c, levels: rubric.criteria[0].levels } : c)),
+    });
+    renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
+    await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
+    expect(screen.queryByText('admin.rubrics.preview.needsLevels')).not.toBeInTheDocument();
   });
 
   it('DÁN bài → chấm CHỈ bài của mình (includeAiSamples=false, không số đo) đúng hợp đồng BE, rồi RENDER "Bài của bạn" và nói rõ trôi chảy không chấm', async () => {
