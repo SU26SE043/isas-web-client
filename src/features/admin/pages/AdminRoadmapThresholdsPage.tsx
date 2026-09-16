@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { AdminPageShell } from '../components/AdminPageShell';
@@ -18,6 +19,8 @@ export function AdminRoadmapThresholdsPage() {
   const { list, update, reset } = useAdminRoadmapThresholds();
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [resettingLevel, setResettingLevel] = useState<string | null>(null);
+  // Trả về mặc định đổi ngưỡng cho MỌI lần chấm sau — hỏi lại trước, không gọi DELETE ngay khi bấm.
+  const [confirmLevel, setConfirmLevel] = useState<string | null>(null);
   const rows: RoadmapThreshold[] = list.data ?? [];
   const forbidden = getApiStatusCode(list.error) === 403;
 
@@ -42,12 +45,14 @@ export function AdminRoadmapThresholdsPage() {
   };
 
   const onReset = (level: string) => {
+    setConfirmLevel(null);
     setResettingLevel(level);
     reset.mutate(level, {
       onSuccess: () => setDraft((current) => { const next = { ...current }; delete next[level]; return next; }),
       onSettled: () => setResettingLevel(null),
     });
   };
+  const levelLabel = (level: string) => { const key = `admin.roadmapThresholds.level.${level}`; const label = t(key); return label === key ? level : label; };
 
   return (
     <AdminPageShell
@@ -103,7 +108,7 @@ export function AdminRoadmapThresholdsPage() {
             draft={draft}
             resettingLevel={resettingLevel}
             onDraftChange={(level, value) => setDraft((current) => ({ ...current, [level]: value }))}
-            onReset={onReset}
+            onReset={setConfirmLevel}
           />
           <p className="text-sm text-muted-foreground">
             {dirtyLevels.length
@@ -116,6 +121,18 @@ export function AdminRoadmapThresholdsPage() {
       {!list.isLoading && !list.isError && !rows.length ? (
         <p className="rounded-xl border border-satin bg-surface-raised p-6 text-sm text-muted-foreground">{t('admin.roadmapThresholds.empty')}</p>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmLevel !== null}
+        onOpenChange={(open) => { if (!open) setConfirmLevel(null); }}
+        title={t('admin.roadmapThresholds.resetTitle').replace('{level}', confirmLevel ? levelLabel(confirmLevel) : '')}
+        description={t('admin.roadmapThresholds.resetDescription').replace('{default}', String(rows.find((row) => row.level === confirmLevel)?.defaultPct ?? ''))}
+        confirmLabel={t('admin.roadmapThresholds.reset')}
+        cancelLabel={t('admin.roadmapThresholds.cancel')}
+        destructive
+        loading={reset.isPending}
+        onConfirm={() => { if (confirmLevel) onReset(confirmLevel); }}
+      />
     </AdminPageShell>
   );
 }
