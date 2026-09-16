@@ -1,143 +1,69 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/shared/languages';
-import { getApiErrorMessage } from '@/shared/api/apiError';
+import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { AdminPageShell } from '../components/AdminPageShell';
+import { CloseInvoiceForm } from '../components/billing/CloseInvoiceForm';
+import { PaymentModeForm } from '../components/billing/PaymentModeForm';
+import { WalletCard } from '../components/billing/WalletCard';
 import { adminPaymentService } from '../services/adminPayment.service';
+import { OWNER_TYPE_ORG, PAYMENT_MODE_CLIENT_ERRORS, isGuidLike } from '../utils/adminBilling';
 
-type PaymentModeChoice = 'prepaid' | 'postpaid';
+export const adminWalletKey = (orgId: string) => ['admin-wallet', OWNER_TYPE_ORG, orgId] as const;
 
+/**
+ * Ví & Postpaid của tổ chức. Một tổ chức là ngữ cảnh chung cho cả trang (bản cũ hai form, hai ô
+ * GUID riêng, một `result` dùng chung đè nhau). Nhận `?orgId=` để màn Tổ chức link sang.
+ */
 export function AdminBillingPage() {
   const { t } = useLanguage();
-  const [orgId, setOrgId] = useState('');
-  const [mode, setMode] = useState<PaymentModeChoice>('postpaid');
-  const [creditLimit, setCreditLimit] = useState('');
-  const [note, setNote] = useState('');
-  const [allowStrandedCredits, setAllowStrandedCredits] = useState(false);
-  const [closeOrgId, setCloseOrgId] = useState('');
-  const [periodStart, setPeriodStart] = useState('');
-  const [periodEnd, setPeriodEnd] = useState('');
-  const [busy, setBusy] = useState<'mode' | 'invoice' | null>(null);
-  const [result, setResult] = useState<unknown>(null);
+  const [searchParams] = useSearchParams();
+  const [orgInput, setOrgInput] = useState(searchParams.get('orgId') ?? '');
+  const [orgId, setOrgId] = useState(() => { const initial = searchParams.get('orgId') ?? ''; return isGuidLike(initial) ? initial.trim() : ''; });
+  const queryClient = useQueryClient();
+  const wallet = useQuery({ queryKey: adminWalletKey(orgId), queryFn: () => adminPaymentService.getCreditAccount(OWNER_TYPE_ORG, orgId), enabled: Boolean(orgId), retry: (count, error) => getApiStatusCode(error) === 401 || getApiStatusCode(error) === 403 ? false : count < 2 });
 
-  const setOrganizationMode = async () => {
-    const parsedLimit = creditLimit.trim() ? Number(creditLimit) : undefined;
-    if (!orgId.trim() || !note.trim() || (mode === 'postpaid' && (!parsedLimit || parsedLimit <= 0))) {
-      toast.error(t('admin.billing.validation'));
-      return;
-    }
-    setBusy('mode');
-    try {
-      const response = await adminPaymentService.setPaymentMode({
-        ownerType: 0,
-        ownerId: orgId,
-        paymentMode: mode === 'postpaid' ? 1 : 0,
-        ...(mode === 'postpaid' ? { creditLimit: parsedLimit } : {}),
-        note,
-        allowStrandedCredits,
-      });
-      setResult(response);
-      toast.success(t('admin.billing.modeSuccess'));
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, t('admin.billing.actionFailed')));
-    } finally {
-      setBusy(null);
-    }
+  const clientError = (error: unknown, fallbackKey: string) => {
+    if (error instanceof Error && error.message in PAYMENT_MODE_CLIENT_ERRORS) return t(PAYMENT_MODE_CLIENT_ERRORS[error.message]);
+    return getApiErrorMessage(error, t(fallbackKey));
   };
-
-  const closeOrganizationInvoice = async () => {
-    if (!closeOrgId.trim()) {
-      toast.error(t('admin.billing.orgRequired'));
-      return;
-    }
-    setBusy('invoice');
-    try {
-      const response = await adminPaymentService.closeInvoice({
-        orgId: closeOrgId,
-        ...(periodStart ? { periodStart } : {}),
-        ...(periodEnd ? { periodEnd } : {}),
-      });
-      setResult(response);
-      toast.success(t('admin.billing.invoiceSuccess'));
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, t('admin.billing.actionFailed')));
-    } finally {
-      setBusy(null);
-    }
-  };
+  const setMode = useMutation({
+    mutationFn: (input: { paymentMode: number; creditLimit?: number; note: string; allowStrandedCredits: boolean }) => adminPaymentService.setPaymentMode({ ownerType: OWNER_TYPE_ORG, ownerId: orgId, ...input }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: adminWalletKey(orgId) }),
+  });
+  const closeInvoice = useMutation({
+    mutationFn: (input: { periodStart?: string; periodEnd?: string }) => adminPaymentService.closeInvoice({ orgId, ...input }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: adminWalletKey(orgId) }),
+  });
+  const lookup = () => { const value = orgInput.trim(); if (isGuidLike(value)) { setOrgId(value); setMode.reset(); closeInvoice.reset(); } };
+  const invalidOrg = orgInput.trim().length > 0 && !isGuidLike(orgInput);
 
   return (
-    <AdminPageShell
-      title={t('admin.billing.title')}
-      description={t('admin.billing.description')}
-    >
-      <Alert variant="info">
-        <AlertDescription>{t('admin.billing.rule')}</AlertDescription>
-      </Alert>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section className="frame-satin rounded-2xl bg-surface-raised p-6">
-          <h2 className="text-xl font-semibold text-foreground">{t('admin.billing.modeTitle')}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{t('admin.billing.modeDescription')}</p>
-          <div className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="billing-org-id">{t('admin.billing.orgId')}</Label>
-              <Input id="billing-org-id" value={orgId} onChange={(event) => setOrgId(event.target.value)} placeholder={t('admin.billing.orgIdPlaceholder')} />
-            </div>
-            <div>
-              <Label htmlFor="billing-mode">{t('admin.billing.mode')}</Label>
-              <select id="billing-mode" value={mode} onChange={(event) => setMode(event.target.value as PaymentModeChoice)} className="mt-2 flex h-10 w-full rounded-lg border border-satin bg-surface-overlay px-3 text-sm text-foreground">
-                <option value="postpaid">{t('admin.billing.postpaid')}</option>
-                <option value="prepaid">{t('admin.billing.prepaid')}</option>
-              </select>
-            </div>
-            {mode === 'postpaid' ? (
-              <div>
-                <Label htmlFor="billing-credit-limit">{t('admin.billing.creditLimit')}</Label>
-                <Input id="billing-credit-limit" type="number" min="1" value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} placeholder="100" />
-              </div>
-            ) : null}
-            <div>
-              <Label htmlFor="billing-note">{t('admin.billing.note')}</Label>
-              <textarea id="billing-note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm text-foreground" />
-            </div>
-            <label className="flex items-start gap-3 text-sm text-muted-foreground">
-              <input type="checkbox" checked={allowStrandedCredits} onChange={(event) => setAllowStrandedCredits(event.target.checked)} className="mt-1" />
-              <span>{t('admin.billing.allowStrandedCredits')}</span>
-            </label>
-            <Button type="button" disabled={busy !== null} onClick={() => void setOrganizationMode()}>
-              {busy === 'mode' ? t('admin.billing.saving') : t('admin.billing.saveMode')}
-            </Button>
+    <AdminPageShell title={t('admin.billing.title')} description={t('admin.billing.description')}>
+      <section className="frame-satin space-y-4 rounded-2xl bg-surface-raised p-6" aria-label={t('admin.billing.orgSection')}>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-64 flex-1">
+            <Label htmlFor="billing-org-id">{t('admin.billing.orgId')}</Label>
+            <Input id="billing-org-id" value={orgInput} onChange={(event) => setOrgInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') lookup(); }} placeholder={t('admin.billing.orgIdPlaceholder')} aria-invalid={invalidOrg || undefined} />
           </div>
-        </section>
+          <Button type="button" variant="outline" onClick={lookup} disabled={!isGuidLike(orgInput)}>{t('admin.billing.lookup')}</Button>
+        </div>
+        {invalidOrg ? <p className="text-xs text-error">{t('admin.billing.orgIdInvalid')}</p> : <p className="text-xs text-muted-foreground">{t('admin.billing.orgIdHint')}</p>}
+        <WalletCard query={wallet} orgId={orgId} />
+      </section>
 
-        <section className="frame-satin rounded-2xl bg-surface-raised p-6">
-          <h2 className="text-xl font-semibold text-foreground">{t('admin.billing.invoiceTitle')}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{t('admin.billing.invoiceDescription')}</p>
-          <div className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="close-invoice-org-id">{t('admin.billing.orgId')}</Label>
-              <Input id="close-invoice-org-id" value={closeOrgId} onChange={(event) => setCloseOrgId(event.target.value)} placeholder={t('admin.billing.orgIdPlaceholder')} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div><Label htmlFor="period-start">{t('admin.billing.periodStart')}</Label><Input id="period-start" type="date" value={periodStart} onChange={(event) => setPeriodStart(event.target.value)} /></div>
-              <div><Label htmlFor="period-end">{t('admin.billing.periodEnd')}</Label><Input id="period-end" type="date" value={periodEnd} onChange={(event) => setPeriodEnd(event.target.value)} /></div>
-            </div>
-            <Button type="button" disabled={busy !== null} onClick={() => void closeOrganizationInvoice()}>
-              {busy === 'invoice' ? t('admin.billing.closing') : t('admin.billing.closeInvoice')}
-            </Button>
-          </div>
-        </section>
-      </div>
-
-      {result ? (
-        <pre className="overflow-x-auto rounded-xl border border-satin bg-surface-raised p-4 text-xs text-muted-foreground" aria-live="polite">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+      {orgId && wallet.data ? (
+        <div className="grid gap-6 xl:grid-cols-2">
+          <PaymentModeForm orgId={orgId} wallet={wallet.data} busy={setMode.isPending} errorMessage={setMode.isError ? clientError(setMode.error, 'admin.billing.actionFailed') : null} result={setMode.data ?? null} onSubmit={(input) => setMode.mutate(input)} />
+          <CloseInvoiceForm orgId={orgId} wallet={wallet.data} busy={closeInvoice.isPending} errorMessage={closeInvoice.isError ? clientError(closeInvoice.error, 'admin.billing.actionFailed') : null} result={closeInvoice.data ?? null} onSubmit={(input) => closeInvoice.mutate(input)} />
+        </div>
+      ) : !orgId ? (
+        <Alert variant="default"><AlertDescription>{t('admin.billing.formsLocked')}</AlertDescription></Alert>
       ) : null}
     </AdminPageShell>
   );

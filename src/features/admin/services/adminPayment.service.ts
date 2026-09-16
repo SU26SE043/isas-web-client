@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { readNextCursorHeader } from '../utils/adminCampaignsApi';
-import type { AdminApiPage, AdminAiUsageAnalytics, AdminFinanceSnapshot, AdminOrder, AdminOrderParams, AdminRevenueAnalytics, AdminTrafficAnalytics, CreditAccount, CreditGrantInput, CreditTransaction, Package, PackageInput, PaymentModeInput, Plan, PlanInput, RefundInput, RefundSettleInput, SubscriptionGrantInput } from '../types/adminApi.types';
+import type { AdminApiPage, AdminAiUsageAnalytics, AdminFinanceSnapshot, AdminOrder, AdminOrderParams, AdminRevenueAnalytics, AdminTrafficAnalytics, CreditAccount, CreditGrantInput, CreditTransaction, InvoiceResult, Package, PackageInput, PaymentModeInput, Plan, PlanInput, RefundInput, RefundSettleInput, SetPaymentModeResult, SubscriptionGrantInput } from '../types/adminApi.types';
 import { adminApiEndpoints } from './adminApi.endpoints';
 
 const list = <T>(data: unknown): T[] => Array.isArray(data) ? data as T[] : ((data as { data?: T[]; items?: T[] } | null)?.data ?? (data as { items?: T[] } | null)?.items ?? []);
@@ -14,7 +14,7 @@ export const adminPaymentService = {
   createPackage: async (input: PackageInput) => (await apiClient.post<Package>(adminApiEndpoints.packages, input)).data,
   updatePackage: async (id: string, input: Partial<PackageInput>) => (await apiClient.put<Package>(adminApiEndpoints.package(id), input)).data,
   deletePackage: async (id: string) => { await apiClient.delete(adminApiEndpoints.package(id)); },
-  closeInvoice: async (input: { orgId: string; periodStart?: string; periodEnd?: string }) => (await apiClient.post(adminApiEndpoints.invoicesClose, input)).data,
+  closeInvoice: async (input: { orgId: string; periodStart?: string; periodEnd?: string }) => (await apiClient.post<InvoiceResult>(adminApiEndpoints.invoicesClose, input)).data,
   refundOrder: async (id: string, input: RefundInput) => (await apiClient.post(adminApiEndpoints.refund(id), input)).data,
   settleRefund: async (id: string, input: RefundSettleInput = {}) => (await apiClient.post(adminApiEndpoints.refundSettle(id), input)).data,
   payoutRefund: async (id: string) => (await apiClient.post(adminApiEndpoints.refundPayout(id))).data,
@@ -32,7 +32,7 @@ export const adminPaymentService = {
     if (input.paymentMode === 1 && (!Number.isFinite(input.creditLimit) || (input.creditLimit ?? 0) <= 0)) {
       throw new Error('CREDIT_LIMIT_REQUIRED');
     }
-    return (await apiClient.post(adminApiEndpoints.paymentMode, {
+    return (await apiClient.post<SetPaymentModeResult>(adminApiEndpoints.paymentMode, {
       ...input,
       ownerId,
       note,

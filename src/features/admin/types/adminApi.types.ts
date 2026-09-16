@@ -110,7 +110,14 @@ export type RefundSettleInput = { gatewayRef?: string };
 export type CreditGrantInput = { ownerType: number; ownerId: string; credits: number; note: string; idempotencyKey?: string };
 export type PaymentModeInput = { ownerType: number; ownerId: string; paymentMode: number; creditLimit?: number; note: string; allowStrandedCredits: boolean };
 export type SubscriptionGrantInput = { ownerType: number; ownerId: string; planId: string; durationDays: number; activatedAt?: string; idempotencyKey: string };
-export type CreditAccount = Record<string, unknown>;
+/**
+ * Payment serialize enum thành SỐ (không JsonStringEnumConverter): `OwnerType` 0=Org 1=User ·
+ * `PaymentMode` 0=Prepaid 1=Postpaid · `CreditAccountStatus` 0=Active 1=Suspended · `InvoiceStatus`
+ * 0=Issued 1=Paid 2=Overdue 3=Void. Bảng tra ở `adminBilling.ts`; đừng in số thô ra màn hình.
+ */
+export type CreditAccount = { ownerType: number; ownerId: string; paymentMode: number; status: number; remainingCredits: number; reservedCredits: number; freeCreditsGranted: number; walletExists: boolean };
+export type SetPaymentModeResult = { ownerType: number; ownerId: string; paymentMode: number; creditLimit: number | null; remainingCredits: number; reservedCredits: number };
+export type InvoiceResult = { id: string; ownerType: number; ownerId: string; periodStart: string; periodEnd: string; interviewCount: number; unitPrice: number; amount: number; status: number; createdAt: string };
 export type CreditTransaction = Record<string, unknown>;
 export type AdminRevenueBucket = { periodStart: string; amountVnd: number; orderCount: number };
 export type AdminRevenueFunnel = {
