@@ -10,7 +10,7 @@ import { useAdminAiUsage } from '../../hooks/useAdminAiUsage';
 import { useAdminRevenue } from '../../hooks/useAdminRevenue';
 import type { AdminAnalyticsGranularity } from '../../types/adminAnalytics.types';
 import { formatVnd } from '../../utils/adminBilling';
-import { formatAudioMinutes, formatPeriodLabel, formatTokens, formatUsd } from '../../utils/adminFormat';
+import { formatAudioMinutes, formatPeriodLabel, formatTokens, formatUsd, formatUsdShort } from '../../utils/adminFormat';
 
 const TOP_OPERATIONS = 6;
 
@@ -59,12 +59,12 @@ export function AdminAiCostMetrics({ groupBy }: { groupBy: AdminAnalyticsGranula
             </CardContent></Card>
             <Card className="frame-satin bg-surface-raised"><CardHeader><CardTitle>{t('admin.aiCost.byOperation')}</CardTitle></CardHeader><CardContent className="px-0">
               <Table aria-label={t('admin.aiCost.byOperation')}>
-                <TableHeader><TableRow><TableHead>{t('admin.aiCost.operation')}</TableHead><TableHead className="text-right">{t('admin.aiCost.callsShort')}</TableHead><TableHead className="text-right">USD</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t('admin.aiCost.operation')}</TableHead><TableHead className="text-right">{t('admin.aiCost.callsShort')}</TableHead><TableHead className="text-right">$</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {shown.map((row) => (
-                    <TableRow key={row.operation}><TableCell className="font-mono text-xs">{row.operation}</TableCell><TableCell className="text-right tabular-nums">{row.calls}</TableCell><TableCell className="text-right tabular-nums">{formatUsd(row.costUsd, locale)}</TableCell></TableRow>
+                    <TableRow key={row.operation}><TableCell className="max-w-40 truncate font-mono text-xs" title={row.operation}>{row.operation}</TableCell><TableCell className="text-right tabular-nums">{row.calls}</TableCell><TableCell className="whitespace-nowrap text-right tabular-nums">{formatUsdShort(row.costUsd)}</TableCell></TableRow>
                   ))}
-                  {operations.length > TOP_OPERATIONS ? <TableRow><TableCell className="text-xs text-muted-foreground">{t('admin.aiCost.othersRow').replace('{n}', String(operations.length - TOP_OPERATIONS))}</TableCell><TableCell /><TableCell className="text-right tabular-nums text-muted-foreground">{formatUsd(restCost, locale)}</TableCell></TableRow> : null}
+                  {operations.length > TOP_OPERATIONS ? <TableRow><TableCell className="text-xs text-muted-foreground">{t('admin.aiCost.othersRow').replace('{n}', String(operations.length - TOP_OPERATIONS))}</TableCell><TableCell /><TableCell className="whitespace-nowrap text-right tabular-nums text-muted-foreground">{formatUsdShort(restCost)}</TableCell></TableRow> : null}
                   {operations.length === 0 ? <TableRow><TableCell colSpan={3} className="text-sm text-muted-foreground">{t('admin.aiCost.empty')}</TableCell></TableRow> : null}
                 </TableBody>
               </Table>

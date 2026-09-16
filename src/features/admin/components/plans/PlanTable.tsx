@@ -34,8 +34,9 @@ export function PlanTable({ plans, busyId, onEdit, onDeactivate }: PlanTableProp
                     <TableCell className="text-xs">{plan.adaptiveEnabled ? `${t('admin.plans.field.adaptive')} ${yes}` : ''}{plan.groundingEnabled ? ` · ${t('admin.plans.field.grounding')} ${yes}` : ''} · N={plan.selfConsistencyN}</TableCell>
                     <TableCell className="text-xs">{[plan.cvAnalysisIncluded && t('admin.plans.field.cv'), plan.repoAnalysisIncluded && t('admin.plans.field.repo'), plan.roadmapEnabled && t('admin.plans.field.roadmap')].filter(Boolean).join(' · ') || '—'}</TableCell>
                     <TableCell className="text-xs tabular-nums">
-                      {t('admin.plans.table.capQuestions')} {cap(plan.maxQuestionsCap)}
-                      {plan.audience === 1 ? ` · ${t('admin.plans.table.capCampaigns')} ${cap(plan.maxActiveCampaigns)} · ${t('admin.plans.table.capCandidates')} ${cap(plan.maxCandidatesCap)} · ${t('admin.plans.table.seats')} ${cap(plan.seatCount)}${plan.postpaidEligible ? ` · ${t('admin.plans.field.postpaid')}` : ''}` : ''}
+                      {/* Khoảng trắng không ngắt giữa nhãn và số — cột hẹp từng gãy "câu⏎20" (đo dev 2026-09-17). */}
+                      {t('admin.plans.table.capQuestions')} {cap(plan.maxQuestionsCap)}
+                      {plan.audience === 1 ? ` · ${t('admin.plans.table.capCampaigns')} ${cap(plan.maxActiveCampaigns)} · ${t('admin.plans.table.capCandidates')} ${cap(plan.maxCandidatesCap)} · ${t('admin.plans.table.seats')} ${cap(plan.seatCount)}${plan.postpaidEligible ? ` · ${t('admin.plans.field.postpaid')}` : ''}` : ''}
                     </TableCell>
                     <TableCell><Badge variant={plan.isActive ? 'success' : 'outline'}>{plan.isActive ? t('admin.plans.status.active') : t('admin.plans.status.retired')}</Badge>{isDefaultPlan(plan) ? <Badge variant="info" className="ml-1">{t('admin.plans.status.default')}</Badge> : null}</TableCell>
                     <TableCell className="whitespace-nowrap text-right">

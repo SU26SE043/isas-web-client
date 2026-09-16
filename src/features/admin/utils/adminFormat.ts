@@ -10,6 +10,9 @@ export const compactAmount = (value: number): string => {
 export const formatUsd = (value: number, locale: string): string =>
   new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: value < 1 ? 4 : 2 }).format(value);
 
+/** Bảng hẹp: `$2.30` thay `2,30 US$` (vi-VN in hậu tố 4 ký tự làm cột bị cắt — đo trên dev 2026-09-17). */
+export const formatUsdShort = (value: number): string => `$${value.toFixed(value < 1 ? 3 : 2)}`;
+
 /** Token đếm hàng triệu ⇒ K/M cho dễ đọc; số nhỏ giữ nguyên có phân cách. */
 export const formatTokens = (value: number, locale: string): string =>
   value >= 10_000 ? compactAmount(value) : new Intl.NumberFormat(locale).format(value);
