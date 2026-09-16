@@ -98,33 +98,69 @@ describe('AdminPromptsPage', () => {
     expect(await screen.findByText('admin.prompts.riskHint.scoring')).toBeInTheDocument();
   });
 
-  it('hiện BẢN MẶC ĐỊNH đang chạy ở cột trái và "Chép mặc định sang để sửa" điền vào ô sửa (bản cũ: ô trống câm)', async () => {
+  it('ô ĐỔ SẴN đúng câu mặc định đang chạy; Lưu tắt khi chưa đổi gì, bật khi sửa và gửi đúng chữ đã sửa (bản cũ: ô trống câm)', async () => {
     vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
       { key: 'questions.intro', version: 0, body: null, defaultBody: 'Bạn là một interviewer chuyên nghiệp cho vị trí {role}.' },
     ]);
     vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
+    const update = vi.spyOn(adminInterviewService, 'updatePrompt').mockResolvedValue({ key: 'questions.intro', version: 1, body: 'x', defaultBody: 'y' });
     renderPage();
-    const defaultBox = await screen.findByLabelText('admin.prompts.defaultColumn');
-    expect(defaultBox).toHaveValue('Bạn là một interviewer chuyên nghiệp cho vị trí {role}.');
-    expect(defaultBox).toHaveAttribute('readonly');
+    const box = await screen.findByLabelText('admin.prompts.body');
+    expect(box).toHaveValue('Bạn là một interviewer chuyên nghiệp cho vị trí {role}.');
+    expect(box).not.toHaveAttribute('readonly');
+    expect(screen.getByRole('status')).toHaveTextContent('admin.prompts.effective.default');
     expect(screen.getByText('admin.prompts.placeholderHint')).toBeInTheDocument();
-    expect(screen.getByLabelText('admin.prompts.body')).toHaveValue('');
-    fireEvent.click(screen.getByRole('button', { name: 'admin.prompts.copyDefault' }));
-    expect(screen.getByLabelText('admin.prompts.body')).toHaveValue('Bạn là một interviewer chuyên nghiệp cho vị trí {role}.');
     expect(screen.queryByText('admin.prompts.defaultUnavailable')).not.toBeInTheDocument();
+    // Chưa đổi gì ⇒ Lưu tắt kể cả khi đã ghi lý do — lưu y nguyên mặc định là tạo "bản tuỳ chỉnh" nói dối.
+    fireEvent.change(screen.getByLabelText(/admin\.prompts\.changeNote/), { target: { value: 'lý do' } });
+    expect(screen.getByRole('button', { name: 'admin.prompts.save' })).toBeDisabled();
+    expect(screen.getByText('admin.prompts.unchangedHint')).toBeInTheDocument();
+    fireEvent.change(box, { target: { value: 'Bạn là một interviewer chuyên nghiệp, kỹ tính, cho vị trí {role}.' } });
+    expect(screen.queryByText('admin.prompts.unchangedHint')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.prompts.save' }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith('questions.intro', { body: 'Bạn là một interviewer chuyên nghiệp, kỹ tính, cho vị trí {role}.', changeNote: 'lý do' }));
   });
 
-  it('defaultBody = "" (khe THÊM) ⇒ nói "trống", KHÔNG có nút chép; defaultBody = null ⇒ nói "chưa lấy được", không giả vờ trống', async () => {
+  it('"Hoàn tác sửa" trả ô về đúng chữ đang chạy', async () => {
+    vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
+      { key: 'questions.intro', version: 0, body: null, defaultBody: 'Câu mặc định.' },
+    ]);
+    vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
+    renderPage();
+    const box = await screen.findByLabelText('admin.prompts.body');
+    expect(screen.queryByRole('button', { name: 'admin.prompts.revert' })).not.toBeInTheDocument();
+    fireEvent.change(box, { target: { value: 'Câu đã sửa.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.prompts.revert' }));
+    expect(box).toHaveValue('Câu mặc định.');
+    expect(screen.queryByRole('button', { name: 'admin.prompts.revert' })).not.toBeInTheDocument();
+  });
+
+  it('khe ĐÃ TUỲ CHỈNH: ô đổ sẵn bản đã sửa (không phải mặc định) + có "Xem bản mặc định của hệ" để đối chiếu', async () => {
+    vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
+      { key: 'questions.guidance', version: 1, body: 'Mỗi câu ≤ 20 từ.', defaultBody: '' },
+    ]);
+    vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
+    renderPage();
+    expect(await screen.findByLabelText('admin.prompts.body')).toHaveValue('Mỗi câu ≤ 20 từ.');
+    expect(screen.getByRole('status')).toHaveTextContent('admin.prompts.effective.custom');
+    expect(screen.getByText('admin.prompts.showDefault')).toBeInTheDocument();
+    expect(screen.getByText('admin.prompts.defaultEmpty')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'admin.prompts.reset' })).toBeEnabled();
+  });
+
+  it('defaultBody = "" (khe THÊM) ⇒ ô trống + nói "hệ không thêm gì"; defaultBody = null ⇒ nói "chưa lấy được", không giả vờ trống', async () => {
     vi.spyOn(adminInterviewService, 'listPrompts').mockResolvedValue([
       { key: 'questions.guidance', version: 0, body: null, defaultBody: '' },
       { key: 'scoring.persona', version: 0, body: null, defaultBody: null },
     ]);
     vi.spyOn(adminInterviewService, 'getPromptHistory').mockResolvedValue([]);
     renderPage();
-    expect(await screen.findByLabelText('admin.prompts.defaultColumn')).toHaveValue('admin.prompts.defaultEmpty');
-    expect(screen.queryByRole('button', { name: 'admin.prompts.copyDefault' })).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('admin.prompts.body')).toHaveValue('');
+    expect(screen.getByRole('status')).toHaveTextContent('admin.prompts.effective.empty');
+    expect(screen.queryByText('admin.prompts.showDefault')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /admin\.prompts\.key\.scoring\.persona/ }));
     expect(await screen.findByText('admin.prompts.defaultUnavailable')).toBeInTheDocument();
-    expect(screen.getByLabelText('admin.prompts.defaultColumn')).toHaveValue('admin.prompts.defaultUnavailableShort');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('admin.prompts.body')).toHaveValue('');
   });
 });

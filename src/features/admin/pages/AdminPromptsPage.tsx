@@ -14,7 +14,9 @@ import { DEAD_PROMPT_KEYS, PROMPT_GROUP_ORDER, describePromptKey, formatPromptLa
 /**
  * Hướng dẫn cho AI (F21). Sidebar nhóm theo LUỒNG với nhãn người đọc (khoá máy hiện phụ), 5 khoá
  * chết bị ẩn (`DEAD_PROMPT_KEYS`). Lịch sử tải theo khoá ĐANG CHỌN — bản cũ dùng `selectedKey`
- * khởi tạo '' nên khoá đầu tự chọn không bao giờ tải lịch sử.
+ * khởi tạo '' nên khoá đầu tự chọn không bao giờ tải lịch sử. Sidebar 35 mảnh cao ~2300px nên phải
+ * DÍNH + tự cuộn trong khung: không thì bấm mảnh ở cuối là trang cuộn theo nút, ô sửa (đứng đầu cột
+ * phải) trôi mất khỏi màn hình — admin bấm xong không thấy gì đổi (đo bằng ảnh L3 2026-09-16).
  */
 export function AdminPromptsPage() {
   const { t } = useLanguage();
@@ -46,7 +48,7 @@ export function AdminPromptsPage() {
 
       {prompts.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="space-y-3 rounded-xl border border-satin bg-surface-raised p-3">
+          <aside className="space-y-3 rounded-xl border border-satin bg-surface-raised p-3 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto">
             {PROMPT_GROUP_ORDER.map((group) => {
               const items = prompts.filter(({ info }) => info.group === group);
               if (!items.length) return null;
