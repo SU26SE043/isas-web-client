@@ -22,7 +22,9 @@ interface RoadmapThresholdsTableProps {
 }
 
 export function RoadmapThresholdsTable({ rows, draft, resettingLevel, onDraftChange, onReset }: RoadmapThresholdsTableProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const levelLabel = (level: string) => { const key = `admin.roadmapThresholds.level.${level}`; const label = t(key); return label === key ? level : label; };
+  const when = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }); };
   return (
     <div className="overflow-x-auto rounded-xl border border-satin bg-surface-overlay/50">
       <table className="w-full min-w-[900px] text-sm">
@@ -41,7 +43,7 @@ export function RoadmapThresholdsTable({ rows, draft, resettingLevel, onDraftCha
               <tr key={row.level} className="border-b border-white/5 align-top">
                 <th className="p-3 text-left font-medium text-foreground">
                   <span className="flex flex-wrap items-center gap-2">
-                    {row.level}
+                    {levelLabel(row.level)}
                     {/* Hàng mồ côi phải HIỆN ra để admin dọn, không giấu đi. */}
                     {row.isKnownLevel ? null : (
                       <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">{t('admin.roadmapThresholds.unknownLevel')}</Badge>
@@ -61,6 +63,7 @@ export function RoadmapThresholdsTable({ rows, draft, resettingLevel, onDraftCha
                     onChange={(event) => onDraftChange(row.level, event.target.value)}
                     className={cn('w-28', invalid && 'border-error')}
                   />
+                  <span className="ml-1 text-xs text-muted-foreground">%</span>
                   {invalid ? <p className="mt-1 text-xs text-error">{t('admin.roadmapThresholds.invalidPct')}</p> : null}
                 </td>
                 <td className="p-3 text-muted-foreground">{row.defaultPct}%</td>
@@ -72,7 +75,7 @@ export function RoadmapThresholdsTable({ rows, draft, resettingLevel, onDraftCha
                 </td>
                 <td className="p-3 text-xs text-muted-foreground">
                   {row.isOverridden && (row.updatedBy || row.updatedAt)
-                    ? <>{row.updatedBy ?? t('admin.roadmapThresholds.unknownActor')}{row.updatedAt ? <span className="block">{row.updatedAt}</span> : null}</>
+                    ? <>{row.updatedBy ?? t('admin.roadmapThresholds.unknownActor')}{row.updatedAt ? <span className="block">{when(row.updatedAt)}</span> : null}</>
                     : <span>{t('admin.roadmapThresholds.noUpdate')}</span>}
                 </td>
                 <td className="p-3">

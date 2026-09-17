@@ -63,11 +63,13 @@ export function usePaymentAccount() {
   });
 }
 
-export function usePaymentSubscription() {
+/** `enabled=false` khi tiering UI tắt: không gọi `/me/subscription` cho một thẻ không hiển thị. */
+export function usePaymentSubscription(enabled = true) {
   return useQuery({
     queryKey: PAYMENT_SUBSCRIPTION_QUERY_KEY,
     queryFn: () => paymentService.getSubscription(),
     retry: false,
+    enabled,
   });
 }
 

@@ -11,11 +11,13 @@ export function useEmployerPaymentAccount() {
   });
 }
 
-export function useEmployerSubscription() {
+/** `enabled=false` khi tiering UI tắt — thẻ "Gói định kỳ" không hiển thị thì không gọi `/me/subscription`. */
+export function useEmployerSubscription(enabled = true) {
   return useQuery({
     queryKey: employerPaymentKeys.subscription(),
     queryFn: employerPaymentService.getMySubscription,
     retry: false,
+    enabled,
   });
 }
 

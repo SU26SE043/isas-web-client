@@ -3,7 +3,7 @@ import type { TranslationDictionary } from '@/shared/languages';
 export const liveEmployerPaymentTranslations: TranslationDictionary = {
   vi: {
     'employerBilling.live.title': 'Thanh toán & gói dịch vụ',
-    'employerBilling.live.description': 'Quản lý credit phỏng vấn, gói định kỳ và lịch sử thanh toán của tổ chức.',
+    'employerBilling.live.description': 'Quản lý credit phỏng vấn và lịch sử thanh toán của tổ chức.',
     'employerBilling.live.overview': 'Tổng quan',
     'employerBilling.live.packages': 'Gói dịch vụ',
     'employerBilling.live.orders': 'Đơn hàng',
@@ -54,7 +54,7 @@ export const liveEmployerPaymentTranslations: TranslationDictionary = {
     'employerBilling.live.recentTransactions': 'Biến động credit gần đây',
     'employerBilling.live.viewAll': 'Xem tất cả',
     'employerBilling.live.emptyOrders': 'Chưa có đơn thanh toán',
-    'employerBilling.live.emptyOrdersHint': 'Các đơn mua credit hoặc gói định kỳ của tổ chức sẽ xuất hiện tại đây.',
+    'employerBilling.live.emptyOrdersHint': 'Các đơn mua credit của tổ chức sẽ xuất hiện tại đây.',
     'employerBilling.live.emptyTransactions': 'Chưa có biến động credit',
     'employerBilling.live.emptyTransactionsHint': 'Các giao dịch cộng, trừ hoặc credit dùng thử sẽ xuất hiện tại đây.',
     'employerBilling.packages.all': 'Tất cả',
@@ -159,7 +159,7 @@ export const liveEmployerPaymentTranslations: TranslationDictionary = {
   },
   en: {
     'employerBilling.live.title': 'Billing & service plans',
-    'employerBilling.live.description': 'Manage interview credits, subscriptions, and your organization payment history.',
+    'employerBilling.live.description': 'Manage interview credits and your organization payment history.',
     'employerBilling.live.overview': 'Overview',
     'employerBilling.live.packages': 'Service plans',
     'employerBilling.live.orders': 'Orders',
@@ -210,7 +210,7 @@ export const liveEmployerPaymentTranslations: TranslationDictionary = {
     'employerBilling.live.recentTransactions': 'Recent credit activity',
     'employerBilling.live.viewAll': 'View all',
     'employerBilling.live.emptyOrders': 'No payment orders yet',
-    'employerBilling.live.emptyOrdersHint': 'Your organization credit and subscription orders will appear here.',
+    'employerBilling.live.emptyOrdersHint': 'Your organization credit orders will appear here.',
     'employerBilling.live.emptyTransactions': 'No credit activity yet',
     'employerBilling.live.emptyTransactionsHint': 'Credit additions, deductions, and free credits will appear here.',
     'employerBilling.packages.all': 'All',

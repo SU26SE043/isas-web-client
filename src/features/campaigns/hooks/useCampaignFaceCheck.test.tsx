@@ -6,7 +6,9 @@ import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
 import {
   FACE_CHECK_ALERT_INTERVAL_MS,
   FACE_CHECK_INTERVAL_MS,
+  FACE_CHECK_JITTER_MS,
   useCampaignFaceCheck,
+  withJitter,
 } from './useCampaignFaceCheck';
 
 vi.mock('../services/campaignCandidate.service', () => ({
@@ -36,6 +38,8 @@ describe('useCampaignFaceCheck', () => {
     checkFace.mockReset();
     createFlag.mockReset();
     createFlag.mockResolvedValue(undefined);
+    // Jitter = 0 cho các test nhịp cố định; nhóm test jitter ở cuối file tự đặt lại.
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
   });
 
   afterEach(() => {
@@ -69,7 +73,7 @@ describe('useCampaignFaceCheck', () => {
     await expect(result.current.checkNow()).resolves.toEqual({ safe: true, signals: [] });
   });
 
-  it('polls every 30 seconds and clears the interval on cleanup', async () => {
+  it('polls every FACE_CHECK_INTERVAL_MS and clears the interval on cleanup', async () => {
     vi.useFakeTimers();
     checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
     const video = document.createElement('video');
@@ -183,7 +187,7 @@ describe('useCampaignFaceCheck', () => {
 
     expect(createFlag).toHaveBeenCalledExactlyOnceWith('campaign-1', 'session-1', {
       signalType: 'monitoring_gap',
-      note: 'Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~61s (nhịp bình thường 30s)',
+      note: `Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~${(FACE_CHECK_INTERVAL_MS + 31_000) / 1000}s (nhịp bình thường ${FACE_CHECK_INTERVAL_MS / 1000}s)`,
     });
   });
 
@@ -202,6 +206,51 @@ describe('useCampaignFaceCheck', () => {
     await act(async () => { await Promise.resolve(); });
 
     expect(createFlag).toHaveBeenCalledOnce();
-    expect(createFlag.mock.calls[0][2].note).toContain('(nhịp bình thường 30s)');
+    expect(createFlag.mock.calls[0][2].note).toContain(`(nhịp bình thường ${FACE_CHECK_INTERVAL_MS / 1000}s)`);
+  });
+
+  describe('jitter', () => {
+    it('is 15s ± 3s: the normal cadence lands inside the window, never outside', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      expect(withJitter(FACE_CHECK_INTERVAL_MS)).toBe(FACE_CHECK_INTERVAL_MS - FACE_CHECK_JITTER_MS);
+      vi.spyOn(Math, 'random').mockReturnValue(1);
+      expect(withJitter(FACE_CHECK_INTERVAL_MS)).toBe(FACE_CHECK_INTERVAL_MS + FACE_CHECK_JITTER_MS);
+      expect(FACE_CHECK_INTERVAL_MS).toBe(15_000);
+      expect(FACE_CHECK_JITTER_MS * 2).toBeLessThan(FACE_CHECK_INTERVAL_MS);
+    });
+
+    it('never jitters the alert cadence', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(1);
+      expect(withJitter(FACE_CHECK_ALERT_INTERVAL_MS)).toBe(FACE_CHECK_ALERT_INTERVAL_MS);
+    });
+
+    it('actually delays the scheduled check by the jittered amount', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, 'random').mockReturnValue(1); // +3s
+      checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
+      const video = document.createElement('video');
+      renderHook(() => useCampaignFaceCheck({
+        campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, videoEl: video, onSignal: vi.fn(),
+      }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
+      expect(checkFace).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_JITTER_MS); });
+      expect(checkFace).toHaveBeenCalledOnce();
+    });
+
+    it('a +3s jitter alone is never reported as a monitoring gap', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, 'random').mockReturnValue(1);
+      checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
+      const video = document.createElement('video');
+      renderHook(() => useCampaignFaceCheck({
+        campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, videoEl: video, onSignal: vi.fn(),
+      }));
+      for (let i = 0; i < 4; i += 1) {
+        await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS + FACE_CHECK_JITTER_MS); });
+      }
+      expect(checkFace).toHaveBeenCalledTimes(4);
+      expect(createFlag).not.toHaveBeenCalled();
+    });
   });
 });

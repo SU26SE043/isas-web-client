@@ -115,7 +115,32 @@ describe('AdminRoadmapThresholdsPage', () => {
     // Thông điệp của server phải tới được admin, không nuốt.
     expect(await screen.findByText(/admin\.roadmapThresholds\.saveError\.400/)).toHaveTextContent('Fresher phải trong [0,100]');
 
+    // Trả về mặc định nay đi qua confirm (đổi luật cho MỌI lần chấm sau) — bấm hàng rồi xác nhận trong dialog.
     fireEvent.click(screen.getByRole('button', { name: 'admin.roadmapThresholds.reset Fresher' }));
+    expect(await screen.findByText('admin.roadmapThresholds.resetDescription')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'admin.roadmapThresholds.reset' }).at(-1)!);
     expect(await screen.findByText('admin.roadmapThresholds.resetError.404')).toBeInTheDocument();
+  });
+
+  it('"Trả về mặc định" KHÔNG gọi DELETE khi chỉ bấm nút hàng — phải xác nhận trong dialog; huỷ thì không gọi', async () => {
+    vi.spyOn(adminRoadmapThresholdService, 'list').mockResolvedValue(rows);
+    const reset = vi.spyOn(adminRoadmapThresholdService, 'reset').mockResolvedValue(undefined as never);
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'admin.roadmapThresholds.reset Fresher' }));
+    expect(await screen.findByText('admin.roadmapThresholds.resetDescription')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.roadmapThresholds.cancel' }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(reset).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.roadmapThresholds.reset Fresher' }));
+    fireEvent.click((await screen.findAllByRole('button', { name: 'admin.roadmapThresholds.reset' })).at(-1)!);
+    await waitFor(() => expect(reset).toHaveBeenCalledWith('Fresher'));
+  });
+
+  it('ngày sửa gần nhất được định dạng theo locale, không in chuỗi ISO thô', async () => {
+    vi.spyOn(adminRoadmapThresholdService, 'list').mockResolvedValue(rows);
+    renderPage();
+    await screen.findByLabelText('admin.roadmapThresholds.column.effective Fresher');
+    expect(screen.queryByText('2026-08-20T09:00:00Z')).not.toBeInTheDocument();
+    expect(screen.getByText('admin@isas.local')).toBeInTheDocument();
   });
 });

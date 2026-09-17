@@ -5,8 +5,21 @@ import type { CampaignFaceSignal } from '../types/campaignViolation.types';
 import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
 import { enqueueCampaignFlag } from '../utils/campaignFlagQueue';
 
-export const FACE_CHECK_INTERVAL_MS = 30_000;
+// 2026-09-17: 30s → 15s. Giá mỗi lượt phía server đã giảm gần nửa (AIService cache vector ảnh
+// mốc theo hash nội dung — trước đó ảnh mốc bị nhúng lại ở MỌI lượt), nên 15s ≈ tải của 30s cũ.
+// Đo trên box 8 core: trần ~2,2 lượt/s cho TOÀN hệ ⇒ 15s chịu được ~16 ứng viên thi cùng lúc
+// khi chừa nửa box cho chấm điểm/decide-next; đừng hạ tiếp mà không đo lại.
+export const FACE_CHECK_INTERVAL_MS = 15_000;
 export const FACE_CHECK_ALERT_INTERVAL_MS = 10_000;
+// Nhịp cố định là thứ canh được: ai muốn đổi người chỉ cần canh đúng giữa hai lượt. Xê dịch
+// ngẫu nhiên ±3s để lượt kế không đoán được; CHỈ áp cho nhịp bình thường, nhịp báo động giữ 10s
+// đúng để lần kiểm lại sau bất thường không bị kéo dài.
+export const FACE_CHECK_JITTER_MS = 3_000;
+
+export function withJitter(intervalMs: number): number {
+  if (intervalMs !== FACE_CHECK_INTERVAL_MS) return intervalMs;
+  return intervalMs + Math.round((Math.random() * 2 - 1) * FACE_CHECK_JITTER_MS);
+}
 
 interface UseCampaignFaceCheckOptions {
   campaignId: string;
@@ -161,10 +174,12 @@ export function useCampaignFaceCheck({
     const scheduleNext = (intervalMs: number) => {
       if (timer.current != null) window.clearTimeout(timer.current);
       scheduledInterval.current = intervalMs;
+      // Callback nhận nhịp GỐC (không jitter): phép đo khoảng trống so với 2× nhịp gốc, nên
+      // jitter +3s không bao giờ tự tạo ra một "khoảng trống".
       timer.current = window.setTimeout(() => {
         timer.current = null;
         void runScheduledCheckRef.current(intervalMs);
-      }, intervalMs);
+      }, withJitter(intervalMs));
     };
     scheduleNextRef.current = scheduleNext;
     scheduleNext(FACE_CHECK_INTERVAL_MS);

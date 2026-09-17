@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient';
 import { getApiErrorMessage } from '@/shared/api/apiError';
+import { isTieringUiEnabled } from '@/shared/config';
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { paymentEndpoints } from './payment.endpoints';
 import { INITIAL_MOCK_WALLET_BALANCE, MOCK_PAYMENT_PACKAGES, MOCK_TOKEN_USAGE, MOCK_WALLET_TRANSACTIONS } from '../mocks/payment.fixtures';
@@ -255,6 +256,15 @@ async function fetchLiveCreditTransactions(params?: { cursor?: string | null; li
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+/**
+ * Gói THUÊ BAO (type=2, gắn tier) chỉ bán khi tiering UI bật — cờ tắt thì catalog chỉ còn gói credit mua lẻ.
+ * Lọc ở tầng service để MỌI màn dùng chung (bảng giá public · /candidate/subscription · tab Gói credit)
+ * không lệch nhau; BE vẫn trả đủ, không đổi hợp đồng. Bật lại: VITE_ENABLE_TIERING_UI=true.
+ */
+function isSellableInCatalog(item: PackageResponse): boolean {
+  return isTieringUiEnabled() || Number(item.type) !== 2;
+}
+
 export const paymentService = {
   async getPaymentAccount(): Promise<PaymentAccountResponse> {
     if (usesMockData('payment')) {
@@ -335,12 +345,12 @@ export const paymentService = {
    * `GET /api/v1/payment/package` → active PackageResponse[].
    */
   async listCatalogPackages(): Promise<PackageResponse[]> {
-    if (usesMockData('payment')) { await mockDelay(50); return MOCK_PAYMENT_PACKAGES.filter((item) => item.isActive); }
+    if (usesMockData('payment')) { await mockDelay(50); return MOCK_PAYMENT_PACKAGES.filter((item) => item.isActive && isSellableInCatalog(item)); }
     try {
       const response = await apiClient.get<unknown>(paymentEndpoints.listPackages);
       return unwrapList(response.data)
         .map(parsePackageResponse)
-        .filter((item): item is PackageResponse => item != null && item.isActive);
+        .filter((item): item is PackageResponse => item != null && item.isActive && isSellableInCatalog(item));
     } catch (error) {
       throw new Error(getApiErrorMessage(error, 'Failed to load packages.'));
     }

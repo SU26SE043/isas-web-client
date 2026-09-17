@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PackagePlus } from 'lucide-react';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { PaymentQuerySection } from '../components/PaymentQuerySection';
 import { TokenTransactionsTable } from '../components/TokenTransactionsTable';
@@ -18,7 +19,8 @@ export const CreditsWalletPage: React.FC = () => {
   const navigate = useNavigate();
   const walletQuery = useTokenWallet();
   const accountQuery = usePaymentAccount();
-  const subscriptionQuery = usePaymentSubscription();
+  const showTiering = isTieringUiEnabled();   // tạm ẩn thẻ "Thuê bao hiện tại" (xem isTieringUiEnabled)
+  const subscriptionQuery = usePaymentSubscription(showTiering);
   const [activeTab, setActiveTab] = useState<'overview' | 'packages' | 'transactions' | 'orders'>('overview');
   const [ordersPage, setOrdersPage] = useState(0);
   const [ordersPageSize, setOrdersPageSize] = useState(5);
@@ -50,7 +52,7 @@ export const CreditsWalletPage: React.FC = () => {
           {tabs.map(([id, label]) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={activeTab === id ? 'shrink-0 border-b-2 border-foreground px-4 py-3 text-sm font-medium text-foreground' : 'shrink-0 border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground'}>{label}</button>)}
         </nav>
 
-        {activeTab === 'overview' && <div className="grid gap-6 lg:grid-cols-2">
+        {activeTab === 'overview' && <div className={showTiering ? 'grid gap-6 lg:grid-cols-2' : 'grid gap-6'}>
           <PaymentQuerySection
             isLoading={accountQuery.isLoading || walletQuery.isLoading}
             isError={accountQuery.isError || walletQuery.isError || !accountQuery.data || !walletQuery.wallet}
@@ -61,13 +63,13 @@ export const CreditsWalletPage: React.FC = () => {
           >
             {accountQuery.data && walletQuery.wallet ? <TokenWalletAccountCard wallet={walletQuery.wallet} account={accountQuery.data} /> : null}
           </PaymentQuerySection>
-          <PaymentQuerySection
+          {showTiering ? <PaymentQuerySection
             isLoading={subscriptionQuery.isLoading}
             isError={subscriptionQuery.isError || !subscriptionQuery.data}
             onRetry={() => void subscriptionQuery.refetch()}
           >
             {subscriptionQuery.data ? <TokenSubscriptionCard subscription={subscriptionQuery.data} onBrowsePackages={() => setActiveTab('packages')} /> : null}
-          </PaymentQuerySection>
+          </PaymentQuerySection> : null}
         </div>}
 
         {activeTab === 'packages' && <TokenPackageCatalog />}

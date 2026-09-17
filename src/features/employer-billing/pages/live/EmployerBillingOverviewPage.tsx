@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { isTieringUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { AccountCard } from '../../components/live/AccountCard';
 import { OrdersTable } from '../../components/live/OrdersTable';
@@ -21,20 +22,21 @@ export function EmployerBillingOverviewPage() {
   const { user } = useAuth();
   const canManage = canManageEmployerPayment(user?.role);
   const account = useEmployerPaymentAccount();
-  const subscription = useEmployerSubscription();
+  const showTiering = isTieringUiEnabled();   // tạm ẩn thẻ "Gói định kỳ" (xem isTieringUiEnabled)
+  const subscription = useEmployerSubscription(showTiering);
   const packages = useEmployerPackages();
   const orders = useEmployerOrders(null, 5);
   const transactions = useEmployerTransactions(null, 5);
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className={showTiering ? 'grid gap-6 lg:grid-cols-2' : 'grid gap-6'}>
         <QuerySection isLoading={account.isLoading} isError={account.isError} onRetry={() => void account.refetch()}>
           {account.data ? <AccountCard account={account.data} /> : null}
         </QuerySection>
-        <QuerySection isLoading={subscription.isLoading} isError={subscription.isError} onRetry={() => void subscription.refetch()}>
+        {showTiering ? <QuerySection isLoading={subscription.isLoading} isError={subscription.isError} onRetry={() => void subscription.refetch()}>
           {subscription.data ? <SubscriptionCard subscription={subscription.data} canManage={canManage} /> : null}
-        </QuerySection>
+        </QuerySection> : null}
       </div>
 
       <section className="space-y-4">

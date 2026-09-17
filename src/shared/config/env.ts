@@ -16,6 +16,11 @@ const envSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value ?? ''),
+  VITE_ENABLE_TIERING_UI: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value === 'true' || value === '1'),
   MODE: z.enum(['development', 'production', 'test']),
   DEV: z.boolean(),
   PROD: z.boolean(),
@@ -26,6 +31,7 @@ function parseEnv() {
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_ENABLE_ENTERPRISE_SSO: import.meta.env.VITE_ENABLE_ENTERPRISE_SSO,
     VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+    VITE_ENABLE_TIERING_UI: import.meta.env.VITE_ENABLE_TIERING_UI,
     MODE: import.meta.env.MODE,
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
@@ -64,4 +70,15 @@ export function isDevEnvironment(): boolean {
 /** Enterprise SAML/OIDC SSO — gated per tenant; enable via VITE_ENABLE_ENTERPRISE_SSO=true */
 export function isEnterpriseSsoEnabled(): boolean {
   return env.VITE_ENABLE_ENTERPRISE_SSO;
+}
+
+/**
+ * Tiering (tier/gói thuê bao/quota tháng) TẠM ẨN khỏi giao diện — chốt 2026-09-17: BE giữ nguyên
+ * (`Tiering:Enabled=false` trên prod), FE không bán/không hiện gói thuê bao, tab Tier, form cấp thuê bao,
+ * thẻ "Thuê bao hiện tại". Bật lại bằng VITE_ENABLE_TIERING_UI=true — không xoá code, không đổi hợp đồng.
+ * Lý do ẩn thay vì để nguyên: catalog prod có 4 gói tier giá 2.000₫ (rác sandbox) và Plus/Pro prod lệch
+ * seed (Credit ≠ Metered) — bày ra là bán thứ chưa chốt luật.
+ */
+export function isTieringUiEnabled(): boolean {
+  return env.VITE_ENABLE_TIERING_UI;
 }

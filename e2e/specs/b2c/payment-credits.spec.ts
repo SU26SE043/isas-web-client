@@ -13,7 +13,7 @@ test.describe('B2C token wallet and checkout', () => {
     await expect(page.locator('.heading-primary.text-5xl')).toHaveText('2,500');
 
     await page.goto('/candidate/subscription');
-    await expect(page.getByRole('heading', { name: /Token packages/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Buy credits/i })).toBeVisible();
     await page.getByRole('button', { name: /^Continue to checkout$/i }).click();
     await expect(page).toHaveURL(/\/candidate\/payment\?packageId=/);
     await page.getByRole('button', { name: /Pay with PayOS/i }).click();
