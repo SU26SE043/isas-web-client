@@ -6,6 +6,7 @@ import { useB2cCoachingNotices } from './useB2cCoachingNotices';
 import { useB2cFaceCheck } from './useB2cFaceCheck';
 import { useB2cFocusTracking } from './useB2cFocusTracking';
 import { useB2cRoomCoaching } from './useB2cRoomCoaching';
+import type { InterviewPhase } from './useB2cPracticeRoom';
 
 vi.mock('../stores/b2cPracticeInterviewStore', () => ({
   useB2cPracticeInterviewStore: vi.fn(),
@@ -76,11 +77,11 @@ describe('useB2cRoomCoaching', () => {
   it('face check LATCHES on once armed — stays on through a later countdown phase (resume)', () => {
     mockStore({ focusTrackingEnabled: true, stage: 'interviewing' });
     const { rerender } = renderHook(
-      (props: { phase: string }) =>
+      (props: { phase: InterviewPhase }) =>
         useB2cRoomCoaching({
           sessionId: 's1', phase: props.phase, videoRef, uploadInFlight: false, completed: false,
         }),
-      { initialProps: { phase: 'countdown' } },
+      { initialProps: { phase: 'countdown' as InterviewPhase } },
     );
     // Lượt render đầu chạy TRƯỚC effect đặt `armed` — soi lượt gần nhất, không phải lượt đầu.
     expect(faceCheckMock.mock.calls.at(-1)![0]).toMatchObject({ enabled: true });
