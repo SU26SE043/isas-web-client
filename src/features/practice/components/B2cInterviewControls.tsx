@@ -13,6 +13,10 @@ interface B2cInterviewControlsProps {
   finishLabel: string;
   finishPrimary?: boolean;
   disabled?: boolean;
+  /** Cho phép bấm "Kết thúc" trước khi đã trả lời hết câu (kèm điều kiện riêng qua `finishDisabled`). */
+  allowEarlyFinish?: boolean;
+  /** Ghi đè `disabled` riêng cho nút Kết thúc khi `allowEarlyFinish` — mặc định dùng `disabled`. */
+  finishDisabled?: boolean;
 }
 
 export function B2cInterviewControls({
@@ -26,6 +30,8 @@ export function B2cInterviewControls({
   finishLabel,
   finishPrimary,
   disabled,
+  allowEarlyFinish = false,
+  finishDisabled,
 }: B2cInterviewControlsProps) {
   const { t } = useLanguage();
 
@@ -63,14 +69,16 @@ export function B2cInterviewControls({
         >
           {t('practice.room.submitAnswer')}
         </button> : null}
-        {finishPrimary ? (
+        {finishPrimary || allowEarlyFinish ? (
           <button
             type="button"
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-error-500/40 px-4 py-2.5 text-sm font-medium text-error-300 hover:bg-error-500/10',
-              'btn-primary border-transparent text-black',
+              'inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium',
+              finishPrimary
+                ? 'btn-primary'
+                : 'border border-error-500/40 text-error-300 hover:bg-error-500/10',
             )}
-            disabled={disabled}
+            disabled={finishDisabled ?? disabled}
             onClick={onFinish}
           >
             {finishLabel}

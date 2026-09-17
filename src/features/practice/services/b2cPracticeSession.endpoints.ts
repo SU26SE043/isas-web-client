@@ -10,5 +10,6 @@ export const b2cPracticeSessionEndpoints = {
     `/api/v1/interview/practice/sessions/${sessionId}/answers/${answerId}/audio`,
   submit: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}/submit`,
   focusEvents: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}/focus-events`,
+  faceCheck: (sessionId: string) => `/api/v1/interview/practice/sessions/${sessionId}/face-check`,
   history: '/api/v1/interview/practice/sessions/history',
 } as const;

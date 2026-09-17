@@ -1,10 +1,10 @@
-import { AppWindow, ClipboardPaste } from 'lucide-react';
+import { AppWindow, ClipboardPaste, ScanFace } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { FocusEventSummary } from '../../types/b2cPracticeSession.types';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatResultTime } from '../../utils/practiceSessionResultFormat';
 
-function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'paste'; icon: typeof AppWindow; label: string; hint: string; value: number }) {
+function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'paste' | 'frame'; icon: typeof AppWindow; label: string; hint: string; value: number }) {
   return (
     <div className="rounded-xl border border-satin bg-surface-overlay p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground"><Icon className="size-5 text-muted-foreground" aria-hidden />{label}</div>
@@ -15,7 +15,7 @@ function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'p
 }
 
 function typeLabel(event: FocusEventSummary, t: (key: string) => string) {
-  const known = new Set(['tab_switch', 'focus_lost', 'paste']);
+  const known = new Set(['tab_switch', 'focus_lost', 'paste', 'no_face', 'multiple_faces']);
   return known.has(event.signalType)
     ? t(`practice.result.focusTracking.type.${event.signalType}`)
     : event.signalType;
@@ -26,6 +26,8 @@ export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewM
   const events = view.focusEvents ?? [];
   const windowCount = events.filter((event) => event.signalType === 'tab_switch' || event.signalType === 'focus_lost').reduce((sum, event) => sum + event.count, 0);
   const pasteCount = events.filter((event) => event.signalType === 'paste').reduce((sum, event) => sum + event.count, 0);
+  const frameEvents = events.filter((event) => event.signalType === 'no_face' || event.signalType === 'multiple_faces');
+  const frameCount = frameEvents.reduce((sum, event) => sum + event.count, 0);
   const count = view.focusLeaveCount ?? 0;
   const placement = view.focusLeavePlacement ? t(`practice.result.focusTracking.${view.focusLeavePlacement}`) : '';
   const message = count > 0
@@ -35,9 +37,10 @@ export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewM
   // Không bọc frame: nội dung nằm TRONG Dialog đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
   return (
     <section>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <FocusMetric id="window" icon={AppWindow} value={windowCount} label={t('practice.result.focusTracking.group.window')} hint={t('practice.result.focusTracking.group.windowHint')} />
         <FocusMetric id="paste" icon={ClipboardPaste} value={pasteCount} label={t('practice.result.focusTracking.group.paste')} hint={t('practice.result.focusTracking.group.pasteHint')} />
+        <FocusMetric id="frame" icon={ScanFace} value={frameCount} label={t('practice.result.focusTracking.group.frame')} hint={t('practice.result.focusTracking.group.frameHint')} />
       </div>
       <ul className="mt-4 space-y-2">
         {events.map((event) => {

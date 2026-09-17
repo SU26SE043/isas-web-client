@@ -15,6 +15,7 @@ interface B2cPracticeRoomDialogsProps {
   onRecorderOpenChange: (open: boolean) => void;
   onRecorderStatusChange: (status: AudioRecorderStatus) => void;
   autoSubmitRequestId: number;
+  earlyFinish?: boolean;
 }
 
 export function B2cPracticeRoomDialogs({
@@ -24,6 +25,7 @@ export function B2cPracticeRoomDialogs({
   onRecorderOpenChange,
   onRecorderStatusChange,
   autoSubmitRequestId,
+  earlyFinish = false,
 }: B2cPracticeRoomDialogsProps) {
   const { t } = useLanguage();
   const questionLabel = t('practice.room.questionOf')
@@ -75,6 +77,10 @@ export function B2cPracticeRoomDialogs({
         retryConfirmOpen={room.retryConfirmOpen}
         onCloseRetry={() => room.setRetryConfirmOpen(false)}
         onConfirmRetry={room.confirmRetryRecording}
+        earlyFinish={earlyFinish && !room.interviewComplete}
+        answeredCount={room.submittedCount}
+        totalCount={room.questions.length}
+        remainingCount={room.unansweredCount}
       />
     </>
   );
