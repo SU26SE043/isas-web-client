@@ -45,6 +45,9 @@ import type {
 } from '../types/campaignWizard.types';
 import {
   CAMPAIGN_WIZARD_STEP_COUNT,
+  hiddenWizardStepsBetween,
+  isHiddenWizardStep,
+  nextVisibleWizardStep,
   canNavigateToWizardStep,
 } from '../components/wizard/campaignWizard.steps';
 import { useCampaignFileActions } from './useCampaignFileActions';
@@ -213,7 +216,7 @@ function buildInitialState(
     questionsPerSession: campaign?.questionsPerSession ?? null,
     settings: defaultSettings(campaign),
     // Chỉ chế độ edit mới mở thẳng vào một bước (mọi bước đã hoàn thành); create luôn đi từ bước 1.
-    currentStep: mode === 'edit' && initialStep != null ? Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, initialStep)) : 0,
+    currentStep: mode === 'edit' && initialStep != null ? snapToVisibleStep(Math.max(0, Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, initialStep))) : 0,
     completedSteps: mode === 'edit' ? [0, 1, 2, 3, 4, 5, 6, 7] : [],
     errorSteps: [],
     draftId: campaign?.id,
@@ -255,6 +258,13 @@ export function hasCampaignUpdateChanges(
 ): boolean {
   return JSON.stringify(buildCampaignUpdateRequest(baseline))
     !== JSON.stringify(buildCampaignUpdateRequest(current));
+}
+
+/** Deep-link `?step=` trỏ vào bước ẩn ⇒ đứng ở bước hiển thị kế trước (hoặc kế sau nếu là bước đầu). */
+function snapToVisibleStep(step: number): number {
+  if (!isHiddenWizardStep(step)) return step;
+  const back = nextVisibleWizardStep(step, -1);
+  return back !== step ? back : nextVisibleWizardStep(step, 1);
 }
 
 function markCompleted(completed: number[], step: number) {
@@ -1047,9 +1057,11 @@ export function useCampaignWizard({
     setActionError(null);
     setState((prev) => ({
       ...prev,
-      completedSteps: markCompleted(prev.completedSteps, prev.currentStep),
+      // Bước ẩn (vd `slots` khi cờ tắt) bị nhảy qua và ĐÁNH DẤU hoàn thành luôn — validate/nav coi nó như đã đi.
+      completedSteps: [prev.currentStep, ...hiddenWizardStepsBetween(prev.currentStep, nextVisibleWizardStep(prev.currentStep, 1))]
+        .reduce((acc, step) => markCompleted(acc, step), prev.completedSteps),
       errorSteps: clearError(prev.errorSteps, prev.currentStep),
-      currentStep: Math.min(CAMPAIGN_WIZARD_STEP_COUNT - 1, prev.currentStep + 1),
+      currentStep: nextVisibleWizardStep(prev.currentStep, 1),
       autosaveStatus: 'dirty',
     }));
   }, [campaignId, fileActions, isEnsuringDraft, isGeneratingQuestions, isSavingQuestions, isSubmitting, mode, state, t]);
@@ -1068,7 +1080,7 @@ export function useCampaignWizard({
     setStepError(null);
     setState((prev) => ({
       ...prev,
-      currentStep: Math.max(0, prev.currentStep - 1),
+      currentStep: nextVisibleWizardStep(prev.currentStep, -1),
     }));
   }, [
     fileActions.isCriteriaBusy,

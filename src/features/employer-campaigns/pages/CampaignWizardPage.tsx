@@ -48,7 +48,8 @@ export function CampaignWizardPage() {
   } = useEmployerCampaign(id);
   const mode = id ? 'edit' : 'create';
   const isEditing = mode === 'edit';
-  // `?step=3` = "Bước 3/8" như người dùng thấy (1-based); hook nhận 0-based. Rác/ngoài dải ⇒ bỏ qua, mở bước 1.
+  // `?step=3` = index NỘI BỘ 1-based (bước 3 = Tiêu chí); hook nhận 0-based. Rác/ngoài dải ⇒ bỏ qua, mở bước 1.
+  // Khi bước "ca thi" (index 5) ẩn, hook tự snap về bước hiển thị kế trước — số trên stepper là vị trí HIỂN THỊ, có thể ≠ ?step.
   const initialStep = parseWizardStepParam(searchParams.get('step'));
   const initialQuestionId = parseWizardQuestionParam(searchParams.get('question'));
 

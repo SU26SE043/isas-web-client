@@ -116,6 +116,8 @@ test('Employer manages live interview slots on Campaign Detail', async ({ page }
 });
 
 test('warns before invitations exceed available slot capacity', async ({ page }) => {
+  // Bước ca thi TẠM ẨN (2026-09-17): wizard không tới bước này và Review coi như 0 ca. Bật VITE_ENABLE_CAMPAIGN_SLOTS_UI khi build dist để chạy.
+  test.skip(!process.env.VITE_ENABLE_CAMPAIGN_SLOTS_UI, 'bước ca thi tạm ẩn khỏi wizard — bật VITE_ENABLE_CAMPAIGN_SLOTS_UI');
   let invitationCalls = 0;
   await page.route(`**/api/v1/campaign/${campaignId}`, (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(campaignResponse('Active')) }),
@@ -143,6 +145,8 @@ test('warns before invitations exceed available slot capacity', async ({ page })
 });
 
 test('shows the dedicated slot step before Review in the edit wizard', async ({ page }) => {
+  // Bước ca thi TẠM ẨN (2026-09-17): wizard không tới bước này và Review coi như 0 ca. Bật VITE_ENABLE_CAMPAIGN_SLOTS_UI khi build dist để chạy.
+  test.skip(!process.env.VITE_ENABLE_CAMPAIGN_SLOTS_UI, 'bước ca thi tạm ẩn khỏi wizard — bật VITE_ENABLE_CAMPAIGN_SLOTS_UI');
   await page.route(`**/api/v1/campaign/${campaignId}`, (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(campaignResponse('Draft')) }),
   );

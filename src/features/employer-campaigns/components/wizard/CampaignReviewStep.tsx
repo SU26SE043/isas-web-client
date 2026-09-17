@@ -2,6 +2,7 @@ import { Rocket, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
+import { isCampaignSlotsUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
 import type { FailedCampaignInvitation } from '../../types/campaign.api.types';
@@ -41,12 +42,14 @@ export function CampaignReviewStep({
   invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true,
 }: CampaignReviewStepProps) {
   const { t } = useLanguage();
-  const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId));
+  // Khung giờ tạm ẩn ⇒ Review coi như 0 ca: không query, không bảng ca, không chặn theo ca (xem isCampaignSlotsUiEnabled).
+  const slotsUi = isCampaignSlotsUiEnabled();
+  const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId) && slotsUi);
   // T12 R2: đang TẢI hoặc LỖI ⇒ coi như "chưa biết ca nào" (`[]`), KHÔNG PHẢI "0 ca thật" —
   // không thể chặn triển khai bằng dữ liệu ca CHƯA CÓ. Nhánh 0-ca của `inviteSlotShortfall`/
   // `slotsOutsideCampaignWindow` tự nhiên trả "không có gì để chặn" cho đúng ca này, nên
   // KHÔNG cần đọc `slotsQuery.isLoading`/`isError` ở đâu khác trong file này.
-  const slots = slotsQuery.data ?? [];
+  const slots = slotsUi ? (slotsQuery.data ?? []) : [];
   const slotCapacitySummary = campaignSlotCapacity(slots);
   const capacity = slotCapacitySummary.total;
   const assignedCount = slots.reduce((sum, slot) => sum + slot.assignedCount, 0);
@@ -131,7 +134,8 @@ export function CampaignReviewStep({
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCriteria')} value={`${rubric.length} · ${Math.round(rubric.reduce((sum, item) => sum + Number(item.weight), 0))}%`} onEdit={() => onGoToStep(2)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryQuestions')} value={`${questions.length} · ${questionsPerSession ?? t('employer.campaigns.wizard.deploy.allQuestions')}`} onEdit={() => onGoToStep(3)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={`${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} onEdit={() => onGoToStep(5)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          {/* Ca thi ẩn ⇒ bước 5 không tới được (goToStep từ chối) — "Sửa" trỏ về bước 1, nơi đặt cửa sổ thi (startsAt/expiresAt). */}
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} onEdit={() => onGoToStep(slotsUi ? 5 : 0)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
         {/* SC2 · D-1 — bước 8 chỉ TÓM TẮT chấm thử theo câu (n/K câu đã thử · m câu chưa gắn tiêu chí), không chặn Phát hành. */}
         <QuestionPreviewSummaryLine campaignId={campaignId ?? null} questions={questions} rubric={rubric} onGoToQuestions={() => onGoToStep(3)} />
