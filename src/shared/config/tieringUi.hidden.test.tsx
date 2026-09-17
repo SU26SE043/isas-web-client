@@ -88,6 +88,8 @@ describe('admin — Gói & Tier chỉ còn Gói bán; Cấp chỉ còn credit; n
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'admin.money.audience.b2c' })).not.toBeInTheDocument();
     await screen.findByText('Gói 5 credit');
+    expect(screen.queryByRole('columnheader', { name: 'admin.plans.package.plan' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'admin.plans.package.audience' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'admin.plans.createPackage' }));
     const typeSelect = await screen.findByLabelText('admin.plans.package.type');
     const options = within(typeSelect).getAllByRole('option').map((o) => o.getAttribute('value'));
