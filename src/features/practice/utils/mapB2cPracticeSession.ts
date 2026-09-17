@@ -14,7 +14,46 @@ import type {
   PracticeSessionTopic,
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
+  FocusEventSummaryResponse,
+  FocusSignalType,
 } from '../types/b2cPracticeSession.types';
+
+const FOCUS_SIGNAL_TYPES: readonly FocusSignalType[] = [
+  'tab_switch',
+  'paste',
+  'focus_lost',
+  'no_face',
+  'multiple_faces',
+];
+
+function isFocusSignalType(value: string): value is FocusSignalType {
+  return (FOCUS_SIGNAL_TYPES as readonly string[]).includes(value);
+}
+
+/**
+ * ⚠ `undefined` (khoá `focusEvents` vắng mặt/`null` trên JSON) ≠ mảng rỗng — mirror bất biến API
+ * (BE `FocusEventSummaryResponse[]?`): thiếu = buổi KHÔNG theo dõi, `[]` = có theo dõi và chưa
+ * ghi nhận gì. Đừng coi "không parse được" giống với "server trả rỗng".
+ */
+function mapFocusEvents(raw: unknown): FocusEventSummaryResponse[] | null | undefined {
+  if (raw === null) return null;
+  if (!Array.isArray(raw)) return undefined;
+  return raw
+    .map((entry) => {
+      const item = asRecord(entry);
+      const signalType = pickString(item.signalType);
+      const firstAt = pickString(item.firstAt);
+      const lastAt = pickString(item.lastAt);
+      if (!isFocusSignalType(signalType) || !firstAt || !lastAt) return null;
+      return {
+        signalType,
+        count: pickNumber(item.count) ?? 0,
+        firstAt,
+        lastAt,
+      };
+    })
+    .filter((item): item is FocusEventSummaryResponse => item !== null);
+}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
@@ -825,6 +864,8 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     questions,
     result,
     answers: enrichedAnswers,
+    focusTrackingEnabled: Boolean(data.focusTrackingEnabled),
+    focusEvents: mapFocusEvents(data.focusEvents),
   };
 }
 

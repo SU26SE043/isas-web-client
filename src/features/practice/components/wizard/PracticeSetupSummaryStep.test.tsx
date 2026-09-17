@@ -41,6 +41,8 @@ const baseProps: PracticeSetupSummaryStepProps = {
   isCreating: false,
   errorCode: null,
   errorMessage: null,
+  focusTrackingEnabled: false,
+  onFocusTrackingChange: vi.fn(),
   onBack: vi.fn(),
   onEditCriteria: vi.fn(),
   onStart: vi.fn(),

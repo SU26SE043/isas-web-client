@@ -455,6 +455,14 @@ export function useB2cPracticeRoom(
   const hasPendingRecording =
     Boolean(recorder.audioFile) && recorder.recordingStatus !== 'submitted';
 
+  // Kết thúc sớm (coaching) — đếm theo câu ĐÃ CÓ CÂU TRẢ LỜI TỪ SERVER, không phải theo
+  // `questionStates` (vốn còn phân biệt recording/uploading/unanswered…). `remainingCount` là số
+  // câu sẽ bị BỎ QUA khi chấm nếu bấm Kết thúc ngay bây giờ.
+  const answeredCount = Object.keys(store.answersByQuestionId).length;
+  const remainingCount = Math.max(0, store.questions.length - answeredCount);
+  const canFinishEarly =
+    answeredCount >= 1 && !isSubmittingSession && !answerSubmit.isSubmittingAnswer;
+
   return {
     isLoading: store.stage === 'setup' && store.questions.length === 0,
     stage: store.stage,
@@ -510,6 +518,9 @@ export function useB2cPracticeRoom(
     submittedCount,
     unansweredCount,
     hasPendingRecording,
+    answeredCount,
+    remainingCount,
+    canFinishEarly,
     startRecording: () => {
       if (options?.violationPaused || speech.isBusy || effectiveRemainingSeconds <= 0 || isTimingOut) return;
       if (store.answersByQuestionId[store.currentQuestionId ?? '']) {

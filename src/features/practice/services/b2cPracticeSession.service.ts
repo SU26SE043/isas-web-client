@@ -9,6 +9,8 @@ import type {
   PracticeJobCategory,
   PracticeLanguage,
   PracticeSessionOptions,
+  FocusBehaviorSignalType,
+  PracticeFaceCheckResult,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.types';
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
@@ -335,6 +337,64 @@ export async function submitPracticeSession(sessionId: string): Promise<void> {
       },
     ],
   });
+}
+
+/**
+ * Coaching (2026-09-17) — ghi một tín hiệu mất tập trung (hành vi). Best-effort: buổi tắt theo
+ * dõi/B2B/đã kết thúc là no-op ở BE (204), lỗi mạng KHÔNG được để chặn luồng phỏng vấn nên bị
+ * nuốt ở đây — mất một tín hiệu coaching không đáng để làm gián đoạn buổi thi.
+ */
+export async function recordPracticeFocusEvent(
+  sessionId: string,
+  signalType: FocusBehaviorSignalType,
+  note?: string,
+): Promise<void> {
+  if (usesMockData('practice')) return;
+  try {
+    await apiClient.post(
+      b2cPracticeSessionEndpoints.focusEvents(sessionId),
+      { signalType, note },
+      { validateStatus: (status) => status === 204 },
+    );
+  } catch {
+    // best-effort — không chặn buổi phỏng vấn vì một tín hiệu coaching không gửi được.
+  }
+}
+
+/**
+ * Coaching (2026-09-17) — 1 lượt kiểm mặt (đếm mặt, detect-only). `null` = "không áp dụng" (buổi
+ * tắt theo dõi/B2B/đã kết thúc — BE trả 204) HOẶC lỗi mạng/AIService (nuốt, không chặn buổi thi).
+ */
+export async function checkPracticeFace(
+  sessionId: string,
+  imageFile: File,
+): Promise<PracticeFaceCheckResult | null> {
+  if (usesMockData('practice')) return null;
+
+  const formData = new FormData();
+  formData.append('image', imageFile);
+
+  try {
+    const response = await apiClient.post<unknown>(
+      b2cPracticeSessionEndpoints.faceCheck(sessionId),
+      formData,
+      multipartFormDataConfig,
+    );
+    if (response.status === 204 || response.data == null || response.data === '') {
+      return null;
+    }
+    const data = response.data as { faceCount?: unknown; signals?: unknown };
+    const faceCount = typeof data.faceCount === 'number' ? data.faceCount : 0;
+    const signals = Array.isArray(data.signals)
+      ? data.signals.filter(
+          (signal): signal is 'no_face' | 'multiple_faces' =>
+            signal === 'no_face' || signal === 'multiple_faces',
+        )
+      : [];
+    return { faceCount, signals };
+  } catch {
+    return null;
+  }
 }
 
 export function isPracticeSessionAlreadySubmittedError(error: unknown): boolean {

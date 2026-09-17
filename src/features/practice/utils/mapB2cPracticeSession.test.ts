@@ -450,3 +450,78 @@ describe('mapSubmitPracticeAnswerResponse', () => {
     expect(mapped.interviewComplete).toBe(false);
   });
 });
+
+describe('mapPracticeSessionResponse — coaching (focusTrackingEnabled/focusEvents)', () => {
+  it('maps focusTrackingEnabled=true and focus events summary', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 's1',
+      status: 'InProgress',
+      questions: [],
+      focusTrackingEnabled: true,
+      focusEvents: [
+        { signalType: 'tab_switch', count: 2, firstAt: '2026-09-17T10:00:00Z', lastAt: '2026-09-17T10:05:00Z' },
+        { signalType: 'no_face', count: 1, firstAt: '2026-09-17T10:02:00Z', lastAt: '2026-09-17T10:02:00Z' },
+      ],
+    });
+
+    expect(mapped.focusTrackingEnabled).toBe(true);
+    expect(mapped.focusEvents).toHaveLength(2);
+    expect(mapped.focusEvents?.[0]).toEqual({
+      signalType: 'tab_switch',
+      count: 2,
+      firstAt: '2026-09-17T10:00:00Z',
+      lastAt: '2026-09-17T10:05:00Z',
+    });
+  });
+
+  it('null focusEvents (buổi KHÔNG theo dõi) maps to null, NOT an empty array', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 's1',
+      status: 'InProgress',
+      questions: [],
+      focusTrackingEnabled: false,
+      focusEvents: null,
+    });
+
+    expect(mapped.focusTrackingEnabled).toBe(false);
+    expect(mapped.focusEvents).toBeNull();
+  });
+
+  it('empty array focusEvents (có theo dõi, chưa ghi nhận gì) stays an empty array, not null', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 's1',
+      status: 'InProgress',
+      questions: [],
+      focusTrackingEnabled: true,
+      focusEvents: [],
+    });
+
+    expect(mapped.focusEvents).toEqual([]);
+  });
+
+  it('missing focusEvents key (unset) is undefined — distinct from null and []', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 's1',
+      status: 'InProgress',
+      questions: [],
+    });
+
+    expect(mapped.focusEvents).toBeUndefined();
+    expect(mapped.focusTrackingEnabled).toBe(false);
+  });
+
+  it('drops a focus-event entry with an unknown signalType (defense against a hostile/buggy response)', () => {
+    const mapped = mapPracticeSessionResponse({
+      id: 's1',
+      status: 'InProgress',
+      questions: [],
+      focusEvents: [
+        { signalType: 'tab_switch', count: 1, firstAt: 'a', lastAt: 'b' },
+        { signalType: 'face_mismatch', count: 1, firstAt: 'a', lastAt: 'b' },
+      ],
+    });
+
+    expect(mapped.focusEvents).toHaveLength(1);
+    expect(mapped.focusEvents?.[0].signalType).toBe('tab_switch');
+  });
+});

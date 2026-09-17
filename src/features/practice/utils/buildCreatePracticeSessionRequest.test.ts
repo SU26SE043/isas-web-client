@@ -19,6 +19,7 @@ const baseState = (): PracticeSetupState => ({
   seniority: 'Junior',
   adaptiveEnabled: true,
   maxDeepPerQuestion: null,
+  focusTrackingEnabled: false,
 });
 
 describe('buildCreatePracticeSessionRequest', () => {

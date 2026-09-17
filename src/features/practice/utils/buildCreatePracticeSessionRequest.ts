@@ -76,5 +76,7 @@ export function buildCreatePracticeSessionRequest(
       state.adaptiveEnabled && state.maxDeepPerQuestion !== null
         ? state.maxDeepPerQuestion
         : undefined,
+    // `undefined` khi TẮT — mặc định server cũng TẮT, gửi `false` thừa chỉ làm payload dài hơn.
+    focusTrackingEnabled: state.focusTrackingEnabled ? true : undefined,
   };
 }

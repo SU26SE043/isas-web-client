@@ -13,6 +13,17 @@ interface B2cInterviewControlsProps {
   finishLabel: string;
   finishPrimary?: boolean;
   disabled?: boolean;
+  /**
+   * Cho phép hiện nút "Kết thúc" TRƯỚC khi AI báo hoàn tất (`finishPrimary`). Nút vẫn hiện dù
+   * `finishPrimary` đang `false` — chỉ B2C tự do dùng, B2B giữ hành vi cũ (không truyền cờ này).
+   */
+  allowEarlyFinish?: boolean;
+  /**
+   * Điều kiện bật/tắt RIÊNG cho nút Kết thúc — độc lập với `disabled` (vốn còn khoá cả nút mic/
+   * camera/gửi câu trả lời khi AI đang đọc câu). Kết thúc sớm phải bấm được ngay cả lúc đó (đang
+   * đọc câu tiếp theo không có nghĩa là không được dừng buổi). `undefined` = dùng `disabled`.
+   */
+  finishDisabled?: boolean;
 }
 
 export function B2cInterviewControls({
@@ -26,6 +37,8 @@ export function B2cInterviewControls({
   finishLabel,
   finishPrimary,
   disabled,
+  allowEarlyFinish = false,
+  finishDisabled,
 }: B2cInterviewControlsProps) {
   const { t } = useLanguage();
 
@@ -63,14 +76,16 @@ export function B2cInterviewControls({
         >
           {t('practice.room.submitAnswer')}
         </button> : null}
-        {finishPrimary ? (
+        {finishPrimary || allowEarlyFinish ? (
           <button
             type="button"
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-error-500/40 px-4 py-2.5 text-sm font-medium text-error-300 hover:bg-error-500/10',
-              'btn-primary border-transparent text-black',
+              'rounded-full px-4 py-2.5 text-sm font-medium',
+              finishPrimary
+                ? 'btn-primary border-transparent text-black'
+                : 'border border-error-500/40 text-error-300 hover:bg-error-500/10',
             )}
-            disabled={disabled}
+            disabled={finishDisabled ?? disabled}
             onClick={onFinish}
           >
             {finishLabel}

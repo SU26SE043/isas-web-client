@@ -54,6 +54,8 @@ export function usePracticeSetupFlow() {
   const [adaptiveEnabled, setAdaptiveEnabled] = useState(true);
   // null = chưa biết dải server cho phép ⇒ không gửi, để server dùng mặc định của chính nó.
   const [maxDeepPerQuestion, setMaxDeepPerQuestion] = useState<number | null>(null);
+  // Coaching (2026-09-17, BC-6 ngoại lệ) — mặc định TẮT, người luyện tự bật.
+  const [focusTrackingEnabled, setFocusTrackingEnabled] = useState(false);
   const [sessionOptions, setSessionOptions] = useState<PracticeSessionOptions | null>(null);
   const [loadingSessionOptions, setLoadingSessionOptions] = useState(false);
   const [sessionOptionsError, setSessionOptionsError] = useState<string | null>(null);
@@ -84,9 +86,10 @@ export function usePracticeSetupFlow() {
       seniority,
       adaptiveEnabled,
       maxDeepPerQuestion,
+      focusTrackingEnabled,
     }),
-    [adaptiveEnabled, cvId, jdId, jdTab, jdText, jobCategory, language, maxDeepPerQuestion,
-      questionCount, rubricCriterionIds, seniority, timeLimitSec],
+    [adaptiveEnabled, cvId, focusTrackingEnabled, jdId, jdTab, jdText, jobCategory, language,
+      maxDeepPerQuestion, questionCount, rubricCriterionIds, seniority, timeLimitSec],
   );
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
@@ -339,6 +342,8 @@ export function usePracticeSetupFlow() {
     setAdaptiveEnabled,
     maxDeepPerQuestion,
     setMaxDeepPerQuestion,
+    focusTrackingEnabled,
+    setFocusTrackingEnabled,
     language,
     sessionOptions,
     loadingSessionOptions,

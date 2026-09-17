@@ -133,6 +133,8 @@ export function PracticeWizardPage() {
           isCreating={flow.isCreatingSession}
           errorCode={flow.createErrorCode}
           errorMessage={flow.createErrorMessage}
+          focusTrackingEnabled={flow.focusTrackingEnabled}
+          onFocusTrackingChange={flow.setFocusTrackingEnabled}
           onBack={() => flow.goToStep(6)}
           onEditCriteria={() => flow.goToStep(6)}
           onStart={() => void flow.handleStart()}

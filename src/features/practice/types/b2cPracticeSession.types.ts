@@ -78,6 +78,12 @@ export interface CreatePracticeSessionRequest {
   adaptiveEnabled?: boolean;
   /** 1..`maxDeepPerQuestionMax`. Bỏ trống = giữ mặc định server. KHÔNG gửi 0 — server từ chối. */
   maxDeepPerQuestion?: number;
+  /**
+   * Coaching (2026-09-17, BC-6 ngoại lệ): ghi nhận mất tập trung (3 tín hiệu hành vi + đếm mặt
+   * detect-only). `undefined`/`false` = TẮT (mặc định, hành vi cũ nguyên vẹn). `true` = bật —
+   * camera giữ mở suốt buổi, chỉ chính người luyện đọc lại kết quả.
+   */
+  focusTrackingEnabled?: boolean;
 }
 
 export interface PracticeSetupState {
@@ -98,6 +104,8 @@ export interface PracticeSetupState {
   adaptiveEnabled: boolean;
   /** null = chưa biết dải server cho phép ⇒ không gửi, để server tự quyết. */
   maxDeepPerQuestion: number | null;
+  /** Coaching (2026-09-17, BC-6 ngoại lệ) — mặc định TẮT, người luyện tự bật. */
+  focusTrackingEnabled: boolean;
 }
 
 export interface PracticeQuestionResponse {
@@ -272,6 +280,29 @@ export interface PracticeAnswerReview {
   isClarify?: boolean;
 }
 
+/**
+ * Coaching (2026-09-17) — cờ ba loại ⊂ `tab_switch`|`paste`|`focus_lost` (hành vi, client tự khai)
+ * hợp với `no_face`|`multiple_faces` (đếm mặt, chỉ SERVER ghi được sau khi gọi AIService thật —
+ * client tuyệt đối KHÔNG được tự khai hai giá trị này qua `recordFocusEvent`).
+ */
+export type FocusBehaviorSignalType = 'tab_switch' | 'paste' | 'focus_lost';
+export type FocusFrameSignalType = 'no_face' | 'multiple_faces';
+export type FocusSignalType = FocusBehaviorSignalType | FocusFrameSignalType;
+
+/** Tổng hợp tín hiệu mất tập trung theo LOẠI cho một buổi — mirror API `FocusEventSummaryResponse`. */
+export interface FocusEventSummaryResponse {
+  signalType: FocusSignalType;
+  count: number;
+  firstAt: string;
+  lastAt: string;
+}
+
+/** Kết quả MỘT lượt kiểm mặt — mirror API `FaceCheckResultResponse`. KHÔNG bao giờ có `face_mismatch`. */
+export interface PracticeFaceCheckResult {
+  faceCount: number;
+  signals: FocusFrameSignalType[];
+}
+
 export interface PracticeSessionResponse {
   id: string;
   status: PracticeSessionStatus;
@@ -294,6 +325,13 @@ export interface PracticeSessionResponse {
   questions: PracticeQuestionResponse[];
   result?: PracticeSessionResult | null;
   answers?: PracticeAnswerReview[] | null;
+  /** Coaching — buổi này có ghi nhận mất tập trung không (ghim lúc tạo). */
+  focusTrackingEnabled?: boolean;
+  /**
+   * Tổng hợp theo loại tín hiệu. ⚠ `null`/`undefined` ≠ mảng rỗng: thiếu = buổi KHÔNG theo dõi;
+   * `[]` = có theo dõi và chưa ghi nhận gì. Đừng gộp hai ca này lại.
+   */
+  focusEvents?: FocusEventSummaryResponse[] | null;
 }
 
 export interface SubmitPracticeAnswerInput {
