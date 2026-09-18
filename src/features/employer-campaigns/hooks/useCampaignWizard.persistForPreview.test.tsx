@@ -1,4 +1,5 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
+import { nextVisibleWizardStep } from '../components/wizard/campaignWizard.steps';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
 
@@ -392,7 +393,8 @@ describe('R1/R2 — nhãn chip sống sót qua MỌI đường lưu; GUID chết
     for (let step = 0; step <= 4; step += 1) {
       await act(async () => { await result.current.goNext(); });
     }
-    expect(result.current.state.currentStep).toBe(5);
+    // Sau bước 4 (settings) là bước hiển thị kế: 5 khi cờ khung giờ bật, 6 khi ẩn (mặc định) — không ghi cứng.
+    expect(result.current.state.currentStep).toBe(nextVisibleWizardStep(4, 1));
     expect(handlers.onCreateCampaign).toHaveBeenCalledTimes(1);
     expect(handlers.onUpdateQuestions).not.toHaveBeenCalled();
     // R1(a): ensureDraft ghép created.rubric ⇒ state mang GUID ngay, không đợi Lưu & chấm thử.

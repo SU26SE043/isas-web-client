@@ -12,6 +12,8 @@ export interface B2cPracticeInterviewRoomProps {
   deadlineAt?: string | null;
   violationPaused?: boolean;
   cameraAlwaysOn?: boolean;
+  /** Cho phép nộp buổi sớm sau khi đã trả lời tối thiểu 1 câu (không chờ hết câu hỏi). */
+  allowEarlyFinish?: boolean;
   onMediaContextChange?: (context: B2cRoomMediaContext) => void;
   onPhaseChange?: (phase: string) => void;
   onSessionSubmitting?: () => void;

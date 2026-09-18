@@ -62,14 +62,70 @@ describe('useB2cFocusTracking', () => {
     expect(recordFocusEvent).toHaveBeenCalledTimes(1);
   });
 
-  it('does not react to blur or when disabled', () => {
-    const { rerender } = renderHook(({ enabled, phase }: { enabled: boolean; phase: 'answering' | 'countdown' }) => useB2cFocusTracking('session-1', enabled, phase), {
-      initialProps: { enabled: false, phase: 'answering' },
-    });
+  it('does not react to blur when disabled', () => {
+    renderHook(() => useB2cFocusTracking('session-1', false, 'answering'));
     act(() => window.dispatchEvent(new Event('blur')));
     expect(recordFocusEvent).not.toHaveBeenCalled();
-    rerender({ enabled: true, phase: 'answering' });
-    act(() => window.dispatchEvent(new Event('blur')));
-    expect(recordFocusEvent).not.toHaveBeenCalled();
+  });
+
+  it('records focus_lost after a confirmed blur (real window switch, not a tab hide)', () => {
+    vi.useFakeTimers();
+    try {
+      renderHook(() => useB2cFocusTracking('session-1', true, 'answering'));
+      act(() => {
+        window.dispatchEvent(new Event('blur'));
+        vi.advanceTimersByTime(250);
+      });
+      expect(recordFocusEvent).toHaveBeenCalledWith('session-1', 'focus_lost');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('dedupes rapid blur/focus flapping within the dedup window (D3-style)', () => {
+    vi.useFakeTimers();
+    try {
+      renderHook(() => useB2cFocusTracking('session-1', true, 'answering'));
+      act(() => {
+        window.dispatchEvent(new Event('blur'));
+        vi.advanceTimersByTime(250);
+        window.dispatchEvent(new Event('focus'));
+        window.dispatchEvent(new Event('blur'));
+        vi.advanceTimersByTime(250);
+      });
+      expect(recordFocusEvent).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('records paste immediately', () => {
+    renderHook(() => useB2cFocusTracking('session-1', true, 'answering'));
+    act(() => document.dispatchEvent(new Event('paste')));
+    expect(recordFocusEvent).toHaveBeenCalledWith('session-1', 'paste');
+  });
+
+  it('calls onEvent for paste/focus_lost immediately, but only calls onEvent(tab_switch) when the tab becomes visible again', () => {
+    vi.useFakeTimers();
+    try {
+      const onEvent = vi.fn();
+      renderHook(() => useB2cFocusTracking('session-1', true, 'answering', onEvent));
+
+      act(() => document.dispatchEvent(new Event('paste')));
+      expect(onEvent).toHaveBeenCalledWith('paste');
+
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(onEvent).not.toHaveBeenCalledWith('tab_switch');
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(onEvent).toHaveBeenCalledWith('tab_switch');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

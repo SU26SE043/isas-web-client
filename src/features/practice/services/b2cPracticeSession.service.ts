@@ -10,6 +10,8 @@ import type {
   PracticeLanguage,
   PracticeSessionOptions,
   FocusSignalType,
+  PracticeFaceCheckResult,
+  FocusFrameSignalType,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.types';
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
@@ -98,6 +100,39 @@ export async function recordFocusEvent(sessionId: string, signalType: FocusSigna
     });
   } catch {
     // Focus tracking is coaching telemetry; an unavailable endpoint must never interrupt practice.
+  }
+}
+
+const FACE_CHECK_FRAME_SIGNALS: readonly FocusFrameSignalType[] = ['no_face', 'multiple_faces'];
+
+/**
+ * B2C coaching — một lượt kiểm mặt detect-only (đếm mặt, KHÔNG so khớp danh tính). Trả `null` khi
+ * mock mode, buổi không áp dụng (204), hoặc lỗi mạng/server — không bao giờ ném để không làm gián
+ * đoạn buổi luyện (cùng nguyên tắc `recordFocusEvent`).
+ */
+export async function checkPracticeFace(
+  sessionId: string,
+  imageFile: File,
+): Promise<PracticeFaceCheckResult | null> {
+  if (usesMockData('practice')) return null;
+  try {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    const response = await apiClient.post<unknown>(
+      b2cPracticeSessionEndpoints.faceCheck(sessionId),
+      formData,
+      { ...multipartFormDataConfig, validateStatus: (status) => status === 200 || status === 204 },
+    );
+    if (response.status === 204 || !response.data || typeof response.data !== 'object') return null;
+    const data = response.data as { faceCount?: unknown; signals?: unknown };
+    const faceCount = typeof data.faceCount === 'number' ? data.faceCount : 0;
+    const signals = Array.isArray(data.signals)
+      ? data.signals.filter((s): s is FocusFrameSignalType =>
+          FACE_CHECK_FRAME_SIGNALS.includes(s as FocusFrameSignalType))
+      : [];
+    return { faceCount, signals };
+  } catch {
+    return null;
   }
 }
 

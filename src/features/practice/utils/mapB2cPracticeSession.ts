@@ -15,7 +15,6 @@ import type {
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
   FocusEventSummary,
-  FocusSignalType,
 } from '../types/b2cPracticeSession.types';
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -47,15 +46,20 @@ function pickStringArray(value: unknown): string[] {
 function mapFocusEvents(raw: unknown): FocusEventSummary[] | null | undefined {
   if (raw === null) return null;
   if (!Array.isArray(raw)) return undefined;
-  const signalTypes: FocusSignalType[] = ['tab_switch', 'paste', 'focus_lost'];
+  const signalTypes = ['tab_switch', 'paste', 'focus_lost', 'no_face', 'multiple_faces'];
   return raw.map((entry) => {
     const item = asRecord(entry);
     const signalType = pickString(item.signalType);
     const count = pickNumber(item.count);
     const firstAt = pickString(item.firstAt);
     const lastAt = pickString(item.lastAt);
-    if (!signalTypes.includes(signalType as FocusSignalType) || count == null || !firstAt || !lastAt) return null;
-    return { signalType: signalType as FocusSignalType, count, firstAt, lastAt };
+    if (!signalTypes.includes(signalType) || count == null || !firstAt || !lastAt) return null;
+    return {
+      signalType: signalType as FocusEventSummary['signalType'],
+      count,
+      firstAt,
+      lastAt,
+    };
   }).filter((item): item is FocusEventSummary => item !== null);
 }
 

@@ -60,6 +60,7 @@ export const PracticeInterviewPage: React.FC = () => {
           learningContext ? learningPracticeReportPath(sessionId, learningContext) : undefined
         }
         startWithCountdown={searchParams.get('start') === 'countdown'}
+        allowEarlyFinish
       />
     );
   }

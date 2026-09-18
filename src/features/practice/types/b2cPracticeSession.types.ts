@@ -81,13 +81,24 @@ export interface CreatePracticeSessionRequest {
   focusTrackingEnabled?: boolean;
 }
 
-export type FocusSignalType = 'tab_switch' | 'paste' | 'focus_lost';
+/** Client tự khai qua `POST focus-events` — BE `FocusSignals.Allowed`. */
+export type FocusBehaviorSignalType = 'tab_switch' | 'paste' | 'focus_lost';
+/** CHỈ server ghi (sau khi gọi AIService `/face-detect`) — BE `FocusSignals.ServerOnly`. */
+export type FocusFrameSignalType = 'no_face' | 'multiple_faces';
+/** @deprecated dùng {@link FocusBehaviorSignalType} — giữ alias để không phải sửa mọi call site cũ. */
+export type FocusSignalType = FocusBehaviorSignalType;
 
 export interface FocusEventSummary {
-  signalType: FocusSignalType;
+  signalType: FocusBehaviorSignalType | FocusFrameSignalType;
   count: number;
   firstAt: string;
   lastAt: string;
+}
+
+/** Kết quả một lượt kiểm mặt B2C (coaching, detect-only — không so khớp danh tính). */
+export interface PracticeFaceCheckResult {
+  faceCount: number;
+  signals: FocusFrameSignalType[];
 }
 
 export interface PracticeSetupState {

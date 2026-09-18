@@ -8,6 +8,8 @@ import { useCampaignDeployOptionsStore } from '../../stores/campaignDeployOption
 import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
 import type { CampaignSlotResponse } from '../../types/campaign.api.types';
 
+// Bước khung giờ MẶC ĐỊNH ẨN (2026-09-17) — file này khoá hành vi KHI BẬT; trạng thái ẩn xem campaignSlotsUi.hidden.test.tsx.
+vi.mock('@/shared/config', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/shared/config')>()), isCampaignSlotsUiEnabled: () => true }));
 vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({
     t: (key: string) => {

@@ -469,6 +469,8 @@ export function useB2cPracticeRoom(
     confirmFinish,
     submittedCount,
     unansweredCount,
+    // Kết thúc sớm: cần ≥1 câu đã nộp + không đang nộp dở (câu hiện tại hoặc cả buổi).
+    canFinishEarly: submittedCount >= 1 && !isSubmittingSession && !answerSubmit.isSubmittingAnswer,
     hasPendingRecording,
     startRecording: () => {
       if (options?.violationPaused || speech.isBusy || effectiveRemainingSeconds <= 0 || isTimingOut) return;

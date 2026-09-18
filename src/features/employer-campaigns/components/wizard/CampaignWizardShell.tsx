@@ -9,7 +9,7 @@ import {
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import type { AutosaveStatus } from '../../types/campaignWizard.types';
-import { CAMPAIGN_WIZARD_STEPS, canNavigateToWizardStep } from './campaignWizard.steps';
+import { CAMPAIGN_WIZARD_STEPS, canNavigateToWizardStep, visibleWizardStepPosition, visibleWizardSteps } from './campaignWizard.steps';
 import type { CampaignWizardStepId } from './campaignWizard.steps';
 
 /**
@@ -92,8 +92,8 @@ export function CampaignWizardShell({
               <span className="sm:hidden">
                 {' · '}
                 {t('employer.campaigns.wizard.stepCounter')
-                  .replace('{current}', String(currentStep + 1))
-                  .replace('{total}', String(CAMPAIGN_WIZARD_STEPS.length))}
+                  .replace('{current}', String(visibleWizardStepPosition(currentStep).position))
+                  .replace('{total}', String(visibleWizardStepPosition(currentStep).total))}
               </span>
             </p>
           </div>
@@ -113,9 +113,9 @@ export function CampaignWizardShell({
           className="hidden shrink-0 sm:block lg:sticky lg:top-24 lg:w-[220px] lg:self-start"
         >
           <ol className="flex flex-col">
-            {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
+            {visibleWizardSteps().map(({ step, index }, position, visible) => {
               const status = resolveFlowStepStatus(index, currentStep, errorSteps);
-              const isLast = index === CAMPAIGN_WIZARD_STEPS.length - 1;
+              const isLast = position === visible.length - 1;
               const canNavigate = Boolean(onStepChange) && canNavigateToWizardStep(index, currentStep, completedSteps);
               return (
                 <li key={step.id} className="w-full">
@@ -129,7 +129,7 @@ export function CampaignWizardShell({
                     <span className="flex flex-col items-center">
                       <FlowStepMarker
                         status={status}
-                        stepNumber={index + 1}
+                        stepNumber={position + 1}
                         className={status === 'current' ? 'border-info bg-info/10 text-info shadow-none' : undefined}
                       />
                       {!isLast ? <span aria-hidden className={cn('mt-1 min-h-8 w-px', flowStepConnectorClass(status === 'complete' ? 'complete' : status === 'error' ? 'error' : 'pending'))} /> : null}
@@ -151,7 +151,7 @@ export function CampaignWizardShell({
             aria-label={t('employer.campaigns.wizard.stepperLabel')}
             className="flex snap-x snap-proximity gap-2 overflow-x-auto pb-1 pr-8 mask-r-from-85% sm:hidden"
           >
-            {CAMPAIGN_WIZARD_STEPS.map((step, index) => {
+            {visibleWizardSteps().map(({ step, index }, position) => {
               const status = resolveFlowStepStatus(index, currentStep, errorSteps);
               const canNavigate = Boolean(onStepChange) && canNavigateToWizardStep(index, currentStep, completedSteps);
               return (
@@ -163,7 +163,7 @@ export function CampaignWizardShell({
                     onClick={() => onStepChange?.(index)}
                     className="group flex min-h-11 items-center gap-2 text-left disabled:cursor-not-allowed disabled:opacity-55"
                   >
-                    <FlowStepMarker status={status} stepNumber={index + 1} />
+                    <FlowStepMarker status={status} stepNumber={position + 1} />
                     {/* Bước đang chọn không bị cắt chữ; các bước khác vẫn truncate cho vừa dải. */}
                     <span className={cn('text-xs font-medium group-hover:text-foreground', index === currentStep ? 'whitespace-nowrap' : 'max-w-[7rem] truncate', flowStepLabelClass(status))}>
                       {t(stepperTitleKey(step))}

@@ -21,6 +21,11 @@ const envSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value === 'true' || value === '1'),
+  VITE_ENABLE_CAMPAIGN_SLOTS_UI: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value === 'true' || value === '1'),
   MODE: z.enum(['development', 'production', 'test']),
   DEV: z.boolean(),
   PROD: z.boolean(),
@@ -32,6 +37,7 @@ function parseEnv() {
     VITE_ENABLE_ENTERPRISE_SSO: import.meta.env.VITE_ENABLE_ENTERPRISE_SSO,
     VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
     VITE_ENABLE_TIERING_UI: import.meta.env.VITE_ENABLE_TIERING_UI,
+    VITE_ENABLE_CAMPAIGN_SLOTS_UI: import.meta.env.VITE_ENABLE_CAMPAIGN_SLOTS_UI,
     MODE: import.meta.env.MODE,
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
@@ -81,4 +87,14 @@ export function isEnterpriseSsoEnabled(): boolean {
  */
 export function isTieringUiEnabled(): boolean {
   return env.VITE_ENABLE_TIERING_UI;
+}
+
+/**
+ * Bước "Khung giờ" (ca thi / sức chứa) trong wizard tạo chiến dịch — TẠM ẨN (chốt 2026-09-17): HR không
+ * thấy bước này, Tiếp/Quay lại nhảy qua, Review không hiện bảng ca. BE giữ nguyên (campaign không ca =
+ * không ràng buộc — vốn là mặc định). Index bước nội bộ 0–7 KHÔNG đổi (60 chỗ ghi cứng) — chỉ tầng hiển
+ * thị bỏ qua. Bật lại bằng VITE_ENABLE_CAMPAIGN_SLOTS_UI=true.
+ */
+export function isCampaignSlotsUiEnabled(): boolean {
+  return env.VITE_ENABLE_CAMPAIGN_SLOTS_UI;
 }

@@ -24,6 +24,18 @@ describe('mapPracticeSessionResponse', () => {
       { signalType: 'tab_switch', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:01:00Z' },
     ]);
   });
+  it('accepts server-only frame signals (no_face/multiple_faces) — B2C face coaching', () => {
+    expect(mapPracticeSessionResponse({
+      focusEvents: [
+        { signalType: 'no_face', count: 1, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:00:00Z' },
+        { signalType: 'multiple_faces', count: 3, firstAt: '2026-01-01T00:05:00Z', lastAt: '2026-01-01T00:10:00Z' },
+      ],
+      questions: [],
+    }).focusEvents).toEqual([
+      { signalType: 'no_face', count: 1, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:00:00Z' },
+      { signalType: 'multiple_faces', count: 3, firstAt: '2026-01-01T00:05:00Z', lastAt: '2026-01-01T00:10:00Z' },
+    ]);
+  });
   it('maps session id, questions, and result fields', () => {
     const mapped = mapPracticeSessionResponse({
       sessionId: 's1',
