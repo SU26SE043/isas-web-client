@@ -1,13 +1,13 @@
 import toast from 'react-hot-toast';
 import { useCallback, useRef } from 'react';
 import { useLanguage } from '@/shared/languages';
-import type { FocusBehaviorSignalType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
+import type { FocusBehaviorSignalType, FocusClientHintType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
 
-export type CoachingNoticeKind = FocusBehaviorSignalType | FocusFrameSignalType;
+export type CoachingNoticeKind = FocusBehaviorSignalType | FocusFrameSignalType | FocusClientHintType;
 
 const BEHAVIOR_THROTTLE_MS = 10_000;
 const FRAME_THROTTLE_MS = 30_000;
-const FRAME_KINDS = new Set<CoachingNoticeKind>(['no_face', 'multiple_faces']);
+const FRAME_KINDS = new Set<CoachingNoticeKind>(['no_face', 'multiple_faces', 'low_light']);
 
 /**
  * B2C coaching (BC-6 ngoại lệ) — toast trung tính (KHÔNG `.success`/`.error`, không màu đỏ/cảnh

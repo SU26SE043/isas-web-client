@@ -9,9 +9,15 @@ export async function dataUrlToJpegFile(dataUrl: string, fileName: string): Prom
  * ready before the camera has produced a usable image, especially right after
  * play(), which yields an all-black JPEG the backend cannot match a face in.
  */
-export function isUsableCameraFrame(video: HTMLVideoElement): boolean {
+/** Video element has produced at least one decoded frame — anything else has nothing to capture. */
+export function isVideoFrameReady(video: HTMLVideoElement): boolean {
   if (video.videoWidth === 0 || video.videoHeight === 0) return false;
   if (video.readyState < 2 /* HAVE_CURRENT_DATA */) return false;
+  return true;
+}
+
+export function isUsableCameraFrame(video: HTMLVideoElement): boolean {
+  if (!isVideoFrameReady(video)) return false;
 
   const sampleCanvas = document.createElement('canvas');
   sampleCanvas.width = 32;

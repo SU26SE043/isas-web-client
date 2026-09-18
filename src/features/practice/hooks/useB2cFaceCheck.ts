@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { captureVideoFrameAsJpegFile } from '@/features/campaigns/utils/captureJpegFile';
+import {
+  captureVideoFrameAsJpegFile,
+  isUsableCameraFrame,
+  isVideoFrameReady,
+} from '@/features/campaigns/utils/captureJpegFile';
 import { checkPracticeFace } from '../services/b2cPracticeSession.service';
-import type { FocusFrameSignalType } from '../types/b2cPracticeSession.types';
+import type { FocusClientHintType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
+
+export type FaceCheckSignal = FocusFrameSignalType | FocusClientHintType;
 
 // B2C coaching — nhịp kiểm mặt riêng của luồng luyện tập, cố ý KHÔNG import từ
 // `useCampaignFaceCheck` (B2B): hai luồng có chủ sở hữu/lịch tinh chỉnh khác nhau, ghép chung sẽ
@@ -20,7 +26,7 @@ interface UseB2cFaceCheckOptions {
   completed?: boolean;
   uploadInFlight?: boolean;
   /** `null` = tín hiệu đã hết (khung hình lại sạch) — coaching cần biết để KHÔNG giữ toast cũ. */
-  onSignal: (signal: FocusFrameSignalType | null) => void;
+  onSignal: (signal: FaceCheckSignal | null) => void;
 }
 
 /**
@@ -39,7 +45,7 @@ export function useB2cFaceCheck({
 }: UseB2cFaceCheckOptions) {
   const inFlight = useRef(false);
   const aborted = useRef(false);
-  const activeSignal = useRef<FocusFrameSignalType | null>(null);
+  const activeSignal = useRef<FaceCheckSignal | null>(null);
   const timer = useRef<number | null>(null);
   const deferred = useRef(false);
   const uploadRef = useRef(uploadInFlight);
@@ -63,13 +69,23 @@ export function useB2cFaceCheck({
     ) return;
     inFlight.current = true;
     try {
+      const emit = (signal: FaceCheckSignal | null) => {
+        if (signal !== activeSignal.current) onSignal(signal);
+        activeSignal.current = signal;
+      };
+      // Chưa có frame nào (camera đang khởi động) — không có gì để nói, cũng không gửi gì.
+      if (!isVideoFrameReady(videoEl)) return;
+      // Khung TỐI (che cam / phòng tối): nhắc bật đèn NGAY TẠI CHỖ. Trước đây helper trả null ở đây
+      // ⇒ im lặng suốt buổi (2026-09-18 prod: che cam cả buổi, 0 request, 0 toast). Không gửi ảnh
+      // đen cho AI: nhận về `no_face` là gộp "tối" với "rời chỗ" — hai lời khuyên khác nhau.
+      if (!isUsableCameraFrame(videoEl)) {
+        emit('low_light');
+        return;
+      }
       const file = await captureVideoFrameAsJpegFile(videoEl, `face-check-${sessionId}-${Date.now()}.jpg`);
       if (!file || aborted.current) return;
       const result = await checkPracticeFace(sessionId, file);
-      const signal: FocusFrameSignalType | null =
-        result && result.signals.length > 0 ? result.signals[0] : null;
-      if (signal !== activeSignal.current) onSignal(signal);
-      activeSignal.current = signal;
+      emit(result && result.signals.length > 0 ? result.signals[0] : null);
     } catch {
       // Coaching telemetry — không để một lượt hỏng làm gián đoạn buổi luyện.
     } finally {
