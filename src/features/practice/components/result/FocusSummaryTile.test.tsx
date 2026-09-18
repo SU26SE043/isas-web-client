@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FocusSummaryTile } from './FocusSummaryTile';
 import { SessionSummaryCard } from './SessionSummaryCard';
@@ -60,6 +60,25 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
     expect(screen.getByText('×4')).toBeInTheDocument();
     expect(screen.queryByText(/tab_switch|focus_lost/)).not.toBeInTheDocument();
     expect(screen.getByText(/practice\.result\.focusTracking\.message/)).toBeInTheDocument();
+  });
+
+  it('chỉ có khung hình → ô "Rời khỏi buổi" ×0 và câu khung hình, KHÔNG phải câu rời buổi/đóng tab', () => {
+    // File này không cleanup giữa các test ⇒ scope vào container để "×0" của test trước không khớp nhầm.
+    const { container } = render(
+      <FocusSummaryTile
+        view={makeView({
+          focusTrackingEnabled: true,
+          focusEvents: [
+            { signalType: 'no_face', count: 12, firstAt: '2026-09-15T04:00:00Z', lastAt: '2026-09-15T04:10:00Z' },
+          ],
+          focusLeaveCount: 0,
+          focusFrameCount: 12,
+        })}
+      />,
+    );
+    expect(within(container).getByText('×0')).toBeInTheDocument();
+    expect(within(container).getByText('practice.result.focusTracking.frameOnly')).toBeInTheDocument();
+    expect(within(container).queryByText(/practice\.result\.focusTracking\.message/)).not.toBeInTheDocument();
   });
 });
 

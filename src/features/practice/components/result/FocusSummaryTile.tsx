@@ -1,15 +1,13 @@
 import { LogOut } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
+import { buildFocusSummaryMessage } from '../../utils/focusTrackingSummary';
 
 export function FocusSummaryTile({ view }: { view: PracticeSessionResultViewModel }) {
   const { t } = useLanguage();
   if (view.focusEvents === null || view.focusEvents === undefined) return null;
-  const count = view.focusLeaveCount ?? 0;
-  const placement = view.focusLeavePlacement ? t(`practice.result.focusTracking.${view.focusLeavePlacement}`) : '';
-  const message = count > 0
-    ? t('practice.result.focusTracking.message').replace('{{n}}', String(count)).replace('{{placement}}', placement ? `, ${placement}` : '')
-    : t('practice.result.focusTracking.empty');
+  const count = view.focusLeaveCount ?? 0;   // nhãn ô là "Rời khỏi buổi" ⇒ chỉ HÀNH VI, khung hình không cộng vào
+  const message = buildFocusSummaryMessage(view, t);
   return (
     <>
       <div className="relative flex min-w-0 items-center gap-4 overflow-hidden rounded-xl border border-satin bg-surface-overlay/80 p-4 sm:p-5">

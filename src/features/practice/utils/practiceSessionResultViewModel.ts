@@ -37,9 +37,15 @@ export type PracticeSessionResultViewModel = {
   benchmark?: PracticeBenchmark | null;
   focusTrackingEnabled: boolean;
   focusEvents: FocusEventSummary[] | null | undefined;
+  /** Số lần RỜI KHỎI buổi = chỉ tín hiệu HÀNH VI (tab_switch/focus_lost/paste). Nhãn UI nói "rời khỏi buổi" nên KHÔNG được cộng tín hiệu khung hình vào đây. */
   focusLeaveCount?: number;
   focusLeavePlacement?: 'firstHalf' | 'secondHalf' | 'spread';
+  /** Số lần khung hình không rõ mặt / có thêm người (no_face/multiple_faces) — nhóm riêng, đếm riêng. */
+  focusFrameCount?: number;
 };
+
+const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces']);
+export const isFrameFocusSignal = (signalType: FocusEventSummary['signalType']): boolean => FRAME_SIGNALS.has(signalType);
 
 export type CriteriaResultViewModel = {
   name: string;
@@ -217,16 +223,22 @@ export function mapPracticeSessionResponseToViewModel(
       ? overallCriteria
       : aggregateCriteriaFromQuestions(questions);
 
-  const focusLeaveCount = Array.isArray(session.focusEvents)
-    ? session.focusEvents.reduce((sum, event) => sum + event.count, 0)
+  // "Rời khỏi buổi" chỉ đếm HÀNH VI: nhịp kiểm mặt 15s biến một người cúi xuống ghi chú thành
+  // "Rời khỏi buổi · 40" + lời khuyên "đóng các tab khác" — sai cả số lẫn lời. Khung hình đếm riêng.
+  const leaveEvents = Array.isArray(session.focusEvents)
+    ? session.focusEvents.filter((event) => !isFrameFocusSignal(event.signalType))
+    : undefined;
+  const focusLeaveCount = leaveEvents?.reduce((sum, event) => sum + event.count, 0);
+  const focusFrameCount = Array.isArray(session.focusEvents)
+    ? session.focusEvents.filter((event) => isFrameFocusSignal(event.signalType)).reduce((sum, event) => sum + event.count, 0)
     : undefined;
   let focusLeavePlacement: PracticeSessionResultViewModel['focusLeavePlacement'];
-  if (Array.isArray(session.focusEvents) && session.focusEvents.length && session.createdAt && session.completedAt) {
+  if (leaveEvents && leaveEvents.length && session.createdAt && session.completedAt) {
     const start = new Date(session.createdAt).getTime();
     const end = new Date(session.completedAt).getTime();
     const midpoint = start + (end - start) / 2;
-    const firstAt = Math.min(...session.focusEvents.map((event) => new Date(event.firstAt).getTime()));
-    const lastAt = Math.max(...session.focusEvents.map((event) => new Date(event.lastAt).getTime()));
+    const firstAt = Math.min(...leaveEvents.map((event) => new Date(event.firstAt).getTime()));
+    const lastAt = Math.max(...leaveEvents.map((event) => new Date(event.lastAt).getTime()));
     if (Number.isFinite(start) && Number.isFinite(end) && Number.isFinite(firstAt) && Number.isFinite(lastAt)) {
       focusLeavePlacement = lastAt < midpoint ? 'firstHalf' : firstAt > midpoint ? 'secondHalf' : 'spread';
     }
@@ -262,6 +274,7 @@ export function mapPracticeSessionResponseToViewModel(
     focusEvents: session.focusEvents,
     focusLeaveCount,
     focusLeavePlacement,
+    focusFrameCount,
   };
 }
 

@@ -3,6 +3,7 @@ import { useLanguage } from '@/shared/languages';
 import type { FocusEventSummary } from '../../types/b2cPracticeSession.types';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatResultTime } from '../../utils/practiceSessionResultFormat';
+import { buildFocusSummaryMessage } from '../../utils/focusTrackingSummary';
 
 function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'paste' | 'frame'; icon: typeof AppWindow; label: string; hint: string; value: number }) {
   return (
@@ -28,11 +29,7 @@ export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewM
   const pasteCount = events.filter((event) => event.signalType === 'paste').reduce((sum, event) => sum + event.count, 0);
   const frameEvents = events.filter((event) => event.signalType === 'no_face' || event.signalType === 'multiple_faces');
   const frameCount = frameEvents.reduce((sum, event) => sum + event.count, 0);
-  const count = view.focusLeaveCount ?? 0;
-  const placement = view.focusLeavePlacement ? t(`practice.result.focusTracking.${view.focusLeavePlacement}`) : '';
-  const message = count > 0
-    ? t('practice.result.focusTracking.message').replace('{{n}}', String(count)).replace('{{placement}}', placement ? `, ${placement}` : '')
-    : t('practice.result.focusTracking.empty');
+  const message = buildFocusSummaryMessage(view, t);
 
   // Không bọc frame: nội dung nằm TRONG Dialog đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
   return (

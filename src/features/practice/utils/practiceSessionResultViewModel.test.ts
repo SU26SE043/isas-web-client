@@ -75,6 +75,48 @@ describe('practiceSessionResultViewModel', () => {
   });
 });
 
+describe('practiceSessionResultViewModel — focusTracking: khung hình đếm RIÊNG', () => {
+  const base: PracticeSessionResponse = {
+    id: 's-focus',
+    status: 'Scored',
+    jobCategory: 'BE',
+    questionCount: 1,
+    createdAt: '2026-09-17T10:00:00Z',
+    completedAt: '2026-09-17T10:30:00Z',
+    questions: [],
+    focusTrackingEnabled: true,
+  } as unknown as PracticeSessionResponse;
+
+  it('no_face/multiple_faces KHÔNG cộng vào focusLeaveCount; vào focusFrameCount; placement chỉ theo hành vi', () => {
+    // Nhịp kiểm mặt 15s: 40 lần no_face là chuyện thường của người cúi xuống ghi chú — cộng vào "rời khỏi
+    // buổi" thì ô Tổng quan hiện ×42 và khuyên "đóng các tab khác" cho người chưa hề rời tab.
+    const view = mapPracticeSessionResponseToViewModel({
+      ...base,
+      focusEvents: [
+        { signalType: 'tab_switch', count: 2, firstAt: '2026-09-17T10:02:00Z', lastAt: '2026-09-17T10:05:00Z' },
+        { signalType: 'no_face', count: 40, firstAt: '2026-09-17T10:20:00Z', lastAt: '2026-09-17T10:29:00Z' },
+        { signalType: 'multiple_faces', count: 3, firstAt: '2026-09-17T10:25:00Z', lastAt: '2026-09-17T10:26:00Z' },
+      ],
+    });
+    expect(view.focusLeaveCount).toBe(2);
+    expect(view.focusFrameCount).toBe(43);
+    // Hành vi chỉ ở nửa đầu (10:02–10:05, giữa buổi là 10:15) — khung hình ở nửa sau KHÔNG được kéo thành 'spread'.
+    expect(view.focusLeavePlacement).toBe('firstHalf');
+  });
+
+  it('chỉ có khung hình → leave = 0, không có placement, frame = tổng', () => {
+    const view = mapPracticeSessionResponseToViewModel({
+      ...base,
+      focusEvents: [
+        { signalType: 'no_face', count: 5, firstAt: '2026-09-17T10:20:00Z', lastAt: '2026-09-17T10:29:00Z' },
+      ],
+    });
+    expect(view.focusLeaveCount).toBe(0);
+    expect(view.focusFrameCount).toBe(5);
+    expect(view.focusLeavePlacement).toBeUndefined();
+  });
+});
+
 describe('practiceSessionResultFormat', () => {
   it('formats scores and status groups safely', () => {
     expect(formatScore(null, 100)).toBe('—');

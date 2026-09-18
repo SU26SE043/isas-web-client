@@ -10,13 +10,19 @@ vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({
     // Khoá nút trả TEMPLATE thật để `{{n}}` được thay — mock trả key khiến mutation "đếm sai" (dùng
     // focusEvents.length thay focusLeaveCount) XANH vì replace() không có gì để thay.
-    t: (key: string) => (key === 'practice.result.focusTracking.button' ? 'Left the session · {{n}}' : key),
+    t: (key: string) =>
+      key === 'practice.result.focusTracking.button' ? 'Left the session · {{n}}'
+        : key === 'practice.result.focusTracking.buttonFrame' ? 'Frame · {{n}}'
+          : key,
     language: 'en',
   }),
 }));
 
-function makeView(focusEvents: PracticeSessionResultViewModel['focusEvents']): PracticeSessionResultViewModel {
-  return { id: 's1', title: 'Practice', status: 'Scored', maxScore: 100, answeredCount: 1, skippedCount: 0, totalQuestions: 1, strengths: [], improvements: [], nextSteps: [], criteria: [], questions: [], hasResult: true, focusTrackingEnabled: true, focusEvents, focusLeaveCount: 6, focusLeavePlacement: 'spread' };
+function makeView(
+  focusEvents: PracticeSessionResultViewModel['focusEvents'],
+  over: Partial<PracticeSessionResultViewModel> = {},
+): PracticeSessionResultViewModel {
+  return { id: 's1', title: 'Practice', status: 'Scored', maxScore: 100, answeredCount: 1, skippedCount: 0, totalQuestions: 1, strengths: [], improvements: [], nextSteps: [], criteria: [], questions: [], hasResult: true, focusTrackingEnabled: true, focusEvents, focusLeaveCount: 6, focusLeavePlacement: 'spread', ...over };
 }
 
 afterEach(() => cleanup());
@@ -56,5 +62,28 @@ describe('FocusEventsButton', () => {
     // Giờ phải là HH:mm đã format, không phải chuỗi ISO thô (regex không phụ thuộc múi giờ máy chạy test).
     expect(dialog.textContent).toMatch(/\d{2}:\d{2}/);
     expect(dialog.textContent).not.toContain('2026-01-01T');
+  });
+
+  it('chỉ có tín hiệu khung hình → nhãn "Frame · n", KHÔNG phải "Left the session · 0"', async () => {
+    const user = userEvent.setup();
+    render(<FocusEventsButton view={makeView([
+      { signalType: 'no_face', count: 7, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:20:00Z' },
+    ], { focusLeaveCount: 0, focusLeavePlacement: undefined, focusFrameCount: 7 })} />);
+    const button = screen.getByRole('button', { name: 'Frame · 7' });
+    expect(screen.queryByRole('button', { name: /Left the session/ })).not.toBeInTheDocument();
+    await user.click(button);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByTestId('focus-metric-frame')).toHaveTextContent(/^07$/);
+    expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^00$/);
+    expect(dialog).toHaveTextContent('practice.result.focusTracking.frameOnly');
+    expect(dialog).not.toHaveTextContent('practice.result.focusTracking.message');
+  });
+
+  it('có cả hai → nhãn nút đếm rời buổi (hành vi), khung hình nằm trong popup', () => {
+    render(<FocusEventsButton view={makeView([
+      { signalType: 'paste', count: 2, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:02:00Z' },
+      { signalType: 'no_face', count: 9, firstAt: '2026-01-01T09:05:00Z', lastAt: '2026-01-01T09:20:00Z' },
+    ], { focusLeaveCount: 2, focusFrameCount: 9 })} />);
+    expect(screen.getByRole('button', { name: 'Left the session · 2' })).toBeInTheDocument();
   });
 });
