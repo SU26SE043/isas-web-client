@@ -58,6 +58,20 @@ describe('useB2cCoachingNotices', () => {
     expect(toastMock).toHaveBeenCalledTimes(3);
   });
 
+  it('low_light là nhóm khung hình: toast đúng khoá, throttle 30s, độc lập với no_face', () => {
+    const { result } = renderHook(() => useB2cCoachingNotices());
+    result.current.notify('low_light');
+    expect(toastMock).toHaveBeenLastCalledWith('practice.room.focusTracking.low_light', { id: 'practice-coach-low_light' });
+    vi.advanceTimersByTime(10_000);
+    result.current.notify('low_light');
+    expect(toastMock).toHaveBeenCalledTimes(1);   // 10s < 30s ⇒ nuốt (hành vi chỉ 10s thì đã hiện)
+    result.current.notify('no_face');
+    expect(toastMock).toHaveBeenCalledTimes(2);   // khác loại ⇒ không chặn nhau
+    vi.advanceTimersByTime(20_000);
+    result.current.notify('low_light');
+    expect(toastMock).toHaveBeenCalledTimes(3);
+  });
+
   it('skips notices while the tab is hidden', () => {
     Object.defineProperty(document, 'hidden', { configurable: true, value: true });
     const { result } = renderHook(() => useB2cCoachingNotices());

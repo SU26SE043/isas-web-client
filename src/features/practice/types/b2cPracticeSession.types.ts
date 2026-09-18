@@ -85,6 +85,12 @@ export interface CreatePracticeSessionRequest {
 export type FocusBehaviorSignalType = 'tab_switch' | 'paste' | 'focus_lost';
 /** CHỈ server ghi (sau khi gọi AIService `/face-detect`) — BE `FocusSignals.ServerOnly`. */
 export type FocusFrameSignalType = 'no_face' | 'multiple_faces';
+/**
+ * CHỈ client: khung hình quá tối để đếm mặt (che cam / phòng tối). Nhắc người luyện bật đèn ngay tại chỗ,
+ * KHÔNG gửi ảnh đen cho AI (tốn CPU để nhận về `no_face` — mà "tối" và "rời chỗ" là hai lời khuyên khác
+ * nhau), KHÔNG ghi server (không có trong whitelist, cố ý — nó là chuyện môi trường, không phải tập trung).
+ */
+export type FocusClientHintType = 'low_light';
 /** @deprecated dùng {@link FocusBehaviorSignalType} — giữ alias để không phải sửa mọi call site cũ. */
 export type FocusSignalType = FocusBehaviorSignalType;
 

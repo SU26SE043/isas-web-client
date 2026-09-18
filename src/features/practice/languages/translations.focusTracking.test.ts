@@ -23,3 +23,20 @@ describe('practiceTranslations — chuỗi focusTracking không mang ngôn ngữ
     });
   }
 });
+
+describe('practiceTranslations — câu opt-in phải nói THẬT về webcam (đếm mặt 2026-09-17)', () => {
+  // Bản trước nhánh đếm mặt ghi "không dùng camera hay micro cho việc này" — từ khi có face-check,
+  // câu đó thành lời nói dối về dữ liệu sinh trắc học ngay trước lúc người dùng bấm bật. Khoá cả
+  // hai chiều: PHẢI nhắc webcam + ảnh xoá ngay, KHÔNG được khẳng định "không dùng camera".
+  const CASES = {
+    vi: { must: ['webcam', 'xoá ngay'], mustNot: ['không dùng camera', 'không dùng webcam'] },
+    en: { must: ['webcam', 'deleted right after'], mustNot: ['no camera', 'no webcam'] },
+  } as const;
+  for (const lang of ['vi', 'en'] as const) {
+    it(`${lang}: practice.setup.focusTracking.description nhắc webcam + xoá ảnh, không phủ nhận camera`, () => {
+      const text = practiceTranslations[lang]['practice.setup.focusTracking.description'].toLowerCase();
+      for (const word of CASES[lang].must) expect(text).toContain(word);
+      for (const word of CASES[lang].mustNot) expect(text).not.toContain(word);
+    });
+  }
+});
