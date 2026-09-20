@@ -8,6 +8,14 @@ interface InterviewHeaderProps {
   isRecording: boolean;
   exitHref?: string;
   titleKey?: string;
+  /**
+   * CAMP-21: khi có, nút "Thoát" gọi callback này thay vì điều hướng thẳng — phòng luyện B2C dùng
+   * để mở hộp thoại xác nhận (nêu luật bỏ trống câu chính = mất điểm + số câu chưa trả lời) rồi
+   * mới nộp. Trước đây nút này nhảy thẳng sang `/complete`, trang đó KHÔNG nộp bài mà chỉ chờ
+   * Scored ⇒ người luyện nhìn vòng xoay "AI đang đánh giá" vô hạn, và không ai nói cho họ biết
+   * câu bỏ trống sẽ trừ điểm.
+   */
+  onExit?: () => void;
 }
 
 export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
@@ -15,6 +23,7 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
   isRecording,
   exitHref,
   titleKey,
+  onExit,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -42,7 +51,7 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
         <button
           type="button"
           className="rounded-lg border border-satin bg-transparent px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-overlay sm:px-4"
-          onClick={() => navigate(to)}
+          onClick={() => (onExit ? onExit() : navigate(to))}
         >
           {t('practice.exit')}
         </button>
