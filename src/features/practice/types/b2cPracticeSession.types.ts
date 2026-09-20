@@ -239,6 +239,17 @@ export interface PracticeSessionResult {
   cvVsAnswer: PracticeCvVsAnswer | null;
   /** v5: peer average or pass-threshold comparison series for radar. */
   benchmark?: PracticeBenchmark | null;
+  /**
+   * CAMP-21 (áp cả B2C từ 2026-09-21): buổi có ghim luật "bỏ trống câu chính = mất điểm".
+   * `false`/vắng = buổi cũ, không có luật ⇒ ba field dưới null (KHÔNG bịa 0/0).
+   */
+  skipPenalty?: boolean;
+  /** Số câu CHÍNH đã trả lời thật (có ghi âm, không im lặng). KHÁC `answeredCount` (đếm cả câu đào sâu). */
+  seedAnswered?: number | null;
+  /** Tổng câu CHÍNH của buổi. KHÁC `totalQuestions` (đếm cả câu đào sâu). */
+  seedTotal?: number | null;
+  /** Trung bình cộng các tiêu chí TRƯỚC khi nhân: `overallScore = scoreBeforePenalty × seedAnswered/seedTotal`. */
+  scoreBeforePenalty?: number | null;
 }
 
 /** v5 delivery metrics (API name). Null = not measured — never coerce to 0. */
