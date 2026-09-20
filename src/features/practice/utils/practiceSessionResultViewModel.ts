@@ -42,6 +42,17 @@ export type PracticeSessionResultViewModel = {
   focusLeavePlacement?: 'firstHalf' | 'secondHalf' | 'spread';
   /** Số lần khung hình không rõ mặt / có thêm người (no_face/multiple_faces) — nhóm riêng, đếm riêng. */
   focusFrameCount?: number;
+  /**
+   * CAMP-21 (B2C từ 2026-09-21). `undefined` = buổi không có luật (buổi cũ) — KHÔNG hiện gì.
+   * Có giá trị = buổi có luật; `applied` = có câu chính bỏ trống nên điểm đã bị nhân xuống.
+   */
+  skipPenalty?: {
+    applied: boolean;
+    seedAnswered: number;
+    seedTotal: number;
+    scoreBefore: number;
+    scoreAfter: number;
+  };
 };
 
 const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces']);
@@ -244,6 +255,25 @@ export function mapPracticeSessionResponseToViewModel(
     }
   }
 
+  // CAMP-21/B2C — chỉ dựng khi BE nói buổi CÓ luật và gửi đủ số; thiếu một vế là không hiện (đừng
+  // tự suy từ answeredCount — nó đếm cả câu đào sâu nên mẫu số sai).
+  let skipPenalty: PracticeSessionResultViewModel['skipPenalty'];
+  if (
+    result?.skipPenalty === true &&
+    result.seedTotal != null && Number.isFinite(result.seedTotal) && result.seedTotal > 0 &&
+    result.seedAnswered != null && Number.isFinite(result.seedAnswered) &&
+    result.scoreBeforePenalty != null && Number.isFinite(result.scoreBeforePenalty) &&
+    result.overallScore != null && Number.isFinite(result.overallScore)
+  ) {
+    skipPenalty = {
+      applied: result.seedAnswered < result.seedTotal,
+      seedAnswered: result.seedAnswered,
+      seedTotal: result.seedTotal,
+      scoreBefore: result.scoreBeforePenalty,
+      scoreAfter: result.overallScore,
+    };
+  }
+
   return {
     id: session.id,
     title: jobCategory ?? '',
@@ -275,6 +305,7 @@ export function mapPracticeSessionResponseToViewModel(
     focusLeaveCount,
     focusLeavePlacement,
     focusFrameCount,
+    skipPenalty,
   };
 }
 

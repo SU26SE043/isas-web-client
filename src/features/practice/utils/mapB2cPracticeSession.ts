@@ -440,6 +440,12 @@ function mapResult(raw: unknown, catalog: CriterionCatalog): PracticeSessionResu
     overallComment: pickString(item.overallComment, item.comment, item.summary, item.feedback),
     cvVsAnswer: mapCvVsAnswer(item.cvVsAnswer ?? item.cvComparison),
     benchmark: mapBenchmark(item.benchmark),
+    // CAMP-21/B2C — chỉ nhận `true` thật; mọi thứ khác = không có luật. Số đọc riêng từng field,
+    // KHÔNG rơi về answeredCount/totalQuestions (chúng đếm cả câu đào sâu — sai mẫu số).
+    skipPenalty: item.skipPenalty === true,
+    seedAnswered: pickNumber(item.seedAnswered) ?? null,
+    seedTotal: pickNumber(item.seedTotal) ?? null,
+    scoreBeforePenalty: pickNumber(item.scoreBeforePenalty) ?? null,
   };
 }
 

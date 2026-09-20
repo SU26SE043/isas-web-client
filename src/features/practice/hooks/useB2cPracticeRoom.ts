@@ -4,6 +4,7 @@ import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
+import { countUnsubmittedQuestions } from '../utils/finishSummary';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
@@ -418,9 +419,11 @@ export function useB2cPracticeRoom(
   const submittedCount = store.questions.filter(
     (question) => store.questionStates[question.id] === 'submitted',
   ).length;
-  const unansweredCount = store.questions.filter(
-    (question) => store.questionStates[question.id] === 'unanswered',
-  ).length;
+  // "Chưa trả lời" trong hộp thoại Kết thúc = MỌI câu chưa nộp (chưa đụng tới, đang đọc, đang thu,
+  // hết giờ). Trước đây chỉ đếm trạng thái `'unanswered'` (= hết giờ) nên thoát giữa chừng với 3 câu
+  // còn nguyên vẫn báo "Chưa trả lời: 0" — đúng con số người luyện cần thấy nhất lại là 0 (CAMP-21:
+  // câu chính bỏ trống = mất điểm). Vế backfill trong `confirmFinish` vẫn lọc riêng `'unanswered'`.
+  const unansweredCount = countUnsubmittedQuestions(store.questions, store.questionStates);
   const hasPendingRecording =
     Boolean(recorder.audioFile) && recorder.recordingStatus !== 'submitted';
 

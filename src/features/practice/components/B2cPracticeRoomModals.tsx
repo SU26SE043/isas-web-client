@@ -50,6 +50,9 @@ export function B2cPracticeRoomModals({
           .replace('{remaining}', String(remainingCount))
       : t('practice.finish.earlySummaryAllAnswered')
     : t('practice.finish.confirmDescription');
+  // CAMP-21: luật "bỏ trống câu chính = mất điểm" phải hiện ở MỌI đường có câu chưa trả lời — kể cả
+  // kết thúc sớm (tóm tắt a/t câu thôi là chưa nói hậu quả). Trả lời hết thì không cần nhắc.
+  const showPenaltyRule = earlyFinish && remainingCount > 0;
 
   return (
     <>
@@ -58,6 +61,11 @@ export function B2cPracticeRoomModals({
           <div className="w-full max-w-md rounded-2xl border border-satin bg-surface-raised p-6">
             <h2 className="text-lg font-semibold text-foreground">{t('practice.finish.confirmTitle')}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+            {showPenaltyRule ? (
+              <p className="mt-2 text-sm text-warning" data-testid="finish-penalty-rule">
+                {t('practice.finish.confirmDescription')}
+              </p>
+            ) : null}
             <ul className="mt-4 space-y-1 text-sm text-foreground">
               {!earlyFinish ? (
                 <>

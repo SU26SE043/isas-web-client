@@ -108,6 +108,20 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
             <p className="mt-2 text-sm text-muted-foreground">
               {view.answeredCount}/{view.totalQuestions} {t('practice.result.questionsAnswered')}
             </p>
+            {view.skipPenalty ? (
+              <p
+                data-testid="skip-penalty-note"
+                className={cn('mt-2 text-sm', view.skipPenalty.applied ? 'text-warning' : 'text-muted-foreground')}
+              >
+                {view.skipPenalty.applied
+                  ? t('practice.result.skipPenaltyApplied')
+                      .replace('{{before}}', splitScore(view.skipPenalty.scoreBefore, maxScore).value)
+                      .replace('{{answered}}', String(view.skipPenalty.seedAnswered))
+                      .replace('{{total}}', String(view.skipPenalty.seedTotal))
+                      .replace('{{after}}', splitScore(view.skipPenalty.scoreAfter, maxScore).value)
+                  : t('practice.result.skipPenaltyNone').replaceAll('{{total}}', String(view.skipPenalty.seedTotal))}
+              </p>
+            ) : null}
             {passed != null ? (
               <p className={cn('mt-4 flex flex-wrap items-center gap-2 text-sm font-medium', passed ? 'text-success' : 'text-warning')}>
                 {passed ? <CheckCircle2 className="size-4" aria-hidden /> : <CircleAlert className="size-4" aria-hidden />}
