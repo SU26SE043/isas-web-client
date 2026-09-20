@@ -66,6 +66,23 @@ describe('B2cPracticeRoomModals — finish dialog', () => {
     expect(screen.getByText('Bạn đã trả lời hết các câu hỏi.')).toBeInTheDocument();
   });
 
+  // CAMP-21: câu luật phải hiện Ở MỌI đường còn câu chưa trả lời — kết thúc sớm chỉ tóm tắt a/t câu
+  // là chưa nói hậu quả. Trả lời hết thì không nhắc (không có gì để mất).
+  it('kết thúc sớm còn câu chưa trả lời ⇒ hiện THÊM câu luật (không thay tóm tắt)', () => {
+    render(
+      <B2cPracticeRoomModals {...baseProps} earlyFinish answeredCount={2} totalCount={5} remainingCount={3} />,
+    );
+    expect(screen.getByText('Bạn đã trả lời 2/5 câu. Còn 3 câu chưa trả lời.')).toBeInTheDocument();
+    expect(screen.getByTestId('finish-penalty-rule')).toHaveTextContent('Các câu chưa trả lời có thể nhận 0 điểm.');
+  });
+
+  it('kết thúc sớm đã trả lời hết ⇒ KHÔNG hiện câu luật', () => {
+    render(
+      <B2cPracticeRoomModals {...baseProps} earlyFinish answeredCount={5} totalCount={5} remainingCount={0} />,
+    );
+    expect(screen.queryByTestId('finish-penalty-rule')).toBeNull();
+  });
+
   it('still shows the pending-recording line during early finish', () => {
     render(<B2cPracticeRoomModals {...baseProps} earlyFinish hasPendingRecording remainingCount={1} />);
     expect(screen.getByText('practice.finish.pendingRecording')).toBeInTheDocument();

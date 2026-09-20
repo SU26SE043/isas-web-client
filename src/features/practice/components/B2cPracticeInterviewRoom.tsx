@@ -111,11 +111,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   };
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
-      <InterviewHeader
-        sessionId={sessionId}
-        isRecording={recorderOpen && cardStatus === 'recording'}
-        onExit={() => room.setFinishOpen(true)}
-      />
+      <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} onExit={() => room.setFinishOpen(true)} />
       <FullscreenExitBanner onBlockingChange={setFullscreenBlocked} />
 
       {room.media.state === 'error' ? (
