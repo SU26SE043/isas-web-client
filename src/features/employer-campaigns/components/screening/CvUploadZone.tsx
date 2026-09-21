@@ -13,6 +13,11 @@ interface CvUploadZoneProps {
   isAnalyzing: boolean;
   canAnalyze: boolean;
   isActive: boolean;
+  /**
+   * Ẩn dòng "Chưa có CV nào được chọn" — dùng ngay sau khi hàng chờ vừa được đẩy đi phân tích:
+   * để nguyên thì nó đứng sát trên banner "Đang phân tích 4/4", hai câu mâu thuẫn nhau.
+   */
+  hideEmptyHint?: boolean;
 }
 
 export function CvUploadZone({
@@ -22,6 +27,7 @@ export function CvUploadZone({
   isAnalyzing,
   canAnalyze,
   isActive,
+  hideEmptyHint = false,
 }: CvUploadZoneProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +109,7 @@ export function CvUploadZone({
       </div>
 
       {files.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('employer.campaigns.screening.upload.empty')}</p>
+        hideEmptyHint ? null : <p className="text-sm text-muted-foreground">{t('employer.campaigns.screening.upload.empty')}</p>
       ) : (
         <CvUploadFileQueue
           files={files}

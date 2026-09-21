@@ -57,6 +57,7 @@ export function CvScreeningPanel({ campaignId, isActive, allowDraftScreening = f
         isAnalyzing={state.analyzeMutation.isPending}
         canAnalyze={state.canAnalyze}
         isActive={screeningEnabled}
+        hideEmptyHint={state.uploadSummary != null}
       />
       {state.uploadSummary ? (
         <CandidateAnalysisProgress

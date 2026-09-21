@@ -30,7 +30,7 @@ export function CandidateEmailCell({ candidate, onUpdateEmail, updating }: Candi
 
   if (!editing) {
     return (
-      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <div className="mt-1 flex items-center gap-1.5 whitespace-nowrap">
         {candidate.email ? (
           <span className="text-xs text-muted-foreground">{candidate.email}</span>
         ) : (
