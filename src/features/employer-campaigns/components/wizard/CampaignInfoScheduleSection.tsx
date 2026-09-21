@@ -36,6 +36,7 @@ export function CampaignInfoScheduleSection({ info, onChange }: CampaignInfoSche
             datePlaceholder={t(`${f}.datePlaceholder`)}
             dateAriaLabel={t(`${f}.dateAriaLabel`)}
             timeAriaLabel={t(`${f}.timeAriaLabel`)}
+            dateErrorMessage={t(`${f}.dateInvalid`)}
             onChange={(value) => onChange({ startsAt: value })}
           />
         </div>
@@ -47,6 +48,7 @@ export function CampaignInfoScheduleSection({ info, onChange }: CampaignInfoSche
             datePlaceholder={t(`${f}.datePlaceholder`)}
             dateAriaLabel={t(`${f}.dateAriaLabel`)}
             timeAriaLabel={t(`${f}.timeAriaLabel`)}
+            dateErrorMessage={t(`${f}.dateInvalid`)}
             onChange={(value) => onChange({ expiresAt: value })}
           />
         </div>

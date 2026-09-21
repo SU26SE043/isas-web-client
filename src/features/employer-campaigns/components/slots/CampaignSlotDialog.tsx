@@ -105,6 +105,7 @@ export function CampaignSlotDialog({
                 datePlaceholder={t('employer.campaigns.form.datePlaceholder')}
                 dateAriaLabel={t('employer.campaigns.form.dateAriaLabel')}
                 timeAriaLabel={t('employer.campaigns.form.timeAriaLabel')}
+                dateErrorMessage={t('employer.campaigns.form.dateInvalid')}
                 aria-invalid={Boolean(errorKey || errorText)}
                 onChange={(value) => setValues((prev) => ({ ...prev, startsAt: value }))}
               />
@@ -118,6 +119,7 @@ export function CampaignSlotDialog({
                 datePlaceholder={t('employer.campaigns.form.datePlaceholder')}
                 dateAriaLabel={t('employer.campaigns.form.dateAriaLabel')}
                 timeAriaLabel={t('employer.campaigns.form.timeAriaLabel')}
+                dateErrorMessage={t('employer.campaigns.form.dateInvalid')}
                 aria-invalid={Boolean(errorKey || errorText)}
                 onChange={(value) => setValues((prev) => ({ ...prev, endsAt: value }))}
               />
