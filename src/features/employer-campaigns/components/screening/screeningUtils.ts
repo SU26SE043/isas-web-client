@@ -3,6 +3,9 @@ import type { CampaignPdfErrorCode } from '../../utils/campaignFiles';
 
 export function canSelectCandidate(item: CampaignCandidateListItem): boolean {
   if (!item.email?.trim()) return false;
+  // Đang được AI sàng ⇒ chưa có điểm để mời. Trước 21/09 nút "Chọn tất cả" vẫn gom cả những dòng
+  // này (checkbox từng dòng tắt, nhưng id vẫn lọt vào danh sách chọn ⇒ thanh hành động đếm dư).
+  if (isCandidateScreeningPending(item)) return false;
   const status = item.status.toLowerCase();
   if (status === 'rejected') return false;
   if (status.includes('invit')) return false;
@@ -55,6 +58,13 @@ export type CandidateAnalysisProgress = {
   errors: number;
 };
 
+/** Đang chờ AI sàng: `Analyzing` (job đã đẩy) hoặc `Filtered` (qua lọc thô, chờ đẩy). Dùng chung cho
+ * thanh tiến độ, dòng skeleton trong bảng và luật poll (`campaignCandidatesPolling`). */
+export function isCandidateScreeningPending(candidate: Pick<CampaignCandidateListItem, 'status'>): boolean {
+  const status = candidate.status.toLowerCase();
+  return status === 'analyzing' || status === 'filtered';
+}
+
 export function getCandidateAnalysisProgress(
   candidates: CampaignCandidateListItem[],
   trackedCandidateIds?: ReadonlySet<string>,
@@ -67,9 +77,7 @@ export function getCandidateAnalysisProgress(
 
   return {
     total: tracked.length,
-    pending: tracked.filter(
-      (candidate) => isStatus(candidate, 'Analyzing') || isStatus(candidate, 'Filtered'),
-    ).length,
+    pending: tracked.filter(isCandidateScreeningPending).length,
     completed: tracked.filter((candidate) => isStatus(candidate, 'Analyzed')).length,
     errors: tracked.filter((candidate) => isStatus(candidate, 'AnalysisFailed')).length,
   };
