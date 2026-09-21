@@ -1,6 +1,5 @@
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
@@ -11,42 +10,29 @@ interface CandidateAnalyzingRowProps {
 }
 
 /**
- * Dòng ứng viên ĐANG được AI sàng (Analyzing/Filtered): mọi ô chưa có dữ liệu vẽ skeleton + spinner
- * thay vì "—" và ô "Lưu email" trống. Đo 21/09: HR vừa bấm Phân tích thấy 4 dòng toàn gạch ngang và
- * ô nhập email rỗng ⇒ đọc thành "hỏng", dù bảng chỉ đang chờ ~30 s. Email đã tách được từ CV thì hiện
- * luôn (là dữ liệu thật), tên/điểm/kỹ năng chờ AI. Không cho tick chọn hay mở chi tiết — chưa có gì
- * để xem, mời lúc này là mời trước khi biết điểm.
+ * Dòng ứng viên ĐANG được AI sàng (Analyzing/Filtered). Đo 21/09: HR vừa bấm Phân tích thấy 4 dòng
+ * toàn "—" + ô "Lưu email" trống ⇒ đọc thành "hỏng", dù bảng chỉ đang chờ ~30 s.
+ *
+ * <p>Cố ý KHÔNG vẽ skeleton từng ô (chủ sản phẩm chê "hơi kì"): 4 thanh mờ giả vờ là dữ liệu sắp
+ * có, mà thứ sắp có thật ra chỉ là MỘT việc — AI đang đọc CV. Nên gom điểm/kỹ năng/trạng thái thành
+ * một ô: spinner + "Đang phân tích". Email đã tách từ CV thì hiện luôn (dữ liệu thật, HR nhận ra
+ * dòng nào là ai). Không tick chọn / không mở chi tiết — chưa có gì để xem, mời lúc này là mời
+ * trước khi biết điểm.</p>
  */
 export function CandidateAnalyzingRow({ candidate }: CandidateAnalyzingRowProps) {
   const { t } = useLanguage();
   return (
-    <TableRow aria-busy="true" data-testid="candidate-analyzing-row">
+    <TableRow aria-busy="true" data-testid="candidate-analyzing-row" className="text-muted-foreground">
       <TableCell>
         <input type="checkbox" checked={false} disabled readOnly className="size-4 rounded border-satin" aria-label={candidate.email ?? candidate.id} />
       </TableCell>
+      <TableCell />
       <TableCell>
-        <Skeleton className="h-4 w-6" />
+        <p className="text-sm">{candidate.email ?? t('employer.campaigns.screening.ranking.noEmail')}</p>
       </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-40" />
-        {candidate.email ? (
-          <p className="mt-2 text-xs text-muted-foreground">{candidate.email}</p>
-        ) : (
-          <Skeleton className="mt-2 h-3 w-48" />
-        )}
-      </TableCell>
-      <TableCell>
+      <TableCell colSpan={3}>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-10" />
-          <Skeleton className="h-5 w-14 rounded-full" />
-        </div>
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-32" />
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2 text-foreground">
-          <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+          <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
           <span>{t(candidateScreeningStatusLabelKey(candidate.status))}</span>
         </div>
       </TableCell>

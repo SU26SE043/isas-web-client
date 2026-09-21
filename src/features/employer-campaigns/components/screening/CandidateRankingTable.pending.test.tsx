@@ -36,13 +36,17 @@ function renderTable(candidates: CampaignCandidateListItem[], onUpdateEmail = vi
 }
 
 describe('dòng đang sàng (Analyzing/Filtered)', () => {
-  it('vẽ skeleton + spinner, hiện email đã tách, KHÔNG có ô nhập/Lưu email, không tick/mở chi tiết được', () => {
+  it('MỘT ô gộp có spinner + trạng thái (không skeleton từng ô), hiện email đã tách, KHÔNG có ô nhập/Lưu email, không tick/mở chi tiết được', () => {
     renderTable([analyzing('a'), { ...analyzing('f'), status: 'Filtered' }]);
 
     const rows = screen.getAllByTestId('candidate-analyzing-row');
     expect(rows).toHaveLength(2);
     const first = within(rows[0]);
-    expect(rows[0].querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThanOrEqual(4);
+    expect(rows[0].querySelectorAll('[data-slot="skeleton"]').length).toBe(0);
+    expect(rows[0].querySelector('.animate-spin')).toBeTruthy();
+    // điểm + kỹ năng + trạng thái gộp làm một ô ⇒ tổng số ô = 7 cột − 2
+    expect(rows[0].querySelectorAll('td').length).toBe(5);
+    expect(rows[0].querySelector('td[colspan="3"]')).toBeTruthy();
     expect(first.getByText('a@x.com')).toBeTruthy();
     expect(first.getByText('employer.campaigns.screening.status.Analyzing')).toBeTruthy();
     expect(first.queryByRole('textbox')).toBeNull();
