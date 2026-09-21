@@ -6,7 +6,7 @@ export interface PageMeta {
   image?: string;
 }
 
-const DEFAULT_OG_IMAGE = '/isas-logo.jpg';
+const DEFAULT_OG_IMAGE = '/isas-og.png';
 
 function upsertMeta(selector: string, attributes: Record<string, string>) {
   let element = document.head.querySelector<HTMLMetaElement>(selector);
