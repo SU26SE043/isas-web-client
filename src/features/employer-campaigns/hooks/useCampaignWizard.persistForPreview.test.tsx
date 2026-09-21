@@ -480,7 +480,7 @@ describe('R1/R2 — nhãn chip sống sót qua MỌI đường lưu; GUID chết
     expect(handlers.onUpdateQuestions).toHaveBeenCalledTimes(2);
     expect(handlers.onUpdateCampaign).toHaveBeenCalledWith('c-new', expect.objectContaining({ criteria: expect.arrayContaining([expect.objectContaining({ id: CRIT_A })]) }));
     expect(lastQuestionsPayload()[0].targetCriterionIds).toEqual([CRIT_B]);
-    expect(handlers.onDeployCampaign).toHaveBeenCalledWith('c-new', expect.anything(), expect.anything());
+    expect(handlers.onDeployCampaign).toHaveBeenCalledWith('c-new', expect.anything());
   });
 
   it('R1(b) saveQuestionsNow (Lưu câu hỏi): PUT metadata TRƯỚC, PUT /questions SAU và mang GUID đã ghép', async () => {

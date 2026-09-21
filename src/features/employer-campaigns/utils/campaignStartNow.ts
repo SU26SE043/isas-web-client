@@ -1,7 +1,9 @@
 import type { EmployerCampaignStatus } from '../types/campaignManagement.types';
 
 /**
- * "Mở ngay" (`POST /campaign/{id}/start-now`) — luật phía FE, thuần, không gọi API.
+ * "Mở ngay" (`POST /campaign/{id}/start-now`) — luật phía FE, thuần, không gọi API. Chỉ còn
+ * trang CHI TIẾT (campaign đã Active) dùng; ô "Mở ngay khi triển khai" ở wizard đã bỏ 21/09
+ * (mặc định D-6 tự tick làm HR hẹn giờ rồi bị mở ngay — xem decisions.md D-6).
  *
  * Mọi blocker ở đây là NGĂN GỌI API (không gọi rồi bắt 4xx). Đối chiếu backend
  * (`CampaignService.StartEarlyAsync`, đọc 2026-09-13): 409 khi không Active · 409 khi đã hết
@@ -10,9 +12,6 @@ import type { EmployerCampaignStatus } from '../types/campaignManagement.types';
  * để nhận về câu 409 mà ta đã biết trước.
  */
 export type StartNowBlocker = 'hasSlots' | 'notFuture' | 'notActive';
-
-/** D-6: hẹn mở ≤ 24h ⇒ mặc định bật "Mở ngay khi triển khai". */
-export const START_NOW_DEFAULT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export interface StartNowBlockerInput {
   status: EmployerCampaignStatus | null | undefined;
@@ -46,39 +45,4 @@ export function startNowBlocker({ status, startsAt, slotCount, now }: StartNowBl
   const start = parseStartsAt(startsAt);
   if (start == null || start <= toEpoch(now)) return 'notFuture';
   return null;
-}
-
-/**
- * D-6 — mặc định bật khi giờ mở còn ở tương lai và cách hiện tại ≤ 24h. Đã qua / không có /
- * xa hơn 24h ⇒ false. Ngưỡng ĐÚNG 24h vẫn tính là "≤" (bật); quá 1 phút ⇒ tắt.
- */
-export function defaultStartNow(startsAt: string | null | undefined, now?: Date | number): boolean {
-  const start = parseStartsAt(startsAt);
-  if (start == null) return false;
-  const delta = start - toEpoch(now);
-  return delta > 0 && delta <= START_NOW_DEFAULT_WINDOW_MS;
-}
-
-export interface ResolveStartNowInput {
-  /** Lựa chọn tường minh của HR ở bước Review; `null` = chưa đụng checkbox. */
-  choice: boolean | null;
-  /** Bước Review đã thấy blocker (có ca / đã tới giờ) ⇒ KHÔNG gửi start-now dù HR từng tick. */
-  blocked: boolean;
-  startsAt: string | null | undefined;
-  now?: Date | number;
-}
-
-/** Giá trị `startNow` thật sự gửi cho `deployCampaign`: blocker thắng, rồi tới HR, rồi mặc định D-6. */
-export function resolveStartNowOnDeploy({ choice, blocked, startsAt, now }: ResolveStartNowInput): boolean {
-  if (blocked) return false;
-  return choice ?? defaultStartNow(startsAt, now);
-}
-
-/**
- * Khoá định danh lựa chọn "Mở ngay" của MỘT lượt wizard: id nháp (hoặc `new` khi chưa có nháp)
- * + giờ mở. Ghép cả giờ mở để lựa chọn cũ không "thơm lây" sang campaign khác mở cùng scope
- * `new`, và để đổi giờ mở ở bước 1 thì mặc định D-6 được tính lại thay vì giữ tick cũ.
- */
-export function startNowChoiceKey(draftId: string | null | undefined, startsAt: string | null | undefined): string {
-  return `${draftId?.trim() || 'new'}|${startsAt ?? ''}`;
 }

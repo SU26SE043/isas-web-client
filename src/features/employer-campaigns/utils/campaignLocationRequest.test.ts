@@ -161,10 +161,25 @@ describe('campaign wizard request contract', () => {
     // Trước 14/09: mặc định giờ mở = lúc mở wizard + 1h (luật tự bịa) VÀ create chặn "giờ mở đã qua"
     // — HR điền 8 bước xong (>30s) là bị đá về bước 1, còn thêm ca thi ngay thì bị 400 "trước khi
     // chiến dịch mở". Bỏ cả hai.
+    // Hạn nộp để tương lai xa: 21/09 thêm luật "hạn nộp đã qua" (riêng expiresAt), test này chỉ đo vế giờ mở.
     const current = persisted();
     current.info.startsAt = '2020-01-01T09:00';
-    current.info.expiresAt = '2020-02-01T09:00';
+    current.info.expiresAt = '2030-02-01T09:00';
     expect(validateCampaignWizardStep(current, 0, { mode: 'create' })).toBeNull();
     expect(validateCampaignWizardStep(current, 0, { mode: 'edit' })).toBeNull();
+  });
+
+  it('hạn nộp ĐÃ QUA (so với `now` truyền vào) ⇒ chặn bước 1 bằng expiresAtPast — kể cả khi giờ mở < hạn', () => {
+    // BE chỉ chặn ở POST; PUT/publish không ⇒ nháp cũ để lâu vẫn phát hành được nếu FE không chặn.
+    const current = persisted();
+    current.info.startsAt = '2026-09-13T09:00';
+    current.info.expiresAt = '2026-09-16T09:00';
+    const now = Date.UTC(2026, 8, 21);
+    expect(validateCampaignWizardStep(current, 0, { mode: 'edit', now })).toBe('employer.campaigns.wizard.expiresAtPast');
+    // Cùng fixture, `now` lùi về trước hạn ⇒ hợp lệ: luật đọc `now`, không đọc đồng hồ máy.
+    expect(validateCampaignWizardStep(current, 0, { mode: 'edit', now: Date.UTC(2026, 8, 14) })).toBeNull();
+    // Hạn ≤ giờ mở vẫn là dateRangeInvalid (luật cũ đứng trước).
+    current.info.expiresAt = '2026-09-13T09:00';
+    expect(validateCampaignWizardStep(current, 0, { mode: 'edit', now })).toBe('employer.campaigns.wizard.dateRangeInvalid');
   });
 });
