@@ -6,8 +6,6 @@ import { SectionPanel } from '@/components/ui/section-panel';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignCandidateListItem } from '../../types/campaign.api.types';
 import type { EmployerCampaign } from '../../types/campaignManagement.types';
-import type { CampaignHardFiltersState } from '../../types/campaignWizard.types';
-import { CampaignHardFilterSection } from './CampaignHardFilterSection';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { WizardNumberField } from './WizardNumberField';
 import { CvScreeningPanel } from '../screening/CvScreeningPanel';
@@ -20,9 +18,7 @@ interface CampaignInvitesStepProps {
   timeLimitMinutes?: number;
   onTimeLimitChange?: (value: number | null) => void;
   error?: string | null;
-  hardFilters: CampaignHardFiltersState;
   inviteEmails: string[];
-  onHardFiltersChange: (patch: Partial<CampaignHardFiltersState>) => void;
   onInviteEmailsChange: (emails: string[]) => void;
   onBack: () => void;
   onNext: () => void;
@@ -40,9 +36,7 @@ export function CampaignInvitesStep({
   timeLimitMinutes,
   onTimeLimitChange,
   error,
-  hardFilters,
   inviteEmails,
-  onHardFiltersChange,
   onInviteEmailsChange,
   onBack,
   onNext,
@@ -136,7 +130,6 @@ export function CampaignInvitesStep({
           <div className="space-y-4">
              {!campaignId ? <Alert variant="warning"><AlertDescription>{t('employer.campaigns.wizard.invites.saveDraftFirst')}</AlertDescription></Alert> : null}
              {campaignId ? <CvScreeningPanel campaignId={campaignId} isActive={false} allowDraftScreening hideInvitationAction onAddCandidates={addScreenedCandidates} /> : null}
-             <CampaignHardFilterSection value={hardFilters} onChange={onHardFiltersChange} />
            </div>
          )}
        </div>
