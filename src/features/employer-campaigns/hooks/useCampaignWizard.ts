@@ -75,8 +75,6 @@ import {
   limitImportedQuestions,
   validImportedQuestions,
 } from '../utils/campaignQuestionImport';
-import { resolveStartNowOnDeploy, startNowChoiceKey } from '../utils/campaignStartNow';
-import { readCampaignDeployOptions } from '../stores/campaignDeployOptionsStore';
 
 export type CampaignFormMode = 'create' | 'edit';
 
@@ -469,7 +467,7 @@ interface UseCampaignWizardArgs {
     fileType: CampaignFileType,
   ) => Promise<BlobDownloadResult>;
   onAfterSubmit: (campaign: EmployerCampaign) => void;
-  onDeployCampaign: (campaignId: string, emails: string[], options?: import('../types/campaignManagement.types').CampaignDeployOptions) => Promise<import('../types/campaignManagement.types').CampaignDeployResult>;
+  onDeployCampaign: (campaignId: string, emails: string[]) => Promise<import('../types/campaignManagement.types').CampaignDeployResult>;
   onSendInvitations: (campaignId: string, emails: string[]) => Promise<import('../types/campaign.api.types').CreateCampaignInvitationsResponse>;
 }
 
@@ -1460,16 +1458,9 @@ export function useCampaignWizard({
     setInvitationFailureReason(null);
     setCanRetryInvitations(true);
     try {
-      // T13 R2 — "Mở ngay khi triển khai": đọc lựa chọn HR (+ blocker) từ store của bước Review theo
-      // ĐÚNG key lúc HR tick (`state.draftId` TRƯỚC khi handleCreateCampaign gán id mới, cùng giờ mở).
-      const startNow = resolveStartNowOnDeploy({
-        ...readCampaignDeployOptions(startNowChoiceKey(state.draftId, state.info.startsAt)),
-        startsAt: state.info.startsAt,
-      });
-      const deployed = await onDeployCampaign(saved.id, state.inviteEmails, { startNow });
-      // Không phải deploy hỏng: publish + mời đã chạy, chỉ bước mở ngay hụt ⇒ toast trung tính,
-      // trỏ HR về trang Chi tiết (nút "Mở ngay") thay vì banner đỏ.
-      if (deployed.startNow === 'failed') toast(t('employer.campaigns.wizard.deploy.startNowFailedAfterDeploy'), { icon: '⚠️', duration: 8000 });
+      // Wizard KHÔNG gửi start-now (bỏ ô "Mở ngay khi triển khai" 21/09): giờ mở HR đặt là giờ mở
+      // thật; muốn mở sớm thì sửa giờ bắt đầu, hoặc nút "Mở ngay" ở trang chi tiết khi đã Active.
+      const deployed = await onDeployCampaign(saved.id, state.inviteEmails);
       const failedInvitations = deployed.invitations?.failed ?? [];
       if (failedInvitations.length > 0) {
         setPartialDeploy({ campaignId: saved.id, campaign: deployed.campaign });

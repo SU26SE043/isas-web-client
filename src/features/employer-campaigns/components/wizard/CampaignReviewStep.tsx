@@ -1,4 +1,4 @@
-import { Rocket, TriangleAlert } from 'lucide-react';
+import { Info, Rocket } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SectionPanel } from '@/components/ui/section-panel';
@@ -11,10 +11,10 @@ import { useCampaignSlots } from '../../hooks/useCampaignSlots';
 import { calculateAdaptiveQuestionBudget } from '../../utils/campaignAdaptiveBudget';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
 import { inviteSlotShortfall, slotsOutsideCampaignWindow } from '../../utils/campaignCapacityChecks';
+import { isCampaignExpiryPast } from '../../utils/campaignWindow';
 import { computeLocalKRule, formatKRuleMessage, splitQuestionBankWarnings } from '../../utils/questionCoverage';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { CampaignReviewSlotsTable } from './review/CampaignReviewSlotsTable';
-import { CampaignReviewDeployOptions, useStartNowOnDeploy } from './review/CampaignReviewDeployOptions';
 import { QuestionPreviewSummaryLine } from './review/QuestionPreviewSummaryLine';
 
 interface CampaignReviewStepProps {
@@ -25,23 +25,35 @@ interface CampaignReviewStepProps {
   isSubmitting?: boolean; submitDisabled?: boolean; disableForBlockingIssues?: boolean;
   hasPartialDeploy?: boolean; onRetryInvitations?: () => void; invitationFailures?: FailedCampaignInvitation[];
   invitationFailureReason?: string | null; canRetryInvitations?: boolean;
+  /** Mốc "bây giờ" (ms) cho luật hạn nộp — test truyền vào; mặc định đồng hồ máy. */
+  now?: number;
 }
 
 interface BlockingItem { key: string; label: string; step: number; /** Có ⇒ `label` là câu thường, chỉ vế này thành link (câu dài không nên gạch chân cả đoạn). */ linkLabel?: string; }
 
-function formatDate(value: string): string {
+/** Giờ + ngày, KHÔNG giây (giây là nhiễu ở màn kiểm tra); chuỗi hỏng trả nguyên để HR còn nhìn thấy nó sai. */
+function formatDate(value: string, language: string | undefined): string {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  if (Number.isNaN(date.getTime())) return value;
+  // Năm ĐỦ 4 số: `dateStyle: 'short'` của vi-VN in "13/9/26" — hai số cuối dễ đọc nhầm thành ngày.
+  return new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
+/**
+ * Bước cuối: MỘT nút Triển khai (ở footer) — ô "Khi bấm Triển khai" chỉ mô tả hậu quả bằng số cụ thể.
+ * Rà 21/09: trang có hai nút đen cùng tên + ô "Mở ngay khi triển khai" gần như luôn bị khoá (giờ mở mặc
+ * định = lúc mở wizard + 1' nên tới bước này đã qua) mà khi giờ mở ở tương lai lại TỰ tick (D-6) ⇒ HR
+ * hẹn 9:00 mai, bấm Triển khai là mở ngay. Bỏ ô đó; muốn mở sớm thì sửa giờ bắt đầu, hoặc dùng nút
+ * "Mở ngay" ở trang chi tiết khi campaign đã Active.
+ */
 export function CampaignReviewStep({
   info, jd, rubric, questions, questionsPerSession, settings, campaignId, domainLabel,
   inviteEmails = [], questionBankWarnings = [], error, onGoToStep, onBack, onSubmit,
   submitLabel, submittingLabel, isSubmitting = false, submitDisabled = false, disableForBlockingIssues = false,
   hasPartialDeploy = false, onRetryInvitations,
-  invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true,
+  invitationFailures = [], invitationFailureReason = null, canRetryInvitations = true, now,
 }: CampaignReviewStepProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Khung giờ tạm ẩn ⇒ Review coi như 0 ca: không query, không bảng ca, không chặn theo ca (xem isCampaignSlotsUiEnabled).
   const slotsUi = isCampaignSlotsUiEnabled();
   const slotsQuery = useCampaignSlots(campaignId, Boolean(campaignId) && slotsUi);
@@ -68,7 +80,12 @@ export function CampaignReviewStep({
   const serverWarnings = splitQuestionBankWarnings(questionBankWarnings);
   // Có rubric ⇒ bản cục bộ là sự thật (kể cả khi server còn giữ cảnh báo cũ của lần lưu trước); không rubric ⇒ tin server.
   const kRuleLabel = localK ? formatKRuleMessage(t, localK) : rubric.length > 0 ? null : serverWarnings.blocking[0] ?? null;
+  const formattedStart = formatDate(info.startsAt, language);
+  const formattedExpires = formatDate(info.expiresAt, language);
+  const expired = isCampaignExpiryPast(info.expiresAt, now);
   const blocking: BlockingItem[] = [
+    // Hạn nộp đã qua đứng ĐẦU: phát hành xong là mọi lời mời chết ngay, và BE PUT/publish không chặn hộ.
+    expired ? { key: 'expired', label: t('employer.campaigns.wizard.deploy.blockExpired').replace('{{expires}}', formattedExpires), step: 0, linkLabel: t('employer.campaigns.wizard.deploy.blockExpiredLink') } : null,
     kRuleLabel ? { key: 'kRule', label: kRuleLabel, step: 3, linkLabel: t('employer.campaigns.review.previewSummary.goToQuestions') } : null,
     !jd.jdText.trim() && !jd.fileName && !jd.serverUploaded ? { key: 'jd', label: t('employer.campaigns.wizard.jdTextRequired'), step: 1 } : null,
     rubric.length === 0 ? { key: 'rubric', label: t('employer.campaigns.wizard.criteriaRequired'), step: 2 } : null,
@@ -93,17 +110,23 @@ export function CampaignReviewStep({
       : null,
   ].filter((item): item is BlockingItem => Boolean(item));
   const deployDisabled = submitDisabled || isSubmitting || (hasPartialDeploy && !canRetryInvitations) || (!hasPartialDeploy && ((disableForBlockingIssues && blocking.length > 0) || adaptiveBudget.exceedsLimit));
-  // T13 R2 — "Mở ngay khi triển khai": có ca ⇒ khoá (ca quyết định giờ mở), đã tới giờ ⇒ khoá.
-  const startNow = useStartNowOnDeploy({ campaignId, startsAt: info.startsAt, slotCount: slots.length });
-  const formattedStart = formatDate(info.startsAt);
   const scheduleValue = slots.length > 0
     ? t('employer.campaigns.wizard.deploy.scheduleSlots')
         .replace('{{n}}', String(slots.length))
         .replace('{{assigned}}', String(assignedCount))
         .replace('{{capacity}}', String(capacity))
-    : startNow.checked
-      ? t('employer.campaigns.wizard.deploy.scheduleStartNow').replace('{{start}}', formattedStart)
-      : t('employer.campaigns.wizard.deploy.scheduleNoSlots');
+    : t('employer.campaigns.wizard.deploy.scheduleWindow').replace('{{start}}', formattedStart).replace('{{expires}}', formattedExpires);
+  const questionsValue = questionsPerSession
+    ? t('employer.campaigns.wizard.deploy.questionsDraw').replace('{{n}}', String(questions.length)).replace('{{k}}', String(questionsPerSession))
+    : t('employer.campaigns.wizard.deploy.questionsAll').replace('{{n}}', String(questions.length));
+  const invitesValue = inviteEmails.length > 0
+    ? `${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`
+    : t('employer.campaigns.wizard.deploy.noInvites');
+  const whenPressed = (inviteEmails.length > 0
+    ? t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length))
+    : t('employer.campaigns.wizard.deploy.whenPressedNoInvites'))
+    .replace('{{start}}', formattedStart)
+    .replace('{{expires}}', formattedExpires);
 
   return (
     <SectionPanel icon={<Rocket className="size-4" aria-hidden />} title={t('employer.campaigns.wizard.deploy.title')} description={t('employer.campaigns.wizard.deploy.description')} footer={<CampaignWizardNav onBack={onBack} onNext={onSubmit} nextLabel={isSubmitting ? submittingLabel : submitLabel} nextDisabled={deployDisabled} isSaving={isSubmitting} backDisabled={isSubmitting} />}>
@@ -130,25 +153,23 @@ export function CampaignReviewStep({
         </section> : null}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCampaign')} value={info.title || '—'} onEdit={() => onGoToStep(0)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryJob')} value={`${domainLabel} · ${jd.fileName || (jd.jdText.trim() ? t('employer.campaigns.wizard.deploy.ready') : '—')}`} onEdit={() => onGoToStep(1)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCriteria')} value={`${rubric.length} · ${Math.round(rubric.reduce((sum, item) => sum + Number(item.weight), 0))}%`} onEdit={() => onGoToStep(2)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryQuestions')} value={`${questions.length} · ${questionsPerSession ?? t('employer.campaigns.wizard.deploy.allQuestions')}`} onEdit={() => onGoToStep(3)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={`${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           {/* Ca thi ẩn ⇒ bước 5 không tới được (goToStep từ chối) — "Sửa" trỏ về bước 1, nơi đặt cửa sổ thi (startsAt/expiresAt). */}
-          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} onEdit={() => onGoToStep(slotsUi ? 5 : 0)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summarySchedule')} value={scheduleValue} tone={expired ? 'error' : 'default'} onEdit={() => onGoToStep(slotsUi ? 5 : 0)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryInvites')} value={invitesValue} onEdit={() => onGoToStep(6)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryJob')} value={`${domainLabel} · ${jd.fileName || (jd.jdText.trim() ? t('employer.campaigns.wizard.deploy.jdTyped') : '—')}`} onEdit={() => onGoToStep(1)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCriteria')} value={t('employer.campaigns.wizard.deploy.criteriaCount').replace('{{n}}', String(rubric.length))} onEdit={() => onGoToStep(2)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryQuestions')} value={questionsValue} onEdit={() => onGoToStep(3)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
         {/* SC2 · D-1 — bước 8 chỉ TÓM TẮT chấm thử theo câu (n/K câu đã thử · m câu chưa gắn tiêu chí), không chặn Phát hành. */}
         <QuestionPreviewSummaryLine campaignId={campaignId ?? null} questions={questions} rubric={rubric} onGoToQuestions={() => onGoToStep(3)} />
-        {hasPartialDeploy ? null : <CampaignReviewDeployOptions startNow={startNow} slotCount={slots.length} formattedStart={formattedStart} disabled={isSubmitting} />}
-        <section className="rounded-xl border border-info/30 bg-info/5 p-4">
-          <div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.whenPressedDescription').replace('{{count}}', String(inviteEmails.length)).replace('{{expires}}', formatDate(info.expiresAt))}</p>{startNow.checked ? <p className="font-medium text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedStartNow').replace('{{start}}', formattedStart)}</p> : null}<p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
-          <Button type="button" className="mt-4" disabled={deployDisabled} loading={isSubmitting} onClick={onSubmit}>{isSubmitting ? submittingLabel : submitLabel}</Button>
+        <section className="rounded-xl border border-info/30 bg-info/5 p-4" data-testid="deploy-consequences">
+          <div className="flex items-start gap-3"><Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden /><div className="space-y-2 text-sm"><h3 className="font-semibold text-foreground">{t('employer.campaigns.wizard.deploy.whenPressedTitle')}</h3><p className="text-muted-foreground">{whenPressed}</p><p className="text-muted-foreground">{t('employer.campaigns.wizard.deploy.lockingDescription')}</p></div></div>
         </section>
       </div>
     </SectionPanel>
   );
 }
 
-function SummaryCard({ label, value, onEdit, editLabel }: { label: string; value: string; onEdit: () => void; editLabel: string }) {
-  return <div className="frame-satin rounded-xl bg-surface-overlay p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 line-clamp-2 text-sm font-medium text-foreground">{value}</p></div><Button type="button" variant="ghost" size="sm" onClick={onEdit}>{editLabel}</Button></div></div>;
+function SummaryCard({ label, value, onEdit, editLabel, tone = 'default' }: { label: string; value: string; onEdit: () => void; editLabel: string; tone?: 'default' | 'error' }) {
+  return <div className="frame-satin rounded-xl bg-surface-overlay p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className={`mt-1 line-clamp-2 text-sm font-medium ${tone === 'error' ? 'text-error' : 'text-foreground'}`}>{value}</p></div><Button type="button" variant="ghost" size="sm" onClick={onEdit}>{editLabel}</Button></div></div>;
 }

@@ -4,7 +4,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CampaignReviewStep } from './CampaignReviewStep';
 import { createEmptyJdState } from '../../types/campaignWizard.types';
-import { useCampaignDeployOptionsStore } from '../../stores/campaignDeployOptionsStore';
 import type { CampaignQuestion, RubricCriterion } from '../../types/campaignManagement.types';
 import type { CampaignSlotResponse } from '../../types/campaign.api.types';
 
@@ -29,9 +28,13 @@ vi.mock('@/shared/languages', () => ({
       if (key === 'employer.campaigns.wizard.deploy.blockSlotShortfall') return `${key} {{inviting}} {{available}}`;
       if (key === 'employer.campaigns.wizard.deploy.blockSlotOutsideWindow') return `${key} {{n}}`;
       if (key === 'employer.campaigns.wizard.deploy.scheduleSlots') return `${key} {{n}} {{assigned}} {{capacity}}`;
-      // T13 R2 — giữ placeholder để test đọc được số ca / giờ mở đã `.replace()`.
-      if (key === 'employer.campaigns.wizard.deploy.startNowBlockedHasSlots') return `${key} {{n}}`;
-      if (key === 'employer.campaigns.wizard.deploy.startNowBlockedNotFuture') return `${key} {{start}}`;
+      // Giữ placeholder để test đọc được giờ mở/hạn nộp đã `.replace()` (bảo vệ chỗ ĐẤU DÂY, không chỉ key).
+      if (key === 'employer.campaigns.wizard.deploy.scheduleWindow') return `${key} {{start}} {{expires}}`;
+      if (key === 'employer.campaigns.wizard.deploy.blockExpired') return `${key} {{expires}}`;
+      if (key === 'employer.campaigns.wizard.deploy.whenPressedDescription') return `${key} {{count}} {{start}} {{expires}}`;
+      if (key === 'employer.campaigns.wizard.deploy.whenPressedNoInvites') return `${key} {{start}} {{expires}}`;
+      if (key === 'employer.campaigns.wizard.deploy.questionsDraw') return `${key} {{n}} {{k}}`;
+      if (key === 'employer.campaigns.wizard.deploy.questionsAll') return `${key} {{n}}`;
       return key;
     },
   }),
@@ -67,9 +70,11 @@ afterEach(() => {
   slotsQueryState.data = [];
   slotsQueryState.isLoading = false;
   slotsQueryState.isError = false;
-  // T13 R2 — store zustand là module-singleton: lựa chọn "Mở ngay" của test trước không được rò sang test sau.
-  useCampaignDeployOptionsStore.getState().reset();
 });
+
+// Mốc "bây giờ" CỐ ĐỊNH cho luật hạn nộp: fixture expiresAt=2026-10-07 mà đọc đồng hồ thật thì sau
+// ngày đó cả file đỏ (bom hẹn giờ — tiền lệ ParticipationServiceTests). 2026-09-21 < 2026-10-07.
+const NOW = Date.UTC(2026, 8, 21, 0, 0, 0);
 
 const baseProps = {
   info: {
@@ -100,6 +105,7 @@ const baseProps = {
   onSubmit: vi.fn(),
   submitLabel: 'publish',
   submittingLabel: 'publishing',
+  now: NOW,
 } as const;
 
 const twentyQuestions = Array.from({ length: 20 }, (_, index) => ({
@@ -192,7 +198,8 @@ describe('CampaignReviewStep adaptive budget for fixed and draw modes', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('invitationFailed');
-    expect(screen.getAllByRole('button', { name: 'retryInvitations' })).toHaveLength(3);
+    // Banner + footer — ô "Khi bấm Triển khai" KHÔNG còn nút (một nút chính duy nhất ở footer).
+    expect(screen.getAllByRole('button', { name: 'retryInvitations' })).toHaveLength(2);
   });
 
   it('routes the recovery banner button to invitation retry', () => {
@@ -413,12 +420,12 @@ describe('CampaignReviewStep — Sức chứa & ca thi (T12 R2)', () => {
     expect(screen.getByText(/slotOutsideBadge/)).toBeInTheDocument();
   });
 
-  it('KHÔNG khai ca nào ⇒ không chặn, tóm tắt lịch nói "không ca"', () => {
+  it('KHÔNG khai ca nào ⇒ không chặn, tóm tắt lịch hiện cửa sổ mở/đóng', () => {
     slotsQueryState.data = [];
     render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" inviteEmails={['a@x.com', 'b@x.com']} disableForBlockingIssues />);
     expect(screen.queryByText(/blockSlotShortfall/)).not.toBeInTheDocument();
     expect(screen.queryByText(/blockSlotOutsideWindow/)).not.toBeInTheDocument();
-    expect(screen.getByText(/scheduleNoSlots/)).toBeInTheDocument();
+    expect(screen.getByText(/scheduleWindow/)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'publish' })[0]).toBeEnabled();
   });
 
@@ -461,13 +468,13 @@ describe('CampaignReviewStep — Sức chứa & ca thi (T12 R2)', () => {
     errorSpy.mockRestore();
   });
 
-  it('slots đang tải (data undefined) ⇒ KHÔNG có bảng ca "ma", tóm tắt lịch nói "không ca"', () => {
+  it('slots đang tải (data undefined) ⇒ KHÔNG có bảng ca "ma", tóm tắt lịch hiện cửa sổ mở/đóng', () => {
     slotsQueryState.data = undefined;
     slotsQueryState.isLoading = true;
     render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" />);
     // Mutation `slots.length > 0 ?` → `true ?` sẽ render <table> rỗng — vế này bắt.
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText(/scheduleNoSlots/)).toBeInTheDocument();
+    expect(screen.getByText(/scheduleWindow/)).toBeInTheDocument();
   });
 
   it('0 lời mời + ca ĐÃ ĐẦY ⇒ KHÔNG chặn (không mời ai thì không thiếu chỗ)', () => {
@@ -479,58 +486,75 @@ describe('CampaignReviewStep — Sức chứa & ca thi (T12 R2)', () => {
   });
 });
 
-// ── T13 R2 — "Mở ngay khi triển khai" ở bước Review (D-3 quick-deploy · D-6 mặc định ≤24h) ────
-describe('CampaignReviewStep — Mở ngay khi triển khai (T13 R2)', () => {
+// ── 21/09 — bỏ "Mở ngay khi triển khai"; MỘT nút Triển khai; chặn hạn nộp đã qua ──────────────
+describe('CampaignReviewStep — bước cuối sau khi bỏ "Mở ngay khi triển khai"', () => {
   const readyProps = {
     ...baseProps,
     rubric: [{ id: 'r1', name: 'Depth', description: '', weight: 100, maxScore: 5 }] as RubricCriterion[],
     questions: [{ id: 'q1', prompt: 'Q1', skill: 'frontend', difficulty: 'middle', source: 'manual', isRequired: true }] as CampaignQuestion[],
     settings: { ...baseProps.settings, adaptiveEnabled: false },
   };
-  const inHours = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
-  const checkbox = () => screen.getByRole('checkbox', { name: /startNowLabel/ });
-  const slot = (id: string): CampaignSlotResponse => ({ id, startsAt: inHours(30), endsAt: inHours(32), capacity: 5, assignedCount: 0, startedCount: 0 });
 
-  it('giờ mở ≤ 24h ⇒ checkbox BẬT SẴN (D-6) kèm chú thích mặc định; tóm tắt lịch nói "mở ngay lúc triển khai"', () => {
-    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" info={{ ...baseProps.info, startsAt: inHours(2), expiresAt: inHours(48) }} />);
-    expect(checkbox()).toBeChecked();
-    expect(checkbox()).toBeEnabled();
-    expect(screen.getByText(/startNowDefaultHint/)).toBeInTheDocument();
-    expect(screen.getByText(/scheduleStartNow/)).toBeInTheDocument();
-    expect(screen.getByText(/whenPressedStartNow/)).toBeInTheDocument();
+  it('KHÔNG còn checkbox "Mở ngay" dù giờ mở ở tương lai ≤ 24h (ca D-6 từng tự tick)', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" info={{ ...baseProps.info, startsAt: '2026-09-21T02:00:00Z', expiresAt: '2026-10-07T09:00' }} />);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByText(/startNow/)).not.toBeInTheDocument();
   });
 
-  it('giờ mở xa hơn 24h ⇒ checkbox TẮT mặc định; tick lên thì tóm tắt đổi và store ghi choice=true', () => {
-    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" info={{ ...baseProps.info, startsAt: inHours(48), expiresAt: inHours(96) }} />);
-    expect(checkbox()).not.toBeChecked();
-    expect(screen.getByText(/scheduleNoSlots/)).toBeInTheDocument();
-    fireEvent.click(checkbox());
-    expect(checkbox()).toBeChecked();
-    expect(screen.getByText(/scheduleStartNow/)).toBeInTheDocument();
-    expect(useCampaignDeployOptionsStore.getState().choice).toBe(true);
-    expect(useCampaignDeployOptionsStore.getState().blocked).toBe(false);
+  it('chỉ MỘT nút Triển khai (footer) — ô "Khi bấm Triển khai" chỉ mô tả, không có nút', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" disableForBlockingIssues />);
+    expect(screen.getAllByRole('button', { name: 'publish' })).toHaveLength(1);
+    expect(within(screen.getByTestId('deploy-consequences')).queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('có ca thi ⇒ checkbox DISABLED + lý do nêu số ca, và store ghi blocked=true dù giờ mở ≤ 24h', () => {
-    slotsQueryState.data = [slot('s1'), slot('s2')];
-    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" info={{ ...baseProps.info, startsAt: inHours(2), expiresAt: inHours(48) }} />);
-    expect(checkbox()).toBeDisabled();
-    expect(checkbox()).not.toBeChecked();
-    expect(screen.getByTestId('start-now-blocked')).toHaveTextContent('startNowBlockedHasSlots');
-    expect(screen.getByTestId('start-now-blocked')).toHaveTextContent('2');
-    expect(useCampaignDeployOptionsStore.getState().blocked).toBe(true);
-    expect(screen.queryByText(/whenPressedStartNow/)).not.toBeInTheDocument();
+  it('hạn nộp ĐÃ QUA ⇒ mục chặn nêu hạn, link về bước 1 (index 0), nút Triển khai KHOÁ, thẻ Lịch tô lỗi', () => {
+    const onGoToStep = vi.fn();
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" onGoToStep={onGoToStep} disableForBlockingIssues info={{ ...baseProps.info, startsAt: '2026-09-13T09:00', expiresAt: '2026-09-16T09:00' }} />);
+    // Câu dài là chữ thường, chỉ vế "chọn lại hạn" thành link (mẫu kRule) — hạn đã được điền vào câu.
+    expect(screen.getByText(/blockExpired/, { selector: 'li' })).not.toHaveTextContent('{{expires}}');
+    const blocker = screen.getByRole('button', { name: 'employer.campaigns.wizard.deploy.blockExpiredLink' });
+    fireEvent.click(blocker);
+    expect(onGoToStep).toHaveBeenCalledWith(0);
+    expect(screen.getByRole('button', { name: 'publish' })).toBeDisabled();
+    expect(screen.getByText(/scheduleWindow/)).toHaveClass('text-error');
   });
 
-  it('giờ mở đã qua ⇒ checkbox DISABLED, lý do "đã tới giờ" — không ai bị mời gọi start-now vô nghĩa', () => {
-    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" />); // baseProps.info.startsAt = 2026-09-07 (quá khứ)
-    expect(checkbox()).toBeDisabled();
-    expect(screen.getByTestId('start-now-blocked')).toHaveTextContent('startNowBlockedNotFuture');
-    expect(useCampaignDeployOptionsStore.getState().blocked).toBe(true);
+  it('hạn nộp còn ở tương lai (so với `now` truyền vào) ⇒ KHÔNG chặn, thẻ Lịch màu thường', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" disableForBlockingIssues />);
+    expect(screen.queryByText(/blockExpired/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'publish' })).toBeEnabled();
+    expect(screen.getByText(/scheduleWindow/)).not.toHaveClass('text-error');
   });
 
-  it('đã deploy dở (hasPartialDeploy) ⇒ KHÔNG còn checkbox — campaign đã Active, start-now đã chạy/không chạy rồi', () => {
-    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" hasPartialDeploy onRetryInvitations={vi.fn()} info={{ ...baseProps.info, startsAt: inHours(2), expiresAt: inHours(48) }} />);
-    expect(screen.queryByRole('checkbox', { name: /startNowLabel/ })).not.toBeInTheDocument();
+  it('luật hạn nộp đọc `now` từ prop, KHÔNG đọc đồng hồ máy: cùng fixture, now=2030 ⇒ chặn', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" disableForBlockingIssues now={Date.UTC(2030, 0, 1)} />);
+    expect(screen.getByText(/blockExpired/, { selector: 'li' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'publish' })).toBeDisabled();
+  });
+
+  it('thẻ Lịch in cả giờ mở lẫn hạn nộp, KHÔNG in giây; thẻ Câu hỏi nói K câu mỗi ứng viên', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" questionsPerSession={3} questions={twentyQuestions} />);
+    const schedule = screen.getByText(/scheduleWindow/);
+    expect(schedule).not.toHaveTextContent('{{start}}');
+    expect(schedule).not.toHaveTextContent('{{expires}}');
+    expect(schedule.textContent).not.toMatch(/:\d\d:\d\d/); // HH:mm, không HH:mm:ss
+    expect(schedule.textContent).toMatch(/2026/); // năm đủ 4 số, không "26"
+    expect(screen.getByText(/questionsDraw/)).toHaveTextContent('20');
+    expect(screen.getByText(/questionsDraw/)).toHaveTextContent('3');
+  });
+
+  it('0 lời mời ⇒ thẻ Lời mời nói "chưa mời ai" và ô hậu quả dùng câu KHÔNG có "gửi 0 lời mời"', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" inviteEmails={[]} />);
+    expect(screen.getByText('employer.campaigns.wizard.deploy.noInvites')).toBeInTheDocument();
+    expect(screen.getByText(/whenPressedNoInvites/)).toBeInTheDocument();
+    expect(screen.queryByText(/whenPressedDescription/)).not.toBeInTheDocument();
+  });
+
+  it('có lời mời ⇒ ô hậu quả nêu số lời mời + giờ mở + hạn nộp đã điền', () => {
+    render(<CampaignReviewStep {...readyProps} campaignId="cmp-1" inviteEmails={['a@x.com', 'b@x.com']} />);
+    const line = screen.getByText(/whenPressedDescription/);
+    expect(line).toHaveTextContent('2');
+    expect(line).not.toHaveTextContent('{{');
+    expect(screen.queryByText(/whenPressedNoInvites/)).not.toBeInTheDocument();
   });
 });

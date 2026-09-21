@@ -104,17 +104,17 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
         rubric={[]} questions={[]} questionsPerSession={5}
         settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}
         campaignId="c1" inviteEmails={['a@x.vn', 'b@x.vn', 'c@x.vn']} domainLabel="Frontend"
-        onGoToStep={vi.fn()} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing"
+        onGoToStep={vi.fn()} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing" now={Date.UTC(2026, 8, 21)}
       />,
     );
     // hook được gọi với enabled=false ⇒ không có request /slots nào dù có campaignId
     expect(slotsHook.mock.calls.every(([, enabled]) => enabled === false)).toBe(true);
     expect(screen.queryByText('employer.campaigns.wizard.deploy.blockSlotShortfall')).not.toBeInTheDocument();
     expect(screen.queryByRole('table', { name: /slot/i })).not.toBeInTheDocument();
-    expect(screen.getByText('employer.campaigns.wizard.deploy.scheduleNoSlots')).toBeInTheDocument();
+    expect(screen.getByText('employer.campaigns.wizard.deploy.scheduleWindow')).toBeInTheDocument();
   });
 
-  it('"Sửa" ở thẻ Lịch & khung giờ trỏ về bước 1 (cửa sổ thi), KHÔNG phải bước 5 đã ẩn (goToStep(5) bị từ chối ⇒ nút chết)', () => {
+  it('"Sửa" ở thẻ Lịch thi trỏ về bước 1 (cửa sổ thi), KHÔNG phải bước 5 đã ẩn (goToStep(5) bị từ chối ⇒ nút chết)', () => {
     const onGoToStep = vi.fn();
     render(
       <CampaignReviewStep
@@ -123,7 +123,7 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
         rubric={[]} questions={[]} questionsPerSession={5}
         settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}
         campaignId="c1" inviteEmails={[]} domainLabel="Frontend"
-        onGoToStep={onGoToStep} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing"
+        onGoToStep={onGoToStep} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing" now={Date.UTC(2026, 8, 21)}
       />,
     );
     const card = screen.getByText('employer.campaigns.wizard.deploy.summarySchedule').parentElement!.parentElement!;

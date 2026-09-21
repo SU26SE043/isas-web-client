@@ -2,6 +2,7 @@ import type { CampaignWizardPersistedState } from '../types/campaignWizard.types
 import { validateCampaignPdf } from './campaignFiles';
 import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
 import { validateCriterionLevels } from './criterionLevelRules';
+import { isCampaignExpiryPast } from './campaignWindow';
 
 const LAST_STEP_INDEX = 7;
 // Trần số câu MỘT BUỔI THI (`settings.maxQuestions`, gồm cả câu đào sâu) — khớp CHECK
@@ -24,6 +25,14 @@ export const MAX_CRITERION_NAME_LENGTH = 255;
 export const MAX_JD_TEXT_LENGTH = 20_000;
 export const MAX_CRITERIA_TEXT_LENGTH = MAX_JD_TEXT_LENGTH;
 export const MAX_FOLLOW_UPS_LIMIT = 20;
+
+export type WizardValidationOptions = {
+  // `mode` giữ trong chữ ký cho các call-site/tests hiện có; từ 14/09 không còn luật nào phân biệt
+  // create/edit ở bước 1 (bỏ chặn "giờ mở đã qua").
+  mode?: 'create' | 'edit';
+  /** Mốc "bây giờ" (ms) — test truyền vào để luật hạn nộp không phụ thuộc đồng hồ máy chạy test. */
+  now?: number;
+};
 
 export type WizardValidationError = {
   step: number;
@@ -48,9 +57,7 @@ function pushError(
 export function validateCampaignWizardStep(
   state: CampaignWizardPersistedState,
   step: number,
-  // `mode` giữ trong chữ ký cho các call-site/tests hiện có; từ 14/09 không còn luật nào phân biệt
-  // create/edit ở bước 1 (bỏ chặn "giờ mở đã qua").
-  _options?: { mode?: 'create' | 'edit' },
+  options?: WizardValidationOptions,
 ): string | null {
   const { info, jd, questions, rubric, settings } = state;
   const totalWeight = rubric.reduce((sum, item) => sum + Number(item.weight), 0);
@@ -64,6 +71,9 @@ export function validateCampaignWizardStep(
     if (!info.language) return 'employer.campaigns.wizard.languageRequired';
     if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
     if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
+    // Hạn nộp đã qua thì chặn (khớp BE `POST /campaign` 400 "ExpiresAt cannot be in the past";
+    // `PUT`/`publish` phía BE KHÔNG chặn nên nháp cũ để lâu vẫn phát hành được — đây là lưới FE).
+    if (isCampaignExpiryPast(info.expiresAt, options?.now)) return 'employer.campaigns.wizard.expiresAtPast';
     // KHÔNG chặn giờ mở "đã qua": BE không có luật đó (giờ mở ≤ lúc triển khai ⇒ mở ngay), và với
     // giờ mở mặc định = lúc mở wizard thì HR điền 8 bước xong là "quá khứ" ⇒ bị đá về bước 1 vô cớ.
     return null;
@@ -209,7 +219,7 @@ export function validateCampaignWizardStep(
 /** Validate every step before POST create / PUT save. */
 export function validateAllCampaignWizardSteps(
   state: CampaignWizardPersistedState,
-  options?: { mode?: 'create' | 'edit' },
+  options?: WizardValidationOptions,
 ): WizardValidationResult {
   const errors: WizardValidationError[] = [];
   for (let step = 0; step <= LAST_STEP_INDEX; step += 1) {
