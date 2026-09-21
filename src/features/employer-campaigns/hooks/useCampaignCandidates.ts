@@ -52,7 +52,12 @@ export function useCampaignCandidates(
     queryFn: () => campaignManagementService.getCampaignCandidates(campaignId!, query),
     enabled: Boolean(campaignId) && (options?.enabled ?? true),
     refetchInterval: (query) => getCampaignCandidatesRefetchInterval(query.state.data),
-    refetchIntervalInBackground: false,
+    // Poll CẢ khi tab bị che/ẩn. Đo 21/09 (dev, Chrome thật): với `false`, HR bấm Phân tích rồi chuyển
+    // sang cửa sổ khác (viết mail, đọc tài liệu) → `visibilityState='hidden'` → không lượt poll nào chạy;
+    // quay lại thì bảng vẫn "Đang phân tích" dù DB đã `Analyzed` từ 30 giây trước — nhìn y như treo.
+    // Ép visibility='visible' là bảng đổi ngay ở lượt poll kế. Chi phí bị chặn bởi chính
+    // `getCampaignCandidatesRefetchInterval`: chỉ poll khi còn dòng Analyzing/Filtered, xong là dừng.
+    refetchIntervalInBackground: true,
   });
 }
 
