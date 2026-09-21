@@ -47,9 +47,15 @@ export function CampaignJdStep({
   const [pendingMethod, setPendingMethod] = useState<JobDescriptionMethod | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const fileBusy = jd.fileStatus === 'uploading' || jd.fileStatus === 'replacing';
+  // Có lời server (400 "giờ bắt đầu đã qua", 409 lý do thật…) thì hiện ĐÚNG lời đó thay câu chung
+  // "không kết nối được máy chủ" — câu chung từng làm HR đi tìm lỗi mạng trong khi lỗi nằm ở bước 1.
   const localError =
     jd.inputMethod === 'file' && jd.fileError
-      ? t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
+      ? jd.fileErrorDetail?.trim()
+        ? jd.fileError === 'draftFailed'
+          ? `${t('employer.campaigns.wizard.jdFileError.draftFailed')} ${jd.fileErrorDetail.trim()}`
+          : jd.fileErrorDetail.trim()
+        : t(`employer.campaigns.wizard.jdFileError.${jd.fileError}`)
       : null;
 
   const requestMethodChange = (next: JobDescriptionMethod) => {
@@ -75,7 +81,7 @@ export function CampaignJdStep({
         : {
             inputMethod: pendingMethod,
             jdFile: null, fileName: null, fileSize: null,
-            fileStatus: 'idle', fileError: null, uploadProgress: null, serverUploaded: false,
+            fileStatus: 'idle', fileError: null, fileErrorDetail: null, uploadProgress: null, serverUploaded: false,
           },
     );
     setPendingMethod(null);

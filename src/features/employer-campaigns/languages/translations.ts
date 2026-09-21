@@ -1201,6 +1201,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.publishFailed': 'Không thể xuất bản chiến dịch.',
     'employer.campaigns.wizard.emptyJd': 'Chưa nhập mô tả công việc.',
     'employer.campaigns.wizard.dateRangeInvalid': 'Thời gian kết thúc phải sau thời gian bắt đầu.',
+    'employer.campaigns.wizard.startsAtInPast': 'Thời gian bắt đầu đã qua — chọn lại giờ bắt đầu ở bước 1 rồi thử lại.',
+    'employer.campaigns.wizard.expiresAtInPast': 'Thời gian kết thúc đã qua — chọn lại thời gian kết thúc ở bước 1 rồi thử lại.',
     'employer.campaigns.wizard.jdRequired': 'Vui lòng tải lên tệp mô tả công việc.',
     'employer.campaigns.wizard.jdFileRequired': 'Vui lòng tải lên tệp mô tả công việc.',
     'employer.campaigns.wizard.jdTextRequired': 'Vui lòng nhập nội dung mô tả công việc.',
@@ -1317,6 +1319,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdFileError.tooLarge': 'Tệp vượt quá 10 MB.',
     'employer.campaigns.wizard.jdFileError.corrupt': 'Tệp bị hỏng hoặc trống.',
     'employer.campaigns.wizard.jdFileError.notFound': 'Chiến dịch không tồn tại.',
+    'employer.campaigns.wizard.jdFileError.draftFailed': 'Chưa tạo được bản nháp nên chưa tải tệp lên:',
     'employer.campaigns.wizard.jdFileError.server':
       'Không thể kết nối máy chủ hoặc hệ thống xử lý file thất bại.',
     'employer.campaigns.wizard.rubricSaveRequired': 'Vui lòng lưu tiêu chí trước khi tiếp tục.',
@@ -3005,6 +3008,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.publishFailed': 'Could not publish the campaign.',
     'employer.campaigns.wizard.emptyJd': 'No job description yet.',
     'employer.campaigns.wizard.dateRangeInvalid': 'End time must be after start time.',
+    'employer.campaigns.wizard.startsAtInPast': 'The start time has already passed — pick a new start time in step 1 and retry.',
+    'employer.campaigns.wizard.expiresAtInPast': 'The end time has already passed — pick a new end time in step 1 and retry.',
     'employer.campaigns.wizard.jdRequired': 'Please upload a job description file.',
     'employer.campaigns.wizard.jdFileRequired': 'Please upload a job description file.',
     'employer.campaigns.wizard.jdTextRequired': 'Please enter the job description content.',
@@ -3121,6 +3126,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.jdFileError.tooLarge': 'The file exceeds 10 MB.',
     'employer.campaigns.wizard.jdFileError.corrupt': 'The file is corrupt or empty.',
     'employer.campaigns.wizard.jdFileError.notFound': 'The campaign does not exist.',
+    'employer.campaigns.wizard.jdFileError.draftFailed': 'The draft could not be created, so the file was not uploaded:',
     'employer.campaigns.wizard.jdFileError.server':
       'Could not reach the server or file processing failed.',
     'employer.campaigns.wizard.rubricSaveRequired': 'Save the criteria before continuing.',

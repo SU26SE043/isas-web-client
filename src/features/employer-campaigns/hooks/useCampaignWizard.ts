@@ -361,6 +361,14 @@ export function mapSubmitError(
       const adaptiveBudget = calculateAdaptiveQuestionBudget(safeQuestions, safeDeep, true);
       return { message: t('employer.campaigns.wizard.adaptiveBudgetTooSmall').replace('{questions}', String(safeQuestions)).replace('{deep}', String(safeDeep)).replace('{need}', String(safeNeed)).replace('{have}', String(safeHave)).replace('{maxQuestions}', String(adaptiveBudget.maxBaseQuestionCount)).replace('{maxDepth}', String(adaptiveBudget.maxDepthAllowed)), step: 3 };
     }
+    // Hai câu plain-text của BE về lịch mở (`CampaignController` POST /campaign) đến tay HR bằng
+    // tiếng Anh; dịch đúng câu để HR biết sửa Ở ĐÂU thay vì đọc "StartsAt".
+    if (/StartsAt cannot be in the past/i.test(message)) {
+      return { message: t('employer.campaigns.wizard.startsAtInPast'), step: 0 };
+    }
+    if (/ExpiresAt cannot be in the past/i.test(message)) {
+      return { message: t('employer.campaigns.wizard.expiresAtInPast'), step: 0 };
+    }
     const step = resolveCampaignErrorStep(message, kind);
     if (step !== null) {
       const fallbackKey =
@@ -605,6 +613,7 @@ export function useCampaignWizard({
     onReplaceFiles,
     onDownloadFile,
     snapshot,
+    mapCreateError: (error) => mapSubmitError(error, t, 'create'),
   });
 
   // R2 — rubric đổi ⇒ cắt nhãn câu về ⊆ id tiêu chí còn tồn tại. HR xoá tiêu chí X ở bước 3: BE replace-all cắt X
