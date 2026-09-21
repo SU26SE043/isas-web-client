@@ -37,6 +37,11 @@ export type JobDescriptionState = {
   extractedText?: string;
   fileStatus: DeferredJdFileStatus;
   fileError: string | null;
+  /**
+   * Lời server đi kèm `fileError` (plain-text 400/409/500, hoặc câu đã dịch của lỗi tạo nháp).
+   * Tuỳ chọn để các test dựng state bằng object literal không phải sửa; `null`/vắng = chỉ có mã.
+   */
+  fileErrorDetail?: string | null;
   uploadProgress: number | null;
   /** True after at least one successful server upload (POST/PUT …/files). */
   serverUploaded: boolean;
@@ -158,6 +163,7 @@ export function createEmptyJdState(): JobDescriptionState {
     extractedText: '',
     fileStatus: 'idle',
     fileError: null,
+    fileErrorDetail: null,
     uploadProgress: null,
     serverUploaded: false,
     isDownloading: false,

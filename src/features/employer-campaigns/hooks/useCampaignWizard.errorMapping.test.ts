@@ -55,6 +55,22 @@ describe('campaign wizard API error step mapping', () => {
     expect(mapSubmitError(bare, (key) => key, 'update').message).toBe('employer.campaigns.wizard.notDraftEditable');
   });
 
+  it('400 "StartsAt/ExpiresAt cannot be in the past" ⇒ câu dịch riêng + về bước 1 (đo prod 21/09: HR đọc thành lỗi mạng)', () => {
+    const past = (data: string) => {
+      const error = new axios.AxiosError('Request failed');
+      error.response = { status: 400, statusText: 'Bad Request', headers: {}, config: {} as never, data };
+      return error;
+    };
+    expect(mapSubmitError(past('StartsAt cannot be in the past.'), (key) => key, 'create')).toEqual({
+      message: 'employer.campaigns.wizard.startsAtInPast',
+      step: 0,
+    });
+    expect(mapSubmitError(past('ExpiresAt cannot be in the past.'), (key) => key, 'create')).toEqual({
+      message: 'employer.campaigns.wizard.expiresAtInPast',
+      step: 0,
+    });
+  });
+
   it('preserves the adaptive budget details from a 400 response', () => {
     const error = new axios.AxiosError('Request failed');
     error.response = {
