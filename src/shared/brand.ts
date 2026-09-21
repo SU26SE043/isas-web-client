@@ -1,6 +1,6 @@
 export const BRAND_NAME = 'PIpraint';
-/** Full wordmark for in-app headers and footers. */
-export const BRAND_LOGO_SRC = '/logo-horizontal-white.png';
-export const BRAND_LOGO_ALT = 'PIpraint Logo';
+/** ISAS wordmark for in-app headers and footers. */
+export const BRAND_LOGO_SRC = '/isas-logo.jpg';
+export const BRAND_LOGO_ALT = 'ISAS Logo';
 
-// Pi mark favicon: public/logo-pi-favicon.png — index.html only, not for React UI.
+// The same wordmark is used for the browser icon and social preview so the old logo is not exposed.

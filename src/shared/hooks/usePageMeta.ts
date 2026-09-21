@@ -6,7 +6,7 @@ export interface PageMeta {
   image?: string;
 }
 
-const DEFAULT_OG_IMAGE = '/logo-pi-favicon.png';
+const DEFAULT_OG_IMAGE = '/isas-logo.jpg';
 
 function upsertMeta(selector: string, attributes: Record<string, string>) {
   let element = document.head.querySelector<HTMLMetaElement>(selector);
