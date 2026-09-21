@@ -3,6 +3,9 @@ import type { CampaignPdfErrorCode } from '../../utils/campaignFiles';
 
 export function canSelectCandidate(item: CampaignCandidateListItem): boolean {
   if (!item.email?.trim()) return false;
+  // Đang được AI sàng ⇒ chưa có điểm để mời. Trước 21/09 nút "Chọn tất cả" vẫn gom cả những dòng
+  // này (checkbox từng dòng tắt, nhưng id vẫn lọt vào danh sách chọn ⇒ thanh hành động đếm dư).
+  if (isCandidateScreeningPending(item)) return false;
   const status = item.status.toLowerCase();
   if (status === 'rejected') return false;
   if (status.includes('invit')) return false;

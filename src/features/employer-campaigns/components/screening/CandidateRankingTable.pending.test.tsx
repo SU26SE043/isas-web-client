@@ -44,11 +44,13 @@ describe('dòng đang sàng (Analyzing/Filtered)', () => {
     const first = within(rows[0]);
     expect(rows[0].querySelectorAll('[data-slot="skeleton"]').length).toBe(0);
     expect(rows[0].querySelector('.animate-spin')).toBeTruthy();
-    // điểm + kỹ năng + trạng thái gộp làm một ô ⇒ tổng số ô = 7 cột − 2
-    expect(rows[0].querySelectorAll('td').length).toBe(5);
-    expect(rows[0].querySelector('td[colspan="3"]')).toBeTruthy();
+    // điểm + kỹ năng gộp làm một ô ⇒ tổng số ô = 5 cột − 1
+    expect(rows[0].querySelectorAll('td').length).toBe(4);
+    expect(rows[0].querySelector('td[colspan="2"]')).toBeTruthy();
     expect(first.getByText('a@x.com')).toBeTruthy();
-    expect(first.getByText('employer.campaigns.screening.status.Analyzing')).toBeTruthy();
+    // chữ trạng thái chỉ cho screen reader — banner tiến độ phía trên đã nói, lặp mỗi dòng là nhiễu
+    const status = first.getByText('employer.campaigns.screening.status.Analyzing');
+    expect(status.classList.contains('sr-only')).toBe(true);
     expect(first.queryByRole('textbox')).toBeNull();
     expect(first.queryByText('employer.campaigns.screening.ranking.saveEmail')).toBeNull();
     expect((first.getByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
