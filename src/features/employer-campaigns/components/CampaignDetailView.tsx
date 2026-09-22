@@ -10,6 +10,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { isCampaignSlotsUiEnabled } from '@/shared/config';
 import { useLanguage } from '@/shared/languages';
 import { CampaignDetailActions } from './CampaignDetailActions';
 import { CampaignAttachmentsCard } from './CampaignAttachmentsCard';
@@ -50,10 +51,14 @@ export function CampaignDetailView({
   onEditCriteria,
 }: CampaignDetailViewProps) {
   const { t, language } = useLanguage();
+  // Khung giờ TẠM ẨN (cờ VITE_ENABLE_CAMPAIGN_SLOTS_UI, mặc định tắt — cùng cờ đã ẩn bước wizard 17/09):
+  // không render panel, KHÔNG gọi `/slots`, và "Mở ngay" coi như 0 ca. BE giữ nguyên: campaign đã có ca
+  // từ trước vẫn bị Start chặn ngoài khung giờ (409) — ẩn ô này không gỡ ràng buộc đó.
+  const slotsUi = isCampaignSlotsUiEnabled();
   // T13 R2 — cùng query key với CampaignSlotsPanel bên dưới (React Query dedup, không thêm request):
   // "Mở ngay" phải nhìn thấy ca để khoá. Đang tải/lỗi ⇒ 0 (backend vẫn chặn 409 làm lớp hai).
-  const slotsQuery = useCampaignSlots(campaign.id);
-  const slotCount = slotsQuery.data?.length ?? 0;
+  const slotsQuery = useCampaignSlots(campaign.id, slotsUi);
+  const slotCount = slotsUi ? (slotsQuery.data?.length ?? 0) : 0;
   const isDraft = campaign.status === 'draft';
   const hasDetailActions =
     campaign.status === 'draft' ||
@@ -163,7 +168,7 @@ export function CampaignDetailView({
           </Card>
         </div>
 
-        <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} />
+        {slotsUi ? <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} /> : null}
 
         <CampaignAttachmentsCard campaignId={campaign.id} />
 
