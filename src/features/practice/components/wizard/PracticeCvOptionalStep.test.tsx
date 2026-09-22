@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeCvOptionalStep } from './PracticeCvOptionalStep';
 
 vi.mock('@/shared/languages', () => ({
@@ -43,5 +44,36 @@ describe('PracticeCvOptionalStep', () => {
     await userEvent.click(screen.getByRole('button', { name: 'practice.setup.cv.retry' }));
 
     expect(onRetryLoad).toHaveBeenCalledOnce();
+  });
+
+  it('làm nổi bật lựa chọn hiện tại bằng trạng thái selected rõ ràng', () => {
+    render(<PracticeCvOptionalStep {...baseProps} />);
+
+    const noCvOption = screen.getByRole('button', { name: 'practice.setup.cv.noCv' });
+
+    expect(noCvOption).toHaveAttribute('aria-pressed', 'true');
+    expect(noCvOption).toHaveClass('border-2');
+  });
+
+  it('phân trang danh sách khi có hơn 5 CV', async () => {
+    const files: UploadedCvFile[] = Array.from({ length: 6 }, (_, index) => ({
+      id: `cv-${index + 1}`,
+      fileName: `resume-${index + 1}.pdf`,
+      fileSizeBytes: 1024,
+      mimeType: 'application/pdf',
+      uploadedAt: '2026-09-22T00:00:00.000Z',
+      pdfUrl: '',
+    }));
+
+    render(<PracticeCvOptionalStep {...baseProps} files={files} />);
+
+    expect(screen.getByRole('button', { name: 'resume-1.pdf' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'resume-5.pdf' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'resume-6.pdf' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'ds.pagination.next' }));
+
+    expect(screen.getByRole('button', { name: 'resume-6.pdf' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'resume-1.pdf' })).not.toBeInTheDocument();
   });
 });
