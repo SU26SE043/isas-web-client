@@ -104,6 +104,7 @@ export function PracticeWizardPage() {
 
       {flow.step === 6 ? (
         <PracticeGradingCriteriaStep
+          jobCategory={flow.jobCategory}
           criteria={flow.rubricCriteria}
           selectedIds={flow.rubricCriterionIds}
           isLoading={flow.loadingRubric}
@@ -112,6 +113,7 @@ export function PracticeWizardPage() {
           onSelect={flow.setRubricCriterionIds}
           onRetry={flow.retryRubric}
           onBack={() => flow.goToStep(5)}
+          onBackToDomain={() => flow.goToStep(0)}
           onNext={() => flow.goToStep(7)}
         />
       ) : null}

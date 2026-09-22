@@ -78,15 +78,15 @@ function renderFlow() {
 }
 
 /**
- * Chọn ngành, chờ session-options, rồi ghé bước 5 để rubric được tải.
+ * Chọn ngành, chờ session-options, rồi ghé bước 7 (index 6) để rubric được tải.
  * Chọn luôn trình độ vì ứng viên đi tới bước tiêu chí là đã qua bước trình độ —
  * bước đó nay bắt buộc chọn (không còn mặc định 'Junior' im lặng).
  */
 async function goToCriteriaStep(result: { current: ReturnType<typeof usePracticeSetupFlow> }) {
   act(() => result.current.setJobCategory('BE'));
   await waitFor(() => expect(result.current.sessionOptions).not.toBeNull());
-  act(() => result.current.goToStep(5));
   act(() => result.current.setSeniority('Junior'));
+  act(() => result.current.goToStep(6));
   await waitFor(() => expect(result.current.rubricCriteria).toHaveLength(CRITERIA.length));
 }
 
@@ -190,7 +190,7 @@ describe('usePracticeSetupFlow — trình độ phỏng vấn', () => {
     const { result } = renderFlow();
     act(() => result.current.setJobCategory('BE'));
     await waitFor(() => expect(result.current.sessionOptions).not.toBeNull());
-    act(() => result.current.goToStep(5));
+    act(() => result.current.goToStep(6));
     await waitFor(() => expect(result.current.rubricCriteria).toHaveLength(CRITERIA.length));
 
     expect(result.current.seniority).toBeNull();
