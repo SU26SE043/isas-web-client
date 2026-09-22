@@ -38,8 +38,11 @@ export const AvatarDropdown: React.FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 bg-surface-raised text-white rounded-full hover:bg-surface-overlay transition-colors"
+        aria-label={t('nav.profile')}
+        aria-expanded={isOpen}
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-satin bg-surface-raised font-semibold text-foreground shadow-sm transition-colors hover:bg-surface-overlay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
       >
         {getInitials(user.fullName)}
       </button>
