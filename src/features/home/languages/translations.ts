@@ -2,7 +2,7 @@ import type { TranslationDictionary } from '../../../shared/languages';
 
 export const homeTranslations: TranslationDictionary = {
   vi: {
-    'home.pageTitle': 'PIpraint — Luyện phỏng vấn AI',
+    'home.pageTitle': 'ISAS - Luyện phỏng vấn AI',
     'home.metaDescription':
       'Luyện phỏng vấn AI, phân tích CV và nhận phản hồi tức thì. Nền tảng đánh giá năng lực cho ứng viên và nhà tuyển dụng.',
     'hero.badge': 'Hệ thống phỏng vấn ứng dụng AI',
@@ -20,7 +20,7 @@ export const homeTranslations: TranslationDictionary = {
     'hero.bulletBody': 'Đánh giá ngôn ngữ cơ thể qua webcam',
 
     'features.title': 'Tính năng đột phá',
-    'features.description': 'PIpraint cung cấp bộ công cụ toàn diện giúp ứng viên và nhà tuyển dụng tối ưu hóa quy trình đánh giá năng lực thông qua AI.',
+    'features.description': 'ISAS cung cấp bộ công cụ toàn diện giúp ứng viên và nhà tuyển dụng tối ưu hóa quy trình đánh giá năng lực thông qua AI.',
     'features.scanning': 'ĐANG QUÉT',
     'features.aiRating': 'Đánh giá AI',
     'features.match': 'Phù hợp',
@@ -51,7 +51,7 @@ export const homeTranslations: TranslationDictionary = {
     'employer.demo': 'Đăng ký Demo B2B',
   },
   en: {
-    'home.pageTitle': 'PIpraint — AI Interview Practice',
+    'home.pageTitle': 'ISAS - AI Interview Practice',
     'home.metaDescription':
       'AI interview practice, CV analysis, and instant feedback. Competency assessment for candidates and employers.',
     'hero.badge': 'AI-powered interview system',
@@ -69,7 +69,7 @@ export const homeTranslations: TranslationDictionary = {
     'hero.bulletBody': 'Evaluate body language through webcam',
 
     'features.title': 'Breakthrough Features',
-    'features.description': 'PIpraint provides a complete AI toolkit that helps candidates and employers optimize competency assessment workflows.',
+    'features.description': 'ISAS provides a complete AI toolkit that helps candidates and employers optimize competency assessment workflows.',
     'features.scanning': 'SCANNING',
     'features.aiRating': 'AI Rating',
     'features.match': 'Match',

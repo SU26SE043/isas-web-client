@@ -33,7 +33,7 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Nhận tin tức mới nhất về công nghệ và nghề nghiệp.',
     'footer.emailPlaceholder': 'Email của bạn',
     'footer.subscribe': 'Đăng ký',
-    'footer.rightsReserved': 'PIpraint. Bảo lưu mọi quyền.',
+    'footer.rightsReserved': 'ISAS. Bảo lưu mọi quyền.',
   },
   en: {
     'language.label': 'Language',
@@ -67,6 +67,6 @@ export const layoutTranslations: TranslationDictionary = {
     'footer.newsletterDescription': 'Get the latest updates about technology and careers.',
     'footer.emailPlaceholder': 'Your email',
     'footer.subscribe': 'Subscribe',
-    'footer.rightsReserved': 'PIpraint. All rights reserved.',
+    'footer.rightsReserved': 'ISAS. All rights reserved.',
   },
 };
