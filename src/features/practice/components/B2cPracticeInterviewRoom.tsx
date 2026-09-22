@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { usesMockData } from '@/shared/mock';
+import { getApiStatusCode } from '@/shared/api/apiError';
 import { InterviewHeader } from './InterviewHeader';
 import { AIInterviewerPanel } from './AIInterviewerPanel';
 import { CandidateCameraPanel } from './CandidateCameraPanel';
@@ -15,7 +16,7 @@ import { QuestionStartCountdown } from './QuestionStartCountdown';
 import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { useB2cRoomCoaching } from '../hooks/useB2cRoomCoaching';
-import { mapModalToCardStatus, resolveAnswerCardStatus } from '../utils/resolveAnswerCardStatus';
+import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
 export type { B2cRoomMediaContext } from '../types/b2cPracticeRoom.types';
@@ -23,8 +24,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [autoSubmitRequestId, setAutoSubmitRequestId] = useState(0);
-  const [recorderOpen, setRecorderOpen] = useState(false);
-  const [modalStatus, setModalStatus] = useState<AudioRecorderStatus | null>(null);
+  const [recorderResetRequestId, setRecorderResetRequestId] = useState(0);
+  const [recorderStatus, setRecorderStatus] = useState<AudioRecorderStatus>('idle');
   const [fullscreenBlocked, setFullscreenBlocked] = useState(false);
   const requestAutoSubmit = useCallback(
     () => setAutoSubmitRequestId((value) => value + 1),
@@ -36,7 +37,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     countdownReady,
     deadlineAt,
     violationPaused: violationPaused || fullscreenBlocked,
-    answerRecorderOpen: recorderOpen,
     onAutoSubmitRequest: requestAutoSubmit,
   });
   const coaching = useB2cRoomCoaching({
@@ -94,24 +94,9 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   const answer = room.currentQuestion
     ? room.answersByQuestionId[room.currentQuestion.id]
     : undefined;
-  const liveModalStatus = recorderOpen ? mapModalToCardStatus(modalStatus ?? 'idle') : null;
-  const cardStatus =
-    liveModalStatus ??
-    resolveAnswerCardStatus({
-      hasAnswer: Boolean(answer),
-      questionState: room.currentQuestion
-        ? room.questionStates[room.currentQuestion.id]
-        : undefined,
-      isSubmitting: room.isSubmittingAnswer,
-      answerError: room.answerError,
-    });
-  const openRecorder = () => {
-    if (violationPaused || fullscreenBlocked || room.speech.isBusy || room.phase !== 'answering' || room.isTimingOut || room.remainingSeconds <= 0 || room.isSubmittingAnswer) return;
-    setRecorderOpen(true);
-  };
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
-      <InterviewHeader sessionId={sessionId} isRecording={recorderOpen && cardStatus === 'recording'} onExit={() => room.setFinishOpen(true)} />
+      <InterviewHeader sessionId={sessionId} isRecording={recorderStatus === 'recording'} onExit={() => room.setFinishOpen(true)} />
       <FullscreenExitBanner onBlockingChange={setFullscreenBlocked} />
 
       {room.media.state === 'error' ? (
@@ -131,7 +116,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
           {t(room.speechWarning)}
         </div>
       ) : null}
-      {room.answerError && !recorderOpen ? (
+      {room.answerError ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
           {t(room.answerError)}
         </div>
@@ -173,11 +158,25 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
             />
           </div>
           <div className="min-w-0 lg:col-span-2">
-            <AnswerRecorderCard
-              status={cardStatus}
-              disabled={violationPaused || fullscreenBlocked || room.speech.isBusy || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
-              onOpenRecorder={openRecorder}
-            />
+            {room.currentQuestion ? (
+              <AnswerRecorderCard
+                sessionId={sessionId}
+                questionId={room.currentQuestion.id}
+                maxDurationSeconds={Math.max(1, Math.min(room.remainingSeconds || room.currentQuestion.timeLimitSec || 120, room.currentQuestion.timeLimitSec || room.remainingSeconds || 120))}
+                sharedStream={room.media.stream}
+                autoSubmitRequestId={autoSubmitRequestId}
+                resetRequestId={recorderResetRequestId}
+                disabled={violationPaused || fullscreenBlocked || room.speech.isBusy || room.phase !== 'answering' || room.isSubmittingSession || room.isTimingOut || room.remainingSeconds <= 0}
+                paused={room.isTimingOut}
+                onStatusChange={setRecorderStatus}
+                onSubmitRecording={(file, durationSec) => room.submitAnswerWithFile(file, durationSec)}
+                onAutoSubmitRecording={(file, durationSec) =>
+                  room.submitAnswerWithFile(file, durationSec, { allowDuringTimeout: true })
+                }
+                onAutoSubmitEmpty={room.submitEmptyAnswer}
+                mapSubmitErrorKey={(error) => mapSubmitPracticeAnswerErrorKey(getApiStatusCode(error))}
+              />
+            ) : null}
           </div>
         </div>
 
@@ -230,14 +229,11 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
       <QuestionStartCountdown visible={room.phase === 'countdown'} value={room.countdownValue} />
       <B2cPracticeRoomDialogs
         room={room}
-        sessionId={sessionId}
-        recorderOpen={recorderOpen}
-        onRecorderOpenChange={(open) => {
-          setRecorderOpen(open);
-          if (!open) setModalStatus(null);
+        hasPendingRecording={recorderStatus !== 'idle' && recorderStatus !== 'error'}
+        onConfirmFinish={() => {
+          setRecorderResetRequestId((value) => value + 1);
+          void room.confirmFinish();
         }}
-        onRecorderStatusChange={setModalStatus}
-        autoSubmitRequestId={autoSubmitRequestId}
         earlyFinish={allowEarlyFinish}
       />
 

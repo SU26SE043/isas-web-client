@@ -29,7 +29,6 @@ export function useB2cPracticeRoom(
     countdownReady?: boolean;
     deadlineAt?: string | null;
     violationPaused?: boolean;
-    answerRecorderOpen?: boolean;
     onAutoSubmitRequest?: () => void;
   },
 ) {
@@ -298,7 +297,7 @@ export function useB2cPracticeRoom(
 
       void (async () => {
         try {
-          if (options?.answerRecorderOpen && options.onAutoSubmitRequest) {
+          if (options?.onAutoSubmitRequest) {
             options.onAutoSubmitRequest();
           } else {
             await answerSubmit.submitEmptyAnswer();
@@ -326,7 +325,6 @@ export function useB2cPracticeRoom(
   }, [
     answerSubmit.isSubmittingAnswer,
     answerSubmit.submitEmptyAnswer,
-    options?.answerRecorderOpen,
     options?.onAutoSubmitRequest,
     isSubmittingSession,
     options?.violationPaused,
