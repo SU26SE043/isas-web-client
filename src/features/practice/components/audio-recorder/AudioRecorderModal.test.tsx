@@ -177,4 +177,82 @@ describe('AudioRecorderModal submit flow', () => {
 
     await waitFor(() => expect(onAutoSubmitEmpty).toHaveBeenCalledTimes(1));
   });
+
+  it('retry sau auto-submit lỗi vẫn giữ đường auto-submit', async () => {
+    const onAutoSubmitRecording = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce(undefined);
+    const onSubmitRecording = vi.fn().mockResolvedValue(undefined);
+    const view = render(
+      <AudioRecorderModal
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        autoSubmitRequestId={0}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.stop' }));
+    await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
+
+    view.rerender(
+      <AudioRecorderModal
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        autoSubmitRequestId={1}
+      />,
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' })).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' }));
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(2));
+    expect(onSubmitRecording).not.toHaveBeenCalled();
+  });
+
+  it('không nộp rỗng khi upload thủ công đang bay', async () => {
+    const resolveManual = { current: null as (() => void) | null };
+    const onSubmitRecording = vi.fn().mockImplementation(
+      () => new Promise<void>((resolve) => {
+        resolveManual.current = resolve;
+      }),
+    );
+    const onAutoSubmitEmpty = vi.fn().mockResolvedValue(undefined);
+    const view = render(
+      <AudioRecorderModal
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+        autoSubmitRequestId={0}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.stop' }));
+    await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.submit' }));
+    await waitFor(() => expect(onSubmitRecording).toHaveBeenCalledTimes(1));
+
+    view.rerender(
+      <AudioRecorderModal
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+        autoSubmitRequestId={1}
+      />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(onAutoSubmitEmpty).not.toHaveBeenCalled();
+    resolveManual.current?.();
+    await waitFor(() => expect(onSubmitRecording).toHaveBeenCalledTimes(1));
+  });
 });

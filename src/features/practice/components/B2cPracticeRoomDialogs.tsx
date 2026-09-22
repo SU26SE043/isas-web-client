@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { getApiStatusCode } from '@/shared/api/apiError';
 import { useLanguage } from '@/shared/languages';
 import { AudioRecorderModal } from './audio-recorder/AudioRecorderModal';
@@ -28,6 +29,37 @@ export function B2cPracticeRoomDialogs({
   earlyFinish = false,
 }: B2cPracticeRoomDialogsProps) {
   const { t } = useLanguage();
+  const recorderDurationRef = useRef<{ questionId: string; seconds: number } | null>(null);
+  const previousQuestionIdRef = useRef<string | null>(room.currentQuestion?.id ?? null);
+
+  useEffect(() => {
+    const questionId = room.currentQuestion?.id ?? null;
+    if (recorderOpen && previousQuestionIdRef.current && questionId !== previousQuestionIdRef.current) {
+      onRecorderOpenChange(false);
+    }
+    previousQuestionIdRef.current = questionId;
+  }, [onRecorderOpenChange, recorderOpen, room.currentQuestion?.id]);
+
+  useEffect(() => {
+    const question = room.currentQuestion;
+    if (!recorderOpen || !question) {
+      recorderDurationRef.current = null;
+      return;
+    }
+    if (recorderDurationRef.current?.questionId === question.id) return;
+
+    recorderDurationRef.current = {
+      questionId: question.id,
+      seconds: Math.max(
+        1,
+        Math.min(
+          room.remainingSeconds || question.timeLimitSec || 120,
+          question.timeLimitSec || room.remainingSeconds || 120,
+        ),
+      ),
+    };
+  }, [recorderOpen, room.currentQuestion, room.remainingSeconds]);
+
   const questionLabel = t('practice.room.questionOf')
     .replace('{current}', String(room.currentIndex + 1))
     .replace('{total}', String(Math.max(room.questions.length, 1)));
@@ -42,7 +74,7 @@ export function B2cPracticeRoomDialogs({
           questionId={room.currentQuestion.id}
           questionContent={room.currentQuestion.content}
           questionLabel={questionLabel}
-          maxDurationSeconds={Math.max(
+          maxDurationSeconds={recorderDurationRef.current?.seconds ?? Math.max(
             1,
             Math.min(
               room.remainingSeconds || room.currentQuestion.timeLimitSec || 120,

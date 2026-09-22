@@ -50,7 +50,7 @@ export function useQuestionSpeech(
   const setQuestionState = useB2cPracticeInterviewStore((s) => s.setQuestionState);
   const [speechState, setSpeechState] = useState<{
     questionId: string | null;
-    status: 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'failed';
+    status: 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'failed' | 'stopped';
   }>({ questionId: null, status: 'idle' });
   const [needsManualPlay, setNeedsManualPlay] = useState(false);
   const cacheRef = useRef<Map<string, Blob>>(new Map());
@@ -62,6 +62,7 @@ export function useQuestionSpeech(
   const playbackSourceRef = useRef<'audio' | 'browser' | null>(null);
   const operationRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+  const questionIdRef = useRef(questionId);
   const enabledRef = useRef(options.enabled ?? true);
   const callbacksRef = useRef({
     onPlaybackStart: options.onPlaybackStart,
@@ -69,6 +70,7 @@ export function useQuestionSpeech(
   });
 
   enabledRef.current = options.enabled ?? true;
+  questionIdRef.current = questionId;
   callbacksRef.current = {
     onPlaybackStart: options.onPlaybackStart,
     onPlaybackComplete: options.onPlaybackComplete,
@@ -97,7 +99,7 @@ export function useQuestionSpeech(
     abortRef.current = null;
     preparedRef.current = null;
     releasePlayer();
-    setSpeechState({ questionId: null, status: 'idle' });
+    setSpeechState({ questionId: questionIdRef.current, status: 'stopped' });
   }, [releasePlayer]);
 
   const playBlob = useCallback(

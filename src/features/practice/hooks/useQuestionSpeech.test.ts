@@ -251,6 +251,42 @@ describe('useQuestionSpeech', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:stub');
   });
 
+  it('dừng phát không giữ gate speech bận trên cùng một câu', async () => {
+    getQuestionSpeech.mockResolvedValue(new Blob(['audio'], { type: 'audio/mpeg' }));
+
+    const { result } = renderHook(() => useQuestionSpeech('session-1', 'question-1'));
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+
+    act(() => result.current.stopPlayback());
+
+    expect(result.current.isBusy).toBe(false);
+  });
+
+  it('vẫn giữ gate bận khi chuyển sang câu mới cho tới khi TTS sẵn sàng', async () => {
+    let resolveNext: ((blob: Blob) => void) | null = null;
+    getQuestionSpeech
+      .mockResolvedValueOnce(new Blob(['first'], { type: 'audio/mpeg' }))
+      .mockImplementationOnce(
+        () => new Promise<Blob>((resolve) => {
+          resolveNext = resolve;
+        }),
+      );
+
+    const { rerender, result } = renderHook(
+      ({ questionId }) => useQuestionSpeech('session-1', questionId),
+      { initialProps: { questionId: 'question-1' } },
+    );
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+
+    rerender({ questionId: 'question-2' });
+    expect(result.current.isBusy).toBe(true);
+
+    await act(async () => {
+      resolveNext?.(new Blob(['second'], { type: 'audio/mpeg' }));
+    });
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(2));
+  });
+
   it('giữ gate bận khi TTS bị pause do vi phạm', async () => {
     getQuestionSpeech.mockResolvedValue(new Blob(['audio'], { type: 'audio/mpeg' }));
 

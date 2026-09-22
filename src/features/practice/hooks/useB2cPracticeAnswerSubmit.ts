@@ -49,6 +49,7 @@ export function useB2cPracticeAnswerSubmit({
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [overwriteConfirmOpen, setOverwriteConfirmOpen] = useState(false);
   const pendingOverrideRef = useRef<{ file: File; durationSec: number } | null>(null);
+  const inFlightRef = useRef(false);
   // `store` and `recorder` are fresh object references every render (Zustand
   // returns a new object on any store write anywhere; the recorder hook
   // returns new inline callbacks each render). Reading them via refs instead
@@ -83,6 +84,8 @@ export function useB2cPracticeAnswerSubmit({
       setAnswerError('practice.errors.audioRequired');
       throw new Error('audio-required');
     }
+    if (inFlightRef.current) throw new Error('submit-in-flight');
+    inFlightRef.current = true;
     setIsSubmittingAnswer(true);
     setAnswerError(null);
     store.setStage('submitting_answer');
@@ -141,6 +144,7 @@ export function useB2cPracticeAnswerSubmit({
       recorder.setStopped();
       throw error;
     } finally {
+      inFlightRef.current = false;
       setIsSubmittingAnswer(false);
       setOverwriteConfirmOpen(false);
     }
@@ -172,9 +176,8 @@ export function useB2cPracticeAnswerSubmit({
         throw new Error('missing-question');
       }
       if (
-        isSubmittingAnswer ||
-        (!options?.allowDuringTimeout && isTimingOut) ||
-        remainingSeconds <= 0
+        inFlightRef.current ||
+        (!options?.allowDuringTimeout && (isTimingOut || remainingSeconds <= 0))
       ) {
         throw new Error('submit-blocked');
       }
@@ -185,19 +188,22 @@ export function useB2cPracticeAnswerSubmit({
   );
 
   const submitEmptyAnswer = useCallback(async () => {
-    if (!currentQuestion || isSubmittingAnswer) return;
+    if (!currentQuestion || inFlightRef.current) return false;
     await performSubmit({
       file: createSilentUnansweredAudioFile(),
       durationSec: 0,
     });
     storeRef.current.setQuestionState(currentQuestion.id, 'unanswered');
-  }, [currentQuestion, isSubmittingAnswer, performSubmit]);
+    return true;
+  }, [currentQuestion, performSubmit]);
 
   const confirmOverwriteSubmit = useCallback(() => {
     const pending = pendingOverrideRef.current;
     pendingOverrideRef.current = null;
     void performSubmit(pending ?? undefined).catch(() => undefined);
   }, [performSubmit]);
+
+  const isSubmitInFlight = useCallback(() => inFlightRef.current, []);
 
   return {
     isSubmittingAnswer,
@@ -210,5 +216,6 @@ export function useB2cPracticeAnswerSubmit({
     overwriteConfirmOpen,
     setOverwriteConfirmOpen,
     confirmOverwriteSubmit,
+    isSubmitInFlight,
   };
 }

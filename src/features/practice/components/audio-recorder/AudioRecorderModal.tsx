@@ -26,7 +26,7 @@ interface AudioRecorderModalProps {
   onSubmitRecording: (file: File, durationSec: number) => Promise<void>;
   onAutoSubmitRecording?: (file: File, durationSec: number) => Promise<void>;
   autoSubmitRequestId?: number;
-  onAutoSubmitEmpty?: () => Promise<void>;
+  onAutoSubmitEmpty?: () => Promise<void | boolean>;
   mapSubmitErrorKey?: (error: unknown) => string;
   onStatusChange?: (status: AudioRecorderStatus) => void;
 }
@@ -59,6 +59,7 @@ export function AudioRecorderModal({
   });
   const [confirmClose, setConfirmClose] = useState(false);
   const submittingLockRef = useRef(false);
+  const lastSubmitAutomaticRef = useRef(false);
   const autoSubmitRequestRef = useRef(0);
   const openRecorderRef = useRef<HTMLElement | null>(null);
 
@@ -103,6 +104,7 @@ export function AudioRecorderModal({
     const durationSec = recorder.state.elapsedSeconds;
     if (!file || durationSec <= 0) return;
     submittingLockRef.current = true;
+    lastSubmitAutomaticRef.current = automatic;
     recorder.markSubmitting();
     try {
       await (automatic && onAutoSubmitRecording
@@ -128,6 +130,7 @@ export function AudioRecorderModal({
     }
 
     const status = recorder.state.status;
+    if (submittingLockRef.current || status === 'submitting') return;
     if (status === 'recording') {
       recorder.stopRecording();
       return;
@@ -196,7 +199,7 @@ export function AudioRecorderModal({
             onRetake={recorder.resetRecording}
             onReplay={() => void recorder.replayAudio()}
             onSubmit={() => void submitOnce()}
-            onRetrySubmit={() => void submitOnce()}
+            onRetrySubmit={() => void submitOnce(lastSubmitAutomaticRef.current)}
             onContinueSuccess={forceClose}
             onCloseError={forceClose}
           />
