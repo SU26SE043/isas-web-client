@@ -125,4 +125,62 @@ describe('AnswerRecorderCard inline recorder flow', () => {
 
     await waitFor(() => expect(onAutoSubmitEmpty).toHaveBeenCalledTimes(1));
   });
+
+  it('auto-submits the recorded answer when the timer requests submission', async () => {
+    const onSubmitRecording = vi.fn().mockResolvedValue(undefined);
+    const onAutoSubmitRecording = vi.fn().mockResolvedValue(undefined);
+    const onAutoSubmitEmpty = vi.fn().mockResolvedValue(undefined);
+    const view = render(
+      <AnswerRecorderCard
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'practice.audioRecorder.stop' })).toBeInTheDocument());
+    await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 1200)); });
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.stop' }));
+    await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
+
+    view.rerender(
+      <AnswerRecorderCard
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+        autoSubmitRequestId={1}
+      />,
+    );
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+    expect(onSubmitRecording).not.toHaveBeenCalled();
+    expect(onAutoSubmitEmpty).not.toHaveBeenCalled();
+  });
+
+  it('does not start a second timeout submission while one is submitting', async () => {
+    let resolveSubmit!: () => void;
+    const onAutoSubmitRecording = vi.fn().mockImplementation(
+      () => new Promise<void>((resolve) => { resolveSubmit = resolve; }),
+    );
+    const onAutoSubmitEmpty = vi.fn().mockResolvedValue(undefined);
+    const view = render(
+      <AnswerRecorderCard
+        {...baseProps}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        onAutoSubmitEmpty={onAutoSubmitEmpty}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'practice.audioRecorder.stop' })).toBeInTheDocument());
+    await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 1200)); });
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.stop' }));
+    await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
+    view.rerender(<AnswerRecorderCard {...baseProps} onAutoSubmitRecording={onAutoSubmitRecording} onAutoSubmitEmpty={onAutoSubmitEmpty} autoSubmitRequestId={1} />);
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+    view.rerender(<AnswerRecorderCard {...baseProps} onAutoSubmitRecording={onAutoSubmitRecording} onAutoSubmitEmpty={onAutoSubmitEmpty} autoSubmitRequestId={2} />);
+    expect(onAutoSubmitEmpty).not.toHaveBeenCalled();
+    resolveSubmit();
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+  });
 });

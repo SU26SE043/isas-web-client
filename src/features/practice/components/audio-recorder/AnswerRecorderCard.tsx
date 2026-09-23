@@ -16,7 +16,8 @@ interface AnswerRecorderCardProps {
   resetRequestId?: number;
   onSubmitRecording: (file: File, durationSec: number) => Promise<void>;
   onAutoSubmitRecording?: (file: File, durationSec: number) => Promise<void>;
-  onAutoSubmitEmpty?: () => Promise<void>;
+  onAutoSubmitEmpty?: () => Promise<boolean | void>;
+  onAutoSubmitEmptyResult?: (result: { submitted: boolean; error?: unknown }) => void;
   mapSubmitErrorKey?: (error: unknown) => string;
   onStatusChange?: (status: AudioRecorderStatus) => void;
 }
@@ -53,6 +54,7 @@ export function AnswerRecorderCard({
   onSubmitRecording,
   onAutoSubmitRecording,
   onAutoSubmitEmpty,
+  onAutoSubmitEmptyResult,
   mapSubmitErrorKey,
   onStatusChange,
 }: AnswerRecorderCardProps) {
@@ -68,6 +70,7 @@ export function AnswerRecorderCard({
     onSubmitRecording,
     onAutoSubmitRecording,
     onAutoSubmitEmpty,
+    onAutoSubmitEmptyResult,
     mapSubmitErrorKey,
     onStatusChange,
   });
@@ -109,7 +112,7 @@ export function AnswerRecorderCard({
         onRetake={recorder.resetRecording}
         onReplay={() => void recorder.replayAudio()}
         onSubmit={() => void recorder.submitOnce()}
-        onRetrySubmit={() => void recorder.submitOnce()}
+        onRetrySubmit={recorder.retrySubmit}
         onContinueSuccess={recorder.resetRecording}
         onCloseError={recorder.resetRecording}
       />

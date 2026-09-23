@@ -116,16 +116,18 @@ export function PracticeGradingCriteriaStep({
           </p>
         </div>
       ) : (
-        <RubricCriteriaTable
-          mode="select"
-          criteria={tableCriteria}
-          selectedIds={selectedIds}
-          disabled={disabled}
-          onSelectionChange={(ids) => {
-            setShowValidation(false);
-            onSelect(ids);
-          }}
-        />
+        <div className="min-w-0 overflow-x-auto">
+          <RubricCriteriaTable
+            mode="select"
+            criteria={tableCriteria}
+            selectedIds={selectedIds}
+            disabled={disabled}
+            onSelectionChange={(ids) => {
+              setShowValidation(false);
+              onSelect(ids);
+            }}
+          />
+        </div>
       )}
 
       {showValidation ? (

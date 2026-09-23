@@ -42,12 +42,21 @@ export function PracticeJdStep({
 }: PracticeJdStepProps) {
   const { t } = useLanguage();
   const count = jdText.trim().length;
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const selectedIndex = selectedJdId ? files.findIndex((file) => file.id === selectedJdId) : -1;
+    return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
+  });
   const totalPages = Math.max(1, Math.ceil(files.length / FILES_PER_PAGE));
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
+
+  useEffect(() => {
+    if (!selectedJdId) return;
+    const selectedIndex = files.findIndex((file) => file.id === selectedJdId);
+    if (selectedIndex >= 0) setCurrentPage(Math.floor(selectedIndex / FILES_PER_PAGE) + 1);
+  }, [files, selectedJdId]);
 
   const visibleFiles = files.slice(
     (currentPage - 1) * FILES_PER_PAGE,

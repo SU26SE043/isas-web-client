@@ -66,6 +66,7 @@ export function useAudioRecorder({
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const pausedAtRef = useRef(0);
   const totalPausedMsRef = useRef(0);
+  const startRequestRef = useRef(0);
 
   const pausePreviewPlayback = useCallback(() => {
     const audio = audioElementRef.current;
@@ -121,6 +122,7 @@ export function useAudioRecorder({
   }, []);
 
   const resetRecording = useCallback(() => {
+    startRequestRef.current += 1;
     clearTimer();
     pausePreviewPlayback();
     revokePreview();
@@ -241,11 +243,13 @@ export function useAudioRecorder({
       uploadProgress: null,
     }));
 
+    const startRequest = ++startRequestRef.current;
     try {
       const liveAudioTracks =
         sharedStream
           ?.getAudioTracks()
           .filter((track) => track.readyState === 'live') ?? [];
+      const ownsStream = liveAudioTracks.length === 0;
       let stream: MediaStream;
       if (liveAudioTracks.length > 0) {
         // Audio-only wrapper keeps cam preview alive and avoids video in MediaRecorder.
@@ -260,6 +264,11 @@ export function useAudioRecorder({
         ownsStreamRef.current = true;
         previousAudioEnabledRef.current = [];
       }
+      if (startRequestRef.current !== startRequest) {
+        if (ownsStream) stopTracks(stream);
+        return;
+      }
+
       streamRef.current = stream;
       const mimeType = pickAudioRecorderMimeType();
       mimeRef.current = mimeType;

@@ -49,12 +49,21 @@ export function PracticeCvOptionalStep({
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const selectedIndex = selectedId ? files.findIndex((file) => file.id === selectedId) : -1;
+    return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
+  });
   const totalPages = Math.max(1, Math.ceil(files.length / FILES_PER_PAGE));
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const selectedIndex = files.findIndex((file) => file.id === selectedId);
+    if (selectedIndex >= 0) setCurrentPage(Math.floor(selectedIndex / FILES_PER_PAGE) + 1);
+  }, [files, selectedId]);
 
   const visibleFiles = files.slice(
     (currentPage - 1) * FILES_PER_PAGE,
