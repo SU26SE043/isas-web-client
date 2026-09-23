@@ -5,6 +5,7 @@ import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPrac
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import { countUnsubmittedQuestions } from '../utils/finishSummary';
+import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
@@ -32,6 +33,7 @@ export function useB2cPracticeRoom(
     deadlineAt?: string | null;
     violationPaused?: boolean;
     onAutoSubmitRequest?: () => void;
+    onAutoSubmitEmptyResult?: (result: { submitted: boolean; error?: unknown }) => void;
   },
 ) {
   const navigate = useNavigate();
@@ -188,6 +190,13 @@ export function useB2cPracticeRoom(
     onStopMedia: () => media.stopMedia(),
     completePath,
   });
+
+  const handleAutoSubmitEmptyResult = useCallback((result: { submitted: boolean; error?: unknown }) => {
+    if (!result.submitted && result.error) {
+      answerSubmit.setAnswerError(mapSubmitPracticeAnswerErrorKey(getApiStatusCode(result.error)));
+    }
+    options?.onAutoSubmitEmptyResult?.(result);
+  }, [answerSubmit.setAnswerError, options?.onAutoSubmitEmptyResult]);
 
   useEffect(() => {
     let cancelled = false;
@@ -556,6 +565,7 @@ export function useB2cPracticeRoom(
     submitAnswer: answerSubmit.submitAnswer,
     submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
     submitEmptyAnswer: answerSubmit.submitEmptyAnswer,
+    handleAutoSubmitEmptyResult,
     overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
     setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
     confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,

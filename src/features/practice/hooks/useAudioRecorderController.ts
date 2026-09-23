@@ -86,7 +86,12 @@ export function useAudioRecorderController({
     if (autoSubmitRequestId <= 0 || autoSubmitRequestRef.current === autoSubmitRequestId) return;
 
     const status = recorder.state.status;
-    if (submittingLockRef.current || status === 'submitting') return;
+    if (submittingLockRef.current || status === 'submitting') {
+      // This request has already been consumed by the in-flight submission.
+      // Do not replay it after the upload resolves on the next render.
+      autoSubmitRequestRef.current = autoSubmitRequestId;
+      return;
+    }
     if (status === 'recording') {
       recorder.stopRecording();
       return;

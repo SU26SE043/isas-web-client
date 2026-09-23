@@ -178,9 +178,43 @@ describe('AnswerRecorderCard inline recorder flow', () => {
     await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
     view.rerender(<AnswerRecorderCard {...baseProps} onAutoSubmitRecording={onAutoSubmitRecording} onAutoSubmitEmpty={onAutoSubmitEmpty} autoSubmitRequestId={1} />);
     await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('practice.audioRecorder.submitting'));
     view.rerender(<AnswerRecorderCard {...baseProps} onAutoSubmitRecording={onAutoSubmitRecording} onAutoSubmitEmpty={onAutoSubmitEmpty} autoSubmitRequestId={2} />);
     expect(onAutoSubmitEmpty).not.toHaveBeenCalled();
     resolveSubmit();
+    await waitFor(() => expect(onAutoSubmitEmpty).not.toHaveBeenCalled());
     await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(1));
+  });
+
+  it('retries a failed automatic submit through the automatic callback', async () => {
+    const onSubmitRecording = vi.fn().mockResolvedValue(undefined);
+    const onAutoSubmitRecording = vi.fn()
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce(undefined);
+    const view = render(
+      <AnswerRecorderCard
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.start' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'practice.audioRecorder.stop' })).toBeInTheDocument());
+    await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 1200)); });
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.stop' }));
+    await waitFor(() => expect(screen.getByText('practice.audioRecorder.previewTitle')).toBeInTheDocument());
+
+    view.rerender(
+      <AnswerRecorderCard
+        {...baseProps}
+        onSubmitRecording={onSubmitRecording}
+        onAutoSubmitRecording={onAutoSubmitRecording}
+        autoSubmitRequestId={1}
+      />,
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: 'practice.audioRecorder.retrySubmit' }));
+    await waitFor(() => expect(onAutoSubmitRecording).toHaveBeenCalledTimes(2));
+    expect(onSubmitRecording).not.toHaveBeenCalled();
   });
 });

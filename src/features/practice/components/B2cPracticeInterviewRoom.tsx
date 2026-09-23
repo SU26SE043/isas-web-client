@@ -174,6 +174,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
                   room.submitAnswerWithFile(file, durationSec, { allowDuringTimeout: true })
                 }
                 onAutoSubmitEmpty={room.submitEmptyAnswer}
+                onAutoSubmitEmptyResult={room.handleAutoSubmitEmptyResult}
                 mapSubmitErrorKey={(error) => mapSubmitPracticeAnswerErrorKey(getApiStatusCode(error))}
               />
             ) : null}
