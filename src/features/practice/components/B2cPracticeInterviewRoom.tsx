@@ -16,6 +16,7 @@ import { QuestionStartCountdown } from './QuestionStartCountdown';
 import { FullscreenExitBanner } from './room/FullscreenExitBanner';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { useB2cRoomCoaching } from '../hooks/useB2cRoomCoaching';
+import { useFrozenRecorderDuration } from '../hooks/useFrozenRecorderDuration';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
@@ -70,6 +71,11 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   useEffect(() => {
     onAnswerUploadStateChange?.(room.isSubmittingAnswer);
   }, [onAnswerUploadStateChange, room.isSubmittingAnswer]);
+  const recorderMaxDuration = useFrozenRecorderDuration(
+    room.currentQuestion?.id ?? null,
+    room.remainingSeconds,
+    room.currentQuestion?.timeLimitSec,
+  );
   if (room.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">
@@ -98,7 +104,6 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
       <InterviewHeader sessionId={sessionId} isRecording={recorderStatus === 'recording'} onExit={() => room.setFinishOpen(true)} />
       <FullscreenExitBanner onBlockingChange={setFullscreenBlocked} />
-
       {room.media.state === 'error' ? (
         <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
           {t('practice.flow.device.denied')}
@@ -162,7 +167,7 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
               <AnswerRecorderCard
                 sessionId={sessionId}
                 questionId={room.currentQuestion.id}
-                maxDurationSeconds={Math.max(1, Math.min(room.remainingSeconds || room.currentQuestion.timeLimitSec || 120, room.currentQuestion.timeLimitSec || room.remainingSeconds || 120))}
+                maxDurationSeconds={recorderMaxDuration}
                 sharedStream={room.media.stream}
                 autoSubmitRequestId={autoSubmitRequestId}
                 resetRequestId={recorderResetRequestId}
