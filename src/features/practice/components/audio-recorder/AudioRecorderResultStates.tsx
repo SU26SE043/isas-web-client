@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Loader2, RotateCcw, RotateCw } from 'lucide-react';
 import type { RefObject } from 'react';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { AudioRecorderState } from '../../types/audioRecorder.types';
 import {
@@ -10,6 +11,7 @@ import {
 interface Props {
   state: AudioRecorderState;
   audioElementRef: RefObject<HTMLAudioElement | null>;
+  compact?: boolean;
   disabled?: boolean;
   onStart: () => void;
   onRetake: () => void;
@@ -23,6 +25,7 @@ interface Props {
 export function AudioRecorderResultStates({
   state,
   audioElementRef,
+  compact = false,
   disabled,
   onStart,
   onRetake,
@@ -36,7 +39,7 @@ export function AudioRecorderResultStates({
 
   if (state.status === 'submitting') {
     return (
-      <div className="flex flex-col items-center gap-4 py-10 text-center" role="status" aria-live="polite">
+      <div className={cn('flex flex-col items-center gap-4 text-center', compact ? 'py-4' : 'py-10')} role="status" aria-live="polite">
         <Loader2 className="size-10 animate-spin text-foreground" aria-hidden />
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-foreground">
@@ -52,7 +55,7 @@ export function AudioRecorderResultStates({
 
   if (state.status === 'success') {
     return (
-      <div className="flex flex-col items-center gap-4 py-10 text-center">
+      <div className={cn('flex flex-col items-center gap-4 text-center', compact ? 'py-4' : 'py-10')}>
         <CheckCircle2 className="size-12 text-success" aria-hidden />
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-foreground">
@@ -69,7 +72,7 @@ export function AudioRecorderResultStates({
 
   if (state.status === 'error') {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <div className={cn('flex flex-col items-center gap-4 text-center', compact ? 'py-4' : 'py-8')}>
         <AlertCircle className="size-12 text-destructive" aria-hidden />
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-foreground">
@@ -106,7 +109,7 @@ export function AudioRecorderResultStates({
   const submitFailed = state.errorKind === 'submit-failed' && state.errorMessage;
 
   return (
-    <div className="space-y-6 py-4">
+    <div className={cn('space-y-4', compact ? 'py-1' : 'space-y-6 py-4')}>
       <div className="space-y-2 text-center">
         <h3 className="text-lg font-semibold text-foreground">
           {t('practice.audioRecorder.previewTitle')}

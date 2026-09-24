@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FileText, RefreshCw, Upload } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import { AppPagination } from '@/components/ui/app-pagination';
 import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
@@ -29,6 +30,8 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const FILES_PER_PAGE = 5;
+
 export function PracticeCvOptionalStep({
   files,
   selectedId,
@@ -46,6 +49,26 @@ export function PracticeCvOptionalStep({
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const selectedIndex = selectedId ? files.findIndex((file) => file.id === selectedId) : -1;
+    return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
+  });
+  const totalPages = Math.max(1, Math.ceil(files.length / FILES_PER_PAGE));
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const selectedIndex = files.findIndex((file) => file.id === selectedId);
+    if (selectedIndex >= 0) setCurrentPage(Math.floor(selectedIndex / FILES_PER_PAGE) + 1);
+  }, [files, selectedId]);
+
+  const visibleFiles = files.slice(
+    (currentPage - 1) * FILES_PER_PAGE,
+    currentPage * FILES_PER_PAGE,
+  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -127,7 +150,7 @@ export function PracticeCvOptionalStep({
           onClick={() => onSelect(null)}
           disabled={disabled}
         />
-        {files.map((file) => (
+        {visibleFiles.map((file) => (
           <PracticeWizardOptionCard
             key={file.id}
             title={file.fileName}
@@ -138,6 +161,20 @@ export function PracticeCvOptionalStep({
           />
         ))}
       </div>
+
+      {files.length > FILES_PER_PAGE ? (
+        <AppPagination
+          currentPage={currentPage}
+          totalItems={files.length}
+          pageSize={FILES_PER_PAGE}
+          pageSizeOptions={[FILES_PER_PAGE]}
+          itemLabel={t('practice.setup.cv.files')}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={() => undefined}
+          disabled={disabled}
+          className="mt-4"
+        />
+      ) : null}
     </PracticeWizardStepCard>
   );
 }

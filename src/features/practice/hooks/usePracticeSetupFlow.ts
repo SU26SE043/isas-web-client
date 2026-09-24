@@ -104,7 +104,7 @@ export function usePracticeSetupFlow() {
   const rubricQuery = useQuery({
     queryKey: ['practice', 'rubric', jobCategory, language],
     queryFn: ({ signal }) => practiceSetupService.getRubric(jobCategory ?? '', signal, language),
-    enabled: step === 5 && Boolean(jobCategory),
+    enabled: step === 6 && Boolean(jobCategory),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });

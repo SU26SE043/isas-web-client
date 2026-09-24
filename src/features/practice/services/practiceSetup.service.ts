@@ -1,11 +1,9 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { apiClient } from '@/shared/api/apiClient';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { getRubric } from '@/features/rubrics/services/candidateRubrics.service';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
-import type {
-  RubricCriterionResponse,
-  RubricResponse,
-} from '@/features/rubrics/types/rubric.types';
+import type { RubricCriterionResponse, RubricResponse } from '@/features/rubrics/types/rubric.types';
 import {
   domainToJobCategoryEnum,
   isJobDomainId,
@@ -141,10 +139,8 @@ export const practiceSetupService = {
     language: 'vi' | 'en' = 'vi',
   ): Promise<PracticeRubricCriterion[]> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
-    const response = await apiClient.get<RubricResponse>(practiceSetupEndpoints.rubric(jobCategory, language), {
-      signal,
-    });
-    const criteria = Array.isArray(response.data?.criteria) ? response.data.criteria : [];
+    const rubric = await getRubric(jobCategory, language, signal);
+    const criteria = Array.isArray(rubric.criteria) ? rubric.criteria : [];
     return criteria.map(mapApiCriterionToPractice);
   },
 

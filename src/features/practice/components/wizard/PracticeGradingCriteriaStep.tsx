@@ -1,11 +1,15 @@
-import { Check, ClipboardCheck, Loader2, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { ClipboardCheck, Loader2, RefreshCw } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useLanguage } from '@/shared/languages';
+import type { EditableRubricCriterion } from '@/features/rubrics/types/rubric.types';
+import { RubricCriteriaTable } from '@/features/rubrics/components/RubricCriteriaTable';
+import type { PracticeJobCategory } from '../../types/b2cPracticeSession.types';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 
 interface PracticeGradingCriteriaStepProps {
+  jobCategory: PracticeJobCategory | null;
   criteria: PracticeRubricCriterion[];
   selectedIds: string[];
   isLoading: boolean;
@@ -14,10 +18,12 @@ interface PracticeGradingCriteriaStepProps {
   onSelect: (ids: string[]) => void;
   onRetry: () => void;
   onBack: () => void;
+  onBackToDomain?: () => void;
   onNext: () => void;
 }
 
 export function PracticeGradingCriteriaStep({
+  jobCategory,
   criteria,
   selectedIds,
   isLoading,
@@ -26,18 +32,24 @@ export function PracticeGradingCriteriaStep({
   onSelect,
   onRetry,
   onBack,
+  onBackToDomain,
   onNext,
 }: PracticeGradingCriteriaStepProps) {
   const { t } = useLanguage();
   const [showValidation, setShowValidation] = useState(false);
-  const selectedSet = new Set(selectedIds);
   const validCriteria = criteria.filter((criterion) => criterion.id && criterion.name.trim());
-  const canNext = !isLoading && !isError && validCriteria.length > 0 && selectedIds.length > 0;
-
-  const handleToggle = (id: string) => {
-    setShowValidation(false);
-    onSelect(selectedSet.has(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id]);
-  };
+  const tableCriteria = useMemo<EditableRubricCriterion[]>(
+    () => validCriteria.map((criterion) => ({
+      clientId: criterion.id,
+      serverId: criterion.id,
+      name: criterion.name,
+      description: criterion.description,
+      weightPercent: criterion.weight,
+      maxScore: criterion.maxScore,
+    })),
+    [validCriteria],
+  );
+  const canNext = Boolean(jobCategory) && !isLoading && !isError && validCriteria.length > 0 && selectedIds.length > 0;
 
   const handleNext = () => {
     if (!canNext) {
@@ -61,7 +73,29 @@ export function PracticeGradingCriteriaStep({
         />
       }
     >
-      {isLoading ? (
+      {jobCategory ? (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-satin bg-surface-overlay/60 px-4 py-3">
+          <span className="text-sm font-medium text-muted-foreground">
+            {t('practice.setup.gradingCriteria.domainLabel')}
+          </span>
+          <span className="rounded-full border border-satin bg-surface-raised px-3 py-1 text-sm font-semibold text-foreground">
+            {t(`rubrics.domain.${jobCategory}`)}
+          </span>
+        </div>
+      ) : null}
+
+      {!jobCategory ? (
+        <div className="rounded-xl border border-dashed border-satin bg-surface-overlay/50 p-5 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t('practice.setup.gradingCriteria.noDomain')}
+          </p>
+          {onBackToDomain ? (
+            <button type="button" className="btn-secondary mt-4" onClick={onBackToDomain}>
+              {t('practice.setup.gradingCriteria.backToDomain')}
+            </button>
+          ) : null}
+        </div>
+      ) : isLoading ? (
         <div className="space-y-3" aria-label={t('practice.setup.gradingCriteria.loading')}>
           {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="h-24 animate-pulse rounded-2xl border border-satin bg-surface-overlay" />
@@ -76,46 +110,23 @@ export function PracticeGradingCriteriaStep({
           </button>
         </div>
       ) : validCriteria.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-satin p-5 text-center text-sm font-medium text-muted-foreground">
-          {t('practice.setup.gradingCriteria.empty')}
-        </p>
+        <div className="rounded-xl border border-dashed border-satin bg-surface-overlay/50 p-5 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t('practice.setup.gradingCriteria.empty')}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {validCriteria.map((criterion) => {
-            const selected = selectedSet.has(criterion.id);
-            return (
-              <label
-                key={criterion.id}
-                className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-[border-color,background-color,box-shadow] ${
-                  selected
-                    ? 'border-info/70 bg-info/10 shadow-[0_0_18px_-10px_var(--color-info)]'
-                    : 'border-satin bg-surface-overlay/70 hover:border-info/40 hover:bg-info/5'
-                } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={selected}
-                  disabled={disabled}
-                  onChange={() => handleToggle(criterion.id)}
-                />
-                <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg border ${selected ? 'border-info bg-info text-white' : 'border-satin bg-surface-base text-transparent'}`}>
-                  <Check className="size-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-foreground">{criterion.name}</span>
-                    <span className="rounded-full border border-info/25 bg-info/10 px-2.5 py-1 text-xs font-semibold text-info-light">
-                      {criterion.weight}%
-                    </span>
-                  </span>
-                  {criterion.description ? (
-                    <span className="mt-1 block text-sm leading-6 text-muted-foreground">{criterion.description}</span>
-                  ) : null}
-                </span>
-              </label>
-            );
-          })}
+        <div className="min-w-0 overflow-x-auto">
+          <RubricCriteriaTable
+            mode="select"
+            criteria={tableCriteria}
+            selectedIds={selectedIds}
+            disabled={disabled}
+            onSelectionChange={(ids) => {
+              setShowValidation(false);
+              onSelect(ids);
+            }}
+          />
         </div>
       )}
 

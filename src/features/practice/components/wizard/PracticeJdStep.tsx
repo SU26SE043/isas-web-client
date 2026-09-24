@@ -1,11 +1,15 @@
+import { useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
+import { AppPagination } from '@/components/ui/app-pagination';
 import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../../types/b2cPracticeSession.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
+
+const FILES_PER_PAGE = 5;
 
 interface PracticeJdStepProps {
   tab: 'file' | 'text';
@@ -38,6 +42,26 @@ export function PracticeJdStep({
 }: PracticeJdStepProps) {
   const { t } = useLanguage();
   const count = jdText.trim().length;
+  const [currentPage, setCurrentPage] = useState(() => {
+    const selectedIndex = selectedJdId ? files.findIndex((file) => file.id === selectedJdId) : -1;
+    return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
+  });
+  const totalPages = Math.max(1, Math.ceil(files.length / FILES_PER_PAGE));
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (!selectedJdId) return;
+    const selectedIndex = files.findIndex((file) => file.id === selectedJdId);
+    if (selectedIndex >= 0) setCurrentPage(Math.floor(selectedIndex / FILES_PER_PAGE) + 1);
+  }, [files, selectedJdId]);
+
+  const visibleFiles = files.slice(
+    (currentPage - 1) * FILES_PER_PAGE,
+    currentPage * FILES_PER_PAGE,
+  );
 
   return (
     <PracticeWizardStepCard
@@ -85,25 +109,41 @@ export function PracticeJdStep({
       <p className="mb-4 text-xs text-muted-foreground">{t('practice.setup.jd.hint')}</p>
 
       {tab === 'file' ? (
-        <div className="grid gap-3">
-          <PracticeWizardOptionCard
-            title={t('practice.setup.jd.noJd')}
-            description={t('practice.setup.jd.noJdHint')}
-            selected={selectedJdId === null}
-            onClick={() => onSelectJd(null)}
-            disabled={disabled}
-          />
-          {files.map((file) => (
+        <>
+          <div className="grid gap-3">
             <PracticeWizardOptionCard
-              key={file.id}
-              title={file.originalName}
-              description={`${Math.round(file.fileSize / 1024)} KB · ${file.parsedStatus}`}
-              selected={selectedJdId === file.id}
-              onClick={() => onSelectJd(file.id)}
+              title={t('practice.setup.jd.noJd')}
+              description={t('practice.setup.jd.noJdHint')}
+              selected={selectedJdId === null}
+              onClick={() => onSelectJd(null)}
               disabled={disabled}
             />
-          ))}
-        </div>
+            {visibleFiles.map((file) => (
+              <PracticeWizardOptionCard
+                key={file.id}
+                title={file.originalName}
+                description={`${Math.round(file.fileSize / 1024)} KB · ${file.parsedStatus}`}
+                selected={selectedJdId === file.id}
+                onClick={() => onSelectJd(file.id)}
+                disabled={disabled}
+              />
+            ))}
+          </div>
+
+          {files.length > FILES_PER_PAGE ? (
+            <AppPagination
+              currentPage={currentPage}
+              totalItems={files.length}
+              pageSize={FILES_PER_PAGE}
+              pageSizeOptions={[FILES_PER_PAGE]}
+              itemLabel={t('practice.setup.jd.files')}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={() => undefined}
+              disabled={disabled}
+              className="mt-4"
+            />
+          ) : null}
+        </>
       ) : (
         <div className="space-y-2">
           <label htmlFor="practice-jd-text" className="sr-only">

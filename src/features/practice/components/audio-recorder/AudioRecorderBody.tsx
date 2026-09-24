@@ -8,6 +8,7 @@ import { AudioRecorderResultStates } from './AudioRecorderResultStates';
 interface AudioRecorderBodyProps {
   state: AudioRecorderState;
   audioElementRef: React.RefObject<HTMLAudioElement | null>;
+  compact?: boolean;
   disabled?: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -22,6 +23,7 @@ interface AudioRecorderBodyProps {
 export function AudioRecorderBody({
   state,
   audioElementRef,
+  compact = false,
   disabled,
   onStart,
   onStop,
@@ -44,6 +46,7 @@ export function AudioRecorderBody({
       <AudioRecorderResultStates
         state={state}
         audioElementRef={audioElementRef}
+        compact={compact}
         disabled={disabled}
         onStart={onStart}
         onRetake={onRetake}
@@ -60,19 +63,25 @@ export function AudioRecorderBody({
   const isRequesting = state.status === 'requesting-permission';
 
   return (
-    <div className="frame-satin flex min-h-[390px] flex-col items-center gap-5 rounded-2xl border border-info/20 bg-surface-base/70 px-4 py-7 text-center sm:min-h-[415px] sm:gap-6 sm:py-8">
+    <div className={cn(
+      'frame-satin flex flex-col items-center rounded-2xl border border-info/20 bg-surface-base/70 text-center',
+      compact ? 'min-h-0 gap-4 px-3 py-4 sm:gap-5 sm:py-5' : 'min-h-[390px] gap-5 px-4 py-7 sm:min-h-[415px] sm:gap-6 sm:py-8',
+    )}>
       <div className="space-y-2">
-        <h3 className="flex items-center justify-center gap-3 text-xl font-semibold text-info-light sm:text-2xl">
-          <AudioWaveform className="size-5" aria-hidden />
+        <h3 className={cn(
+          'flex items-center justify-center gap-2 font-semibold text-info-light',
+          compact ? 'text-base' : 'text-xl sm:text-2xl',
+        )}>
+          <AudioWaveform className={cn(compact ? 'size-4' : 'size-5')} aria-hidden />
           {isRecording
             ? t('practice.audioRecorder.recording')
             : isRequesting
               ? t('practice.audioRecorder.requestingPermission')
               : t('practice.audioRecorder.startPrompt')}
-          <AudioWaveform className="size-5" aria-hidden />
+          <AudioWaveform className={cn(compact ? 'size-4' : 'size-5')} aria-hidden />
         </h3>
         {!isRecording && !isRequesting ? (
-          <p className="text-sm text-muted-foreground sm:text-base">
+          <p className={cn('text-muted-foreground', compact ? 'text-xs' : 'text-sm sm:text-base')}>
             {t('practice.audioRecorder.permissionHint')}
           </p>
         ) : null}
@@ -80,7 +89,8 @@ export function AudioRecorderBody({
 
       <div
         className={cn(
-          'relative flex size-32 items-center justify-center rounded-full border border-info/70 bg-gradient-to-br from-info/25 via-info-500/20 to-info-500/30 shadow-none sm:size-36',
+          'relative flex items-center justify-center rounded-full border border-info/70 bg-gradient-to-br from-info/25 via-info-500/20 to-info-500/30 shadow-none',
+          compact ? 'size-20 sm:size-24' : 'size-32 sm:size-36',
           isRecording && 'border-destructive/70 shadow-none',
         )}
       >
@@ -93,12 +103,15 @@ export function AudioRecorderBody({
           />
         ) : null}
         <Mic
-          className={cn('relative size-12', isRecording ? 'text-destructive' : 'text-info-light')}
+          className={cn(compact ? 'relative size-8' : 'relative size-12', isRecording ? 'text-destructive' : 'text-info-light')}
           aria-hidden
         />
       </div>
 
-      <p className="text-3xl font-semibold tabular-nums text-foreground sm:text-4xl" aria-live="polite">
+      <p className={cn(
+        'font-semibold tabular-nums text-foreground',
+        compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl',
+      )} aria-live="polite">
         {formatAudioClock(state.elapsedSeconds)} / {formatAudioClock(state.maxDurationSeconds)}
       </p>
 
@@ -111,7 +124,10 @@ export function AudioRecorderBody({
       {isRecording ? (
         <button
           type="button"
-          className="inline-flex size-[4.5rem] items-center justify-center rounded-full border border-destructive/60 bg-destructive/15 text-destructive shadow-[0_0_26px_-8px_var(--color-destructive)] hover:bg-destructive/25"
+          className={cn(
+            'inline-flex items-center justify-center rounded-full border border-destructive/60 bg-destructive/15 text-destructive shadow-[0_0_26px_-8px_var(--color-destructive)] hover:bg-destructive/25',
+            compact ? 'size-14' : 'size-[4.5rem]',
+          )}
           onClick={onStop}
           disabled={disabled}
           aria-label={t('practice.audioRecorder.stop')}
@@ -121,7 +137,10 @@ export function AudioRecorderBody({
       ) : (
         <button
           type="button"
-          className="inline-flex size-[4.5rem] items-center justify-center rounded-full border-4 border-surface-raised bg-foreground text-error shadow-[0_0_26px_-8px_var(--color-error)] hover:bg-foreground/90 disabled:opacity-50"
+          className={cn(
+            'inline-flex items-center justify-center rounded-full border-4 border-surface-raised bg-foreground text-error shadow-[0_0_26px_-8px_var(--color-error)] hover:bg-foreground/90 disabled:opacity-50',
+            compact ? 'size-14' : 'size-[4.5rem]',
+          )}
           onClick={onStart}
           disabled={disabled || isRequesting}
           aria-label={t('practice.audioRecorder.start')}

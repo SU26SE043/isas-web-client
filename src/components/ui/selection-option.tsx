@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectionOptionProps {
@@ -39,15 +39,26 @@ export function SelectionOption({
       aria-label={title}
       aria-describedby={description ? descriptionId : undefined}
       className={cn(
-        'group flex min-h-[112px] items-center gap-5 rounded-2xl px-6 py-5 text-left transition-[background-color,border-color,box-shadow,opacity,transform] duration-200 ease-out hover:-translate-y-0.5',
+        'group flex min-h-[112px] items-center gap-4 rounded-2xl px-6 py-5 text-left transition-[background-color,border-color,box-shadow,opacity,transform] duration-200 ease-out hover:-translate-y-0.5',
         selected
-          ? 'border-foreground/50 bg-foreground/[0.04] shadow-[var(--satin-inset)]'
+          ? 'frame-satin border-2 border-foreground bg-foreground/[0.08] shadow-[var(--satin-inset),0_0_0_2px_var(--surface-base),0_0_0_4px_var(--satin-border-hover)]'
           : 'frame-satin-interactive bg-surface-overlay hover:border-foreground/35 hover:bg-foreground/[0.03]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
       )}
       aria-pressed={selected}
     >
+      <span
+        className={cn(
+          'flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+          selected
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-satin bg-surface-overlay text-transparent',
+        )}
+        aria-hidden
+      >
+        <Check className="size-3" strokeWidth={3} />
+      </span>
       {icon ? (
         <span
           className={cn(

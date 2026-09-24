@@ -14,9 +14,11 @@ function normalizeRubricResponse(data: RubricResponse): RubricResponse {
 export async function getRubric(
   jobCategory: JobCategory,
   language: RubricLanguage = 'vi',
+  signal?: AbortSignal,
 ): Promise<RubricResponse> {
   const response = await apiClient.get<RubricResponse>(
     candidateRubricsEndpoints.rubric(jobCategory, language),
+    { signal },
   );
   return normalizeRubricResponse(response.data);
 }

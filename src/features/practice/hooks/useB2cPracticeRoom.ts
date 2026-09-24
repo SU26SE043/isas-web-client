@@ -5,6 +5,7 @@ import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPrac
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
 import { countUnsubmittedQuestions } from '../utils/finishSummary';
+import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
@@ -15,6 +16,8 @@ import { loadRoomSession } from './loadRoomSession';
 // request fires, but short enough not to add a needless extra second on top
 // of the real submit latency.
 const TIMEOUT_ADVANCE_DELAY_MS = 150;
+const TIMEOUT_FALLBACK_DELAY_MS = 6_000;
+const TIMEOUT_FALLBACK_MAX_ATTEMPTS = 3;
 const COUNTDOWN_STEP_MS = 1000;
 const COUNTDOWN_START_HOLD_MS = 800;
 
@@ -29,8 +32,8 @@ export function useB2cPracticeRoom(
     countdownReady?: boolean;
     deadlineAt?: string | null;
     violationPaused?: boolean;
-    answerRecorderOpen?: boolean;
     onAutoSubmitRequest?: () => void;
+    onAutoSubmitEmptyResult?: (result: { submitted: boolean; error?: unknown }) => void;
   },
 ) {
   const navigate = useNavigate();
@@ -51,6 +54,9 @@ export function useB2cPracticeRoom(
   const [serverRemainingSeconds, setServerRemainingSeconds] = useState<number | null>(null);
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
+  const timeoutAdvanceTimerRef = useRef<number | null>(null);
+  const timeoutFallbackTimerRef = useRef<number | null>(null);
+  const timeoutFallbackAttemptsRef = useRef(0);
   const countdownIntervalRef = useRef<number | null>(null);
   const countdownTimeoutRef = useRef<number | null>(null);
   const countdownQuestionRef = useRef<string | null>(null);
@@ -132,6 +138,8 @@ export function useB2cPracticeRoom(
       !speech.isBusy
       && store.currentQuestionId
       && store.questionStates[store.currentQuestionId] !== 'recording'
+      && store.questionStates[store.currentQuestionId] !== 'unanswered'
+      && store.questionStates[store.currentQuestionId] !== 'submitted'
     ) {
       store.setQuestionState(store.currentQuestionId, 'recording');
     }
@@ -182,6 +190,13 @@ export function useB2cPracticeRoom(
     onStopMedia: () => media.stopMedia(),
     completePath,
   });
+
+  const handleAutoSubmitEmptyResult = useCallback((result: { submitted: boolean; error?: unknown }) => {
+    if (!result.submitted && result.error) {
+      answerSubmit.setAnswerError(mapSubmitPracticeAnswerErrorKey(getApiStatusCode(result.error)));
+    }
+    options?.onAutoSubmitEmptyResult?.(result);
+  }, [answerSubmit.setAnswerError, options?.onAutoSubmitEmptyResult]);
 
   useEffect(() => {
     let cancelled = false;
@@ -254,6 +269,15 @@ export function useB2cPracticeRoom(
 
   useEffect(() => {
     clearQuestionCountdown();
+    if (timeoutAdvanceTimerRef.current != null) {
+      window.clearTimeout(timeoutAdvanceTimerRef.current);
+      timeoutAdvanceTimerRef.current = null;
+    }
+    if (timeoutFallbackTimerRef.current != null) {
+      window.clearTimeout(timeoutFallbackTimerRef.current);
+      timeoutFallbackTimerRef.current = null;
+    }
+    timeoutFallbackAttemptsRef.current = 0;
     const ready = media.state === 'ready' && (!options?.startWithCountdown || options.countdownReady !== false);
     // Câu đầu vẫn đi qua countdown 3-2-1. Mỗi câu chuyển sang `reading` ngay
     // khi active để mic tiếp tục khóa trong lúc TTS tải/phát.
@@ -273,10 +297,88 @@ export function useB2cPracticeRoom(
     startQuestionCountdown(store.currentQuestionId);
   }, [initialCountdownComplete, media.state, options?.countdownReady, options?.startWithCountdown, sessionReady, startQuestionCountdown, store.currentQuestionId]);
 
-  useEffect(() => () => clearQuestionCountdown(), [clearQuestionCountdown]);
+  useEffect(
+    () => () => {
+      clearQuestionCountdown();
+      if (timeoutAdvanceTimerRef.current != null) {
+        window.clearTimeout(timeoutAdvanceTimerRef.current);
+        timeoutAdvanceTimerRef.current = null;
+      }
+      if (timeoutFallbackTimerRef.current != null) {
+        window.clearTimeout(timeoutFallbackTimerRef.current);
+        timeoutFallbackTimerRef.current = null;
+      }
+    },
+    [clearQuestionCountdown],
+  );
+
+  const failTimeoutRecovery = useCallback(() => {
+    answerSubmit.setAnswerError('practice.errors.submitAnswerFailed');
+    setIsTimingOut(false);
+    timeoutHandledForQuestionRef.current = null;
+    timeoutFallbackAttemptsRef.current = 0;
+  }, [answerSubmit.setAnswerError]);
+
+  const scheduleTimeoutFallback = useCallback((questionId: string) => {
+    if (timeoutFallbackTimerRef.current != null) return;
+
+    timeoutFallbackTimerRef.current = window.setTimeout(() => {
+      timeoutFallbackTimerRef.current = null;
+      const current = useB2cPracticeInterviewStore.getState();
+      const answerSubmitStage =
+        current.stage === 'interviewing' || current.stage === 'submitting_answer';
+      if (
+        current.currentQuestionId !== questionId
+        || current.answersByQuestionId[questionId]
+        || !answerSubmitStage
+      ) {
+        timeoutFallbackAttemptsRef.current = 0;
+        return;
+      }
+
+      timeoutFallbackAttemptsRef.current += 1;
+      if (answerSubmit.isSubmitInFlight()) {
+        if (timeoutFallbackAttemptsRef.current >= TIMEOUT_FALLBACK_MAX_ATTEMPTS) {
+          failTimeoutRecovery();
+        } else {
+          scheduleTimeoutFallback(questionId);
+        }
+        return;
+      }
+
+      const isFinalAttempt = timeoutFallbackAttemptsRef.current >= TIMEOUT_FALLBACK_MAX_ATTEMPTS;
+      const submit = isFinalAttempt
+        ? answerSubmit.submitEmptyAnswer()
+        : (options?.onAutoSubmitRequest?.(), Promise.resolve(false));
+
+      submit.then((submitted) => {
+        if (submitted) {
+          timeoutFallbackAttemptsRef.current = 0;
+          setIsTimingOut(false);
+          return;
+        }
+        if (isFinalAttempt) {
+          failTimeoutRecovery();
+        } else {
+          scheduleTimeoutFallback(questionId);
+        }
+      }).catch(() => {
+        if (isFinalAttempt) {
+          failTimeoutRecovery();
+        } else {
+          scheduleTimeoutFallback(questionId);
+        }
+      });
+    }, TIMEOUT_FALLBACK_DELAY_MS);
+  }, [
+    answerSubmit.isSubmitInFlight,
+    answerSubmit.submitEmptyAnswer,
+    failTimeoutRecovery,
+    options?.onAutoSubmitRequest,
+  ]);
 
   useEffect(() => {
-    if (options?.violationPaused || phase !== 'answering') return undefined;
+    if (options?.violationPaused || (phase !== 'answering' && phase !== 'reading')) return undefined;
     if (effectiveRemainingSeconds !== 0) return;
     if (store.stage !== 'interviewing') return;
     if (isSubmittingSession) return;
@@ -286,25 +388,29 @@ export function useB2cPracticeRoom(
     if (store.answersByQuestionId[questionId]) return;
     if (timeoutHandledForQuestionRef.current === questionId) return;
 
-    let cancelled = false;
     timeoutHandledForQuestionRef.current = questionId;
     setIsTimingOut(true);
     setShowTimerWarning(false);
     speech.stopPlayback();
     store.setQuestionState(questionId, 'unanswered');
 
-    const advanceTimer = window.setTimeout(() => {
-      if (cancelled) return;
-
+    timeoutAdvanceTimerRef.current = window.setTimeout(() => {
+      timeoutAdvanceTimerRef.current = null;
+      const current = useB2cPracticeInterviewStore.getState();
+      if (
+        current.currentQuestionId !== questionId
+        || current.answersByQuestionId[questionId]
+        || current.stage !== 'interviewing'
+      ) return;
       void (async () => {
         try {
-          if (options?.answerRecorderOpen && options.onAutoSubmitRequest) {
+          if (options?.onAutoSubmitRequest) {
             options.onAutoSubmitRequest();
+            scheduleTimeoutFallback(questionId);
           } else {
             await answerSubmit.submitEmptyAnswer();
           }
         } catch {
-          if (cancelled) return;
           // Auto-submit failed outright (as opposed to being superseded by a
           // question change) — let the next tick retry instead of leaving
           // this question permanently stuck behind the guard.
@@ -312,21 +418,18 @@ export function useB2cPracticeRoom(
             timeoutHandledForQuestionRef.current = null;
           }
         } finally {
-          if (!cancelled) setIsTimingOut(false);
+          if (!options?.onAutoSubmitRequest) setIsTimingOut(false);
         }
       })();
     }, TIMEOUT_ADVANCE_DELAY_MS);
 
-    return () => {
-      cancelled = true;
-      window.clearTimeout(advanceTimer);
-    };
+    return undefined;
     // Do not depend on isTimingOut — setting it would re-run and clear the advance timer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     answerSubmit.isSubmittingAnswer,
     answerSubmit.submitEmptyAnswer,
-    options?.answerRecorderOpen,
+    scheduleTimeoutFallback,
     options?.onAutoSubmitRequest,
     isSubmittingSession,
     options?.violationPaused,
@@ -462,6 +565,7 @@ export function useB2cPracticeRoom(
     submitAnswer: answerSubmit.submitAnswer,
     submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
     submitEmptyAnswer: answerSubmit.submitEmptyAnswer,
+    handleAutoSubmitEmptyResult,
     overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
     setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
     confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,

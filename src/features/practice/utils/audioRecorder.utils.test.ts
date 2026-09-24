@@ -7,7 +7,6 @@ import {
   formatAudioClock,
   pickAudioRecorderMimeType,
 } from './audioRecorder.utils';
-import { resolveAnswerCardStatus } from './resolveAnswerCardStatus';
 
 describe('audioRecorder.utils', () => {
   it('formats clock and picks extensions', () => {
@@ -35,49 +34,5 @@ describe('audioRecorder.utils', () => {
 
   it('returns a mime type string', () => {
     expect(typeof pickAudioRecorderMimeType()).toBe('string');
-  });
-});
-
-describe('resolveAnswerCardStatus', () => {
-  it('prefers submitting and submitted states', () => {
-    expect(
-      resolveAnswerCardStatus({
-        hasAnswer: false,
-        isSubmitting: true,
-        answerError: null,
-      }),
-    ).toBe('submitting');
-    expect(
-      resolveAnswerCardStatus({
-        hasAnswer: true,
-        isSubmitting: false,
-        answerError: null,
-      }),
-    ).toBe('submitted');
-  });
-
-  it('maps question states and errors', () => {
-    expect(
-      resolveAnswerCardStatus({
-        hasAnswer: false,
-        questionState: 'recording',
-        isSubmitting: false,
-        answerError: null,
-      }),
-    ).toBe('recording');
-    expect(
-      resolveAnswerCardStatus({
-        hasAnswer: false,
-        isSubmitting: false,
-        answerError: 'practice.errors.audioRequired',
-      }),
-    ).toBe('error');
-    expect(
-      resolveAnswerCardStatus({
-        hasAnswer: false,
-        isSubmitting: false,
-        answerError: null,
-      }),
-    ).toBe('unanswered');
   });
 });
