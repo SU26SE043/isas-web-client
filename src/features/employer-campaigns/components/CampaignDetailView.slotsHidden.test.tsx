@@ -6,33 +6,36 @@ import type { CampaignSlotResponse } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 
 /**
- * T13 R2 — Tester M4: `CampaignDetailStatusNotices` có test cho `slotCount`, nhưng chỗ ĐẤU DÂY
- * (`CampaignDetailView` đọc `useCampaignSlots` rồi truyền `slotCount`) thì không — ghi cứng
- * `slotCount = 0` ở view vẫn XANH mọi tầng, tức "Mở ngay" trên trang chi tiết không bao giờ
- * bị khoá dù campaign có ca. Test này đứng đúng ở khe nối đó.
+ * Ô "Khung giờ phỏng vấn" trên trang chi tiết TẠM ẨN sau cờ `VITE_ENABLE_CAMPAIGN_SLOTS_UI` (mặc định tắt,
+ * chốt 2026-09-22 — cùng cờ đã ẩn bước wizard 17/09). Ba vế phải đúng CÙNG LÚC khi cờ tắt:
+ * (1) không render panel, (2) KHÔNG gọi `/slots` (hook nhận `enabled=false`), (3) "Mở ngay" không bị khoá
+ * vì ca kể cả khi cache còn dữ liệu ca. Thiếu (2) là trang vẫn bắn một request vô hình; thiếu (3) là
+ * campaign cũ có ca bị khoá "Mở ngay" mà HR không thấy ca ở đâu để xoá.
  */
-// Khung giờ tạm ẩn sau cờ (mặc định tắt) — test này đo hành vi KHI BẬT; ca cờ tắt ở `CampaignDetailView.slotsHidden.test.tsx`.
 vi.mock('@/shared/config', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/config')>()),
-  isCampaignSlotsUiEnabled: () => true,
+  isCampaignSlotsUiEnabled: () => false,
 }));
 vi.mock('@/shared/languages', () => ({
-  useLanguage: () => ({
-    t: (key: string) => (key === 'employer.campaigns.detail.startNowBlockedHasSlots' ? `${key} {{n}}` : key),
-    language: 'vi',
-  }),
+  useLanguage: () => ({ t: (key: string) => key, language: 'vi' }),
 }));
 
-const slotsState = vi.hoisted(() => ({ data: [] as CampaignSlotResponse[] | undefined }));
+const slotsHook = vi.hoisted(() => ({
+  data: [] as CampaignSlotResponse[] | undefined,
+  calls: [] as Array<{ campaignId: string | undefined; enabled: boolean | undefined }>,
+}));
 vi.mock('../hooks/useCampaignSlots', () => ({
-  useCampaignSlots: () => ({ data: slotsState.data, isLoading: false, isError: false }),
+  useCampaignSlots: (campaignId: string | undefined, enabled?: boolean) => {
+    slotsHook.calls.push({ campaignId, enabled });
+    return { data: slotsHook.data, isLoading: false, isError: false };
+  },
   useCampaignSlotMutations: () => ({ create: {}, update: {}, remove: {} }),
 }));
 
-// Các card con gọi service/react-query riêng — không thuộc khe nối đang đo, cắt để test không cần provider.
-vi.mock('./slots/CampaignSlotsPanel', () => ({ CampaignSlotsPanel: () => null }));
+vi.mock('./slots/CampaignSlotsPanel', () => ({
+  CampaignSlotsPanel: () => <div data-testid="campaign-slots-panel" />,
+}));
 vi.mock('./CampaignAttachmentsCard', () => ({ CampaignAttachmentsCard: () => null }));
-// SC2 T10 thay `CampaignRubricPreviewSection` bằng section card theo câu (cần Router + react-query) — cùng lý do cắt.
 vi.mock('./detail/CampaignDetailQuestionsSection', () => ({ CampaignDetailQuestionsSection: () => null }));
 vi.mock('./CampaignScoringRulesCard', () => ({ CampaignScoringRulesCard: () => null }));
 vi.mock('./CampaignDetailActions', () => ({ CampaignDetailActions: () => null }));
@@ -41,7 +44,8 @@ const { CampaignDetailView } = await import('./CampaignDetailView');
 
 afterEach(() => {
   cleanup();
-  slotsState.data = [];
+  slotsHook.data = [];
+  slotsHook.calls = [];
 });
 
 const slot = (id: string): CampaignSlotResponse => ({
@@ -50,7 +54,7 @@ const slot = (id: string): CampaignSlotResponse => ({
 
 const campaign = {
   id: 'cmp-1',
-  title: 'T13',
+  title: 'Ẩn khung giờ',
   status: 'active',
   startsAt: '2099-01-01T10:00:00.000Z',
   deadline: '2099-02-01T10:00:00.000Z',
@@ -75,16 +79,20 @@ function renderView() {
   );
 }
 
-describe('CampaignDetailView → slotCount → "Mở ngay" (T13 R2)', () => {
-  it('useCampaignSlots trả 2 ca ⇒ nút Mở ngay DISABLED + lý do nêu đúng 2 ca', () => {
-    slotsState.data = [slot('s1'), slot('s2')];
+describe('CampaignDetailView — khung giờ tạm ẩn (cờ tắt)', () => {
+  it('không render ô "Khung giờ phỏng vấn"', () => {
     renderView();
-    expect(screen.getByRole('button', { name: 'employer.campaigns.detail.startNow' })).toBeDisabled();
-    expect(screen.getByTestId('start-now-blocked')).toHaveTextContent('employer.campaigns.detail.startNowBlockedHasSlots 2');
+    expect(screen.queryByTestId('campaign-slots-panel')).not.toBeInTheDocument();
   });
 
-  it('0 ca ⇒ nút Mở ngay ENABLED, không có dòng lý do', () => {
-    slotsState.data = [];
+  it('không gọi /slots: hook nhận enabled=false', () => {
+    renderView();
+    expect(slotsHook.calls.length).toBeGreaterThan(0);
+    expect(slotsHook.calls.every((call) => call.enabled === false)).toBe(true);
+  });
+
+  it('cache còn 2 ca vẫn KHÔNG khoá "Mở ngay" (ca không hiện thì không được chặn theo ca)', () => {
+    slotsHook.data = [slot('s1'), slot('s2')];
     renderView();
     expect(screen.getByRole('button', { name: 'employer.campaigns.detail.startNow' })).toBeEnabled();
     expect(screen.queryByTestId('start-now-blocked')).not.toBeInTheDocument();
