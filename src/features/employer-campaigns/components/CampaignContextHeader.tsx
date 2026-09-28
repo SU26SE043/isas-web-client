@@ -1,5 +1,7 @@
-import { ArrowLeft, CalendarDays } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 import { CampaignManagementStatusBadge } from './CampaignManagementStatusBadge';
@@ -56,6 +58,18 @@ export function CampaignContextHeader({
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <CampaignManagementStatusBadge status={campaign.status} />
+            {/* Lối vào mời THÊM người khi chiến dịch đang mở. Trước đây trang chi tiết chỉ có nút mời trong
+                tab "Danh sách lời mời" và CHỈ khi danh sách rỗng — đã mời ≥1 người là hết đường (HR phải quay
+                về danh sách chiến dịch). Trang /invitations tự có tab này nên không lặp ở mode đó. */}
+            {mode === 'overview' && campaign.status === 'active' ? (
+              <Link
+                to={`/employer/campaigns/${campaign.id}/invitations?tab=invite`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-foreground/30 bg-foreground/[0.06] text-foreground shadow-sm')}
+              >
+                <Send className="size-4" aria-hidden />
+                {t('employer.campaigns.list.invite')}
+              </Link>
+            ) : null}
             {campaign.status === 'active' && onEndCampaign ? (
               <EndCampaignDialog onConfirm={onEndCampaign} />
             ) : null}
