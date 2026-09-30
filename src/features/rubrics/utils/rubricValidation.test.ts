@@ -29,10 +29,11 @@ describe('validateRubric — không có luật "Σ điểm tối đa = 100"', ()
     expect(validateRubric([criterion('Một tiêu chí', 100, 7)])).toBeNull();
   });
 
-  it('vẫn chặn: maxScore ≤ 0 · trọng số âm · Σ trọng số ≠ 100% · thiếu tên · rỗng', () => {
+  it('vẫn chặn: maxScore ≤ 0 · trọng số không dương · thiếu tên · rỗng', () => {
     expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, maxScore: 0 } : c)))).toBe('invalidMaxScore');
-    expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, weightPercent: -1 } : c)))).toBe('negativeWeight');
-    expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, weightPercent: 30 } : c)))).toBe('invalidWeight');
+    expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, weightPercent: -1 } : c)))).toBe('invalidWeight');
+    expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, weightPercent: 0 } : c)))).toBe('invalidWeight');
+    expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, weightPercent: 30 } : c)))).toBeNull();
     expect(validateRubric(seed.map((c, i) => (i === 0 ? { ...c, name: '  ' } : c)))).toBe('missingName');
     expect(validateRubric([])).toBe('empty');
   });

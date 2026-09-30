@@ -56,5 +56,4 @@ export type RubricValidationCode =
   | 'empty'
   | 'missingName'
   | 'invalidMaxScore'
-  | 'negativeWeight'
   | 'invalidWeight';

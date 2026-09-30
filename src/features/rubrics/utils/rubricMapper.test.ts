@@ -60,7 +60,7 @@ describe('rubricMapper — mốc điểm đi qua vòng đọc-sửa-lưu', () =>
     const [criterion] = mapEditableToUpdateRequest(editable).criteria;
     expect(criterion.name).toBe('Chiều sâu kỹ thuật');
     expect(criterion.description).toBe('mô tả');
-    expect(criterion.weight).toBeCloseTo(0.4);
+    expect(criterion.weight).toBeCloseTo(1);
     expect(criterion.maxScore).toBe(10);
   });
 });
