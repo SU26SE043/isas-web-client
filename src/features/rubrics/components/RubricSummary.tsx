@@ -13,11 +13,7 @@ interface RubricSummaryProps {
 export function RubricSummary({ criteriaCount, totalWeightLabel, totalMaxScore, weightStatus }: RubricSummaryProps) {
   const { t } = useLanguage();
   const weightValid = weightStatus === 'valid';
-  const statusLabel = weightValid
-    ? t('rubrics.summary.statusValid')
-    : weightStatus === 'over'
-      ? t('rubrics.summary.statusOver')
-      : t('rubrics.summary.statusUnder');
+  const statusLabel = weightValid ? t('rubrics.summary.statusValid') : t('rubrics.summary.statusAdjusting');
 
   return (
     <StatGrid columns={4}>
@@ -26,7 +22,7 @@ export function RubricSummary({ criteriaCount, totalWeightLabel, totalMaxScore, 
         label={t('rubrics.summary.totalWeight')}
         value={totalWeightLabel}
         icon={<PieChart aria-hidden />}
-        tone={weightValid ? 'success' : 'error'}
+        tone={weightValid ? 'success' : 'neutral'}
       />
       {/* Thông tin thuần: tổng điểm tối đa không có ngưỡng đúng/sai (điểm tổng chấm theo % từng tiêu chí). */}
       <StatCard
@@ -39,7 +35,7 @@ export function RubricSummary({ criteriaCount, totalWeightLabel, totalMaxScore, 
         label={t('rubrics.summary.status')}
         value={statusLabel}
         icon={<BadgeCheck aria-hidden />}
-        tone={weightValid ? 'success' : 'error'}
+        tone={weightValid ? 'success' : 'neutral'}
         hint={weightValid ? t('rubrics.summary.statusValidHint') : undefined}
       />
     </StatGrid>

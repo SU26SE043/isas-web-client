@@ -9,6 +9,8 @@ export interface SelectionOptionProps {
   icon?: React.ReactNode;
   selected?: boolean;
   onClick?: () => void;
+  /** Tuỳ chọn: bấm đúp (vd mở xem tệp). Bấm đơn vẫn chạy `onClick` như cũ. */
+  onDoubleClick?: () => void;
   showChevron?: boolean;
   className?: string;
   disabled?: boolean;
@@ -25,6 +27,7 @@ export function SelectionOption({
   icon,
   selected = false,
   onClick,
+  onDoubleClick,
   showChevron = true,
   className,
   disabled = false,
@@ -35,6 +38,7 @@ export function SelectionOption({
     <button
       type="button"
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       disabled={disabled}
       aria-label={title}
       aria-describedby={description ? descriptionId : undefined}

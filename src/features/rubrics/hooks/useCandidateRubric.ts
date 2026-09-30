@@ -17,6 +17,7 @@ import {
   mapResponseToEditable,
   serializeCriteria,
 } from '../utils/rubricMapper';
+import { redistributeAfterAdd, redistributeAfterRemove } from '../utils/rubricWeights';
 import {
   computeTotalMaxScore,
   computeTotalWeightDecimal,
@@ -80,15 +81,21 @@ export function useCandidateRubric() {
 
   const removeCriterion = useCallback(
     (clientId: string) => {
-      markDirty(criteria.filter((item) => item.clientId !== clientId));
+      const remaining = criteria.filter((item) => item.clientId !== clientId);
+      const weights = redistributeAfterRemove(remaining.map((item) => item.weightPercent));
+      markDirty(remaining.map((item, index) => ({ ...item, weightPercent: weights[index] ?? 0 })));
     },
     [criteria, markDirty],
   );
 
   const addCriterion = useCallback(() => {
     const created = createEmptyCriterion();
+    const weights = redistributeAfterAdd(criteria.map((item) => item.weightPercent));
     focusClientIdRef.current = created.clientId;
-    markDirty([...criteria, created]);
+    markDirty([
+      ...criteria.map((item, index) => ({ ...item, weightPercent: weights[index] ?? 0 })),
+      { ...created, weightPercent: weights[weights.length - 1] ?? 0 },
+    ]);
   }, [criteria, markDirty]);
 
   const saveMutation = useMutation({

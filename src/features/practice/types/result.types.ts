@@ -35,6 +35,9 @@ export interface GapAnalysisItem {
 
 export type AssessmentStatus = 'pending' | 'scoring' | 'scored' | 'failed';
 
+/** Rubric provenance returned by the B2C practice session result API. */
+export type PracticeRubricSource = 'SystemDefault' | 'Custom' | null;
+
 export interface AssessmentStatusResponse {
   assessmentId: string;
   status: AssessmentStatus;

@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils';
 import { AppPagination } from '@/components/ui/app-pagination';
 import { validateCvFile } from '@/features/cv-analysis/utils/cvFileValidation';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
+import {
+  CvDocumentViewerDialog,
+  type CvDocumentViewerTarget,
+} from '@/features/cv-analysis/components/report/CvDocumentViewerDialog';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
@@ -49,6 +53,7 @@ export function PracticeCvOptionalStep({
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [viewerTarget, setViewerTarget] = useState<CvDocumentViewerTarget | null>(null);
   const [currentPage, setCurrentPage] = useState(() => {
     const selectedIndex = selectedId ? files.findIndex((file) => file.id === selectedId) : -1;
     return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
@@ -157,10 +162,15 @@ export function PracticeCvOptionalStep({
             description={`${formatBytes(file.fileSizeBytes)} · ${new Date(file.uploadedAt).toLocaleDateString()}`}
             selected={selectedId === file.id}
             onClick={() => onSelect(file.id)}
+            onDoubleClick={() => setViewerTarget({ fileId: file.id, kind: 'cv', fileName: file.fileName })}
             disabled={disabled}
           />
         ))}
       </div>
+
+      {files.length > 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground">{t('practice.setup.cv.openHint')}</p>
+      ) : null}
 
       {files.length > FILES_PER_PAGE ? (
         <AppPagination
@@ -175,6 +185,8 @@ export function PracticeCvOptionalStep({
           className="mt-4"
         />
       ) : null}
+
+      <CvDocumentViewerDialog target={viewerTarget} onClose={() => setViewerTarget(null)} />
     </PracticeWizardStepCard>
   );
 }

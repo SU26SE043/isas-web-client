@@ -439,6 +439,10 @@ function mapResult(raw: unknown, catalog: CriterionCatalog): PracticeSessionResu
     nextSteps: resolveTextList(item.nextSteps ?? item.recommendations, catalog),
     overallComment: pickString(item.overallComment, item.comment, item.summary, item.feedback),
     cvVsAnswer: mapCvVsAnswer(item.cvVsAnswer ?? item.cvComparison),
+    rubricSource:
+      item.rubricSource === 'SystemDefault' || item.rubricSource === 'Custom'
+        ? item.rubricSource
+        : null,
     benchmark: mapBenchmark(item.benchmark),
     // CAMP-21/B2C — chỉ nhận `true` thật; mọi thứ khác = không có luật. Số đọc riêng từng field,
     // KHÔNG rơi về answeredCount/totalQuestions (chúng đếm cả câu đào sâu — sai mẫu số).

@@ -251,7 +251,7 @@ export function usePracticeSetupFlow() {
       setUploadingCv(true);
       setUploadError(null);
       try {
-        const uploaded = await practiceSetupService.uploadCv(file, language);
+        const uploaded = await practiceSetupService.uploadCv(file);
         setCvFiles((prev) => [uploaded, ...prev.filter((item) => item.id !== uploaded.id)]);
         setCvId(uploaded.id);
       } catch {
@@ -260,7 +260,7 @@ export function usePracticeSetupFlow() {
         setUploadingCv(false);
       }
     },
-    [language, t],
+    [t],
   );
 
   // Nút "Bắt đầu" chỉ tắt sau khi React vẽ lại; hai cú bấm rơi vào cùng một

@@ -60,6 +60,12 @@ describe('mapPracticeSessionResponse', () => {
     expect(mapped.result?.cvVsAnswer?.summary).toBe('Aligned');
   });
 
+  it('preserves rubric provenance and treats unknown values as legacy null', () => {
+    expect(mapPracticeSessionResponse({ questions: [], result: { overallScore: 1, rubricSource: 'SystemDefault', criteriaScores: [], needsImprovement: [], overallComment: '', cvVsAnswer: null } }).result?.rubricSource).toBe('SystemDefault');
+    expect(mapPracticeSessionResponse({ questions: [], result: { overallScore: 1, rubricSource: 'Custom', criteriaScores: [], needsImprovement: [], overallComment: '', cvVsAnswer: null } }).result?.rubricSource).toBe('Custom');
+    expect(mapPracticeSessionResponse({ questions: [], result: { overallScore: 1, rubricSource: 'Other', criteriaScores: [], needsImprovement: [], overallComment: '', cvVsAnswer: null } }).result?.rubricSource).toBeNull();
+  });
+
   it('maps nullable session topics and filters malformed topic records', () => {
     expect(mapPracticeSessionResponse({ topics: MOCK_SESSION_TOPICS_NULL, questions: [] }).topics).toBeNull();
     expect(mapPracticeSessionResponse({ topics: MOCK_SESSION_TOPICS_EMPTY, questions: [] }).topics).toEqual([]);
