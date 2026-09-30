@@ -1,10 +1,17 @@
-import { ChartNoAxesCombined, List } from 'lucide-react';
+import { ChartNoAxesCombined, Info, List } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { CriteriaProgressList, CriteriaThresholdNote } from './CriteriaProgressList';
 import { CriteriaRadarChart } from './CriteriaRadarChart';
+import type { UnassessedCriteriaResult } from '../../utils/unassessedCriteria';
 
-export function ReportCriteriaScores({ view }: { view: PracticeSessionResultViewModel }) {
+export function ReportCriteriaScores({
+  view,
+  unassessedCriteria,
+}: {
+  view: PracticeSessionResultViewModel;
+  unassessedCriteria: UnassessedCriteriaResult;
+}) {
   const { t } = useLanguage();
 
   return (
@@ -62,6 +69,25 @@ export function ReportCriteriaScores({ view }: { view: PracticeSessionResultView
               criteria={view.criteria}
               passThresholdPct={view.passThresholdPct}
             />
+            {unassessedCriteria.status === 'known' && unassessedCriteria.names.length > 0 ? (
+              <div className="mt-4 rounded-xl border border-info/30 bg-info/5 p-4 text-sm text-foreground" role="status">
+                <p className="flex items-start gap-2 font-medium">
+                  <Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
+                  <span>{t('practice.result.unassessed.title')}</span>
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-6 text-muted-foreground">
+                  {unassessedCriteria.names.map((name) => <li key={name}>{name}</li>)}
+                </ul>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                  {t('practice.result.unassessed.explanation')}
+                </p>
+              </div>
+            ) : unassessedCriteria.status === 'unknown' ? (
+              <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground" role="status">
+                <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                <span>{t('practice.result.unassessed.generic')}</span>
+              </p>
+            ) : null}
           </div>
         </div>
 

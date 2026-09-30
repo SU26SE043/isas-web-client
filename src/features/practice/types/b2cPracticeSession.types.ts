@@ -1,4 +1,6 @@
 /** B2C practice session API contract (POST/GET sessions, answers, speech, submit). */
+import type { PracticeRubricSource } from './result.types';
+
 
 export type PracticeJobCategory = 'BA' | 'BE' | 'FE';
 export type PracticeLanguage = 'vi' | 'en';
@@ -237,6 +239,7 @@ export interface PracticeSessionResult {
   nextSteps?: string[];
   overallComment: string;
   cvVsAnswer: PracticeCvVsAnswer | null;
+  rubricSource?: PracticeRubricSource;
   /** v5: peer average or pass-threshold comparison series for radar. */
   benchmark?: PracticeBenchmark | null;
   /**

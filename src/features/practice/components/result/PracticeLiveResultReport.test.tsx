@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MOCK_SESSION_TOPICS_EIGHT } from '../../mocks/sessionTopics.fixtures';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
@@ -62,9 +63,11 @@ function renderReport(
   url = '/practice/result?sessionId=session-1',
 ) {
   return render(
-    <MemoryRouter initialEntries={[url]}>
-      <PracticeLiveResultReport session={reportSession} />
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={[url]}>
+        <PracticeLiveResultReport session={reportSession} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -94,6 +97,7 @@ describe('PracticeLiveResultReport tabs', () => {
 
     expect(screen.getByText('practice.result.criteriaScores')).toBeInTheDocument();
     expect(screen.getByText('radar-chart')).toBeInTheDocument();
+    expect(screen.getByText('practice.result.unassessed.generic')).toBeInTheDocument();
     expect(screen.queryByText('practice.result.summary')).not.toBeInTheDocument();
     expect(screen.queryByText('practice.result.jumpToQuestion')).not.toBeInTheDocument();
   });
