@@ -2,12 +2,19 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import { PracticeCvOptionalStep } from './PracticeCvOptionalStep';
 
 vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({ t: (key: string) => key }),
+}));
+
+const viewerMocks = vi.hoisted(() => ({ getFileBlob: vi.fn() }));
+
+// Hộp thoại xem PDF tải file thật qua cvAnalysisService — chặn mạng trong test.
+vi.mock('@/features/cv-analysis/services/cvAnalysis.service', () => ({
+  cvAnalysisService: { getFileBlob: viewerMocks.getFileBlob },
 }));
 
 const baseProps = {
@@ -21,6 +28,23 @@ const baseProps = {
   onBack: vi.fn(),
   onNext: vi.fn(),
 };
+
+const cvFile: UploadedCvFile = {
+  id: 'cv-42',
+  fileName: 'backend-cv.pdf',
+  fileSizeBytes: 78736,
+  mimeType: 'application/pdf',
+  uploadedAt: '2026-09-29T13:18:37.332Z',
+  pdfUrl: '',
+};
+
+beforeEach(() => {
+  viewerMocks.getFileBlob.mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }));
+  vi.stubGlobal('URL', Object.assign(URL, {
+    createObjectURL: vi.fn(() => 'blob:preview'),
+    revokeObjectURL: vi.fn(),
+  }));
+});
 
 afterEach(() => {
   cleanup();
@@ -75,5 +99,33 @@ describe('PracticeCvOptionalStep', () => {
 
     expect(screen.getByRole('button', { name: 'resume-6.pdf' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'resume-1.pdf' })).not.toBeInTheDocument();
+  });
+
+  it('bấm 1 lần chỉ chọn CV, không mở file', async () => {
+    const onSelect = vi.fn();
+    render(<PracticeCvOptionalStep {...baseProps} files={[cvFile]} onSelect={onSelect} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'backend-cv.pdf' }));
+
+    expect(onSelect).toHaveBeenCalledWith('cv-42');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(viewerMocks.getFileBlob).not.toHaveBeenCalled();
+  });
+
+  it('bấm 2 lần mở đúng CV đó trong hộp thoại xem PDF', async () => {
+    render(<PracticeCvOptionalStep {...baseProps} files={[cvFile]} />);
+
+    expect(screen.getByText('practice.setup.cv.openHint')).toBeInTheDocument();
+    await userEvent.dblClick(screen.getByRole('button', { name: 'backend-cv.pdf' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('backend-cv.pdf');
+    expect(viewerMocks.getFileBlob).toHaveBeenCalledWith('cv-42');
+  });
+
+  it('chưa có CV nào thì không hiện gợi ý bấm đúp', () => {
+    render(<PracticeCvOptionalStep {...baseProps} />);
+
+    expect(screen.queryByText('practice.setup.cv.openHint')).not.toBeInTheDocument();
   });
 });

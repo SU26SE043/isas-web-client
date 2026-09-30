@@ -4,6 +4,10 @@ import { useLanguage } from '@/shared/languages';
 import { cn } from '@/lib/utils';
 import { AppPagination } from '@/components/ui/app-pagination';
 import type { FileRecord } from '@/features/cv-analysis/types/cvAnalysis.types';
+import {
+  CvDocumentViewerDialog,
+  type CvDocumentViewerTarget,
+} from '@/features/cv-analysis/components/report/CvDocumentViewerDialog';
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../../types/b2cPracticeSession.types';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardOptionCard } from './PracticeWizardOptionCard';
@@ -42,6 +46,7 @@ export function PracticeJdStep({
 }: PracticeJdStepProps) {
   const { t } = useLanguage();
   const count = jdText.trim().length;
+  const [viewerTarget, setViewerTarget] = useState<CvDocumentViewerTarget | null>(null);
   const [currentPage, setCurrentPage] = useState(() => {
     const selectedIndex = selectedJdId ? files.findIndex((file) => file.id === selectedJdId) : -1;
     return selectedIndex >= 0 ? Math.floor(selectedIndex / FILES_PER_PAGE) + 1 : 1;
@@ -125,10 +130,15 @@ export function PracticeJdStep({
                 description={`${Math.round(file.fileSize / 1024)} KB · ${file.parsedStatus}`}
                 selected={selectedJdId === file.id}
                 onClick={() => onSelectJd(file.id)}
+                onDoubleClick={() => setViewerTarget({ fileId: file.id, kind: 'jd', fileName: file.originalName })}
                 disabled={disabled}
               />
             ))}
           </div>
+
+          {files.length > 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">{t('practice.setup.jd.openHint')}</p>
+          ) : null}
 
           {files.length > FILES_PER_PAGE ? (
             <AppPagination
@@ -170,6 +180,8 @@ export function PracticeJdStep({
           </div>
         </div>
       )}
+
+      <CvDocumentViewerDialog target={viewerTarget} onClose={() => setViewerTarget(null)} />
     </PracticeWizardStepCard>
   );
 }

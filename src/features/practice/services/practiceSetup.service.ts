@@ -1,6 +1,6 @@
 import { mockDelay, usesMockData } from '@/shared/mock';
 import { apiClient } from '@/shared/api/apiClient';
-import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
+import { cvAnalysisService, toUploadedCvFile } from '@/features/cv-analysis/services/cvAnalysis.service';
 import { getRubric } from '@/features/rubrics/services/candidateRubrics.service';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
 import type { RubricCriterionResponse, RubricResponse } from '@/features/rubrics/types/rubric.types';
@@ -107,26 +107,11 @@ export const practiceSetupService = {
     return cvAnalysisService.listUploadedCvs();
   },
 
-  async uploadCv(file: File, language: 'vi' | 'en'): Promise<UploadedCvFile> {
-    if (!usesMockData('practice')) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('language', language);
-      const response = await apiClient.post<UploadedCvFile>(practiceSetupEndpoints.uploadCv, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return response.data;
-    }
-
-    const record = await cvAnalysisService.uploadCv(file);
-    return {
-      id: record.id,
-      fileName: record.originalName,
-      fileSizeBytes: record.fileSize,
-      mimeType: record.mimeType,
-      uploadedAt: record.createdAt,
-      pdfUrl: '',
-    };
+  async uploadCv(file: File): Promise<UploadedCvFile> {
+    // Đi qua parser của cv-analysis (đọc `fileId`, ném lỗi rõ khi thiếu id) —
+    // KHÔNG ép kiểu response thô: tên trường server (`fileId`/`fileSize`/`createdAt`)
+    // khác tên trường thẻ (`id`/`fileSizeBytes`/`uploadedAt`).
+    return toUploadedCvFile(await cvAnalysisService.uploadCv(file));
   },
 
   /**
