@@ -468,7 +468,13 @@ function readNextCursor(headers: unknown): string | null {
   return typeof cursor === 'string' && cursor.trim() ? cursor.trim() : null;
 }
 
-function toUploadedCvFile(record: FileRecord): UploadedCvFile {
+/**
+ * Một nguồn chuyển FileRecord → thẻ CV cho CẢ danh sách lẫn lượt upload.
+ * Wizard luyện từng tự ép kiểu response upload thô (`fileId`/`fileSize`/`createdAt`)
+ * sang `UploadedCvFile` ⇒ thẻ vừa tải hiện "NaN MB · Invalid Date" và `id` undefined,
+ * buổi luyện tạo ra lặng lẽ KHÔNG có CV.
+ */
+export function toUploadedCvFile(record: FileRecord): UploadedCvFile {
   return {
     id: record.id,
     fileName: record.originalName,
