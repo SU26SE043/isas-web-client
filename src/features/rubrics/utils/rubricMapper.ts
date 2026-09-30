@@ -6,6 +6,7 @@ import type {
   RubricResponse,
   UpdateRubricRequest,
 } from '../types/rubric.types';
+import { normalizeWeightsToDecimal } from './rubricWeights';
 
 let tempCriterionCounter = 0;
 
@@ -30,11 +31,12 @@ export function mapResponseToEditable(response: RubricResponse): EditableRubricC
 }
 
 export function mapEditableToUpdateRequest(criteria: EditableRubricCriterion[]): UpdateRubricRequest {
+  const normalizedWeights = normalizeWeightsToDecimal(criteria.map((criterion) => criterion.weightPercent));
   return {
-    criteria: criteria.map((criterion) => ({
+    criteria: criteria.map((criterion, index) => ({
       name: criterion.name.trim(),
       description: criterion.description.trim() || null,
-      weight: criterion.weightPercent / 100,
+      weight: normalizedWeights[index] ?? 0,
       maxScore: criterion.maxScore,
       // Mang mốc điểm ĐI VÀ VỀ. Lưu rubric riêng là replace-all: server dựng hàng mới từ ĐÚNG
       // payload này, nên field nào không gửi lại coi như bị xoá. Màn này không có ô sửa mốc, nên

@@ -19,17 +19,13 @@ export function RubricWeightStatus({
   const { t } = useLanguage();
 
   const currentPercent = totalWeight * 100;
-  const missingToFull = Math.max(0, Math.round((100 - currentPercent) * 10) / 10);
-  const overFull = Math.max(0, Math.round((currentPercent - 100) * 10) / 10);
   const isValid = weightStatus === 'valid' && !serverError;
+  const statusTone = serverError ? 'text-error' : isValid ? 'text-success' : 'text-foreground';
 
-  const message =
-    serverError ??
+  const message = serverError ??
     (weightStatus === 'valid'
       ? t('rubrics.weight.valid')
-      : weightStatus === 'under'
-        ? t('rubrics.weight.under').replace('{percent}', `${missingToFull}%`)
-        : t('rubrics.weight.over').replace('{percent}', `${overFull}%`));
+      : t('rubrics.weight.adjusting').replace('{percent}', totalWeightLabel));
 
   const fillWidth = Math.min(100, Math.max(0, currentPercent));
 
@@ -43,7 +39,7 @@ export function RubricWeightStatus({
         <p
           className={cn(
             'text-sm font-semibold',
-            isValid ? 'text-foreground' : 'text-error',
+            statusTone,
           )}
         >
           {totalWeightLabel}
@@ -62,7 +58,7 @@ export function RubricWeightStatus({
           <div
             className={cn(
               'h-full rounded-full transition-[width,background-color] duration-300 ease-out',
-              isValid ? 'bg-success' : 'bg-error',
+              serverError ? 'bg-error' : isValid ? 'bg-success' : 'bg-secondary-main',
             )}
             style={{ width: `${fillWidth}%` }}
           />
@@ -77,12 +73,13 @@ export function RubricWeightStatus({
       <p
         className={cn(
           'mt-3 flex items-center gap-2 text-sm',
-          isValid ? 'text-success' : 'text-error',
+          statusTone,
         )}
       >
         {isValid ? <BadgeCheck className="size-4 shrink-0" aria-hidden /> : null}
         {message}
       </p>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('rubrics.weight.scoringNote')}</p>
     </section>
   );
 }

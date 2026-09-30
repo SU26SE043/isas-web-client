@@ -35,6 +35,7 @@ export type PracticeSessionResultViewModel = {
   hasResult: boolean;
   cvVsAnswerSummary?: string;
   benchmark?: PracticeBenchmark | null;
+  rubricSource?: PracticeSessionResult['rubricSource'];
   focusTrackingEnabled: boolean;
   focusEvents: FocusEventSummary[] | null | undefined;
   /** Số lần RỜI KHỎI buổi = chỉ tín hiệu HÀNH VI (tab_switch/focus_lost/paste). Nhãn UI nói "rời khỏi buổi" nên KHÔNG được cộng tín hiệu khung hình vào đây. */
@@ -300,6 +301,7 @@ export function mapPracticeSessionResponseToViewModel(
     hasResult: Boolean(result),
     cvVsAnswerSummary: result?.cvVsAnswer?.summary?.trim() || undefined,
     benchmark: result?.benchmark ?? null,
+    rubricSource: result?.rubricSource,
     focusTrackingEnabled: session.focusTrackingEnabled === true,
     focusEvents: session.focusEvents,
     focusLeaveCount,

@@ -29,12 +29,7 @@ export function validateRubric(criteria: EditableRubricCriterion[]): RubricValid
   for (const criterion of criteria) {
     if (!criterion.name.trim()) return 'missingName';
     if (criterion.maxScore <= 0) return 'invalidMaxScore';
-    if (criterion.weightPercent < 0) return 'negativeWeight';
-  }
-
-  const totalWeight = computeTotalWeightDecimal(criteria);
-  if (totalWeight < WEIGHT_TOLERANCE_MIN || totalWeight > WEIGHT_TOLERANCE_MAX) {
-    return 'invalidWeight';
+    if (criterion.weightPercent <= 0) return 'invalidWeight';
   }
 
   // KHÔNG có luật "Σ điểm tối đa = 100": backend chỉ đòi maxScore ≥ 1 (RubricLibraryService.NormalizeAndValidate),

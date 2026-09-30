@@ -1,6 +1,10 @@
 ﻿import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/shared/languages';
+import { getRubric } from '@/features/rubrics/services/candidateRubrics.service';
+import { CANDIDATE_RUBRIC_QUERY_KEY } from '@/features/rubrics/hooks/useCandidateRubric';
+import type { JobCategory } from '@/features/rubrics/types/rubric.types';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
 import { useLiveReportTabs } from '../../hooks/useLiveReportTabs';
 import { mapPracticeSessionResponseToViewModel } from '../../utils/practiceSessionResultViewModel';
@@ -10,6 +14,7 @@ import { ReportCriteriaScores } from './ReportCriteriaScores';
 import { ReportOverview } from './ReportOverview';
 import { ReportQuestionDetail } from './ReportQuestionDetail';
 import { SessionResultHeader } from './SessionResultHeader';
+import { getPracticeRubricLanguage, getUnassessedCriteria } from '../../utils/unassessedCriteria';
 
 interface PracticeLiveResultReportProps {
   session: PracticeSessionResponse;
@@ -24,6 +29,27 @@ export function PracticeLiveResultReport({
 }: PracticeLiveResultReportProps) {
   const { t } = useLanguage();
   const view = mapPracticeSessionResponseToViewModel(session);
+  const rubricSource = session.result?.rubricSource;
+  const jobCategory = session.jobCategory;
+  const rubricLanguage = getPracticeRubricLanguage(session.language);
+  const canLoadDefaultRubric =
+    rubricSource === 'SystemDefault' &&
+    (jobCategory === 'BA' || jobCategory === 'BE' || jobCategory === 'FE');
+  const rubricQuery = useQuery({
+    queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage],
+    queryFn: ({ signal }) => getRubric(jobCategory as JobCategory, rubricLanguage, signal),
+    enabled: canLoadDefaultRubric,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const unassessedCriteria = getUnassessedCriteria(
+    session,
+    rubricQuery.data,
+    {
+      isLoading: canLoadDefaultRubric && rubricQuery.isLoading,
+      isError: canLoadDefaultRubric && rubricQuery.isError,
+    },
+  );
   const { activeTab, activeQuestionIndex, setActiveTab, setActiveQuestionIndex } =
     useLiveReportTabs(view.questions.length);
 
@@ -47,7 +73,7 @@ export function PracticeLiveResultReport({
                 : undefined
             }
           >
-            <ReportCriteriaScores view={view} />
+            <ReportCriteriaScores view={view} unassessedCriteria={unassessedCriteria} />
             {session.topics?.length ? (
               <PracticeSessionTopics
                 topics={session.topics}
