@@ -14,7 +14,7 @@ import { ReportCriteriaScores } from './ReportCriteriaScores';
 import { ReportOverview } from './ReportOverview';
 import { ReportQuestionDetail } from './ReportQuestionDetail';
 import { SessionResultHeader } from './SessionResultHeader';
-import { getUnassessedCriteria } from '../../utils/unassessedCriteria';
+import { getPracticeRubricLanguage, getUnassessedCriteria } from '../../utils/unassessedCriteria';
 
 interface PracticeLiveResultReportProps {
   session: PracticeSessionResponse;
@@ -31,7 +31,7 @@ export function PracticeLiveResultReport({
   const view = mapPracticeSessionResponseToViewModel(session);
   const rubricSource = session.result?.rubricSource;
   const jobCategory = session.jobCategory;
-  const rubricLanguage = session.language ?? 'vi';
+  const rubricLanguage = getPracticeRubricLanguage(session.language);
   const canLoadDefaultRubric =
     rubricSource === 'SystemDefault' &&
     (jobCategory === 'BA' || jobCategory === 'BE' || jobCategory === 'FE');

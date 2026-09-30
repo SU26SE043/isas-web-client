@@ -1,10 +1,14 @@
 import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
-import type { PracticeSessionResponse } from '../types/b2cPracticeSession.types';
+import type { PracticeLanguage, PracticeSessionResponse } from '../types/b2cPracticeSession.types';
 
 export type UnassessedCriteriaResult =
   | { status: 'loading'; names: [] }
   | { status: 'unknown'; names: [] }
   | { status: 'known'; names: string[] };
+
+export function getPracticeRubricLanguage(language?: PracticeLanguage): PracticeLanguage {
+  return language ?? 'vi';
+}
 
 /**
  * Finds default-rubric criteria that have no score for a scored B2C session.

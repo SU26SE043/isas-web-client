@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RubricResponse } from '@/features/rubrics/types/rubric.types';
 import type { PracticeSessionResponse } from '../types/b2cPracticeSession.types';
-import { getUnassessedCriteria } from './unassessedCriteria';
+import { getPracticeRubricLanguage, getUnassessedCriteria } from './unassessedCriteria';
 
 const rubric: RubricResponse = {
   jobCategory: 'FE',
@@ -27,6 +27,11 @@ function session(source: 'SystemDefault' | 'Custom' | null, names: string[]): Pr
 }
 
 describe('getUnassessedCriteria', () => {
+  it('keeps the session language for rubric lookup', () => {
+    expect(getPracticeRubricLanguage('en')).toBe('en');
+    expect(getPracticeRubricLanguage()).toBe('vi');
+  });
+
   it('finds missing default criteria by trimmed, case-insensitive name', () => {
     const result = getUnassessedCriteria(
       session('SystemDefault', [' communication ', 'FLUENCY', 'Technical depth', 'Problem solving', 'System design']),
