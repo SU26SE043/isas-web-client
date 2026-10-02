@@ -42,6 +42,7 @@ npm run test:e2e:smoke
 | ATT1-F1 | PASS KIỂM — `0591c6d6` + `8be01a9e` |
 | ATT1-F2 | PASS KIỂM — `e3ec89b9` + `db8ec0e1` |
 | ATT1-F3 | PASS KIỂM — `f7e02808` + `4c82d23e` |
-| ATT1-F4 | pending (in progress) |
-| ATT1-F5 | pending (in progress) |
-| ATT1-F6 | pending — needs Backend ATT1-B1..B3 on dev. Checklist: (1) wizard 5 min / 2 attempts → Review → deploy; (2) detail card, increase to 3, forced decrease shows server 409; (3) candidate state ①, dialog rules, preparation shows `questionsLocked` with empty content; (4) room clock ≈ 05:00 and correct after machine clock +10 min; (5) violation overlay keeps the clock running; (6) time-up while recording question 2 saves it and submits (session Scoring/Scored); (7) attempt 2 flow ③ → retake with different questions → abandon → ④ without a button; (8) 375 px, no overflow, 0 console errors |
+| ATT1-F4 | PASS KIỂM — `35a227a1` + `e9df53db` |
+| ATT1-F5 | PASS KIỂM — `c88dace9` + `f99e81d2` |
+| ATT1-F5b | PASS KIỂM — `ad2d5814` + `c8150611` |
+| ATT1-F6 | PARTIAL — 6/8 mục PASS trên dev 03/10/2026; mục 7 bị chặn bởi luật CAMP-23, mục 4 phần lệch giờ chưa chạy. Chi tiết: [f6-dev-run.md](f6-dev-run.md) |
