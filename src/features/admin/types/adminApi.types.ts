@@ -67,7 +67,7 @@ export type AdminRubricSet = {
 };
 export type AdminRubricMatrixRow = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; version: number; criteriaCount: number; withLevelsCount: number };
 export type AdminRubricVersionItem = { version: number; isActive: boolean; criteriaCount: number; withLevelsCount: number };
-/** RUB1 body: null on existing criteria means preserve; missing criteria are removed. */
+/** RUB1 body: only name/weight/scoringScope nulls preserve existing values; missing criteria are removed. */
 export type AdminRubricCriterionInput = {
   id: string | null;
   name: string | null;

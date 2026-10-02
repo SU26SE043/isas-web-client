@@ -66,7 +66,7 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   // Ngôn ngữ BỘ CHUẨN (vi/en) là một chiều dữ liệu, độc lập với ngôn ngữ giao diện — mặc định mở BE/vi.
   await expect(page.getByRole('button', { name: 'Backend · Vietnamese' })).toHaveAttribute('aria-pressed', 'true');
 
-  // (2) Sửa mô tả → Lưu → confirm → PUT giữ nguyên values bằng null.
+  // (2) Sửa mô tả → Lưu → confirm → PUT gửi lại đủ nội dung hiện tại để BE không xoá fields null.
   const save = page.getByRole('button', { name: 'Save new version' });
   await expect(save).toBeDisabled();
   await page.getByLabel('Description for the AI 2').fill('Depth of technical understanding.');
@@ -78,8 +78,8 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   expect(puts).toHaveLength(1);
   expect(puts[0]).toEqual({
     criteria: [
-      { id: 'c-1', name: null, description: null, weight: null, scoringScope: null, levels: null },
-      { id: 'c-2', name: null, description: 'Depth of technical understanding.', weight: null, scoringScope: null, levels: null },
+      { id: 'c-1', name: null, description: 'Clear structure.', weight: null, scoringScope: null, levels: rubric.criteria[0].levels },
+      { id: 'c-2', name: null, description: 'Depth of technical understanding.', weight: null, scoringScope: null, levels: rubric.criteria[1].levels },
     ],
   });
   expect(JSON.stringify(puts[0])).not.toMatch(/"maxScore"|"scoringMethod"/);

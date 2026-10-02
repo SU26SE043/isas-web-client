@@ -60,18 +60,40 @@ describe('parseAdminRubricSet — hợp đồng khớp DTO backend', () => {
 });
 
 describe('toAdminRubricUpsertInput — contract RUB1', () => {
-  it('sends only changes for existing criteria and keeps unedited fields null', () => {
+  // AdminRubric.cs:14-15 treats null/empty descriptions and null/empty levels as cleared content,
+  // so unchanged descriptive fields must be resent; only name/weight/scoringScope use null=preserve.
+  it('sends descriptions and levels for existing criteria, while null preserves editable scalar fields', () => {
     const set = parseAdminRubricSet(beRubric);
     const edited = set.criteria.map((c) => (c.id === 'c-1' ? { ...c, levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] } : c));
     const body = toAdminRubricUpsertInput(edited, set.criteria);
     expect(body).toEqual({
       criteria: [
-        { id: 'c-1', name: null, description: null, weight: null, scoringScope: null, levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] },
-        { id: 'c-2', name: null, description: null, weight: null, scoringScope: null, levels: null },
-        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: null },
+        { id: 'c-1', name: null, description: 'Rõ ràng, có cấu trúc.', weight: null, scoringScope: null, levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] },
+        { id: 'c-2', name: null, description: null, weight: null, scoringScope: null, levels: [] },
+        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: [] },
       ],
     });
     expect(body.criteria.every((item) => !('maxScore' in item) && !('scoringMethod' in item))).toBe(true);
+  });
+
+  it('preserves another criterion description and two levels when only criterion A weight changes', () => {
+    const set = parseAdminRubricSet(beRubric);
+    const twoLevels = [
+      { score: 0, descriptor: 'No relevant example was provided.' },
+      { score: 5, descriptor: 'Gives a clear example and explains trade-offs.' },
+    ];
+    const original = set.criteria.map((criterion) => criterion.id === 'c-2'
+      ? { ...criterion, description: 'Evaluate practical technical depth.', levels: twoLevels }
+      : criterion);
+    const edited = original.map((criterion) => criterion.id === 'c-1'
+      ? { ...criterion, weight: criterion.weight - 0.01 }
+      : criterion);
+    const body = toAdminRubricUpsertInput(edited, original);
+
+    expect(body.criteria[1]).toEqual({
+      id: 'c-2', name: null, description: 'Evaluate practical technical depth.', weight: null,
+      scoringScope: null, levels: twoLevels,
+    });
   });
 
   it('uses decimal weights, adds with null id, omits deleted and disabled measured criteria', () => {
@@ -80,7 +102,7 @@ describe('toAdminRubricUpsertInput — contract RUB1', () => {
     const edited = [{ ...set.criteria[0], weight: 0.2 }, newCriterion, { ...set.criteria[2], enabled: false }];
     const body = toAdminRubricUpsertInput(edited, set.criteria);
     expect(body.criteria).toEqual([
-      { id: 'c-1', name: null, description: null, weight: 0.2, scoringScope: null, levels: null },
+      { id: 'c-1', name: null, description: 'Rõ ràng, có cấu trúc.', weight: 0.2, scoringScope: null, levels: set.criteria[0].levels },
       { id: null, name: 'New', description: null, weight: 0.3, scoringScope: 'Always', levels: [] },
     ]);
   });
@@ -89,7 +111,7 @@ describe('toAdminRubricUpsertInput — contract RUB1', () => {
     const set = parseAdminRubricSet(beRubric);
     const changedMeasured = { ...set.criteria[2], name: 'tamper', scoringScope: 'WhenTargeted', description: 'updated', weight: 0.2 };
     expect(toAdminRubricUpsertInput([changedMeasured], set.criteria).criteria[0]).toEqual({
-      id: 'c-3', name: null, description: 'updated', weight: 0.2, scoringScope: null, levels: null,
+      id: 'c-3', name: null, description: 'updated', weight: 0.2, scoringScope: null, levels: [],
     });
   });
 

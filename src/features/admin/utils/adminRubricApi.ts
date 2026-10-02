@@ -218,20 +218,18 @@ export function toAdminRubricUpsertInput(
   return {
     criteria: criteria.filter((criterion) => criterion.enabled !== false).map((criterion) => {
       const original = criterion.isNew ? undefined : originals.get(criterion.id);
-      const levels = criterion.levels.length ? normalizeCriterionLevels(criterion.levels) : [];
+      const levels = normalizeCriterionLevels(criterion.levels);
       return {
         id: original ? criterion.id : null,
         name: original ? (original.scoringMethod === 'DeliveryMetrics' || criterion.name === original.name ? null : criterion.name.trim()) : criterion.name.trim(),
-        description: original
-          ? (criterion.description === original.description ? null : criterion.description?.trim() || null)
-          : criterion.description?.trim() || null,
+        // AdminRubric.cs treats null/empty description and null/[] levels as cleared values,
+        // so existing criteria must always send their current content on every upsert.
+        description: criterion.description?.trim() || null,
         weight: original ? (criterion.weight === original.weight ? null : criterion.weight) : criterion.weight,
         scoringScope: original
           ? (original.scoringMethod === 'DeliveryMetrics' || criterion.scoringScope === original.scoringScope ? null : criterion.scoringScope as 'Always' | 'WhenTargeted')
           : criterion.scoringScope as 'Always' | 'WhenTargeted',
-        levels: original
-          ? (JSON.stringify(levels) === JSON.stringify(original.levels) ? null : levels)
-          : levels,
+        levels,
       };
     }),
   };
