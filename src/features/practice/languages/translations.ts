@@ -323,6 +323,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.effectiveWeight': 'Trọng số hiệu dụng',
     'practice.result.skipPenaltyApplied':
       'Điểm trung bình {{before}} × {{answered}}/{{total}} câu chính đã trả lời = {{after}}. Bỏ trống câu chính là mất điểm; câu đào sâu không tính vào phép chia.',
+    'practice.result.skipPenaltyAppliedWeighted':
+      'Điểm có trọng số {{before}} × {{answered}}/{{total}} câu chính đã trả lời = {{after}}. Bỏ trống câu chính là mất điểm; câu đào sâu không tính vào phép chia.',
     'practice.result.skipPenaltyNone': 'Đủ {{total}}/{{total}} câu chính — không bị trừ điểm.',
     'practice.result.transcript': 'Bản ghi',
     'practice.result.transcriptLabel': 'Bản ghi:',
@@ -1590,6 +1592,8 @@ export const practiceTranslations: TranslationDictionary = {
     'practice.result.effectiveWeight': 'Effective weight',
     'practice.result.skipPenaltyApplied':
       'Average {{before}} × {{answered}}/{{total}} main questions answered = {{after}}. Leaving a main question blank costs points; follow-up questions are not part of the ratio.',
+    'practice.result.skipPenaltyAppliedWeighted':
+      'Weighted score {{before}} × {{answered}}/{{total}} main questions answered = {{after}}. Leaving a main question blank costs points; follow-up questions are not part of the ratio.',
     'practice.result.skipPenaltyNone': 'All {{total}}/{{total}} main questions answered — no deduction.',
     'practice.result.transcript': 'Transcript',
     'practice.result.transcriptLabel': 'Transcript:',
