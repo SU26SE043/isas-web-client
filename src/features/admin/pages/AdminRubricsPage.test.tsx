@@ -71,7 +71,7 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
 });
 
 describe('AdminRubricsPage — lưu', () => {
-  it('saves the RUB1 partial update body while preserving unchanged values with null', async () => {
+  it('saves current descriptions and levels while null preserves unchanged scalar fields', async () => {
     mockHappyPath();
     const updateSpy = vi.spyOn(adminRubricService, 'update').mockResolvedValue({ ...rubric, version: 3, changed: true });
     renderPage();
@@ -91,9 +91,9 @@ describe('AdminRubricsPage — lưu', () => {
     expect([category, language]).toEqual(['BE', 'vi']);
     expect(body).toEqual({
       criteria: [
-        { id: 'c-1', name: null, description: null, weight: 0.3, scoringScope: null, levels: null },
-        { id: 'c-2', name: null, description: 'Đo độ sâu hiểu biết kỹ thuật.', weight: 0.6, scoringScope: null, levels: null },
-        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: null },
+        { id: 'c-1', name: null, description: 'Rõ ràng.', weight: 0.3, scoringScope: null, levels: rubric.criteria[0].levels },
+        { id: 'c-2', name: null, description: 'Đo độ sâu hiểu biết kỹ thuật.', weight: 0.6, scoringScope: null, levels: [] },
+        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: [] },
       ],
     });
     expect(JSON.stringify(body)).not.toMatch(/"maxScore"|"scoringMethod"/);
