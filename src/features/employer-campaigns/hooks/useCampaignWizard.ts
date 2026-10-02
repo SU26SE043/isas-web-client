@@ -64,6 +64,7 @@ import {
   CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { CAMPAIGN_DEFAULT_MAX_ATTEMPTS } from '../utils/campaignAttemptRules';
 import { adoptServerRubric, buildQuestionIdAliases, pruneQuestionTargetIds } from '../utils/serverIdAdoption';
 import {
   CampaignInvitationDeployError,
@@ -158,6 +159,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
     language: campaign?.locale ?? 'vi',
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
+    maxAttempts: campaign?.maxAttempts ?? CAMPAIGN_DEFAULT_MAX_ATTEMPTS,
     passScorePct: campaign?.passScorePct ?? null,
     startsAt: toDatetimeLocalValue(start),
     expiresAt: toDatetimeLocalValue(end),
@@ -278,7 +280,15 @@ export function resolveCampaignErrorStep(
   kind: 'create' | 'update' | 'questions',
 ): number | null {
   const lower = message.toLowerCase();
-  if (lower.includes('maxquestions') || lower.includes('maxfollowups')) return 4;
+  // ATT1 [C1] — 400 về thời lượng / số lần làm: hai ô này nay ở khối "Luật làm bài" của bước 5 (index 4).
+  if (
+    lower.includes('maxquestions') ||
+    lower.includes('maxfollowups') ||
+    lower.includes('timelimit') ||
+    lower.includes('maxattempts')
+  ) {
+    return 4;
+  }
   if (lower.includes('question') || lower.includes('câu hỏi') || kind === 'questions') return 3;
   if (
     lower.includes('criteria') ||

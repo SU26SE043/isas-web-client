@@ -85,7 +85,7 @@ describe('mapQuestionsToApiRequest', () => {
 
   it('R1(a): buildCampaignCreateRequest (POST) bỏ nhãn id tạm có chủ đích thay vì ném — tiêu chí chưa có GUID nào để resolve', () => {
     const request = buildCampaignCreateRequest({
-      info: { title: 'T', domain: 'backend', language: 'vi', maxCandidates: null, timeLimitMinutes: 60, passScorePct: null, startsAt: '2030-01-01T09:00', expiresAt: '2030-02-01T09:00', timezone: 'UTC' },
+      info: { title: 'T', domain: 'backend', language: 'vi', maxCandidates: null, timeLimitMinutes: 60, maxAttempts: 1, passScorePct: null, startsAt: '2030-01-01T09:00', expiresAt: '2030-02-01T09:00', timezone: 'UTC' },
       jd: { ...createEmptyJdState(), jdText: 'JD' },
       rubric: [{ id: 'new-a', name: 'A', description: '', weight: 100, maxScore: 5, scoringScope: 'WhenTargeted' }],
       questions: [

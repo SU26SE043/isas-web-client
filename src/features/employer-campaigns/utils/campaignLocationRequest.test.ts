@@ -16,6 +16,7 @@ function snapshot(): CampaignWizardSubmitSnapshot {
       language: 'vi',
       maxCandidates: 20,
       timeLimitMinutes: 60,
+      maxAttempts: 1,
       passScorePct: 70,
       startsAt: '2030-08-04T09:00',
       expiresAt: '2030-09-04T09:00',
@@ -89,6 +90,7 @@ describe('campaign wizard request contract', () => {
     expect(buildCampaignCreateRequest(current)).toMatchObject({
       language: 'en',
       timeLimitMinutes: 60,
+      maxAttempts: 1,
     });
   });
 

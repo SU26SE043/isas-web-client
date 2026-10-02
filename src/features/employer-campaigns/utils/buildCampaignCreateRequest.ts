@@ -285,6 +285,8 @@ export function buildCampaignCreateRequest(
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
     timeLimitMinutes: info.timeLimitMinutes,
+    // ATT1 [C1] — luôn gửi tường minh (kể cả 1) để body nói đúng điều HR thấy ở bước 5.
+    maxAttempts: info.maxAttempts,
     passScorePct: info.passScorePct ?? null,
     antiCheatEnabled: settings.antiCheatEnabled,
     faceVerifyEnabled: settings.faceVerifyEnabled,
@@ -335,7 +337,10 @@ export function buildCampaignUpdateRequest(
     language: info.language,
     maxCandidates:
       info.maxCandidates && info.maxCandidates > 0 ? info.maxCandidates : undefined,
+    // ⚠ GIỮ hai khoá luật làm bài trong body đầy đủ: Backend coi "vắng" là KHÔNG ĐỔI ([C2]) — bỏ đi là
+    // nháp mất khả năng sửa thời lượng / số lần. `buildDirtyUpdateRequest` chỉ lược khi giá trị không đổi.
     timeLimitMinutes: info.timeLimitMinutes,
+    maxAttempts: info.maxAttempts,
     antiCheatEnabled: settings.antiCheatEnabled,
     faceVerifyEnabled: settings.faceVerifyEnabled,
     adaptiveEnabled: settings.adaptiveEnabled,

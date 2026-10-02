@@ -1120,6 +1120,9 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.deploy.summaryQuestions': 'Câu hỏi',
     'employer.campaigns.wizard.deploy.summaryInvites': 'Lời mời',
     'employer.campaigns.wizard.deploy.summarySchedule': 'Lịch thi',
+    'employer.campaigns.wizard.deploy.summaryAttemptRules': 'Luật làm bài',
+    'employer.campaigns.wizard.deploy.attemptRulesValueOne': '{{minutes}} phút · tối đa {{n}} lần',
+    'employer.campaigns.wizard.deploy.attemptRulesValueMany': '{{minutes}} phút · tối đa {{n}} lần',
     'employer.campaigns.wizard.deploy.edit': 'Sửa',
     'employer.campaigns.wizard.deploy.jdTyped': 'JD nhập trực tiếp',
     'employer.campaigns.wizard.deploy.criteriaCount': '{{n}} tiêu chí',
@@ -1169,7 +1172,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleRequired': 'Vui lòng nhập tên chiến dịch.',
     'employer.campaigns.wizard.domainRequired': 'Vui lòng chọn lĩnh vực chuyên môn.',
     'employer.campaigns.wizard.languageRequired': 'Vui lòng chọn ngôn ngữ phỏng vấn.',
-    'employer.campaigns.wizard.timeLimitRequired': 'Thời lượng phỏng vấn phải lớn hơn 0 phút.',
+    'employer.campaigns.wizard.timeLimitInvalid': 'Thời lượng bài thi phải là số nguyên từ 5 đến 180 phút.',
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'Chiến dịch phải có ít nhất một câu hỏi.',
     'employer.campaigns.wizard.questionsRequired': 'Chiến dịch phải có ít nhất một câu hỏi.',
@@ -1574,7 +1577,20 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.form.openDays': 'Chiến dịch mở trong {days} ngày.',
     'employer.campaigns.form.openDaysPending': 'Chọn thời gian bắt đầu và kết thúc hợp lệ.',
     'employer.campaigns.form.timeLimitMinutes': 'Thời lượng bài thi',
-    'employer.campaigns.form.timeLimitHelp': 'Hiện trong thư mời để ứng viên thu xếp.',
+    'employer.campaigns.form.attemptRules.title': 'Luật làm bài',
+    'employer.campaigns.form.attemptRules.timeLimitRange': '{{min}}–{{max}}',
+    'employer.campaigns.form.attemptRules.timeLimitHelp':
+      'Đồng hồ chạy từ lúc ứng viên vào phòng thi, không dừng khi tải lại trang. Hết giờ hệ thống tự nộp, câu trống = 0.',
+    'employer.campaigns.form.attemptRules.estimate': 'Ước tính cần ~{{minutes}} phút cho {{k}} câu.',
+    'employer.campaigns.form.attemptRules.estimateAdaptive':
+      'Ước tính cần ~{{minutes}} phút cho {{k}} câu gốc × {{d}} câu đào sâu.',
+    'employer.campaigns.form.attemptRules.belowEstimate':
+      'Thời lượng đang đặt ngắn hơn ước tính — ứng viên có thể không kịp trả lời hết.',
+    'employer.campaigns.form.attemptRules.maxAttempts': 'Số lần làm bài tối đa',
+    'employer.campaigns.form.attemptRules.attemptOptionOne': '{{n}} lần',
+    'employer.campaigns.form.attemptRules.attemptOptionMany': '{{n}} lần',
+    'employer.campaigns.form.attemptRules.maxAttemptsHelp':
+      'Mỗi lượt làm lại trừ thêm 1 credit tổ chức và rút bộ câu gốc khác. Sau khi triển khai chỉ có thể TĂNG.',
     'employer.campaigns.form.antiCheat': 'Bật giám sát chống gian lận',
     'employer.campaigns.form.antiCheatHelp': 'Hệ thống sẽ áp dụng các quy tắc giám sát trong quá trình ứng viên làm bài.',
     'employer.campaigns.form.faceVerify': 'Bật xác minh khuôn mặt',
@@ -2909,6 +2925,9 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.deploy.summaryQuestions': 'Questions',
     'employer.campaigns.wizard.deploy.summaryInvites': 'Invitations',
     'employer.campaigns.wizard.deploy.summarySchedule': 'Schedule',
+    'employer.campaigns.wizard.deploy.summaryAttemptRules': 'Attempt rules',
+    'employer.campaigns.wizard.deploy.attemptRulesValueOne': '{{minutes}} min · up to {{n}} attempt',
+    'employer.campaigns.wizard.deploy.attemptRulesValueMany': '{{minutes}} min · up to {{n}} attempts',
     'employer.campaigns.wizard.deploy.edit': 'Edit',
     'employer.campaigns.wizard.deploy.jdTyped': 'JD typed in',
     'employer.campaigns.wizard.deploy.criteriaCount': '{{n}} criteria',
@@ -2984,7 +3003,7 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.titleRequired': 'Please enter a campaign name.',
     'employer.campaigns.wizard.domainRequired': 'Please select a domain.',
     'employer.campaigns.wizard.languageRequired': 'Please select an interview language.',
-    'employer.campaigns.wizard.timeLimitRequired': 'Interview duration must be greater than 0 minutes.',
+    'employer.campaigns.wizard.timeLimitInvalid': 'Sitting length must be a whole number from 5 to 180 minutes.',
     'employer.campaigns.wizard.draftQuestionsBlocked':
       'The campaign must include at least one question.',
     'employer.campaigns.wizard.questionsRequired': 'The campaign must include at least one question.',
@@ -3389,7 +3408,20 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.form.openDays': 'Campaign is open for {days} days.',
     'employer.campaigns.form.openDaysPending': 'Pick a valid start and end time.',
     'employer.campaigns.form.timeLimitMinutes': 'Sitting length',
-    'employer.campaigns.form.timeLimitHelp': 'Shown in the invitation email so candidates can plan.',
+    'employer.campaigns.form.attemptRules.title': 'Attempt rules',
+    'employer.campaigns.form.attemptRules.timeLimitRange': '{{min}}–{{max}}',
+    'employer.campaigns.form.attemptRules.timeLimitHelp':
+      'The clock starts when the candidate enters the exam room and keeps running through page reloads. When time is up the system submits automatically; unanswered questions score 0.',
+    'employer.campaigns.form.attemptRules.estimate': 'Estimate: ~{{minutes}} min (questions per sitting: {{k}}).',
+    'employer.campaigns.form.attemptRules.estimateAdaptive':
+      'Estimate: ~{{minutes}} min (base questions: {{k}} × follow-ups each: {{d}}).',
+    'employer.campaigns.form.attemptRules.belowEstimate':
+      'The sitting length is shorter than the estimate — candidates may not have time to answer everything.',
+    'employer.campaigns.form.attemptRules.maxAttempts': 'Maximum attempts',
+    'employer.campaigns.form.attemptRules.attemptOptionOne': '{{n}} attempt',
+    'employer.campaigns.form.attemptRules.attemptOptionMany': '{{n}} attempts',
+    'employer.campaigns.form.attemptRules.maxAttemptsHelp':
+      'Each retake uses 1 more organization credit and draws a different set of base questions. After deployment it can only be INCREASED.',
     'employer.campaigns.form.antiCheat': 'Enable anti-cheat monitoring',
     'employer.campaigns.form.antiCheatHelp': 'The system applies monitoring rules while candidates take the interview.',
     'employer.campaigns.form.faceVerify': 'Enable face verification',

@@ -67,7 +67,10 @@ export type CampaignInfoState = {
   /** Interview language, independent from the user's UI language. */
   language?: CampaignLanguage | '';
   maxCandidates: number | null;
+  /** ATT1 — thời lượng cả buổi (5–180 phút, server áp); ô nhập ở bước 5 "Luật làm bài". */
   timeLimitMinutes: number;
+  /** ATT1 — số lần làm tối đa mỗi ứng viên (1–3, mặc định 1); ô chọn ở bước 5 "Luật làm bài". */
+  maxAttempts: number;
   /** Optional 0–100; null = HR decides. */
   passScorePct: number | null;
   startsAt: string;

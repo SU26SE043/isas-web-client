@@ -28,6 +28,9 @@ const settings = {
 
 const baseProps = {
   settings,
+  timeLimitMinutes: 60,
+  maxAttempts: 1,
+  onRulesChange: vi.fn(),
   onChange: vi.fn(),
   onBack: vi.fn(),
   onNext: vi.fn(),

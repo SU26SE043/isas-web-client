@@ -100,6 +100,8 @@ export type CampaignResponse = {
   expiresAt?: string | null;
   durationMinutes?: number | null;
   timeLimitMinutes?: number | null;
+  /** ATT1 [C5] — số lần làm tối đa; response cũ chưa mang ⇒ null (mapper hiểu là 1). */
+  maxAttempts?: number | null;
   passScorePct?: number | null;
   antiCheatEnabled?: boolean | null;
   faceVerifyEnabled?: boolean | null;
@@ -199,7 +201,10 @@ export type CampaignCreateRequest = {
   language?: CampaignLanguage;
   seniority?: CampaignSeniority;
   maxCandidates?: number | null;
+  /** ATT1 [C1] — ngoài [5,180] ⇒ 400. */
   timeLimitMinutes: number;
+  /** ATT1 [C1] — 1..3; vắng = 1. */
+  maxAttempts?: number;
   /** 0..100; null = HR decides */
   passScorePct?: number | null;
   antiCheatEnabled: boolean;
@@ -249,6 +254,8 @@ export type CampaignUpdateRequest = {
   seniority?: CampaignSeniority;
   maxCandidates?: number | null;
   timeLimitMinutes?: number;
+  /** ATT1 [C2] — vắng = không đổi. Draft: 1–3; Active: chỉ TĂNG (giảm ⇒ 409 MAX_ATTEMPTS_DECREASE). */
+  maxAttempts?: number;
   antiCheatEnabled?: boolean;
   faceVerifyEnabled?: boolean;
   adaptiveEnabled?: boolean;
