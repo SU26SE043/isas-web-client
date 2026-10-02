@@ -126,7 +126,8 @@ describe('IncreaseMaxAttemptsDialog — lưu', () => {
       await user.click(within(dialog).getByRole('button', { name: `${K}.confirm:2` }));
 
       const alert = await within(dialog).findByRole('alert');
-      expect(alert).toHaveTextContent(serverText);
+      // So khớp TUYỆT ĐỐI: Alert chỉ render children ⇒ không được chèn câu chung trước/sau lời server.
+      expect(alert.textContent?.trim()).toBe(serverText);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: `${K}.confirm:2` })).toBeEnabled();
       expect(invalidate).not.toHaveBeenCalled();
