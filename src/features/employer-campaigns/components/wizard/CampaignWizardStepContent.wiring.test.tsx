@@ -149,6 +149,15 @@ describe('CampaignWizardStepContent — khe nối Luật làm bài (ATT1-F1)', (
     expect(props.questionCount).toBe(1);
   });
 
+  it('K = questionsPerSession khi có (3), KHÔNG phải số câu đã soạn (1) hay questionCount sinh AI (5)', () => {
+    const base = wizardAt(4);
+    const wizard = { ...base, state: { ...base.state, questionsPerSession: 3 } } as CampaignWizardController;
+    expect(wizard.state.questions).toHaveLength(1);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
+    const props = settingsStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.questionCount).toBe(3);
+  });
+
   it('bước Mời KHÔNG còn nhận prop thời lượng nào', () => {
     const wizard = wizardAt(6);
     render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);

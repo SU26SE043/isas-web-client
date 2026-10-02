@@ -576,6 +576,11 @@ describe('CampaignReviewStep — dòng Luật làm bài', () => {
     expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueOne 30|1');
   });
 
+  it('90 phút · tối đa 2 lần ⇒ đã là số nhiều (chỉ đúng 1 mới dùng câu số ít)', () => {
+    render(<CampaignReviewStep {...baseProps} info={{ ...baseProps.info, timeLimitMinutes: 90, maxAttempts: 2 }} />);
+    expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueMany 90|2');
+  });
+
   it('45 phút · tối đa 3 lần ⇒ dùng câu số nhiều và đúng số', () => {
     render(<CampaignReviewStep {...baseProps} info={{ ...baseProps.info, timeLimitMinutes: 45, maxAttempts: 3 }} />);
     expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueMany 45|3');

@@ -107,6 +107,13 @@ describe('ATT1-F1 — khối "Luật làm bài" ở bước 5', () => {
     expect(screen.getByTestId('campaign-time-estimate')).toHaveTextContent(`${ESTIMATE} 10|5`);
   });
 
+  it('adaptive TẮT nhưng settings còn giữ maxDeepPerQuestion=3 (d cũ) ⇒ vẫn ~10 phút, khoá không-adaptive', () => {
+    renderStep({ questionCount: 5, settings: { ...settings, adaptiveEnabled: false, maxDeepPerQuestion: 3 } });
+    const line = screen.getByTestId('campaign-time-estimate');
+    expect(line).toHaveTextContent(`${ESTIMATE} 10|5`);
+    expect(line).not.toHaveTextContent(ESTIMATE_ADAPTIVE);
+  });
+
   it('ước tính ĐỔI khi bật adaptive (d = maxDeepPerQuestion): K=5, d=3 ⇒ ~40 phút', () => {
     renderStep({ questionCount: 5, settings: { ...settings, adaptiveEnabled: true, maxDeepPerQuestion: 3 } });
     expect(screen.getByTestId('campaign-time-estimate')).toHaveTextContent(`${ESTIMATE_ADAPTIVE} 40|5|3`);
