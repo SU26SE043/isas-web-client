@@ -106,8 +106,12 @@ export function IncreaseMaxAttemptsDialog({ campaignId, title, current }: Increa
           </div>
         </div>
 
-        <ul className="list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-muted-foreground">
-          <li>{t(`${K}.consequenceAllCandidates`)}</li>
+        <ul
+          className="list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-muted-foreground"
+          data-testid="increase-max-attempts-consequences"
+        >
+          {/* Luật CAMP-23: buổi Completed (đã nộp bài) KHÔNG làm lại được dù tăng số lần. */}
+          <li>{t(`${K}.consequenceUnfinishedOnly`)}</li>
           <li>{t(`${K}.consequenceCredit`)}</li>
           <li>{t(`${K}.consequenceNoDecrease`)}</li>
         </ul>

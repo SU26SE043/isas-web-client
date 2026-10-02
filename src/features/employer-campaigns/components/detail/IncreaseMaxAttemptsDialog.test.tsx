@@ -72,7 +72,7 @@ describe('IncreaseMaxAttemptsDialog — chỉ cho chọn giá trị > hiện t�
     expect(optionNames(dialog)).toEqual([`${OPTION}:2`, `${OPTION}:3`]);
     expect(within(dialog).getByRole('button', { name: `${OPTION}:2` })).toHaveAttribute('aria-pressed', 'true');
     expect(dialog).toHaveTextContent(`${K}.dialogCurrentOne:1`);
-    for (const key of ['consequenceAllCandidates', 'consequenceCredit', 'consequenceNoDecrease']) {
+    for (const key of ['consequenceUnfinishedOnly', 'consequenceCredit', 'consequenceNoDecrease']) {
       expect(dialog).toHaveTextContent(`${K}.${key}`);
     }
     expect(within(dialog).getByRole('button', { name: `${K}.confirm:2` })).toBeEnabled();

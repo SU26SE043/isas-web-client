@@ -983,7 +983,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.detail.attemptRules.dialogCurrentOne': 'Hiện tại: {{n}} lần.',
     'employer.campaigns.detail.attemptRules.dialogCurrentMany': 'Hiện tại: {{n}} lần.',
     'employer.campaigns.detail.attemptRules.dialogNew': 'Mới:',
-    'employer.campaigns.detail.attemptRules.consequenceAllCandidates': 'Áp dụng cho MỌI ứng viên, kể cả người đã hết lượt.',
+    'employer.campaigns.detail.attemptRules.consequenceUnfinishedOnly':
+      'Chỉ người bỏ ngang (lượt bị huỷ) dùng được lượt mới; người đã nộp bài không làm lại được.',
     'employer.campaigns.detail.attemptRules.consequenceCredit': 'Mỗi lượt làm lại trừ 1 credit tổ chức.',
     'employer.campaigns.detail.attemptRules.consequenceNoDecrease': 'Không thể giảm lại sau khi lưu.',
     'employer.campaigns.detail.attemptRules.cancel': 'Hủy',
@@ -2832,7 +2833,8 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.detail.attemptRules.dialogCurrentOne': 'Current: {{n}} attempt.',
     'employer.campaigns.detail.attemptRules.dialogCurrentMany': 'Current: {{n}} attempts.',
     'employer.campaigns.detail.attemptRules.dialogNew': 'New:',
-    'employer.campaigns.detail.attemptRules.consequenceAllCandidates': 'Applies to EVERY candidate, including those who have used up their attempts.',
+    'employer.campaigns.detail.attemptRules.consequenceUnfinishedOnly':
+      'Only candidates who dropped out (attempt cancelled) can use the new attempts; anyone who already submitted cannot retake.',
     'employer.campaigns.detail.attemptRules.consequenceCredit': 'Each retake uses 1 organization credit.',
     'employer.campaigns.detail.attemptRules.consequenceNoDecrease': 'It cannot be decreased after saving.',
     'employer.campaigns.detail.attemptRules.cancel': 'Cancel',

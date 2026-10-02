@@ -147,3 +147,51 @@ describe('campaign wizard API error step mapping', () => {
     expect(mapDeployError(error, (key) => key)).toBe('Campaign has interview slots configured.');
   });
 });
+
+/**
+ * ATT1-F5b — Backend trả body OBJECT `{ error }` cho MỌI 400/409 của POST/PUT /campaign (vd. nháp cũ
+ * có thời lượng ngoài [5,180] lúc publish ⇒ 400 [C4]). Đường cũ chỉ đọc CHUỖI TRẦN và chỉ ở 409 ⇒
+ * cả 400 lẫn 409 rơi về câu chung "deployFailed", HR không biết sai gì.
+ */
+describe('publish — lời server trong body `{ error }`', () => {
+  const deployError = (status: number, data: unknown) => {
+    const error = new axios.AxiosError('Request failed');
+    error.response = { status, statusText: '', headers: {}, config: {} as never, data };
+    return error;
+  };
+  const REASON = 'Thời lượng làm bài phải trong khoảng 5–180 phút.';
+  const t = (key: string) => key;
+
+  it('400 { error } ⇒ hiện NGUYÊN lời server, không phải câu chung', () => {
+    const error = deployError(400, { error: REASON });
+    expect(getDeployWarnings(error, t)).toEqual([REASON]);
+    expect(mapDeployError(error, t)).toBe(REASON);
+  });
+
+  it('409 { error } ⇒ hiện NGUYÊN lời server (MAX_ATTEMPTS_DECREASE, TIME_LIMIT_LOCKED…)', () => {
+    const error = deployError(409, { code: 'TIME_LIMIT_LOCKED', error: 'Không sửa được thời lượng sau khi triển khai.' });
+    expect(mapDeployError(error, t)).toBe('Không sửa được thời lượng sau khi triển khai.');
+  });
+
+  it('409 bọc `{ data: { error } }` ⇒ vẫn đọc được lời server', () => {
+    expect(mapDeployError(deployError(409, { data: { error: REASON } }), t)).toBe(REASON);
+  });
+
+  it('code QUESTION_BANK_INVALID vẫn thắng lời server trong cùng body 400', () => {
+    const error = deployError(400, { code: 'QUESTION_BANK_INVALID', error: REASON });
+    expect(getDeployWarnings(error, t)).toEqual(['employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID']);
+  });
+
+  it('500 { error } ⇒ câu chung, KHÔNG lộ lời server kỹ thuật', () => {
+    const error = deployError(500, { error: 'NullReferenceException at CampaignService' });
+    expect(getDeployWarnings(error, t)).toEqual([]);
+    expect(mapDeployError(error, t)).toBe('employer.campaigns.wizard.deploy.deployFailed');
+  });
+
+  it('body rỗng / thiếu / `error` không phải chuỗi ⇒ câu chung', () => {
+    for (const data of [undefined, null, '', '   ', {}, { error: '' }, { error: '  ' }, { error: 42 }]) {
+      expect(mapDeployError(deployError(400, data), t)).toBe('employer.campaigns.wizard.deploy.deployFailed');
+    }
+    expect(mapDeployError(new Error('Network Error'), t)).toBe('employer.campaigns.wizard.deploy.deployFailed');
+  });
+});

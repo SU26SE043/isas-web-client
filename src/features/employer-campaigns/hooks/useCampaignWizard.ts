@@ -441,6 +441,11 @@ export function getDeployWarnings(error: unknown, t: (key: string) => string): s
     : [];
   if (code === 'QUESTION_BANK_INVALID') return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings];
   if (code === 'ADAPTIVE_BUDGET_TOO_SMALL' && nested) return [adaptiveDeployWarning(nested, t), ...warnings];
+  // Backend trả body OBJECT `{ error }` (có thể bọc `{ data: { error } }`) cho mọi 400/409 của
+  // POST/PUT /campaign — vd. nháp cũ có thời lượng ngoài [5,180] lúc publish [C4]. Chỉ 400/409 mới
+  // là lỗi nghiệp vụ đọc được; 5xx/mạng vẫn về câu chung để không lộ lỗi kỹ thuật.
+  const serverReason = typeof nested?.error === 'string' ? nested.error.trim() : '';
+  if ((status === 400 || status === 409) && serverReason) return [serverReason];
   if (status === 409 && typeof raw === 'string' && raw.trim()) return [raw.trim()];
   return [];
 }
