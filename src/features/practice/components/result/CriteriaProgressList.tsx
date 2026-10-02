@@ -41,7 +41,7 @@ export function CriteriaProgressList({
     const totalContribution = criteria.reduce((sum, item) => sum + (item.contribution ?? 0), 0);
     return <div className="overflow-x-auto rounded-xl border border-satin"><table className="w-full min-w-[520px] text-sm">
       <thead className="bg-surface-overlay text-left text-xs uppercase text-muted-foreground"><tr>
-        <th className="p-3">{t('practice.result.criteriaDetail')}</th><th className="p-3">{t('practice.result.score')}</th><th className="p-3">{t('practice.result.weight')}</th><th className="p-3">{t('practice.result.contribution')}</th>
+        <th className="p-3">{t('practice.result.criteriaDetail')}</th><th className="p-3">{t('practice.result.score')}</th><th className="p-3">{t('practice.result.effectiveWeight')}</th><th className="p-3">{t('practice.result.contribution')}</th>
       </tr></thead>
       <tbody>{criteria.map((item) => <tr key={item.name} className="border-t border-subtle">
         <th className="p-3 text-left font-medium text-foreground">{item.name}</th>

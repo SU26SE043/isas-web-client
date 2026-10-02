@@ -7,6 +7,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MOCK_SESSION_TOPICS_EIGHT } from '../../mocks/sessionTopics.fixtures';
 import type { PracticeSessionResponse } from '../../types/b2cPracticeSession.types';
+import { mapPracticeSessionResponse } from '../../utils/mapB2cPracticeSession';
+import weightedSessionFixture from '../../utils/fixtures/weighted-session-e327d25c.json';
+import legacySessionFixture from '../../utils/fixtures/legacy-practice-session.json';
 import { PracticeLiveResultReport } from './PracticeLiveResultReport';
 
 vi.mock('@/shared/languages', () => ({
@@ -151,13 +154,34 @@ describe('PracticeLiveResultReport tabs', () => {
 
     expect(screen.getByTestId('weighted-score-formula')).toHaveTextContent('90.625');
     expect(screen.getByTestId('weighted-score-formula')).toHaveTextContent('3/4');
-    expect(screen.getByRole('columnheader', { name: 'practice.result.weight' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'practice.result.effectiveWeight' })).toBeInTheDocument();
     expect(screen.getByText('60.00%')).toBeInTheDocument();
     expect(screen.getByText('54.38%')).toBeInTheDocument();
     expect(screen.getByText('90.63%')).toBeInTheDocument();
     expect(screen.getByText('System design')).toBeInTheDocument();
     expect(screen.getByText('practice.result.unassessed.notAsked')).toBeInTheDocument();
     expect(screen.getByText('practice.result.unassessed.reweighted')).toBeInTheDocument();
+  });
+
+  it('renders the raw weighted session fixture through the API mapper', async () => {
+    const user = userEvent.setup();
+    renderReport(mapPracticeSessionResponse(weightedSessionFixture));
+    await user.click(screen.getByRole('tab', { name: 'practice.result.quickCriteria' }));
+
+    expect(screen.getByTestId('weighted-score-formula')).toHaveTextContent('Score 81.405; penalty answered 2/3; final 54.27');
+    expect(screen.getByRole('columnheader', { name: 'practice.result.effectiveWeight' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'practice.result.contribution' })).toBeInTheDocument();
+    expect(screen.getByText('60.00%')).toBeInTheDocument();
+    expect(screen.getByText('48.84%')).toBeInTheDocument();
+    expect(screen.getByText('Thiết kế hệ thống')).toBeInTheDocument();
+    expect(screen.getByText('practice.result.unassessed.notAsked')).toBeInTheDocument();
+
+    cleanup();
+    const oldSession = mapPracticeSessionResponse(legacySessionFixture);
+    renderReport(oldSession, '/practice/result?sessionId=legacy');
+    await user.click(screen.getByRole('tab', { name: 'practice.result.quickCriteria' }));
+    expect(screen.queryByTestId('weighted-score-formula')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'practice.result.effectiveWeight' })).not.toBeInTheDocument();
   });
 
   it.each(['Average', null] as const)('%s formula keeps the existing unweighted layout', async (scoreFormula) => {
