@@ -99,7 +99,7 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
     slotsData = [{ id: 's1', startsAt: '2026-09-08T09:00:00Z', endsAt: '2026-09-08T10:00:00Z', capacity: 1, assignedCount: 0, startedCount: 0 }];
     render(
       <CampaignReviewStep
-        info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
+        info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, maxAttempts: 1, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
         jd={{ ...createEmptyJdState(), inputMethod: 'text', jdText: 'Build a frontend product.' }}
         rubric={[]} questions={[]} questionsPerSession={5}
         settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}
@@ -118,7 +118,7 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
     const onGoToStep = vi.fn();
     render(
       <CampaignReviewStep
-        info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
+        info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, maxAttempts: 1, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
         jd={{ ...createEmptyJdState(), inputMethod: 'text', jdText: 'Build a frontend product.' }}
         rubric={[]} questions={[]} questionsPerSession={5}
         settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}

@@ -8,11 +8,16 @@ import type {
   SubmitPracticeAnswerResponse,
 } from '../types/b2cPracticeSession.types';
 
+/** `'no_speech'` — server không thấy vùng tiếng nói trong file ⇒ câu này KHÔNG tính là đã trả lời (CAMP-21). */
+export const NO_SPEECH_REJECT_REASON = 'no_speech';
+
 export interface SubmittedAnswerState {
   answerId: string;
   questionId: string;
   status: string;
   transcript?: string | null;
+  /** Lý do server không chấm (`'no_speech'` = bài im lặng). `null`/vắng ⇒ vẫn tính ĐÃ trả lời. */
+  rejectReason?: string | null;
   nextAction?: SubmitPracticeAnswerResponse['nextAction'];
   interviewComplete?: boolean;
 }
@@ -80,6 +85,7 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
         questionId: answer.questionId,
         status: answer.status ?? 'Scoring',
         transcript: answer.transcript ?? null,
+        rejectReason: answer.rejectReason ?? null,
       };
     }
     const current = session.questions.find((q) => !answersByQuestionId[q.id]) ?? null;
@@ -88,8 +94,16 @@ export const useB2cPracticeInterviewStore = create<B2cPracticeInterviewState>((s
     const anchor = current ?? session.questions[session.questions.length - 1] ?? null;
     const questionStates: Record<string, QuestionAnswerState> = {};
     for (const q of session.questions) {
-      questionStates[q.id] = answersByQuestionId[q.id]
-        ? 'submitted'
+      const answer = answersByQuestionId[q.id];
+      // Bài im lặng (`rejectReason = 'no_speech'`) đã có bản ghi trên server nhưng KHÔNG tính là đã
+      // trả lời (CAMP-21: đã trả lời ⇔ lý do null hoặc khác `'no_speech'`) — câu hết giờ từng câu được
+      // nộp thay bằng file lặng rơi vào đây. Vẫn giữ bản ghi trong `answersByQuestionId` để không hỏi
+      // lại câu đó; chỉ trạng thái là `'unanswered'` nên "Đã trả lời x/y câu chính" đếm đúng sau khi
+      // tải lại phòng. `rejectReason` null (dòng cũ, BK23) hoặc lý do khác ⇒ vẫn `'submitted'`.
+      questionStates[q.id] = answer
+        ? answer.rejectReason === NO_SPEECH_REJECT_REASON
+          ? 'unanswered'
+          : 'submitted'
         : q.id === anchor?.id
           ? 'reading_question'
           : 'not_started';

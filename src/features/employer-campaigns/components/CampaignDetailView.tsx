@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
   CalendarDays,
-  Clock3,
   LayoutGrid,
   MessageSquareText,
   Settings,
@@ -22,6 +21,7 @@ import { CampaignScoringRulesCard } from './CampaignScoringRulesCard';
 import { CampaignDetailStatusNotices } from './CampaignDetailStatusNotices';
 import { useCampaignSlots } from '../hooks/useCampaignSlots';
 import { CampaignDetailQuestionsSection } from './detail/CampaignDetailQuestionsSection';
+import { CampaignAttemptRulesCard } from './detail/CampaignAttemptRulesCard';
 import type { CampaignStatusUpdateRequest } from '../types/campaign.api.types';
 import type { EmployerCampaign } from '../types/campaignManagement.types';
 interface CampaignDetailViewProps {
@@ -100,18 +100,14 @@ export function CampaignDetailView({
                   campaign.jobDescription || t('employer.campaigns.detail.noJobDescription')
                 }
               />
-              <div className="grid gap-3 md:grid-cols-3">
+              {/* ATT1-F2: ô Thời lượng chuyển vào thẻ "Luật làm bài" (cột phải) cùng số lần làm tối đa. */}
+              <div className="grid gap-3 md:grid-cols-2">
                 <CampaignDetailMetric
                   icon={UsersRound}
                   label={t('employer.campaigns.list.capacity')}
                   // capacity=0 (`campaignMapper.ts` sentinel cho `maxCandidates` chưa khai — nay
                   // TUỲ CHỌN) nghĩa là "không trần riêng", không phải "sức chứa bằng không".
                   value={`${campaign.cvCount ?? 0}/${campaign.capacity > 0 ? campaign.capacity : '—'}`}
-                />
-                <CampaignDetailMetric
-                  icon={Clock3}
-                  label={t('employer.campaigns.form.duration')}
-                  value={`${campaign.durationMinutes}`}
                 />
                 <CampaignDetailMetric
                   icon={MessageSquareText}
@@ -122,50 +118,53 @@ export function CampaignDetailView({
             </CardContent>
           </Card>
 
-          <Card className="frame-satin bg-surface-raised">
-            <CardHeader className="pb-3">
-              <IconTitle icon={Settings} tone="info">
-                {t('employer.campaigns.detail.settings')}
-              </IconTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p className="flex items-center gap-2">
-                <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
-                <span>{t('employer.campaigns.form.startsAt')}:</span>
-                <strong className="font-semibold text-foreground">{formattedStart}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
-                <span>{t('employer.campaigns.form.deadline')}:</span>
-                <strong className="font-semibold text-foreground">{formattedDeadline}</strong>
-              </p>
-              <p className="flex items-center gap-2">
-                <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
-              </p>
-              <p className="text-muted-foreground">
-                {t('employer.campaigns.form.passScorePct')}:{' '}
-                <strong className="font-semibold text-foreground">
-                  {campaign.passScorePct != null ? `${campaign.passScorePct}%` : '—'}
-                </strong>
-              </p>
-              <p className="text-muted-foreground">
-                {t('employer.campaigns.form.antiCheat')}:{' '}
-                <strong className="font-semibold text-foreground">
-                  {campaign.antiCheatEnabled
-                    ? t('employer.campaigns.detail.enabled')
-                    : t('employer.campaigns.detail.disabled')}
-                </strong>
-              </p>
-              <p className="text-muted-foreground">
-                {t('employer.campaigns.form.faceVerify')}:{' '}
-                <strong className="font-semibold text-foreground">
-                  {campaign.faceVerifyEnabled
-                    ? t('employer.campaigns.detail.enabled')
-                    : t('employer.campaigns.detail.disabled')}
-                </strong>
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <Card className="frame-satin bg-surface-raised">
+              <CardHeader className="pb-3">
+                <IconTitle icon={Settings} tone="info">
+                  {t('employer.campaigns.detail.settings')}
+                </IconTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p className="flex items-center gap-2">
+                  <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
+                  <span>{t('employer.campaigns.form.startsAt')}:</span>
+                  <strong className="font-semibold text-foreground">{formattedStart}</strong>
+                </p>
+                <p className="flex items-center gap-2">
+                  <CalendarDays className="size-4 shrink-0 text-info-light" aria-hidden />
+                  <span>{t('employer.campaigns.form.deadline')}:</span>
+                  <strong className="font-semibold text-foreground">{formattedDeadline}</strong>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Building2 className="size-4 shrink-0 text-info-light" aria-hidden />
+                </p>
+                <p className="text-muted-foreground">
+                  {t('employer.campaigns.form.passScorePct')}:{' '}
+                  <strong className="font-semibold text-foreground">
+                    {campaign.passScorePct != null ? `${campaign.passScorePct}%` : '—'}
+                  </strong>
+                </p>
+                <p className="text-muted-foreground">
+                  {t('employer.campaigns.form.antiCheat')}:{' '}
+                  <strong className="font-semibold text-foreground">
+                    {campaign.antiCheatEnabled
+                      ? t('employer.campaigns.detail.enabled')
+                      : t('employer.campaigns.detail.disabled')}
+                  </strong>
+                </p>
+                <p className="text-muted-foreground">
+                  {t('employer.campaigns.form.faceVerify')}:{' '}
+                  <strong className="font-semibold text-foreground">
+                    {campaign.faceVerifyEnabled
+                      ? t('employer.campaigns.detail.enabled')
+                      : t('employer.campaigns.detail.disabled')}
+                  </strong>
+                </p>
+              </CardContent>
+            </Card>
+            <CampaignAttemptRulesCard campaign={campaign} />
+          </div>
         </div>
 
         {slotsUi ? <CampaignSlotsPanel campaignId={campaign.id} editable={isDraft} /> : null}

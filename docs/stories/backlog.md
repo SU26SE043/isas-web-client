@@ -18,6 +18,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | E08 | Magic link entry, org dashboard, **assessment proctoring**, analytics | M04, M09 | implemented (mock) |
 | E09 | Admin portal & audit | M11-M12 | implemented |
 | E10 | Notifications, reporting, ATS hooks | M09-M10 | implemented |
+| ATT1 | Attempt limit (1–3) + server-timed sitting for B2B campaigns — Frontend F1–F6 (contract `7e4792f993948da2`) | M04–M05 | in_progress |
 
 ## Active stories
 
@@ -47,6 +48,14 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-024 | Employer result detail v2: adjustment history and answer audio | E08 | high-risk | in_progress | [US-024](./epics/E08-employer-analytics/US-024-result-detail-v2/overview.md) |
 | FS-129 | API v10 B2B interview anti-cheat | E08 | high-risk | implemented | [FS-129](./epics/E08-campaign-discovery/FS-129-api-v10-anti-cheat/overview.md) |
 | FS-149c | RNK1 campaign scoring, question bank and CV controls | E07 | high-risk | implemented | [FS-149c](./epics/E07-campaign-management/FS-149c-ranking-control/overview.md) |
+| ATT1-F1 | Wizard step 5 “Luật làm bài”: sitting length 5–180 + max attempts 1–3 + Review row | ATT1 | high-risk | implemented | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) — `0591c6d6` + `8be01a9e` |
+| ATT1-F2 | Campaign Detail attempt-rules card + increase-attempts dialog (Active) | ATT1 | high-risk | implemented | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) — `e3ec89b9` + `db8ec0e1` |
+| ATT1-F3 | Candidate campaign page: four attempt states + confirm dialog + card attempts line | ATT1 | high-risk | implemented | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) — `f7e02808` + `4c82d23e` |
+| ATT1-F4 | Interview room: `begin` on room entry + server-time sitting clock (never paused) | ATT1 | high-risk | in_progress | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) |
+| ATT1-F5 | Time-up: final upload, submit, non-dismissible time-up screen | ATT1 | high-risk | in_progress | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) |
+| ATT1-F6 | Real run on dev through the UI (needs Backend ATT1-B1..B3 on dev) | ATT1 | high-risk | planned | [ATT1](./epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md) |
+
+**ATT1 dependency:** F1–F5 are built against mocks; F6 waits for Backend ATT1-B1..B3 on dev. Production order is **Frontend first, then Backend** (new Frontend + old Backend behaves as today; old Frontend + new Backend shows no question content in the room). Merging `main` deploys production.
 
 ## How to pick work
 
@@ -70,5 +79,6 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-010 | FR-255-289 | SCR-ADM-069-088 |
 | US-013 | FR-225-254 | SCR-CAN-047-051, SCR-EMP-066-068, SCR-SHR-095 |
 | US-014 | FR-095-194 | SCR-CAN-025b-034, SCR-EMP-064-065 |
+| ATT1-F1–F6 | — (ATT1 spec, contract `7e4792f993948da2`; no dedicated FR in BRD yet) | SCR-EMP-056–057, SCR-CAN-033, `/candidate/campaigns/:id` |
 
 Full FR list: `BRD/Functional_Requirements.md`.

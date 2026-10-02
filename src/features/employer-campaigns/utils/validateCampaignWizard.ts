@@ -3,6 +3,7 @@ import { validateCampaignPdf } from './campaignFiles';
 import { CAMPAIGN_QUESTION_HARD_MAX } from './campaignQuestionLimits';
 import { validateCriterionLevels } from './criterionLevelRules';
 import { isCampaignExpiryPast } from './campaignWindow';
+import { isValidCampaignTimeLimit } from './campaignAttemptRules';
 
 const LAST_STEP_INDEX = 7;
 // Trần số câu MỘT BUỔI THI (`settings.maxQuestions`, gồm cả câu đào sâu) — khớp CHECK
@@ -96,12 +97,6 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 6) {
-    if (!info.timeLimitMinutes || info.timeLimitMinutes < 1) {
-      return 'employer.campaigns.wizard.timeLimitRequired';
-    }
-    if (!Number.isInteger(info.timeLimitMinutes)) {
-      return 'employer.campaigns.form.integerRequired';
-    }
     const minYears = state.hardFilters?.minYearsExperience;
     if (minYears != null && (!Number.isInteger(minYears) || minYears < 0 || minYears > 60)) {
       return 'employer.campaigns.wizard.hardFilters.minYearsInvalid';
@@ -192,6 +187,11 @@ export function validateCampaignWizardStep(
   }
 
   if (step === 4) {
+    // ATT1 — thời lượng nay nằm ở khối "Luật làm bài" của bước NÀY (index 4 = bước 5), không còn ở bước
+    // Mời: lỗi phải đá HR về đúng chỗ có ô nhập. Biên khớp [C1]/[C4] — ngoài [5,180] BE trả 400.
+    if (!isValidCampaignTimeLimit(info.timeLimitMinutes)) {
+      return 'employer.campaigns.wizard.timeLimitInvalid';
+    }
     if (
       !Number.isFinite(settings.maxQuestions) ||
       settings.maxQuestions < 0 ||

@@ -9,6 +9,7 @@ const snapshot = (hardFilters = createEmptyHardFiltersState()): CampaignWizardSu
     domain: 'frontend',
     maxCandidates: null,
     timeLimitMinutes: 30,
+    maxAttempts: 1,
     passScorePct: null,
     startsAt: '2099-01-01T10:00:00.000Z',
     expiresAt: '2099-01-02T10:00:00.000Z',

@@ -45,12 +45,36 @@ Each invite card shows:
 - Deadline / expiry
 - Status: `invited` | `in_progress` | `completed` | `expired` (and future pipeline statuses)
 - CTA: **Bắt đầu** (invited) or **Tiếp tục** (in_progress)
+- Attempts line (ATT1-F3): “Còn {remaining}/{max} lượt”, or “Hết lượt” in the error tone when out of attempts. Shown only when the response carries both `maxAttempts` and `attemptsUsed`, and not for Completed. For states ③/④ (below) the interview-status badge is hidden because the backend reports an abandoned attempt as `NotStarted`, which would contradict the attempts message.
 
 ### Briefing & assessment start
 
 1. Candidate clicks **Bắt đầu** / **Tiếp tục** on a card.
 2. Navigate to `/candidate/campaigns/:token/briefing` — campaign info, instructions, proctoring notice (`CampaignBriefingPanel`).
 3. **Start assessment** → shared engine `/interview/campaign-{id}/prepare` → device → terms → identity → room (see [`campaign-assessment.md`](./campaign-assessment.md)).
+
+### Attempt states on the candidate campaign page (ATT1-F3)
+
+Surface: `/candidate/campaigns/:id` (`CandidateCampaignDetailPage`, the page the card links to) plus the confirm dialog `StartCampaignConfirmDialog`. Contract: ATT1 `[C6]`–`[C8]` (hash `7e4792f993948da2`); story packet [`ATT1-frontend`](../stories/epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md).
+
+**Rules shown.** When present, the header shows “Thời lượng {n} phút” and “{n} lần làm”, and the exam-info list adds the clock rule: the clock starts when the candidate enters the interview room (after the device check) and does not stop on reload. **No countdown** is shown on the card or this page — the Campaign service does not know when the candidate entered the room, so any number would be wrong.
+
+**Four states.** Out-of-attempts is decided **only** from `attemptsUsed` / `maxAttempts` (or a `409 ATTEMPT_LIMIT_REACHED`), never from `interviewStatus` — the backend reports an abandoned attempt as `NotStarted`.
+
+| # | Condition | UI |
+| --- | --- | --- |
+| ① Not started | `attemptsUsed` = 0 (or any case not covered by ②–④) | **Bắt đầu bài phỏng vấn** → confirm dialog |
+| ② In progress | `interviewStatus = InProgress` | “Đang làm dở” + **Tiếp tục bài phỏng vấn** (calls `start` again to rebuild the room marker; no dialog) |
+| ③ Retake available | `lastAttemptAbandoned` and `attemptsUsed < maxAttempts` | “Lượt {n} đã kết thúc mà chưa có câu trả lời nào được chấm.” · “Còn {remaining}/{max} lượt — lượt mới có bộ câu hỏi khác.” · **Làm lại lượt {n+1}** → confirm dialog |
+| ④ Out of attempts | `attemptsUsed ≥ maxAttempts`, not InProgress / Completed | “Bạn đã dùng hết {used}/{max} lượt…” + “Liên hệ nhà tuyển dụng nếu buổi thi gặp sự cố.” — **no button** |
+
+Completed keeps the existing completed badge. In ③/④ the “Chưa bắt đầu” badge and the “Bài thi đã được bắt đầu.” line are hidden (they would contradict the attempts message).
+
+**Confirm dialog** (Bắt đầu / Làm lại): bullet lines “Bài thi {n} phút, tính từ lúc vào phòng.”, “Bạn có {n} lượt.” plus the resume rule (leaving mid-way can be resumed within the remaining time; time-up auto-submits), and — **only on a retake** — “Đây là lượt {n}/{max} — bộ câu khác.” Confirm label: **Vào bước chuẩn bị**.
+
+**Start errors.** `409 { code: "ATTEMPT_LIMIT_REACHED", attemptsUsed, maxAttempts }` [C8] → dedicated message, confirm button disabled (Cancel still works), and my-campaigns list + detail queries are invalidated so the page re-renders as ④. The service reads `code` before HTTP status.
+
+**Backend-compatibility.** The frontend ships to production **before** Backend ATT1. Any missing field ⇒ `undefined` (no defaults are invented): the page, card and dialog behave exactly as before ATT1 — the start button is never hidden because fields are missing. `start` responses whose `questions[].content` is `""` [C7] are kept (only items without `id` are dropped); `attemptNo` and `timeLimitMinutes` from `start` are parsed when present. `start.deadlineAt` keeps its old meaning (hard campaign/slot deadline), not the sitting clock.
 
 ---
 
@@ -117,9 +141,9 @@ Do **not** restore filters, search, or self-enroll without an invite.
 | --- | --- |
 | `GET /api/v1/campaign/invitations/{token}` | Public invitation metadata; returns 404/410 without side effects |
 | `POST /api/v1/campaign/invitations/{token}/join` | Candidate-only join; JWT is required and invitation email must match |
-| `GET /api/v1/campaign/my-campaigns` | Keyset-paged campaigns joined by the authenticated Candidate |
-| `GET /api/v1/campaign/my-campaigns/{id}` | Joined campaign detail and current interview state |
-| `POST /api/v1/campaign/{id}/start` | Idempotently create/resume the campaign interview session |
+| `GET /api/v1/campaign/my-campaigns` | Keyset-paged campaigns joined by the authenticated Candidate; ATT1 adds `timeLimitMinutes`, `maxAttempts`, `attemptsUsed`, `lastAttemptAbandoned` [C6] |
+| `GET /api/v1/campaign/my-campaigns/{id}` | Joined campaign detail and current interview state; same ATT1 fields [C6] |
+| `POST /api/v1/campaign/{id}/start` | Idempotently create/resume the campaign interview session; ATT1 adds `attemptNo`, `timeLimitMinutes`, hides question content until `begin` [C7]; `409 ATTEMPT_LIMIT_REACHED` when out of attempts [C8] |
 
 The magic link is anonymous only for reading invitation metadata. The frontend saves
 the token, sends unauthenticated users through Candidate sign-in/registration, and

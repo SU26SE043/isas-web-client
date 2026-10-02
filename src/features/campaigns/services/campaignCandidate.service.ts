@@ -114,6 +114,8 @@ function toCampaignCandidateError(error: unknown, fallback: string): CampaignCan
   };
   const code = isInvitationEmailMismatch(status, apiCode, apiMessage)
     ? 'emailMismatch'
+    : apiCode === 'ATTEMPT_LIMIT_REACHED'
+    ? 'attemptLimitReached'
     : apiCode === 'outside_slot_window'
     ? 'outsideSlotWindow'
     : apiCode === 'concurrent_limit'
@@ -138,6 +140,29 @@ function unwrapData(payload: unknown): unknown {
 function asOptionalString(value: unknown): string | null {
   if (value == null || value === '') return null;
   return String(value);
+}
+
+/** Số nguyên từ JSON; vắng / sai kiểu ⇒ undefined (Backend cũ không gửi field ATT1). */
+function asOptionalNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+/** `int | null` của hợp đồng: null giữ là null, vắng ⇒ undefined. */
+function asOptionalNullableNumber(value: unknown): number | null | undefined {
+  return value === null ? null : asOptionalNumber(value);
+}
+
+/**
+ * ATT1 [C6] — thời lượng + lượt của my-campaigns (danh sách và chi tiết). Field vắng ⇒ undefined để
+ * trang/thẻ chạy y như trước ATT1 — KHÔNG điền mặc định (đoán thay server là luật bị cấm).
+ */
+function parseAttemptFields(data: Record<string, unknown>) {
+  return {
+    timeLimitMinutes: asOptionalNullableNumber(data.timeLimitMinutes),
+    maxAttempts: asOptionalNumber(data.maxAttempts),
+    attemptsUsed: asOptionalNumber(data.attemptsUsed),
+    lastAttemptAbandoned: typeof data.lastAttemptAbandoned === 'boolean' ? data.lastAttemptAbandoned : undefined,
+  };
 }
 
 function parseCriterion(raw: unknown): CampaignCriterion | null {
@@ -236,6 +261,7 @@ function parseListItem(raw: unknown): CandidateCampaignListItem | null {
     deadline: asOptionalString(data.deadline),
     membershipStatus: String(data.membershipStatus ?? ''),
     interviewStatus: parseInterviewStatus(data.interviewStatus),
+    ...parseAttemptFields(data),
   };
 }
 
@@ -286,6 +312,7 @@ function parseDetail(raw: unknown): CandidateCampaignDetailResponse {
     interviewStatus: parseInterviewStatus(data.interviewStatus),
     sessionId: asOptionalString(data.sessionId),
     started: Boolean(data.started),
+    ...parseAttemptFields(data),
   };
 }
 
@@ -306,8 +333,9 @@ function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCamp
       if (!item || typeof item !== 'object') return null;
       const q = item as Record<string, unknown>;
       const id = String(q.id ?? '').trim();
+      // [C7] Backend ATT1 trả content "" (đề chỉ lộ sau begin) ⇒ GIỮ câu, chỉ bỏ câu thiếu id.
       const content = String(q.content ?? '').trim();
-      if (!id || !content) return null;
+      if (!id) return null;
       const orderNo = typeof q.orderNo === 'number' ? q.orderNo : Number(q.orderNo ?? 0);
       const timeLimitSec =
         typeof q.timeLimitSec === 'number' ? q.timeLimitSec : Number(q.timeLimitSec ?? 0);
@@ -329,6 +357,8 @@ function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCamp
     faceEnrollRequired: Boolean(data.faceEnrollRequired),
     adaptiveEnabled: Boolean(data.adaptiveEnabled),
     deadlineAt: asOptionalString(data.deadlineAt),
+    attemptNo: asOptionalNumber(data.attemptNo),
+    timeLimitMinutes: asOptionalNullableNumber(data.timeLimitMinutes),
   };
 }
 

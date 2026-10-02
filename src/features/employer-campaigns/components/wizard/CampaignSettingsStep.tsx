@@ -9,6 +9,8 @@ import {
   calculateAdaptiveQuestionBudget,
   CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
 } from '../../utils/campaignAdaptiveBudget';
+import { isValidCampaignTimeLimit } from '../../utils/campaignAttemptRules';
+import { CampaignAttemptRulesPanel, type CampaignAttemptRulesPatch } from './CampaignAttemptRulesPanel';
 import { CampaignWizardNav } from './CampaignWizardNav';
 import { FieldError } from './FieldError';
 
@@ -20,6 +22,10 @@ const ADAPTIVE_PRESETS = [
 
 interface CampaignSettingsStepProps {
   settings: CampaignSettingsState;
+  /** ATT1 — "Luật làm bài" sống ở `info` (gửi lên cùng metadata), nhưng ô nhập nằm ở bước này. */
+  timeLimitMinutes: number;
+  maxAttempts: number;
+  onRulesChange: (patch: CampaignAttemptRulesPatch) => void;
   error?: string | null;
   onChange: (patch: Partial<CampaignSettingsState>) => void;
   onBack: () => void;
@@ -60,6 +66,9 @@ function ToggleRow({
 
 export function CampaignSettingsStep({
   settings,
+  timeLimitMinutes,
+  maxAttempts,
+  onRulesChange,
   error,
   onChange,
   onBack,
@@ -91,6 +100,17 @@ export function CampaignSettingsStep({
     >
       <div className="space-y-6">
         {error ? <FieldError message={error} /> : null}
+
+        <CampaignAttemptRulesPanel
+          timeLimitMinutes={timeLimitMinutes}
+          maxAttempts={maxAttempts}
+          baseQuestionCount={questionCount}
+          adaptiveEnabled={settings.adaptiveEnabled}
+          maxDeepPerQuestion={settings.maxDeepPerQuestion}
+          invalid={Boolean(error) && !isValidCampaignTimeLimit(timeLimitMinutes)}
+          disabled={isSaving}
+          onChange={onRulesChange}
+        />
 
         <section className="grid gap-4 md:grid-cols-2">
           <ToggleRow

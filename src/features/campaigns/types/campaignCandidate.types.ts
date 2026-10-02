@@ -38,6 +38,11 @@ export interface CandidateCampaignListItem {
   deadline?: string | null;
   membershipStatus: string;
   interviewStatus: CampaignInterviewStatus;
+  /** ATT1 [C6] — field vắng (Backend cũ) ⇒ undefined ⇒ UI chạy như trước ATT1. */
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number;
+  attemptsUsed?: number;
+  lastAttemptAbandoned?: boolean;
 }
 
 export interface CandidateCampaignsPage {
@@ -56,6 +61,11 @@ export interface CandidateCampaignDetailResponse {
   interviewStatus: CampaignInterviewStatus;
   sessionId?: string | null;
   started: boolean;
+  /** ATT1 [C6] — field vắng (Backend cũ) ⇒ undefined ⇒ UI chạy như trước ATT1. */
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number;
+  attemptsUsed?: number;
+  lastAttemptAbandoned?: boolean;
 }
 
 export interface StartCampaignInterviewResponse {
@@ -71,6 +81,9 @@ export interface StartCampaignInterviewResponse {
   faceEnrollRequired: boolean;
   adaptiveEnabled: boolean;
   deadlineAt?: string | null;
+  /** ATT1 [C7] — field vắng (Backend cũ) ⇒ undefined. */
+  attemptNo?: number;
+  timeLimitMinutes?: number | null;
 }
 
 export interface FaceCheckResponse {
@@ -106,6 +119,7 @@ export type CampaignCandidateErrorCode =
   | 'conflict'
   | 'outsideSlotWindow'
   | 'concurrentLimit'
+  | 'attemptLimitReached'
   | 'badRequest'
   | 'identityError'
   | 'serverError'

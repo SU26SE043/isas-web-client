@@ -80,6 +80,11 @@ export interface EmployerCampaign {
   deadline: string;
   startsAt?: string;
   durationMinutes: number;
+  /**
+   * ATT1 [C5] — số lần làm tối đa (1–3). `mapCampaignResponseToEmployerCampaign` LUÔN điền (response
+   * cũ vắng ⇒ 1); tuỳ chọn ở type chỉ để fixture/mock dựng tay không phải khai.
+   */
+  maxAttempts?: number;
   passScorePct?: number | null;
   antiCheatEnabled?: boolean;
   faceVerifyEnabled?: boolean;

@@ -32,6 +32,14 @@ vi.mock('./CampaignQuestionsStep', () => ({
   CampaignQuestionsStep: (props: Record<string, unknown>) => { questionsStepSpy(props); return null; },
 }));
 vi.mock('../../hooks/useRubricPreview', () => ({ useRubricPreview: useRubricPreviewSpy }));
+const settingsStepSpy = vi.fn();
+vi.mock('./CampaignSettingsStep', () => ({
+  CampaignSettingsStep: (props: Record<string, unknown>) => { settingsStepSpy(props); return null; },
+}));
+const invitesStepSpy = vi.fn();
+vi.mock('./CampaignInvitesStep', () => ({
+  CampaignInvitesStep: (props: Record<string, unknown>) => { invitesStepSpy(props); return null; },
+}));
 vi.mock('../../services/campaignCriteria.service', () => ({ campaignCriteriaService: { preview: vi.fn(async () => ({ jobCategory: 'BE', language: 'vi', criteria: [] })) } }));
 
 const { CampaignWizardStepContent } = await import('./CampaignWizardStepContent');
@@ -47,7 +55,8 @@ function wizardAt(step: number): CampaignWizardController {
     step, mode: 'create', errorSteps: [], completedSteps: [], stepError: null, actionError: null, partialDeploy: null,
     canRetryInvitations: true, isSavingStep: false, isSubmitting: false, isDraftEditable: true, metadataSaved: false, questionsSaved: false,
     domainLabel: 'Backend', jobCategory: 'BE', campaignStatus: 'draft', persistForPreview, goToStep, resolveQuestionId, updateQuestion,
-    state: { currentStep: step, draftId: 'c-1', info: { title: 't', domain: 'backend', language: 'vi', passScorePct: 60, startsAt: '', expiresAt: '', maxCandidates: 5, timeLimitMinutes: 60 },
+    patchInfo: vi.fn(),
+    state: { currentStep: step, draftId: 'c-1', info: { title: 't', domain: 'backend', language: 'vi', passScorePct: 60, startsAt: '', expiresAt: '', maxCandidates: 5, timeLimitMinutes: 60, maxAttempts: 2 },
       jd: { inputMethod: 'text', jdText: 'jd' }, rubric: [], rubricCustomized: false, questions, questionCount: 5, questionsPerSession: null,
       settings: {}, inviteEmails: [], errorSteps: [], completedSteps: [], autosaveStatus: 'idle' },
   } as unknown as CampaignWizardController;
@@ -121,5 +130,39 @@ describe('CampaignWizardStepContent — khe nối bước 4 (SC2 · T9)', () => 
     props.preview.onGoToCriteria();
     expect(wizard.goToStep).toHaveBeenCalledTimes(2);
     expect(wizard.goToStep).toHaveBeenCalledWith(2);
+  });
+});
+
+/**
+ * ATT1-F1 — MỘT nguồn sự thật cho thời lượng: StepContent chuyền `info.timeLimitMinutes`/`info.maxAttempts` +
+ * `patchInfo` vào bước 5 (index 4) và KHÔNG còn chuyền gì về thời lượng xuống bước Mời (index 6).
+ */
+describe('CampaignWizardStepContent — khe nối Luật làm bài (ATT1-F1)', () => {
+  it('bước 5 nhận timeLimitMinutes + maxAttempts từ info và onRulesChange = patchInfo', () => {
+    const wizard = wizardAt(4);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
+    const props = settingsStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.timeLimitMinutes).toBe(60);
+    expect(props.maxAttempts).toBe(2);
+    expect(props.onRulesChange).toBe(wizard.patchInfo);
+    // K của ước tính = questionsPerSession ?? số câu (fixture: null ⇒ 1 câu).
+    expect(props.questionCount).toBe(1);
+  });
+
+  it('K = questionsPerSession khi có (3), KHÔNG phải số câu đã soạn (1) hay questionCount sinh AI (5)', () => {
+    const base = wizardAt(4);
+    const wizard = { ...base, state: { ...base.state, questionsPerSession: 3 } } as CampaignWizardController;
+    expect(wizard.state.questions).toHaveLength(1);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
+    const props = settingsStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.questionCount).toBe(3);
+  });
+
+  it('bước Mời KHÔNG còn nhận prop thời lượng nào', () => {
+    const wizard = wizardAt(6);
+    render(<CampaignWizardStepContent wizard={wizard} campaign={null} onCancel={() => undefined} finalSubmitLabel="x" finalLoadingLabel="y" />);
+    const props = invitesStepSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props).not.toHaveProperty('timeLimitMinutes');
+    expect(props).not.toHaveProperty('onTimeLimitChange');
   });
 });

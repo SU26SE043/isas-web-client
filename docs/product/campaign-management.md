@@ -26,15 +26,17 @@ Frontend contract for employer campaign list, create/publish (Flow 1), and invit
 
 **CV invite** — still mock-shaped for upcoming live wiring (candidates upload, invite by candidateIds).
 
+**Attempt rules (ATT1-F1, ATT1-F2) — implemented, backend-dependent** — Sitting length (`timeLimitMinutes`) and maximum attempts (`maxAttempts`) are configured in wizard step 5 and shown/increased on Campaign Detail. See [Attempt rules (ATT1)](#attempt-rules-att1). Until Backend ATT1 is deployed, responses without `maxAttempts` render as 1 (the contract default).
+
 ## Flow 1 — Create & publish
 
 Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 
-1. Campaign information — title, domain, maxCandidates, timeLimitMinutes, passScorePct (optional, HR decides when empty), startsAt, expiresAt. Existing campaign responses may still expose `location` for list/detail display, but the create/edit wizard does not collect or persist it.
+1. Campaign information — title, domain, maxCandidates, passScorePct (optional, HR decides when empty), startsAt, expiresAt. (`timeLimitMinutes` is not collected in this step: before ATT1 its input sat in the invite step’s email tab; since ATT1-F1 its only input is step 5 “Luật làm bài”.) Existing campaign responses may still expose `location` for list/detail display, but the create/edit wizard does not collect or persist it.
 2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
 3. Evaluation criteria — HR may write criteria or preview the system default set by domain/language; criteria preserve `id`, `levels`, and optional `minPct` floor (0–100). Weights are shown as % and converted to 0–1 decimals on submit.
 4. Questions — AI-generated or HR-authored, each with `prompt`, `source`, `questionGroup`, `isRequired` (“Luôn hỏi”); the question bank shows K questions per candidate and group counts.
-5. Settings — `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion`, `maxQuestions = min(20, K×(1+d))`, and `maxFollowUps`.
+5. Settings — first block **“Luật làm bài”** (ATT1-F1): `timeLimitMinutes` (5–180) and `maxAttempts` (1 / 2 / 3, default 1); then `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion`, `maxQuestions = min(20, K×(1+d))`, and `maxFollowUps`.
 6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
@@ -48,6 +50,47 @@ Archived detail: **Pipeline** · **Xóa**.
 There is **no** “Save draft” button mid-wizard, and no API call at all while navigating between steps — every field lives in local wizard state until the Review step's final submit. Create calls `POST /api/v1/campaign` exactly once (Review step only); if a JD file is pending it uploads right after via `POST …/files`. Edit mode sends only dirty/changed metadata fields via `PUT /api/v1/campaign/{id}` (see `buildDirtyUpdateRequest`), plus the full question list via `PUT …/questions`; criteria/questions edits only apply while the campaign is Draft. Publish is only from Campaign Detail.
 
 Candidate invitation is **not** part of Flow 1.
+
+## Attempt rules (ATT1)
+
+ATT1 makes two campaign values server-enforced rules (contract hash `7e4792f993948da2`, codes `[C1]`–`[C5]`; the full contract stays in the ATT1 spec, not here). Story packet: [`ATT1-frontend`](../stories/epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md).
+
+- **Sitting length** `timeLimitMinutes` — the whole-sitting clock the server runs from the moment the candidate enters the interview room (see [`practice-interview.md`](./practice-interview.md#b2b-campaign-sitting-clock-att1)). Before ATT1 the value was only printed in the invitation email.
+- **Maximum attempts** `maxAttempts` — how many times one candidate may start a new sitting for the campaign (1–3, default 1). Resuming an unfinished sitting does not count. Each retake costs the organization 1 more credit and draws a different base question set.
+
+### Wizard step 5 — “Luật làm bài” (ATT1-F1)
+
+- The block sits at the top of step 5 (“Bảo mật & phỏng vấn thích ứng”), above anti-cheat and adaptive settings. It is the **only** input for `timeLimitMinutes`; the field was removed from the invite step’s email tab so there is one source of truth.
+- Sitting length: whole number in **[5, 180]** minutes (new campaigns default to 60). Out of range → step-5 error `employer.campaigns.wizard.timeLimitInvalid`. Server `400` messages that mention `timeLimit` / `maxAttempts` also route back to step 5.
+- Maximum attempts: choose **1 / 2 / 3** (default 1); helper text says each retake costs 1 organization credit, draws different base questions, and can only be **increased** after deployment.
+- Estimate line: `ceil(K × (1 + d) × 2)` minutes, where `K = questionsPerSession ?? number of authored questions` and `d = maxDeepPerQuestion` when adaptive is on, else 0 (2 min = default 120 s answer time). When the sitting length is below the estimate the line turns warning-coloured — it **never blocks** saving.
+- Requests: create always sends `maxAttempts` (and `timeLimitMinutes`) [C1]; the full Draft update body keeps both keys because the backend treats an absent key as “unchanged” [C2]; the dirty-only edit PUT sends them only when changed. Mapper reads `maxAttempts` from `CampaignResponse` [C5]; absent ⇒ 1.
+- Review (“Kiểm tra”) step: summary row “Luật làm bài · {minutes} phút · tối đa {n} lần” with **Sửa** jumping to step 5.
+
+### Campaign Detail — attempt-rules card (ATT1-F2)
+
+The “Luật làm bài” card replaces the former Duration metric and shows sitting length + maximum attempts.
+
+| Campaign status | Card behaviour |
+| --- | --- |
+| Draft | Link **Sửa ở bước 5** → `/employer/campaigns/{id}/edit?step=5`; no increase button |
+| Active, `maxAttempts` < 3 | **Tăng số lần** opens the increase dialog |
+| Active, `maxAttempts` = 3 | Display only |
+| Closed / Archived / Paused | Display only |
+| Any non-Draft | “(khoá sau khi triển khai)” next to the sitting length; there is no way to edit the sitting length [C3] |
+
+Increase dialog (“Tăng số lần làm bài”): lists only values **greater than** the current one; states the three consequences (applies to every candidate including those already out of attempts; each retake costs 1 organization credit; cannot be decreased later). Saving sends `PUT /api/v1/campaign/{id}` with exactly `{ title, maxAttempts }` — `title` is required by the backend, and no other form field is sent (partial PUT; extra keys risk another lock’s 409). On success: close, invalidate campaign detail and list queries, toast “Đã tăng lên {n} lần”.
+
+Errors in the dialog (dialog stays open):
+
+| Response | UI |
+| --- | --- |
+| `409 { code: "MAX_ATTEMPTS_DECREASE", error }` [C2] | Server `error` shown verbatim |
+| `409 { code: "TIME_LIMIT_LOCKED", error }` [C3] | Server `error` shown verbatim |
+| Other `409` with `error` (e.g. Closed/Archived value change) | Server `error` shown verbatim |
+| Anything else | Generic localized failure |
+
+Publishing with a missing or out-of-range sitting length is rejected by the server with `400` [C4].
 
 ## Flow 2 — Invite candidates (Active only)
 
@@ -80,6 +123,8 @@ Legacy `/selection` redirects to `/invite`.
 | Finish wizard on Review (create) | `POST /api/v1/campaign`, then `POST …/files` once if a JD file is pending |
 | Save on Review (edit) | `PUT /api/v1/campaign/{id}` (dirty fields only) then `PUT …/questions` |
 | Publish | `POST /api/v1/campaign/{id}/publish` |
+| Increase max attempts (Active, Campaign Detail) | `PUT /api/v1/campaign/{id}` with exactly `{ title, maxAttempts }` (ATT1 [C2]) |
+| Attempt-rules contract | `timeLimitMinutes` 5–180 and `maxAttempts` 1–3 on create/update; `maxAttempts` on every `CampaignResponse`; 409 `MAX_ATTEMPTS_DECREASE` / `TIME_LIMIT_LOCKED` (ATT1 [C1]–[C5]) |
 | End / Archive | `PUT /api/v1/campaign/{id}/status` `{ status: "Closed" \| "Archived" }` |
 | Soft-delete | `DELETE /api/v1/campaign/{id}` |
 | Invite by email | `POST /api/v1/campaign/{id}/invitations` `{ emails: string[] }` |

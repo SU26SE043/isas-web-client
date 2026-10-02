@@ -1,5 +1,6 @@
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import type { CreatePracticeSessionErrorCode } from '../types/b2cPracticeSession.types';
+import { getPracticeApiErrorCode } from './practiceApiErrorCode';
 
 export function mapCreatePracticeSessionError(error: unknown): {
   code: CreatePracticeSessionErrorCode;
@@ -41,11 +42,42 @@ export function mapCreatePracticeSessionError(error: unknown): {
   return { code: 'generic', message, status };
 }
 
-export function mapSubmitPracticeAnswerErrorKey(status: number | undefined): string {
+/**
+ * ATT1 [I3]/[I1] — mã lỗi riêng của buổi thi tính giờ. Đọc `code` TRƯỚC `status`: cả ba đều là 409, nếu đọc
+ * status trước thì ứng viên chỉ thấy câu chung chung "practice.errors.conflict" thay vì biết đã hết giờ.
+ */
+const SESSION_ERROR_CODE_KEYS: Readonly<Record<string, string>> = {
+  SESSION_NOT_BEGUN: 'practice.errors.sessionNotBegun',
+  SESSION_TIME_UP: 'practice.errors.sessionTimeUp',
+  SESSION_ENDED: 'practice.errors.sessionEnded',
+};
+
+/** Khoá i18n cho lỗi nộp câu trả lời: `code` trong body (ATT1) trước, rồi mới tới HTTP status như cũ. */
+export function mapSubmitPracticeAnswerErrorKey(error: unknown): string {
+  const code = getPracticeApiErrorCode(error);
+  const byCode = code ? SESSION_ERROR_CODE_KEYS[code] : undefined;
+  if (byCode) return byCode;
+  const status = getApiStatusCode(error);
   if (status === 400) return 'practice.errors.audioRequired';
   if (status === 403) return 'practice.errors.forbidden';
   if (status === 404) return 'practice.errors.questionNotFound';
+  // 409 KHÔNG có code (Backend cũ / xung đột khác) giữ câu cũ.
   if (status === 409) return 'practice.errors.conflict';
   if (status === 500) return 'practice.errors.submitAnswerFailed';
   return 'practice.errors.submitAnswerFailed';
+}
+
+/**
+ * Nộp bài (submit) trả 400 "đã nộp rồi" ⇒ coi như đã nộp. Tách từ `confirmFinish` để màn hết giờ (ATT1-F5)
+ * dùng ĐÚNG cùng luật — không tự chế luật thứ hai.
+ */
+export function isSessionAlreadySubmittedError(error: unknown): boolean {
+  if (getApiStatusCode(error) !== 400) return false;
+  const message = getApiErrorMessage(error, '').toLowerCase();
+  return (
+    message.includes('already') ||
+    message.includes('submitted') ||
+    message.includes('đã submit') ||
+    message.includes('da submit')
+  );
 }

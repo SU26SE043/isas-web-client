@@ -1,14 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getApiStatusCode } from '@/shared/api/apiError';
-import {
-  submitPracticeAnswer,
-  submitPracticeSession,
-} from '../services/b2cPracticeSession.service';
+import { submitPracticeSession } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { getNextPracticeQuestion } from '../utils/getNextPracticeQuestion';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
+import { getPracticeApiErrorCode } from '../utils/practiceApiErrorCode';
+import { submitAnswerWithBeginRetry } from './submitAnswerWithBeginRetry';
 import type { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 
 type Recorder = ReturnType<typeof usePracticeAnswerRecorder>;
@@ -25,6 +23,15 @@ interface UseB2cPracticeAnswerSubmitOptions {
   onStopSpeech: () => void;
   onStopMedia: () => void;
   completePath?: string;
+  /**
+   * ATT1-F5 — đồng hồ cả buổi đã về 0 (hoặc server báo SESSION_TIME_UP): câu vừa lưu KHÔNG được chuyển câu,
+   * KHÔNG tự nộp bài ở đây (luồng hết giờ tự nộp đúng 1 lần). Chặn nộp câu trống nằm ở phòng (`useB2cPracticeRoom`).
+   */
+  isExamTimeUp?: () => boolean;
+  /** ATT1 [I3] — upload bị 409 SESSION_TIME_UP ⇒ báo phòng vào luồng hết giờ (bỏ câu đó, nộp bài). */
+  onSessionTimeUp?: () => void;
+  /** Nộp bài (dùng chung với phòng để không bao giờ gửi submit 2 lần song song). */
+  submitSession?: () => Promise<void>;
 }
 
 interface SubmitAnswerOptions {
@@ -42,6 +49,9 @@ export function useB2cPracticeAnswerSubmit({
   onStopSpeech,
   onStopMedia,
   completePath,
+  isExamTimeUp,
+  onSessionTimeUp,
+  submitSession,
 }: UseB2cPracticeAnswerSubmitOptions) {
   const navigate = useNavigate();
   const store = useB2cPracticeInterviewStore();
@@ -50,6 +60,8 @@ export function useB2cPracticeAnswerSubmit({
   const [overwriteConfirmOpen, setOverwriteConfirmOpen] = useState(false);
   const pendingOverrideRef = useRef<{ file: File; durationSec: number } | null>(null);
   const inFlightRef = useRef(false);
+  // Lời hứa "upload đang bay đã xong" (thành công hay lỗi) — luồng hết giờ chờ nó trước khi nộp bài.
+  const inFlightDoneRef = useRef<Promise<void> | null>(null);
   // `store` and `recorder` are fresh object references every render (Zustand
   // returns a new object on any store write anywhere; the recorder hook
   // returns new inline callbacks each render). Reading them via refs instead
@@ -64,6 +76,13 @@ export function useB2cPracticeAnswerSubmit({
   onStopSpeechRef.current = onStopSpeech;
   const onStopMediaRef = useRef(onStopMedia);
   onStopMediaRef.current = onStopMedia;
+  const isExamTimeUpRef = useRef(isExamTimeUp);
+  isExamTimeUpRef.current = isExamTimeUp;
+  const onSessionTimeUpRef = useRef(onSessionTimeUp);
+  onSessionTimeUpRef.current = onSessionTimeUp;
+  const submitSessionRef = useRef(submitSession);
+  submitSessionRef.current = submitSession;
+  const examTimeUp = useCallback(() => isExamTimeUpRef.current?.() === true, []);
 
   const canSubmitAnswer =
     Boolean(recorder.audioFile) &&
@@ -86,12 +105,14 @@ export function useB2cPracticeAnswerSubmit({
     }
     if (inFlightRef.current) throw new Error('submit-in-flight');
     inFlightRef.current = true;
+    let markDone!: () => void;
+    inFlightDoneRef.current = new Promise<void>((resolve) => { markDone = resolve; });
     setIsSubmittingAnswer(true);
     setAnswerError(null);
     store.setStage('submitting_answer');
     recorder.setUploading();
     try {
-      const response = await submitPracticeAnswer({
+      const response = await submitAnswerWithBeginRetry({
         sessionId,
         questionId: currentQuestion.id,
         file,
@@ -111,6 +132,8 @@ export function useB2cPracticeAnswerSubmit({
       // only happened on the interviewComplete branch, leaving old audio
       // playing (and racing new-question TTS) on the normal advance path.
       onStopSpeechRef.current();
+      // Hết giờ cả buổi: câu này đã lưu — dừng ở đây (không chuyển câu, không tự nộp bài).
+      if (examTimeUp()) return;
 
       if (response.nextQuestion) {
         store.appendQuestion(response.nextQuestion);
@@ -121,7 +144,9 @@ export function useB2cPracticeAnswerSubmit({
         store.setInterviewComplete(true, response.nextAction ?? 'end');
         recorder.stopRecordingAndDiscard();
         try {
-          await submitPracticeSession(sessionId);
+          await (submitSessionRef.current ?? (() => submitPracticeSession(sessionId)))();
+          // Hết giờ ập tới khi đang nộp: màn hết giờ đã hiện "Đã nộp bài" — không rời phòng.
+          if (examTimeUp()) return;
           onStopMediaRef.current();
           navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
         } catch {
@@ -137,18 +162,20 @@ export function useB2cPracticeAnswerSubmit({
         store.setStage('interviewing');
       }
     } catch (error) {
-      const status = getApiStatusCode(error);
-      setAnswerError(mapSubmitPracticeAnswerErrorKey(status));
+      setAnswerError(mapSubmitPracticeAnswerErrorKey(error));
+      if (getPracticeApiErrorCode(error) === 'SESSION_TIME_UP') onSessionTimeUpRef.current?.();
       store.setStage('interviewing');
       store.setQuestionState(currentQuestion.id, 'error');
       recorder.setStopped();
       throw error;
     } finally {
       inFlightRef.current = false;
+      inFlightDoneRef.current = null;
+      markDone();
       setIsSubmittingAnswer(false);
       setOverwriteConfirmOpen(false);
     }
-  }, [completePath, currentQuestion, navigate, sessionId]);
+  }, [completePath, currentQuestion, examTimeUp, navigate, sessionId]);
 
   const submitAnswer = useCallback(async () => {
     if (!canSubmitAnswer) {
@@ -204,6 +231,8 @@ export function useB2cPracticeAnswerSubmit({
   }, [performSubmit]);
 
   const isSubmitInFlight = useCallback(() => inFlightRef.current, []);
+  /** Upload đang bay ⇒ lời hứa xong (không bao giờ reject); không có ⇒ `null`. */
+  const waitForInFlight = useCallback(() => inFlightDoneRef.current, []);
 
   return {
     isSubmittingAnswer,
@@ -217,5 +246,6 @@ export function useB2cPracticeAnswerSubmit({
     setOverwriteConfirmOpen,
     confirmOverwriteSubmit,
     isSubmitInFlight,
+    waitForInFlight,
   };
 }

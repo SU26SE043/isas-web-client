@@ -119,6 +119,10 @@ export function CampaignReviewStep({
   const questionsValue = questionsPerSession
     ? t('employer.campaigns.wizard.deploy.questionsDraw').replace('{{n}}', String(questions.length)).replace('{{k}}', String(questionsPerSession))
     : t('employer.campaigns.wizard.deploy.questionsAll').replace('{{n}}', String(questions.length));
+  // ATT1 — "30 phút · tối đa 1 lần"; "Sửa" về bước 5 (index 4), nơi có khối "Luật làm bài".
+  const attemptRulesValue = t(info.maxAttempts === 1 ? 'employer.campaigns.wizard.deploy.attemptRulesValueOne' : 'employer.campaigns.wizard.deploy.attemptRulesValueMany')
+    .replace('{{minutes}}', String(info.timeLimitMinutes))
+    .replace('{{n}}', String(info.maxAttempts));
   const invitesValue = inviteEmails.length > 0
     ? `${inviteEmails.length} ${t('employer.campaigns.wizard.deploy.candidates')}`
     : t('employer.campaigns.wizard.deploy.noInvites');
@@ -159,6 +163,7 @@ export function CampaignReviewStep({
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryJob')} value={`${domainLabel} · ${jd.fileName || (jd.jdText.trim() ? t('employer.campaigns.wizard.deploy.jdTyped') : '—')}`} onEdit={() => onGoToStep(1)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryCriteria')} value={t('employer.campaigns.wizard.deploy.criteriaCount').replace('{{n}}', String(rubric.length))} onEdit={() => onGoToStep(2)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
           <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryQuestions')} value={questionsValue} onEdit={() => onGoToStep(3)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
+          <SummaryCard label={t('employer.campaigns.wizard.deploy.summaryAttemptRules')} value={attemptRulesValue} onEdit={() => onGoToStep(4)} editLabel={t('employer.campaigns.wizard.deploy.edit')} />
         </div>
         {/* SC2 · D-1 — bước 8 chỉ TÓM TẮT chấm thử theo câu (n/K câu đã thử · m câu chưa gắn tiêu chí), không chặn Phát hành. */}
         <QuestionPreviewSummaryLine campaignId={campaignId ?? null} questions={questions} rubric={rubric} onGoToQuestions={() => onGoToStep(3)} />

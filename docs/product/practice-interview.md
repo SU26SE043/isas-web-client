@@ -57,7 +57,37 @@ Weighted result responses may include `scoreFormula: "Weighted"`, `scoreBeforePe
 
 Interview room UI stays campaign-agnostic for B2B. B2C practice uses dedicated hooks/services under `b2cPractice*`.
 
-The B2B campaign adapter supplies a `violationPaused` input to the shared room. While true, the existing question timer, TTS, MediaRecorder, submit/next/finish actions, and recorder controls pause or become disabled. Resume uses the same state and media instances; no second interview state machine is created. B2C never enables this campaign monitoring path.
+The B2B campaign adapter supplies a `violationPaused` input to the shared room. While true, the existing question timer, TTS, MediaRecorder, submit/next/finish actions, and recorder controls pause or become disabled. Resume uses the same state and media instances; no second interview state machine is created. B2C never enables this campaign monitoring path. The ATT1 whole-sitting clock below is the exception: it never pauses.
+
+## B2B campaign sitting clock (ATT1)
+
+**Status: in progress** — ATT1-F4 (enter room + server-time clock) and ATT1-F5 (time-up) are being implemented; this section describes the agreed target from the ATT1 spec (contract hash `7e4792f993948da2`, codes `[I1]`–`[I5]`). Story packet: [`ATT1-frontend`](../stories/epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md). HR configures the length in [`campaign-management.md`](./campaign-management.md#attempt-rules-att1); the candidate campaign page is in [`campaign-discovery.md`](./campaign-discovery.md#attempt-states-on-the-candidate-campaign-page-att1-f3).
+
+**Scope.** Only B2B campaign sessions created after Backend ATT1. **B2C practice is unchanged**, and so are B2B sessions created before ATT1 (`begin` returns `beganAt = null`, `durationMinutes = null` ⇒ no sitting clock).
+
+**Questions locked until the room.** After ATT1, campaign `start` and the session `GET` used by `/interview/:sessionId/prepare` return question ids/order/time limits with empty `content` (`questionsLocked = true`) [I2]; answers and TTS speech return `409 SESSION_NOT_BEGUN` while locked [I3][I4]. The preparation page must **not** call `begin` — otherwise the clock would run during the device check.
+
+**Entering the room (F4).** When the B2B room opens (after preparation, before the first question is read) the frontend calls `POST /api/v1/interview/practice/sessions/{id}/begin` once [I1] (repeat calls return the same `beganAt`/`deadline`), then invalidates and refetches the `["practice","session",sessionId]` query. Still locked after `begin` ⇒ call `begin` once more, then show a room-load error. `begin` `404` (old Backend) ⇒ keep today’s path using the stored `deadlineAt` from `start`. `409 SESSION_ENDED` ⇒ the sitting is over.
+
+**Clock = server time, never paused.**
+
+- `offset = Date.parse(serverNow) − Date.now()` taken from the latest response carrying `serverNow` (`begin` or session `GET`); `remaining = deadline − (Date.now() + offset)`. Plain `Date.now()` is never used for the sitting clock.
+- The sitting clock keeps running during violation overlays, hidden tabs and reloads. The **question** timer still pauses on violation exactly as in [`campaign-assessment.md`](./campaign-assessment.md) §26–27; the effective answer timer stays `min(question timer, sitting remaining)`.
+- `start.deadlineAt` is the hard campaign/slot deadline, not the sitting clock, whenever `begin` returned a result.
+- Header: “Thời gian bài thi ⏱ mm:ss (theo giờ hệ thống)” in its own component. ≤ 5 min: warning colour + “Còn 5 phút — hệ thống sẽ tự nộp khi hết giờ”. ≤ 1 min: error colour. `aria-live` announces only at 5 min / 1 min / 0. The violation overlay adds “Đồng hồ bài thi vẫn chạy”.
+
+**Time-up (F5).** At `remaining = 0`: stop recording; if a segment was being recorded, upload it with `allowDuringTimeout` and wait at most **25 s** (the server accepts answers until `deadline + 30 s`) [I3]; then call `POST .../submit` [I5] (unchanged, accepted after the deadline); show a full-screen, non-dismissible “Đã hết giờ làm bài” screen with save/submit progress, the number of main questions answered (unanswered = 0 points), and a button back to the campaign page. No further recording or question navigation after 0.
+
+| Case | Behaviour |
+| --- | --- |
+| Upload `409 SESSION_TIME_UP` | Drop that answer, continue to submit |
+| Upload `409 SESSION_NOT_BEGUN` | Call `begin`, retry the upload once |
+| `submit` fails | Time-up screen stays, with “Hệ thống sẽ tự nộp bài trong ít phút” (server auto-finalizes after `deadline + 30 s`) — never a “submit failed” message |
+| No question answered at all | Server cancels the sitting; the attempt is still consumed |
+
+Session error mapping reads the response `code` before the HTTP status, with dedicated i18n keys for the new ATT1 codes (today every `409` maps to `practice.errors.conflict`).
+
+**Deliberately not done:** a server-held per-question timer; any countdown on the campaign card/page; an “attempt n” label in HR results.
 
 ## Integration order
 

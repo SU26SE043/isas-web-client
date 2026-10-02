@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
+import { getApiStatusCode } from '@/shared/api/apiError';
 import { submitPracticeAnswer, submitPracticeSession } from '../services/b2cPracticeSession.service';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { createSilentUnansweredAudioFile } from '../utils/createSilentUnansweredAudioFile';
-import { countUnsubmittedQuestions } from '../utils/finishSummary';
-import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
+import { countMainQuestionsAnswered, countUnsubmittedQuestions } from '../utils/finishSummary';
+import { isSessionAlreadySubmittedError, mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErrors';
 import { useB2cPracticeAnswerSubmit } from './useB2cPracticeAnswerSubmit';
 import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
 import { loadRoomSession } from './loadRoomSession';
+import { enterExamRoom, ExamRoomEntryError, type ExamRoomEntryFailure } from './enterExamRoom';
+import { useRoomExamClock } from './useRoomExamClock';
+import { useExamTimeUp, type ExamTimeUpReason } from './useExamTimeUp';
 
 // Brief enough to let the "time's up" state paint before the auto-submit
 // request fires, but short enough not to add a needless extra second on top
@@ -31,6 +34,20 @@ export function useB2cPracticeRoom(
     startWithCountdown?: boolean;
     countdownReady?: boolean;
     deadlineAt?: string | null;
+    /** Phòng B2B (ATT1 [I1]): gọi begin khi vào phòng, đồng hồ cả buổi theo giờ server. B2C không bật. */
+    beginOnEnter?: boolean;
+    /** Begin có kết quả (đề đã mở khoá) — caller invalidate cache phiên. */
+    onSessionBegun?: () => void;
+    /**
+     * ATT1-F5: phòng vào luồng hết giờ (đồng hồ cả buổi của buổi tính giờ về 0, hoặc upload bị 409
+     * SESSION_TIME_UP) — gọi đúng 1 lần. Trang B2B ẩn overlay vi phạm / toàn màn hình, thôi giám sát.
+     */
+    onExamTimeUp?: () => void;
+    /**
+     * ATT1-F5: hết giờ ⇒ thẻ ghi âm dừng và nộp đoạn đang ghi (allowDuringTimeout). Trả `false` khi không có
+     * đoạn nào để nộp. Không truyền ⇒ coi như không có.
+     */
+    requestFinalRecording?: () => boolean;
     violationPaused?: boolean;
     onAutoSubmitRequest?: () => void;
     onAutoSubmitEmptyResult?: (result: { submitted: boolean; error?: unknown }) => void;
@@ -51,7 +68,20 @@ export function useB2cPracticeRoom(
   );
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
-  const [serverRemainingSeconds, setServerRemainingSeconds] = useState<number | null>(null);
+  const [entryError, setEntryError] = useState<ExamRoomEntryFailure | null>(null);
+  const beginOnEnter = Boolean(options?.beginOnEnter);
+  const onSessionBegunRef = useRef(options?.onSessionBegun);
+  onSessionBegunRef.current = options?.onSessionBegun;
+  // `useRoomExamClock` chỉ gọi `onTimeUp` khi buổi TÍNH GIỜ (begin có durationMinutes) — đường cũ (begin 404,
+  // deadlineAt của start) và B2C không bao giờ vào luồng hết giờ: giữ đúng hành vi trước ATT1.
+  const examTimeUpTriggerRef = useRef<(reason: ExamTimeUpReason) => void>(() => undefined);
+  const handleExamClockTimeUp = useCallback(() => examTimeUpTriggerRef.current('clock'), []);
+  const examClock = useRoomExamClock({
+    beginOnEnter,
+    fallbackDeadlineAt: options?.deadlineAt,
+    onTimeUp: handleExamClockTimeUp,
+  });
+  const serverRemainingSeconds = examClock.serverRemainingSeconds;
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
   const timeoutAdvanceTimerRef = useRef<number | null>(null);
@@ -79,6 +109,18 @@ export function useB2cPracticeRoom(
     }
     countdownQuestionRef.current = null;
     setCountdownValue(null);
+  }, []);
+
+  /** Huỷ hẹn giờ của luồng hết giờ TỪNG CÂU (tự nộp câu trống / chuyển câu). */
+  const clearQuestionTimeoutTimers = useCallback(() => {
+    if (timeoutAdvanceTimerRef.current != null) {
+      window.clearTimeout(timeoutAdvanceTimerRef.current);
+      timeoutAdvanceTimerRef.current = null;
+    }
+    if (timeoutFallbackTimerRef.current != null) {
+      window.clearTimeout(timeoutFallbackTimerRef.current);
+      timeoutFallbackTimerRef.current = null;
+    }
   }, []);
 
   const startQuestionCountdown = useCallback((questionId: string) => {
@@ -153,29 +195,43 @@ export function useB2cPracticeRoom(
     store.setQuestionState,
   ]);
 
-  useEffect(() => {
-    if (!options?.deadlineAt) {
-      setServerRemainingSeconds(null);
-      return;
-    }
-    const deadlineMs = new Date(options.deadlineAt).getTime();
-    if (!Number.isFinite(deadlineMs)) {
-      setServerRemainingSeconds(null);
-      return;
-    }
-    const update = () => {
-      if (violationPausedRef.current) return;
-      setServerRemainingSeconds(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
-    };
-    update();
-    const timer = window.setInterval(update, 1000);
-    return () => window.clearInterval(timer);
-  }, [options?.deadlineAt]);
-
+  // Đồng hồ cả buổi (`useRoomExamClock`) KHÔNG dừng theo `violationPausedRef` — chỉ đồng hồ câu dừng.
   const effectiveRemainingSeconds =
     serverRemainingSeconds == null
       ? store.remainingSeconds
       : Math.min(store.remainingSeconds, serverRemainingSeconds);
+
+  // Nộp bài dùng chung (Kết thúc · câu cuối interviewComplete · hết giờ): hai lời gọi chồng nhau dùng CHUNG một
+  // request ⇒ không bao giờ gửi submit lần 2. Lỗi ⇒ quên lời hứa để lần sau thử lại được.
+  const sessionSubmitRef = useRef<Promise<void> | null>(null);
+  const submitSessionOnce = useCallback(() => {
+    if (!sessionSubmitRef.current) {
+      const pending = submitPracticeSession(sessionId);
+      sessionSubmitRef.current = pending;
+      pending.catch(() => {
+        if (sessionSubmitRef.current === pending) sessionSubmitRef.current = null;
+      });
+    }
+    return sessionSubmitRef.current;
+  }, [sessionId]);
+
+  const examTimeUp = useExamTimeUp({
+    enabled: beginOnEnter,
+    onEnter: () => {
+      clearQuestionTimeoutTimers();
+      setShowTimerWarning(false);
+      setFinishOpen(false);
+      setRetryConfirmOpen(false);
+      speech.stopPlayback();
+    },
+    requestFinalRecording: () => options?.requestFinalRecording?.() === true,
+    waitForInFlightUpload: () => answerSubmit.waitForInFlight(),
+    onUploadPhaseDone: () => media.stopMedia(),
+    submitSession: submitSessionOnce,
+    onTimeUp: options?.onExamTimeUp,
+  });
+  examTimeUpTriggerRef.current = examTimeUp.trigger;
+  const examTimeUpActive = examTimeUp.status != null;
 
   const answerSubmit = useB2cPracticeAnswerSubmit({
     sessionId,
@@ -184,24 +240,75 @@ export function useB2cPracticeRoom(
     currentQuestion,
     remainingSeconds: effectiveRemainingSeconds,
     stage: store.stage,
-    isTimingOut,
+    isTimingOut: isTimingOut || examTimeUpActive,
     answersByQuestionId: store.answersByQuestionId,
     onStopSpeech: () => speech.stopPlayback(),
     onStopMedia: () => media.stopMedia(),
     completePath,
+    isExamTimeUp: examTimeUp.isActive,
+    onSessionTimeUp: () => examTimeUp.trigger('server'),
+    submitSession: submitSessionOnce,
   });
 
   const handleAutoSubmitEmptyResult = useCallback((result: { submitted: boolean; error?: unknown }) => {
+    // Hết giờ: thẻ ghi âm báo không có đoạn nào để nộp ⇒ thôi chờ, sang nộp bài.
+    if (examTimeUp.isActive()) {
+      examTimeUp.settleFinalUpload();
+      return;
+    }
     if (!result.submitted && result.error) {
-      answerSubmit.setAnswerError(mapSubmitPracticeAnswerErrorKey(getApiStatusCode(result.error)));
+      answerSubmit.setAnswerError(mapSubmitPracticeAnswerErrorKey(result.error));
     }
     options?.onAutoSubmitEmptyResult?.(result);
-  }, [answerSubmit.setAnswerError, options?.onAutoSubmitEmptyResult]);
+  }, [answerSubmit.setAnswerError, examTimeUp.isActive, examTimeUp.settleFinalUpload, options?.onAutoSubmitEmptyResult]);
+
+  const submitAnswerWithFile = useCallback(
+    async (file: File, durationSec: number, submitOptions?: { allowDuringTimeout?: boolean }) => {
+      try {
+        await answerSubmit.submitAnswerWithFile(file, durationSec, submitOptions);
+      } finally {
+        // Đoạn ghi âm cuối (nộp tự động lúc hết giờ) đã xong — thành công hay 409 SESSION_TIME_UP đều sang nộp bài.
+        if (submitOptions?.allowDuringTimeout && examTimeUp.isActive()) examTimeUp.settleFinalUpload();
+      }
+    },
+    [answerSubmit.submitAnswerWithFile, examTimeUp.isActive, examTimeUp.settleFinalUpload],
+  );
+
+  const submitEmptyAnswer = useCallback(async () => {
+    // Hết giờ: không nộp câu trống — đoạn ghi âm hoá ra rỗng ⇒ thôi chờ, sang nộp bài.
+    if (examTimeUp.isActive()) {
+      examTimeUp.settleFinalUpload();
+      return false;
+    }
+    return answerSubmit.submitEmptyAnswer();
+  }, [answerSubmit.submitEmptyAnswer, examTimeUp.isActive, examTimeUp.settleFinalUpload]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       if (!sessionId) return;
+      if (beginOnEnter) {
+        // B2B: begin TRƯỚC khi đọc câu — luôn begin (kể cả store còn câu của buổi này) vì đồng hồ cần deadline.
+        store.setStage('interviewing');
+        try {
+          const entry = await enterExamRoom(
+            sessionId,
+            { onBegun: () => onSessionBegunRef.current?.() },
+            () => cancelled,
+          );
+          if (!entry) return;
+          examClock.applyEntry(entry.clock);
+          store.hydrateFromSession(entry.session);
+        } catch (error) {
+          if (cancelled) return;
+          if (error instanceof ExamRoomEntryError) {
+            setEntryError(error.reason);
+            media.stopMedia();
+          }
+          store.setStage('error');
+        }
+        return;
+      }
       if (store.sessionId === sessionId && store.questions.length > 0) {
         store.setStage('interviewing');
         return;
@@ -378,6 +485,9 @@ export function useB2cPracticeRoom(
   ]);
 
   useEffect(() => {
+    // ATT1-F5: đồng hồ hiệu lực = min(câu, cả buổi) ⇒ cả buổi về 0 cũng làm nó về 0. Khi nguyên nhân là hết giờ
+    // CẢ BUỔI thì KHÔNG đi luồng hết giờ từng câu (nộp câu trống + chuyển câu) — chỉ luồng hết giờ (`useExamTimeUp`).
+    if (examClock.examClock?.timeUp || examTimeUp.isActive()) return undefined;
     if (options?.violationPaused || (phase !== 'answering' && phase !== 'reading')) return undefined;
     if (effectiveRemainingSeconds !== 0) return;
     if (store.stage !== 'interviewing') return;
@@ -446,10 +556,12 @@ export function useB2cPracticeRoom(
     !options?.violationPaused &&
     !answerSubmit.isSubmittingAnswer &&
     !isTimingOut &&
+    !examTimeUpActive &&
     store.stage === 'interviewing';
 
   const confirmFinish = useCallback(async () => {
-    if (options?.violationPaused) return;
+    // Hết giờ: luồng hết giờ đã (đang) nộp bài — "Kết thúc"/"Thoát" không được gây submit thứ 2.
+    if (options?.violationPaused || examTimeUp.isActive()) return;
     setIsSubmittingSession(true);
     store.setStage('submitting_session');
     speech.stopPlayback();
@@ -492,19 +604,13 @@ export function useB2cPracticeRoom(
         return;
       }
 
-      await submitPracticeSession(sessionId);
+      await submitSessionOnce();
       media.stopMedia();
       navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
     } catch (error) {
       const status = getApiStatusCode(error);
-      const message = getApiErrorMessage(error, '').toLowerCase();
       if (status === 400) {
-        if (
-          message.includes('already') ||
-          message.includes('submitted') ||
-          message.includes('đã submit') ||
-          message.includes('da submit')
-        ) {
+        if (isSessionAlreadySubmittedError(error)) {
           navigate(completePath ?? `/interview/${sessionId}/complete`, { replace: true });
           return;
         }
@@ -517,7 +623,7 @@ export function useB2cPracticeRoom(
       setIsSubmittingSession(false);
       setFinishOpen(false);
     }
-  }, [answerSubmit, completePath, media, navigate, options?.violationPaused, recorder, sessionId, speech, store]);
+  }, [answerSubmit, completePath, examTimeUp.isActive, media, navigate, options?.violationPaused, recorder, sessionId, speech, store, submitSessionOnce]);
 
   const submittedCount = store.questions.filter(
     (question) => store.questionStates[question.id] === 'submitted',
@@ -529,6 +635,7 @@ export function useB2cPracticeRoom(
   const unansweredCount = countUnsubmittedQuestions(store.questions, store.questionStates);
   const hasPendingRecording =
     Boolean(recorder.audioFile) && recorder.recordingStatus !== 'submitted';
+  const blockedByExamTimeUp = examTimeUpActive || examTimeUp.isActive();
 
   return {
     isLoading: store.stage === 'setup' && store.questions.length === 0,
@@ -541,6 +648,14 @@ export function useB2cPracticeRoom(
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
     remainingSeconds: effectiveRemainingSeconds,
+    /** Đồng hồ cả buổi để hiện ở header — `null` khi buổi không tính giờ (B2C, Backend cũ). */
+    examClock: examClock.examClock,
+    /** Không vào được phòng thi B2B (đề vẫn khoá / buổi đã kết thúc / lỗi) — phòng hiện bảng lỗi. */
+    entryError,
+    /** ATT1-F5 — `null` khi chưa hết giờ; có giá trị ⇒ phòng hiện màn "Đã hết giờ" (không đóng được). */
+    examTimeUp: examTimeUp.status,
+    /** Câu CHÍNH (câu gốc, không tính câu đào sâu) đã có câu trả lời được lưu / tổng câu chính. */
+    mainQuestionsAnswered: countMainQuestionsAnswered(store.questions, store.questionStates, store.answersByQuestionId),
     answersByQuestionId: store.answersByQuestionId,
     questionStates: store.questionStates,
     interviewComplete: store.interviewComplete,
@@ -555,7 +670,7 @@ export function useB2cPracticeRoom(
     recorder,
     isSubmittingAnswer: answerSubmit.isSubmittingAnswer,
     isSubmittingSession,
-    isTimingOut: isTimingOut || Boolean(options?.violationPaused),
+    isTimingOut: isTimingOut || Boolean(options?.violationPaused) || examTimeUpActive,
     phase,
     countdownValue,
     answerError: answerSubmit.answerError,
@@ -563,24 +678,27 @@ export function useB2cPracticeRoom(
     canSubmitAnswer: answerSubmit.canSubmitAnswer,
     canReplay,
     submitAnswer: answerSubmit.submitAnswer,
-    submitAnswerWithFile: answerSubmit.submitAnswerWithFile,
-    submitEmptyAnswer: answerSubmit.submitEmptyAnswer,
+    submitAnswerWithFile,
+    submitEmptyAnswer,
     handleAutoSubmitEmptyResult,
     overwriteConfirmOpen: answerSubmit.overwriteConfirmOpen,
     setOverwriteConfirmOpen: answerSubmit.setOverwriteConfirmOpen,
     confirmOverwriteSubmit: answerSubmit.confirmOverwriteSubmit,
     finishOpen,
-    setFinishOpen,
+    setFinishOpen: (open: boolean) => {
+      if (open && blockedByExamTimeUp) return;
+      setFinishOpen(open);
+    },
     retryConfirmOpen,
     setRetryConfirmOpen,
     confirmFinish,
     submittedCount,
     unansweredCount,
     // Kết thúc sớm: cần ≥1 câu đã nộp + không đang nộp dở (câu hiện tại hoặc cả buổi).
-    canFinishEarly: submittedCount >= 1 && !isSubmittingSession && !answerSubmit.isSubmittingAnswer,
+    canFinishEarly: submittedCount >= 1 && !isSubmittingSession && !answerSubmit.isSubmittingAnswer && !examTimeUpActive,
     hasPendingRecording,
     startRecording: () => {
-      if (options?.violationPaused || speech.isBusy || effectiveRemainingSeconds <= 0 || isTimingOut) return;
+      if (options?.violationPaused || speech.isBusy || effectiveRemainingSeconds <= 0 || isTimingOut || blockedByExamTimeUp) return;
       if (store.answersByQuestionId[store.currentQuestionId ?? '']) {
         setRetryConfirmOpen(true);
         return;
@@ -591,7 +709,7 @@ export function useB2cPracticeRoom(
       }
     },
     confirmRetryRecording: () => {
-      if (options?.violationPaused || speech.isBusy || isTimingOut || effectiveRemainingSeconds <= 0) return;
+      if (options?.violationPaused || speech.isBusy || isTimingOut || effectiveRemainingSeconds <= 0 || blockedByExamTimeUp) return;
       setRetryConfirmOpen(false);
       recorder.clearRecording();
       recorder.startRecording();

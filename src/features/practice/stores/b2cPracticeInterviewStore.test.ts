@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useB2cPracticeInterviewStore } from './b2cPracticeInterviewStore';
+import { countMainQuestionsAnswered, countUnsubmittedQuestions } from '../utils/finishSummary';
 import type { PracticeQuestionResponse, PracticeSessionResponse } from '../types/b2cPracticeSession.types';
 
 function makeQuestion(id: string, orderNo: number): PracticeQuestionResponse {
@@ -144,6 +145,88 @@ describe('useB2cPracticeInterviewStore hydrateFromSession — quay lại buổi 
     expect(state.answersByQuestionId).toEqual({});
     expect(state.interviewComplete).toBe(false);
     expect(state.questionStates).toEqual({ 'q-1': 'reading_question', 'q-2': 'not_started', 'q-3': 'not_started' });
+  });
+});
+
+describe('useB2cPracticeInterviewStore hydrateFromSession — bài im lặng (rejectReason no_speech, CAMP-21)', () => {
+  beforeEach(() => {
+    useB2cPracticeInterviewStore.getState().reset();
+  });
+
+  const seeds = [makeQuestion('q-1', 1), makeQuestion('q-2', 5), makeQuestion('q-3', 9)];
+
+  it('câu bị nộp thay bằng file lặng ⇒ "chưa trả lời" nhưng VẪN giữ bản ghi (không hỏi lại); x/y câu chính = 1/3', () => {
+    // Hết giờ TỪNG CÂU: hệ thống nộp thay bằng file lặng ⇒ server trả status 'Skipped' + rejectReason
+    // 'no_speech'. Trước đây hydrate gán 'submitted' cho MỌI câu có bản ghi ⇒ sau khi tải lại phòng,
+    // màn hết giờ báo "Đã trả lời 2/3" trong khi ứng viên chỉ thật sự trả lời 1 câu.
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scoring', rejectReason: null, transcript: 'đã nói' },
+        // Bài im lặng VẪN CÓ audio — durationSec của nó KHÔNG phải 0, nên durationSec không dùng được làm tín hiệu.
+        { questionId: 'q-2', answerId: 'a-2', status: 'Skipped', rejectReason: 'no_speech', durationSec: 11 },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.questionStates).toEqual({ 'q-1': 'submitted', 'q-2': 'unanswered', 'q-3': 'reading_question' });
+    // Bản ghi của câu im lặng phải còn: thiếu nó là phòng hỏi lại câu 2 và ứng viên nộp đè lên bài đã có.
+    expect(state.answersByQuestionId['q-2']).toMatchObject({ answerId: 'a-2', status: 'Skipped', rejectReason: 'no_speech' });
+    expect(state.currentQuestionId).toBe('q-3');
+
+    expect(countMainQuestionsAnswered(state.questions, state.questionStates, state.answersByQuestionId))
+      .toEqual({ answered: 1, total: 3 });
+    expect(countUnsubmittedQuestions(state.questions, state.questionStates)).toBe(2);
+  });
+
+  it('rejectReason null (dòng dữ liệu cũ BK23) hoặc lý do KHÁC ⇒ vẫn tính ĐÃ trả lời', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scored', rejectReason: null },
+        { questionId: 'q-2', answerId: 'a-2', status: 'Skipped', rejectReason: 'too_short' },
+        { questionId: 'q-3', answerId: 'a-3', status: 'Scoring' },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.questionStates).toEqual({ 'q-1': 'submitted', 'q-2': 'submitted', 'q-3': 'submitted' });
+    expect(countMainQuestionsAnswered(state.questions, state.questionStates, state.answersByQuestionId))
+      .toEqual({ answered: 3, total: 3 });
+  });
+
+  it('phòng luyện B2C (answers KHÔNG có rejectReason) không đổi hành vi: mọi câu có bản ghi là đã trả lời', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scored', transcript: 'b2c' },
+        { questionId: 'q-2', answerId: 'a-2', status: 'Scoring' },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.questionStates).toEqual({ 'q-1': 'submitted', 'q-2': 'submitted', 'q-3': 'reading_question' });
+    expect(state.answersByQuestionId['q-1']).toMatchObject({ rejectReason: null });
+    expect(state.stage).toBe('interviewing');
+    expect(state.interviewComplete).toBe(false);
+  });
+
+  it('câu cuối là bài im lặng ⇒ hết câu để hỏi (interviewComplete) nhưng vẫn "chưa trả lời"', () => {
+    useB2cPracticeInterviewStore.getState().hydrateFromSession({
+      ...makeSession(seeds),
+      answers: [
+        { questionId: 'q-1', answerId: 'a-1', status: 'Scored' },
+        { questionId: 'q-2', answerId: 'a-2', status: 'Scored' },
+        { questionId: 'q-3', answerId: 'a-3', status: 'Skipped', rejectReason: 'no_speech' },
+      ],
+    });
+
+    const state = useB2cPracticeInterviewStore.getState();
+    expect(state.interviewComplete).toBe(true);
+    expect(state.stage).toBe('ready_to_finish');
+    expect(state.questionStates['q-3']).toBe('unanswered');
+    expect(countMainQuestionsAnswered(state.questions, state.questionStates, state.answersByQuestionId))
+      .toEqual({ answered: 2, total: 3 });
   });
 });
 

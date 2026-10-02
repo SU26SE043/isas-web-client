@@ -36,6 +36,8 @@ vi.mock('./CampaignAttachmentsCard', () => ({ CampaignAttachmentsCard: () => nul
 vi.mock('./detail/CampaignDetailQuestionsSection', () => ({ CampaignDetailQuestionsSection: () => null }));
 vi.mock('./CampaignScoringRulesCard', () => ({ CampaignScoringRulesCard: () => null }));
 vi.mock('./CampaignDetailActions', () => ({ CampaignDetailActions: () => null }));
+// ATT1-F2: hộp thoại "Tăng số lần" dùng react-query (useMutation) — cùng lý do cắt; có test riêng.
+vi.mock('./detail/IncreaseMaxAttemptsDialog', () => ({ IncreaseMaxAttemptsDialog: () => null }));
 
 const { CampaignDetailView } = await import('./CampaignDetailView');
 

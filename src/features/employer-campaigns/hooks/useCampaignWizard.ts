@@ -64,6 +64,7 @@ import {
   CAMPAIGN_AI_GENERATE_MAX,
 } from '../utils/campaignQuestionLimits';
 import { calculateAdaptiveQuestionBudget } from '../utils/campaignAdaptiveBudget';
+import { CAMPAIGN_DEFAULT_MAX_ATTEMPTS } from '../utils/campaignAttemptRules';
 import { adoptServerRubric, buildQuestionIdAliases, pruneQuestionTargetIds } from '../utils/serverIdAdoption';
 import {
   CampaignInvitationDeployError,
@@ -158,6 +159,7 @@ function defaultInfo(campaign?: EmployerCampaign | null): CampaignInfoState {
     language: campaign?.locale ?? 'vi',
     maxCandidates: campaign?.capacity && campaign.capacity > 0 ? campaign.capacity : null,
     timeLimitMinutes: campaign?.durationMinutes || 60,
+    maxAttempts: campaign?.maxAttempts ?? CAMPAIGN_DEFAULT_MAX_ATTEMPTS,
     passScorePct: campaign?.passScorePct ?? null,
     startsAt: toDatetimeLocalValue(start),
     expiresAt: toDatetimeLocalValue(end),
@@ -278,7 +280,15 @@ export function resolveCampaignErrorStep(
   kind: 'create' | 'update' | 'questions',
 ): number | null {
   const lower = message.toLowerCase();
-  if (lower.includes('maxquestions') || lower.includes('maxfollowups')) return 4;
+  // ATT1 [C1] — 400 về thời lượng / số lần làm: hai ô này nay ở khối "Luật làm bài" của bước 5 (index 4).
+  if (
+    lower.includes('maxquestions') ||
+    lower.includes('maxfollowups') ||
+    lower.includes('timelimit') ||
+    lower.includes('maxattempts')
+  ) {
+    return 4;
+  }
   if (lower.includes('question') || lower.includes('câu hỏi') || kind === 'questions') return 3;
   if (
     lower.includes('criteria') ||
@@ -431,6 +441,11 @@ export function getDeployWarnings(error: unknown, t: (key: string) => string): s
     : [];
   if (code === 'QUESTION_BANK_INVALID') return [t('employer.campaigns.wizard.deploy.warning.QUESTION_BANK_INVALID'), ...warnings];
   if (code === 'ADAPTIVE_BUDGET_TOO_SMALL' && nested) return [adaptiveDeployWarning(nested, t), ...warnings];
+  // Backend trả body OBJECT `{ error }` (có thể bọc `{ data: { error } }`) cho mọi 400/409 của
+  // POST/PUT /campaign — vd. nháp cũ có thời lượng ngoài [5,180] lúc publish [C4]. Chỉ 400/409 mới
+  // là lỗi nghiệp vụ đọc được; 5xx/mạng vẫn về câu chung để không lộ lỗi kỹ thuật.
+  const serverReason = typeof nested?.error === 'string' ? nested.error.trim() : '';
+  if ((status === 400 || status === 409) && serverReason) return [serverReason];
   if (status === 409 && typeof raw === 'string' && raw.trim()) return [raw.trim()];
   return [];
 }
@@ -438,6 +453,9 @@ export function getDeployWarnings(error: unknown, t: (key: string) => string): s
 export function mapDeployError(error: unknown, t: (key: string) => string): string {
   const warnings = getDeployWarnings(error, t);
   if (warnings.length) return warnings.join(' ');
+  // 409 = xung đột trạng thái. Không đọc được lời server thì câu về trạng thái vẫn sát hơn câu chung
+  // "triển khai thất bại" — giữ chất lượng thông điệp của chốt 409 cũ trong `handleFinalSubmit`.
+  if (getApiStatusCode(error) === 409) return t('employer.campaigns.wizard.deploy.deployConflict');
   return t('employer.campaigns.wizard.deploy.deployFailed');
 }
 
@@ -1481,16 +1499,14 @@ export function useCampaignWizard({
         setActionError(null);
         return;
       }
-      const status = getApiStatusCode(error);
       setPartialDeploy(null);
       setInvitationFailures([]);
       setInvitationFailureReason(null);
       setCanRetryInvitations(true);
-      setActionError(status === 409
-          ? (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.trim()
-            ? error.response.data.trim()
-            : t('employer.campaigns.wizard.deploy.deployConflict'))
-          : mapDeployError(error, t));
+      // F5b: KHÔNG chốt 409 riêng nữa. Chốt cũ chỉ đọc body CHUỖI TRẦN nên chặn chính bản sửa F5b
+      // (`getDeployWarnings` đã đọc `{ error }` cho 400 VÀ 409) và sẽ mở lại lỗ ngay khi backend đổi
+      // 409 sang `{ error }`. Câu mặc định riêng cho 409 nằm trong `mapDeployError`.
+      setActionError(mapDeployError(error, t));
     } finally {
       setIsSubmitting(false);
     }

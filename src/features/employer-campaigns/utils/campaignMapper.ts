@@ -12,6 +12,7 @@ import type {
   RubricCriterion,
   RubricScoringScope,
 } from '../types/campaignManagement.types';
+import { CAMPAIGN_DEFAULT_MAX_ATTEMPTS } from './campaignAttemptRules';
 
 const LIST_DEFAULT_PROCTORING: CampaignProctoringConfig = {
   faceCaptureIntervalSeconds: 90,
@@ -247,6 +248,7 @@ export function parseCampaignResponse(raw: unknown): CampaignResponse | null {
     durationMinutes:
       pickNumber(record, 'durationMinutes', 'DurationMinutes', 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
     timeLimitMinutes: pickNumber(record, 'timeLimitMinutes', 'TimeLimitMinutes') ?? null,
+    maxAttempts: pickNumber(record, 'maxAttempts', 'MaxAttempts') ?? null,
     passScorePct: pickNumber(record, 'passScorePct', 'PassScorePct') ?? null,
     antiCheatEnabled: pickBoolean(record, 'antiCheatEnabled', 'AntiCheatEnabled') ?? null,
     faceVerifyEnabled: pickBoolean(record, 'faceVerifyEnabled', 'FaceVerifyEnabled') ?? null,
@@ -339,6 +341,8 @@ export function mapCampaignResponseToEmployerCampaign(item: CampaignResponse): E
     deadline,
     startsAt: item.startsAt?.trim() || undefined,
     durationMinutes: item.durationMinutes ?? item.timeLimitMinutes ?? 0,
+    // ATT1 [C5] — Backend chưa có ATT1 không trả field này ⇒ 1 (đúng luật mặc định [C1]).
+    maxAttempts: item.maxAttempts ?? CAMPAIGN_DEFAULT_MAX_ATTEMPTS,
     passScorePct: item.passScorePct ?? null,
     skipPenalty: item.skipPenalty ?? null,
     rubricVersion: item.rubricVersion ?? null,

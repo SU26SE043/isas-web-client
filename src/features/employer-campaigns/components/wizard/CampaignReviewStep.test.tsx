@@ -35,6 +35,8 @@ vi.mock('@/shared/languages', () => ({
       if (key === 'employer.campaigns.wizard.deploy.whenPressedNoInvites') return `${key} {{start}} {{expires}}`;
       if (key === 'employer.campaigns.wizard.deploy.questionsDraw') return `${key} {{n}} {{k}}`;
       if (key === 'employer.campaigns.wizard.deploy.questionsAll') return `${key} {{n}}`;
+      // ATT1-F1 — giữ placeholder để test đọc được số phút / số lần đã `.replace()`.
+      if (key.startsWith('employer.campaigns.wizard.deploy.attemptRulesValue')) return `${key} {{minutes}}|{{n}}`;
       return key;
     },
   }),
@@ -82,6 +84,7 @@ const baseProps = {
     domain: 'frontend',
     maxCandidates: 10,
     timeLimitMinutes: 60,
+    maxAttempts: 1,
     passScorePct: 70,
     startsAt: '2026-09-07T09:00',
     expiresAt: '2026-10-07T09:00',
@@ -556,5 +559,38 @@ describe('CampaignReviewStep — bước cuối sau khi bỏ "Mở ngay khi tri�
     expect(line).toHaveTextContent('2');
     expect(line).not.toHaveTextContent('{{');
     expect(screen.queryByText(/whenPressedNoInvites/)).not.toBeInTheDocument();
+  });
+});
+
+/** ATT1-F1 — bước Kiểm tra có dòng "Luật làm bài · 30 phút · tối đa 1 lần" + nút Sửa về bước 5 (index 4). */
+describe('CampaignReviewStep — dòng Luật làm bài', () => {
+  const attemptCard = () => {
+    const label = screen.getByText('employer.campaigns.wizard.deploy.summaryAttemptRules');
+    const card = label.closest('.frame-satin');
+    if (!(card instanceof HTMLElement)) throw new Error('không thấy thẻ Luật làm bài');
+    return card;
+  };
+
+  it('30 phút · tối đa 1 lần ⇒ đúng số trong thẻ (khoá số ít)', () => {
+    render(<CampaignReviewStep {...baseProps} info={{ ...baseProps.info, timeLimitMinutes: 30, maxAttempts: 1 }} />);
+    expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueOne 30|1');
+  });
+
+  it('90 phút · tối đa 2 lần ⇒ đã là số nhiều (chỉ đúng 1 mới dùng câu số ít)', () => {
+    render(<CampaignReviewStep {...baseProps} info={{ ...baseProps.info, timeLimitMinutes: 90, maxAttempts: 2 }} />);
+    expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueMany 90|2');
+  });
+
+  it('45 phút · tối đa 3 lần ⇒ dùng câu số nhiều và đúng số', () => {
+    render(<CampaignReviewStep {...baseProps} info={{ ...baseProps.info, timeLimitMinutes: 45, maxAttempts: 3 }} />);
+    expect(within(attemptCard()).getByText(/attemptRulesValue/)).toHaveTextContent('employer.campaigns.wizard.deploy.attemptRulesValueMany 45|3');
+  });
+
+  it('nút Sửa trong thẻ đưa về bước 5 (index 4 — khối Luật làm bài), không phải bước khác', () => {
+    const onGoToStep = vi.fn();
+    render(<CampaignReviewStep {...baseProps} onGoToStep={onGoToStep} />);
+    fireEvent.click(within(attemptCard()).getByRole('button', { name: 'employer.campaigns.wizard.deploy.edit' }));
+    expect(onGoToStep).toHaveBeenCalledTimes(1);
+    expect(onGoToStep).toHaveBeenCalledWith(4);
   });
 });
