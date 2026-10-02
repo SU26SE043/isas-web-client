@@ -275,6 +275,34 @@ describe('CampaignInterviewPage — hết giờ cả buổi (ATT1-F5)', () => {
     expect(media.stopMedia).toHaveBeenCalled();
   });
 
+  it('tải lại phòng sau khi một câu bị nộp thay bằng file lặng ⇒ "Đã trả lời 1/3 câu chính", KHÔNG đếm dư', async () => {
+    // Hết giờ câu 2 ở lượt trước ⇒ server giữ bản ghi im lặng: status 'Skipped' + rejectReason 'no_speech'
+    // (bài im lặng VẪN CÓ audio nên durationSec của nó khác 0). Trước đây hydrate coi MỌI bản ghi là đã
+    // trả lời ⇒ màn hết giờ báo 2/3 dù ứng viên chỉ thật sự trả lời câu 1.
+    svc.getPracticeSession.mockImplementation(async () => ({
+      ...sessionResponse(),
+      answers: [
+        { answerId: 'a-1', questionId: 'q-1', status: 'Scored' },
+        { answerId: 'a-1fu', questionId: 'q-1-fu', status: 'Scored' },
+        { answerId: 'a-2', questionId: 'q-2', status: 'Skipped', rejectReason: 'no_speech', durationSec: 11 },
+      ],
+    }));
+    await enterRoom();
+    // Bản ghi im lặng vẫn còn ⇒ phòng mở ở câu 3, KHÔNG hỏi lại câu 2 (nộp lại là ghi đè bài đã có).
+    expect(useB2cPracticeInterviewStore.getState().currentQuestionId).toBe('q-3');
+
+    await flush(26_000); // T = 30 s
+    await flush();
+
+    expect(calls).toEqual(['begin', 'submit']);
+    expect(statusText()).toBe('Đã nộp bài');
+    expect(summaryText()).toBe('Đã trả lời 1/3 câu chính. Câu chưa trả lời được tính 0 điểm.');
+    const store = useB2cPracticeInterviewStore.getState();
+    expect(store.questionStates['q-2']).toBe('unanswered');
+    expect(store.answersByQuestionId['q-2']).toMatchObject({ answerId: 'a-2', rejectReason: 'no_speech' });
+    expect(svc.submitPracticeAnswer).not.toHaveBeenCalled();
+  });
+
   it('về 0 khi KHÔNG ghi ⇒ nộp bài NGAY, không nộp câu trống; đồng hồ tick tiếp 2 phút vẫn ĐÚNG 1 submit; thôi giám sát', async () => {
     await enterRoom();
     expect(state.antiCheatEnabled.at(-1)).toBe(true);
@@ -294,6 +322,26 @@ describe('CampaignInterviewPage — hết giờ cả buổi (ATT1-F5)', () => {
     expect(store.questionStates['q-2']).not.toBe('unanswered');
     expect(store.currentQuestionId).toBe('q-2');
     expect(screen.queryByText(VI['practice.errors.submitAnswerFailed'])).toBeNull();
+  });
+
+  it('về 0 khi đoạn đang ghi CHƯA tới 1 giây ⇒ KHÔNG đứng chờ hết trần 25 s, nộp bài ngay', async () => {
+    // Đoạn dưới 1 giây bị thẻ ghi âm coi là rỗng (không có file để nộp). Phòng phải báo ngay là
+    // "không có gì để nộp" — `submitEmptyAnswer` + `handleAutoSubmitEmptyResult` cùng gọi
+    // `settleFinalUpload()` — chứ không để ứng viên nhìn "Đang lưu câu trả lời cuối …" đủ 25 giây.
+    await enterRoom(); // T = 4 s
+    await flush(25_600); // T = 29,6 s
+    fireEvent.click(screen.getByRole('button', { name: VI['practice.audioRecorder.start'] }));
+    await flush();
+    expect(FakeMediaRecorder.instances.at(-1)?.state).toBe('recording');
+
+    await flush(400); // T = 30 s — mới ghi được 0,4 giây
+    expect(FakeMediaRecorder.instances.at(-1)?.state).toBe('inactive');
+    expect(calls).toEqual(['begin', 'submit']);
+    expect(statusText()).toBe('Đã nộp bài');
+    expect(svc.submitPracticeAnswer).not.toHaveBeenCalled(); // không nộp đoạn rỗng, cũng không nộp câu trống
+
+    await flush(26_000); // qua trần 25 giây — không nộp bài lần 2
+    expect(submitCount()).toBe(1);
   });
 
   it('trần chờ upload 25 giây: 24,9 s vẫn chờ, 25 s thôi chờ và nộp bài (đúng 1 lần)', async () => {

@@ -508,6 +508,46 @@ describe('mapPracticeSessionResponse — answerId khi answer lồng trong questi
   });
 });
 
+describe('mapPracticeSessionResponse — rejectReason (CAMP-21)', () => {
+  const session = (answers: unknown[]) => ({
+    id: 'session-reject',
+    status: 'InProgress',
+    questions: [
+      { id: 'q1', orderNo: 1, content: 'Câu 1', timeLimitSec: 120, kind: 'Seed' },
+      { id: 'q2', orderNo: 5, content: 'Câu 2', timeLimitSec: 120, kind: 'Seed' },
+      { id: 'q3', orderNo: 9, content: 'Câu 3', timeLimitSec: 120, kind: 'Seed' },
+    ],
+    answers,
+    result: null,
+  });
+
+  it('đọc rejectReason của bài im lặng; vắng hoặc null ⇒ null (dòng dữ liệu cũ BK23)', () => {
+    const mapped = mapPracticeSessionResponse(session([
+      // Bài im lặng VẪN CÓ audio: durationSec khác 0 nên không thể dùng nó làm tín hiệu.
+      { questionId: 'q1', answerId: 'a-1', status: 'Skipped', rejectReason: 'no_speech', durationSec: 11 },
+      { questionId: 'q2', answerId: 'a-2', status: 'Scoring', rejectReason: null },
+      { questionId: 'q3', answerId: 'a-3', status: 'Scored' },
+    ]));
+
+    expect(mapped.answers?.map((a) => [a.questionId, a.rejectReason])).toEqual([
+      ['q1', 'no_speech'],
+      ['q2', null],
+      ['q3', null],
+    ]);
+    expect(mapped.answers?.[0]?.durationSec).toBe(11);
+  });
+
+  it('chấp cả RejectReason / reject_reason và cắt khoảng trắng', () => {
+    const mapped = mapPracticeSessionResponse(session([
+      { questionId: 'q1', answerId: 'a-1', RejectReason: 'no_speech' },
+      { questionId: 'q2', answerId: 'a-2', reject_reason: ' no_speech ' },
+      { questionId: 'q3', answerId: 'a-3', rejectReason: '   ' },
+    ]));
+
+    expect(mapped.answers?.map((a) => a.rejectReason)).toEqual(['no_speech', 'no_speech', null]);
+  });
+});
+
 describe('mapSubmitPracticeAnswerResponse', () => {
   it('maps nextQuestion and nextAction', () => {
     const mapped = mapSubmitPracticeAnswerResponse({

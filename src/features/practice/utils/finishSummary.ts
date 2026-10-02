@@ -23,6 +23,9 @@ export function countUnsubmittedQuestions(
  * - x = câu gốc đã có câu trả lời được server lưu (`answers` có bản ghi) VÀ ở trạng thái `'submitted'`.
  *   Câu hết giờ từng câu được hệ thống nộp thay bằng file lặng (`'unanswered'`) KHÔNG tính là đã trả lời —
  *   nó vẫn bị tính 0 điểm. Câu đào sâu đã trả lời không cộng vào x.
+ * - Sau khi TẢI LẠI phòng, trạng thái `'unanswered'` đó do `hydrateFromSession` dựng lại từ
+ *   `answers[].rejectReason === 'no_speech'` (CAMP-21) — nên x không đếm dư khi quay lại buổi dở.
+ *   KHÔNG dùng `durationSec === 0` làm tín hiệu: bài im lặng VẪN CÓ audio nên `durationSec` khác 0.
  */
 export function countMainQuestionsAnswered(
   questions: ReadonlyArray<{ id: string; kind?: string | null }>,

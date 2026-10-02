@@ -639,6 +639,9 @@ function mapAnswerReview(
     audioUrl: pickString(item.audioUrl, item.recordingUrl) || null,
     durationSec: pickNumber(item.durationSec, item.answerDurationSec) ?? null,
     status: pickString(item.status, evaluation.status) || null,
+    // ATT1 — `'no_speech'` = bài im lặng (server trả kèm `status = 'Skipped'`). Vắng ⇒ null: dòng
+    // dữ liệu cũ (BK23) không biết lý do nên vẫn tính ĐÃ trả lời theo luật CAMP-21.
+    rejectReason: pickString(item.rejectReason, item.RejectReason, item.reject_reason) || null,
     score: pickNumber(item.score, evaluation.score, evaluation.overallScore) ?? null,
     comment:
       pickString(item.comment, item.feedback, evaluation.comment, evaluation.feedback) || null,

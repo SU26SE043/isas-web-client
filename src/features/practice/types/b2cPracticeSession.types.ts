@@ -310,6 +310,13 @@ export interface PracticeAnswerReview {
   audioUrl?: string | null;
   durationSec?: number | null;
   status?: string | null;
+  /**
+   * ATT1 — lý do server KHÔNG chấm câu trả lời. `'no_speech'` = VAD không thấy vùng tiếng nói
+   * (bài im lặng: `status = 'Skipped'` nhưng VẪN CÓ audio ⇒ `durationSec` của nó KHÔNG phải 0).
+   * `null` = không có lý do / dòng dữ liệu cũ không biết (BK23).
+   * Luật CAMP-21: ĐÃ trả lời ⇔ `rejectReason` null HOẶC khác `'no_speech'`.
+   */
+  rejectReason?: string | null;
   score?: number | null;
   comment?: string | null;
   criteriaScores?: PracticeCriteriaScore[];
