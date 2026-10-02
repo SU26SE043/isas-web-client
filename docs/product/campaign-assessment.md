@@ -824,6 +824,8 @@ timer = 01:20
 
 Không được để countdown tiếp tục chạy trong lúc violation đang block.
 
+> **ATT1 (đang triển khai — ATT1-F4):** quy tắc pause ở mục 26–27 áp cho **đồng hồ câu** (question timer). **Đồng hồ cả buổi** (thời lượng bài thi HR đặt, theo giờ server, chạy từ lúc vào phòng) **KHÔNG dừng** khi popup vi phạm mở, khi tab bị ẩn hay khi tải lại trang; overlay vi phạm thêm dòng “Đồng hồ bài thi vẫn chạy”. Chi tiết: [`practice-interview.md`](./practice-interview.md#b2b-campaign-sitting-clock-att1).
+
 ---
 
 ## 28. TTS Pause / Resume

@@ -1312,6 +1312,14 @@ flowchart TB
 | FS-149 | Candidate selection upload step | P10 | M04 | F-CAMP-E-007 | HR | EMP-056 | P0 | FS-142 | L | `product-scope` §4.5 | Screening UI |
 | FS-149b | Invitation email preview | P10 | M04 | F-CAMP-E-005 | HR | EMP-056 | P1 | FS-147 | S | §4.6 publish | Preview before send |
 | FS-149c | RNK1 ranking controls and campaign policy visibility | P10 | M04/M05 | F-CAMP-E-003 | HR | EMP-056–057 | P0 | FS-149 | L | RNK1 F0–F6 | Evidence-first scores, question bank, must-have needs |
+| ATT1-F1 | Attempt rules in wizard step 5 (length 5–180, attempts 1–3) + Review row | P10 | M04 | F-CAMP-E-003 | HR | EMP-057 | P0 | FS-145 | — | ATT1 [C1] [C4] [C5] | ✅ implemented |
+| ATT1-F2 | Detail attempt-rules card + increase-attempts dialog (Active) | P10 | M04 | F-CAMP-E-002 | HR | EMP-056 | P0 | ATT1-F1 | — | ATT1 [C2] [C3] [C5] | ✅ implemented |
+| ATT1-F3 | Candidate campaign page: four attempt states + confirm dialog + card line | P8 | M04 | F-B2B-ENTRY-001 | Candidate | `/candidate/campaigns/:id` | P0 | ATT1-F2 | — | ATT1 [C6] [C7] [C8] | ✅ implemented |
+| ATT1-F4 | Room: `begin` on entry + server-time sitting clock (never paused) | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | ATT1-F3 | — | ATT1 [I1] [I2] [I4] | in progress |
+| ATT1-F5 | Time-up: final upload, submit, time-up screen | P5 | M05 | F-INT-005 | Candidate | CAN-033 | P0 | ATT1-F4 | — | ATT1 [I3] [I5] | in progress |
+| ATT1-F6 | Real run on dev through the UI | P15 | All | — | HR, Candidate | EMP-056–057, CAN-033 | P0 | ATT1-F5 + Backend ATT1-B1..B3 on dev | — | ATT1 F6 checklist | planned |
+
+**ATT1 (attempt limit + server-timed sitting):** contracts in [`campaign-management.md`](./product/campaign-management.md#attempt-rules-att1), [`campaign-discovery.md`](./product/campaign-discovery.md#attempt-states-on-the-candidate-campaign-page-att1-f3), [`practice-interview.md`](./product/practice-interview.md#b2b-campaign-sitting-clock-att1); packet [`ATT1-frontend`](./stories/epics/ATT1-attempts-server-clock/ATT1-frontend/overview.md). Frontend must reach production **before** Backend ATT1.
 
 ### 9.12 Phase 11 — Employer Analytics (FS-150–154)
 
