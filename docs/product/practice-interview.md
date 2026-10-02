@@ -21,7 +21,7 @@ History: `/candidate/practice/history`.
 5. Room: question text renders immediately from session state and never depends on TTS. The authenticated TTS `GET .../questions/{id}/speech` is prefetched as a blob as soon as the question is known, then played after the start gate through one persistent audio coordinator. Recording and the answer timer stay locked during TTS loading/playback. At the 9s load ceiling or on a transient 502/504, the coordinator uses Web Speech with the already-rendered question text when supported; otherwise it degrades to text-only and unlocks the answer flow. HTML audio and Web Speech are mutually exclusive and both are cancelled on question change/recording stop. A 60s playback watchdog prevents a missing completion event from hanging the room. Autoplay rejection exposes a manual Play action. MediaRecorder answers use echo cancellation and `POST .../answers` multipart (`questionId`, `file`, `durationSec`). If the answer timer hits `0` without a submitted answer: stop/discard recording, mark the question `unanswered`, register a silent answer so scoring can assign 0, auto-advance (TTS + new timer). The Finish control is shown only after the answer API returns `interviewComplete: true`; it then calls `POST .../submit` (204, empty body).
 6. Scoring: `/interview/:sessionId/complete` polls `GET .../sessions/{sessionId}` every 3s until `status === Scored`, then redirects to `/practice/result?sessionId={sessionId}`. The result page calls the same authenticated session-detail endpoint, polls only while evaluation is pending, and renders `result` (`overallScore`, `criteriaScores`, `needsImprovement`, `overallComment`, `cvVsAnswer`). The frontend never creates an `assessment-*` ID.
 
-Rubric editing lives at `/candidate/rubrics` (not part of create payload). Practice setup also loads the active rubric with `?language=vi|en` before sending selected `rubricCriterionIds`.
+Rubric editing lives at `/candidate/rubrics` (not part of create payload). Practice setup loads the active rubric with `?language=vi|en` and shows its source and criterion names in step 7. The create request does **not** send `rubricCriterionIds`; the server pins the active rubric. Step 7 links to the candidate editor, saving user choices and CV/JD IDs in a user-bound, two-hour `sessionStorage` draft. Returning to `/candidate/practice/setup` restores step 7 and reloads the rubric. The editor only accepts an internal `/candidate/` `returnTo` path.
 
 ## Candidate rubric API
 
@@ -40,6 +40,7 @@ Vietnamese and English rubrics are separate records. The frontend sends the acti
 | Path | Component |
 | --- | --- |
 | `/practice` | Setup wizard → create session on Start |
+| `/candidate/practice/setup` | Setup wizard return route after editing personal criteria |
 | `/interview/:sessionId/prepare` | Fetch live session detail + readiness/consent |
 | `/interview/:sessionId/room` | Shared B2C and learning practice room (live); campaign has its dedicated adapter |
 | `/interview/:sessionId/complete` | Scoring poll + live report |

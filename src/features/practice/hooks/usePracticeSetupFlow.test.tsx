@@ -13,15 +13,19 @@ const mocks = vi.hoisted(() => ({
   listFiles: vi.fn(),
   createPracticeSession: vi.fn(),
   getPracticeSessionOptions: vi.fn(),
+  setLanguage: vi.fn(),
 }));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
+vi.mock('@/features/auth/stores/authStore', () => ({
+  useAuthStore: (selector: (state: { user: { id: string } }) => unknown) => selector({ user: { id: 'user-1' } }),
+}));
 vi.mock('@/shared/languages', () => ({
-  useLanguage: () => ({ language: 'vi', t: (key: string) => key }),
+  useLanguage: () => ({ language: 'vi', setLanguage: mocks.setLanguage, t: (key: string) => key }),
 }));
 vi.mock('../services/practiceSetup.service', () => ({
   practiceSetupService: {
-    getRubric: (...args: unknown[]) => mocks.getRubric(...args),
+    getRubricDetails: (...args: unknown[]) => mocks.getRubric(...args),
     listUploadedCvs: (...args: unknown[]) => mocks.listUploadedCvs(...args),
     uploadCv: (...args: unknown[]) => mocks.uploadCv(...args),
   },
@@ -91,7 +95,7 @@ async function goToCriteriaStep(result: { current: ReturnType<typeof usePractice
 }
 
 beforeEach(() => {
-  mocks.getRubric.mockResolvedValue(CRITERIA);
+  mocks.getRubric.mockResolvedValue({ criteria: CRITERIA, isCustom: false });
   mocks.listUploadedCvs.mockResolvedValue(CV_FILES);
   mocks.listFiles.mockResolvedValue([]);
   mocks.getPracticeSessionOptions.mockResolvedValue(SESSION_OPTIONS);
@@ -106,40 +110,66 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  sessionStorage.clear();
 });
 
 describe('usePracticeSetupFlow — tiêu chí chấm điểm', () => {
-  it('tick sẵn toàn bộ tiêu chí khi rubric vừa tải xong', async () => {
+  it('loads the active rubric and does not require criterion checkboxes to start', async () => {
     const { result } = renderFlow();
     await goToCriteriaStep(result);
 
-    expect(result.current.rubricCriterionIds).toEqual(['c-1', 'c-2']);
+    expect(result.current.rubricCriteria).toEqual(CRITERIA);
+    expect(result.current.rubricIsCustom).toBe(false);
+    expect(result.current.canStart).toBe(true);
   });
 
-  it('giữ nguyên trạng thái rỗng khi ứng viên bỏ tick tiêu chí cuối cùng', async () => {
+  it('saves the wizard draft and opens the rubric editor', async () => {
     const { result } = renderFlow();
     await goToCriteriaStep(result);
-
-    act(() => result.current.setRubricCriterionIds(['c-1']));
-    expect(result.current.rubricCriterionIds).toEqual(['c-1']);
-
-    act(() => result.current.setRubricCriterionIds([]));
-
-    expect(result.current.rubricCriterionIds).toEqual([]);
-    expect(result.current.canStart).toBe(false);
+    act(() => result.current.openRubricEditor());
+    expect(mocks.navigate).toHaveBeenCalledWith(expect.stringContaining('/candidate/rubrics?'));
+    expect(sessionStorage.getItem('isas-practice-wizard-draft')).toContain('user-1');
   });
 
-  it('tick sẵn lại cho bộ tiêu chí của ngành mới', async () => {
+  it('restores every editable choice at step 7 after returning from the rubric editor', async () => {
+    const first = renderFlow();
+    await goToCriteriaStep(first.result);
+    act(() => {
+      first.result.current.setCvId('cv-1');
+      first.result.current.setJdId('jd-1');
+      first.result.current.setJdText('Important JD text');
+      first.result.current.setJdTab('text');
+      first.result.current.setTimeLimitSec(240);
+      first.result.current.setQuestionCount(8);
+      first.result.current.setSeniority('Senior');
+      first.result.current.setAdaptiveEnabled(false);
+      first.result.current.setMaxDeepPerQuestion(2);
+      first.result.current.setFocusTrackingEnabled(true);
+    });
+    act(() => first.result.current.openRubricEditor());
+    first.unmount();
+
+    mocks.getRubric.mockResolvedValue({ criteria: CRITERIA, isCustom: true });
+    const returned = renderFlow();
+    await waitFor(() => expect(returned.result.current.step).toBe(6));
+    await waitFor(() => expect(returned.result.current.rubricIsCustom).toBe(true));
+    expect(returned.result.current).toMatchObject({
+      jobCategory: 'BE', cvId: 'cv-1', jdId: 'jd-1', jdText: 'Important JD text',
+      jdTab: 'text', timeLimitSec: 240, questionCount: 8, seniority: 'Senior',
+      adaptiveEnabled: false, maxDeepPerQuestion: 2, focusTrackingEnabled: true,
+    });
+    expect(sessionStorage.getItem('isas-practice-wizard-draft')).toBeNull();
+  });
+
+  it('reloads the rubric when the job category changes', async () => {
     const { result } = renderFlow();
     await goToCriteriaStep(result);
-    act(() => result.current.setRubricCriterionIds([]));
-
-    mocks.getRubric.mockResolvedValue([
-      { id: 'fe-1', name: 'Tư duy UI', description: '', weight: 100, maxScore: 10 },
-    ]);
+    mocks.getRubric.mockResolvedValue({ criteria: [
+      { id: 'fe-1', name: 'Tư duy UI', description: '', weight: 100, maxScore: 5 },
+    ], isCustom: true });
     act(() => result.current.setJobCategory('FE'));
-
-    await waitFor(() => expect(result.current.rubricCriterionIds).toEqual(['fe-1']));
+    await waitFor(() => expect(result.current.rubricCriteria.map((criterion) => criterion.id)).toEqual(['fe-1']));
+    expect(result.current.rubricIsCustom).toBe(true);
   });
 });
 

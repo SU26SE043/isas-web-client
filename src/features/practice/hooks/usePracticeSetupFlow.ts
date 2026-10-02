@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { cvAnalysisService } from '@/features/cv-analysis/services/cvAnalysis.service';
@@ -22,18 +22,21 @@ import type {
   PracticeSeniority,
   PracticeTimeLimitSec,
 } from '../types/b2cPracticeSession.types';
-import type { PracticeRubricCriterion } from '../types/practiceSetup.types';
 import { PRACTICE_JD_TEXT_MAX_CHARS } from '../types/b2cPracticeSession.types';
 import { useB2cPracticeInterviewStore } from '../stores/b2cPracticeInterviewStore';
 import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { usesMockData } from '@/shared/mock';
 import { paymentService } from '@/features/payment/services/payment.service';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { savePracticeWizardDraft, takePracticeWizardDraft } from '../utils/practiceWizardDraft';
 
 export const PRACTICE_SETUP_STEP_COUNT = 8;
 
 export function usePracticeSetupFlow() {
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const queryClient = useQueryClient();
+  const { language, setLanguage, t } = useLanguage();
+  const userId = useAuthStore((state) => state.user?.id);
   const resetInterviewFlow = useInterviewFlowStore((s) => s.reset);
   const hydrateFromSession = useB2cPracticeInterviewStore((s) => s.hydrateFromSession);
   const resetInterviewStore = useB2cPracticeInterviewStore((s) => s.reset);
@@ -46,7 +49,6 @@ export function usePracticeSetupFlow() {
   const [jdTab, setJdTab] = useState<'file' | 'text'>('file');
   const [timeLimitSec, setTimeLimitSec] = useState<PracticeTimeLimitSec>(120);
   const [questionCount, setQuestionCount] = useState(5);
-  const [rubricCriterionIds, setRubricCriterionIds] = useState<string[]>([]);
   // KHÔNG mặc định trình độ. Mặc định 'Junior' im lặng khiến ứng viên senior không bấm đổi
   // bước này vẫn nhận trọn bộ câu hỏi Junior — không lỗi, không cảnh báo, sau khi đã trừ credit.
   const [seniority, setSeniority] = useState<PracticeSeniority | null>(null);
@@ -71,6 +73,32 @@ export function usePracticeSetupFlow() {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [createErrorCode, setCreateErrorCode] = useState<CreatePracticeSessionErrorCode | null>(null);
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState<string | null>(null);
+
+  const restoredForUserRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!userId || restoredForUserRef.current === userId) return;
+    restoredForUserRef.current = userId;
+    const draft = takePracticeWizardDraft(userId);
+    if (!draft) return;
+    void queryClient.invalidateQueries({
+      queryKey: ['practice', 'rubric', draft.jobCategory, draft.language],
+      exact: true,
+    });
+    setJobCategory(draft.jobCategory);
+    setCvId(draft.cvId);
+    setJdId(draft.jdId);
+    setJdText(draft.jdText);
+    setJdTab(draft.jdTab);
+    setTimeLimitSec(draft.timeLimitSec);
+    setQuestionCount(draft.questionCount);
+    setSeniority(draft.seniority);
+    setAdaptiveEnabled(draft.adaptiveEnabled);
+    setMaxDeepPerQuestion(draft.maxDeepPerQuestion);
+    setFocusTrackingEnabled(draft.focusTrackingEnabled);
+    setLanguage(draft.language);
+    setStep(6);
+  }, [queryClient, setLanguage, userId]);
 
   const setupState: PracticeSetupState = useMemo(
     () => ({
@@ -80,7 +108,7 @@ export function usePracticeSetupFlow() {
       jdText: jdTab === 'text' ? jdText : '',
       timeLimitSec,
       questionCount,
-      rubricCriterionIds,
+      rubricCriterionIds: [],
       language,
       seniority,
       adaptiveEnabled,
@@ -88,13 +116,12 @@ export function usePracticeSetupFlow() {
       focusTrackingEnabled,
     }),
     [adaptiveEnabled, cvId, jdId, jdTab, jdText, jobCategory, language, maxDeepPerQuestion,
-      questionCount, rubricCriterionIds, seniority, timeLimitSec, focusTrackingEnabled],
+      questionCount, seniority, timeLimitSec, focusTrackingEnabled],
   );
 
   const jdTextTooLong = jdTab === 'text' && jdText.trim().length > PRACTICE_JD_TEXT_MAX_CHARS;
   const canStart =
     canStartPracticeSession(setupState) &&
-    (rubricCriterionIds.length > 0 || usesMockData('practice')) &&
     Boolean(sessionOptions) &&
     !loadingSessionOptions &&
     !sessionOptionsError &&
@@ -103,52 +130,28 @@ export function usePracticeSetupFlow() {
 
   const rubricQuery = useQuery({
     queryKey: ['practice', 'rubric', jobCategory, language],
-    queryFn: ({ signal }) => practiceSetupService.getRubric(jobCategory ?? '', signal, language),
+    queryFn: ({ signal }) => practiceSetupService.getRubricDetails(jobCategory ?? '', signal, language),
     enabled: step === 6 && Boolean(jobCategory),
     retry: false,
-    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
   });
 
-  const validRubricIds = useMemo(
-    () => new Set((rubricQuery.data ?? []).filter((item) => item.id && item.name.trim()).map((item) => item.id)),
-    [rubricQuery.data],
-  );
-
-  const validSelectedRubricIds = useMemo(
-    () => rubricCriterionIds.filter((id) => validRubricIds.has(id)),
-    [rubricCriterionIds, validRubricIds],
-  );
-
-  // Bộ rubric đã được tick sẵn hộ ứng viên. Giữ theo THAM CHIẾU dữ liệu chứ
-  // không theo "danh sách chọn đang rỗng".
-  const seededRubricRef = useRef<PracticeRubricCriterion[] | null>(null);
-
-  useEffect(() => {
-    seededRubricRef.current = null;
-    setRubricCriterionIds([]);
-  }, [jobCategory]);
-
-  useEffect(() => {
-    const data = rubricQuery.data;
-    if (!data) return;
-
-    // Tick sẵn toàn bộ tiêu chí đúng MỘT lần cho mỗi bộ rubric tải về. Điều
-    // kiện cũ là "đang rỗng thì tick hết", nên bỏ tick tiêu chí CUỐI CÙNG là cả
-    // danh sách tự tick lại — ứng viên không cách nào chọn lại từ đầu, và cảnh
-    // báo "phải chọn ít nhất một tiêu chí" của bước này không bao giờ hiện.
-    if (seededRubricRef.current !== data) {
-      seededRubricRef.current = data;
-      if (validRubricIds.size > 0) {
-        setRubricCriterionIds([...validRubricIds]);
-        return;
-      }
+  const openRubricEditor = useCallback(() => {
+    if (!userId || !jobCategory || uploadingCv || loadingCv || loadingJd || isCreatingSession) return;
+    const saved = savePracticeWizardDraft(userId, {
+      jobCategory, cvId, jdId, jdText, jdTab, timeLimitSec, questionCount,
+      seniority, adaptiveEnabled, maxDeepPerQuestion, focusTrackingEnabled, language,
+    });
+    if (!saved) {
+      setDraftError(t('practice.setup.gradingCriteria.storageError'));
+      return;
     }
-
-    // Rubric đổi (đổi ngôn ngữ, tải lại) ⇒ bỏ các id không còn tồn tại.
-    if (validSelectedRubricIds.length !== rubricCriterionIds.length) {
-      setRubricCriterionIds(validSelectedRubricIds);
-    }
-  }, [rubricQuery.data, rubricCriterionIds.length, validRubricIds, validSelectedRubricIds]);
+    setDraftError(null);
+    const params = new URLSearchParams({ category: jobCategory, language, returnTo: '/candidate/practice/setup' });
+    navigate(`/candidate/rubrics?${params.toString()}`);
+  }, [adaptiveEnabled, cvId, focusTrackingEnabled, isCreatingSession, jdId, jdTab, jdText,
+    jobCategory, language, loadingCv, loadingJd, maxDeepPerQuestion, navigate, questionCount,
+    seniority, t, timeLimitSec, uploadingCv, userId]);
 
   useEffect(() => {
     if (!jobCategory) {
@@ -329,9 +332,10 @@ export function usePracticeSetupFlow() {
     setTimeLimitSec,
     questionCount,
     setQuestionCount,
-    rubricCriterionIds: validSelectedRubricIds,
-    setRubricCriterionIds,
-    rubricCriteria: rubricQuery.data ?? [],
+    rubricCriteria: rubricQuery.data?.criteria ?? [],
+    rubricIsCustom: rubricQuery.data?.isCustom ?? false,
+    openRubricEditor,
+    draftError,
     loadingRubric: rubricQuery.isLoading,
     rubricError: rubricQuery.isError,
     retryRubric: () => void rubricQuery.refetch(),

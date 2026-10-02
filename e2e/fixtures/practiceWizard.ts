@@ -80,11 +80,11 @@ export async function completePracticeSetupWizard(
   await page.getByRole('button', { name: /^Junior\b/i }).click();
   await page.getByRole('button', { name: /^Next$/i }).click();
 
-  // Grading criteria: all stubbed criteria are preselected once the rubric loads.
-  await expect(page.getByRole('heading', { name: /Choose grading criteria/i })).toBeVisible({
+  // Step 7 shows the active rubric; criterion checkboxes are not part of the create request.
+  await expect(page.getByRole('heading', { name: /Grading criteria/i })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByText(/\d+ criteria selected/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Default criteria/i)).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: /^Next$/i }).click();
 
   await page.getByRole('button', { name: /Start interview/i }).click();

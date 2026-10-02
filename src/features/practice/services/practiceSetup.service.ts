@@ -123,10 +123,19 @@ export const practiceSetupService = {
     signal?: AbortSignal,
     language: 'vi' | 'en' = 'vi',
   ): Promise<PracticeRubricCriterion[]> {
+    const rubric = await this.getRubricDetails(domainId, signal, language);
+    return rubric.criteria;
+  },
+
+  async getRubricDetails(
+    domainId: string,
+    signal?: AbortSignal,
+    language: 'vi' | 'en' = 'vi',
+  ): Promise<{ criteria: PracticeRubricCriterion[]; isCustom: boolean }> {
     const jobCategory = resolveJobCategoryFromDomainId(domainId);
     const rubric = await getRubric(jobCategory, language, signal);
     const criteria = Array.isArray(rubric.criteria) ? rubric.criteria : [];
-    return criteria.map(mapApiCriterionToPractice);
+    return { criteria: criteria.map(mapApiCriterionToPractice), isCustom: rubric.isCustom };
   },
 
   /** @deprecated Prefer getRubric — kept for callers still using generateRubric name. */

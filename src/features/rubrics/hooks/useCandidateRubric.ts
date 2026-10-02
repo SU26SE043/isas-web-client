@@ -28,11 +28,11 @@ import {
 
 export const CANDIDATE_RUBRIC_QUERY_KEY = ['candidate', 'rubric'] as const;
 
-export function useCandidateRubric() {
+export function useCandidateRubric(initialCategory?: JobCategory) {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
 
-  const [jobCategory, setJobCategory] = useState<JobCategory>(() => getInitialJobCategory());
+  const [jobCategory, setJobCategory] = useState<JobCategory>(() => initialCategory ?? getInitialJobCategory());
   const [criteria, setCriteria] = useState<EditableRubricCriterion[]>([]);
   const [isCustom, setIsCustom] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -210,11 +210,13 @@ export function useCandidateRubric() {
     removeCriterion,
     addCriterion,
     save: () => saveMutation.mutate(),
+    saveAsync: () => saveMutation.mutateAsync(),
     isSaving: saveMutation.isPending,
     canSave,
     reset: () => resetMutation.mutate(),
     isResetting: resetMutation.isPending,
     confirmDiscardChanges,
     cancelUnsavedDialog,
+    requestDiscard: () => setUnsavedDialogOpen(true),
   };
 }
