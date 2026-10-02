@@ -29,7 +29,22 @@ beforeEach(() => {
   vi.setSystemTime(MACHINE_MS);
 });
 
+const restoreDocumentVisibility: Array<() => void> = [];
+
+/** Giả tab ẩn: `document.hidden` / `visibilityState` của jsdom là getter trên prototype ⇒ che bằng thuộc tính riêng. */
+function hideDocument() {
+  for (const [key, value] of [['hidden', true], ['visibilityState', 'hidden']] as const) {
+    const own = Object.getOwnPropertyDescriptor(document, key);
+    Object.defineProperty(document, key, { configurable: true, get: () => value });
+    restoreDocumentVisibility.push(() => {
+      if (own) Object.defineProperty(document, key, own);
+      else delete (document as unknown as Record<string, unknown>)[key];
+    });
+  }
+}
+
 afterEach(() => {
+  while (restoreDocumentVisibility.length) restoreDocumentVisibility.pop()!();
   cleanup();
   vi.useRealTimers();
 });
@@ -80,6 +95,20 @@ describe('useRoomExamClock', () => {
     const { result } = renderHook(() => useRoomExamClock({ beginOnEnter: false }));
     expect(result.current.serverRemainingSeconds).toBeNull();
     expect(result.current.examClock).toBeNull();
+  });
+
+  it('tab ẨN (document.hidden) ⇒ đồng hồ cả buổi KHÔNG dừng: 30 giây trôi ⇒ còn lại giảm đúng 30', () => {
+    const { result } = renderHook(() => useRoomExamClock({ beginOnEnter: true }));
+    act(() => result.current.applyEntry(begunEntry()));
+    expect(result.current.examClock?.remainingSeconds).toBe(1800);
+
+    hideDocument();
+    expect(document.hidden).toBe(true);
+    expect(document.visibilityState).toBe('hidden');
+    act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+    act(() => { vi.advanceTimersByTime(30_000); });
+
+    expect(result.current.examClock?.remainingSeconds).toBe(1770);
   });
 
   it('tab hiện lại ⇒ tính lại ngay theo giờ hiện tại', () => {

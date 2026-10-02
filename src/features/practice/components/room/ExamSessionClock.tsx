@@ -64,20 +64,24 @@ export function ExamSessionClock({ remainingSeconds }: { remainingSeconds: numbe
   );
 }
 
-/** Dòng nhắc dưới header khi còn ≤ 5 phút (và > 0). Không live — vùng status của đồng hồ đã báo. */
+/**
+ * Dòng nhắc dưới header khi còn ≤ 5 phút (và > 0). Không live — vùng status của đồng hồ đã báo.
+ * ≤ 1 phút đổi chữ ("Còn dưới 1 phút …") — giữ "Còn 5 phút" lúc 00:35 là nói sai giờ với ứng viên.
+ */
 export function ExamClockReminder({ remainingSeconds }: { remainingSeconds: number }) {
   const { t } = useLanguage();
   const severity = getExamClockSeverity(remainingSeconds);
   if (severity === 'normal' || remainingSeconds <= 0) return null;
+  const critical = severity === 'critical';
   return (
     <p
       className={cn(
         'border-b px-6 py-2 text-sm',
-        severity === 'critical' ? 'border-error/30 bg-error/10 text-error' : 'border-warning/30 bg-warning/10 text-warning',
+        critical ? 'border-error/30 bg-error/10 text-error' : 'border-warning/30 bg-warning/10 text-warning',
       )}
       data-testid="exam-clock-reminder"
     >
-      {t('practice.examClock.reminder')}
+      {t(critical ? 'practice.examClock.reminderCritical' : 'practice.examClock.reminder')}
     </p>
   );
 }

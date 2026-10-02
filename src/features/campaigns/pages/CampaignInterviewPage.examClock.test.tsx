@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { useB2cPracticeInterviewStore } from '@/features/practice/stores/b2cPracticeInterviewStore';
 import { resetExamRoomBeginsForTests } from '@/features/practice/hooks/enterExamRoom';
+import type { PracticeSessionResponse } from '@/features/practice/types/b2cPracticeSession.types';
 
 /**
  * ATT1-F4 — khoá KHE NỐI trang B2B → phòng → hook → enterExamRoom → service (chỉ service bị mock).
@@ -116,6 +117,11 @@ beforeEach(() => {
   state.currentViolation = null;
   state.isFullscreen = true;
   Object.values(svc).forEach((fn) => fn.mockReset());
+  // Mock media/recorder/speech sống qua các test (object cấp module) ⇒ xoá lịch sử gọi, nếu không
+  // `toHaveBeenCalled` của test sau đúng nhờ lời gọi của test trước.
+  [media, recorder, speech].forEach((mock) => Object.values(mock).forEach((value) => {
+    if (vi.isMockFunction(value)) value.mockClear();
+  }));
   svc.beginPracticeSession.mockResolvedValue(beginResponse());
   svc.getPracticeSession.mockResolvedValue(sessionResponse());
   svc.getQuestionSpeech.mockResolvedValue(new Blob());
@@ -170,6 +176,30 @@ describe('CampaignInterviewPage — vào phòng + đồng hồ theo giờ server
     expect(clockValue()).toBe('28:59');
   });
 
+  it('offset begin và GET lệch 2 phút ⇒ header theo GET (response MỚI NHẤT có serverNow)', async () => {
+    // Cùng giờ máy MACHINE_MS: begin báo server 03:00, GET (đến sau) báo 03:02 — giờ máy vừa bị chỉnh.
+    // Theo GET: còn 30 − 2 = 28 phút; theo begin cũ sẽ là 30:00.
+    svc.getPracticeSession.mockResolvedValue(sessionResponse({ serverNow: iso(SERVER_MS + 2 * 60_000) }));
+    renderPage();
+    await flush();
+
+    expect(clockValue()).toBe('28:00');
+  });
+
+  it('vào lại phòng qua SPA ("Tiếp tục") khi store b2c còn câu của buổi ⇒ VẪN begin đúng 1 lần, header có đồng hồ', async () => {
+    // Điều hướng SPA không reset store b2c ⇒ store còn nguyên câu của lần vào trước.
+    useB2cPracticeInterviewStore.getState().hydrateFromSession(sessionResponse() as unknown as PracticeSessionResponse);
+    expect(useB2cPracticeInterviewStore.getState().sessionId).toBe(SESSION_ID);
+    expect(useB2cPracticeInterviewStore.getState().questions).toHaveLength(1);
+
+    renderPage();
+    await flush();
+
+    expect(svc.beginPracticeSession).toHaveBeenCalledTimes(1);
+    expect(svc.beginPracticeSession).toHaveBeenCalledWith(SESSION_ID);
+    expect(clockValue()).toBe('30:00');
+  });
+
   it('begin có kết quả ⇒ KHÔNG dùng deadlineAt của start (90 giây) để chặn đồng hồ câu', async () => {
     renderPage();
     await flush();
@@ -219,11 +249,16 @@ describe('CampaignInterviewPage — vào phòng + đồng hồ theo giờ server
     await flush(1_000);
     expect(clockValue()).toBe('05:00');
     expect(clock()).toHaveAttribute('data-severity', 'warning');
-    expect(screen.getByTestId('exam-clock-reminder')).toHaveTextContent('practice.examClock.reminder');
+    expect(screen.getByTestId('exam-clock-reminder').textContent).toBe('practice.examClock.reminder');
 
     await flush(240_000);
     expect(clockValue()).toBe('01:00');
     expect(clock()).toHaveAttribute('data-severity', 'critical');
+    expect(screen.getByTestId('exam-clock-reminder').textContent).toBe('practice.examClock.reminderCritical');
+
+    await flush(25_000);
+    expect(clockValue()).toBe('00:35');
+    expect(screen.getByTestId('exam-clock-reminder').textContent).toBe('practice.examClock.reminderCritical');
   });
 
   it('begin 404 (Backend cũ) ⇒ không đồng hồ header, đồng hồ câu chặn theo deadlineAt cũ của start', async () => {
@@ -273,14 +308,25 @@ describe('CampaignInterviewPage — vào phòng + đồng hồ theo giờ server
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
   });
 
-  it('đề vẫn khoá sau begin ⇒ begin lại 1 lần rồi báo lỗi tải phòng', async () => {
+  it('đề vẫn khoá sau begin ⇒ begin lại 1 lần rồi báo lỗi tải phòng + tắt camera/mic NGAY lúc báo lỗi', async () => {
+    let resolveFirstBegin!: (value: unknown) => void;
+    svc.beginPracticeSession
+      .mockReturnValueOnce(new Promise((r) => { resolveFirstBegin = r; }))
+      .mockResolvedValue(beginResponse());
     svc.getPracticeSession.mockResolvedValue(sessionResponse({ questionsLocked: true, questions: [{ ...QUESTION, content: '' }] }));
     renderPage();
+    await flush();
+    // StrictMode mount → unmount → mount vốn gọi stopMedia (cleanup) ⇒ xoá trước khi begin trả về, để chỉ
+    // đếm lời gọi do bảng lỗi tải phòng.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    media.stopMedia.mockClear();
+
+    resolveFirstBegin(beginResponse());
     await flush();
 
     expect(svc.beginPracticeSession).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('alert')).toHaveTextContent('practice.room.entryError.questionsLocked');
-    expect(media.stopMedia).toHaveBeenCalled();
+    expect(media.stopMedia).toHaveBeenCalledTimes(1);
   });
 
   it('409 SESSION_ENDED ⇒ bảng "buổi đã kết thúc", chỉ có nút quay lại', async () => {

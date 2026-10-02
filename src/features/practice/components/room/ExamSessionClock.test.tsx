@@ -41,32 +41,55 @@ describe('ExamSessionClock', () => {
     const { rerender } = render(<ExamSessionClock remainingSeconds={301} />);
     expect(value()).toHaveAttribute('aria-live', 'off');
     const status = screen.getByRole('status');
-    expect(status).toHaveTextContent('');
+    // So khớp TUYỆT ĐỐI: chữ của vùng status không được đổi theo từng giây trong cùng một mốc —
+    // đổi là trình đọc màn hình đọc lại mỗi giây.
+    expect(status.textContent).toBe('');
 
     rerender(<ExamSessionClock remainingSeconds={300} />);
-    expect(status).toHaveTextContent('practice.examClock.announce.fiveMinutes');
+    expect(status.textContent).toBe('practice.examClock.announce.fiveMinutes');
     rerender(<ExamSessionClock remainingSeconds={200} />);
-    expect(status).toHaveTextContent('practice.examClock.announce.fiveMinutes');
+    expect(status.textContent).toBe('practice.examClock.announce.fiveMinutes');
+    rerender(<ExamSessionClock remainingSeconds={61} />);
+    expect(status.textContent).toBe('practice.examClock.announce.fiveMinutes');
+
     rerender(<ExamSessionClock remainingSeconds={60} />);
-    expect(status).toHaveTextContent('practice.examClock.announce.oneMinute');
+    expect(status.textContent).toBe('practice.examClock.announce.oneMinute');
+    rerender(<ExamSessionClock remainingSeconds={35} />);
+    expect(status.textContent).toBe('practice.examClock.announce.oneMinute');
+    rerender(<ExamSessionClock remainingSeconds={1} />);
+    expect(status.textContent).toBe('practice.examClock.announce.oneMinute');
+
     rerender(<ExamSessionClock remainingSeconds={0} />);
-    expect(status).toHaveTextContent('practice.examClock.announce.timeUp');
+    expect(status.textContent).toBe('practice.examClock.announce.timeUp');
   });
 });
 
 describe('ExamClockReminder', () => {
+  const reminder = () => screen.getByTestId('exam-clock-reminder');
+
   it('chỉ hiện khi 0 < còn lại ≤ 5 phút', () => {
     const { rerender } = render(<ExamClockReminder remainingSeconds={301} />);
     expect(screen.queryByTestId('exam-clock-reminder')).not.toBeInTheDocument();
 
     rerender(<ExamClockReminder remainingSeconds={300} />);
-    expect(screen.getByTestId('exam-clock-reminder')).toHaveTextContent('practice.examClock.reminder');
-    expect(screen.getByTestId('exam-clock-reminder')).toHaveClass('text-warning');
+    expect(reminder()).toHaveClass('text-warning');
 
     rerender(<ExamClockReminder remainingSeconds={60} />);
-    expect(screen.getByTestId('exam-clock-reminder')).toHaveClass('text-error');
+    expect(reminder()).toHaveClass('text-error');
 
     rerender(<ExamClockReminder remainingSeconds={0} />);
     expect(screen.queryByTestId('exam-clock-reminder')).not.toBeInTheDocument();
+  });
+
+  it('chữ đúng mức: ≤ 5 phút ⇒ "Còn 5 phút"; ≤ 1 phút ⇒ "Còn dưới 1 phút" (không còn ghi 5 phút lúc 00:35)', () => {
+    const { rerender } = render(<ExamClockReminder remainingSeconds={300} />);
+    expect(reminder().textContent).toBe('practice.examClock.reminder');
+    rerender(<ExamClockReminder remainingSeconds={61} />);
+    expect(reminder().textContent).toBe('practice.examClock.reminder');
+
+    rerender(<ExamClockReminder remainingSeconds={60} />);
+    expect(reminder().textContent).toBe('practice.examClock.reminderCritical');
+    rerender(<ExamClockReminder remainingSeconds={35} />);
+    expect(reminder().textContent).toBe('practice.examClock.reminderCritical');
   });
 });

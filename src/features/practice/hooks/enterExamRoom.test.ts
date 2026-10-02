@@ -1,5 +1,6 @@
 import { AxiosError, AxiosHeaders } from 'axios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { apiClient } from '@/shared/api/apiClient';
 import type {
   PracticeSessionBeginResponse,
   PracticeSessionResponse,
@@ -11,8 +12,13 @@ import {
   resetExamRoomBeginsForTests,
 } from './enterExamRoom';
 
+// Mặc định (begin không bị override) đi qua service THẬT; chỉ HTTP bị giả.
+vi.mock('@/shared/api/apiClient', () => ({ apiClient: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('@/shared/mock', () => ({ usesMockData: () => false, mockDelay: vi.fn() }));
+
 const SERVER_NOW = '2026-10-02T03:00:00.000Z';
 const MACHINE_MS = Date.parse(SERVER_NOW) + 10 * 60_000; // máy chạy nhanh 10 phút
+const GUID_SESSION_ID = '685d10e7-af3c-4971-a207-54abfb6d7dee';
 
 const BEGIN: PracticeSessionBeginResponse = {
   sessionId: 's-1',
@@ -35,14 +41,18 @@ function session(overrides: Partial<PracticeSessionResponse> = {}): PracticeSess
   };
 }
 
-function conflict(code: string) {
-  return new AxiosError('409', '409', undefined, undefined, {
-    status: 409,
-    statusText: 'Conflict',
-    data: { code, error: 'ended' },
+function httpError(status: number, data: unknown) {
+  return new AxiosError(String(status), String(status), undefined, undefined, {
+    status,
+    statusText: String(status),
+    data,
     headers: {},
     config: { headers: new AxiosHeaders() },
   });
+}
+
+function conflict(code: string) {
+  return httpError(409, { code, error: 'ended' });
 }
 
 afterEach(() => resetExamRoomBeginsForTests());
@@ -68,6 +78,32 @@ describe('enterExamRoom — begin TRƯỚC khi đọc câu', () => {
       sessionOffsetMs: -10 * 60_000,
     });
     expect(entry?.session.questions[0]?.content).toBe('Câu 1');
+  });
+
+  it('offset của đồng hồ lấy từ GET (response MỚI NHẤT), không phải từ begin', async () => {
+    // begin nhận lúc máy = MACHINE_MS, server = 03:00:00 ⇒ offset begin −10 phút.
+    // GET nhận 1 giây sau theo máy, nhưng server báo 03:02:01 (giờ máy vừa bị chỉnh lùi 2 phút) ⇒ offset −8 phút.
+    const now = vi.fn()
+      .mockReturnValueOnce(MACHINE_MS)
+      .mockReturnValueOnce(MACHINE_MS + 1_000)
+      .mockImplementation(() => { throw new Error('now() gọi quá số lần mong đợi'); });
+    const getServerNow = new Date(Date.parse(SERVER_NOW) + 2 * 60_000 + 1_000).toISOString();
+
+    const entry = await enterExamRoom('s-1', {
+      begin: vi.fn().mockResolvedValue(BEGIN),
+      fetchSession: vi.fn().mockResolvedValue(session({ serverNow: getServerNow })),
+      loadLegacy: vi.fn(),
+      now,
+    });
+
+    expect(entry?.clock).toEqual({
+      kind: 'begun',
+      begin: BEGIN,
+      beginOffsetMs: -10 * 60_000,
+      sessionOffsetMs: -8 * 60_000,
+    });
+    if (entry?.clock.kind !== 'begun') throw new Error('expected begun');
+    expect(entry.clock.sessionOffsetMs).not.toBe(entry.clock.beginOffsetMs);
   });
 
   it('begin 404 (null) ⇒ đường cũ loadRoomSession, không onBegun', async () => {
@@ -122,6 +158,24 @@ describe('enterExamRoom — begin TRƯỚC khi đọc câu', () => {
 
     expect(error).toBeInstanceOf(ExamRoomEntryError);
     expect(error.reason).toBe('session_ended');
+    expect(fetchSession).not.toHaveBeenCalled();
+  });
+
+  it('begin 403 (qua service thật) ⇒ failed — KHÔNG bị coi như Backend cũ (404) để vào đường cũ', async () => {
+    vi.mocked(apiClient.post).mockRejectedValueOnce(httpError(403, { error: 'Forbidden' }));
+    const fetchSession = vi.fn();
+    const loadLegacy = vi.fn().mockResolvedValue(session());
+
+    const error = await enterExamRoom(GUID_SESSION_ID, { fetchSession, loadLegacy }).catch((e) => e);
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      `/api/v1/interview/practice/sessions/${GUID_SESSION_ID}/begin`,
+      undefined,
+      expect.anything(),
+    );
+    expect(error).toBeInstanceOf(ExamRoomEntryError);
+    expect(error.reason).toBe('failed');
+    expect(loadLegacy).not.toHaveBeenCalled();
     expect(fetchSession).not.toHaveBeenCalled();
   });
 

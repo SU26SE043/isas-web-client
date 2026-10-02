@@ -77,6 +77,12 @@ describe('beginPracticeSession — [I1]', () => {
     await expect(beginPracticeSession(SESSION_ID)).resolves.toBeNull();
   });
 
+  it.each([403, 500])('%i ⇒ ném nguyên (KHÔNG null — chỉ 404 mới là Backend cũ)', async (status) => {
+    const error = httpError(status, { error: 'x' });
+    vi.mocked(apiClient.post).mockRejectedValue(error);
+    await expect(beginPracticeSession(SESSION_ID)).rejects.toBe(error);
+  });
+
   it('409 SESSION_ENDED ném nguyên — code đọc được', async () => {
     const error = httpError(409, { code: 'SESSION_ENDED', error: 'Buổi đã kết thúc' });
     vi.mocked(apiClient.post).mockRejectedValue(error);
