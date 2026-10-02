@@ -194,4 +194,24 @@ describe('publish — lời server trong body `{ error }`', () => {
     }
     expect(mapDeployError(new Error('Network Error'), t)).toBe('employer.campaigns.wizard.deploy.deployFailed');
   });
+
+  // Dải đọc lời server phải HẸP đúng 400/409 (lỗi nghiệp vụ). 401/403 là lỗi phiên/quyền: lời server
+  // ("token expired") vô nghĩa với HR và lộ chi tiết kỹ thuật ⇒ phải về câu chung. Thiếu ca này thì
+  // nới `status === 400 || status === 409` sang 401/403 không test nào đỏ [lỗ K4].
+  it('401 / 403 { error } ⇒ câu chung, KHÔNG lộ lời server', () => {
+    for (const status of [401, 403]) {
+      const error = deployError(status, { error: 'token expired' });
+      expect(getDeployWarnings(error, t)).toEqual([]);
+      expect(mapDeployError(error, t)).toBe('employer.campaigns.wizard.deploy.deployFailed');
+    }
+  });
+
+  // F5b (dọn): `handleFinalSubmit` bỏ chốt 409 riêng ⇒ câu mặc định cho 409 không-body chuyển vào
+  // `mapDeployError`, để thông điệp không tụt từ "sai trạng thái" xuống câu chung "triển khai thất bại".
+  it('409 không body / body lạ ⇒ câu mặc định về trạng thái, không phải câu chung', () => {
+    for (const data of [undefined, null, '', '   ', {}, { error: '' }, { error: 42 }]) {
+      expect(getDeployWarnings(deployError(409, data), t)).toEqual([]);
+      expect(mapDeployError(deployError(409, data), t)).toBe('employer.campaigns.wizard.deploy.deployConflict');
+    }
+  });
 });
