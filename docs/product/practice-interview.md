@@ -21,25 +21,31 @@ History: `/candidate/practice/history`.
 5. Room: question text renders immediately from session state and never depends on TTS. The authenticated TTS `GET .../questions/{id}/speech` is prefetched as a blob as soon as the question is known, then played after the start gate through one persistent audio coordinator. Recording and the answer timer stay locked during TTS loading/playback. At the 9s load ceiling or on a transient 502/504, the coordinator uses Web Speech with the already-rendered question text when supported; otherwise it degrades to text-only and unlocks the answer flow. HTML audio and Web Speech are mutually exclusive and both are cancelled on question change/recording stop. A 60s playback watchdog prevents a missing completion event from hanging the room. Autoplay rejection exposes a manual Play action. MediaRecorder answers use echo cancellation and `POST .../answers` multipart (`questionId`, `file`, `durationSec`). If the answer timer hits `0` without a submitted answer: stop/discard recording, mark the question `unanswered`, register a silent answer so scoring can assign 0, auto-advance (TTS + new timer). The Finish control is shown only after the answer API returns `interviewComplete: true`; it then calls `POST .../submit` (204, empty body).
 6. Scoring: `/interview/:sessionId/complete` polls `GET .../sessions/{sessionId}` every 3s until `status === Scored`, then redirects to `/practice/result?sessionId={sessionId}`. The result page calls the same authenticated session-detail endpoint, polls only while evaluation is pending, and renders `result` (`overallScore`, `criteriaScores`, `needsImprovement`, `overallComment`, `cvVsAnswer`). The frontend never creates an `assessment-*` ID.
 
-Rubric editing lives at `/candidate/rubrics` (not part of create payload). Practice setup also loads the active rubric with `?language=vi|en` before sending selected `rubricCriterionIds`.
+Rubric editing lives at `/candidate/rubrics` (not part of create payload). Practice setup loads the active rubric with `?language=vi|en` and shows its source and criterion names in step 7. The create request does **not** send `rubricCriterionIds`; the server pins the active rubric. Step 7 links to the candidate editor, saving user choices and CV/JD IDs in a user-bound, two-hour `sessionStorage` draft. Returning to `/candidate/practice/setup` restores step 7 and reloads the rubric. The editor only accepts an internal `/candidate/` `returnTo` path.
 
 ## Candidate rubric API
 
-The rubric editor uses the Candidate-owned CRUD contract:
+The candidate rubric editor uses the Candidate-owned contract:
 
 | Action | Path | Notes |
 | --- | --- | --- |
 | Read | `GET /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Returns the custom rubric or the 7-criterion seed; response does not echo `language` |
 | Replace | `PUT /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Replaces all criteria; total weight must be within `0.99..1.01` |
 | Reset | `DELETE /api/v1/interview/practice/rubrics/{jobCategory}?language=vi|en` | Idempotently returns that language to the seed rubric |
+| Read default | `GET /api/v1/interview/practice/rubrics/{jobCategory}/default?language=vi|en` | Returns the current default rubric and its `defaultVersion` |
 
-Vietnamese and English rubrics are separate records. The frontend sends the active UI language on every verb and keeps it in the query cache key.
+Vietnamese and English rubrics are separate records. The frontend sends the active UI language on every verb and keeps it in the query cache key. Candidate responses may include `defaultVersion` and `basedOnDefaultVersion`; a custom rubric based on an older version can show a default/custom comparison and apply the new default after confirmation. Reset remains available to return to the default rubric.
+
+The admin rubric editor uses `GET /api/v1/admin/rubrics/{jobCategory}?language=vi|en` and `PUT` on the same path. An update sends one entry per criterion with `id`, `name`, `description`, `weight`, `scoringScope`, and `levels`; unchanged values for existing criteria are `null`, a new criterion has `id: null`, and deleted criteria are omitted. `maxScore` is fixed at 5. The editor requires enabled weights to total exactly 100% before sending an update. DeliveryMetrics criteria retain their name and scope and can only be enabled or disabled; the service remains authoritative for validation errors.
+
+Weighted result responses may include `scoreFormula: "Weighted"`, `scoreBeforePenalty`, `skipPenalty`, `effectiveWeight` and `contribution` per assessed criterion, and `unassessedCriteria`. The report renders these returned values and the post-penalty formula. Average or legacy responses keep the existing unweighted report. An explicit empty `unassessedCriteria` list means there are no unassessed criteria; the frontend only uses its legacy inference when the field is absent.
 
 ## Routes
 
 | Path | Component |
 | --- | --- |
 | `/practice` | Setup wizard → create session on Start |
+| `/candidate/practice/setup` | Setup wizard return route after editing personal criteria |
 | `/interview/:sessionId/prepare` | Fetch live session detail + readiness/consent |
 | `/interview/:sessionId/room` | Shared B2C and learning practice room (live); campaign has its dedicated adapter |
 | `/interview/:sessionId/complete` | Scoring poll + live report |

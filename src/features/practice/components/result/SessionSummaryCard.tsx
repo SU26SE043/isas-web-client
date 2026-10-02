@@ -114,7 +114,9 @@ export function SessionSummaryCard({ view }: { view: PracticeSessionResultViewMo
                 className={cn('mt-2 text-sm', view.skipPenalty.applied ? 'text-warning' : 'text-muted-foreground')}
               >
                 {view.skipPenalty.applied
-                  ? t('practice.result.skipPenaltyApplied')
+                  ? t(view.scoreFormula === 'Weighted'
+                      ? 'practice.result.skipPenaltyAppliedWeighted'
+                      : 'practice.result.skipPenaltyApplied')
                       .replace('{{before}}', splitScore(view.skipPenalty.scoreBefore, maxScore).value)
                       .replace('{{answered}}', String(view.skipPenalty.seedAnswered))
                       .replace('{{total}}', String(view.skipPenalty.seedTotal))

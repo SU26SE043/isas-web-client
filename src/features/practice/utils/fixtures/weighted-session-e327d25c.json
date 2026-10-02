@@ -1,0 +1,27 @@
+{
+  "id": "e327d25c-2287-4cff-a87c-157f2fb35ff2",
+  "status": "Scored",
+  "jobCategory": "BE",
+  "language": "vi",
+  "questions": [
+    { "id": "q1", "orderNo": 1, "content": "Mô tả cách bạn thiết kế một API.", "timeLimitSec": 120, "kind": "Seed", "answer": { "transcript": "…", "status": "Scored" } },
+    { "id": "q2", "orderNo": 2, "content": "Bạn xử lý lỗi hệ thống như thế nào?", "timeLimitSec": 120, "kind": "Seed", "answer": { "transcript": "…", "status": "Scored" } },
+    { "id": "q3", "orderNo": 3, "content": "Bạn tối ưu truy vấn ra sao?", "timeLimitSec": 120, "kind": "Seed", "answer": null }
+  ],
+  "result": {
+    "overallScore": 54.27,
+    "maxScore": 100,
+    "scoreFormula": "Weighted",
+    "scoreBeforePenalty": 81.405,
+    "skipPenalty": true,
+    "seedAnswered": 2,
+    "seedTotal": 3,
+    "criteriaScores": [
+      { "criterionId": "communication", "name": "Giao tiếp", "score": 4.2, "maxScore": 5, "effectiveWeight": 0.6, "contribution": 48.84 },
+      { "criterionId": "technical-depth", "name": "Chiều sâu kỹ thuật", "score": 3.2, "maxScore": 5, "effectiveWeight": 0.4, "contribution": 32.56 }
+    ],
+    "unassessedCriteria": [
+      { "criterionId": "system-design", "name": "Thiết kế hệ thống", "weight": 0.2 }
+    ]
+  }
+}

@@ -19,6 +19,10 @@ export function getUnassessedCriteria(
   rubric: RubricResponse | null | undefined,
   options: { isLoading?: boolean; isError?: boolean } = {},
 ): UnassessedCriteriaResult {
+  const serverUnassessed = session.result?.unassessedCriteria;
+  if (Array.isArray(serverUnassessed)) {
+    return { status: 'known', names: serverUnassessed.map((item) => item.name.trim()).filter(Boolean) };
+  }
   if (options.isLoading) return { status: 'loading', names: [] };
   if (session.result?.rubricSource !== 'SystemDefault') return { status: 'unknown', names: [] };
   if (options.isError || !rubric || rubric.isCustom) return { status: 'unknown', names: [] };

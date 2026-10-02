@@ -106,11 +106,14 @@ export function PracticeWizardPage() {
         <PracticeGradingCriteriaStep
           jobCategory={flow.jobCategory}
           criteria={flow.rubricCriteria}
-          selectedIds={flow.rubricCriterionIds}
+          isCustom={flow.rubricIsCustom}
+          language={flow.language}
           isLoading={flow.loadingRubric}
           isError={flow.rubricError}
           disabled={disabled}
-          onSelect={flow.setRubricCriterionIds}
+          editDisabled={flow.uploadingCv || flow.loadingCv || flow.loadingJd}
+          draftError={flow.draftError}
+          onEdit={flow.openRubricEditor}
           onRetry={flow.retryRubric}
           onBack={() => flow.goToStep(5)}
           onBackToDomain={() => flow.goToStep(0)}
@@ -131,7 +134,7 @@ export function PracticeWizardPage() {
           adaptiveEnabled={flow.adaptiveEnabled}
           maxDeepPerQuestion={flow.maxDeepPerQuestion}
           focusTrackingEnabled={flow.focusTrackingEnabled}
-          criteria={flow.rubricCriteria.filter((criterion) => flow.rubricCriterionIds.includes(criterion.id))}
+          criteria={flow.rubricCriteria}
           canStart={flow.canStart}
           isCreating={flow.isCreatingSession}
           errorCode={flow.createErrorCode}

@@ -13,4 +13,10 @@ describe('candidateRubricsEndpoints', () => {
       '/api/v1/interview/practice/rubrics/BE?language=en',
     );
   });
+
+  it('builds the candidate default-rubric endpoint for version comparisons', () => {
+    expect(candidateRubricsEndpoints.defaultRubric('BA', 'en')).toBe(
+      '/api/v1/interview/practice/rubrics/BA/default?language=en',
+    );
+  });
 });

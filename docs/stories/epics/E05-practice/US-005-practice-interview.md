@@ -26,6 +26,8 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 ## Acceptance Criteria
 
 - `/practice` shows a 6-step setup wizard before the interview engine; confirm creates session + reserves tokens then navigates to prepare.
+- Practice wizard rubric step shows source and criterion details, opens `/candidate/rubrics`, and restores a user-bound setup draft when returning. The create request leaves criterion selection to the server-pinned active rubric.
+- Candidate rubric updates preserve unchanged values, support editing criterion details and levels on the fixed 0–5 scale, validate a 100% weight total before save, and can compare/apply a newer default version after confirmation.
 - `/interview/:sessionId/prepare` fetches the live session detail once through TanStack Query, validates the route ID, and presents localized loading, `401`, `403`, `404`, generic error, retry, and success states without mock fallback.
 - B2C flow after confirm: prepare consent → device check → waiting room → interview room (skip `/identity`).
 - Interview room: AI panel, **live candidate camera** (no disable toggle), timer (orange ≤120s, red ≤30s), submit, pause.
@@ -37,6 +39,7 @@ Candidate runs AI practice interview via `/practice` **pre-session wizard** (dom
 - Ephemeral device/consent progress may be persisted per session in `sessionStorage`; durable roadmap ownership is carried by the `roadmapId` and `lessonId` route context, not inferred from a session ID or browser storage.
 - Result page: tabbed report (Overview/Breakdown/Roadmap), radar chart, gap analysis, roadmap preview via `learningService`, error/loading states.
 - Post-interview result uses `/practice/result?sessionId=<guid>` and `GET /api/v1/interview/practice/sessions/{sessionId}`. Invalid or prefixed IDs never call the API; pending evaluation polls every 3s and stops on `Scored` or failed status; `401`, `403`, `404`, generation failure, and generic failures have distinct localized states.
+- Weighted results display the server formula, effective criterion weights and contributions, and the API's authoritative unassessed criteria. Legacy and Average results retain the unweighted layout.
 - Roadmap menu `/candidate/roadmap` opens **creation wizard** (domain → reports → target level → confirm → AI → Learning). See `docs/product/learning-roadmap.md`.
 - Learning `/candidate/learning` is a **dashboard of created roadmaps** (search/filter/sort), then milestone → theory → device-check → practice with live feedback → practice report. See `docs/product/learning.md`.
 - Learning practice uses the shared answer/submit endpoints: it advances to the next question immediately after a successful recording upload; the UI may submit the session only when the API returns `interviewComplete`. AI scoring runs in the background and the aggregate lesson report offers retry/recovery if scoring exceeds the polling window.

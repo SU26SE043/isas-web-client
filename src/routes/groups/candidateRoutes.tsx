@@ -6,6 +6,7 @@ import { CVAnalysisPage } from '@/features/cv-analysis/pages/CVAnalysisPage';
 import { CVResultPage } from '@/features/cv-analysis/pages/CVResultPage';
 import { PracticeHistoryResultPage } from '@/features/practice/pages/PracticeHistoryResultPage';
 import { InterviewHistoryPage } from '@/features/practice/pages/InterviewHistoryPage';
+import { PracticeWizardPage } from '@/features/practice/pages/PracticeWizardPage';
 import { RoadmapPage } from '@/features/practice/pages/RoadmapPage';
 import { LearningHubPage } from '@/features/practice/pages/LearningHubPage';
 import { LearningRoadmapDetailPage } from '@/features/practice/pages/LearningRoadmapDetailPage';
@@ -113,6 +114,7 @@ export const candidateRoutes: RouteObject[] = [
               },
               { path: 'campaigns/:id/enroll', element: <Navigate to="/candidate/campaigns" replace /> },
               { path: 'practice/history', element: <InterviewHistoryPage /> },
+              { path: 'practice/setup', element: <PracticeWizardPage /> },
               { path: 'interview-history', element: <Navigate to="/candidate/practice/history" replace /> },
               { path: 'practice/history/:id', element: <PracticeHistoryResultPage /> },
               { path: 'reports', element: <CandidateReportsPage /> },

@@ -43,6 +43,14 @@ export function ReportCriteriaScores({
           </div>
         </div>
 
+        {view.scoreFormula === 'Weighted' ? <p className="border-b border-subtle bg-surface-base/50 px-5 py-3 text-sm text-muted-foreground" data-testid="weighted-score-formula">
+          {(view.skipPenalty ? t('practice.result.weightedFormulaPenalty') : t('practice.result.weightedFormula'))
+            .replace('{before}', String(view.scoreBeforePenalty ?? view.overallScore ?? '—'))
+            .replace('{answered}', String(view.skipPenalty?.seedAnswered ?? '—'))
+            .replace('{total}', String(view.skipPenalty?.seedTotal ?? '—'))
+            .replace('{after}', String(view.overallScore ?? '—'))}
+        </p> : null}
+
         <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:gap-5 lg:p-6">
           <div className="frame-satin-soft rounded-xl bg-surface-base/60 p-4 sm:p-5">
             <div className="mb-1 flex items-center justify-center gap-2 text-sm font-semibold text-foreground">
@@ -68,6 +76,7 @@ export function ReportCriteriaScores({
             <CriteriaProgressList
               criteria={view.criteria}
               passThresholdPct={view.passThresholdPct}
+              weighted={view.scoreFormula === 'Weighted'}
             />
             {unassessedCriteria.status === 'known' && unassessedCriteria.names.length > 0 ? (
               <div className="mt-4 rounded-xl border border-info/30 bg-info/5 p-4 text-sm text-foreground" role="status">
@@ -76,10 +85,10 @@ export function ReportCriteriaScores({
                   <span>{t('practice.result.unassessed.title')}</span>
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-6 text-muted-foreground">
-                  {unassessedCriteria.names.map((name) => <li key={name}>{name}</li>)}
+                  {unassessedCriteria.names.map((name) => <li key={name} className={view.scoreFormula === 'Weighted' ? 'flex flex-wrap justify-between gap-2' : undefined}><span>{name}</span>{view.scoreFormula === 'Weighted' ? <span className="text-xs">{t('practice.result.unassessed.notAsked')}</span> : null}</li>)}
                 </ul>
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                  {t('practice.result.unassessed.explanation')}
+                  {t(view.scoreFormula === 'Weighted' ? 'practice.result.unassessed.reweighted' : 'practice.result.unassessed.explanation')}
                 </p>
               </div>
             ) : unassessedCriteria.status === 'unknown' ? (

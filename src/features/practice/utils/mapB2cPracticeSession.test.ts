@@ -8,6 +8,8 @@ import {
   MOCK_SESSION_TOPICS_EMPTY,
   MOCK_SESSION_TOPICS_NULL,
 } from '../mocks/sessionTopics.fixtures';
+import weightedSessionFixture from './fixtures/weighted-session-e327d25c.json';
+import legacySessionFixture from './fixtures/legacy-practice-session.json';
 
 describe('mapPracticeSessionResponse', () => {
   it('preserves null versus empty focus event summaries and filters malformed entries', () => {
@@ -58,6 +60,34 @@ describe('mapPracticeSessionResponse', () => {
     expect(mapped.result?.overallScore).toBe(82);
     expect(mapped.result?.criteriaScores[0]?.name).toBe('Comm');
     expect(mapped.result?.cvVsAnswer?.summary).toBe('Aligned');
+  });
+
+  it('maps the raw RUB1 weighted detail response and preserves an authoritative empty unassessed list', () => {
+    const mapped = mapPracticeSessionResponse(weightedSessionFixture);
+    expect(mapped.id).toBe('e327d25c-2287-4cff-a87c-157f2fb35ff2');
+    expect(mapped.result).toMatchObject({ scoreFormula: 'Weighted', scoreBeforePenalty: 81.405, overallScore: 54.27 });
+    expect(mapped.result?.unassessedCriteria).toEqual([{ criterionId: 'system-design', name: 'Thiết kế hệ thống', weight: 0.2 }]);
+    expect(mapped.result?.criteriaScores[0]).toMatchObject({ effectiveWeight: 0.6, contribution: 48.84 });
+
+    const oldSession = mapPracticeSessionResponse(legacySessionFixture);
+    expect(oldSession.result?.scoreFormula).toBeNull();
+    expect(oldSession.result?.unassessedCriteria).toBeNull();
+    expect(mapPracticeSessionResponse({ questions: [], result: { overallScore: 1, criteriaScores: [], unassessedCriteria: [] } }).result?.unassessedCriteria).toEqual([]);
+  });
+
+  it('accepts only known score formula values and retains unassessed criteria', () => {
+    const mapped = mapPracticeSessionResponse({
+      questions: [],
+      result: {
+        overallScore: 54.27,
+        scoreFormula: 'WeightedV2',
+        criteriaScores: [{ criterionId: 'c1', name: 'Communication', score: 4, effectiveWeight: 0.6, contribution: 48.84 }],
+        unassessedCriteria: [{ criterionId: 'c2', name: 'System design', weight: 0.2 }],
+      },
+    });
+    expect(mapped.result?.scoreFormula).toBeNull();
+    expect(mapped.result?.criteriaScores[0]).toMatchObject({ effectiveWeight: 0.6, contribution: 48.84 });
+    expect(mapped.result?.unassessedCriteria).toEqual([{ criterionId: 'c2', name: 'System design', weight: 0.2 }]);
   });
 
   it('preserves rubric provenance and treats unknown values as legacy null', () => {

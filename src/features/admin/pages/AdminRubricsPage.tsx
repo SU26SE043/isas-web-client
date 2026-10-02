@@ -25,7 +25,7 @@ import { toAdminRubricUpsertInput } from '../utils/adminRubricApi';
  * 200 `changed:false` (không lưu gì). Xem `adminRubricApi.ts` cho luật parse-first.
  */
 type RubricTab = 'levels' | 'try';
-const TAB_CLASS = 'rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200';
+const TAB_CLASS = 'rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200';
 
 export function AdminRubricsPage() {
   const { t } = useLanguage();
@@ -35,6 +35,7 @@ export function AdminRubricsPage() {
   const [confirm, setConfirm] = useState<'save' | 'reset' | 'discard' | null>(null);
   const [pendingSelect, setPendingSelect] = useState<{ category: AdminRubricJobCategory; language: AdminRubricLanguage } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
   // Tab ghim vào URL (`?tab=try`) để nút ở đầu trang, link chia sẻ và tab trình duyệt mới đều mở đúng chỗ —
   // panel tự thử từng nằm cuối trang dài 7 tiêu chí, người dùng phải cuộn mới biết nó tồn tại.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,7 +52,10 @@ export function AdminRubricsPage() {
   useEffect(() => { setDraft(null); }, [category, language, rubric?.version]);
 
   const criteria = draft ?? rubric?.criteria ?? [];
-  const dirty = draft !== null && JSON.stringify(toAdminRubricUpsertInput(draft)) !== JSON.stringify(toAdminRubricUpsertInput(rubric?.criteria ?? []));
+  const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(rubric?.criteria ?? []);
+  const enabledCriteria = criteria.filter((criterion) => criterion.enabled !== false);
+  const totalWeight = enabledCriteria.reduce((sum, criterion) => sum + criterion.weight, 0);
+  const validTotalWeight = enabledCriteria.length > 0 && Math.abs(totalWeight - 1) <= 0.0001;
   const forbidden = getApiStatusCode(query.detail.error) === 403;
   const missingLevels = useMemo(() => criteria.filter((c) => c.levels.length === 0).length, [criteria]);
 
@@ -68,7 +72,7 @@ export function AdminRubricsPage() {
     setConfirm(null);
   };
   const save = () =>
-    query.update.mutate(toAdminRubricUpsertInput(criteria), {
+    query.update.mutate(toAdminRubricUpsertInput(criteria, rubric?.criteria ?? []), {
       onSuccess: (saved) => {
         setConfirm(null);
         setDraft(null);
@@ -88,7 +92,7 @@ export function AdminRubricsPage() {
         <>
           {tab !== 'try' ? <Button type="button" variant="secondary" disabled={!rubric} onClick={() => showTab('try')}>🎙 {t('admin.rubrics.tab.try')}</Button> : null}
           <Button type="button" variant="outline" disabled={!rubric || query.reset.isPending} onClick={() => setConfirm('reset')}>{t('admin.rubrics.reset')}</Button>
-          <Button type="button" disabled={!dirty} loading={query.update.isPending} onClick={() => setConfirm('save')}>{t('admin.rubrics.save')}</Button>
+          <Button type="button" disabled={!dirty || !validTotalWeight} loading={query.update.isPending} onClick={() => setConfirm('save')}>{t('admin.rubrics.save')}</Button>
         </>
       }
     >
@@ -113,7 +117,7 @@ export function AdminRubricsPage() {
             {dirty ? <Badge variant="warning">{t('admin.rubrics.dirty')}</Badge> : null}
             {dirty ? <Button type="button" variant="ghost" size="sm" onClick={() => setDraft(null)}>{t('admin.rubrics.discard')}</Button> : null}
           </div>
-          <div role="tablist" aria-label={t('admin.rubrics.tab.label')} className="inline-flex gap-1 rounded-xl border border-satin bg-surface-raised p-1">
+          <div role="tablist" aria-label={t('admin.rubrics.tab.label')} className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-satin bg-surface-raised p-1">
             {(['levels', 'try'] as const).map((id) => (
               <button
                 key={id}
@@ -132,6 +136,12 @@ export function AdminRubricsPage() {
           ) : (
             <>
               <Alert variant="info"><AlertDescription>{t('admin.rubrics.effectNote')}</AlertDescription></Alert>
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-satin bg-surface-raised p-3 text-sm">
+                <span>{t('admin.rubrics.totalWeight').replace('{weight}', String(Number((totalWeight * 100).toFixed(2))))}</span>
+                <Badge variant={validTotalWeight ? 'success' : 'warning'}>{t(validTotalWeight ? 'admin.rubrics.totalWeightValid' : 'admin.rubrics.totalWeightInvalid')}</Badge>
+                <Button type="button" variant="outline" size="sm" disabled={!dirty} onClick={() => setShowDiff((value) => !value)}>{t(showDiff ? 'admin.rubrics.hideDiff' : 'admin.rubrics.showDiff')}</Button>
+              </div>
+              {showDiff ? <RubricChanges current={criteria} baseline={rubric.criteria} t={t} /> : null}
               <AdminRubricSuggestControls criteria={criteria} suggest={query.suggest} onApply={setDraft} />
               <AdminRubricCriteriaTable criteria={criteria} onChange={setDraft} />
             </>
@@ -185,4 +195,22 @@ export function AdminRubricsPage() {
       />
     </AdminPageShell>
   );
+}
+
+function RubricChanges({ current, baseline, t }: { current: AdminRubricCriterion[]; baseline: AdminRubricCriterion[]; t: (key: string) => string }) {
+  const original = new Map(baseline.map((criterion) => [criterion.id, criterion]));
+  const currentById = new Map(current.filter((criterion) => !criterion.isNew && criterion.enabled !== false).map((criterion) => [criterion.id, criterion]));
+  const changes: string[] = [];
+  for (const criterion of current) {
+    if (criterion.enabled === false) { changes.push(`${t('admin.rubrics.diff.disabled')}: ${criterion.name}`); continue; }
+    const before = original.get(criterion.id);
+    if (criterion.isNew || !before) { changes.push(`${t('admin.rubrics.diff.added')}: ${criterion.name || t('admin.rubrics.unnamed')}`); continue; }
+    if (criterion.name !== before.name) changes.push(`${t('admin.rubrics.column.name')}: ${before.name} → ${criterion.name}`);
+    if (criterion.description !== before.description) changes.push(`${t('admin.rubrics.column.description')}: ${criterion.name}`);
+    if (criterion.weight !== before.weight) changes.push(`${t('admin.rubrics.column.weight')}: ${criterion.name} (${Math.round(before.weight * 100)}% → ${Math.round(criterion.weight * 100)}%)`);
+    if (criterion.scoringScope !== before.scoringScope) changes.push(`${t('admin.rubrics.column.scope')}: ${criterion.name}`);
+    if (JSON.stringify(criterion.levels) !== JSON.stringify(before.levels)) changes.push(`${t('admin.rubrics.column.levels')}: ${criterion.name}`);
+  }
+  for (const criterion of baseline) if (!currentById.has(criterion.id) && !current.some((item) => item.id === criterion.id && item.enabled === false)) changes.push(`${t('admin.rubrics.diff.removed')}: ${criterion.name}`);
+  return <section className="rounded-xl border border-satin bg-surface-raised p-4" aria-label={t('admin.rubrics.diff.title')}><h3 className="font-medium">{t('admin.rubrics.diff.title')}</h3>{changes.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{changes.map((change, index) => <li key={`${change}-${index}`}>{change}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">{t('admin.rubrics.diff.none')}</p>}</section>;
 }

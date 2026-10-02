@@ -54,6 +54,9 @@ export type PracticeSessionResultViewModel = {
     scoreBefore: number;
     scoreAfter: number;
   };
+  scoreFormula?: 'Average' | 'Weighted' | null;
+  scoreBeforePenalty?: number | null;
+  unassessedCriteria?: Array<{ criterionId: string; name: string; weight: number }> | null;
 };
 
 const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces']);
@@ -65,6 +68,8 @@ export type CriteriaResultViewModel = {
   maxScore: number;
   pct: number;
   comment?: string;
+  effectiveWeight?: number | null;
+  contribution?: number | null;
 };
 
 export type QuestionResultViewModel = {
@@ -127,6 +132,8 @@ function mapCriterion(item: PracticeCriteriaScore): CriteriaResultViewModel {
     maxScore,
     pct,
     comment: item.comment?.trim() || undefined,
+    effectiveWeight: item.effectiveWeight,
+    contribution: item.contribution,
   };
 }
 
@@ -308,6 +315,9 @@ export function mapPracticeSessionResponseToViewModel(
     focusLeavePlacement,
     focusFrameCount,
     skipPenalty,
+    scoreFormula: result?.scoreFormula,
+    scoreBeforePenalty: result?.scoreBeforePenalty,
+    unassessedCriteria: result?.unassessedCriteria,
   };
 }
 

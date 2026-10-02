@@ -47,6 +47,20 @@ describe('getUnassessedCriteria', () => {
     });
   });
 
+  it('prefers the backend unassessed list, even when it differs from current rubric names', () => {
+    const result = getUnassessedCriteria({
+      ...session('Custom', ['Communication']),
+      result: { ...session('Custom', ['Communication']).result!, unassessedCriteria: [{ criterionId: 'old-id', name: 'Pinned name', weight: 0.25 }] },
+    }, undefined);
+    expect(result).toEqual({ status: 'known', names: ['Pinned name'] });
+  });
+
+  it('treats an explicit empty backend list as authoritative rather than guessing', () => {
+    const input = session('SystemDefault', ['Communication']);
+    input.result!.unassessedCriteria = [];
+    expect(getUnassessedCriteria(input, rubric)).toEqual({ status: 'known', names: [] });
+  });
+
   it.each([
     ['Custom source', session('Custom', ['Communication']), rubric, {}],
     ['legacy null source', session(null, ['Communication']), rubric, {}],

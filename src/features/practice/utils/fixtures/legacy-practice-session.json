@@ -1,0 +1,15 @@
+{
+  "id": "legacy-practice-session",
+  "status": "Scored",
+  "questions": [],
+  "result": {
+    "overallScore": 72,
+    "maxScore": 100,
+    "scoreFormula": null,
+    "scoreBeforePenalty": null,
+    "criteriaScores": [
+      { "criterionId": "communication", "name": "Communication", "score": 3.6, "maxScore": 5, "weight": 1 }
+    ],
+    "unassessedCriteria": null
+  }
+}

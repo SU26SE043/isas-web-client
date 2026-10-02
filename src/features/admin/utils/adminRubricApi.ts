@@ -210,13 +210,28 @@ export function parseAdminRubricPreviewHistory(raw: unknown): AdminRubricPreview
  * Body PUT chỉ mang ĐÚNG ba trường BE nhận. Không spread nguyên object đọc từ GET: bản trước làm
  * thế nên `descriptor` cũ đi lên nguyên xi ⇒ fingerprint bằng nhau ⇒ `changed:false`.
  */
-export function toAdminRubricUpsertInput(criteria: AdminRubricCriterion[]): AdminRubricUpsertInput {
+export function toAdminRubricUpsertInput(
+  criteria: AdminRubricCriterion[],
+  baseline: AdminRubricCriterion[] = [],
+): AdminRubricUpsertInput {
+  const originals = new Map(baseline.map((criterion) => [criterion.id, criterion]));
   return {
-    criteria: criteria.map((c) => ({
-      id: c.id,
-      description: c.description?.trim() ? c.description.trim() : null,
-      levels: c.levels.length ? normalizeCriterionLevels(c.levels) : null,
-    })),
+    criteria: criteria.filter((criterion) => criterion.enabled !== false).map((criterion) => {
+      const original = criterion.isNew ? undefined : originals.get(criterion.id);
+      const levels = normalizeCriterionLevels(criterion.levels);
+      return {
+        id: original ? criterion.id : null,
+        name: original ? (original.scoringMethod === 'DeliveryMetrics' || criterion.name === original.name ? null : criterion.name.trim()) : criterion.name.trim(),
+        // AdminRubric.cs treats null/empty description and null/[] levels as cleared values,
+        // so existing criteria must always send their current content on every upsert.
+        description: criterion.description?.trim() || null,
+        weight: original ? (criterion.weight === original.weight ? null : criterion.weight) : criterion.weight,
+        scoringScope: original
+          ? (original.scoringMethod === 'DeliveryMetrics' || criterion.scoringScope === original.scoringScope ? null : criterion.scoringScope as 'Always' | 'WhenTargeted')
+          : criterion.scoringScope as 'Always' | 'WhenTargeted',
+        levels,
+      };
+    }),
   };
 }
 

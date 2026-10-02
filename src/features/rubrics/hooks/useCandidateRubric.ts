@@ -28,11 +28,11 @@ import {
 
 export const CANDIDATE_RUBRIC_QUERY_KEY = ['candidate', 'rubric'] as const;
 
-export function useCandidateRubric() {
+export function useCandidateRubric(initialCategory?: JobCategory) {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
 
-  const [jobCategory, setJobCategory] = useState<JobCategory>(() => getInitialJobCategory());
+  const [jobCategory, setJobCategory] = useState<JobCategory>(() => initialCategory ?? getInitialJobCategory());
   const [criteria, setCriteria] = useState<EditableRubricCriterion[]>([]);
   const [isCustom, setIsCustom] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -125,9 +125,12 @@ export function useCandidateRubric() {
     mutationFn: () => resetRubric(jobCategory, rubricLanguage),
     onSuccess: async () => {
       setResetDialogOpen(false);
+      const queryKey = [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage] as const;
+      await queryClient.invalidateQueries({ queryKey, exact: true });
       const response = await queryClient.fetchQuery({
-        queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, jobCategory, rubricLanguage],
+        queryKey,
         queryFn: () => getRubric(jobCategory, rubricLanguage),
+        staleTime: 0,
       });
       const editable = mapResponseToEditable(response);
       setCriteria(editable);
@@ -190,6 +193,8 @@ export function useCandidateRubric() {
     jobCategory,
     criteria,
     isCustom,
+    defaultVersion: rubricQuery.data?.defaultVersion,
+    basedOnDefaultVersion: rubricQuery.data?.basedOnDefaultVersion,
     isDirty,
     isLoading: rubricQuery.isLoading,
     isFetching: rubricQuery.isFetching,
@@ -210,11 +215,13 @@ export function useCandidateRubric() {
     removeCriterion,
     addCriterion,
     save: () => saveMutation.mutate(),
+    saveAsync: () => saveMutation.mutateAsync(),
     isSaving: saveMutation.isPending,
     canSave,
     reset: () => resetMutation.mutate(),
     isResetting: resetMutation.isPending,
     confirmDiscardChanges,
     cancelUnsavedDialog,
+    requestDiscard: () => setUnsavedDialogOpen(true),
   };
 }

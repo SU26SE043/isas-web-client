@@ -229,6 +229,8 @@ function mapCriteriaScore(
   const percentage = pickNumber(item.percentage, item.pct, item.percent);
   const weight = pickNumber(item.weight);
   const averageScore = pickNumber(item.averageScore);
+  const effectiveWeight = pickNumber(item.effectiveWeight) ?? null;
+  const contribution = pickNumber(item.contribution) ?? null;
   if (!name) {
     if (!criterionId) return null;
     return {
@@ -240,6 +242,8 @@ function mapCriteriaScore(
       averageScore: averageScore ?? null,
       percentage: percentage ?? null,
       weight: weight ?? null,
+      effectiveWeight,
+      contribution,
     };
   }
   return {
@@ -251,6 +255,8 @@ function mapCriteriaScore(
     averageScore: averageScore ?? null,
     percentage: percentage ?? null,
     weight: weight ?? null,
+    effectiveWeight,
+    contribution,
   };
 }
 
@@ -450,6 +456,22 @@ function mapResult(raw: unknown, catalog: CriterionCatalog): PracticeSessionResu
     seedAnswered: pickNumber(item.seedAnswered) ?? null,
     seedTotal: pickNumber(item.seedTotal) ?? null,
     scoreBeforePenalty: pickNumber(item.scoreBeforePenalty) ?? null,
+    scoreFormula: item.scoreFormula === 'Weighted' || item.scoreFormula === 'Average'
+      ? item.scoreFormula
+      : null,
+    // [] is meaningful: the scored session is known to have no unassessed criteria.
+    // Older APIs return null/omit this field and must remain distinguishable.
+    unassessedCriteria: Array.isArray(item.unassessedCriteria)
+      ? item.unassessedCriteria
+          .map((rawCriterion) => {
+            const criterion = asRecord(rawCriterion);
+            const criterionId = pickString(criterion.criterionId);
+            const name = pickString(criterion.name);
+            const weight = pickNumber(criterion.weight);
+            return criterionId && name && weight != null ? { criterionId, name, weight } : null;
+          })
+          .filter((criterion): criterion is { criterionId: string; name: string; weight: number } => criterion !== null)
+      : null,
   };
 }
 

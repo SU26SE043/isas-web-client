@@ -12,6 +12,8 @@ vi.mock('@/shared/languages', () => ({
     t: (key: string) =>
       key === 'practice.result.skipPenaltyApplied'
         ? 'AVG {{before}} × {{answered}}/{{total}} = {{after}}'
+        : key === 'practice.result.skipPenaltyAppliedWeighted'
+          ? 'WEIGHTED {{before}} × {{answered}}/{{total}} = {{after}}'
         : key === 'practice.result.skipPenaltyNone'
           ? 'FULL {{total}}/{{total}}'
           : key,
@@ -57,6 +59,15 @@ describe('SessionSummaryCard — CAMP-21 note', () => {
     const note = screen.getByTestId('skip-penalty-note');
     expect(note).toHaveTextContent(/^AVG 80 × 2\/3 = 53\.3$/);
     expect(note.className).toContain('text-warning');
+  });
+
+  it('buổi Weighted dùng nhãn điểm có trọng số và thay đúng các giá trị penalty', () => {
+    render(<SessionSummaryCard view={makeView({
+      overallScore: 54.27,
+      scoreFormula: 'Weighted',
+      skipPenalty: { applied: true, seedAnswered: 2, seedTotal: 3, scoreBefore: 81.405, scoreAfter: 54.27 },
+    })} />);
+    expect(screen.getByTestId('skip-penalty-note')).toHaveTextContent(/^WEIGHTED 81\.4 × 2\/3 = 54\.3$/);
   });
 
   it('đủ câu chính ⇒ dòng "không bị trừ", không phải màu cảnh báo', () => {

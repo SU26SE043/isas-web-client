@@ -25,6 +25,8 @@ export type RubricResponse = {
   jobCategory: JobCategory;
   isCustom: boolean;
   criteria: RubricCriterionResponse[];
+  defaultVersion?: number;
+  basedOnDefaultVersion?: number | null;
 };
 
 export type EditableRubricCriterion = {

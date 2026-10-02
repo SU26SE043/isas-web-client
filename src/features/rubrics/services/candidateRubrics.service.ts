@@ -8,7 +8,18 @@ function normalizeRubricResponse(data: RubricResponse): RubricResponse {
     jobCategory: data.jobCategory,
     isCustom: Boolean(data.isCustom),
     criteria: Array.isArray(data.criteria) ? data.criteria : [],
+    defaultVersion: Number.isInteger(data.defaultVersion) ? data.defaultVersion : undefined,
+    basedOnDefaultVersion: Number.isInteger(data.basedOnDefaultVersion) ? data.basedOnDefaultVersion : data.basedOnDefaultVersion === null ? null : undefined,
   };
+}
+
+export async function getDefaultRubric(
+  jobCategory: JobCategory,
+  language: RubricLanguage = 'vi',
+  signal?: AbortSignal,
+): Promise<RubricResponse> {
+  const response = await apiClient.get<RubricResponse>(candidateRubricsEndpoints.defaultRubric(jobCategory, language), { signal });
+  return normalizeRubricResponse(response.data);
 }
 
 export async function getRubric(
