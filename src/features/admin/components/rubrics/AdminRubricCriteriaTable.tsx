@@ -38,8 +38,8 @@ export function AdminRubricCriteriaTable({ criteria, onChange }: Props) {
           <thead className="border-b border-satin bg-surface-overlay"><tr>
             <th className="p-3 text-left">{t('admin.rubrics.column.name')}</th>
             <th className="p-3 text-left">{t('admin.rubrics.column.description')}</th>
-            <th className="w-28 p-3 text-left">{t('admin.rubrics.column.weight')}</th>
-            <th className="w-48 p-3 text-left">{t('admin.rubrics.column.scope')}</th>
+            <th className="w-40 min-w-40 p-3 text-right">{t('admin.rubrics.column.weight')}</th>
+            <th className="w-56 min-w-56 p-3 text-left">{t('admin.rubrics.column.scope')}</th>
             <th className="w-24 p-3 text-left">{t('admin.rubrics.column.scale')}</th>
             <th className="p-3 text-left">{t('admin.rubrics.column.levels')}</th>
             <th className="p-3 text-left">{t('admin.rubrics.column.actions')}</th>
@@ -63,8 +63,8 @@ export function AdminRubricCriteriaTable({ criteria, onChange }: Props) {
                 </div>
               </td>
               <td className="min-w-64 p-2"><Textarea aria-label={`${t('admin.rubrics.column.description')} ${index + 1}`} value={criterion.description ?? ''} rows={2} onChange={(event) => patch(criterion.id, { description: event.target.value })} /></td>
-              <td className="p-3"><div className="flex items-center gap-1"><input className={inputClass} type="number" min="0" max="100" step="0.1" aria-label={`${t('admin.rubrics.column.weight')} ${index + 1}`} value={Math.round(criterion.weight * 1000) / 10} onChange={(event) => patch(criterion.id, { weight: Number(event.target.value) / 100 })} /><span>%</span></div></td>
-              <td className="p-3"><select className={inputClass} aria-label={`${t('admin.rubrics.column.scope')} ${index + 1}`} value={criterion.scoringScope} disabled={measured && !isNew} onChange={(event) => patch(criterion.id, { scoringScope: event.target.value })}>
+              <td className="min-w-40 p-3"><div className="flex items-center gap-1"><input className={`${inputClass} min-w-0 text-right tabular-nums`} type="number" min="0" max="100" step="0.1" aria-label={`${t('admin.rubrics.column.weight')} ${index + 1}`} value={Math.round(criterion.weight * 1000) / 10} onChange={(event) => patch(criterion.id, { weight: Number(event.target.value) / 100 })} /><span>%</span></div></td>
+              <td className="min-w-56 p-3"><select className={`${inputClass} whitespace-nowrap`} aria-label={`${t('admin.rubrics.column.scope')} ${index + 1}`} value={criterion.scoringScope} disabled={measured && !isNew} onChange={(event) => patch(criterion.id, { scoringScope: event.target.value })}>
                 <option value="Always">{t('admin.rubrics.scope.Always')}</option><option value="WhenTargeted">{t('admin.rubrics.scope.WhenTargeted')}</option>
               </select></td>
               <td className="p-3"><span className="inline-flex items-center gap-1 rounded-lg border border-satin px-2 py-1">🔒 0–5</span></td>

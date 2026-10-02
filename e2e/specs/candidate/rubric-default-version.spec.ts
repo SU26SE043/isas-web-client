@@ -30,16 +30,12 @@ test('candidate compares an updated default rubric and applies it through confir
   await loginAs(page, 'Candidate');
   await page.goto('/candidate/rubrics?category=BE&language=en');
   await expect(page.getByText('The default rubric has been updated to version 3.')).toBeVisible();
-  await page.screenshot({ path: test.info().outputPath('rub1-candidate-rubric-desktop.png'), fullPage: true });
-
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.screenshot({ path: test.info().outputPath('rub1-candidate-rubric-mobile.png'), fullPage: true });
   await page.getByRole('button', { name: 'View differences' }).click();
   const diff = page.getByRole('dialog');
   await expect(diff.getByRole('heading', { name: 'Compare with default rubric' })).toBeVisible();
   await expect(diff.getByText('Default level text')).toBeVisible();
   await expect(diff.getByText('Custom level text')).toBeVisible();
-  await page.screenshot({ path: test.info().outputPath('rub1-candidate-rubric-diff.png'), fullPage: true });
   await diff.getByRole('button', { name: 'Close' }).click();
 
   await page.getByRole('button', { name: 'Apply default rubric' }).click();

@@ -56,13 +56,24 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   });
 
   await loginAs(page, 'Admin');
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/admin/rubrics');
 
   // (1) Bảng hiện descriptor thật của mốc (bản cũ: mọi ô trống vì đọc `description`).
   await expect(page.getByText(/No answer or off topic/)).toBeVisible();
   await expect(page.getByRole('spinbutton', { name: 'Weight 1' })).toHaveValue('75');
   await expect(page.getByRole('spinbutton', { name: 'Weight 2' })).toHaveValue('25');
-  await page.screenshot({ path: test.info().outputPath('rub1-admin-desktop.png'), fullPage: true });
+  const weightInput = page.getByRole('spinbutton', { name: 'Weight 1' });
+  const scopeSelect = page.getByLabel('Scoring scope 1');
+  expect((await weightInput.boundingBox())?.width).toBeGreaterThan(100);
+  expect((await scopeSelect.boundingBox())?.width).toBeGreaterThan(180);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await weightInput.scrollIntoViewIfNeeded();
+  expect((await weightInput.boundingBox())?.width).toBeGreaterThan(100);
+  await scopeSelect.scrollIntoViewIfNeeded();
+  expect((await scopeSelect.boundingBox())?.width).toBeGreaterThan(180);
+  await expect(scopeSelect).toHaveValue('Always');
+  await page.setViewportSize({ width: 1440, height: 1000 });
   // Ngôn ngữ BỘ CHUẨN (vi/en) là một chiều dữ liệu, độc lập với ngôn ngữ giao diện — mặc định mở BE/vi.
   await expect(page.getByRole('button', { name: 'Backend · Vietnamese' })).toHaveAttribute('aria-pressed', 'true');
 
@@ -74,7 +85,6 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   await save.click();
   await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText(/Saved v3/)).toBeVisible();
-  await page.screenshot({ path: test.info().outputPath('rub1-admin-saved.png'), fullPage: true });
   expect(puts).toHaveLength(1);
   expect(puts[0]).toEqual({
     criteria: [
@@ -94,7 +104,6 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   await page.setViewportSize({ width: 375, height: 812 });
   await expect(page.getByRole('tab', { name: 'Score levels' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Try the rubric yourself' })).toBeVisible();
-  await page.screenshot({ path: test.info().outputPath('rub1-admin-mobile.png'), fullPage: true });
   const grade = page.getByRole('button', { name: /Grade this answer/ });
   await expect(grade).toBeDisabled();
   await page.getByRole('button', { name: 'Paste', exact: true }).click();

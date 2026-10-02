@@ -71,6 +71,17 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
 });
 
 describe('AdminRubricsPage — lưu', () => {
+  it('keeps weight and scoring scope controls wide enough to read', async () => {
+    mockHappyPath();
+    renderPage();
+    const weight = await screen.findByLabelText('admin.rubrics.column.weight 1');
+    const scope = screen.getByLabelText('admin.rubrics.column.scope 1');
+    expect(weight).toHaveClass('text-right', 'tabular-nums');
+    expect(weight.parentElement?.parentElement).toHaveClass('min-w-40');
+    expect(scope).toHaveClass('whitespace-nowrap');
+    expect(scope.parentElement).toHaveClass('min-w-56');
+  });
+
   it('saves current descriptions and levels while null preserves unchanged scalar fields', async () => {
     mockHappyPath();
     const updateSpy = vi.spyOn(adminRubricService, 'update').mockResolvedValue({ ...rubric, version: 3, changed: true });
