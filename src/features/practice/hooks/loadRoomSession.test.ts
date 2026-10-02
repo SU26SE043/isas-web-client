@@ -52,6 +52,16 @@ describe('loadRoomSession', () => {
     ]);
   });
 
+  it('marker sau ATT1 (start trả content "") + server lỗi ⇒ ném lỗi, KHÔNG dựng đề rỗng từ marker', async () => {
+    const lockedMarker: StoredCampaignInterview = {
+      ...marker,
+      questions: marker.questions.map((question) => ({ ...question, content: '' })),
+    };
+    const fetchSession = vi.fn().mockRejectedValue(new Error('network'));
+
+    await expect(loadRoomSession('sess-1', { readMarker: () => lockedMarker, fetchSession })).rejects.toThrow('network');
+  });
+
   it('không marker (B2C) ⇒ hỏi server, lỗi thì ném ra cho hook xử lý', async () => {
     const fetchSession = vi.fn().mockResolvedValue(serverSession);
     await expect(loadRoomSession('sess-1', { readMarker: () => null, fetchSession })).resolves.toBe(serverSession);

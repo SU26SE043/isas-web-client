@@ -15,6 +15,7 @@ import type {
   PracticeSessionResult,
   SubmitPracticeAnswerResponse,
   FocusEventSummary,
+  PracticeSessionBeginResponse,
 } from '../types/b2cPracticeSession.types';
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -884,6 +885,43 @@ export function mapPracticeSessionResponse(raw: unknown): PracticeSessionRespons
     answers: enrichedAnswers,
     focusTrackingEnabled: typeof data.focusTrackingEnabled === 'boolean' ? data.focusTrackingEnabled : undefined,
     focusEvents: mapFocusEvents(data.focusEvents),
+    ...mapSessionClockFields(data),
+  };
+}
+
+/** `null` gửi tường minh giữ `null`; vắng/sai kiểu ⇒ `undefined` (Backend cũ — hành vi hôm nay). */
+function pickNullableString(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  return pickString(value) || undefined;
+}
+
+function pickNullableNumber(value: unknown): number | null | undefined {
+  if (value === null) return null;
+  return pickNumber(value);
+}
+
+/** ATT1 [I2] — bốn khoá mới của GET session. Vắng ⇒ `undefined` / `false`. */
+function mapSessionClockFields(data: Record<string, unknown>) {
+  return {
+    durationMinutes: pickNullableNumber(data.durationMinutes),
+    beganAt: pickNullableString(data.beganAt),
+    serverNow: pickString(data.serverNow) || undefined,
+    questionsLocked: data.questionsLocked === true,
+  };
+}
+
+/** ATT1 [I1] — response của `POST …/sessions/{id}/begin`. */
+export function mapPracticeSessionBeginResponse(
+  raw: unknown,
+  fallbackSessionId: string,
+): PracticeSessionBeginResponse {
+  const data = asRecord(raw);
+  return {
+    sessionId: pickString(data.sessionId, data.id) || fallbackSessionId,
+    beganAt: pickNullableString(data.beganAt) ?? null,
+    deadline: pickNullableString(data.deadline) ?? null,
+    serverNow: pickNullableString(data.serverNow) ?? null,
+    durationMinutes: pickNullableNumber(data.durationMinutes) ?? null,
   };
 }
 

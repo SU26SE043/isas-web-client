@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '../../../shared/languages';
 
 interface InterviewHeaderProps {
@@ -16,6 +17,8 @@ interface InterviewHeaderProps {
    * câu bỏ trống sẽ trừ điểm.
    */
   onExit?: () => void;
+  /** ATT1-F4: đồng hồ cả buổi (phòng thi B2B tính giờ). Vắng ⇒ header y như cũ (B2C). */
+  examClock?: React.ReactNode;
 }
 
 export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
@@ -24,14 +27,15 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
   exitHref,
   titleKey,
   onExit,
+  examClock,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const to = exitHref ?? `/interview/${sessionId}/complete`;
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-satin bg-surface-raised/95 px-4 py-3 backdrop-blur-md sm:px-6">
-      <div className="flex min-w-0 items-center gap-4 sm:gap-6">
+    <header className={cn('sticky top-0 z-50 flex items-center justify-between border-b border-satin bg-surface-raised/95 px-4 py-3 backdrop-blur-md sm:px-6', examClock && 'flex-wrap gap-y-2 sm:flex-nowrap')}>
+      <div className={cn('flex min-w-0 items-center gap-4 sm:gap-6', examClock && 'flex-1 basis-0')}>
         <Link to="/" className="shrink-0">
           <BrandLogo />
         </Link>
@@ -40,6 +44,11 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
           {t(titleKey ?? 'practice.title')}
         </h1>
       </div>
+
+      {examClock ? (
+        // Mobile: đồng hồ xuống hàng riêng (đủ chỗ cho nhãn); ≥ sm: nằm bên phải, cạnh nút Thoát.
+        <div className="order-last flex w-full justify-center sm:order-none sm:ml-auto sm:mr-4 sm:w-auto">{examClock}</div>
+      ) : null}
 
       <div className="flex shrink-0 items-center gap-3 sm:gap-4">
         {isRecording ? (

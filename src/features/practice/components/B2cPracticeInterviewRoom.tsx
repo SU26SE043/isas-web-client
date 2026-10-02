@@ -14,6 +14,9 @@ import { B2cPracticeRoomDialogs } from './B2cPracticeRoomDialogs';
 import { AnswerRecorderCard } from './audio-recorder/AnswerRecorderCard';
 import { QuestionStartCountdown } from './QuestionStartCountdown';
 import { FullscreenExitBanner } from './room/FullscreenExitBanner';
+import { ExamSessionClock } from './room/ExamSessionClock';
+import { ExamRoomEntryErrorPanel } from './room/ExamRoomEntryErrorPanel';
+import { RoomStatusBanners } from './room/RoomStatusBanners';
 import { useB2cPracticeRoom } from '../hooks/useB2cPracticeRoom';
 import { useB2cRoomCoaching } from '../hooks/useB2cRoomCoaching';
 import { useFrozenRecorderDuration } from '../hooks/useFrozenRecorderDuration';
@@ -21,7 +24,7 @@ import { mapSubmitPracticeAnswerErrorKey } from '../utils/b2cPracticeSessionErro
 import type { AudioRecorderStatus } from '../types/audioRecorder.types';
 import type { B2cPracticeInterviewRoomProps } from '../types/b2cPracticeRoom.types';
 export type { B2cRoomMediaContext } from '../types/b2cPracticeRoom.types';
-export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, violationPaused = false, cameraAlwaysOn = false, allowEarlyFinish = false, onMediaContextChange, onPhaseChange, onSessionSubmitting, onAnswerUploadStateChange }: B2cPracticeInterviewRoomProps) {
+export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCountdown, countdownReady, deadlineAt, beginOnEnter = false, onSessionBegun, onExamClockChange, violationPaused = false, cameraAlwaysOn = false, allowEarlyFinish = false, onMediaContextChange, onPhaseChange, onSessionSubmitting, onAnswerUploadStateChange }: B2cPracticeInterviewRoomProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [autoSubmitRequestId, setAutoSubmitRequestId] = useState(0);
@@ -37,6 +40,8 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     startWithCountdown,
     countdownReady,
     deadlineAt,
+    beginOnEnter,
+    onSessionBegun,
     violationPaused: violationPaused || fullscreenBlocked,
     onAutoSubmitRequest: requestAutoSubmit,
   });
@@ -71,11 +76,14 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
   useEffect(() => {
     onAnswerUploadStateChange?.(room.isSubmittingAnswer);
   }, [onAnswerUploadStateChange, room.isSubmittingAnswer]);
+  const examClockRunning = room.examClock != null;
+  useEffect(() => { onExamClockChange?.(examClockRunning); }, [examClockRunning, onExamClockChange]);
   const recorderMaxDuration = useFrozenRecorderDuration(
     room.currentQuestion?.id ?? null,
     room.remainingSeconds,
     room.currentQuestion?.timeLimitSec,
   );
+  if (room.entryError) return <ExamRoomEntryErrorPanel reason={room.entryError} backPath={completePath ?? '/practice'} />;
   if (room.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center surface-base">
@@ -102,30 +110,20 @@ export function B2cPracticeInterviewRoom({ sessionId, completePath, startWithCou
     : undefined;
   return (
     <div className="relative flex min-h-screen flex-col surface-base pb-32 font-sans">
-      <InterviewHeader sessionId={sessionId} isRecording={recorderStatus === 'recording'} onExit={() => room.setFinishOpen(true)} />
+      <InterviewHeader
+        sessionId={sessionId}
+        isRecording={recorderStatus === 'recording'}
+        onExit={() => room.setFinishOpen(true)}
+        examClock={room.examClock ? <ExamSessionClock remainingSeconds={room.examClock.remainingSeconds} /> : null}
+      />
       <FullscreenExitBanner onBlockingChange={setFullscreenBlocked} />
-      {room.media.state === 'error' ? (
-        <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
-          {t('practice.flow.device.denied')}
-          <button
-            type="button"
-            className="ml-3 underline underline-offset-2"
-            onClick={() => void room.media.startMedia()}
-          >
-            {t('practice.flow.device.retry')}
-          </button>
-        </div>
-      ) : null}
-      {room.speechWarning ? (
-        <div role="status" className="border-b border-warning/30 bg-warning/10 px-6 py-2 text-sm text-warning">
-          {t(room.speechWarning)}
-        </div>
-      ) : null}
-      {room.answerError ? (
-        <div role="alert" className="border-b border-error/30 bg-error/10 px-6 py-2 text-sm text-error">
-          {t(room.answerError)}
-        </div>
-      ) : null}
+      <RoomStatusBanners
+        mediaError={room.media.state === 'error'}
+        onRetryMedia={() => void room.media.startMedia()}
+        speechWarning={room.speechWarning}
+        answerError={room.answerError}
+        examRemainingSeconds={room.examClock?.remainingSeconds ?? null}
+      />
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
           <div className="min-h-[240px] lg:col-span-8 lg:min-h-[320px]">

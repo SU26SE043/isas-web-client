@@ -345,6 +345,26 @@ export interface PracticeSessionResponse {
   answers?: PracticeAnswerReview[] | null;
   focusTrackingEnabled?: boolean;
   focusEvents?: FocusEventSummary[] | null;
+  /** ATT1 [I2] — thời lượng cả buổi (phút). `null` = buổi không tính giờ; vắng (Backend cũ) = `undefined`. */
+  durationMinutes?: number | null;
+  /** ATT1 [I2] — mốc vào phòng (ISO UTC). `null` = chưa begin / không tính giờ; vắng = `undefined`. */
+  beganAt?: string | null;
+  /** ATT1 [I2] — giờ server lúc trả response (ISO UTC). Vắng (Backend cũ) = `undefined`. */
+  serverNow?: string;
+  /** ATT1 [I2] — `true` ⇒ mọi `questions[].content` rỗng (chưa begin). Vắng = `false`. */
+  questionsLocked?: boolean;
+}
+
+/**
+ * ATT1 [I1] — `POST /api/v1/interview/practice/sessions/{id}/begin`. Gọi lại trả CÙNG `beganAt`/`deadline`.
+ * Buổi không tính giờ (B2C, B2B tạo trước ATT1): `beganAt` = `durationMinutes` = `null`, `deadline` = giá trị đang có.
+ */
+export interface PracticeSessionBeginResponse {
+  sessionId: string;
+  beganAt: string | null;
+  deadline: string | null;
+  serverNow: string | null;
+  durationMinutes: number | null;
 }
 
 export interface SubmitPracticeAnswerInput {

@@ -12,12 +12,14 @@ import type {
   FocusSignalType,
   PracticeFaceCheckResult,
   FocusFrameSignalType,
+  PracticeSessionBeginResponse,
 } from '../types/b2cPracticeSession.types';
 import { PRACTICE_ANSWER_AUDIO_MAX_BYTES } from '../types/b2cPracticeSession.types';
 import { b2cPracticeSessionEndpoints } from './b2cPracticeSession.endpoints';
 import {
   extractSessionIdFromCreateResponse,
   applyRubricCatalogToSession,
+  mapPracticeSessionBeginResponse,
   mapPracticeSessionResponse,
   mapSubmitPracticeAnswerResponse,
   sessionNeedsRubricEnrichment,
@@ -353,6 +355,42 @@ export async function submitPracticeAnswer(
     { ...multipartFormDataConfig, timeout: 120_000 },
   );
   return mapSubmitPracticeAnswerResponse(response.data);
+}
+
+/** POST không body: bỏ Content-Type (ASP.NET hay trả 400 cho JSON `null` ở endpoint không body). */
+const NO_BODY_TRANSFORM = [
+  (data: unknown, headers: unknown) => {
+    if (headers && typeof headers === 'object') {
+      if ('delete' in headers && typeof (headers as { delete: (key: string) => void }).delete === 'function') {
+        (headers as { delete: (key: string) => void }).delete('Content-Type');
+      } else {
+        delete (headers as Record<string, unknown>)['Content-Type'];
+      }
+    }
+    return data;
+  },
+];
+
+/**
+ * ATT1 [I1] — "vào phòng": mở khoá đề và bắt đầu đồng hồ cả buổi (idempotent — gọi lại trả CÙNG mốc).
+ * Trả `null` khi Backend chưa có endpoint (404 — Backend cũ ⇒ phòng chạy đúng như hôm nay), ở chế độ mock
+ * (buổi mock không tính giờ) hoặc mã buổi không phải GUID (buổi e2e/legacy — GET cũng không gọi server).
+ * Lỗi khác (409 SESSION_ENDED, 403, 5xx, mạng) ném nguyên để phòng tự xử lý.
+ */
+export async function beginPracticeSession(
+  sessionId: string,
+): Promise<PracticeSessionBeginResponse | null> {
+  if (usesMockData('practice')) return null;
+  if (!isValidPracticeSessionId(sessionId)) return null;
+  try {
+    const response = await apiClient.post<unknown>(b2cPracticeSessionEndpoints.begin(sessionId), undefined, {
+      transformRequest: NO_BODY_TRANSFORM,
+    });
+    return mapPracticeSessionBeginResponse(response.data, sessionId);
+  } catch (error) {
+    if (getApiStatusCode(error) === 404) return null;
+    throw error;
+  }
 }
 
 export async function submitPracticeSession(sessionId: string): Promise<void> {

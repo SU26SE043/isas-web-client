@@ -1,12 +1,14 @@
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   B2cPracticeInterviewRoom,
   type B2cRoomMediaContext,
 } from '@/features/practice/components/B2cPracticeInterviewRoom';
 import { useLanguage } from '@/shared/languages';
 import { CampaignViolationDialog } from '../components/CampaignViolationDialog';
+import { ExamClockStillRunning } from '../components/ExamClockStillRunning';
 import { useCampaignAntiCheat } from '../hooks/useCampaignAntiCheat';
 import { useCampaignFaceCheck } from '../hooks/useCampaignFaceCheck';
 import { useCampaignFullscreen } from '../hooks/useCampaignFullscreen';
@@ -32,6 +34,8 @@ export function CampaignInterviewPage() {
   const [answerUploadInFlight, setAnswerUploadInFlight] = useState(false);
   const [recovering, setRecovering] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [examClockRunning, setExamClockRunning] = useState(false);
+  const queryClient = useQueryClient();
   const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
@@ -44,6 +48,10 @@ export function CampaignInterviewPage() {
     toast.success(t('campaigns.violation.behaviorRecorded'), { duration: 5000 });
   }, [t]);
   const handleFaceSignal = useCallback(() => undefined, []);
+  // ATT1-F4: begin vừa mở khoá đề ⇒ bản cache của trang chuẩn bị (đề bị che) hết hiệu lực.
+  const handleSessionBegun = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['practice', 'session', sessionId], refetchType: 'all' });
+  }, [queryClient, sessionId]);
   const handleFullscreenExit = useCallback(() => fullscreenExitRef.current(), []);
   const fullscreen = useCampaignFullscreen({
     enabled: Boolean(sessionId),
@@ -143,6 +151,7 @@ export function CampaignInterviewPage() {
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               {t(fullscreen.hasExited ? 'campaigns.fullscreen.exitWarning' : 'campaigns.fullscreen.required')}
             </p>
+            {examClockRunning ? <ExamClockStillRunning className="mt-3 justify-center" /> : null}
             <button type="button" className="btn-primary mt-6 w-full" onClick={() => void fullscreen.enterFullscreen()} disabled={!fullscreen.fullscreenSupported}>
               {t(fullscreen.fullscreenSupported ? 'campaigns.fullscreen.enter' : 'campaigns.fullscreen.unsupported')}
             </button>
@@ -155,6 +164,7 @@ export function CampaignInterviewPage() {
         pendingCount={violations.pendingCount}
         recovering={recovering}
         recoveryError={recoveryError}
+        examClockRunning={examClockRunning}
         onContinue={() => void handleContinue()}
       />
 
@@ -166,6 +176,9 @@ export function CampaignInterviewPage() {
         startWithCountdown
         countdownReady={fullscreen.isFullscreen}
         deadlineAt={stored?.deadlineAt}
+        beginOnEnter
+        onSessionBegun={handleSessionBegun}
+        onExamClockChange={setExamClockRunning}
         completePath="/candidate/campaigns"
         violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn

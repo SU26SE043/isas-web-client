@@ -11,6 +11,8 @@ import { useQuestionSpeech } from './useQuestionSpeech';
 import { usePracticeAnswerRecorder } from './usePracticeAnswerRecorder';
 import { useInterviewMedia } from './useInterviewMedia';
 import { loadRoomSession } from './loadRoomSession';
+import { enterExamRoom, ExamRoomEntryError, type ExamRoomEntryFailure } from './enterExamRoom';
+import { useRoomExamClock } from './useRoomExamClock';
 
 // Brief enough to let the "time's up" state paint before the auto-submit
 // request fires, but short enough not to add a needless extra second on top
@@ -31,6 +33,12 @@ export function useB2cPracticeRoom(
     startWithCountdown?: boolean;
     countdownReady?: boolean;
     deadlineAt?: string | null;
+    /** Phòng B2B (ATT1 [I1]): gọi begin khi vào phòng, đồng hồ cả buổi theo giờ server. B2C không bật. */
+    beginOnEnter?: boolean;
+    /** Begin có kết quả (đề đã mở khoá) — caller invalidate cache phiên. */
+    onSessionBegun?: () => void;
+    /** Điểm nối ATT1-F5: đồng hồ cả buổi (buổi tính giờ) về 0 — gọi đúng 1 lần. */
+    onExamTimeUp?: () => void;
     violationPaused?: boolean;
     onAutoSubmitRequest?: () => void;
     onAutoSubmitEmptyResult?: (result: { submitted: boolean; error?: unknown }) => void;
@@ -51,7 +59,16 @@ export function useB2cPracticeRoom(
   );
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
-  const [serverRemainingSeconds, setServerRemainingSeconds] = useState<number | null>(null);
+  const [entryError, setEntryError] = useState<ExamRoomEntryFailure | null>(null);
+  const beginOnEnter = Boolean(options?.beginOnEnter);
+  const onSessionBegunRef = useRef(options?.onSessionBegun);
+  onSessionBegunRef.current = options?.onSessionBegun;
+  const examClock = useRoomExamClock({
+    beginOnEnter,
+    fallbackDeadlineAt: options?.deadlineAt,
+    onTimeUp: options?.onExamTimeUp,
+  });
+  const serverRemainingSeconds = examClock.serverRemainingSeconds;
   const warned10Ref = useRef(false);
   const timeoutHandledForQuestionRef = useRef<string | null>(null);
   const timeoutAdvanceTimerRef = useRef<number | null>(null);
@@ -153,25 +170,7 @@ export function useB2cPracticeRoom(
     store.setQuestionState,
   ]);
 
-  useEffect(() => {
-    if (!options?.deadlineAt) {
-      setServerRemainingSeconds(null);
-      return;
-    }
-    const deadlineMs = new Date(options.deadlineAt).getTime();
-    if (!Number.isFinite(deadlineMs)) {
-      setServerRemainingSeconds(null);
-      return;
-    }
-    const update = () => {
-      if (violationPausedRef.current) return;
-      setServerRemainingSeconds(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
-    };
-    update();
-    const timer = window.setInterval(update, 1000);
-    return () => window.clearInterval(timer);
-  }, [options?.deadlineAt]);
-
+  // Đồng hồ cả buổi (`useRoomExamClock`) KHÔNG dừng theo `violationPausedRef` — chỉ đồng hồ câu dừng.
   const effectiveRemainingSeconds =
     serverRemainingSeconds == null
       ? store.remainingSeconds
@@ -202,6 +201,28 @@ export function useB2cPracticeRoom(
     let cancelled = false;
     void (async () => {
       if (!sessionId) return;
+      if (beginOnEnter) {
+        // B2B: begin TRƯỚC khi đọc câu — luôn begin (kể cả store còn câu của buổi này) vì đồng hồ cần deadline.
+        store.setStage('interviewing');
+        try {
+          const entry = await enterExamRoom(
+            sessionId,
+            { onBegun: () => onSessionBegunRef.current?.() },
+            () => cancelled,
+          );
+          if (!entry) return;
+          examClock.applyEntry(entry.clock);
+          store.hydrateFromSession(entry.session);
+        } catch (error) {
+          if (cancelled) return;
+          if (error instanceof ExamRoomEntryError) {
+            setEntryError(error.reason);
+            media.stopMedia();
+          }
+          store.setStage('error');
+        }
+        return;
+      }
       if (store.sessionId === sessionId && store.questions.length > 0) {
         store.setStage('interviewing');
         return;
@@ -541,6 +562,10 @@ export function useB2cPracticeRoom(
       store.questions.findIndex((q) => q.id === store.currentQuestionId),
     ),
     remainingSeconds: effectiveRemainingSeconds,
+    /** Đồng hồ cả buổi để hiện ở header — `null` khi buổi không tính giờ (B2C, Backend cũ). */
+    examClock: examClock.examClock,
+    /** Không vào được phòng thi B2B (đề vẫn khoá / buổi đã kết thúc / lỗi) — phòng hiện bảng lỗi. */
+    entryError,
     answersByQuestionId: store.answersByQuestionId,
     questionStates: store.questionStates,
     interviewComplete: store.interviewComplete,

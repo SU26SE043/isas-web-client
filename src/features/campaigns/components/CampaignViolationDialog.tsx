@@ -2,12 +2,15 @@ import { Loader2, TriangleAlert } from 'lucide-react';
 import { AppModal } from '@/components/ui/app-modal';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignViolation } from '../types/campaignViolation.types';
+import { ExamClockStillRunning } from './ExamClockStillRunning';
 
 interface CampaignViolationDialogProps {
   violation: CampaignViolation | null;
   pendingCount: number;
   recovering: boolean;
   recoveryError: string | null;
+  /** ATT1-F4: buổi tính giờ ⇒ nói rõ đồng hồ bài thi KHÔNG dừng trong lúc khắc phục vi phạm. */
+  examClockRunning?: boolean;
   onContinue: () => void;
 }
 
@@ -28,6 +31,7 @@ export function CampaignViolationDialog({
   pendingCount,
   recovering,
   recoveryError,
+  examClockRunning = false,
   onContinue,
 }: CampaignViolationDialogProps) {
   const { t } = useLanguage();
@@ -66,6 +70,7 @@ export function CampaignViolationDialog({
             </div>
           </div>
 
+          {examClockRunning ? <ExamClockStillRunning className="mt-4" /> : null}
           {pendingCount > 0 ? (
             <p className="mt-4 text-xs text-warning">
               {t('campaigns.violation.pending').replace('{count}', String(pendingCount))}

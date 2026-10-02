@@ -21,7 +21,10 @@ export async function loadRoomSession(
   if (!marker) return deps.fetchSession(sessionId);
   try {
     return await deps.fetchSession(sessionId);
-  } catch {
+  } catch (error) {
+    // ATT1 [C7]: start trả câu content "" (đề chỉ lộ sau begin) ⇒ marker đó KHÔNG làm nguồn đề được —
+    // ném lỗi thay vì hiện câu rỗng như thể là đề. Marker của Backend cũ (có content) vẫn dự phòng như cũ.
+    if (marker.questions.some((question) => !question.content?.trim())) throw error;
     return {
       id: sessionId,
       status: 'InProgress',
