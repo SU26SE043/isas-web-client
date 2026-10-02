@@ -28,7 +28,7 @@ import { useInterviewFlowStore } from '../stores/interviewFlowStore';
 import { usesMockData } from '@/shared/mock';
 import { paymentService } from '@/features/payment/services/payment.service';
 import { useAuthStore } from '@/features/auth/stores/authStore';
-import { savePracticeWizardDraft, takePracticeWizardDraft } from '../utils/practiceWizardDraft';
+import { clearPracticeWizardDraft, savePracticeWizardDraft, takePracticeWizardDraft } from '../utils/practiceWizardDraft';
 
 export const PRACTICE_SETUP_STEP_COUNT = 8;
 
@@ -76,11 +76,15 @@ export function usePracticeSetupFlow() {
   const [draftError, setDraftError] = useState<string | null>(null);
 
   const restoredForUserRef = useRef<string | null>(null);
+  const draftActiveRef = useRef(false);
+  const skipDraftSyncRef = useRef(false);
   useEffect(() => {
     if (!userId || restoredForUserRef.current === userId) return;
     restoredForUserRef.current = userId;
     const draft = takePracticeWizardDraft(userId);
     if (!draft) return;
+    draftActiveRef.current = true;
+    skipDraftSyncRef.current = true;
     void queryClient.invalidateQueries({
       queryKey: ['practice', 'rubric', draft.jobCategory, draft.language],
       exact: true,
@@ -99,6 +103,17 @@ export function usePracticeSetupFlow() {
     setLanguage(draft.language);
     setStep(6);
   }, [queryClient, setLanguage, userId]);
+
+  useEffect(() => {
+    if (!draftActiveRef.current || !userId) return;
+    if (skipDraftSyncRef.current) { skipDraftSyncRef.current = false; return; }
+    if (!jobCategory) return;
+    savePracticeWizardDraft(userId, {
+      jobCategory, cvId, jdId, jdText, jdTab, timeLimitSec, questionCount,
+      seniority, adaptiveEnabled, maxDeepPerQuestion, focusTrackingEnabled, language,
+    });
+  }, [adaptiveEnabled, cvId, focusTrackingEnabled, jdId, jdTab, jdText, jobCategory,
+    language, maxDeepPerQuestion, questionCount, seniority, timeLimitSec, userId]);
 
   const setupState: PracticeSetupState = useMemo(
     () => ({
@@ -286,6 +301,8 @@ export function usePracticeSetupFlow() {
       }
       hydrateFromSession(session);
       resetInterviewFlow(session.id);
+      clearPracticeWizardDraft();
+      draftActiveRef.current = false;
       // Prep flow handles consent + device check after session creation.
       navigate(`/interview/${session.id}/prepare`, { replace: true });
     } catch (error) {

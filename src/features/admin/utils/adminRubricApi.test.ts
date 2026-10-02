@@ -59,26 +59,43 @@ describe('parseAdminRubricSet — hợp đồng khớp DTO backend', () => {
   });
 });
 
-describe('toAdminRubricUpsertInput — body PUT chỉ mang 3 trường BE nhận', () => {
-  it('gửi {id, description, levels[{score, descriptor}]}, KHÔNG spread name/weight/maxScore/scoringScope', () => {
+describe('toAdminRubricUpsertInput — contract RUB1', () => {
+  it('sends only changes for existing criteria and keeps unedited fields null', () => {
     const set = parseAdminRubricSet(beRubric);
     const edited = set.criteria.map((c) => (c.id === 'c-1' ? { ...c, levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] } : c));
-    const body = toAdminRubricUpsertInput(edited);
+    const body = toAdminRubricUpsertInput(edited, set.criteria);
     expect(body).toEqual({
       criteria: [
-        { id: 'c-1', description: 'Rõ ràng, có cấu trúc.', levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] },
-        { id: 'c-2', description: null, levels: null },
-        { id: 'c-3', description: null, levels: null },
+        { id: 'c-1', name: null, description: null, weight: null, scoringScope: null, levels: [{ score: 0, descriptor: 'Mới ' + 'x'.repeat(20) }, { score: 5, descriptor: 'Mới ' + 'y'.repeat(20) }] },
+        { id: 'c-2', name: null, description: null, weight: null, scoringScope: null, levels: null },
+        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: null },
       ],
     });
-    // BE B10 (Disallow) sẽ 400 nếu body mang khoá lạ — kể cả `scoringMethod` mới thêm ở chiều đọc.
-    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"|"scoringMethod"|"description":"x/);
+    expect(body.criteria.every((item) => !('maxScore' in item) && !('scoringMethod' in item))).toBe(true);
   });
 
-  it('mô tả toàn khoảng trắng ⇒ null (BE coi rỗng = không có mô tả)', () => {
+  it('uses decimal weights, adds with null id, omits deleted and disabled measured criteria', () => {
     const set = parseAdminRubricSet(beRubric);
-    const body = toAdminRubricUpsertInput([{ ...set.criteria[0], description: '   ' }]);
-    expect(body.criteria[0].description).toBeNull();
+    const newCriterion = { ...set.criteria[0], id: 'new-1', isNew: true, name: 'New', description: '', weight: 0.3, scoringScope: 'Always', levels: [] };
+    const edited = [{ ...set.criteria[0], weight: 0.2 }, newCriterion, { ...set.criteria[2], enabled: false }];
+    const body = toAdminRubricUpsertInput(edited, set.criteria);
+    expect(body.criteria).toEqual([
+      { id: 'c-1', name: null, description: null, weight: 0.2, scoringScope: null, levels: null },
+      { id: null, name: 'New', description: null, weight: 0.3, scoringScope: 'Always', levels: [] },
+    ]);
+  });
+
+  it('forces immutable name and scope fields to null on measured criteria', () => {
+    const set = parseAdminRubricSet(beRubric);
+    const changedMeasured = { ...set.criteria[2], name: 'tamper', scoringScope: 'WhenTargeted', description: 'updated', weight: 0.2 };
+    expect(toAdminRubricUpsertInput([changedMeasured], set.criteria).criteria[0]).toEqual({
+      id: 'c-3', name: null, description: 'updated', weight: 0.2, scoringScope: null, levels: null,
+    });
+  });
+
+  it('trims a changed description to null when cleared', () => {
+    const set = parseAdminRubricSet(beRubric);
+    expect(toAdminRubricUpsertInput([{ ...set.criteria[0], description: '   ' }], set.criteria).criteria[0].description).toBeNull();
   });
 });
 

@@ -166,6 +166,10 @@ export interface PracticeCriteriaScore {
   averageScore?: number | null;
   percentage?: number | null;
   weight?: number | null;
+  /** Normalized weight among scored criteria; null for Average sessions. */
+  effectiveWeight?: number | null;
+  /** Percentage points contributed to the total; null for Average sessions. */
+  contribution?: number | null;
 }
 
 export interface PracticeRubricCriterionRef {
@@ -253,6 +257,9 @@ export interface PracticeSessionResult {
   seedTotal?: number | null;
   /** Trung bình cộng các tiêu chí TRƯỚC khi nhân: `overallScore = scoreBeforePenalty × seedAnswered/seedTotal`. */
   scoreBeforePenalty?: number | null;
+  scoreFormula?: 'Average' | 'Weighted' | null;
+  /** Null/absent means an older session; an empty array is an authoritative current result. */
+  unassessedCriteria?: Array<{ criterionId: string; name: string; weight: number }> | null;
 }
 
 /** v5 delivery metrics (API name). Null = not measured — never coerce to 0. */

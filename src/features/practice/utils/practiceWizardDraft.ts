@@ -28,6 +28,10 @@ function clearStoredDraft(): void {
   try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* Storage can be blocked. */ }
 }
 
+export function clearPracticeWizardDraft(): void {
+  clearStoredDraft();
+}
+
 export function savePracticeWizardDraft(userId: string | null | undefined, draft: PracticeWizardDraft): boolean {
   if (!userId) return false;
   try {

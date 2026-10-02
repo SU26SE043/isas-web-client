@@ -16,15 +16,15 @@ const LONG = (s: string) => `${s} ${'x'.repeat(24)}`;
 const rubric: AdminRubricSet = {
   jobCategory: 'BE', language: 'vi', version: 2, changed: false,
   criteria: [
-    { id: 'c-1', name: 'Giao tiếp & trình bày', description: 'Rõ ràng.', weight: 0.15, maxScore: 5, scoringScope: 'Always', scoringMethod: 'Ai', levels: [{ score: 0, descriptor: LONG('Không trả lời hoặc lạc đề') }, { score: 5, descriptor: LONG('Mạch lạc, có ví dụ') }] },
-    { id: 'c-2', name: 'Chiều sâu kỹ thuật', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', scoringMethod: 'Ai', levels: [] },
+    { id: 'c-1', name: 'Giao tiếp & trình bày', description: 'Rõ ràng.', weight: 0.4, maxScore: 5, scoringScope: 'Always', scoringMethod: 'Ai', levels: [{ score: 0, descriptor: LONG('Không trả lời hoặc lạc đề') }, { score: 5, descriptor: LONG('Mạch lạc, có ví dụ') }] },
+    { id: 'c-2', name: 'Chiều sâu kỹ thuật', description: null, weight: 0.5, maxScore: 5, scoringScope: 'WhenTargeted', scoringMethod: 'Ai', levels: [] },
     // Tiêu chí ĐO (F11): hệ tự tính từ bản ghi, không gửi AI ⇒ 0 mốc là bình thường, không được báo thiếu.
     { id: 'c-3', name: 'Độ trôi chảy & tự tin', description: null, weight: 0.1, maxScore: 5, scoringScope: 'Always', scoringMethod: 'DeliveryMetrics', levels: [] },
   ],
   sampleQuestions: [{ id: 'q-1', text: 'Giải thích index trong PostgreSQL.' }, { id: 'q-2', text: 'Transaction isolation là gì?' }],
 };
 const matrix: AdminRubricMatrixRow[] = [
-  { jobCategory: 'BE', language: 'vi', version: 2, criteriaCount: 2, withLevelsCount: 1 },
+  { jobCategory: 'BE', language: 'vi', version: 2, criteriaCount: 3, withLevelsCount: 1 },
   { jobCategory: 'FE', language: 'vi', version: 1, criteriaCount: 7, withLevelsCount: 7 },
   { jobCategory: 'FE', language: 'en', version: 1, criteriaCount: 7, withLevelsCount: 0 },
 ];
@@ -59,7 +59,7 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
     // Đúng MỘT tiêu chí AI thiếu mốc (c-2); tiêu chí đo (c-3) 0 mốc nhưng hiện "không cần mốc" + badge "hệ tự đo", KHÔNG phải cảnh báo.
     expect(screen.getAllByText('admin.rubrics.levels.none')).toHaveLength(1);
     expect(screen.getByText('admin.rubrics.measured.noLevelsNeeded')).toBeInTheDocument();
-    expect(screen.getByText('admin.rubrics.measured.badge')).toBeInTheDocument();
+    expect(screen.getByText(/admin\.rubrics\.measured\.badge/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'admin.rubrics.category.FE · admin.rubrics.lang.vi' })).toBeInTheDocument();
     expect(getSpy.mock.calls[0]).toEqual(['BE', 'vi']);
     // Ma trận phải phủ CẢ HAI ngôn ngữ trong một lượt gọi — gọi kèm `?language=vi` thì 3 ô English rơi về "chưa tải được" (đo trên dev).
@@ -71,14 +71,19 @@ describe('AdminRubricsPage — hiện đúng dữ liệu BE', () => {
 });
 
 describe('AdminRubricsPage — lưu', () => {
-  it('sửa mô tả → Lưu → confirm → PUT chỉ mang {id, description, levels[{score, descriptor}]}, KHÔNG có name/weight/maxScore', async () => {
+  it('saves the RUB1 partial update body while preserving unchanged values with null', async () => {
     mockHappyPath();
     const updateSpy = vi.spyOn(adminRubricService, 'update').mockResolvedValue({ ...rubric, version: 3, changed: true });
     renderPage();
-    const textarea = await screen.findByLabelText('admin.rubrics.column.description Chiều sâu kỹ thuật');
-    expect(screen.getByRole('button', { name: 'admin.rubrics.save' })).toBeDisabled();
+    const textarea = await screen.findByLabelText('admin.rubrics.column.description 2');
+    const saveButton = screen.getByRole('button', { name: 'admin.rubrics.save' });
+    expect(saveButton).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('admin.rubrics.column.weight 2'), { target: { value: '60' } });
+    expect(saveButton).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('admin.rubrics.column.weight 1'), { target: { value: '30' } });
+    expect(saveButton).toBeEnabled();
     fireEvent.change(textarea, { target: { value: 'Đo độ sâu hiểu biết kỹ thuật.' } });
-    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.save' }));
+    fireEvent.click(saveButton);
     expect(await screen.findByText('admin.rubrics.saveDescription')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.saveConfirm' }));
     await waitFor(() => expect(updateSpy).toHaveBeenCalledTimes(1));
@@ -86,20 +91,32 @@ describe('AdminRubricsPage — lưu', () => {
     expect([category, language]).toEqual(['BE', 'vi']);
     expect(body).toEqual({
       criteria: [
-        { id: 'c-1', description: 'Rõ ràng.', levels: rubric.criteria[0].levels },
-        { id: 'c-2', description: 'Đo độ sâu hiểu biết kỹ thuật.', levels: null },
-        { id: 'c-3', description: null, levels: null },
+        { id: 'c-1', name: null, description: null, weight: 0.3, scoringScope: null, levels: null },
+        { id: 'c-2', name: null, description: 'Đo độ sâu hiểu biết kỹ thuật.', weight: 0.6, scoringScope: null, levels: null },
+        { id: 'c-3', name: null, description: null, weight: null, scoringScope: null, levels: null },
       ],
     });
-    expect(JSON.stringify(body)).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"|"scoringMethod"/);
+    expect(JSON.stringify(body)).not.toMatch(/"maxScore"|"scoringMethod"/);
     expect(await screen.findByText('admin.rubrics.saveSuccess')).toBeInTheDocument();
+  });
+
+  it('requires confirmation before a criterion rename', async () => {
+    mockHappyPath();
+    renderPage();
+    const name = await screen.findByLabelText('admin.rubrics.column.name 1');
+    fireEvent.change(name, { target: { value: 'Giao tiếp mới' } });
+    fireEvent.blur(name);
+    expect(await screen.findByText('admin.rubrics.renameDescription')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.renameConfirm' }));
+    expect(name).toHaveValue('Giao tiếp mới');
+    expect(screen.getByRole('button', { name: 'admin.rubrics.save' })).toBeEnabled();
   });
 
   it('BE trả changed:false ⇒ nói rõ "không tạo phiên bản mới", không giả vờ đã lưu', async () => {
     mockHappyPath();
     vi.spyOn(adminRubricService, 'update').mockResolvedValue({ ...rubric, changed: false });
     renderPage();
-    fireEvent.change(await screen.findByLabelText('admin.rubrics.column.description Chiều sâu kỹ thuật'), { target: { value: 'x' } });
+    fireEvent.change(await screen.findByLabelText('admin.rubrics.column.description 2'), { target: { value: 'x' } });
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.save' }));
     fireEvent.click(await screen.findByRole('button', { name: 'admin.rubrics.saveConfirm' }));
     expect(await screen.findByText('admin.rubrics.saveUnchanged')).toBeInTheDocument();

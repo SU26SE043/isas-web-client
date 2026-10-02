@@ -9,14 +9,14 @@ import { loginAs } from '../../fixtures/auth';
  */
 const LONG = (s: string) => `${s} — ${'lorem '.repeat(6).trim()}`;
 const rubric = {
-  jobCategory: 'BE', language: 'en', version: 2, changed: false,
+  jobCategory: 'BE', language: 'vi', version: 2, changed: false,
   criteria: [
-    { id: 'c-1', name: 'Communication', description: 'Clear structure.', weight: 0.15, maxScore: 5, scoringScope: 'Always', levels: [{ score: 0, descriptor: LONG('No answer or off topic') }, { score: 5, descriptor: LONG('Fluent with concrete examples') }] },
-    { id: 'c-2', name: 'Technical depth', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', levels: [{ score: 0, descriptor: LONG('Nothing relevant') }, { score: 5, descriptor: LONG('Deep and precise') }] },
+    { id: 'c-1', name: 'Communication', description: 'Clear structure.', weight: 0.75, maxScore: 5, scoringScope: 'Always', scoringMethod: 'Ai', levels: [{ score: 0, descriptor: LONG('No answer or off topic') }, { score: 5, descriptor: LONG('Fluent with concrete examples') }] },
+    { id: 'c-2', name: 'Technical depth', description: null, weight: 0.25, maxScore: 5, scoringScope: 'WhenTargeted', scoringMethod: 'Ai', levels: [{ score: 0, descriptor: LONG('Nothing relevant') }, { score: 5, descriptor: LONG('Deep and precise') }] },
   ],
   sampleQuestions: [{ id: 'q-1', text: 'Explain indexes in PostgreSQL.' }],
 };
-const matrix = [{ jobCategory: 'BE', language: 'en', version: 2, criteriaCount: 2, withLevelsCount: 2 }];
+const matrix = [{ jobCategory: 'BE', language: 'vi', version: 2, criteriaCount: 2, withLevelsCount: 2 }];
 const run = {
   id: 'r-1', status: 'Succeeded', jobCategory: 'BE', language: 'en', rubricVersion: 2, questionText: 'Explain indexes in PostgreSQL.', rubricFingerprint: 'fp', promptVersion: null,
   deliveryMetricsAvailable: false, lengthParityWarning: false, freeRunsRemaining: 4,
@@ -36,7 +36,7 @@ const customRun = {
     scores: rubric.criteria.map((c) => ({ criterionId: c.id, criterionName: c.name, maxScore: 5, expectedLevel: 3, actualScore: 3, levelMatched: 3, reasoning: 'has a main point', measured: false })) }],
 };
 
-test('admin sees real level descriptors, saves only the allowed fields, and grades their OWN pasted answer (no AI samples)', async ({ page }) => {
+test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN pasted answer (no AI samples)', async ({ page }) => {
   const puts: unknown[] = [];
   const previews: unknown[] = [];
   await page.route('**/api/v1/interview/admin/rubrics**', async (route) => {
@@ -60,25 +60,29 @@ test('admin sees real level descriptors, saves only the allowed fields, and grad
 
   // (1) Bảng hiện descriptor thật của mốc (bản cũ: mọi ô trống vì đọc `description`).
   await expect(page.getByText(/No answer or off topic/)).toBeVisible();
+  await expect(page.getByRole('spinbutton', { name: 'Weight 1' })).toHaveValue('75');
+  await expect(page.getByRole('spinbutton', { name: 'Weight 2' })).toHaveValue('25');
+  await page.screenshot({ path: test.info().outputPath('rub1-admin-desktop.png'), fullPage: true });
   // Ngôn ngữ BỘ CHUẨN (vi/en) là một chiều dữ liệu, độc lập với ngôn ngữ giao diện — mặc định mở BE/vi.
   await expect(page.getByRole('button', { name: 'Backend · Vietnamese' })).toHaveAttribute('aria-pressed', 'true');
 
-  // (2) Sửa mô tả → Lưu → confirm → PUT chỉ mang 3 trường BE nhận.
+  // (2) Sửa mô tả → Lưu → confirm → PUT giữ nguyên values bằng null.
   const save = page.getByRole('button', { name: 'Save new version' });
   await expect(save).toBeDisabled();
-  await page.getByLabel('Description for the AI Technical depth').fill('Depth of technical understanding.');
+  await page.getByLabel('Description for the AI 2').fill('Depth of technical understanding.');
   await expect(save).toBeEnabled();
   await save.click();
   await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText(/Saved v3/)).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('rub1-admin-saved.png'), fullPage: true });
   expect(puts).toHaveLength(1);
   expect(puts[0]).toEqual({
     criteria: [
-      { id: 'c-1', description: 'Clear structure.', levels: rubric.criteria[0].levels },
-      { id: 'c-2', description: 'Depth of technical understanding.', levels: rubric.criteria[1].levels },
+      { id: 'c-1', name: null, description: null, weight: null, scoringScope: null, levels: null },
+      { id: 'c-2', name: null, description: 'Depth of technical understanding.', weight: null, scoringScope: null, levels: null },
     ],
   });
-  expect(JSON.stringify(puts[0])).not.toMatch(/"name"|"weight"|"maxScore"|"scoringScope"/);
+  expect(JSON.stringify(puts[0])).not.toMatch(/"maxScore"|"scoringMethod"/);
 
   // (3) Tự thử: chưa có bài ⇒ nút Chấm tắt; chuyển "Paste" → dán bài → Chấm gửi ĐÚNG hợp đồng
   // (sampleQuestionId + customAnswer + includeAiSamples=false, KHÔNG deliveryMetrics) → hiện "Your answer",
@@ -87,6 +91,10 @@ test('admin sees real level descriptors, saves only the allowed fields, and grad
   await page.getByRole('button', { name: /Try the rubric yourself/ }).click();
   await expect(page).toHaveURL(/tab=try/);
   await expect(page.getByRole('tab', { name: 'Try the rubric yourself' })).toHaveAttribute('aria-selected', 'true');
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expect(page.getByRole('tab', { name: 'Score levels' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Try the rubric yourself' })).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('rub1-admin-mobile.png'), fullPage: true });
   const grade = page.getByRole('button', { name: /Grade this answer/ });
   await expect(grade).toBeDisabled();
   await page.getByRole('button', { name: 'Paste', exact: true }).click();

@@ -35,6 +35,9 @@ export type AdminRubricJobCategory = 'FE' | 'BE' | 'BA';
 export type AdminRubricLevel = { score: number; descriptor: string };
 export type AdminRubricCriterion = {
   id: string;
+  /** Client-only draft fields; never emitted by the response parser. */
+  isNew?: boolean;
+  enabled?: boolean;
   name: string;
   description: string | null;
   weight: number;
@@ -64,8 +67,15 @@ export type AdminRubricSet = {
 };
 export type AdminRubricMatrixRow = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; version: number; criteriaCount: number; withLevelsCount: number };
 export type AdminRubricVersionItem = { version: number; isActive: boolean; criteriaCount: number; withLevelsCount: number };
-/** Body của `PUT /admin/rubrics/{jobCategory}` — CHỈ ba trường admin được sửa (name/weight/maxScore/scope khoá bằng cấu trúc ở BE). */
-export type AdminRubricCriterionInput = { id: string; description: string | null; levels: AdminRubricLevel[] | null };
+/** RUB1 body: null on existing criteria means preserve; missing criteria are removed. */
+export type AdminRubricCriterionInput = {
+  id: string | null;
+  name: string | null;
+  description: string | null;
+  weight: number | null;
+  scoringScope: 'Always' | 'WhenTargeted' | null;
+  levels: AdminRubricLevel[] | null;
+};
 export type AdminRubricUpsertInput = { criteria: AdminRubricCriterionInput[] };
 export type AdminSuggestedCriterionLevels = { criterionId: string; name: string; maxScore: number; levels: AdminRubricLevel[] };
 export type AdminSuggestLevelsResponse = { jobCategory: AdminRubricJobCategory; language: AdminRubricLanguage; rubricVersion: number; criteria: AdminSuggestedCriterionLevels[] };

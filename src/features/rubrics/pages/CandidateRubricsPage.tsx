@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
@@ -17,6 +18,9 @@ import type { RubricValidationCode } from '../types/rubric.types';
 import { PageHeader } from '@/components/patterns/PageHeader';
 import { safeCandidateReturnTo } from '@/features/practice/utils/practiceWizardDraft';
 import type { JobCategory } from '../types/rubric.types';
+import { getDefaultRubric } from '../services/candidateRubrics.service';
+import { CANDIDATE_RUBRIC_QUERY_KEY } from '../hooks/useCandidateRubric';
+import { DefaultRubricDiffDialog } from '../components/DefaultRubricDiffDialog';
 
 function validationMessage(t: (key: string) => string, code: RubricValidationCode | null): string | null {
   if (!code) return null;
@@ -32,12 +36,20 @@ export function CandidateRubricsPage() {
   const returnLanguage = searchParams.get('language') === 'en' ? 'en' : 'vi';
   const returnTo = safeCandidateReturnTo(searchParams.get('returnTo'));
   const [returnPending, setReturnPending] = useState(false);
+  const [showDefaultDiff, setShowDefaultDiff] = useState(false);
   useEffect(() => {
     if (returnTo && language !== returnLanguage) setLanguage(returnLanguage);
   }, [language, returnLanguage, returnTo, setLanguage]);
   usePageTitle(t('rubrics.pageTitle'));
 
   const flow = useCandidateRubric(returnCategory ?? undefined);
+  const hasNewDefault = flow.isCustom && flow.defaultVersion != null && flow.basedOnDefaultVersion != null && flow.defaultVersion > flow.basedOnDefaultVersion;
+  const defaultRubricQuery = useQuery({
+    queryKey: [...CANDIDATE_RUBRIC_QUERY_KEY, 'default', flow.jobCategory, language, flow.defaultVersion],
+    queryFn: ({ signal }) => getDefaultRubric(flow.jobCategory, language, signal),
+    enabled: showDefaultDiff && hasNewDefault,
+    retry: false,
+  });
   const actionsDisabled = flow.isLoading || flow.isSaving || flow.isResetting || flow.isFetching;
   const validationMessageText = validationMessage(t, flow.validationCode);
 
@@ -45,6 +57,14 @@ export function CandidateRubricsPage() {
     <div className="h-full overflow-y-auto bg-surface-page">
       <div className="app-page space-y-6">
         <PageHeader title={t('rubrics.pageTitle')} description={t('rubrics.pageDescription')} />
+
+        {hasNewDefault ? <section className="frame-satin flex flex-wrap items-center justify-between gap-3 rounded-xl border border-info/30 bg-info/5 p-4" role="status">
+          <p className="text-sm font-medium text-foreground">{t('rubrics.defaultUpdated.banner').replace('{version}', String(flow.defaultVersion))}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => setShowDefaultDiff(true)}>{t('rubrics.defaultUpdated.diff')}</Button>
+            <Button type="button" onClick={() => flow.setResetDialogOpen(true)}>{t('rubrics.defaultUpdated.apply')}</Button>
+          </div>
+        </section> : null}
 
         {returnTo ? (
           <div className="frame-satin space-y-3 rounded-xl border border-satin bg-surface-raised p-4" role="status">
@@ -146,6 +166,15 @@ export function CandidateRubricsPage() {
         isResetting={flow.isResetting}
         onOpenChange={flow.setResetDialogOpen}
         onConfirm={flow.reset}
+      />
+      <DefaultRubricDiffDialog
+        open={showDefaultDiff}
+        onOpenChange={setShowDefaultDiff}
+        isLoading={defaultRubricQuery.isLoading}
+        error={defaultRubricQuery.isError}
+        defaultCriteria={defaultRubricQuery.data?.criteria ?? []}
+        customCriteria={flow.criteria}
+        version={flow.defaultVersion}
       />
     </div>
   );

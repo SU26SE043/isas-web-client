@@ -25,13 +25,35 @@ const CRITERIA_ACCENTS = [
 export function CriteriaProgressList({
   criteria,
   passThresholdPct,
+  weighted = false,
 }: {
   criteria: CriteriaResultViewModel[];
   passThresholdPct?: number;
+  weighted?: boolean;
 }) {
   const { t } = useLanguage();
   if (!criteria.length) {
     return <p className="text-sm text-muted-foreground">{t('practice.result.noCriteria')}</p>;
+  }
+
+  if (weighted) {
+    const allContributionsKnown = criteria.every((item) => item.contribution != null);
+    const totalContribution = criteria.reduce((sum, item) => sum + (item.contribution ?? 0), 0);
+    return <div className="overflow-x-auto rounded-xl border border-satin"><table className="w-full min-w-[520px] text-sm">
+      <thead className="bg-surface-overlay text-left text-xs uppercase text-muted-foreground"><tr>
+        <th className="p-3">{t('practice.result.criteriaDetail')}</th><th className="p-3">{t('practice.result.score')}</th><th className="p-3">{t('practice.result.weight')}</th><th className="p-3">{t('practice.result.contribution')}</th>
+      </tr></thead>
+      <tbody>{criteria.map((item) => <tr key={item.name} className="border-t border-subtle">
+        <th className="p-3 text-left font-medium text-foreground">{item.name}</th>
+        <td className="p-3 tabular-nums">{formatScore(item.score, item.maxScore)}</td>
+        <td className="p-3 tabular-nums">{item.effectiveWeight == null ? '—' : `${(item.effectiveWeight * 100).toFixed(2)}%`}</td>
+        <td className="p-3 tabular-nums">{item.contribution == null ? '—' : `${item.contribution.toFixed(2)}%`}</td>
+      </tr>)}</tbody>
+      <tfoot className="border-t border-satin bg-surface-overlay/60"><tr>
+        <th colSpan={3} className="p-3 text-right font-semibold">{t('practice.result.contributionTotal')}</th>
+        <td className="p-3 font-semibold tabular-nums">{allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—'}</td>
+      </tr></tfoot>
+    </table></div>;
   }
 
   return (

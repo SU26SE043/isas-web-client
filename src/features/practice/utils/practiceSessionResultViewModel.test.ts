@@ -73,6 +73,23 @@ describe('practiceSessionResultViewModel', () => {
     expect(view.questions[0]?.suggestedAnswer).toBe('Sample answer');
     expect(view.questions[1]?.skipped).toBe(true);
   });
+
+  it('preserves weighted formula and contribution fields supplied by the API', () => {
+    const view = mapPracticeSessionResponseToViewModel({
+      id: 'weighted', status: 'Scored', questions: [], answers: [],
+      result: {
+        overallScore: 72.5, scoreBeforePenalty: 90.625, scoreFormula: 'Weighted',
+        seedAnswered: 3, seedTotal: 4, skipPenalty: true,
+        criteriaScores: [{ name: 'Communication', score: 4, maxScore: 5, effectiveWeight: 0.25, contribution: 20 }],
+        unassessedCriteria: [{ criterionId: 'c2', name: 'System design', weight: 0.4 }],
+        needsImprovement: [], overallComment: '', cvVsAnswer: null,
+      },
+    });
+    expect(view.scoreFormula).toBe('Weighted');
+    expect(view.criteria[0]).toMatchObject({ effectiveWeight: 0.25, contribution: 20 });
+    expect(view.skipPenalty).toMatchObject({ seedAnswered: 3, seedTotal: 4, applied: true });
+    expect(view.unassessedCriteria).toEqual([{ criterionId: 'c2', name: 'System design', weight: 0.4 }]);
+  });
 });
 
 describe('practiceSessionResultViewModel — focusTracking: khung hình đếm RIÊNG', () => {

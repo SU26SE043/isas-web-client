@@ -158,7 +158,17 @@ describe('usePracticeSetupFlow — tiêu chí chấm điểm', () => {
       jdTab: 'text', timeLimitSec: 240, questionCount: 8, seniority: 'Senior',
       adaptiveEnabled: false, maxDeepPerQuestion: 2, focusTrackingEnabled: true,
     });
-    expect(sessionStorage.getItem('isas-practice-wizard-draft')).toBeNull();
+    expect(sessionStorage.getItem('isas-practice-wizard-draft')).toContain('user-1');
+    returned.unmount();
+
+    // F5 khi đang ở bước tiêu chí phải giữ lựa chọn đã khôi phục.
+    const refreshed = renderFlow();
+    await waitFor(() => expect(refreshed.result.current.step).toBe(6));
+    expect(refreshed.result.current).toMatchObject({
+      jobCategory: 'BE', cvId: 'cv-1', jdId: 'jd-1', jdText: 'Important JD text',
+      jdTab: 'text', timeLimitSec: 240, questionCount: 8, seniority: 'Senior',
+      adaptiveEnabled: false, maxDeepPerQuestion: 2, focusTrackingEnabled: true,
+    });
   });
 
   it('reloads the rubric when the job category changes', async () => {
