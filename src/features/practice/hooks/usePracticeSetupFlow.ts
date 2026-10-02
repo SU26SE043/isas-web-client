@@ -256,9 +256,10 @@ export function usePracticeSetupFlow() {
   }, []);
 
   useEffect(() => {
-    if (step === 1) void loadCvFiles();
-    if (step === 2) void loadJdFiles();
-  }, [loadCvFiles, loadJdFiles, step]);
+    const summaryStep = PRACTICE_SETUP_STEP_COUNT - 1;
+    if (step === 1 || (step === summaryStep && cvId)) void loadCvFiles();
+    if (step === 2 || (step === summaryStep && jdId)) void loadJdFiles();
+  }, [cvId, jdId, loadCvFiles, loadJdFiles, step]);
 
   const goToStep = useCallback((next: number) => {
     setStep(Math.max(0, Math.min(PRACTICE_SETUP_STEP_COUNT - 1, next)));

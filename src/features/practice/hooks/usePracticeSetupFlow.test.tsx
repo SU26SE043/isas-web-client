@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import type { ReactNode } from 'react';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePracticeSetupFlow } from './usePracticeSetupFlow';
+import { PracticeSetupSummaryStep } from '../components/wizard/PracticeSetupSummaryStep';
+import { savePracticeWizardDraft } from '../utils/practiceWizardDraft';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -69,6 +71,17 @@ const CV_FILES = [
     pdfUrl: '',
   },
 ];
+const JD_FILES = [
+  {
+    id: 'jd-1',
+    fileType: 'jd',
+    originalName: 'senior-backend-role.pdf',
+    mimeType: 'application/pdf',
+    fileSize: 2048,
+    parsedStatus: 'completed',
+    createdAt: '2026-08-01T00:00:00.000Z',
+  },
+];
 
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
@@ -97,7 +110,7 @@ async function goToCriteriaStep(result: { current: ReturnType<typeof usePractice
 beforeEach(() => {
   mocks.getRubric.mockResolvedValue({ criteria: CRITERIA, isCustom: false });
   mocks.listUploadedCvs.mockResolvedValue(CV_FILES);
-  mocks.listFiles.mockResolvedValue([]);
+  mocks.listFiles.mockResolvedValue(JD_FILES);
   mocks.getPracticeSessionOptions.mockResolvedValue(SESSION_OPTIONS);
   mocks.createPracticeSession.mockResolvedValue({
     id: 'session-1',
@@ -184,6 +197,49 @@ describe('usePracticeSetupFlow — tiêu chí chấm điểm', () => {
 });
 
 describe('usePracticeSetupFlow — tải danh sách CV', () => {
+  it('restored CV/JD draft resolves and displays both saved file names at the summary step', async () => {
+    savePracticeWizardDraft('user-1', {
+      jobCategory: 'BE', cvId: 'cv-1', jdId: 'jd-1', jdText: '', jdTab: 'file',
+      timeLimitSec: 120, questionCount: 5, seniority: 'Junior', adaptiveEnabled: true,
+      maxDeepPerQuestion: 3, focusTrackingEnabled: false, language: 'vi',
+    });
+    const { result } = renderFlow();
+
+    await waitFor(() => expect(result.current.step).toBe(6));
+    expect(mocks.listUploadedCvs).not.toHaveBeenCalled();
+    expect(mocks.listFiles).not.toHaveBeenCalled();
+
+    act(() => result.current.goToStep(7));
+    await waitFor(() => {
+      expect(result.current.selectedCv?.fileName).toBe('cv.pdf');
+      expect(result.current.selectedJd?.originalName).toBe('senior-backend-role.pdf');
+    });
+
+    render(<PracticeSetupSummaryStep
+      jobCategory={result.current.jobCategory}
+      cvFile={result.current.selectedCv}
+      jdFile={result.current.selectedJd}
+      jdText={result.current.jdText}
+      jdTab={result.current.jdTab}
+      timeLimitSec={result.current.timeLimitSec}
+      seniority={result.current.seniority}
+      questionCount={result.current.questionCount}
+      adaptiveEnabled={result.current.adaptiveEnabled}
+      maxDeepPerQuestion={result.current.maxDeepPerQuestion}
+      criteria={result.current.rubricCriteria}
+      canStart={result.current.canStart}
+      isCreating={false}
+      errorCode={null}
+      errorMessage={null}
+      onBack={() => undefined}
+      onEditCriteria={() => undefined}
+      onStart={() => undefined}
+      onClearError={() => undefined}
+    />);
+    expect(screen.getByText('cv.pdf')).toBeTruthy();
+    expect(screen.getByText('senior-backend-role.pdf')).toBeTruthy();
+  });
+
   it('báo lỗi thay vì hiện danh sách rỗng khi mạng hỏng, và tải lại được', async () => {
     mocks.listUploadedCvs.mockRejectedValueOnce(new Error('network down'));
     const { result } = renderFlow();
