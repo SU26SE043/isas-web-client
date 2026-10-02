@@ -52,6 +52,11 @@ describe('CandidateCampaignsPage → MyCampaignCard: dòng lượt (ATT1-F3)', (
     expect(within(card('a')).getByTestId('my-campaign-attempts-text').textContent).toBe('Còn 2/3 lượt');
     expect(within(card('b')).getByTestId('my-campaign-attempts-text').textContent).toBe('Hết lượt');
     expect(within(card('c')).queryByTestId('my-campaign-attempts')).toBeNull();
+    // ③ (a) / ④ (b) không ghi "Chưa bắt đầu" cạnh dòng lượt; Backend cũ (c) giữ badge như trước.
+    const notStarted = VI['campaigns.my.interview.notStarted'];
+    expect(within(card('a')).queryByText(notStarted)).toBeNull();
+    expect(within(card('b')).queryByText(notStarted)).toBeNull();
+    expect(within(card('c')).getByText(notStarted)).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith('/api/v1/campaign/my-campaigns', expect.anything());
   });
 });

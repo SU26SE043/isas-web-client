@@ -47,7 +47,11 @@ export type CandidateAttemptView =
   /** ④ Hết lượt → không có nút. */
   | { kind: 'exhausted'; used: number; max: number };
 
-export function resolveCandidateAttemptView(detail: CandidateCampaignDetailResponse): CandidateAttemptView {
+/** Chi tiết HOẶC item danh sách (item không có started / sessionId ⇒ nhánh Backend cũ coi như chưa start). */
+type AttemptViewInput = AttemptFields &
+  Partial<Pick<CandidateCampaignDetailResponse, 'started' | 'sessionId' | 'lastAttemptAbandoned'>>;
+
+export function resolveCandidateAttemptView(detail: AttemptViewInput): CandidateAttemptView {
   if (detail.interviewStatus === 'Completed') return { kind: 'completed' };
 
   const counts = readAttemptCounts(detail);
@@ -69,6 +73,14 @@ export function resolveCandidateAttemptView(detail: CandidateCampaignDetailRespo
     };
   }
   return { kind: 'start' };
+}
+
+/**
+ * ③ / ④ — đã có lượt kết thúc. Backend để interviewStatus = NotStarted cho lượt bỏ ngang, nên nhãn
+ * "Chưa bắt đầu" và dòng "Bài thi đã được bắt đầu." sẽ tự mâu thuẫn với thông điệp lượt ⇒ ẩn chúng.
+ */
+export function hasEndedAttempt(view: CandidateAttemptView): boolean {
+  return view.kind === 'retry' || view.kind === 'exhausted';
 }
 
 /** Thay `{key}` trong chuỗi i18n (cùng kiểu `{date}` / `{count}` đang dùng trong feature này). */

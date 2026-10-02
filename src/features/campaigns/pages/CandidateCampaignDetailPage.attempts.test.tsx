@@ -154,6 +154,37 @@ describe('CandidateCampaignDetailPage — bốn trạng thái lượt (ATT1-F3)'
   });
 });
 
+describe('CandidateCampaignDetailPage — header + "Thông tin bài thi" không tự mâu thuẫn với ③/④', () => {
+  const header = () => document.querySelector('header') as HTMLElement;
+  const NOT_STARTED = VI['campaigns.my.interview.notStarted'];
+  const STARTED_YES = VI['campaigns.detail.startedYes'];
+  const STARTED_NO = VI['campaigns.detail.startedNo'];
+  const abandoned = { interviewStatus: 'NotStarted', started: true, sessionId: 'sess-abandoned', timeLimitMinutes: 20, lastAttemptAbandoned: true };
+
+  it.each([
+    { name: '③ làm lại (1/3)', body: { ...abandoned, maxAttempts: 3, attemptsUsed: 1 }, block: 'campaign-attempt-retry' },
+    { name: '④ hết lượt (1/1)', body: { ...abandoned, maxAttempts: 1, attemptsUsed: 1 }, block: 'campaign-attempt-exhausted' },
+  ])('$name: KHÔNG có badge "Chưa bắt đầu" lẫn dòng "Bài thi đã/chưa bắt đầu"', async ({ body, block }) => {
+    await renderPage(body);
+    expect(screen.getByTestId(block)).toBeInTheDocument();
+    expect(within(header()).getByText(VI['campaigns.detail.badge'])).toBeInTheDocument();
+    expect(screen.queryByText(NOT_STARTED)).toBeNull();
+    expect(screen.queryByText(STARTED_YES)).toBeNull();
+    expect(screen.queryByText(STARTED_NO)).toBeNull();
+  });
+
+  it.each([
+    { name: '① chưa làm', body: { interviewStatus: 'NotStarted', started: false, timeLimitMinutes: 45, maxAttempts: 3, attemptsUsed: 0, lastAttemptAbandoned: false }, badge: NOT_STARTED, line: STARTED_NO },
+    { name: '② đang làm dở', body: { interviewStatus: 'InProgress', started: true, sessionId: 'sess-old', timeLimitMinutes: 30, maxAttempts: 1, attemptsUsed: 1, lastAttemptAbandoned: false }, badge: VI['campaigns.my.interview.inProgress'], line: STARTED_YES },
+    { name: 'Backend cũ, chưa start', body: { interviewStatus: 'NotStarted', started: false }, badge: NOT_STARTED, line: STARTED_NO },
+    { name: 'Backend cũ, NotStarted đã start', body: { interviewStatus: 'NotStarted', started: true, sessionId: 'sess-1' }, badge: NOT_STARTED, line: STARTED_YES },
+  ])('$name: badge header + dòng bắt đầu GIỮ NGUYÊN', async ({ body, badge, line }) => {
+    await renderPage(body);
+    expect(within(header()).getByText(badge)).toBeInTheDocument();
+    expect(screen.getByText(line)).toBeInTheDocument();
+  });
+});
+
 const ATT1_TEST_IDS = [
   'campaign-rule-duration', 'campaign-rule-attempts', 'campaign-clock-rule', 'campaign-attempt-in-progress',
   'campaign-attempt-retry', 'campaign-attempt-exhausted',
@@ -205,6 +236,28 @@ describe('CandidateCampaignDetailPage — 409 ATTEMPT_LIMIT_REACHED [C8]', () =>
     expect(saveCampaignInterviewSession).not.toHaveBeenCalled();
   });
 
+  it('sau ATTEMPT_LIMIT_REACHED: nút "Vào bước chuẩn bị" bị vô hiệu (không bấm lại để nhận thêm 409); Huỷ đóng ⇒ trang ④', async () => {
+    await renderPage({ interviewStatus: 'NotStarted', started: false, timeLimitMinutes: 45, maxAttempts: 1, attemptsUsed: 0, lastAttemptAbandoned: false });
+    api.post.mockImplementationOnce(async () => {
+      detailBody = { ...detailBody, attemptsUsed: 1, lastAttemptAbandoned: true };
+      throw LIMIT;
+    });
+
+    const { dialog } = await openDialogLines('Bắt đầu bài phỏng vấn');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Vào bước chuẩn bị' }));
+    await waitFor(() => expect(within(dialog).getByRole('alert').textContent).toBe(VI['campaigns.detail.startAttemptLimitReached']));
+    await screen.findByTestId('campaign-attempt-exhausted-text');
+
+    // Nhãn còn "Vào bước chuẩn bị" (không phải "Đang bắt đầu…") ⇒ bị vô hiệu vì hết lượt, không phải vì đang gửi.
+    expect(within(dialog).getByRole('button', { name: 'Vào bước chuẩn bị' })).toBeDisabled();
+    expect(api.post).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(within(dialog).getByRole('button', { name: VI['campaigns.detail.startCancel'] }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(buttonTexts()).toEqual([]);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('đường "Tiếp tục" (không có hộp thoại): câu riêng hiện ngay dưới nút + làm mới trang', async () => {
     const { invalidate } = await renderPage({ interviewStatus: 'InProgress', started: true, sessionId: 'sess-old', timeLimitMinutes: 30, maxAttempts: 1, attemptsUsed: 1, lastAttemptAbandoned: false });
     api.post.mockRejectedValueOnce(LIMIT);
@@ -225,5 +278,7 @@ describe('CandidateCampaignDetailPage — 409 ATTEMPT_LIMIT_REACHED [C8]', () =>
 
     await waitFor(() => expect(within(dialog).getByRole('alert').textContent).toBe('Phiên đang bận.'));
     expect(invalidate).not.toHaveBeenCalled();
+    // Lỗi khác hết lượt ⇒ vẫn cho thử lại.
+    expect(within(dialog).getByRole('button', { name: 'Vào bước chuẩn bị' })).toBeEnabled();
   });
 });

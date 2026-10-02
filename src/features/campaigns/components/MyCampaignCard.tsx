@@ -13,7 +13,13 @@ import type {
   CampaignInterviewStatus,
   CandidateCampaignListItem,
 } from '../types/campaignCandidate.types';
-import { fillTemplate, isOutOfAttempts, readAttemptCounts } from '../utils/campaignAttemptState';
+import {
+  fillTemplate,
+  hasEndedAttempt,
+  isOutOfAttempts,
+  readAttemptCounts,
+  resolveCandidateAttemptView,
+} from '../utils/campaignAttemptState';
 
 interface MyCampaignCardProps {
   campaign: CandidateCampaignListItem;
@@ -44,6 +50,8 @@ export function MyCampaignCard({ campaign, highlighted = false }: MyCampaignCard
   // Completed giữ thẻ như trước ATT1 — trang chi tiết cũng không cho làm tiếp khi đã hoàn thành.
   const attempts = campaign.interviewStatus === 'Completed' ? null : readAttemptCounts(campaign);
   const outOfAttempts = isOutOfAttempts(campaign);
+  // ③/④: không ghi "Chưa bắt đầu" cạnh "Còn x/y lượt" / "Hết lượt" — cùng nguyên tắc với trang chi tiết.
+  const attemptEnded = hasEndedAttempt(resolveCandidateAttemptView(campaign));
   const deadlineLabel = campaign.deadline
     ? new Date(campaign.deadline).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', {
         year: 'numeric',
@@ -74,20 +82,22 @@ export function MyCampaignCard({ campaign, highlighted = false }: MyCampaignCard
             {campaign.title}
           </h2>
         </div>
-        <span
-          className={cn(
-            'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium',
-            campaign.interviewStatus === 'Completed' &&
-              'border-success/35 bg-success/10 text-success-light',
-            campaign.interviewStatus === 'InProgress' &&
-              'border-warning/35 bg-warning/10 text-warning-light',
-            campaign.interviewStatus === 'NotStarted' &&
-              'border-subtle bg-surface-overlay text-muted-foreground',
-          )}
-        >
-          <span className="size-1.5 rounded-full bg-current" aria-hidden />
-          {t(interviewStatusLabelKey(campaign.interviewStatus))}
-        </span>
+        {attemptEnded ? null : (
+          <span
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium',
+              campaign.interviewStatus === 'Completed' &&
+                'border-success/35 bg-success/10 text-success-light',
+              campaign.interviewStatus === 'InProgress' &&
+                'border-warning/35 bg-warning/10 text-warning-light',
+              campaign.interviewStatus === 'NotStarted' &&
+                'border-subtle bg-surface-overlay text-muted-foreground',
+            )}
+          >
+            <span className="size-1.5 rounded-full bg-current" aria-hidden />
+            {t(interviewStatusLabelKey(campaign.interviewStatus))}
+          </span>
+        )}
       </div>
 
       <div className="mt-6 space-y-4">

@@ -15,7 +15,7 @@ import {
   campaignCandidateService,
 } from '../services/campaignCandidate.service';
 import type { CampaignInterviewStatus } from '../types/campaignCandidate.types';
-import { resolveCandidateAttemptView } from '../utils/campaignAttemptState';
+import { hasEndedAttempt, resolveCandidateAttemptView } from '../utils/campaignAttemptState';
 import { saveCampaignInterviewSession } from '../utils/campaignInterviewSession';
 import { isAttemptLimitReached, startErrorMessage } from '../utils/campaignStartError';
 
@@ -35,6 +35,8 @@ export function CandidateCampaignDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  // [C8] server báo hết lượt ⇒ khoá nút xác nhận (bấm lại chỉ nhận thêm 409).
+  const [attemptLimitHit, setAttemptLimitHit] = useState(false);
 
   const detailPath = useMemo(
     () => `/candidate/campaigns/${encodeURIComponent(id)}`,
@@ -89,6 +91,8 @@ export function CandidateCampaignDetailPage() {
 
   // ATT1-F3: ① chưa làm · ② đang làm dở · ③ làm lại · ④ hết lượt — field vắng ⇒ logic trước ATT1.
   const view = resolveCandidateAttemptView(data);
+  // ③/④: ẩn badge "Chưa bắt đầu" + dòng "Bài thi đã được bắt đầu." (tự mâu thuẫn với thông điệp lượt).
+  const attemptEnded = hasEndedAttempt(view);
   const campaignId = data.campaignId;
   const refreshCampaignQueries = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY }),
@@ -124,7 +128,10 @@ export function CandidateCampaignDetailPage() {
     } catch (startErr) {
       setStartError(startErrorMessage(startErr, t));
       // [C8] server báo hết lượt ⇒ làm mới danh sách + chi tiết để trang chuyển sang ④ (không còn nút).
-      if (isAttemptLimitReached(startErr)) void refreshCampaignQueries();
+      if (isAttemptLimitReached(startErr)) {
+        setAttemptLimitHit(true);
+        void refreshCampaignQueries();
+      }
     } finally {
       setIsStarting(false);
     }
@@ -140,7 +147,7 @@ export function CandidateCampaignDetailPage() {
           <div className="relative space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-info-400/30 bg-info-500/15 px-3 py-1.5 text-xs font-medium text-info-200"><BriefcaseBusiness className="size-4" aria-hidden />{t('campaigns.detail.badge')}</span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-success/35 bg-success/10 px-3 py-1.5 text-xs font-medium text-success-light"><BadgeCheck className="size-4" aria-hidden />{t(interviewStatusLabelKey(data.interviewStatus))}</span>
+              {attemptEnded ? null : <span className="inline-flex items-center gap-2 rounded-full border border-success/35 bg-success/10 px-3 py-1.5 text-xs font-medium text-success-light"><BadgeCheck className="size-4" aria-hidden />{t(interviewStatusLabelKey(data.interviewStatus))}</span>}
             </div>
             <h1 className="heading-primary break-words text-3xl text-foreground sm:text-4xl">{data.title}</h1>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
@@ -159,12 +166,12 @@ export function CandidateCampaignDetailPage() {
             </section>
             <section className="frame-satin rounded-2xl bg-surface-raised p-5 sm:p-6">
               <SectionHeading icon={Info} title={t('campaigns.detail.examInfo')} iconClassName="text-info" />
-              <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li>{typeof data.timeLimitMinutes === 'number' ? <li data-testid="campaign-clock-rule" className="flex gap-3"><Timer className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.attempt.clockRule')}</li> : null}</ul>
+              <ul className="mt-5 space-y-4 text-sm text-muted-foreground">{attemptEnded ? null : <li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li>}<li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li>{typeof data.timeLimitMinutes === 'number' ? <li data-testid="campaign-clock-rule" className="flex gap-3"><Timer className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.attempt.clockRule')}</li> : null}</ul>
               <div className="mt-5">
                 <CampaignAttemptAction
                   view={view}
                   isStarting={isStarting}
-                  onOpenConfirm={() => { setStartError(null); setConfirmOpen(true); }}
+                  onOpenConfirm={() => { setStartError(null); setAttemptLimitHit(false); setConfirmOpen(true); }}
                   onContinue={() => void enterInterviewRoom()}
                   inlineError={confirmOpen ? null : startError}
                 />
@@ -184,6 +191,7 @@ export function CandidateCampaignDetailPage() {
         onConfirm={() => void enterInterviewRoom()}
         isSubmitting={isStarting}
         errorMessage={startError}
+        confirmDisabled={attemptLimitHit}
         timeLimitMinutes={data.timeLimitMinutes}
         maxAttempts={data.maxAttempts}
         retryAttemptNo={view.kind === 'retry' ? view.attemptNo : undefined}

@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { apiClient } from '@/shared/api/apiClient';
+import type { StartCampaignInterviewResponse } from '../types/campaignCandidate.types';
 import { CampaignCandidateError, campaignCandidateService } from './campaignCandidate.service';
 
 vi.mock('@/shared/api/apiClient', () => ({
@@ -126,6 +127,36 @@ describe('campaignCandidateService.startCampaignInterview — ATT1 [C7] [C8]', (
     const legacy = await campaignCandidateService.startCampaignInterview(CMP);
     expect(legacy.attemptNo).toBeUndefined();
     expect(legacy.timeLimitMinutes).toBeUndefined();
+  });
+
+  it('[C7] content "" (đề chỉ lộ sau begin) ⇒ GIỮ câu với content "", đủ id/orderNo/timeLimitSec, sắp theo orderNo; câu thiếu id vẫn bỏ', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: {
+        sessionId: 's-4', campaignId: CMP, antiCheatEnabled: true, faceEnrollRequired: false, adaptiveEnabled: false, attemptNo: 1, timeLimitMinutes: 30,
+        questions: [
+          { id: 'q2', orderNo: 2, content: '', timeLimitSec: 90 },
+          { id: 'q1', orderNo: 1, content: '', timeLimitSec: 120 },
+          { id: '', orderNo: 3, content: '' },
+        ],
+      },
+    });
+    const started = await campaignCandidateService.startCampaignInterview(CMP);
+    expect(started.questions).toEqual([
+      { id: 'q1', orderNo: 1, content: '', timeLimitSec: 120 },
+      { id: 'q2', orderNo: 2, content: '', timeLimitSec: 90 },
+    ]);
+    expectTypeOf<StartCampaignInterviewResponse['questions'][number]['content']>().toEqualTypeOf<string>();
+  });
+
+  it('Backend cũ: content có chữ ⇒ trim như trước', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: {
+        sessionId: 's-5', campaignId: CMP, antiCheatEnabled: false, faceEnrollRequired: false, adaptiveEnabled: false,
+        questions: [{ id: 'q1', orderNo: 1, content: ' Câu 1 ', timeLimitSec: 60 }],
+      },
+    });
+    const started = await campaignCandidateService.startCampaignInterview(CMP);
+    expect(started.questions).toEqual([{ id: 'q1', orderNo: 1, content: 'Câu 1', timeLimitSec: 60 }]);
   });
 
   it('409 ATTEMPT_LIMIT_REACHED ⇒ code attemptLimitReached (đọc code TRƯỚC status)', async () => {

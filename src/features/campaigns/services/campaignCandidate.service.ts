@@ -333,8 +333,9 @@ function parseStartResponse(raw: unknown, fallbackCampaignId: string): StartCamp
       if (!item || typeof item !== 'object') return null;
       const q = item as Record<string, unknown>;
       const id = String(q.id ?? '').trim();
+      // [C7] Backend ATT1 trả content "" (đề chỉ lộ sau begin) ⇒ GIỮ câu, chỉ bỏ câu thiếu id.
       const content = String(q.content ?? '').trim();
-      if (!id || !content) return null;
+      if (!id) return null;
       const orderNo = typeof q.orderNo === 'number' ? q.orderNo : Number(q.orderNo ?? 0);
       const timeLimitSec =
         typeof q.timeLimitSec === 'number' ? q.timeLimitSec : Number(q.timeLimitSec ?? 0);

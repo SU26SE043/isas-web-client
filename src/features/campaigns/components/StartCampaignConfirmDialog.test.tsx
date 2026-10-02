@@ -60,8 +60,19 @@ describe('StartCampaignConfirmDialog — ATT1-F3', () => {
     expect(ruleLines(dialog)).toEqual(['Bạn có 1 lượt.']);
   });
 
+  it('làm lại khi KHÔNG đặt thời lượng (null) ⇒ vẫn có dòng lượt n/N (không phụ thuộc thời lượng)', () => {
+    const dialog = renderDialog({ timeLimitMinutes: null, maxAttempts: 3, retryAttemptNo: 2 });
+    expect(ruleLines(dialog)).toEqual(['Bạn có 3 lượt.', 'Đây là lượt 2/3 — bộ câu khác.']);
+  });
+
   it('lỗi start hiện trong hộp thoại', () => {
     const dialog = renderDialog({ maxAttempts: 1, errorMessage: 'Lỗi gì đó' });
     expect(within(dialog).getByRole('alert').textContent).toBe('Lỗi gì đó');
+  });
+
+  it('confirmDisabled (đã hết lượt) ⇒ nút xác nhận bị vô hiệu, nút Huỷ vẫn bấm được', () => {
+    const dialog = renderDialog({ timeLimitMinutes: 30, maxAttempts: 1, confirmDisabled: true, errorMessage: 'Hết lượt' });
+    expect(within(dialog).getByRole('button', { name: 'Vào bước chuẩn bị' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: VI['campaigns.detail.startCancel'] })).toBeEnabled();
   });
 });

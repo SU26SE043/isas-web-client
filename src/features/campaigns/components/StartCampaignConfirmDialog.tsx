@@ -22,6 +22,8 @@ interface StartCampaignConfirmDialogProps {
   maxAttempts?: number;
   /** Chỉ truyền khi LÀM LẠI (③): số thứ tự lượt mới = attemptsUsed + 1. */
   retryAttemptNo?: number;
+  /** [C8] đã nhận ATTEMPT_LIMIT_REACHED ⇒ khoá nút xác nhận (Huỷ vẫn dùng được). */
+  confirmDisabled?: boolean;
 }
 
 function useAttemptRuleLines(
@@ -57,6 +59,7 @@ export function StartCampaignConfirmDialog({
   timeLimitMinutes,
   maxAttempts,
   retryAttemptNo,
+  confirmDisabled = false,
 }: StartCampaignConfirmDialogProps) {
   const { t } = useLanguage();
   const ruleLines = useAttemptRuleLines(timeLimitMinutes, maxAttempts, retryAttemptNo);
@@ -99,7 +102,7 @@ export function StartCampaignConfirmDialog({
           <button
             type="button"
             className="btn-primary inline-flex"
-            disabled={isSubmitting}
+            disabled={isSubmitting || confirmDisabled}
             onClick={onConfirm}
           >
             {isSubmitting ? t('campaigns.detail.starting') : confirmLabel}

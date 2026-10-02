@@ -64,3 +64,25 @@ describe('MyCampaignCard — dòng lượt (ATT1-F3)', () => {
     expect(screen.queryByTestId('my-campaign-attempts')).toBeNull();
   });
 });
+
+describe('MyCampaignCard — badge trạng thái không tự mâu thuẫn với ③/④', () => {
+  const NOT_STARTED = VI['campaigns.my.interview.notStarted'];
+
+  it.each([
+    { name: '③ bỏ ngang, còn lượt', overrides: { maxAttempts: 3, attemptsUsed: 1, lastAttemptAbandoned: true }, line: 'Còn 2/3 lượt' },
+    { name: '④ hết lượt', overrides: { maxAttempts: 2, attemptsUsed: 2, lastAttemptAbandoned: true }, line: 'Hết lượt' },
+  ])('$name (NotStarted) ⇒ KHÔNG ghi "Chưa bắt đầu" cạnh "$line"', ({ overrides, line }) => {
+    renderCard(overrides);
+    expect(attemptsText()).toBe(line);
+    expect(screen.queryByText(NOT_STARTED)).toBeNull();
+  });
+
+  it.each([
+    { name: '① chưa làm', overrides: { maxAttempts: 2, attemptsUsed: 0, lastAttemptAbandoned: false }, badge: NOT_STARTED },
+    { name: 'Backend cũ', overrides: {}, badge: NOT_STARTED },
+    { name: '② đang làm dở', overrides: { interviewStatus: 'InProgress' as const, maxAttempts: 1, attemptsUsed: 1 }, badge: VI['campaigns.my.interview.inProgress'] },
+  ])('$name ⇒ badge giữ nguyên "$badge"', ({ overrides, badge }) => {
+    renderCard(overrides);
+    expect(screen.getByText(badge)).toBeInTheDocument();
+  });
+});
