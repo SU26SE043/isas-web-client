@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, BadgeCheck, BriefcaseBusiness, CalendarClock, CheckCircle2, Code2, FileText, Info, Loader2, MessageCircle, Play, Star, Video } from 'lucide-react';
+import { AlertCircle, ArrowLeft, BadgeCheck, BriefcaseBusiness, CalendarClock, CheckCircle2, Code2, FileText, Info, Loader2, MessageCircle, Star, Timer, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { UserRole } from '@/features/auth/types/auth.types';
 import { useLanguage } from '@/shared/languages';
+import { CampaignAttemptAction, CampaignAttemptRulesMeta } from '../components/CampaignAttemptStatus';
 import { StartCampaignConfirmDialog } from '../components/StartCampaignConfirmDialog';
 import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
 import { myCampaignDetailQueryKey, useMyCampaignDetail } from '../hooks/useMyCampaignDetail';
@@ -14,26 +15,14 @@ import {
   campaignCandidateService,
 } from '../services/campaignCandidate.service';
 import type { CampaignInterviewStatus } from '../types/campaignCandidate.types';
+import { resolveCandidateAttemptView } from '../utils/campaignAttemptState';
 import { saveCampaignInterviewSession } from '../utils/campaignInterviewSession';
+import { isAttemptLimitReached, startErrorMessage } from '../utils/campaignStartError';
 
 function interviewStatusLabelKey(status: CampaignInterviewStatus) {
   if (status === 'InProgress') return 'campaigns.my.interview.inProgress';
   if (status === 'Completed') return 'campaigns.my.interview.completed';
   return 'campaigns.my.interview.notStarted';
-}
-
-function startErrorMessage(error: unknown, t: (key: string) => string): string {
-  if (!(error instanceof CampaignCandidateError)) return t('campaigns.detail.startUnknown');
-  if (error.code === 'unauthorized') return t('campaigns.detail.startUnauthorized');
-  if (error.code === 'paymentRequired') return t('campaigns.detail.startPaymentRequired');
-  if (error.code === 'forbidden') return t('campaigns.detail.startForbidden');
-  if (error.code === 'outsideSlotWindow') return t('campaigns.detail.startOutsideSlotWindow');
-  if (error.code === 'concurrentLimit') return t('campaigns.detail.startConcurrentLimit');
-  if (error.code === 'conflict') return error.message || t('campaigns.detail.startConflict');
-  if (error.code === 'identityError' || error.code === 'serverError') {
-    return t('campaigns.detail.startServerError');
-  }
-  return error.message || t('campaigns.detail.startUnknown');
 }
 
 export function CandidateCampaignDetailPage() {
@@ -98,8 +87,13 @@ export function CandidateCampaignDetailPage() {
       })
     : null;
 
-  const canContinue = data.started && Boolean(data.sessionId) && data.interviewStatus !== 'Completed';
-  const isCompleted = data.interviewStatus === 'Completed';
+  // ATT1-F3: ① chưa làm · ② đang làm dở · ③ làm lại · ④ hết lượt — field vắng ⇒ logic trước ATT1.
+  const view = resolveCandidateAttemptView(data);
+  const campaignId = data.campaignId;
+  const refreshCampaignQueries = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY }),
+    queryClient.invalidateQueries({ queryKey: myCampaignDetailQueryKey(campaignId) }),
+  ]);
 
   /**
    * Vào phòng thi — dùng chung cho "Bắt đầu" LẪN "Tiếp tục".
@@ -119,12 +113,9 @@ export function CandidateCampaignDetailPage() {
     setIsStarting(true);
     setStartError(null);
     try {
-      const started = await campaignCandidateService.startCampaignInterview(data.campaignId);
+      const started = await campaignCandidateService.startCampaignInterview(campaignId);
       saveCampaignInterviewSession(started);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: MY_CAMPAIGNS_QUERY_KEY }),
-        queryClient.invalidateQueries({ queryKey: myCampaignDetailQueryKey(data.campaignId) }),
-      ]);
+      await refreshCampaignQueries();
       setConfirmOpen(false);
 
       // The session is created here so its campaign policy and questions can be retained,
@@ -132,6 +123,8 @@ export function CandidateCampaignDetailPage() {
       navigate(`/interview/${encodeURIComponent(started.sessionId)}/prepare`);
     } catch (startErr) {
       setStartError(startErrorMessage(startErr, t));
+      // [C8] server báo hết lượt ⇒ làm mới danh sách + chi tiết để trang chuyển sang ④ (không còn nút).
+      if (isAttemptLimitReached(startErr)) void refreshCampaignQueries();
     } finally {
       setIsStarting(false);
     }
@@ -152,6 +145,7 @@ export function CandidateCampaignDetailPage() {
             <h1 className="heading-primary break-words text-3xl text-foreground sm:text-4xl">{data.title}</h1>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
               {data.jobTitle ? <span className="inline-flex items-center gap-2"><Code2 className="size-4 text-info" aria-hidden />{data.jobTitle}</span> : null}
+              <CampaignAttemptRulesMeta timeLimitMinutes={data.timeLimitMinutes} maxAttempts={data.maxAttempts} />
               {deadlineLabel ? <span className="inline-flex items-center gap-2 text-warning-light"><CalendarClock className="size-4" aria-hidden />{t('campaigns.invite.deadline')}: {deadlineLabel}</span> : null}
             </div>
           </div>
@@ -165,11 +159,15 @@ export function CandidateCampaignDetailPage() {
             </section>
             <section className="frame-satin rounded-2xl bg-surface-raised p-5 sm:p-6">
               <SectionHeading icon={Info} title={t('campaigns.detail.examInfo')} iconClassName="text-info" />
-              <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li></ul>
+              <ul className="mt-5 space-y-4 text-sm text-muted-foreground"><li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{data.started ? t('campaigns.detail.startedYes') : t('campaigns.detail.startedNo')}</li><li className="flex gap-3"><Video className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.deviceHint')}</li>{typeof data.timeLimitMinutes === 'number' ? <li data-testid="campaign-clock-rule" className="flex gap-3"><Timer className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />{t('campaigns.detail.attempt.clockRule')}</li> : null}</ul>
               <div className="mt-5">
-                {isCompleted ? <p className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-success/35 bg-success/10 px-4 py-3 text-sm font-semibold text-success-light"><BadgeCheck className="size-4" aria-hidden />{t('campaigns.my.interview.completed')}</p> : null}
-                {!isCompleted && canContinue ? <button type="button" disabled={isStarting} className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => void enterInterviewRoom()}><Play className="size-4" aria-hidden />{t('campaigns.detail.continue')}</button> : null}
-                {!isCompleted && !canContinue ? <button type="button" className="btn-primary inline-flex w-full justify-center gap-2" onClick={() => { setStartError(null); setConfirmOpen(true); }}><Play className="size-4" aria-hidden />{t('campaigns.detail.start')}</button> : null}
+                <CampaignAttemptAction
+                  view={view}
+                  isStarting={isStarting}
+                  onOpenConfirm={() => { setStartError(null); setConfirmOpen(true); }}
+                  onContinue={() => void enterInterviewRoom()}
+                  inlineError={confirmOpen ? null : startError}
+                />
               </div>
             </section>
           </div>
@@ -186,6 +184,9 @@ export function CandidateCampaignDetailPage() {
         onConfirm={() => void enterInterviewRoom()}
         isSubmitting={isStarting}
         errorMessage={startError}
+        timeLimitMinutes={data.timeLimitMinutes}
+        maxAttempts={data.maxAttempts}
+        retryAttemptNo={view.kind === 'retry' ? view.attemptNo : undefined}
       />
     </div>
   );
