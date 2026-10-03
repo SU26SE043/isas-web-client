@@ -79,6 +79,17 @@ describe('UnscoredFlaggedSection', () => {
     }
   });
 
+  it('mobile card: tên ngắt theo TỪ (không cắt giữa chữ "Hoàng L|ong"), email dài vẫn ngắt mọi chỗ để không tràn', () => {
+    const { container } = render(<UnscoredFlaggedSection items={[
+      item({ fullName: 'Nguyễn Thị Phương Thảo Hoàng Long', email: 'nguyenthiphuongthaohoanglong.candidate@example-company.com' }),
+    ]} />);
+    const cards = layout(container, 'cards');
+    const name = cards.getByText('Nguyễn Thị Phương Thảo Hoàng Long');
+    expect(name.className).toMatch(/(^|\s)wrap-anywhere(\s|$)/);
+    expect(name.className).not.toMatch(/break-all/);
+    expect(cards.getByText('nguyenthiphuongthaohoanglong.candidate@example-company.com').className).toMatch(/(^|\s)break-all(\s|$)/);
+  });
+
   it('uses the legacy no-score label when the new fields are missing', () => {
     const { container } = render(<UnscoredFlaggedSection items={[item()]} />);
     for (const view of ['table', 'cards'] as const) {

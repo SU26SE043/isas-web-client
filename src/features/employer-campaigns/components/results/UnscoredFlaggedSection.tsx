@@ -81,9 +81,10 @@ export function UnscoredFlaggedSection({
                 className="frame-satin rounded-xl bg-surface-raised p-4"
               >
                 {/* Trạng thái đứng DƯỚI tên, không đặt cạnh: ở 375px email dài (không có chỗ ngắt)
-                    tràn sang và bị nhãn trạng thái đè lên. */}
+                    tràn sang và bị nhãn trạng thái đè lên. Tên ngắt theo TỪ (wrap-anywhere chỉ cắt giữa chữ khi một
+                    từ dài hơn cả dòng) — break-all cắt "Hoàng L|ong"; email không có khoảng trắng nên giữ break-all. */}
                 <div className="min-w-0">
-                  <p className="break-all font-medium text-foreground">{candidateDisplayName(item, t)}</p>
+                  <p className="wrap-anywhere font-medium text-foreground">{candidateDisplayName(item, t)}</p>
                   <p className="break-all text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
                 </div>
                 <div title={item.sessionId} className="mt-2">
