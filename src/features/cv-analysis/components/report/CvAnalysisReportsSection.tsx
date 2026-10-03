@@ -1,15 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ReportCategoryAccordion } from '@/features/practice/components/reports/ReportCategoryAccordion';
 import { useLanguage } from '@/shared/languages';
 import { useCvAnalyses } from '../../hooks/useCvAnalyses';
 import { useInterviewFiles } from '../../hooks/useInterviewFiles';
 import { CvAnalysisAccordionItem } from './CvAnalysisAccordionItem';
 import { CvAnalysisListSkeleton } from './CvAnalysisReportSkeleton';
 
-export function CvAnalysisReportsSection() {
+export function CvAnalysisReportsSection({
+  active = true,
+  onCountChange,
+}: {
+  active?: boolean;
+  onCountChange?: (count: number | null) => void;
+}) {
   const { t } = useLanguage();
   const { data: analyses = [], isLoading, isError, refetch, isFetching } = useCvAnalyses();
   // `CvAnalysisResult` only carries `cvId`, so the file name is joined here once
@@ -21,14 +26,18 @@ export function CvAnalysisReportsSection() {
   );
   const [openId, setOpenId] = useState<string | null>(null);
 
+  useEffect(() => {
+    onCountChange?.(isLoading || isError ? null : analyses.length);
+  }, [analyses.length, isError, isLoading, onCountChange]);
+
   const toggle = (id: string) => {
     setOpenId((current) => (current === id ? null : id));
   };
 
-  const count = isLoading || isError ? 0 : analyses.length;
+  if (!active) return null;
 
   return (
-    <ReportCategoryAccordion title={t('practice.reports.category.cv')} count={count} defaultOpen={false}>
+    <div className="space-y-3">
       {isLoading ? <CvAnalysisListSkeleton /> : null}
 
       {isError ? (
@@ -70,6 +79,6 @@ export function CvAnalysisReportsSection() {
           ))}
         </div>
       ) : null}
-    </ReportCategoryAccordion>
+    </div>
   );
 }

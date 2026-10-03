@@ -77,4 +77,27 @@ describe('CandidateReportsPage', () => {
     expect(await screen.findByText('practice.reports.category.learning')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('đổi tab để chỉ hiển thị danh sách report của hạng mục đang chọn', async () => {
+    vi.mocked(fetchCandidateReportsHub).mockResolvedValue({
+      interview: [],
+      learning: [{
+        id: 'lesson-report',
+        category: 'learning',
+        title: 'Lesson report',
+        titleVi: 'Báo cáo bài học',
+        href: '/candidate/practice/history/lesson-report',
+        createdAt: '2026-09-30T00:00:00Z',
+      }],
+      cv: [],
+    });
+
+    renderPage();
+
+    const learningTab = await screen.findByRole('tab', { name: /practice\.reports\.category\.learning/ });
+    await userEvent.click(learningTab);
+
+    expect(learningTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Báo cáo bài học')).toBeInTheDocument();
+  });
 });
