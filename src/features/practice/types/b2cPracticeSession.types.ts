@@ -88,16 +88,23 @@ export type FocusBehaviorSignalType = 'tab_switch' | 'paste' | 'focus_lost';
 /** CHỈ server ghi (sau khi gọi AIService `/face-detect`) — BE `FocusSignals.ServerOnly`. */
 export type FocusFrameSignalType = 'no_face' | 'multiple_faces';
 /**
- * CHỈ client: khung hình quá tối để đếm mặt (che cam / phòng tối). Nhắc người luyện bật đèn ngay tại chỗ,
- * KHÔNG gửi ảnh đen cho AI (tốn CPU để nhận về `no_face` — mà "tối" và "rời chỗ" là hai lời khuyên khác
- * nhau), KHÔNG ghi server (không có trong whitelist, cố ý — nó là chuyện môi trường, không phải tập trung).
+ * Client tự khai qua `POST focus-events` (BE `FocusSignals.Allowed`, từ 2026-10-03): khung webcam tối / bị che.
+ * Chỉ trình duyệt đo được (không gửi ảnh đen cho AI — nhận về `no_face` là gộp "che cam" với "rời chỗ"), nên
+ * client là nguồn duy nhất. Thuộc nhóm KHUNG HÌNH ở màn kết quả, không cộng vào "rời khỏi buổi".
+ */
+export type FocusCameraSignalType = 'camera_blocked';
+/** Mọi tín hiệu client được tự khai qua `POST focus-events`. */
+export type FocusClientSignalType = FocusBehaviorSignalType | FocusCameraSignalType;
+/**
+ * CHỈ client, chỉ để hiện toast: khung hình quá tối để đếm mặt (che cam / phòng tối). Lần che cam được GHI
+ * về server dưới tên {@link FocusCameraSignalType}; `low_light` chỉ là loại toast nhắc tại chỗ.
  */
 export type FocusClientHintType = 'low_light';
 /** @deprecated dùng {@link FocusBehaviorSignalType} — giữ alias để không phải sửa mọi call site cũ. */
 export type FocusSignalType = FocusBehaviorSignalType;
 
 export interface FocusEventSummary {
-  signalType: FocusBehaviorSignalType | FocusFrameSignalType;
+  signalType: FocusBehaviorSignalType | FocusFrameSignalType | FocusCameraSignalType;
   count: number;
   firstAt: string;
   lastAt: string;

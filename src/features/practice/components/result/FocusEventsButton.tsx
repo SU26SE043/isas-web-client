@@ -2,10 +2,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/shared/languages';
-import { LogOut, ShieldCheck } from 'lucide-react';
+import { ScanEye, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
-import { buildFocusButtonLabel } from '../../utils/focusTrackingSummary';
+import { buildFocusBreakdownLabel } from '../../utils/focusTrackingSummary';
 import { FocusEventsAnalysis } from './FocusEventsAnalysis';
 
 export function FocusEventsButton({ view }: { view: PracticeSessionResultViewModel }) {
@@ -18,8 +18,8 @@ export function FocusEventsButton({ view }: { view: PracticeSessionResultViewMod
   return (
     <>
       <Button type="button" variant="outline" size="sm" className="border-warning/40 bg-warning/10 text-warning hover:bg-warning/20" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        <LogOut className="size-3.5" aria-hidden />
-        {buildFocusButtonLabel(view, t)}
+        <ScanEye className="size-3.5" aria-hidden />
+        {buildFocusBreakdownLabel(view, t)}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">

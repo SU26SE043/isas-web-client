@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { checkPracticeFace } from '../services/b2cPracticeSession.service';
+import { checkPracticeFace, recordFocusEvent } from '../services/b2cPracticeSession.service';
 import {
   captureVideoFrameAsJpegFile,
   isUsableCameraFrame,
@@ -11,6 +11,7 @@ import { FACE_CHECK_INTERVAL_MS, useB2cFaceCheck } from './useB2cFaceCheck';
 
 vi.mock('../services/b2cPracticeSession.service', () => ({
   checkPracticeFace: vi.fn(),
+  recordFocusEvent: vi.fn(),
 }));
 vi.mock('@/features/campaigns/utils/captureJpegFile', () => ({
   captureVideoFrameAsJpegFile: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@/features/campaigns/utils/captureJpegFile', () => ({
 }));
 
 const checkFace = vi.mocked(checkPracticeFace);
+const record = vi.mocked(recordFocusEvent);
 const capture = vi.mocked(captureVideoFrameAsJpegFile);
 const frameReady = vi.mocked(isVideoFrameReady);
 const frameUsable = vi.mocked(isUsableCameraFrame);
@@ -38,6 +40,7 @@ describe('useB2cFaceCheck', () => {
     frameUsable.mockReset();
     frameUsable.mockReturnValue(true);
     checkFace.mockReset();
+    record.mockReset();
     // Jitter = 0 để nhịp lập lịch đoán trước được (Math.random=0.5 → (0.5*2-1)*jitter = 0).
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
     vi.useFakeTimers();
@@ -61,14 +64,18 @@ describe('useB2cFaceCheck', () => {
     expect(onSignal).toHaveBeenCalledWith('low_light');
     expect(capture).not.toHaveBeenCalled();       // không chụp ảnh đen
     expect(checkFace).not.toHaveBeenCalled();     // không tốn AI cho ảnh đen
+    // 2026-10-03: che cam phải được GHI để màn kết quả hiện được — trước đây chỉ có toast.
+    expect(record).toHaveBeenCalledWith('s1', 'camera_blocked');
 
     await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
     expect(onSignal).toHaveBeenCalledTimes(1);    // vẫn tối ⇒ không dội toast
+    expect(record).toHaveBeenCalledTimes(2);      // nhưng VẪN ghi mỗi lượt kiểm (cùng nhịp với no_face phía server)
 
     frameUsable.mockReturnValue(true);            // bật đèn: khung sáng, có mặt
     await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
     expect(checkFace).toHaveBeenCalledTimes(1);
     expect(onSignal).toHaveBeenLastCalledWith(null);   // tín hiệu đã hết
+    expect(record).toHaveBeenCalledTimes(2);           // khung sáng ⇒ không ghi thêm camera_blocked
   });
 
   it('camera chưa có frame (readyState/videoWidth = 0) → không nói gì, không chụp, không gọi AI', async () => {

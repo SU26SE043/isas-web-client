@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FocusSummaryTile } from './FocusSummaryTile';
 import { SessionSummaryCard } from './SessionSummaryCard';
@@ -38,32 +38,35 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
   });
 
   it('[] (bật, chưa ghi nhận) → ×0 + câu rỗng, không khen', () => {
-    render(<FocusSummaryTile view={makeView({ focusTrackingEnabled: true, focusEvents: [], focusLeaveCount: 0 })} />);
-    expect(screen.getByText('×0')).toBeInTheDocument();
-    expect(screen.getByText('practice.result.focusTracking.empty')).toBeInTheDocument();
+    const { container } = render(<FocusSummaryTile view={makeView({ focusTrackingEnabled: true, focusEvents: [], focusLeaveCount: 0 })} />);
+    expect(within(container).getByText('×0')).toBeInTheDocument();
+    expect(within(container).getByTestId('focus-tile-breakdown')).toHaveTextContent('practice.result.focusTracking.empty');
   });
 
-  it('có sự kiện → tổng gộp một số + câu gợi ý kèm vị trí', () => {
-    render(
+  it('có cả rời buổi lẫn khung hình → tổng gộp + tách nhóm, KHÔNG giấu khuôn mặt / che cam', () => {
+    // Trước 2026-10-03 ô này chỉ đếm rời buổi (×1) ⇒ "2 khuôn mặt" và "che cam" không hiện ở đâu trên Tổng quan.
+    const { container } = render(
       <FocusSummaryTile
         view={makeView({
           focusTrackingEnabled: true,
           focusEvents: [
-            { signalType: 'tab_switch', count: 3, firstAt: '2026-09-15T04:00:00Z', lastAt: '2026-09-15T04:10:00Z' },
             { signalType: 'focus_lost', count: 1, firstAt: '2026-09-15T04:05:00Z', lastAt: '2026-09-15T04:05:00Z' },
+            { signalType: 'multiple_faces', count: 2, firstAt: '2026-09-15T04:06:00Z', lastAt: '2026-09-15T04:07:00Z' },
+            { signalType: 'camera_blocked', count: 3, firstAt: '2026-09-15T04:08:00Z', lastAt: '2026-09-15T04:09:00Z' },
           ],
-          focusLeaveCount: 4,
-          focusLeavePlacement: 'secondHalf',
+          focusLeaveCount: 1,
+          focusFrameCount: 5,
         })}
       />,
     );
-    expect(screen.getByText('×4')).toBeInTheDocument();
-    expect(screen.queryByText(/tab_switch|focus_lost/)).not.toBeInTheDocument();
-    expect(screen.getByText(/practice\.result\.focusTracking\.message/)).toBeInTheDocument();
+    expect(within(container).getByText('×6')).toBeInTheDocument();
+    const breakdown = within(container).getByTestId('focus-tile-breakdown');
+    expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.leave');
+    expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.face');
+    expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.camera');
   });
 
-  it('chỉ có khung hình → ô "Rời khỏi buổi" ×0 và câu khung hình, KHÔNG phải câu rời buổi/đóng tab', () => {
-    // File này không cleanup giữa các test ⇒ scope vào container để "×0" của test trước không khớp nhầm.
+  it('chỉ có khung hình → tách nhóm KHÔNG có "rời buổi"', () => {
     const { container } = render(
       <FocusSummaryTile
         view={makeView({
@@ -76,9 +79,10 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
         })}
       />,
     );
-    expect(within(container).getByText('×0')).toBeInTheDocument();
-    expect(within(container).getByText('practice.result.focusTracking.frameOnly')).toBeInTheDocument();
-    expect(within(container).queryByText(/practice\.result\.focusTracking\.message/)).not.toBeInTheDocument();
+    expect(within(container).getByText('×12')).toBeInTheDocument();
+    const breakdown = within(container).getByTestId('focus-tile-breakdown');
+    expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.face');
+    expect(breakdown).not.toHaveTextContent('practice.result.focusTracking.short.leave');
   });
 });
 

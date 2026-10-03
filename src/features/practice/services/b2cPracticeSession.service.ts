@@ -9,7 +9,7 @@ import type {
   PracticeJobCategory,
   PracticeLanguage,
   PracticeSessionOptions,
-  FocusSignalType,
+  FocusClientSignalType,
   PracticeFaceCheckResult,
   FocusFrameSignalType,
   PracticeSessionBeginResponse,
@@ -94,7 +94,7 @@ function buildMockSession(payload: CreatePracticeSessionRequest): PracticeSessio
   return session;
 }
 
-export async function recordFocusEvent(sessionId: string, signalType: FocusSignalType): Promise<void> {
+export async function recordFocusEvent(sessionId: string, signalType: FocusClientSignalType): Promise<void> {
   if (usesMockData('practice')) return;
   try {
     await apiClient.post(b2cPracticeSessionEndpoints.focusEvents(sessionId), { signalType }, {
