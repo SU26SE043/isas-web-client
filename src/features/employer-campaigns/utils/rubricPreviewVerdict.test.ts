@@ -1,23 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-  brokenRun,
   goodRun,
-  narrowRun,
-  positiveBiasRun,
   previewQuestions,
   rubricMissingLevels,
   rubricWithLevels,
   sample,
-  score,
 } from '../mocks/rubricPreview.fixtures';
 import {
-  BIAS_DELTA_PCT,
   compareRuns,
   computeBlocker,
-  computeVerdict,
   criteriaMissingLevels,
+  customSampleOf,
   defaultPreviewQuestion,
-  DISCRIMINATION_RANGE_PCT,
   FREE_RUNS_PER_QUESTION,
   FREE_RUNS_PER_VERSION,
   freeRunsForQuestion,
@@ -25,79 +19,24 @@ import {
   freeRunsForVersion,
   hasVerifiedRun,
   latestSeenRubricVersion,
-  computeCompression,
+  passesThreshold,
   scopedCriteriaForQuestion,
 } from './rubricPreviewVerdict';
 import type { CampaignQuestion, RubricCriterion } from '../types/campaignManagement.types';
 
-describe('computeVerdict — thứ tự + biên độ, không phải |Δ|', () => {
-  it('thứ tự đúng và biên độ ≥ 30 ⇒ discriminates, range = Excellent − Weak', () => {
-    const verdict = computeVerdict(goodRun(), null);
-    expect(verdict.ordering).toBe('ok');
-    expect(verdict.range).toBe(70);
-    expect(verdict.verdict).toBe('discriminates');
-    expect(verdict.threshold).toBeNull();
+describe('customSampleOf / passesThreshold — chấm thử chỉ còn bài người dùng tự nhập (2026-10-03)', () => {
+  it('lấy đúng bài Custom; lượt cũ chỉ có 3 bài AI ⇒ null (UI nói là lượt cũ, không vẽ bảng 3 bài)', () => {
+    const mine = sample('Custom', 0, 62);
+    expect(customSampleOf(goodRun({ samples: [mine] }))).toBe(mine);
+    expect(customSampleOf(goodRun({ samples: [sample('Weak', 20, 18), sample('Good', 60, 62), sample('Excellent', 100, 88)] }))).toBeNull();
+    expect(customSampleOf(goodRun({ samples: [sample('Weak', 20, 18), mine] }))).toBe(mine);
   });
 
-  it('thứ tự vỡ (Khá > Xuất sắc) ⇒ weak, kể cả khi biên độ vẫn ≥ 30', () => {
-    const run = goodRun({ samples: [sample('Weak', 20, 10), sample('Good', 60, 95), sample('Excellent', 100, 80)] });
-    const verdict = computeVerdict(run, null);
-    expect(verdict.ordering).toBe('broken');
-    expect(verdict.range).toBe(70);
-    expect(verdict.verdict).toBe('weak');
-    expect(computeVerdict(brokenRun(), null).verdict).toBe('weak');
-  });
-
-  it('bằng điểm cũng là thứ tự vỡ — nghiêm ngặt, không phải ≤', () => {
-    const run = goodRun({ samples: [sample('Weak', 20, 40), sample('Good', 60, 40), sample('Excellent', 100, 90)] });
-    expect(computeVerdict(run, null).ordering).toBe('broken');
-  });
-
-  it('thứ tự đúng nhưng biên độ dưới 30 ⇒ inconclusive; đúng 30 ⇒ discriminates', () => {
-    expect(computeVerdict(narrowRun(), null)).toMatchObject({ ordering: 'ok', range: 12, verdict: 'inconclusive' });
-    const edge = goodRun({ samples: [sample('Weak', 20, 40), sample('Good', 60, 55), sample('Excellent', 100, 70)] });
-    expect(computeVerdict(edge, null).range).toBe(DISCRIMINATION_RANGE_PCT);
-    expect(computeVerdict(edge, null).verdict).toBe('discriminates');
-    const under = goodRun({ samples: [sample('Weak', 20, 40), sample('Good', 60, 55), sample('Excellent', 100, 69.9)] });
-    expect(computeVerdict(under, null).verdict).toBe('inconclusive');
-  });
-
-  it('bias positive chỉ khi CẢ BA bài lệch > +3; một bài lệch không đủ', () => {
-    expect(computeVerdict(positiveBiasRun(), null).bias).toBe('positive');
-    const onlyOne = goodRun({ samples: [sample('Weak', 20, 30), sample('Good', 60, 61), sample('Excellent', 100, 100)] });
-    expect(computeVerdict(onlyOne, null).bias).toBe('none');
-    const twoOfThree = goodRun({ samples: [sample('Weak', 20, 30), sample('Good', 60, 70), sample('Excellent', 100, 100)] });
-    expect(computeVerdict(twoOfThree, null).bias).toBe('none');
-  });
-
-  it('bias negative khi cả ba lệch < −3; đúng ±3 là nhiễu, không phải thiên lệch', () => {
-    const negative = goodRun({ samples: [sample('Weak', 20, 10), sample('Good', 60, 50), sample('Excellent', 100, 90)] });
-    expect(computeVerdict(negative, null).bias).toBe('negative');
-    const atNoise = goodRun({ samples: [sample('Weak', 20, 23), sample('Good', 60, 63), sample('Excellent', 100, 103)] });
-    expect(computeVerdict(atNoise, null).bias).toBe('none');
-    expect(BIAS_DELTA_PCT).toBe(3);
-  });
-
-  it('bài Custom không tham gia bias nhưng có tham gia ngưỡng Đạt', () => {
-    const run = positiveBiasRun({ samples: [...positiveBiasRun().samples, sample('Custom', 0, 40)] });
-    const verdict = computeVerdict(run, 50);
-    expect(verdict.bias).toBe('positive');
-    expect(verdict.threshold).toEqual({ pct: 50, failing: ['Weak', 'Custom'] });
-  });
-
-  it('maxAbsDelta là |Δ| lớn nhất trên 3 bài AI', () => {
-    expect(computeVerdict(goodRun(), null).maxAbsDelta).toBe(12);
-  });
-
-  it('ngưỡng Đạt: liệt kê band có điểm thật < pct; đúng bằng pct thì đạt', () => {
-    const verdict = computeVerdict(goodRun(), 62);
-    expect(verdict.threshold).toEqual({ pct: 62, failing: ['Weak'] });
-    expect(computeVerdict(goodRun(), 10)?.threshold?.failing).toEqual([]);
-  });
-
-  it('thiếu một band AI (lượt lỗi) ⇒ thứ tự vỡ, không ném', () => {
-    const run = goodRun({ status: 'Failed', samples: [sample('Weak', 20, 18)] });
-    expect(computeVerdict(run, null)).toMatchObject({ ordering: 'broken', range: 0, bias: 'none', verdict: 'weak' });
+  it('Đạt khi ≥ ngưỡng (cùng quy ước bảng xếp hạng); không có ngưỡng ⇒ null', () => {
+    expect(passesThreshold(50, 50)).toBe(true);
+    expect(passesThreshold(49.99, 50)).toBe(false);
+    expect(passesThreshold(80, null)).toBeNull();
+    expect(passesThreshold(80, Number.NaN)).toBeNull();
   });
 });
 
@@ -181,28 +120,6 @@ describe('helpers', () => {
   // Quota là thứ HR nhìn trước khi bấm; BE chỉ trả nó KÈM lượt ⇒ trước lượt đầu phải tự biết còn nguyên 3.
   // Ca thật đo trên dev 4/4 lượt: Yếu +24…+36, Xuất sắc −30…−33 ⇒ bias gộp = none (trái dấu) nhưng đó chính là
   // thứ HR sửa được: mốc thấp quá dễ, mốc cao quá khó. Đếm theo TIÊU CHÍ, so theo MỐC chọn (levelMatched).
-  it('computeCompression: Yếu vượt mốc ≥ nửa tiêu chí VÀ Xuất sắc dưới mốc ≥ nửa ⇒ nén; thiếu một vế ⇒ null', () => {
-    const weakOver = sample('Weak', 20, 48, [score('a', 'A', 1, 3), score('b', 'B', 1, 3), score('c', 'C', 1, 1)]);
-    const excellentUnder = sample('Excellent', 100, 68, [score('a', 'A', 5, 3), score('b', 'B', 5, 5), score('c', 'C', 5, 3)]);
-    expect(computeCompression(weakOver, excellentUnder)).toEqual({ weakOver: 2, excellentUnder: 2, total: 3 });
-    // Yếu đúng mốc ⇒ không phải nén, dù Xuất sắc bị chấm thấp (đó là bias âm ở một đầu, câu chữ khác).
-    const weakOk = sample('Weak', 20, 20, [score('a', 'A', 1, 1), score('b', 'B', 1, 1), score('c', 'C', 1, 2)]);
-    expect(computeCompression(weakOk, excellentUnder)).toBeNull();
-    expect(computeCompression(undefined, excellentUnder)).toBeNull();
-    expect(computeVerdict(goodRun(), null).compression).toBeNull();
-  });
-
-  it('computeCompression so theo MỨC đã chọn (levelMatched), không theo điểm thô — cùng quy ước với bảng tầng 2', () => {
-    // Mốc không cách đều: điểm thô 2.4 nhưng bộ chấm đã snap về mức 1 ⇒ Yếu KHÔNG vượt kỳ vọng.
-    const snapped = (id: string, expected: number, actual: number, level: number) => ({ ...score(id, id, expected, actual), levelMatched: level });
-    const weak = sample('Weak', 20, 30, [snapped('a', 1, 2.4, 1), snapped('b', 1, 2.4, 1)]);
-    const excellent = sample('Excellent', 100, 70, [snapped('a', 5, 3, 3), snapped('b', 5, 3, 3)]);
-    expect(computeCompression(weak, excellent)).toBeNull();
-    // Cùng điểm thô, nhưng mức chọn là 3 ⇒ vượt ⇒ nén.
-    const weakOver = sample('Weak', 20, 30, [snapped('a', 1, 2.4, 3), snapped('b', 1, 2.4, 3)]);
-    expect(computeCompression(weakOver, excellent)).toEqual({ weakOver: 2, excellentUnder: 2, total: 2 });
-  });
-
   it('freeRunsForVersion: chưa lượt nào ⇒ 3; lượt mới nhất cùng bản ⇒ tin số BE; bản khác ⇒ quota mới 3', () => {
     expect(freeRunsForVersion(null, null, 1)).toBe(FREE_RUNS_PER_VERSION);
     expect(freeRunsForVersion(2, goodRun({ rubricVersion: 1, freeRunsRemaining: 2 }), 1)).toBe(2);

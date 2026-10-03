@@ -22,7 +22,7 @@ function setup() {
 afterEach(() => vi.restoreAllMocks());
 
 describe('useRubricTryFlow', () => {
-  it('nói → chép lời đổ vào ô sửa + giữ số đo; chấm gửi includeAiSamples=false + deliveryMetrics; sửa bản chép ⇒ transcriptEdited', async () => {
+  it('nói → chép lời đổ vào ô sửa + giữ số đo; chấm gửi bài + deliveryMetrics (không còn cờ 3 bài AI); sửa bản chép ⇒ transcriptEdited', async () => {
     vi.spyOn(adminRubricService, 'transcribeForPreview').mockResolvedValue({ transcript: 'Em sẽ thêm index.', deliveryMetrics: metrics, transcriptEngine: 'whisper-1', noSpeech: false });
     const { hook, mutate } = setup();
     expect(hook.result.current.canGrade).toBe(false);          // chưa có bản chép thì không có đường nào chấm
@@ -35,7 +35,7 @@ describe('useRubricTryFlow', () => {
     expect(hook.result.current.transcriptEdited).toBe(true);
     act(() => hook.result.current.grade({ sampleQuestionId: 'q-1', seniority: 'Junior' }));
     expect(mutate).toHaveBeenCalledTimes(1);
-    expect(mutate.mock.calls[0][0]).toEqual({ sampleQuestionId: 'q-1', seniority: 'Junior', customAnswer: 'Em sẽ thêm index cho cột hay lọc.', includeAiSamples: false, deliveryMetrics: metrics });
+    expect(mutate.mock.calls[0][0]).toEqual({ sampleQuestionId: 'q-1', seniority: 'Junior', customAnswer: 'Em sẽ thêm index cho cột hay lọc.', deliveryMetrics: metrics });
   });
 
   it('dán bài ⇒ KHÔNG gửi deliveryMetrics kể cả khi trước đó đã chép lời (bản ghi không còn nói về bài này)', async () => {
@@ -48,11 +48,11 @@ describe('useRubricTryFlow', () => {
     expect(hook.result.current.hasAudioMetrics).toBe(false);
     act(() => hook.result.current.setAnswerText('bài dán'));
     act(() => hook.result.current.grade({ question: 'Q?' }));
-    expect(mutate.mock.calls[0][0]).toEqual({ question: 'Q?', customAnswer: 'bài dán', includeAiSamples: false });
+    expect(mutate.mock.calls[0][0]).toEqual({ question: 'Q?', customAnswer: 'bài dán' });
     expect('deliveryMetrics' in mutate.mock.calls[0][0]).toBe(false);
   });
 
-  it('bản ghi không có tiếng nói ⇒ noSpeech, không cho chấm; bật checkbox ⇒ includeAiSamples=true', async () => {
+  it('bản ghi không có tiếng nói ⇒ noSpeech, không cho chấm; chấm bài dán ⇒ chỉ gửi bài người dùng, KHÔNG có cờ 3 bài AI', async () => {
     vi.spyOn(adminRubricService, 'transcribeForPreview').mockResolvedValue({ transcript: '', deliveryMetrics: null, transcriptEngine: null, noSpeech: true });
     const { hook, mutate } = setup();
     act(() => hook.result.current.transcribe.mutate(file));
@@ -62,9 +62,10 @@ describe('useRubricTryFlow', () => {
     act(() => hook.result.current.resetAnswer());
     expect(hook.result.current.noSpeech).toBe(false);
     act(() => { hook.result.current.switchMode('paste'); });
-    act(() => { hook.result.current.setAnswerText('bài dán'); hook.result.current.setIncludeAiSamples(true); });
+    act(() => { hook.result.current.setAnswerText('bài dán'); });
     act(() => hook.result.current.grade({ question: 'Q?' }));
-    expect(mutate.mock.calls[0][0]).toMatchObject({ includeAiSamples: true });
+    expect(mutate.mock.calls[0][0]).toMatchObject({ question: 'Q?', customAnswer: 'bài dán' });
+    expect(mutate.mock.calls[0][0]).not.toHaveProperty('includeAiSamples');
   });
 
   it('gọi đúng service với nghề/ngôn ngữ và tên file', async () => {

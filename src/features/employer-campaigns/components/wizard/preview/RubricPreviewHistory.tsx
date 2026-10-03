@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/shared/languages';
 import type { RubricPreviewComparability, RubricPreviewRun } from '../../../types/rubricPreview.types';
-import { compareRuns, computeVerdict } from '../../../utils/rubricPreviewVerdict';
+import { compareRuns, customSampleOf } from '../../../utils/rubricPreviewVerdict';
 import { formatPct } from './RubricPreviewResult';
 
 const COMPARABILITY_VARIANT: Record<RubricPreviewComparability, 'success' | 'warning' | 'info'> = {
@@ -55,22 +55,19 @@ export function RubricPreviewHistory({ runs, latest, viewingId, isLoading = fals
           <ul className="space-y-1.5">
             {group.map((run) => {
               const comparability = compareRuns(run, latest);
-              const verdict = run.status === 'Succeeded' ? computeVerdict(run, null) : null;
+              const mine = run.status === 'Succeeded' ? customSampleOf(run) : null;
               return (
                 <li key={run.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-satin bg-surface-overlay px-3 py-2 text-sm">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <span className="font-medium text-foreground">{t('employer.campaigns.rubricPreview.history.run').replace('{{n}}', String(runNumberOf(runs, run.id)))}</span>
                     <span className="text-xs text-muted-foreground">v{run.rubricVersion} · {formatDate(run.createdAt)}</span>
                     {run.status === 'Succeeded' ? (
-                      <>
-                        {/* Ba con số trên từng dòng: cùng thước đo mà 44→56→52 là NHIỄU bộ chấm — HR phải thấy điều đó (CAMP-19). */}
-                        <span className="text-xs tabular-nums text-foreground" data-testid="history-scores">
-                          {run.samples.filter((sample) => sample.band !== 'Custom').map((sample) => `${t(`employer.campaigns.rubricPreview.band.${sample.band}`)} ${formatPct(sample.actualWeightedPct)}`).join(' · ')}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {t(`employer.campaigns.rubricPreview.verdict.${verdict?.verdict ?? 'inconclusive'}`).replace('{{range}}', formatPct(verdict?.range ?? 0))}
-                        </span>
-                      </>
+                      // Điểm bài của người dùng ở từng lượt: cùng thước đo mà 62→48→55 là NHIỄU bộ chấm — phải thấy được.
+                      <span className="text-xs tabular-nums text-foreground" data-testid="history-scores">
+                        {mine
+                          ? t('employer.campaigns.rubricPreview.history.score').replace('{{pct}}', formatPct(mine.actualWeightedPct))
+                          : t('employer.campaigns.rubricPreview.history.legacy')}
+                      </span>
                     ) : (
                       <Badge variant={run.status === 'Failed' ? 'destructive' : 'info'}>
                         {run.status === 'Failed' ? t('employer.campaigns.rubricPreview.history.failed') : t('employer.campaigns.rubricPreview.history.running')}

@@ -7,10 +7,7 @@ import type {
   UseRubricPreviewApi,
 } from '../types/rubricPreview.types';
 
-/**
- * Fixture cho test chấm thử thước đo (CAMP-19). Kỳ vọng ≠ thật ở MỌI bài — cố ý, để phép hoán đổi
- * hàng Kỳ vọng/Thật (mutation M7) không thể xanh oan như đã xảy ra ở vòng 2026-08-13 (seed hai giá trị trùng).
- */
+/** Fixture cho test chấm thử thước đo (CAMP-19). */
 export const PREVIEW_CRITERIA: RubricPreviewRun['rubric'] = [
   { criterionId: 'c-depth', name: 'Chiều sâu kỹ thuật', weight: 0.6, maxScore: 5, levels: [{ score: 0, descriptor: 'Trống' }, { score: 5, descriptor: 'Xuất sắc' }] },
   { criterionId: 'c-comm', name: 'Giao tiếp', weight: 0.4, maxScore: 5, levels: [{ score: 0, descriptor: 'Trống' }, { score: 5, descriptor: 'Xuất sắc' }] },
@@ -35,7 +32,7 @@ export function sample(band: RubricPreviewBand, expected: number, actual: number
   };
 }
 
-/** Lượt "đẹp": thứ tự đúng, biên độ 70, Δ nhỏ lẫn lộn dấu ⇒ bias none. Kỳ vọng 20/60/100 ≠ thật 18/62/88. */
+/** Lượt chấm thử thành công: một bài người dùng tự nhập, 62%. */
 export function goodRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
   return {
     id: 'run-1',
@@ -50,7 +47,8 @@ export function goodRun(overrides: Partial<RubricPreviewRun> = {}): RubricPrevie
     billed: false,
     freeRunsRemaining: 2,
     rubric: PREVIEW_CRITERIA,
-    samples: [sample('Weak', 20, 18), sample('Good', 60, 62), sample('Excellent', 100, 88)],
+    // 2026-10-03: chấm thử chỉ còn bài người dùng tự nhập (band Custom).
+    samples: [sample('Custom', 0, 62)],
     errorReason: null,
     createdAt: '2026-09-12T08:00:00Z',
     completedAt: '2026-09-12T08:01:00Z',
@@ -58,19 +56,9 @@ export function goodRun(overrides: Partial<RubricPreviewRun> = {}): RubricPrevie
   };
 }
 
-/** Thứ tự VỠ: Khá chấm cao hơn Xuất sắc. */
-export function brokenRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
-  return goodRun({ id: 'run-broken', samples: [sample('Weak', 20, 30), sample('Good', 60, 75), sample('Excellent', 100, 70)], ...overrides });
-}
-
-/** Thứ tự đúng nhưng biên độ chỉ 12. */
-export function narrowRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
-  return goodRun({ id: 'run-narrow', samples: [sample('Weak', 20, 60), sample('Good', 60, 66), sample('Excellent', 100, 72)], ...overrides });
-}
-
-/** Cả 3 bài lệch DƯƠNG > 3 ⇒ bias positive. */
-export function positiveBiasRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
-  return goodRun({ id: 'run-bias', samples: [sample('Weak', 20, 30), sample('Good', 60, 70), sample('Excellent', 90, 98)], ...overrides });
+/** Lượt CŨ (trước 2026-10-03): chỉ có 3 bài AI, không có bài người dùng. */
+export function legacyAiOnlyRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
+  return goodRun({ id: 'run-legacy', samples: [sample('Weak', 20, 18), sample('Good', 60, 62), sample('Excellent', 100, 88)], ...overrides });
 }
 
 export const previewQuestions: CampaignQuestion[] = [

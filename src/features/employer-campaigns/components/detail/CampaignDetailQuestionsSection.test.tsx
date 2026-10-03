@@ -71,6 +71,9 @@ describe('CampaignDetailQuestionsSection — tab Chi tiết dùng card theo câu
       expect(within(cardA).getByRole('button', { name: `employer.campaigns.campaignQuestions.question.${name}` })).toBeDisabled();
     }
     expect(within(cardA).getByTestId('question-preview-panel')).toBeInTheDocument();
+    // 2026-10-03: ô câu trả lời mặc định TRỐNG ⇒ nút tắt tới khi nhập.
+    expect(within(cardA).getByRole('button', { name: RUN })).toBeDisabled();
+    fireEvent.change(within(cardA).getByLabelText('employer.campaigns.questionCard.preview.custom.label'), { target: { value: 'Bài của tôi' } });
     expect(within(cardA).getByRole('button', { name: RUN })).toBeEnabled();
     expect(within(cardA).queryByRole('button', { name: RUN_SAVE })).not.toBeInTheDocument();
     // Hợp đồng T9: một hook / card, đúng campaignId + questionId; trang chi tiết KHÔNG có beforeRun/resolveQuestionId.
@@ -95,6 +98,7 @@ describe('CampaignDetailQuestionsSection — tab Chi tiết dùng card theo câu
     renderAt(<CampaignDetailQuestionsSection campaign={campaign({ status: 'active' })} />);
     expect(screen.queryByRole('button', { name: EDIT })).not.toBeInTheDocument();
     expect(screen.getByText('employer.campaigns.detail.questions.descriptionLocked')).toBeInTheDocument();
+    fireEvent.change(within(cardOf(QA)).getByLabelText('employer.campaigns.questionCard.preview.custom.label'), { target: { value: 'Bài của tôi' } });
     expect(within(cardOf(QA)).getByRole('button', { name: RUN })).toBeEnabled();
     expect(within(cardOf(QA)).queryByTestId('question-preview-blocked')).not.toBeInTheDocument();
   });
@@ -121,8 +125,9 @@ describe('CampaignDetailQuestionsSection — tab Chi tiết dùng card theo câu
     renderAt(<CampaignDetailQuestionsSection campaign={campaign()} />);
     // Mở card B (mặc định chỉ card đầu mở) để nút của nó nằm trong cây a11y.
     fireEvent.click(within(cardOf(QB)).getByRole('button', { name: /Câu B/ }));
+    fireEvent.change(within(cardOf(QA)).getByLabelText('employer.campaigns.questionCard.preview.custom.label'), { target: { value: 'Bài của tôi' } });
     fireEvent.click(within(cardOf(QA)).getByRole('button', { name: RUN }));
-    expect(run).toHaveBeenCalledWith('Bài mẫu A');
+    expect(run).toHaveBeenCalledWith('Bài của tôi');
     expect(within(cardOf(QB)).getByTestId('question-preview-blocked')).toHaveTextContent('employer.campaigns.questionCard.preview.blocked.runningOther');
     // Đang có lượt bay ⇒ nút mọi card đổi nhãn "đang chấm" + khoá (không POST chồng — BE 409).
     expect(within(cardOf(QB)).getByRole('button', { name: 'employer.campaigns.rubricPreview.running' })).toBeDisabled();

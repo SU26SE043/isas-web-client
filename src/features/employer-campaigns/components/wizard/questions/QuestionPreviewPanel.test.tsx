@@ -35,7 +35,7 @@ function sevenRun(overrides: Partial<RubricPreviewRun> = {}): RubricPreviewRun {
     id: 'run-7',
     questionId: 'q-1',
     rubric,
-    samples: [sample('Weak', 20, 18, scores(1)), sample('Good', 60, 62, scores(3)), sample('Excellent', 100, 88, scores(5))],
+    samples: [sample('Custom', 0, 62, scores(3))],
     ...overrides,
   });
 }
@@ -50,30 +50,53 @@ function ctx(overrides: Partial<QuestionPreviewContext> = {}): QuestionPreviewCo
   return { campaignId: 'c-1', campaignStatus: 'draft', rubric: SEVEN, questions: [question, other], passScorePct: 60, currentRubricVersion: 1, beforeRun: vi.fn(async () => 'c-1'), onRunningChange: vi.fn(), runningQuestionId: null, ...overrides };
 }
 const RUN = 'employer.campaigns.rubricPreview.runSave';
+const FIELD = 'employer.campaigns.questionCard.preview.custom.label';
+const MY_ANSWER = 'Em dùng POST, kiểm tra dữ liệu rồi trả 201';
+/** 2026-10-03: ô câu trả lời mặc định TRỐNG ⇒ phải nhập trước khi chấm. */
+function typeAnswer(text = MY_ANSWER) {
+  fireEvent.change(screen.getByLabelText(FIELD), { target: { value: text } });
+}
+function criterionRows() {
+  return within(screen.getByRole('list', { name: 'employer.campaigns.rubricPreview.result.perCriterion' })).getAllByRole('listitem');
+}
 
 describe('QuestionPreviewPanel — chấm thử theo câu', () => {
-  it('bấm chấm thử ⇒ run(customAnswer = câu mẫu của chính câu) + onRunningChange(id) TRƯỚC, null SAU', async () => {
+  it('bấm chấm thử ⇒ run(câu trả lời người dùng nhập) + onRunningChange(id) TRƯỚC, null SAU', async () => {
     const preview = api();
     const context = ctx();
     render(<QuestionPreviewPanel question={question} index={0} ctx={context} preview={preview} />);
+    typeAnswer();
     fireEvent.click(screen.getByRole('button', { name: RUN }));
     expect(context.onRunningChange).toHaveBeenNthCalledWith(1, 'q-1');
-    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR');
+    expect(preview.run).toHaveBeenCalledWith(MY_ANSWER);
     await waitFor(() => expect(context.onRunningChange).toHaveBeenLastCalledWith(null));
     expect((context.onRunningChange as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]).toBeLessThan((preview.run as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]);
   });
 
-  it('HR sửa ô bài tự dán ⇒ gửi bản sửa; xoá trống ⇒ null (chỉ 3 bài AI)', () => {
+  it('ô câu trả lời mặc định TRỐNG ⇒ nút tắt; chỉ khoảng trắng vẫn tắt; nhập ⇒ gửi bản đã cắt khoảng trắng', () => {
     const preview = api();
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
-    const field = screen.getByLabelText('employer.campaigns.questionCard.preview.custom.label');
-    expect(field).toHaveValue('Bài mẫu của HR');
+    const field = screen.getByLabelText(FIELD);
+    expect(field).toHaveValue('');
+    expect(screen.getByRole('button', { name: RUN })).toBeDisabled();
+    fireEvent.change(field, { target: { value: '   ' } });
+    expect(screen.getByRole('button', { name: RUN })).toBeDisabled();
     fireEvent.change(field, { target: { value: '  transcript thật  ' } });
     fireEvent.click(screen.getByRole('button', { name: RUN }));
+    expect(preview.run).toHaveBeenCalledTimes(1);
     expect(preview.run).toHaveBeenLastCalledWith('transcript thật');
-    fireEvent.change(field, { target: { value: '   ' } });
+  });
+
+  it('"Dùng câu trả lời mẫu" chép câu mẫu của chính câu vào ô; câu không có mẫu ⇒ không có nút', () => {
+    const preview = api();
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.questionCard.preview.custom.useSample' }));
+    expect(screen.getByLabelText(FIELD)).toHaveValue('Bài mẫu của HR');
     fireEvent.click(screen.getByRole('button', { name: RUN }));
-    expect(preview.run).toHaveBeenLastCalledWith(null);
+    expect(preview.run).toHaveBeenLastCalledWith('Bài mẫu của HR');
+    cleanup();
+    render(<QuestionPreviewPanel question={{ ...question, sampleAnswer: '  ' }} index={0} ctx={ctx()} preview={api()} />);
+    expect(screen.queryByRole('button', { name: 'employer.campaigns.questionCard.preview.custom.useSample' })).not.toBeInTheDocument();
   });
 
   it('đang chấm câu KHÁC (#2) ⇒ nút disabled + lý do nêu "#2"; KHÔNG gọi run', () => {
@@ -88,6 +111,7 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     const preview = api({ freeRunsRemaining: 0 });
     const user = userEvent.setup();
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    typeAnswer();
     const button = screen.getByRole('button', { name: /rubricPreview\.runPaid/ });
     await user.click(button);
     expect(preview.run).not.toHaveBeenCalled();
@@ -121,6 +145,7 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     const noLevelsDesign = SEVEN.map((item) => (item.id === 'c-design' ? { ...item, levels: [] } : item));
     const preview2 = api();
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx({ rubric: noLevelsDesign })} preview={preview2} />);
+    typeAnswer();
     fireEvent.click(screen.getByRole('button', { name: RUN }));
     expect(preview2.run).toHaveBeenCalledTimes(1);
   });
@@ -133,15 +158,14 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     expect(screen.getByTestId('question-preview-blocked')).toHaveTextContent('blocked.emptyPrompt');
   });
 
-  it('bảng kết quả CHỈ hiện tiêu chí trong run.scopedCriterionIds (7 tiêu chí, scoped 5 ⇒ 5 hàng) — điểm gộp giữ nguyên', () => {
+  it('danh sách tiêu chí CHỈ hiện tiêu chí trong run.scopedCriterionIds (7 tiêu chí, scoped 5 ⇒ 5 hàng) — điểm gộp giữ nguyên', () => {
     const run = sevenRun({ scopedCriterionIds: FIVE_IDS });
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={api({ runs: [run], latest: run })} />);
     expect(screen.getByTestId('question-preview-scoped')).toHaveTextContent('employer.campaigns.questionCard.preview.scoped');
-    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.details.show' }));
-    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    const rows = criterionRows();
     expect(rows).toHaveLength(5);
     expect(rows.map((row) => row.textContent?.includes('Tiêu chí design'))).not.toContain(true);
-    expect(screen.getAllByText('88%').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('preview-score')).toHaveTextContent(/^62/);
   });
 
   it('ĐẦU-CUỐI (correction T9-R3 F1): JSON BE có scopedCriterionIds=[S1,S2] qua parser THẬT, nhãn HIỆN TẠI của câu là [S3] ⇒ bảng hiện S1,S2 (sự thật BE thắng nhãn hiện tại)', () => {
@@ -149,8 +173,7 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     const run = parseRubricPreviewRun(JSON.parse(JSON.stringify({ ...sevenRun({ id: 'run-be' }), scopedCriterionIds: ['c-comm', 'c-fluency'] })));
     expect(run.scopedCriterionIds).toEqual(['c-comm', 'c-fluency']);
     render(<QuestionPreviewPanel question={{ ...question, targetCriterionIds: ['c-depth'] }} index={0} ctx={ctx()} preview={api({ runs: [run], latest: run })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.details.show' }));
-    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    const rows = criterionRows();
     expect(rows).toHaveLength(2);
     expect(rows.map((row) => row.textContent)).toEqual([expect.stringContaining('Tiêu chí comm'), expect.stringContaining('Tiêu chí fluency')]);
     expect(rows.some((row) => row.textContent?.includes('Tiêu chí depth'))).toBe(false);
@@ -159,8 +182,7 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
   it('lượt cũ không mang scopedCriterionIds ⇒ lọc theo nhãn câu cục bộ (Always 4 + depth = 5 hàng); không crash', () => {
     const run = sevenRun({ scopedCriterionIds: undefined });
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={api({ runs: [run], latest: run })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.rubricPreview.details.show' }));
-    expect(within(screen.getByRole('table')).getAllByRole('row').slice(1)).toHaveLength(5);
+    expect(criterionRows()).toHaveLength(5);
   });
 
   it('lỗi từ hook hiện headline theo mã + nút Đã hiểu gọi clearError', () => {
@@ -181,6 +203,7 @@ describe('QuestionPreviewPanel — R3: xác nhận trả phí', () => {
     const preview = api({ freeRunsRemaining: null });
     const user = userEvent.setup();
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    typeAnswer();
     await user.click(screen.getByRole('button', { name: RUN }));
     expect(preview.run).not.toHaveBeenCalled();
     expect(await screen.findByText('employer.campaigns.rubricPreview.confirm.maybePaidTitle')).toBeInTheDocument();
@@ -188,36 +211,41 @@ describe('QuestionPreviewPanel — R3: xác nhận trả phí', () => {
     const dialog = screen.getByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: RUN }));
     expect(preview.run).toHaveBeenCalledTimes(1);
-    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+    expect(preview.run).toHaveBeenCalledWith(MY_ANSWER, { confirmBilled: true });
   });
 
   it('hết lượt (0) ⇒ đồng ý ⇒ POST mang confirmBilled: true', async () => {
     const preview = api({ freeRunsRemaining: 0 });
     const user = userEvent.setup();
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    typeAnswer();
     await user.click(screen.getByRole('button', { name: /rubricPreview\.runPaid/ }));
     await user.click(await screen.findByRole('button', { name: /confirm.*runPaid|rubricPreview\.runPaid/ }));
-    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+    expect(preview.run).toHaveBeenCalledWith(MY_ANSWER, { confirmBilled: true });
   });
 
   it('còn lượt miễn phí (1) ⇒ KHÔNG hỏi, run(custom) không có cờ', () => {
     const preview = api({ freeRunsRemaining: 1 });
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    typeAnswer();
     fireEvent.click(screen.getByRole('button', { name: RUN }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(preview.run).toHaveBeenCalledTimes(1);
-    expect((preview.run as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual(['Bài mẫu của HR']);
+    expect((preview.run as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual([MY_ANSWER]);
   });
 
   it('BE 409 confirm-required (billingConfirm ≠ null) ⇒ hộp thoại TỰ mở; đồng ý ⇒ clearBillingConfirm + gọi lại có cờ; huỷ ⇒ chỉ clear, không run', async () => {
     const user = userEvent.setup();
-    const billingConfirm = { freeRunsRemaining: 0, questionId: 'q-1', input: { questionId: 'q-1', customAnswer: 'Bài mẫu của HR' } };
-    const preview = api({ freeRunsRemaining: 1, billingConfirm });
-    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    const billingConfirm = { freeRunsRemaining: 0, questionId: 'q-1', input: { questionId: 'q-1', customAnswer: MY_ANSWER } };
+    // Luồng thật: người dùng NHẬP bài → bấm → BE 409 → hộp thoại tự mở với CÙNG bài đang có trong ô.
+    const preview = api({ freeRunsRemaining: 1 });
+    const { rerender } = render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    typeAnswer();
+    rerender(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={{ ...preview, billingConfirm }} />);
     expect(await screen.findByText('employer.campaigns.rubricPreview.confirm.paidTitle')).toBeInTheDocument();
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /rubricPreview\.runPaid/ }));
     expect(preview.clearBillingConfirm).toHaveBeenCalledTimes(1);
-    expect(preview.run).toHaveBeenCalledWith('Bài mẫu của HR', { confirmBilled: true });
+    expect(preview.run).toHaveBeenCalledWith(MY_ANSWER, { confirmBilled: true });
     cleanup();
 
     const preview2 = api({ freeRunsRemaining: 1, billingConfirm });
@@ -225,5 +253,14 @@ describe('QuestionPreviewPanel — R3: xác nhận trả phí', () => {
     await user.click(await screen.findByRole('button', { name: 'employer.campaigns.rubricPreview.confirm.cancel' }));
     expect(preview2.clearBillingConfirm).toHaveBeenCalledTimes(1);
     expect(preview2.run).not.toHaveBeenCalled();
+  });
+
+  it('hộp thoại trả phí TỰ mở khi ô câu trả lời đang TRỐNG ⇒ đồng ý KHÔNG gửi gì (BE sẽ 400 — không còn bài để chấm)', async () => {
+    const user = userEvent.setup();
+    const billingConfirm = { freeRunsRemaining: 0, questionId: 'q-1', input: { questionId: 'q-1', customAnswer: MY_ANSWER } };
+    const preview = api({ freeRunsRemaining: 1, billingConfirm });
+    render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /rubricPreview\.runPaid/ }));
+    expect(preview.run).not.toHaveBeenCalled();
   });
 });

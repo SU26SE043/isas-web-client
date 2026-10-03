@@ -61,7 +61,7 @@ export function QuestionPreviewPanel({ question, index, ctx, preview, disabled =
   const reason = blockedReason();
   const canRun = !blocker && !emptyPrompt && !runningOther;
 
-  const handleRun = (customAnswer: string | null, confirmBilled: boolean) => {
+  const handleRun = (customAnswer: string, confirmBilled: boolean) => {
     ctx.onRunningChange(question.id);
     // Chỉ đính tuỳ chọn khi có cờ — lượt miễn phí gọi `run(customAnswer)` y như trước.
     const pending = confirmBilled ? preview.run(customAnswer, { confirmBilled: true }) : preview.run(customAnswer);

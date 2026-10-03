@@ -1,96 +1,23 @@
 import type { CampaignQuestion, EmployerCampaignStatus, RubricCriterion } from '../types/campaignManagement.types';
 import type {
-  RubricPreviewBand,
   RubricPreviewBlocker,
   RubricPreviewComparability,
   RubricPreviewRun,
   RubricPreviewSample,
-  RubricPreviewVerdict,
 } from '../types/rubricPreview.types';
 
 /**
- * Biên độ (Excellent − Weak, điểm %) tối thiểu để nói "thước đo phân biệt được 3 mức".
- * 30 vì đó là khoảng cách để một ngưỡng Đạt đặt ở giữa (vd 50–70%) còn tách được Yếu khỏi Xuất sắc
- * sau khi cộng nhiễu chấm ±5 mỗi bên (đo RAG2: dao động 0,0–0,15 ở temp 0, tới 2,0 điểm/tiêu chí ở temp 0,6).
- * Dưới 30, ba bài rơi vào cùng một dải nhãn dù thứ tự có đúng.
+ * 2026-10-03 — chấm thử CHỈ chấm câu trả lời người dùng tự nhập (band `Custom`); không còn 3 bài AI
+ * Yếu/Khá/Xuất sắc. Lượt CŨ (trước mốc này) có thể chỉ có 3 bài AI ⇒ trả `null`, UI nói rõ là lượt cũ.
  */
-export const DISCRIMINATION_RANGE_PCT = 30;
-
-/**
- * Δ = thật − kỳ vọng phải vượt ±3 điểm % ở CẢ BA bài AI viết mới gọi là thiên lệch một chiều.
- * 3 là mức nhiễu làm tròn trọng số (weight 4 chữ số thập phân × maxScore nguyên ⇒ ±1–2 điểm là sai số tính,
- * không phải model tự khen). Một bài lệch không đủ: chỉ khi cả ba cùng dấu mới là xu hướng, không phải nhiễu.
- */
-export const BIAS_DELTA_PCT = 3;
-
-const AI_BANDS: readonly RubricPreviewBand[] = ['Weak', 'Good', 'Excellent'];
-
-function findBand(run: RubricPreviewRun, band: RubricPreviewBand): RubricPreviewSample | undefined {
-  return run.samples.find((sample) => sample.band === band);
+export function customSampleOf(run: RubricPreviewRun): RubricPreviewSample | null {
+  return run.samples.find((sample) => sample.band === 'Custom') ?? null;
 }
 
-function round1(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-/**
- * Kết luận tầng 1. KHÔNG dùng |Δ| làm thước chính (xem `RubricPreviewVerdict`): người viết và người chấm
- * là cùng một model, Δ nhỏ chỉ chứng minh nó đồng ý với chính nó. Thứ tự + biên độ mới là phép đo.
- */
-export function computeVerdict(run: RubricPreviewRun, passScorePct: number | null): RubricPreviewVerdict {
-  const weak = findBand(run, 'Weak');
-  const good = findBand(run, 'Good');
-  const excellent = findBand(run, 'Excellent');
-  const aiSamples = [weak, good, excellent].filter((sample): sample is RubricPreviewSample => Boolean(sample));
-
-  // Nghiêm ngặt: bằng nhau cũng là "không giữ" — hai bài khác hẳn nhau mà cùng điểm thì thước đo không tách được.
-  const ordering: RubricPreviewVerdict['ordering'] =
-    weak && good && excellent && weak.actualWeightedPct < good.actualWeightedPct && good.actualWeightedPct < excellent.actualWeightedPct
-      ? 'ok'
-      : 'broken';
-  const range = weak && excellent ? round1(excellent.actualWeightedPct - weak.actualWeightedPct) : 0;
-
-  const deltas = aiSamples.map((sample) => sample.actualWeightedPct - sample.expectedWeightedPct);
-  const bias: RubricPreviewVerdict['bias'] =
-    deltas.length === AI_BANDS.length && deltas.every((delta) => delta > BIAS_DELTA_PCT)
-      ? 'positive'
-      : deltas.length === AI_BANDS.length && deltas.every((delta) => delta < -BIAS_DELTA_PCT)
-        ? 'negative'
-        : 'none';
-  const maxAbsDelta = deltas.length ? round1(Math.max(...deltas.map((delta) => Math.abs(delta)))) : 0;
-
-  const verdict: RubricPreviewVerdict['verdict'] =
-    ordering === 'broken' ? 'weak' : range >= DISCRIMINATION_RANGE_PCT ? 'discriminates' : 'inconclusive';
-
-  const threshold =
-    passScorePct != null && Number.isFinite(passScorePct)
-      ? {
-          pct: passScorePct,
-          failing: run.samples.filter((sample) => sample.actualWeightedPct < passScorePct).map((sample) => sample.band),
-        }
-      : null;
-
-  return { ordering, range, bias, maxAbsDelta, verdict, threshold, compression: computeCompression(weak, excellent) };
-}
-
-/** Mức bộ chấm CHỌN so với mức code kỳ vọng — so theo mốc (levelMatched) vì mốc không cách đều; không có mốc thì so điểm. */
-function levelDelta(score: RubricPreviewSample['scores'][number]): number {
-  return (score.levelMatched ?? score.actualScore) - score.expectedLevel;
-}
-
-/**
- * Đếm theo TIÊU CHÍ chứ không theo điểm gộp: bias gộp có thể bằng 0 (Yếu +24, Xuất sắc −30 triệt tiêu nhau)
- * trong khi đúng ca đó là thứ HR cần thấy — mốc đầu thang mở quá rộng, mốc cuối thang đóng quá chặt.
- */
-export function computeCompression(
-  weak: RubricPreviewSample | undefined,
-  excellent: RubricPreviewSample | undefined,
-): RubricPreviewVerdict['compression'] {
-  if (!weak || !excellent || weak.scores.length === 0 || excellent.scores.length === 0) return null;
-  const total = Math.min(weak.scores.length, excellent.scores.length);
-  const weakOver = weak.scores.filter((score) => levelDelta(score) > 0).length;
-  const excellentUnder = excellent.scores.filter((score) => levelDelta(score) < 0).length;
-  return weakOver * 2 >= total && excellentUnder * 2 >= total ? { weakOver, excellentUnder, total } : null;
+/** Đạt khi điểm ≥ ngưỡng (cùng quy ước bảng xếp hạng); không có ngưỡng ⇒ `null` (không kết luận). */
+export function passesThreshold(pct: number, passScorePct: number | null): boolean | null {
+  if (passScorePct == null || !Number.isFinite(passScorePct)) return null;
+  return pct >= passScorePct;
 }
 
 /**

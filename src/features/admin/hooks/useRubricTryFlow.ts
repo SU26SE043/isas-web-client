@@ -26,7 +26,7 @@ interface UseRubricTryFlowArgs {
  * - Không có đường nào bấm Chấm trước khi THẤY bản chép lời — chấm trên bản chép sai là chấm oan.
  * - Số đo cách nói CHỈ đi kèm khi bài đến từ bản ghi âm; dán tay ⇒ không có số đo ⇒ BE không chấm
  *   tiêu chí trôi chảy (UI nói rõ, không để ai tưởng mình 0 điểm).
- * - 3 bài AI là tuỳ chọn TẮT mặc định — bật mới tốn 3 lượt Gemini + 30–60s.
+ * - 2026-10-03: chỉ chấm bài người dùng tự nói/dán — không còn 3 bài AI (BE bỏ qua cờ cũ).
  */
 export function useRubricTryFlow({ category, language, preview }: UseRubricTryFlowArgs) {
   const [mode, setMode] = useState<RubricTryMode>('voice');
@@ -34,7 +34,6 @@ export function useRubricTryFlow({ category, language, preview }: UseRubricTryFl
   const [transcribedText, setTranscribedText] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<AdminDeliveryMetrics | null>(null);
   const [noSpeech, setNoSpeech] = useState(false);
-  const [includeAiSamples, setIncludeAiSamples] = useState(false);
 
   const transcribe = useMutation({
     mutationFn: (file: File) => adminRubricService.transcribeForPreview(category, language, file, file.name),
@@ -70,18 +69,16 @@ export function useRubricTryFlow({ category, language, preview }: UseRubricTryFl
     const input: AdminRubricPreviewRequest = {
       ...questionInput,
       customAnswer: answerText.trim(),
-      includeAiSamples,
       ...(hasAudioMetrics ? { deliveryMetrics: metrics } : {}),
     };
     preview.mutate(input, { onSuccess });
-  }, [answerText, includeAiSamples, hasAudioMetrics, metrics, preview]);
+  }, [answerText, hasAudioMetrics, metrics, preview]);
 
   return {
     mode, switchMode,
     answerText, setAnswerText,
     transcribedText, transcriptEdited,
     metrics, hasAudioMetrics, noSpeech,
-    includeAiSamples, setIncludeAiSamples,
     transcribe, resetAnswer,
     hasAnswer, canGrade, grade,
   };

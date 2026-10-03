@@ -2,14 +2,13 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { goodRun, sample } from '../../../mocks/rubricPreview.fixtures';
+import { goodRun, legacyAiOnlyRun, sample } from '../../../mocks/rubricPreview.fixtures';
 import { RubricPreviewHistory, runNumberOf } from './RubricPreviewHistory';
 
 const messages: Record<string, string> = {
   'employer.campaigns.rubricPreview.history.run': 'Lượt {{n}}',
-  'employer.campaigns.rubricPreview.band.Weak': 'Yếu',
-  'employer.campaigns.rubricPreview.band.Good': 'Khá',
-  'employer.campaigns.rubricPreview.band.Excellent': 'Xuất sắc',
+  'employer.campaigns.rubricPreview.history.score': 'Bài của bạn {{pct}}%',
+  'employer.campaigns.rubricPreview.history.legacy': 'Lượt cũ (3 bài mẫu AI)',
 };
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => messages[key] ?? key, language: 'vi' }) }));
 
@@ -50,12 +49,14 @@ describe('RubricPreviewHistory', () => {
     expect(within(items[1]).getByText('employer.campaigns.rubricPreview.history.failed')).toBeInTheDocument();
   });
 
-  it('H5: mỗi dòng Succeeded in 3 con số Yếu/Khá/Xuất sắc (bỏ bài Custom) — cùng thước đo mà điểm nhảy là NHIỄU bộ chấm, HR phải thấy', () => {
-    const withCustom = goodRun({ id: 'r9', createdAt: '2026-09-12T05:00:00Z', samples: [...goodRun().samples, sample('Custom', 0, 55)] });
-    render(<RubricPreviewHistory runs={[latest, withCustom]} latest={latest} viewingId="r4" onOpen={vi.fn()} />);
-    const scores = screen.getByTestId('history-scores');
-    expect(scores).toHaveTextContent('Yếu 18 · Khá 62 · Xuất sắc 88');
-    expect(scores).not.toHaveTextContent('55');
+  it('mỗi dòng Succeeded in điểm BÀI CỦA BẠN (cùng thước đo mà điểm nhảy là nhiễu bộ chấm); lượt cũ chỉ có bài AI ghi rõ', () => {
+    const mine = goodRun({ id: 'r9', createdAt: '2026-09-12T05:00:00Z', samples: [sample('Custom', 0, 55)] });
+    const legacy = legacyAiOnlyRun({ id: 'r8', createdAt: '2026-09-12T04:00:00Z' });
+    render(<RubricPreviewHistory runs={[latest, mine, legacy]} latest={latest} viewingId="r4" onOpen={vi.fn()} />);
+    const scores = screen.getAllByTestId('history-scores');
+    expect(scores[0]).toHaveTextContent('Bài của bạn 55%');
+    expect(scores[1]).toHaveTextContent('Lượt cũ (3 bài mẫu AI)');
+    expect(scores[1]).not.toHaveTextContent('62');
   });
 
   it('bấm Mở trả về id lượt; không còn lượt nào khác thì không render', () => {

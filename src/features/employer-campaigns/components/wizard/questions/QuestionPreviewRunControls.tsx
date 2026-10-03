@@ -9,7 +9,7 @@ import { useLanguage } from '@/shared/languages';
 
 export interface QuestionPreviewRunControlsProps {
   questionId: string;
-  /** Bài tự dán mặc định = câu trả lời mẫu của chính câu này (HR sửa được, để trống = chỉ 3 bài AI). */
+  /** Câu trả lời mẫu của chính câu này — chỉ để nút "Dùng câu trả lời mẫu" chép vào ô (ô mặc định TRỐNG). */
   sampleAnswer: string;
   /** Wizard có bước lưu ⇒ nhãn "Lưu & chấm thử"; trang chi tiết ⇒ "Chấm thử". */
   savesBeforeRun: boolean;
@@ -27,13 +27,13 @@ export interface QuestionPreviewRunControlsProps {
   disabled: boolean;
   isRunning: boolean;
   /** `confirmBilled` = HR đã đồng ý trừ credit (hộp thoại trả phí / không rõ quota / BE đòi xác nhận). */
-  onRun: (customAnswer: string | null, confirmBilled: boolean) => void;
+  onRun: (customAnswer: string, confirmBilled: boolean) => void;
 }
 
 /**
- * SC2 · T9 — ô bài tự dán + nút chấm thử + hộp thoại xác nhận (I7: hết lượt miễn phí ⇒ HỎI trước khi trừ credit,
- * không trừ trong im lặng). Tách khỏi panel để mỗi file ≤ 250 dòng; KHÔNG có `<select>` câu hỏi — câu là
- * chính card đang đứng.
+ * SC2 · T9 — ô câu trả lời + nút chấm thử + hộp thoại xác nhận (I7: hết lượt miễn phí ⇒ HỎI trước khi trừ credit,
+ * không trừ trong im lặng). 2026-10-03: chấm thử CHỈ chấm câu trả lời người dùng tự nhập ⇒ ô mặc định TRỐNG,
+ * chưa nhập thì nút tắt (BE cũng 400). Tách khỏi panel để mỗi file ≤ 250 dòng.
  */
 export function QuestionPreviewRunControls({
   questionId,
@@ -49,18 +49,21 @@ export function QuestionPreviewRunControls({
   onRun,
 }: QuestionPreviewRunControlsProps) {
   const { t } = useLanguage();
-  // `null` = chưa chạm ⇒ bám theo câu mẫu (HR sửa câu mẫu thì ô này đổi theo); chuỗi = HR đã tự sửa.
-  const [customEdited, setCustomEdited] = React.useState<string | null>(null);
+  const [answer, setAnswer] = React.useState('');
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const customValue = customEdited ?? sampleAnswer;
+  const trimmed = answer.trim();
   const paid = freeRunsLeft != null && freeRunsLeft <= 0;
   const unknown = freeRunsLeft == null;
   // Hộp thoại ở chế độ "trừ credit" khi: FE biết đã hết lượt · FE không biết · BE vừa từ chối vì chưa xác nhận.
   const charge = paid || unknown || billingConfirmPending;
   const dialogOpen = confirmOpen || billingConfirmPending;
 
-  const fire = (confirmBilled: boolean) => onRun(customValue.trim() ? customValue.trim() : null, confirmBilled);
+  const fire = (confirmBilled: boolean) => {
+    // Hộp thoại trả phí có thể TỰ mở (BE 409) — ô trống thì không gửi gì: BE sẽ 400, không còn bài để chấm.
+    if (trimmed) onRun(trimmed, confirmBilled);
+  };
   const submit = () => {
+    if (!trimmed) return;
     if (requireConfirm || paid || unknown) {
       setConfirmOpen(true);
       return;
@@ -92,16 +95,23 @@ export function QuestionPreviewRunControls({
         <Textarea
           id={`q-custom-${questionId}`}
           rows={4}
-          value={customValue}
+          value={answer}
           disabled={disabled || isRunning}
           placeholder={t('employer.campaigns.rubricPreview.custom.placeholder')}
-          onChange={(event) => setCustomEdited(event.target.value)}
+          onChange={(event) => setAnswer(event.target.value)}
         />
-        <p className="text-xs text-muted-foreground">{t('employer.campaigns.questionCard.preview.custom.hint')}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">{t('employer.campaigns.questionCard.preview.custom.hint')}</p>
+          {sampleAnswer.trim() ? (
+            <Button type="button" variant="ghost" size="sm" disabled={disabled || isRunning} onClick={() => setAnswer(sampleAnswer)}>
+              {t('employer.campaigns.questionCard.preview.custom.useSample')}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={disabled || isRunning} loading={isRunning} onClick={submit}>
+        <Button type="button" variant="outline" size="sm" disabled={disabled || isRunning || !trimmed} loading={isRunning} onClick={submit}>
           {!isRunning ? <FlaskConical className="size-3.5" aria-hidden /> : null}
           {isRunning ? t('employer.campaigns.rubricPreview.running') : runLabel}
         </Button>
