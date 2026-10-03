@@ -38,6 +38,16 @@ describe('mapPracticeSessionResponse', () => {
       { signalType: 'multiple_faces', count: 3, firstAt: '2026-01-01T00:05:00Z', lastAt: '2026-01-01T00:10:00Z' },
     ]);
   });
+  it('giữ camera_blocked (che cam — client khai) thay vì lọc im lặng như loại lạ', () => {
+    expect(mapPracticeSessionResponse({
+      focusEvents: [
+        { signalType: 'camera_blocked', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:00:30Z' },
+      ],
+      questions: [],
+    }).focusEvents).toEqual([
+      { signalType: 'camera_blocked', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:00:30Z' },
+    ]);
+  });
   it('maps session id, questions, and result fields', () => {
     const mapped = mapPracticeSessionResponse({
       sessionId: 's1',

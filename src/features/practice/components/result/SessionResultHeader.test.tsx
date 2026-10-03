@@ -18,7 +18,7 @@ describe('SessionResultHeader focus tracking', () => {
   it('wires the button and dialog for recorded events', async () => {
     const user = userEvent.setup();
     renderHeader([{ signalType: 'tab_switch', count: 3, firstAt: '2026-01-01T09:00:00Z', lastAt: '2026-01-01T09:01:00Z' }]);
-    await user.click(screen.getByRole('button', { name: /practice\.result\.focusTracking\.button/ }));
+    await user.click(screen.getByRole('button', { name: /practice\.result\.focusTracking\.short\.leave/ }));
     expect(await screen.findByRole('dialog')).toHaveTextContent('practice.result.focusTracking.type.tab_switch');
   });
   it('uses the empty badge without a button and keeps null silent', () => {

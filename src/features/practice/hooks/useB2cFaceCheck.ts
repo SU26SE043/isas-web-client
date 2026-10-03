@@ -4,7 +4,7 @@ import {
   isUsableCameraFrame,
   isVideoFrameReady,
 } from '@/features/campaigns/utils/captureJpegFile';
-import { checkPracticeFace } from '../services/b2cPracticeSession.service';
+import { checkPracticeFace, recordFocusEvent } from '../services/b2cPracticeSession.service';
 import type { FocusClientHintType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
 
 export type FaceCheckSignal = FocusFrameSignalType | FocusClientHintType;
@@ -78,8 +78,11 @@ export function useB2cFaceCheck({
       // Khung TỐI (che cam / phòng tối): nhắc bật đèn NGAY TẠI CHỖ. Trước đây helper trả null ở đây
       // ⇒ im lặng suốt buổi (2026-09-18 prod: che cam cả buổi, 0 request, 0 toast). Không gửi ảnh
       // đen cho AI: nhận về `no_face` là gộp "tối" với "rời chỗ" — hai lời khuyên khác nhau.
+      // 2026-10-03: GHI thêm `camera_blocked` mỗi lượt kiểm (cùng nhịp với `no_face` phía server) —
+      // trước đó chỉ có toast nên màn kết quả không bao giờ biết người luyện đã che cam.
       if (!isUsableCameraFrame(videoEl)) {
         emit('low_light');
+        void recordFocusEvent(sessionId, 'camera_blocked');
         return;
       }
       const file = await captureVideoFrameAsJpegFile(videoEl, `face-check-${sessionId}-${Date.now()}.jpg`);

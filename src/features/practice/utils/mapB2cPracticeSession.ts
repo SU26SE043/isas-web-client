@@ -47,7 +47,8 @@ function pickStringArray(value: unknown): string[] {
 function mapFocusEvents(raw: unknown): FocusEventSummary[] | null | undefined {
   if (raw === null) return null;
   if (!Array.isArray(raw)) return undefined;
-  const signalTypes = ['tab_switch', 'paste', 'focus_lost', 'no_face', 'multiple_faces'];
+  // Loại lạ bị lọc IM LẶNG ⇒ thêm tín hiệu ở BE mà quên dòng này là nó biến mất khỏi màn kết quả.
+  const signalTypes = ['tab_switch', 'paste', 'focus_lost', 'no_face', 'multiple_faces', 'camera_blocked'];
   return raw.map((entry) => {
     const item = asRecord(entry);
     const signalType = pickString(item.signalType);

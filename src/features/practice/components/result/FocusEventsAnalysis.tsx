@@ -1,11 +1,13 @@
-import { AppWindow, ClipboardPaste, ScanFace } from 'lucide-react';
+import { AppWindow, CameraOff, ClipboardPaste, ScanFace } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { FocusEventSummary } from '../../types/b2cPracticeSession.types';
 import type { PracticeSessionResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatResultTime } from '../../utils/practiceSessionResultFormat';
-import { buildFocusSummaryMessage } from '../../utils/focusTrackingSummary';
+import { buildFocusSummaryMessage, countFocusGroups } from '../../utils/focusTrackingSummary';
 
-function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'paste' | 'frame'; icon: typeof AppWindow; label: string; hint: string; value: number }) {
+type MetricId = 'window' | 'paste' | 'face' | 'camera';
+
+function FocusMetric({ id, icon: Icon, label, hint, value }: { id: MetricId; icon: typeof AppWindow; label: string; hint: string; value: number }) {
   return (
     <div className="rounded-xl border border-satin bg-surface-overlay p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground"><Icon className="size-5 text-muted-foreground" aria-hidden />{label}</div>
@@ -15,29 +17,41 @@ function FocusMetric({ id, icon: Icon, label, hint, value }: { id: 'window' | 'p
   );
 }
 
+const KNOWN_TYPES = new Set(['tab_switch', 'focus_lost', 'paste', 'no_face', 'multiple_faces', 'camera_blocked']);
+
 function typeLabel(event: FocusEventSummary, t: (key: string) => string) {
-  const known = new Set(['tab_switch', 'focus_lost', 'paste', 'no_face', 'multiple_faces']);
-  return known.has(event.signalType)
+  return KNOWN_TYPES.has(event.signalType)
     ? t(`practice.result.focusTracking.type.${event.signalType}`)
     : event.signalType;
 }
 
+const METRICS: ReadonlyArray<{ id: MetricId; icon: typeof AppWindow }> = [
+  { id: 'window', icon: AppWindow },
+  { id: 'face', icon: ScanFace },
+  { id: 'camera', icon: CameraOff },
+  { id: 'paste', icon: ClipboardPaste },
+];
+
 export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewModel }) {
   const { t, language } = useLanguage();
   const events = view.focusEvents ?? [];
-  const windowCount = events.filter((event) => event.signalType === 'tab_switch' || event.signalType === 'focus_lost').reduce((sum, event) => sum + event.count, 0);
-  const pasteCount = events.filter((event) => event.signalType === 'paste').reduce((sum, event) => sum + event.count, 0);
-  const frameEvents = events.filter((event) => event.signalType === 'no_face' || event.signalType === 'multiple_faces');
-  const frameCount = frameEvents.reduce((sum, event) => sum + event.count, 0);
+  const counts = countFocusGroups(events);
   const message = buildFocusSummaryMessage(view, t);
 
-  // Không bọc frame: nội dung nằm TRONG Dialog đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
+  // Không bọc frame: nội dung nằm TRONG Dialog/mục đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
   return (
     <section>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <FocusMetric id="window" icon={AppWindow} value={windowCount} label={t('practice.result.focusTracking.group.window')} hint={t('practice.result.focusTracking.group.windowHint')} />
-        <FocusMetric id="paste" icon={ClipboardPaste} value={pasteCount} label={t('practice.result.focusTracking.group.paste')} hint={t('practice.result.focusTracking.group.pasteHint')} />
-        <FocusMetric id="frame" icon={ScanFace} value={frameCount} label={t('practice.result.focusTracking.group.frame')} hint={t('practice.result.focusTracking.group.frameHint')} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {METRICS.map(({ id, icon }) => (
+          <FocusMetric
+            key={id}
+            id={id}
+            icon={icon}
+            value={counts[id]}
+            label={t(`practice.result.focusTracking.group.${id}`)}
+            hint={t(`practice.result.focusTracking.group.${id}Hint`)}
+          />
+        ))}
       </div>
       <ul className="mt-4 space-y-2">
         {events.map((event) => {

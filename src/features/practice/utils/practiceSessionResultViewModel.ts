@@ -41,7 +41,7 @@ export type PracticeSessionResultViewModel = {
   /** Số lần RỜI KHỎI buổi = chỉ tín hiệu HÀNH VI (tab_switch/focus_lost/paste). Nhãn UI nói "rời khỏi buổi" nên KHÔNG được cộng tín hiệu khung hình vào đây. */
   focusLeaveCount?: number;
   focusLeavePlacement?: 'firstHalf' | 'secondHalf' | 'spread';
-  /** Số lần khung hình không rõ mặt / có thêm người (no_face/multiple_faces) — nhóm riêng, đếm riêng. */
+  /** Số lần khung hình có vấn đề (no_face/multiple_faces/camera_blocked) — nhóm riêng, đếm riêng. */
   focusFrameCount?: number;
   /**
    * CAMP-21 (B2C từ 2026-09-21). `undefined` = buổi không có luật (buổi cũ) — KHÔNG hiện gì.
@@ -59,7 +59,7 @@ export type PracticeSessionResultViewModel = {
   unassessedCriteria?: Array<{ criterionId: string; name: string; weight: number }> | null;
 };
 
-const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces']);
+const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces', 'camera_blocked']);
 export const isFrameFocusSignal = (signalType: FocusEventSummary['signalType']): boolean => FRAME_SIGNALS.has(signalType);
 
 export type CriteriaResultViewModel = {
