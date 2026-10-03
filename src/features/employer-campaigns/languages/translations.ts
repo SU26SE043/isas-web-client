@@ -572,7 +572,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.unscoredFlagged.emptyDescription':
       'Hiện không có ứng viên nào vừa có cảnh báo vừa chưa được chấm điểm.',
     'employer.campaigns.results.unscoredFlagged.interviewStatus': 'Trạng thái buổi',
-    'employer.campaigns.results.unscoredFlagged.startedAt': 'Bắt đầu',
     'employer.campaigns.results.unscoredFlagged.noScore': 'Chưa có điểm',
     'employer.campaigns.results.unscoredFlagged.abandoned': 'Bỏ ngang',
     'employer.campaigns.results.unscoredFlagged.noScoredAnswer': 'Bỏ ngang — kết thúc khi chưa có câu nào được chấm',
@@ -2437,7 +2436,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.unscoredFlagged.emptyDescription':
       'There are currently no candidates who are both flagged and unscored.',
     'employer.campaigns.results.unscoredFlagged.interviewStatus': 'Interview status',
-    'employer.campaigns.results.unscoredFlagged.startedAt': 'Started',
     'employer.campaigns.results.unscoredFlagged.noScore': 'No score yet',
     'employer.campaigns.results.unscoredFlagged.abandoned': 'Abandoned',
     'employer.campaigns.results.unscoredFlagged.noScoredAnswer': 'Abandoned — ended before any answer was scored',
