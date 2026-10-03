@@ -68,7 +68,15 @@ export function CampaignFaceEnrollPage() {
       );
     } catch (uploadError) {
       if (uploadError instanceof CampaignCandidateError && uploadError.code === 'badRequest') {
-        setError(t('campaigns.faceEnroll.badImage'));
+        if (uploadError.apiCode === 'REFERENCE_MULTIPLE_FACES') {
+          setPreview('');
+          setError(t('campaigns.faceEnroll.multipleFaces'));
+        } else if (uploadError.apiCode === 'REFERENCE_NO_FACE') {
+          setPreview('');
+          setError(t('campaigns.faceEnroll.noFace'));
+        } else {
+          setError(t('campaigns.faceEnroll.badImage'));
+        }
       } else {
         setError(t('campaigns.faceEnroll.uploadError'));
       }

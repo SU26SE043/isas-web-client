@@ -2,6 +2,7 @@ import { AppWindow, Clock3, TriangleAlert } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
 import { formatResultTime, getResultFlagCount } from '../../utils/campaignResultsActions';
+import { flagNoteText } from '../../utils/flagNoteText';
 import {
   flagTypeLabelKey,
   getReviewPriority,
@@ -102,7 +103,7 @@ export function ProctoringAnalysis({ flags, embedded = false }: ProctoringAnalys
                   {flagLabel(flag.type, t)}: {flag.count}
                   <ResultFlagSourceLabel flag={flag} />
                 </p>
-                {flag.note?.trim() ? <p className="mt-1 text-current/80">{flag.note.trim()}</p> : null}
+                {flag.note?.trim() ? <p className="mt-1 text-current/80">{flagNoteText(flag.note, t)}</p> : null}
                 {firstAt || lastAt ? (
                   <p className="mt-1 text-current/80">
                     {firstAt ? `${t('employer.campaigns.results.proctoring.firstAt')} ${firstAt}` : null}

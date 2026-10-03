@@ -86,6 +86,10 @@ describe('campaignCandidatesApi', () => {
           sessionId: 's2',
           fullName: null,
           email: null,
+          InterviewStatus: 'Abandoned',
+          IsLatestAttempt: true,
+          AbandonReason: 'no_scored_answer',
+          InterviewStartedAt: '2026-08-27T08:45:00Z',
           flags: [{
             type: 'FaceMissing',
             count: 2,
@@ -104,6 +108,10 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.unscoredFlagged).toHaveLength(1);
     expect(parsed.unscoredFlagged[0]?.fullName).toBeNull();
     expect(parsed.unscoredFlagged[0]?.email).toBeNull();
+    expect(parsed.unscoredFlagged[0]).toMatchObject({
+      interviewStatus: 'Abandoned', isLatestAttempt: true,
+      abandonReason: 'no_scored_answer', interviewStartedAt: '2026-08-27T08:45:00Z',
+    });
     expect(parsed.unscoredFlagged[0]?.flags[0]?.firstAt).toBe('2026-08-27T09:00:00Z');
     expect(parsed.unscoredFlagged[0]?.flags[0]?.lastAt).toBe('2026-08-27T09:30:00Z');
     expect(parsed.results[0]?.flags[0]?.source).toBe('Server');
@@ -151,6 +159,17 @@ describe('campaignCandidatesApi', () => {
       ],
     });
     expect(parsed.unscoredFlagged).toEqual([]);
+  });
+
+  it('keeps new unscored attempt fields optional for older backend payloads', () => {
+    const parsed = parseCampaignResultsResponse({
+      unscoredFlagged: [{ candidateId: 'c1', sessionId: 'legacy-session', flags: [] }],
+    });
+    expect(parsed.unscoredFlagged[0]).toMatchObject({ candidateId: 'c1', sessionId: 'legacy-session' });
+    expect(parsed.unscoredFlagged[0]?.interviewStatus).toBeUndefined();
+    expect(parsed.unscoredFlagged[0]?.isLatestAttempt).toBeUndefined();
+    expect(parsed.unscoredFlagged[0]?.abandonReason).toBeUndefined();
+    expect(parsed.unscoredFlagged[0]?.interviewStartedAt).toBeUndefined();
   });
 
   it('preserves RNK1 result context fields without inventing legacy values', () => {
