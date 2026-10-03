@@ -1,4 +1,5 @@
-import { Loader2, TriangleAlert } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { AppModal } from '@/components/ui/app-modal';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignViolation } from '../types/campaignViolation.types';
@@ -13,6 +14,8 @@ interface CampaignViolationDialogProps {
   examClockRunning?: boolean;
   onContinue: () => void;
 }
+
+export const CAMPAIGN_VIOLATION_AUTO_CONTINUE_MS = 5_000;
 
 const MESSAGE_KEYS = {
   tab_switch: 'campaigns.violation.tabSwitch',
@@ -29,13 +32,24 @@ const MESSAGE_KEYS = {
 export function CampaignViolationDialog({
   violation,
   pendingCount,
-  recovering,
   recoveryError,
   examClockRunning = false,
   onContinue,
 }: CampaignViolationDialogProps) {
   const { t } = useLanguage();
   const isIdentityIssue = violation?.kind === 'identity_unverified';
+  const onContinueRef = useRef(onContinue);
+  onContinueRef.current = onContinue;
+
+  useEffect(() => {
+    if (!violation) return undefined;
+
+    const timer = window.setTimeout(() => {
+      onContinueRef.current();
+    }, CAMPAIGN_VIOLATION_AUTO_CONTINUE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [violation?.id]);
 
   return (
     <AppModal
@@ -48,18 +62,18 @@ export function CampaignViolationDialog({
       ariaLabel={t(isIdentityIssue
         ? 'campaigns.violation.identityTitle'
         : 'campaigns.violation.title')}
-      contentClassName="border-warning/40 bg-surface-elevated"
-      overlayClassName="z-[120] bg-black/80 backdrop-blur-md"
+      contentClassName="border-error/40 bg-surface-elevated"
+      overlayClassName="z-[120] bg-white/70 backdrop-blur-md"
       className="z-[130]"
     >
       {violation ? (
         <div className="p-1">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full border border-warning/40 bg-warning/10 text-warning">
+            <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full border border-error/40 bg-error/10 text-error">
               <TriangleAlert className="size-5" aria-hidden />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl font-semibold text-error">
                 {t(isIdentityIssue
                   ? 'campaigns.violation.identityTitle'
                   : 'campaigns.violation.title')}
@@ -72,7 +86,7 @@ export function CampaignViolationDialog({
 
           {examClockRunning ? <ExamClockStillRunning className="mt-4" /> : null}
           {pendingCount > 0 ? (
-            <p className="mt-4 text-xs text-warning">
+            <p className="mt-4 text-xs text-error">
               {t('campaigns.violation.pending').replace('{count}', String(pendingCount))}
             </p>
           ) : null}
@@ -80,17 +94,6 @@ export function CampaignViolationDialog({
             <p className="mt-4 text-sm text-error" role="alert">{t(recoveryError)}</p>
           ) : null}
 
-          <button
-            type="button"
-            className="btn-primary mt-6 inline-flex w-full items-center justify-center gap-2"
-            disabled={recovering}
-            onClick={onContinue}
-          >
-            {recovering ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-            {t((isIdentityIssue || recoveryError)
-              ? 'campaigns.violation.retry'
-              : 'campaigns.violation.continue')}
-          </button>
         </div>
       ) : null}
     </AppModal>

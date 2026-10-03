@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   B2cPracticeInterviewRoom,
@@ -40,17 +39,16 @@ export function CampaignInterviewPage() {
   // ATT1-F5: phòng đã đóng (hết giờ / không vào được phòng) ⇒ không overlay nào được che màn hết giờ / bảng lỗi.
   const [roomClosed, setRoomClosed] = useState(false);
   const queryClient = useQueryClient();
-  const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
+  const { enqueue: enqueueViolation } = violations;
   const proctoring = useCampaignProctoringLifecycle(antiCheatEnabled);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
   const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
-    if (behaviorToastTypes.current.has(kind)) return;
-    behaviorToastTypes.current.add(kind);
-    toast.success(t('campaigns.violation.behaviorRecorded'), { duration: 5000 });
-  }, [t]);
+    setViolationPaused(true);
+    enqueueViolation(kind);
+  }, [enqueueViolation]);
   const handleFaceSignal = useCallback(() => undefined, []);
   // ATT1-F4: begin vừa mở khoá đề ⇒ bản cache của trang chuẩn bị (đề bị che) hết hiệu lực.
   const handleSessionBegun = useCallback(() => {
@@ -72,7 +70,7 @@ export function CampaignInterviewPage() {
     recoveryActive: Boolean(violations.currentViolation),
     stream: media?.stream,
     onPause: handleViolationPause,
-    onViolation: violations.enqueue,
+    onViolation: enqueueViolation,
     onBehaviorSignal: handleBehaviorSignal,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;

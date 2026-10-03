@@ -18,8 +18,8 @@ Mục tiêu chính:
 - Sau khi fullscreen thành công mới chạy countdown `3 → 2 → 1 → Bắt đầu`.
 - Trong lúc phỏng vấn, nếu Candidate rời khỏi màn hình phỏng vấn hoặc vi phạm điều kiện anti-cheating thì bài phải bị pause.
 - Frontend phát hiện hành vi vi phạm và gửi tín hiệu lên Backend để ghi nhận.
-- Candidate bắt buộc phải xác nhận popup vi phạm.
-- Chỉ sau khi Candidate click `OK / Tiếp tục làm bài` và fullscreen được khôi phục thành công thì bài mới được tiếp tục.
+- Popup vi phạm tự gọi flow `Tiếp tục làm bài` sau 5 giây; Candidate cũng có thể xác nhận sớm.
+- Chỉ sau khi fullscreen/camera được khôi phục thành công thì bài mới được tiếp tục.
 
 ---
 
@@ -657,23 +657,17 @@ Resume interview
 
 ---
 
-## 22. Candidate bắt buộc click OK / Tiếp tục làm bài
+## 22. Popup tự tiếp tục sau 5 giây
 
-Đây là requirement bắt buộc.
-
-Không được:
+Popup cảnh báo hiển thị ở giữa màn hình trong 5 giây, sau đó tự gọi flow `Tiếp tục làm bài`.
 
 ```text
 violation
-→ tự fullscreen
-→ tự resume
-```
-
-Không được:
-
-```text
-popup
-→ auto close sau vài giây
+→ popup đỏ + nền blur trắng bán trong suốt
+→ chờ 5 giây
+→ gọi flow Continue
+→ nếu fullscreen/camera hợp lệ: resume
+→ nếu recovery thất bại: giữ lớp chặn và yêu cầu Candidate khắc phục
 ```
 
 Không được:
@@ -690,26 +684,14 @@ ESC
 → popup đóng
 ```
 
-Candidate bắt buộc phải click:
-
-```text
-OK
-```
-
-hoặc:
-
-```text
-Tiếp tục làm bài
-```
-
 ---
 
-## 23. Thứ tự khi click Continue
+## 23. Thứ tự khi Continue
 
 Thứ tự bắt buộc:
 
 ```text
-Candidate click Continue
+Timer 5 giây gọi Continue
         ↓
 requestFullscreen()
         ↓
@@ -762,12 +744,13 @@ Popup phải là blocking modal.
 Yêu cầu UI:
 
 - background Interview Room vẫn thấy được;
-- background phải blur/dim;
+- background phải blur với lớp trắng bán trong suốt;
 - modal nằm trên cùng;
 - không click được nội dung phía sau;
 - không đóng bằng backdrop;
 - không đóng bằng ESC;
-- không auto-close.
+- không hiển thị nút Continue;
+- tự gọi Continue sau 5 giây; không tự bỏ qua điều kiện fullscreen/camera.
 
 Ví dụ:
 
@@ -779,8 +762,6 @@ Bạn đã rời khỏi màn hình phỏng vấn.
 Hành vi này đã được hệ thống ghi nhận.
 
 Vui lòng quay lại chế độ toàn màn hình để tiếp tục.
-
-[ Tiếp tục làm bài ]
 ```
 
 Reuse modal/dialog của project.
