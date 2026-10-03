@@ -565,13 +565,28 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.empty.filteredDescription':
       'Thử đổi bộ lọc hoặc từ khóa tìm kiếm.',
     'employer.campaigns.results.unscoredFlagged.title':
-      'Ứng viên có cảnh báo nhưng chưa được chấm',
+      'Ứng viên có cảnh báo nhưng không có điểm',
     'employer.campaigns.results.unscoredFlagged.description':
-      'Các ứng viên này có cờ cảnh báo nhưng chưa có kết quả xếp hạng.',
+      'Buổi phỏng vấn bị bỏ ngang hoặc đang diễn ra nên không có điểm. Cảnh báo vẫn được giữ để bạn xem xét.',
     'employer.campaigns.results.unscoredFlagged.emptyTitle': 'Không có ứng viên chưa chấm bị gắn cờ',
     'employer.campaigns.results.unscoredFlagged.emptyDescription':
       'Hiện không có ứng viên nào vừa có cảnh báo vừa chưa được chấm điểm.',
-    'employer.campaigns.results.unscoredFlagged.session': 'Phiên',
+    'employer.campaigns.results.unscoredFlagged.interviewStatus': 'Trạng thái buổi',
+    'employer.campaigns.results.unscoredFlagged.noScore': 'Chưa có điểm',
+    'employer.campaigns.results.unscoredFlagged.abandoned': 'Bỏ ngang',
+    'employer.campaigns.results.unscoredFlagged.noScoredAnswer': 'Bỏ ngang — kết thúc khi chưa có câu nào được chấm',
+    'employer.campaigns.results.unscoredFlagged.expiredNoAnswer': 'Bỏ ngang — hết hạn khi chưa trả lời',
+    'employer.campaigns.results.unscoredFlagged.generationFailed': 'Lỗi hệ thống — không tạo được câu hỏi',
+    'employer.campaigns.results.unscoredFlagged.notCandidateFault': 'Không phải lỗi của ứng viên',
+    'employer.campaigns.results.unscoredFlagged.inProgress': 'Đang làm bài — điểm sẽ hiện khi chấm xong',
+    'employer.campaigns.results.unscoredFlagged.previousAttempt': 'Lượt trước (ứng viên đã làm lại)',
+    'employer.campaigns.results.flagNotes.fullscreenExit': 'Ứng viên đã thoát chế độ toàn màn hình.',
+    'employer.campaigns.results.flagNotes.tabSwitch': 'Ứng viên đã chuyển khỏi thẻ phỏng vấn.',
+    'employer.campaigns.results.flagNotes.windowSwitch': 'Ứng viên đã rời cửa sổ phỏng vấn bằng Alt+Tab hoặc chuyển cửa sổ.',
+    'employer.campaigns.results.flagNotes.focusLost': 'Ứng viên đã làm mất tiêu điểm cửa sổ phỏng vấn.',
+    'employer.campaigns.results.flagNotes.paste': 'Ứng viên đã thử dán nội dung trong buổi phỏng vấn.',
+    'employer.campaigns.results.flagNotes.cameraUnavailable': 'Camera của ứng viên đã ngừng hoạt động trong buổi phỏng vấn.',
+    'employer.campaigns.results.flagNotes.recoverySuffix': '(đang khắc phục thiết bị)',
     'employer.campaigns.results.errors.notFound':
       'Không tìm thấy chiến dịch hoặc bạn không có quyền xem kết quả này.',
     'employer.campaigns.results.errors.loadFailed':
@@ -2401,13 +2416,28 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.results.empty.filteredDescription':
       'Try changing filters or the search keyword.',
     'employer.campaigns.results.unscoredFlagged.title':
-      'Candidates with flags but no scored result',
+      'Candidates with flags but no score',
     'employer.campaigns.results.unscoredFlagged.description':
-      'These candidates have warning flags but are not yet in the ranking table.',
+      'The interview was abandoned or is still in progress, so there is no score. Flags are retained for your review.',
     'employer.campaigns.results.unscoredFlagged.emptyTitle': 'No unscored flagged candidates',
     'employer.campaigns.results.unscoredFlagged.emptyDescription':
       'There are currently no candidates who are both flagged and unscored.',
-    'employer.campaigns.results.unscoredFlagged.session': 'Session',
+    'employer.campaigns.results.unscoredFlagged.interviewStatus': 'Interview status',
+    'employer.campaigns.results.unscoredFlagged.noScore': 'No score yet',
+    'employer.campaigns.results.unscoredFlagged.abandoned': 'Abandoned',
+    'employer.campaigns.results.unscoredFlagged.noScoredAnswer': 'Abandoned — ended before any answer was scored',
+    'employer.campaigns.results.unscoredFlagged.expiredNoAnswer': 'Abandoned — expired before an answer',
+    'employer.campaigns.results.unscoredFlagged.generationFailed': 'System error — questions could not be generated',
+    'employer.campaigns.results.unscoredFlagged.notCandidateFault': 'This was not the candidate’s fault',
+    'employer.campaigns.results.unscoredFlagged.inProgress': 'In progress — score will appear when scoring is complete',
+    'employer.campaigns.results.unscoredFlagged.previousAttempt': 'Previous attempt (candidate has retaken)',
+    'employer.campaigns.results.flagNotes.fullscreenExit': 'Candidate exited fullscreen mode.',
+    'employer.campaigns.results.flagNotes.tabSwitch': 'Candidate switched away from the interview tab.',
+    'employer.campaigns.results.flagNotes.windowSwitch': 'Candidate left the interview window using Alt+Tab or window switching.',
+    'employer.campaigns.results.flagNotes.focusLost': 'Candidate lost focus from the interview window.',
+    'employer.campaigns.results.flagNotes.paste': 'Candidate attempted to paste content during the interview.',
+    'employer.campaigns.results.flagNotes.cameraUnavailable': 'Candidate camera became unavailable during the interview.',
+    'employer.campaigns.results.flagNotes.recoverySuffix': '(device recovery in progress)',
     'employer.campaigns.results.errors.notFound':
       'Campaign was not found or you do not have permission to view these results.',
     'employer.campaigns.results.errors.loadFailed':

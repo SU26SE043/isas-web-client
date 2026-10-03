@@ -10,6 +10,7 @@ import {
 } from '../../utils/campaignResultsActions';
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 import { ResultsCriterionCutoff } from './ResultsContextStrip';
+import { flagNoteText } from '../../utils/flagNoteText';
 
 export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) {
   const { t } = useLanguage();
@@ -70,7 +71,7 @@ export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
   const summary = item.flags.map((flag) => `${flag.type}: ${flag.count}`).join('\n');
   const notes = item.flags
     .filter((flag) => flag.note?.trim())
-    .map((flag) => `${flag.type}: ${flag.note}`)
+    .map((flag) => `${flag.type}: ${flagNoteText(flag.note!, t)}`)
     .join('\n');
   const serverFlag = item.flags.find((flag) => flag.source === 'Server');
   return (

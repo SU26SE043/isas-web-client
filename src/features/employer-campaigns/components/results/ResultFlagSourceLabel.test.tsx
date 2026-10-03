@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { LanguageProvider } from '@/shared/languages';
 import type { CampaignResultFlag } from '../../types/campaign.api.types';
@@ -60,7 +60,7 @@ describe('ResultFlagSourceLabel', () => {
   });
 
   it('shows the system label in UnscoredFlaggedSection but not for Client flags', () => {
-    renderWithLanguage(
+    const { container } = renderWithLanguage(
       <UnscoredFlaggedSection
         items={[
           {
@@ -74,9 +74,13 @@ describe('ResultFlagSourceLabel', () => {
       />,
     );
 
-    expect(screen.getByText('Hệ thống ghi nhận')).toBeTruthy();
-    expect(screen.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
-    expect(screen.getByText('Rời tab thi: 1')).toBeTruthy();
-    expect(screen.getAllByText('Hệ thống ghi nhận')).toHaveLength(1);
+    // Section vẽ cả bảng (desktop) lẫn thẻ (mobile), CSS ẩn một bên ⇒ kiểm TỪNG bố cục: mỗi bên đúng
+    // một nhãn "Hệ thống ghi nhận" (cờ Server), cờ Client không mang nhãn.
+    for (const layout of ['table', 'cards']) {
+      const region = within(container.querySelector(`[data-layout="${layout}"]`) as HTMLElement);
+      expect(region.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
+      expect(region.getByText('Rời tab thi: 1')).toBeTruthy();
+      expect(region.getAllByText('Hệ thống ghi nhận')).toHaveLength(1);
+    }
   });
 });

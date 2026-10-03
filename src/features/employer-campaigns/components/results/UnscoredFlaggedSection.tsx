@@ -9,17 +9,15 @@ import {
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
-import { formatResultTime } from '../../utils/campaignResultsActions';
-import { flagTypeLabelKey, getReviewPriority, REVIEW_PRIORITY_CLASS } from '../../utils/proctoringFlagPriority';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
-import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
+import { UnscoredFlagList, UnscoredStatus } from './UnscoredFlagList';
 
 export function UnscoredFlaggedSection({
   items,
 }: {
   items: CampaignUnscoredFlaggedResult[];
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const list = items ?? [];
 
   return (
@@ -40,68 +38,65 @@ export function UnscoredFlaggedSection({
           description={t('employer.campaigns.results.unscoredFlagged.emptyDescription')}
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-satin bg-surface-raised">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('employer.campaigns.results.columns.candidate')}</TableHead>
-                <TableHead>{t('employer.campaigns.results.unscoredFlagged.session')}</TableHead>
-                <TableHead>{t('employer.campaigns.results.columns.flags')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((item) => (
-                <TableRow key={`${item.candidateId}-${item.sessionId}`}>
-                  <TableCell>
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground">
-                        {candidateDisplayName(item, t)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {candidateDisplayEmail(item, t)}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {item.sessionId}
-                  </TableCell>
-                  <TableCell>
-                    {item.flags.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">
-                        {t('employer.campaigns.results.flags.none')}
-                      </span>
-                    ) : (
-                      <ul className="space-y-1 text-xs">
-                        {item.flags.map((flag) => (
-                          <li key={`${flag.type}-${flag.count}-${flag.note ?? ''}`} className={`rounded-lg border px-3 py-2 ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}>
-                            <p className="font-medium">
-                              {flagTypeLabelKey(flag.type) ? t(flagTypeLabelKey(flag.type) as string) : flag.type}: {flag.count}
-                            </p>
-                            <ResultFlagSourceLabel flag={flag} />
-                            {flag.note?.trim() ? (
-                              <p className="mt-0.5 text-current/80">
-                                {flag.note.trim()}
-                              </p>
-                            ) : null}
-                            {formatResultTime(flag.firstAt, language) || formatResultTime(flag.lastAt, language) ? (
-                              <p className="mt-0.5 text-current/80">
-                                {formatResultTime(flag.firstAt, language) ? `${t('employer.campaigns.results.proctoring.firstAt')} ${formatResultTime(flag.firstAt, language)}` : null}
-                                {formatResultTime(flag.firstAt, language) && formatResultTime(flag.lastAt, language) ? ' · ' : null}
-                                {formatResultTime(flag.lastAt, language) ? `${t('employer.campaigns.results.proctoring.lastAt')} ${formatResultTime(flag.lastAt, language)}` : null}
-                              </p>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </TableCell>
+        <>
+          {/* Desktop: bảng. Mobile: thẻ. Cả hai cùng có trong DOM, CSS ẩn một bên (display:none
+              cũng ẩn khỏi cây trợ năng) — test nên khoanh vùng theo data-layout. */}
+          <div
+            data-layout="table"
+            className="hidden overflow-x-auto rounded-xl border border-satin bg-surface-raised md:block"
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('employer.campaigns.results.columns.candidate')}</TableHead>
+                  <TableHead>{t('employer.campaigns.results.unscoredFlagged.interviewStatus')}</TableHead>
+                  <TableHead>{t('employer.campaigns.results.columns.flags')}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {list.map((item) => (
+                  <TableRow key={`${item.candidateId}-${item.sessionId}`}>
+                    <TableCell>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{candidateDisplayName(item, t)}</p>
+                        <p className="text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell title={item.sessionId} className="max-w-64 whitespace-normal">
+                      <UnscoredStatus item={item} />
+                    </TableCell>
+                    <TableCell>
+                      <UnscoredFlagList flags={item.flags} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <ul data-layout="cards" className="space-y-3 md:hidden">
+            {list.map((item) => (
+              <li
+                key={`mobile-${item.candidateId}-${item.sessionId}`}
+                className="frame-satin rounded-xl bg-surface-raised p-4"
+              >
+                {/* Trạng thái đứng DƯỚI tên, không đặt cạnh: ở 375px email dài (không có chỗ ngắt)
+                    tràn sang và bị nhãn trạng thái đè lên. */}
+                <div className="min-w-0">
+                  <p className="break-all font-medium text-foreground">{candidateDisplayName(item, t)}</p>
+                  <p className="break-all text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
+                </div>
+                <div title={item.sessionId} className="mt-2">
+                  <UnscoredStatus item={item} />
+                </div>
+                <div className="mt-3 border-t border-satin pt-3">
+                  <UnscoredFlagList flags={item.flags} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );
 }
-
