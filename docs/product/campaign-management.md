@@ -39,6 +39,8 @@ Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 5. Settings — first block **“Luật làm bài”** (ATT1-F1): `timeLimitMinutes` (5–180) and `maxAttempts` (1 / 2 / 3, default 1); then `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion`, `maxQuestions = min(20, K×(1+d))`, and `maxFollowUps`.
 6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
+In step 4 draw mode, `questionsPerSession` (K) is the **total** base questions each candidate receives, including every required question. The “Bốc” input shows and accepts only the number drawn from the optional pool; its value is converted to K by adding the required count. Switching a question between required and pool keeps K unchanged and updates the displayed draw. K is limited to 1–20; `null` means the full bank. The pool heading displays the computed draw and actual pool size. This correction applies to the Draft wizard only and does not change the API or Active campaigns.
+
 Draft preview actions: **Chỉnh sửa** · **Xuất bản** (confirm → publish) · **Xóa** (confirm → soft-delete).
 
 Active detail: **Mời ứng viên** · **Pipeline** · **Kết thúc chiến dịch** beside the status badge (two-step confirmation → status Closed).

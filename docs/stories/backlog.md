@@ -32,6 +32,7 @@ Sliced from `BRD/Functional_Requirements.md` modules and `BRD/Screen_Inventory.m
 | US-005 | Practice interview B2C | E05 | normal | implemented | [US-005](./epics/E05-practice/US-005-practice-interview.md) |
 | US-006 | Candidate dashboard heatmap | E03 | normal | implemented | [US-006](./epics/E03-auth/US-006-candidate-dashboard.md) |
 | US-007 | Campaign management employer workflow | E07 | normal | implemented | [US-007](./epics/E07-campaign-management/US-007-campaign-management.md) |
+| QBK1 | Step 4 draw count means pool draws while K remains the total | E07 | normal | implemented | [QBK1](./epics/E07-campaign-management/QBK1-draw-count.md) |
 | US-007 | Campaign discovery candidate entry | E08 | normal | **deprecated (product)** | [US-007](./epics/E08-campaign-discovery/US-007-campaign-discovery.md) - public browse out of scope; keep `/invite/:token` only |
 | US-008 | Organization onboarding employer entry | E08 | normal | implemented | [US-008](./epics/E08-org-onboarding/US-008-organization-onboarding.md) |
 | US-009 | Employer analytics and candidate pipeline | E08 | normal | implemented | [US-009](./epics/E08-employer-analytics/US-009-employer-analytics.md) |

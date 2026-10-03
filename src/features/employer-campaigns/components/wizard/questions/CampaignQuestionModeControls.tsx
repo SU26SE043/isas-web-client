@@ -3,8 +3,9 @@ import { useLanguage } from '@/shared/languages';
 interface CampaignQuestionModeControlsProps {
   drawMode: boolean;
   fixedCount: number;
-  poolCount: number;
   drawCount: number;
+  drawMin: number;
+  drawMax: number;
   totalPerCandidate: number;
   disabled?: boolean;
   onSelectMode: (drawMode: boolean) => void;
@@ -14,8 +15,9 @@ interface CampaignQuestionModeControlsProps {
 export function CampaignQuestionModeControls({
   drawMode,
   fixedCount,
-  poolCount,
   drawCount,
+  drawMin,
+  drawMax,
   totalPerCandidate,
   disabled = false,
   onSelectMode,
@@ -41,11 +43,11 @@ export function CampaignQuestionModeControls({
           <input
             id="campaign-question-draw-count"
             type="number"
-            min={0}
-            max={poolCount}
+            min={drawMin}
+            max={drawMax}
             value={drawCount}
             disabled={disabled}
-            onChange={(event) => onDrawCountChange(Math.min(Math.max(Number(event.target.value) || 0, 0), poolCount))}
+            onChange={(event) => onDrawCountChange(Math.min(Math.max(Number(event.target.value) || 0, drawMin), drawMax))}
             className="h-9 w-20 rounded-xl border border-satin bg-surface-base px-3 text-sm"
           />
         </label>
