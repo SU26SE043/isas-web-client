@@ -307,8 +307,9 @@ export function buildCampaignCreateRequest(
     // Nháp được tạo ngay ở BƯỚC 2 (lúc tải JD) khi bước 3 chưa chạy nên rubric luôn rỗng
     // ⇒ mọi lần tải JD đều 400 và người dùng kẹt cứng ở bước 2. `undefined` bị JSON bỏ qua.
     criteria: snapshot.rubric.length ? mapRubricToCreateCriteria(snapshot.rubric) : undefined,
-    startsAt: toIsoDateTime(info.startsAt),
-    expiresAt: toIsoDateTime(info.expiresAt),
+    // Nháp được thiếu ngày (sàng CV trước khi chốt lịch) ⇒ ô trống = bỏ khoá; Triển khai mới bắt buộc.
+    startsAt: info.startsAt ? toIsoDateTime(info.startsAt) : undefined,
+    expiresAt: info.expiresAt ? toIsoDateTime(info.expiresAt) : undefined,
     questions,
   };
 }
@@ -362,8 +363,9 @@ export function buildCampaignUpdateRequest(
     // Nháp được tạo ngay ở BƯỚC 2 (lúc tải JD) khi bước 3 chưa chạy nên rubric luôn rỗng
     // ⇒ mọi lần tải JD đều 400 và người dùng kẹt cứng ở bước 2. `undefined` bị JSON bỏ qua.
     criteria: snapshot.rubric.length ? mapRubricToCreateCriteria(snapshot.rubric) : undefined,
-    startsAt: toIsoDateTime(info.startsAt),
-    expiresAt: toIsoDateTime(info.expiresAt),
+    // Vắng = KHÔNG ĐỔI phía BE ⇒ ô trống không xoá ngày đã lưu.
+    startsAt: info.startsAt ? toIsoDateTime(info.startsAt) : undefined,
+    expiresAt: info.expiresAt ? toIsoDateTime(info.expiresAt) : undefined,
   };
 }
 

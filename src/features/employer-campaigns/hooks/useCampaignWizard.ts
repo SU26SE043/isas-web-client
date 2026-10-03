@@ -885,7 +885,7 @@ export function useCampaignWizard({
     // R1(b) — thước đo phải HỢP LỆ vì lưu câu hỏi nay PUT metadata trước (cùng luật `persistForPreview`).
     const validationMode = mode === 'create' && state.draftId ? 'edit' : mode;
     for (const step of [0, 2]) {
-      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode, requireSchedule: false });
       if (errorKey) {
         setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
         setState((prev) => ({ ...prev, currentStep: step, errorSteps: Array.from(new Set([...prev.errorSteps, step])) }));
@@ -1047,7 +1047,7 @@ export function useCampaignWizard({
   const goNext = useCallback(async () => {
     if (requestLockRef.current || isSubmitting || isGeneratingQuestions || isSavingQuestions || isEnsuringDraft) return;
     const step = state.currentStep;
-    const errorKey = validateCampaignWizardStep(state, step, { mode });
+    const errorKey = validateCampaignWizardStep(state, step, { mode, requireSchedule: false });
     if (errorKey) {
       setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
       setState((prev) => ({
@@ -1393,7 +1393,7 @@ export function useCampaignWizard({
     // nhưng card đã chặn ở FE (`noQuestions`) trước khi gọi tới đây ⇒ không có đường nào lưu rồi POST hụt.
     const stepsToValidate = state.questions.length > 0 ? [0, 2, 3] : [0, 2];
     for (const step of stepsToValidate) {
-      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode });
+      const errorKey = validateCampaignWizardStep(state, step, { mode: validationMode, requireSchedule: false });
       if (errorKey) {
         setStepError(t(errorKey).replace('{{max}}', String(CAMPAIGN_QUESTION_HARD_MAX)));
         setState((prev) => ({

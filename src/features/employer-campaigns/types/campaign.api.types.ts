@@ -227,8 +227,9 @@ export type CampaignCreateRequest = {
   /** 0 clears the rule; omit when unchanged. */
   minYearsExperience?: number | null;
   criteria?: CampaignCreateCriterionRequest[] | null;
-  startsAt: string;
-  expiresAt: string;
+  /** Tuỳ chọn khi tạo nháp; bắt buộc lúc publish. */
+  startsAt?: string;
+  expiresAt?: string;
   /** Required non-empty on create. */
   questions: CampaignCreateQuestionRequest[];
 };
