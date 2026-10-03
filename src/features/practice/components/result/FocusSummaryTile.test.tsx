@@ -38,7 +38,7 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
   });
 
   it('[] (bật, chưa ghi nhận) → ×0 + câu rỗng, không khen', () => {
-    const { container } = render(<FocusSummaryTile view={makeView({ focusTrackingEnabled: true, focusEvents: [], focusLeaveCount: 0 })} />);
+    const { container } = render(<FocusSummaryTile view={makeView({ focusTrackingEnabled: true, focusEvents: [] })} />);
     expect(within(container).getByText('×0')).toBeInTheDocument();
     expect(within(container).getByTestId('focus-tile-breakdown')).toHaveTextContent('practice.result.focusTracking.empty');
   });
@@ -54,8 +54,6 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
             { signalType: 'multiple_faces', count: 2, firstAt: '2026-09-15T04:06:00Z', lastAt: '2026-09-15T04:07:00Z' },
             { signalType: 'camera_blocked', count: 3, firstAt: '2026-09-15T04:08:00Z', lastAt: '2026-09-15T04:09:00Z' },
           ],
-          focusLeaveCount: 1,
-          focusFrameCount: 5,
         })}
       />,
     );
@@ -66,6 +64,24 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
     expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.camera');
   });
 
+  it('có dán → nhóm "Dán" RIÊNG, không gộp vào "rời buổi" (ô Rời tab / cửa sổ không cộng dán)', () => {
+    const { container } = render(
+      <FocusSummaryTile
+        view={makeView({
+          focusTrackingEnabled: true,
+          focusEvents: [
+            { signalType: 'focus_lost', count: 1, firstAt: '2026-09-15T04:05:00Z', lastAt: '2026-09-15T04:05:00Z' },
+            { signalType: 'paste', count: 2, firstAt: '2026-09-15T04:06:00Z', lastAt: '2026-09-15T04:07:00Z' },
+          ],
+        })}
+      />,
+    );
+    expect(within(container).getByText('×3')).toBeInTheDocument();
+    expect(within(container).getByTestId('focus-tile-breakdown')).toHaveTextContent(
+      /^practice\.result\.focusTracking\.short\.leave · practice\.result\.focusTracking\.short\.paste$/,
+    );
+  });
+
   it('chỉ có khung hình → tách nhóm KHÔNG có "rời buổi"', () => {
     const { container } = render(
       <FocusSummaryTile
@@ -74,8 +90,6 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
           focusEvents: [
             { signalType: 'no_face', count: 12, firstAt: '2026-09-15T04:00:00Z', lastAt: '2026-09-15T04:10:00Z' },
           ],
-          focusLeaveCount: 0,
-          focusFrameCount: 12,
         })}
       />,
     );
@@ -95,7 +109,7 @@ describe('SessionSummaryCard — lưới thống kê', () => {
 
   it('buổi có theo dõi mở 4 cột cho ô thứ tư', () => {
     const { container } = render(
-      <SessionSummaryCard view={makeView({ focusTrackingEnabled: true, focusEvents: [], focusLeaveCount: 0 })} />,
+      <SessionSummaryCard view={makeView({ focusTrackingEnabled: true, focusEvents: [] })} />,
     );
     expect(container.querySelector('.sm\\:grid-cols-4')).not.toBeNull();
   });
