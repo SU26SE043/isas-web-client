@@ -161,6 +161,28 @@ describe('campaignCandidatesApi', () => {
     expect(parsed.unscoredFlagged).toEqual([]);
   });
 
+  // Backend (ASP.NET, System.Text.Json mặc định) gửi khoá chữ thường đầu — đây là dạng THẬT trên dây.
+  // Ca PascalCase ở trên chỉ phủ nhánh dự phòng; thiếu ca này thì gõ sai khoá thật vẫn xanh.
+  it('reads the unscored attempt fields from camelCase keys, as the backend sends them', () => {
+    const parsed = parseCampaignResultsResponse({
+      unscoredFlagged: [{
+        candidateId: 'c1',
+        sessionId: 's1',
+        interviewStatus: 'Abandoned',
+        isLatestAttempt: false,
+        abandonReason: 'generation_failed',
+        interviewStartedAt: '2026-10-03T04:11:51Z',
+        flags: [],
+      }],
+    });
+    expect(parsed.unscoredFlagged[0]).toMatchObject({
+      interviewStatus: 'Abandoned',
+      isLatestAttempt: false,
+      abandonReason: 'generation_failed',
+      interviewStartedAt: '2026-10-03T04:11:51Z',
+    });
+  });
+
   it('keeps new unscored attempt fields optional for older backend payloads', () => {
     const parsed = parseCampaignResultsResponse({
       unscoredFlagged: [{ candidateId: 'c1', sessionId: 'legacy-session', flags: [] }],
