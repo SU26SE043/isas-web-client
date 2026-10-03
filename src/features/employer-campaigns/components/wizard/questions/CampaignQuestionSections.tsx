@@ -11,6 +11,7 @@ interface CampaignQuestionSectionsProps {
   isDraft: boolean;
   disabled?: boolean;
   drawMode: boolean;
+  drawCount?: number;
   listRef?: RefObject<HTMLUListElement | null>;
   onChangePrompt: (id: string, prompt: string) => void;
   onToggleRequired: (id: string, isRequired: boolean) => void;
@@ -56,6 +57,7 @@ type ListProps = Omit<CampaignQuestionSectionsProps, 'isDraft' | 'drawMode' | 'i
   allQuestions: CampaignQuestion[];
   editLocked: boolean;
   title: string;
+  titleParams?: Record<string, string>;
   description: string;
   isOpen: (id: string) => boolean;
   setOpen: (id: string, open: boolean) => void;
@@ -63,7 +65,7 @@ type ListProps = Omit<CampaignQuestionSectionsProps, 'isDraft' | 'drawMode' | 'i
 };
 
 function QuestionList({
-  questions, allQuestions, editLocked, title, description, listRef, disabled,
+  questions, allQuestions, editLocked, title, titleParams, description, listRef, disabled,
   onChangePrompt, onToggleRequired, onChangeGroup, onMoveQuestion, onRemoveQuestion,
   rubric, onChangeTargets, onChangeSampleAnswer, onGoToCriteria, previewCtx, isOpen, setOpen, deepLinkId,
 }: ListProps) {
@@ -71,7 +73,11 @@ function QuestionList({
   return (
     <section className="space-y-3">
       <div>
-        <h3 className="text-sm font-semibold text-foreground">{t(title)}</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          {Object.entries(titleParams ?? {}).reduce(
+            (label, [key, value]) => label.replaceAll(`{{${key}}}`, value), t(title),
+          )}
+        </h3>
         <p className="text-xs text-muted-foreground">{t(description)}</p>
       </div>
       <ul ref={listRef} className="space-y-3">
@@ -107,7 +113,7 @@ function QuestionList({
 }
 
 export function CampaignQuestionSections({
-  questions, isDraft, disabled = false, drawMode, listRef, initialOpenQuestionId,
+  questions, isDraft, disabled = false, drawMode, drawCount = 0, listRef, initialOpenQuestionId,
   onChangePrompt, onToggleRequired, onChangeGroup, onMoveQuestion, onRemoveQuestion,
   rubric, onChangeTargets, onChangeSampleAnswer, onGoToCriteria, previewCtx,
 }: CampaignQuestionSectionsProps) {
@@ -148,6 +154,7 @@ export function CampaignQuestionSections({
         {...shared}
         questions={pool}
         title="employer.campaigns.campaignQuestions.pool.title"
+        titleParams={{ draw: String(drawCount), pool: String(pool.length) }}
         description="employer.campaigns.campaignQuestions.pool.description"
       />
     </div>

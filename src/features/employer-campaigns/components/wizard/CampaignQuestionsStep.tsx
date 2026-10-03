@@ -109,7 +109,7 @@ export function CampaignQuestionsStep({
   const busy = isGenerating || isSaving;
   const max = CAMPAIGN_QUESTION_HARD_MAX;
   const canContinue = !busy;
-  const { drawMode, fixedCount, poolCount, drawCount, totalPerCandidate, selectMode } = useQuestionDrawMode({
+  const { drawMode, fixedCount, drawCount, drawMin, drawMax, totalPerCandidate, setDrawCount, selectMode } = useQuestionDrawMode({
     questions, questionsPerSession, onToggleRequired, onQuestionsPerSession,
   });
 
@@ -170,12 +170,13 @@ export function CampaignQuestionsStep({
             <CampaignQuestionModeControls
               drawMode={drawMode}
               fixedCount={fixedCount}
-              poolCount={poolCount}
               drawCount={drawCount}
+              drawMin={drawMin}
+              drawMax={drawMax}
               totalPerCandidate={totalPerCandidate}
               disabled={busy}
               onSelectMode={selectMode}
-              onDrawCountChange={onQuestionsPerSession}
+              onDrawCountChange={setDrawCount}
             />
 
             <AiGenerateCard
@@ -196,6 +197,7 @@ export function CampaignQuestionsStep({
               isDraft={isDraft}
               disabled={busy}
               drawMode={drawMode}
+              drawCount={drawCount}
               listRef={listRef}
               onChangePrompt={onChangePrompt}
               onToggleRequired={onToggleRequired}

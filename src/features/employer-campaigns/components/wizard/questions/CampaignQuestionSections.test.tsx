@@ -5,7 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CampaignQuestion } from '../../../types/campaignManagement.types';
 import { CampaignQuestionSections } from './CampaignQuestionSections';
 
-vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key }) }));
+vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) =>
+  key === 'employer.campaigns.campaignQuestions.pool.title'
+    ? 'RANDOM POOL · {{draw}} of {{pool}} · draw {{draw}}'
+    : key,
+}) }));
 afterEach(() => cleanup());
 
 const q = (id: string, prompt = `Prompt ${id}`): CampaignQuestion => ({ id, prompt, skill: '', difficulty: 'middle', source: 'manual', isRequired: true });
@@ -13,6 +17,11 @@ const handlers = { onChangePrompt: vi.fn(), onToggleRequired: vi.fn(), onChangeG
 const panelOf = (id: string) => document.getElementById(`question-card-${id}`)?.querySelector('[data-testid="question-card-panel"]') as HTMLElement;
 
 describe('CampaignQuestionSections — trạng thái mở/đóng cục bộ + deep-link', () => {
+  it('fills every placeholder in the pool heading after translating its key', () => {
+    render(<CampaignQuestionSections questions={[q('fixed'), { ...q('pool'), isRequired: false }]}
+      isDraft drawMode drawCount={1} {...handlers} />);
+    expect(screen.getByText('RANDOM POOL · 1 of 1 · draw 1')).toBeInTheDocument();
+  });
   it('mặc định chỉ MỘT card mở (card đầu); bấm hàng đầu card 2 ⇒ mở thêm; bấm lại card 1 ⇒ đóng', () => {
     render(<CampaignQuestionSections questions={[q('a'), q('b'), q('c')]} isDraft drawMode={false} {...handlers} />);
     expect(panelOf('a')).not.toHaveAttribute('hidden');
