@@ -127,7 +127,7 @@ export function useCampaignFileActions({
 
     if (!draftEnsureRef.current) {
       draftEnsureRef.current = (async () => {
-        const infoError = validateCampaignWizardStep(state, 0, { mode: 'create' });
+        const infoError = validateCampaignWizardStep(state, 0, { mode: 'create', requireSchedule: false });
         if (infoError) throw new Error(infoError);
 
         const base = snapshot();

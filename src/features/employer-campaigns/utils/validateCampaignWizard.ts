@@ -33,6 +33,11 @@ export type WizardValidationOptions = {
   mode?: 'create' | 'edit';
   /** Mốc "bây giờ" (ms) — test truyền vào để luật hạn nộp không phụ thuộc đồng hồ máy chạy test. */
   now?: number;
+  /**
+   * `false` = ngày bắt đầu/hạn nộp TUỲ CHỌN (tạo nháp, Tiếp tục, lưu câu hỏi, chấm thử) — nháp để sàng CV /
+   * tải JD không cần lịch thi. Mặc định bắt buộc (Triển khai). Ngày đã nhập thì vẫn phải hợp lệ.
+   */
+  requireSchedule?: boolean;
 };
 
 export type WizardValidationError = {
@@ -70,11 +75,15 @@ export function validateCampaignWizardStep(
     }
     if (!info.domain) return 'employer.campaigns.wizard.domainRequired';
     if (!info.language) return 'employer.campaigns.wizard.languageRequired';
-    if (!info.startsAt || !info.expiresAt) return 'employer.campaigns.form.required';
-    if (info.expiresAt <= info.startsAt) return 'employer.campaigns.wizard.dateRangeInvalid';
+    if (options?.requireSchedule !== false && (!info.startsAt || !info.expiresAt)) {
+      return 'employer.campaigns.form.required';
+    }
+    if (info.startsAt && info.expiresAt && info.expiresAt <= info.startsAt) {
+      return 'employer.campaigns.wizard.dateRangeInvalid';
+    }
     // Hạn nộp đã qua thì chặn (khớp BE `POST /campaign` 400 "ExpiresAt cannot be in the past";
     // `PUT`/`publish` phía BE KHÔNG chặn nên nháp cũ để lâu vẫn phát hành được — đây là lưới FE).
-    if (isCampaignExpiryPast(info.expiresAt, options?.now)) return 'employer.campaigns.wizard.expiresAtPast';
+    if (info.expiresAt && isCampaignExpiryPast(info.expiresAt, options?.now)) return 'employer.campaigns.wizard.expiresAtPast';
     // KHÔNG chặn giờ mở "đã qua": BE không có luật đó (giờ mở ≤ lúc triển khai ⇒ mở ngay), và với
     // giờ mở mặc định = lúc mở wizard thì HR điền 8 bước xong là "quá khứ" ⇒ bị đá về bước 1 vô cớ.
     return null;
