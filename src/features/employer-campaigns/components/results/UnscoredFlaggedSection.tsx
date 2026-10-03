@@ -80,14 +80,14 @@ export function UnscoredFlaggedSection({
                 key={`mobile-${item.candidateId}-${item.sessionId}`}
                 className="frame-satin rounded-xl bg-surface-raised p-4"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">{candidateDisplayName(item, t)}</p>
-                    <p className="text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
-                  </div>
-                  <div title={item.sessionId} className="max-w-[60%] text-right">
-                    <UnscoredStatus item={item} />
-                  </div>
+                {/* Trạng thái đứng DƯỚI tên, không đặt cạnh: ở 375px email dài (không có chỗ ngắt)
+                    tràn sang và bị nhãn trạng thái đè lên. */}
+                <div className="min-w-0">
+                  <p className="break-all font-medium text-foreground">{candidateDisplayName(item, t)}</p>
+                  <p className="break-all text-xs text-muted-foreground">{candidateDisplayEmail(item, t)}</p>
+                </div>
+                <div title={item.sessionId} className="mt-2">
+                  <UnscoredStatus item={item} />
                 </div>
                 <div className="mt-3 border-t border-satin pt-3">
                   <UnscoredFlagList flags={item.flags} />
