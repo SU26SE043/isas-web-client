@@ -177,7 +177,7 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     expect(screen.queryByText('admin.rubrics.preview.needsLevels')).not.toBeInTheDocument();
   });
 
-  it('DÁN bài → chấm CHỈ bài của mình (includeAiSamples=false, không số đo) đúng hợp đồng BE, rồi RENDER "Bài của bạn" và nói rõ trôi chảy không chấm', async () => {
+  it('DÁN bài → chấm CHỈ bài của mình (không số đo, không cờ 3 bài AI) đúng hợp đồng BE, rồi RENDER "Bài của bạn" và nói rõ trôi chảy không chấm', async () => {
     mockHappyPath();
     const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(customRun);
     renderPage();
@@ -191,7 +191,7 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     expect(runButton).toBeEnabled();
     fireEvent.click(runButton);
     await waitFor(() => expect(previewSpy).toHaveBeenCalledTimes(1));
-    expect(previewSpy.mock.calls[0]).toEqual(['BE', 'vi', { sampleQuestionId: 'q-2', customAnswer: 'Bài tôi tự dán.', includeAiSamples: false }]);
+    expect(previewSpy.mock.calls[0]).toEqual(['BE', 'vi', { sampleQuestionId: 'q-2', customAnswer: 'Bài tôi tự dán.' }]);
     expect(JSON.stringify(previewSpy.mock.calls[0][2])).not.toMatch(/deliveryMetrics|criterionKey|"answer"/);
     expect(await screen.findByLabelText('admin.rubrics.try.result.yours')).toBeInTheDocument();
     expect(screen.getByText('admin.rubrics.try.result.fluencySkipped')).toBeInTheDocument();
@@ -200,22 +200,23 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     expect(screen.queryByText('admin.rubrics.try.result.aiSection')).not.toBeInTheDocument();
   });
 
-  it('bật "3 bài AI" ⇒ gửi includeAiSamples=true và lượt có bài AI hiện mục so sánh (3 dải Yếu/Khá/Xuất sắc)', async () => {
+  it('2026-10-03: không còn lựa chọn "3 bài AI"; lượt CŨ chỉ có bài AI ⇒ ghi rõ là lượt cũ, không vẽ Yếu/Khá/Xuất sắc', async () => {
     mockHappyPath();
+    // `run` của file này chỉ có 3 bài AI (không có bài Custom) — đúng hình dạng một lượt lưu trước mốc.
     const previewSpy = vi.spyOn(adminRubricService, 'preview').mockResolvedValue(run);
     renderPage();
     await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
     openTryTab();
     const runButton = await screen.findByRole('button', { name: 'admin.rubrics.try.run.free' });
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'admin.rubrics.try.mode.paste' }));
     fireEvent.change(screen.getByLabelText('admin.rubrics.try.mode.paste'), { target: { value: 'Bài tôi tự dán.' } });
-    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(runButton);
     await waitFor(() => expect(previewSpy).toHaveBeenCalledTimes(1));
-    expect(previewSpy.mock.calls[0][2]).toMatchObject({ includeAiSamples: true, customAnswer: 'Bài tôi tự dán.' });
-    expect(await screen.findByText('admin.rubrics.try.result.aiSection')).toBeInTheDocument();
-    expect(screen.getByText('employer.campaigns.rubricPreview.band.Weak')).toBeInTheDocument();
-    expect(screen.getByText('employer.campaigns.rubricPreview.band.Excellent')).toBeInTheDocument();
+    expect(previewSpy.mock.calls[0][2]).not.toHaveProperty('includeAiSamples');
+    expect(await screen.findByTestId('admin-try-legacy')).toHaveTextContent('admin.rubrics.try.result.legacyAiOnly');
+    expect(screen.queryByText('employer.campaigns.rubricPreview.band.Weak')).not.toBeInTheDocument();
+    expect(screen.queryByText('admin.rubrics.try.result.aiSection')).not.toBeInTheDocument();
   });
 
   it('đổi câu hỏi khi ĐÃ có bài ⇒ hỏi trước; huỷ thì giữ nguyên câu và bài', async () => {

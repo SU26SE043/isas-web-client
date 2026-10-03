@@ -109,29 +109,6 @@ export type RubricPreviewBlocker =
   | { kind: 'closed' }
   | { kind: 'running' };
 
-/**
- * Kết luận tầng 1 — suy từ dữ liệu, KHÔNG dùng |Δ| làm thước chính: mức kỳ vọng do code chọn trước khi AI viết,
- * nên Δ nhỏ chỉ chứng minh người viết và người chấm (cùng một model) đồng ý với nhau.
- */
-export interface RubricPreviewVerdict {
-  /** Weak < Good < Excellent theo điểm THẬT có giữ không. */
-  ordering: 'ok' | 'broken';
-  /** Excellent − Weak (điểm thật, %). Dưới 30 = thước đo không phân biệt. */
-  range: number;
-  /** Δ = thật − kỳ vọng trên 3 bài AI viết: cùng dấu cả 3 ⇒ thiên lệch một chiều. */
-  bias: 'none' | 'positive' | 'negative';
-  maxAbsDelta: number;
-  verdict: 'discriminates' | 'weak' | 'inconclusive';
-  /** Chồng ngưỡng Đạt (passScorePct) lên từng bài — kiểm luôn ngưỡng HR đặt. */
-  threshold: { pct: number; failing: RubricPreviewBand[] } | null;
-  /**
-   * "Nén về giữa": bài Yếu bị chấm CAO hơn mốc kỳ vọng ở ≥ nửa số tiêu chí VÀ bài Xuất sắc bị chấm THẤP hơn ở ≥ nửa
-   * ⇒ mốc thấp quá dễ đạt, mốc cao quá khó — đây là chẩn đoán HR sửa được (viết lại mốc), khác `bias` (cả 3 cùng dấu).
-   * `null` = không nén (hoặc không đủ dữ liệu tiêu chí để kết luận).
-   */
-  compression: { weakOver: number; excellentUnder: number; total: number } | null;
-}
-
 /** Badge so hai lượt: chỉ "cùng thước đo" khi CẢ fingerprint LẪN promptVersion trùng (admin đổi prompt chấm cũng đổi điểm). */
 export type RubricPreviewComparability = 'same' | 'rubricChanged' | 'promptChanged' | 'bothChanged';
 

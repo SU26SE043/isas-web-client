@@ -49,7 +49,7 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
       if (req.method() === 'GET') return json([]);
       const body = req.postDataJSON();
       previews.push(body);
-      return json(body.includeAiSamples ? run : customRun);
+      return json(customRun);
     }
     if (req.method() === 'PUT') { puts.push(req.postDataJSON()); return json({ ...rubric, version: 3, changed: true }); }
     return json(rubric);
@@ -95,7 +95,7 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   expect(JSON.stringify(puts[0])).not.toMatch(/"maxScore"|"scoringMethod"/);
 
   // (3) Tự thử: chưa có bài ⇒ nút Chấm tắt; chuyển "Paste" → dán bài → Chấm gửi ĐÚNG hợp đồng
-  // (sampleQuestionId + customAnswer + includeAiSamples=false, KHÔNG deliveryMetrics) → hiện "Your answer",
+  // (sampleQuestionId + customAnswer, KHÔNG deliveryMetrics, KHÔNG cờ 3 bài AI) → hiện "Your answer",
   // nói rõ trôi chảy không chấm vì không có bản ghi; không có mục 3 bài AI.
   // Panel tự thử nằm ở tab riêng; nút ở đầu trang mở nó và ghim ?tab=try vào URL.
   await page.getByRole('button', { name: /Try the rubric yourself/ }).click();
@@ -114,13 +114,8 @@ test('admin edits the weighted rubric, saves the RUB1 body, and grades their OWN
   await expect(page.getByText(/A pasted answer has no recording/)).toBeVisible();
   await expect(page.getByText(/Compared with 3 AI-written samples/)).toHaveCount(0);
   expect(previews).toHaveLength(1);
-  expect(previews[0]).toEqual({ sampleQuestionId: 'q-1', customAnswer: 'My own answer.', includeAiSamples: false });
+  expect(previews[0]).toEqual({ sampleQuestionId: 'q-1', customAnswer: 'My own answer.' });
 
-  // (4) Bật "3 bài AI" → lượt thứ hai mang includeAiSamples=true và mục so sánh hiện 3 dải.
-  await page.getByRole('checkbox').check();
-  await grade.click();
-  await expect(page.getByText(/Compared with 3 AI-written samples/)).toBeVisible();
-  await expect(page.getByText('Weak', { exact: true })).toBeVisible();
-  expect(previews).toHaveLength(2);
-  expect(previews[1]).toMatchObject({ includeAiSamples: true });
+  // (4) 2026-10-03: không còn lựa chọn "3 bài AI" — chấm thử chỉ chấm bài của chính người dùng.
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
 });

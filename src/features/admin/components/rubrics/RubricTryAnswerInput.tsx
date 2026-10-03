@@ -76,13 +76,6 @@ export function RubricTryAnswerInput({ flow, questionKey, disabled }: RubricTryA
           : <span className={`${CHIP} bg-warning/10 text-warning`}>{t('admin.rubrics.try.chip.noAudio')}</span>}
       </div>
 
-      <label className="flex items-start gap-3 text-sm text-muted-foreground">
-        <input type="checkbox" checked={flow.includeAiSamples} disabled={disabled} onChange={(event) => flow.setIncludeAiSamples(event.target.checked)} className="mt-1" />
-        <span>
-          <span className="block text-foreground">{t('admin.rubrics.try.aiSamples.toggle')}</span>
-          <span className="block text-xs">{t('admin.rubrics.try.aiSamples.hint')}</span>
-        </span>
-      </label>
     </div>
   );
 }

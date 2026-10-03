@@ -6,7 +6,6 @@ import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
 import { RubricPreviewHistory, runNumberOf } from '@/features/employer-campaigns/components/wizard/preview/RubricPreviewHistory';
-import { RubricPreviewResult } from '@/features/employer-campaigns/components/wizard/preview/RubricPreviewResult';
 import { useRubricTryFlow, type RubricTryQuestionInput } from '../../hooks/useRubricTryFlow';
 import type { AdminRubricPreviewRequest, AdminRubricPreviewRun, AdminRubricSet } from '../../types/adminApi.types';
 import { toEmployerPreviewRun } from '../../utils/adminRubricApi';
@@ -24,7 +23,7 @@ interface AdminRubricPreviewPanelProps {
 
 /**
  * "Tự thử thước đo" (BC-8): người dùng chọn câu hỏi → NÓI (hoặc dán) → sửa bản chép lời → CHẤM bằng
- * đúng bộ chấm thật → đọc kết quả BÀI CỦA MÌNH. 3 bài AI (yếu/khá/xuất sắc) là tuỳ chọn tắt mặc định.
+ * đúng bộ chấm thật → đọc kết quả BÀI CỦA MÌNH. 2026-10-03: bỏ hẳn 3 bài AI (yếu/khá/xuất sắc) — chỉ chấm bài người dùng.
  * Chủ sản phẩm chốt 2026-09-16: "3 bài mẫu không cần lắm — cái cần là tự tạo câu hỏi, tự trả lời
  * bằng giọng nói, xem hệ chấm mình thế nào".
  */
@@ -72,7 +71,6 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
     return status && [400, 404, 409, 429, 502].includes(status) ? `admin.rubrics.preview.error.${status}` : 'admin.rubrics.preview.error.default';
   };
   const viewingCustom = viewing?.samples.find((s) => s.band === 'Custom') ?? null;
-  const viewingHasAi = Boolean(viewing?.samples.some((s) => s.band !== 'Custom'));
 
   return (
     <section className="space-y-5 rounded-xl border border-satin bg-surface-raised p-4" aria-label={t('admin.rubrics.try.title')}>
@@ -111,13 +109,8 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
           </div>
           {latest && viewing.id !== latest.id ? <button type="button" className="text-xs text-info underline" onClick={() => setViewingId(null)}>{t('employer.campaigns.rubricPreview.result.backToLatest')}</button> : null}
           {viewingCustom ? <RubricTryYourScore run={viewing} sample={viewingCustom} /> : null}
-          {viewingHasAi ? (
-            <details className="rounded-xl border border-satin p-3" open={!viewingCustom}>
-              <summary className="cursor-pointer text-sm font-medium text-foreground">{t('admin.rubrics.try.result.aiSection')}</summary>
-              <div className="mt-3">
-                <RubricPreviewResult run={toEmployerPreviewRun(viewing)} runNumber={runNumberOf(employerRuns, viewing.id) || runs.length + 1} passScorePct={null} dimmed={preview.isPending} />
-              </div>
-            </details>
+          {viewing.status === 'Succeeded' && !viewingCustom ? (
+            <p className="text-sm text-muted-foreground" data-testid="admin-try-legacy">{t('admin.rubrics.try.result.legacyAiOnly')}</p>
           ) : null}
         </div>
       ) : null}

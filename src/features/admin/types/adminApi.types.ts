@@ -96,15 +96,14 @@ export type AdminDeliveryMetrics = {
 /** Kết quả chép lời bản ghi của chính người dùng (POST …/preview/transcribe). `noSpeech` = VAD không thấy tiếng nói. */
 export type AdminPreviewTranscribeResult = { transcript: string; deliveryMetrics: AdminDeliveryMetrics | null; transcriptEngine: string | null; noSpeech: boolean };
 /**
- * `includeAiSamples=false` ⇒ KHÔNG bắt AI viết 3 bài mẫu, chỉ chấm `customAnswer` (bắt buộc có).
+ * Chấm thử CHỈ chấm `customAnswer` (bắt buộc có — 2026-10-03, không còn 3 bài AI).
  * `deliveryMetrics` = số đo của chính bản ghi (echo từ bước chép lời) ⇒ BE đo luôn tiêu chí trôi chảy.
  */
 export type AdminRubricPreviewRequest = {
   question?: string | null;
-  customAnswer?: string | null;
+  customAnswer: string;
   seniority?: string | null;
   sampleQuestionId?: string | null;
-  includeAiSamples?: boolean;
   deliveryMetrics?: AdminDeliveryMetrics | null;
 };
 export type AdminRubricPreviewStatus = 'Running' | 'Succeeded' | 'Failed';

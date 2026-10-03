@@ -44,6 +44,7 @@ describe('CampaignQuestionsStep — correction T9-R3 (F2): câu đang chấm s�
   it('bấm "Lưu & chấm thử" ở client-2, rồi questions đổi thành [S1,S2] ⇒ header S2 mang badge "#2", card S1 chặn "#2" (không "#?")', () => {
     const { rerender } = render(<CampaignQuestionsStep {...props} questions={[q('client-1', 'Câu một'), q('client-2', 'Câu hai')]} />);
     fireEvent.click(within(cardOf('client-2')).getByRole('button', { name: /Câu hai/ }));
+    fireEvent.change(within(cardOf('client-2')).getByLabelText('employer.campaigns.questionCard.preview.custom.label'), { target: { value: 'Bài của tôi' } });
     fireEvent.click(within(cardOf('client-2')).getByRole('button', { name: 'employer.campaigns.rubricPreview.runSave' }));
     expect(hook.run).toHaveBeenCalledTimes(1);
     expect(within(cardOf('client-2')).getByTestId('question-card-running')).toHaveTextContent('Đang chấm câu #2');
