@@ -492,6 +492,13 @@ select {
     border-color: var(--satin-border);
   }
 
+  /* Vạch kẻ satin cho `divide-y`/`divide-x`. Tailwind chỉ sinh `divide-<màu>` từ --color-* trong @theme; satin là
+     token riêng như .border-satin ⇒ thiếu rule này thì `divide-satin` là class chết, vạch rơi về currentColor
+     (đo trên dev: rgb(24, 24, 27)). `:where()` giữ specificity 0 giống divide-* Tailwind sinh ra. */
+  :where(.divide-satin > :not(:last-child)) {
+    border-color: var(--satin-border);
+  }
+
   /* === LAYOUT === */
   .page-container {
     width: 100%;

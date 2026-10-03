@@ -36,4 +36,9 @@ describe('ProctoringAnalysis', () => {
     render(<ProctoringAnalysis flags={[f('weird_new_signal', 2)]} />);
     expect(screen.getByText(/weird_new_signal: 2/)).toBeInTheDocument();
   });
+
+  it('dịch note anti-cheat đã biết và biến thể đang khắc phục thiết bị', () => {
+    render(<ProctoringAnalysis flags={[{ ...f('focus_lost', 1), note: 'Candidate lost focus from the interview window. (đang khắc phục thiết bị)' }]} />);
+    expect(screen.getByText('employer.campaigns.results.flagNotes.focusLost employer.campaigns.results.flagNotes.recoverySuffix')).toBeInTheDocument();
+  });
 });

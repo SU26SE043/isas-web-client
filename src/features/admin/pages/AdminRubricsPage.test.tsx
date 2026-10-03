@@ -6,9 +6,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { adminRubricService } from '../services/adminRubric.service';
 import type { AdminRubricMatrixRow, AdminRubricPreviewRun, AdminRubricSet } from '../types/adminApi.types';
+import { formatRunTime } from '@/features/employer-campaigns/components/wizard/preview/formatRunTime';
 import { AdminRubricsPage } from './AdminRubricsPage';
 
-vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'vi' }) }));
+// Nhãn lượt trả TEMPLATE thật để {time} được thay (trả nguyên khoá thì không bắt được số/giờ sai); khoá khác trả khoá.
+vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => (key === 'admin.rubrics.try.result.run' ? 'RUN@{time}' : key), language: 'vi' }) }));
 
 // Fixture theo ĐÚNG DTO `AdminRubric.cs` (descriptor · id · jobCategory). Bản test cũ dựng
 // `{ key, description }` theo type FE tự bịa ⇒ xanh vì lý do sai, màn hình thật trống.
@@ -217,6 +219,17 @@ describe('AdminRubricsPage — tự thử thước đo', () => {
     expect(await screen.findByTestId('admin-try-legacy')).toHaveTextContent('admin.rubrics.try.result.legacyAiOnly');
     expect(screen.queryByText('employer.campaigns.rubricPreview.band.Weak')).not.toBeInTheDocument();
     expect(screen.queryByText('admin.rubrics.try.result.aiSection')).not.toBeInTheDocument();
+  });
+
+  it('BE trả 20 lượt mới nhất ⇒ lượt đang xem gọi bằng GIỜ của nó, không "Lượt 20" (số theo vị trí trong cửa sổ)', async () => {
+    mockHappyPath();
+    const window = Array.from({ length: 20 }, (_, i) => ({ ...customRun, id: `w${i}`, createdAt: new Date(Date.UTC(2026, 9, 3, 7, 5, 0) - i * 7000).toISOString() }));
+    vi.mocked(adminRubricService.previewHistory).mockResolvedValue(window);
+    renderPage();
+    await screen.findByRole('tab', { name: 'admin.rubrics.tab.try' });
+    openTryTab();
+    expect(await screen.findByText(`RUN@${formatRunTime(window[0].createdAt, 'vi')}`)).toBeInTheDocument();
+    expect(screen.queryByText(/^RUN@\d+$/)).not.toBeInTheDocument();
   });
 
   it('đổi câu hỏi khi ĐÃ có bài ⇒ hỏi trước; huỷ thì giữ nguyên câu và bài', async () => {

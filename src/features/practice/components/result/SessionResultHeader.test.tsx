@@ -10,7 +10,7 @@ import { SessionResultHeader } from './SessionResultHeader';
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'en' }) }));
 
 const base: PracticeSessionResultViewModel = { id: 's1', title: 'Practice', status: 'Scored', maxScore: 100, answeredCount: 1, skippedCount: 0, totalQuestions: 1, strengths: [], improvements: [], nextSteps: [], criteria: [], questions: [], hasResult: true, focusTrackingEnabled: true, focusEvents: null };
-function renderHeader(focusEvents: PracticeSessionResultViewModel['focusEvents']) { return render(<MemoryRouter><SessionResultHeader view={{ ...base, focusEvents, focusLeaveCount: 3 }} /></MemoryRouter>); }
+function renderHeader(focusEvents: PracticeSessionResultViewModel['focusEvents']) { return render(<MemoryRouter><SessionResultHeader view={{ ...base, focusEvents }} /></MemoryRouter>); }
 
 afterEach(() => cleanup());
 

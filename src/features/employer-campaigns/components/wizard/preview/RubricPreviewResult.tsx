@@ -7,13 +7,12 @@ import { useLanguage } from '@/shared/languages';
 import type { RubricPreviewRun } from '../../../types/rubricPreview.types';
 import { customSampleOf, passesThreshold } from '../../../utils/rubricPreviewVerdict';
 import { formatPct } from './formatPct';
+import { formatRunTime } from './formatRunTime';
 
 export { formatPct };
 
 export interface RubricPreviewResultProps {
   run: RubricPreviewRun;
-  /** Số thứ tự theo thời gian (1 = lượt đầu tiên của câu). */
-  runNumber: number;
   passScorePct: number | null;
   onEditLevels?: () => void;
   onBackToLatest?: () => void;
@@ -26,14 +25,10 @@ export interface RubricPreviewResultProps {
  * theo ngưỡng, rồi từng tiêu chí kèm mức + lý do trích từ bài. Không còn 3 bài AI Yếu/Khá/Xuất sắc và kết luận
  * "thứ tự / biên độ" dựng trên chúng. Lượt CŨ chỉ có bài AI ⇒ nói rõ là lượt cũ, không vẽ lại bảng 3 bài.
  */
-export function RubricPreviewResult({ run, runNumber, passScorePct, onEditLevels, onBackToLatest, dimmed = false }: RubricPreviewResultProps) {
+export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToLatest, dimmed = false }: RubricPreviewResultProps) {
   const { t, language } = useLanguage();
-  const created = new Date(run.createdAt);
-  const dateLabel = Number.isNaN(created.getTime())
-    ? run.createdAt
-    : created.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' });
   const header = t('employer.campaigns.rubricPreview.result.header')
-    .replace('{{n}}', String(runNumber)).replace('{{version}}', String(run.rubricVersion)).replace('{{date}}', dateLabel);
+    .replace('{{date}}', formatRunTime(run.createdAt, language)).replace('{{version}}', String(run.rubricVersion));
   const failed = run.status === 'Failed';
   const mine = run.status === 'Succeeded' ? customSampleOf(run) : null;
   const passed = mine ? passesThreshold(mine.actualWeightedPct, passScorePct) : null;

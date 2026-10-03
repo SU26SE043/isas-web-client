@@ -25,7 +25,7 @@ describe('Tab Tổng quan — mục "Mất tập trung trong buổi" hiện th�
       { signalType: 'focus_lost', count: 1, firstAt: '2026-10-03T02:17:26Z', lastAt: '2026-10-03T02:17:26Z' },
       { signalType: 'multiple_faces', count: 1, firstAt: '2026-10-03T02:17:47Z', lastAt: '2026-10-03T02:17:47Z' },
       { signalType: 'camera_blocked', count: 2, firstAt: '2026-10-03T02:17:14Z', lastAt: '2026-10-03T02:17:30Z' },
-    ], { focusLeaveCount: 1, focusFrameCount: 3 })} />);
+    ])} />);
     const section = screen.getByRole('region', { name: 'practice.result.focusTracking.title' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(within(section).getByTestId('focus-metric-window')).toHaveTextContent(/^01$/);

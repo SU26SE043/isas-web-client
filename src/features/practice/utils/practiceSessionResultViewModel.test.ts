@@ -104,7 +104,7 @@ describe('practiceSessionResultViewModel — focusTracking: khung hình đếm R
     focusTrackingEnabled: true,
   } as unknown as PracticeSessionResponse;
 
-  it('no_face/multiple_faces KHÔNG cộng vào focusLeaveCount; vào focusFrameCount; placement chỉ theo hành vi', () => {
+  it('placement chỉ theo RỜI tab/cửa sổ: khung hình ở nửa sau KHÔNG kéo thành "rải trong buổi"', () => {
     // Nhịp kiểm mặt 15s: 40 lần no_face là chuyện thường của người cúi xuống ghi chú — cộng vào "rời khỏi
     // buổi" thì ô Tổng quan hiện ×42 và khuyên "đóng các tab khác" cho người chưa hề rời tab.
     const view = mapPracticeSessionResponseToViewModel({
@@ -115,34 +115,30 @@ describe('practiceSessionResultViewModel — focusTracking: khung hình đếm R
         { signalType: 'multiple_faces', count: 3, firstAt: '2026-09-17T10:25:00Z', lastAt: '2026-09-17T10:26:00Z' },
       ],
     });
-    expect(view.focusLeaveCount).toBe(2);
-    expect(view.focusFrameCount).toBe(43);
     // Hành vi chỉ ở nửa đầu (10:02–10:05, giữa buổi là 10:15) — khung hình ở nửa sau KHÔNG được kéo thành 'spread'.
     expect(view.focusLeavePlacement).toBe('firstHalf');
   });
 
-  it('chỉ có khung hình → leave = 0, không có placement, frame = tổng', () => {
+  it('chỉ có khung hình → không có placement', () => {
     const view = mapPracticeSessionResponseToViewModel({
       ...base,
       focusEvents: [
         { signalType: 'no_face', count: 5, firstAt: '2026-09-17T10:20:00Z', lastAt: '2026-09-17T10:29:00Z' },
       ],
     });
-    expect(view.focusLeaveCount).toBe(0);
-    expect(view.focusFrameCount).toBe(5);
     expect(view.focusLeavePlacement).toBeUndefined();
   });
 
-  it('camera_blocked (che cam) thuộc nhóm khung hình, KHÔNG cộng vào rời khỏi buổi', () => {
+  it('dán là nhóm RIÊNG: lần dán ở nửa sau KHÔNG kéo placement của "rời buổi" thành "rải trong buổi"', () => {
     const view = mapPracticeSessionResponseToViewModel({
       ...base,
       focusEvents: [
         { signalType: 'focus_lost', count: 1, firstAt: '2026-09-17T10:02:00Z', lastAt: '2026-09-17T10:02:00Z' },
+        { signalType: 'paste', count: 2, firstAt: '2026-09-17T10:25:00Z', lastAt: '2026-09-17T10:26:00Z' },
         { signalType: 'camera_blocked', count: 4, firstAt: '2026-09-17T10:20:00Z', lastAt: '2026-09-17T10:21:00Z' },
       ],
     });
-    expect(view.focusLeaveCount).toBe(1);
-    expect(view.focusFrameCount).toBe(4);
+    expect(view.focusLeavePlacement).toBe('firstHalf');
   });
 });
 
