@@ -94,7 +94,11 @@ export interface LearningMilestone {
 
 export interface LearningRoadmapResolvedSession {
   id: string;
+  /** Lúc buổi xong (completedAt), thiếu thì lúc tạo buổi. null = BE cũ chỉ trả id trần. */
   date: string | null;
+  score: number | null;
+  /** null = buổi luyện tự do (không thuộc lộ trình nào). */
+  lessonTitle: string | null;
 }
 
 export interface LearningRoadmapResolvedFrom {
