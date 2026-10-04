@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { checkPracticeFace, recordFocusEvent } from '../services/b2cPracticeSession.service';
 import {
   captureVideoFrameAsJpegFile,
-  isUsableCameraFrame,
   isVideoFrameReady,
 } from '@/features/campaigns/utils/captureJpegFile';
+import { isCameraCovered } from '../utils/cameraCoverCheck';
 import { FACE_CHECK_INTERVAL_MS, useB2cFaceCheck } from './useB2cFaceCheck';
 
 vi.mock('../services/b2cPracticeSession.service', () => ({
@@ -16,14 +16,16 @@ vi.mock('../services/b2cPracticeSession.service', () => ({
 vi.mock('@/features/campaigns/utils/captureJpegFile', () => ({
   captureVideoFrameAsJpegFile: vi.fn(),
   isVideoFrameReady: vi.fn(() => true),
-  isUsableCameraFrame: vi.fn(() => true),
+}));
+vi.mock('../utils/cameraCoverCheck', () => ({
+  isCameraCovered: vi.fn(() => false),
 }));
 
 const checkFace = vi.mocked(checkPracticeFace);
 const record = vi.mocked(recordFocusEvent);
 const capture = vi.mocked(captureVideoFrameAsJpegFile);
 const frameReady = vi.mocked(isVideoFrameReady);
-const frameUsable = vi.mocked(isUsableCameraFrame);
+const frameCovered = vi.mocked(isCameraCovered);
 
 function setVisibility(value: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', { configurable: true, value });
@@ -37,8 +39,8 @@ describe('useB2cFaceCheck', () => {
     capture.mockResolvedValue(new File(['frame'], 'frame.jpg', { type: 'image/jpeg' }));
     frameReady.mockReset();
     frameReady.mockReturnValue(true);
-    frameUsable.mockReset();
-    frameUsable.mockReturnValue(true);
+    frameCovered.mockReset();
+    frameCovered.mockReturnValue(false);
     checkFace.mockReset();
     record.mockReset();
     // Jitter = 0 để nhịp lập lịch đoán trước được (Math.random=0.5 → (0.5*2-1)*jitter = 0).
@@ -52,10 +54,10 @@ describe('useB2cFaceCheck', () => {
     vi.restoreAllMocks();
   });
 
-  it('khung TỐI → onSignal(low_light) tại chỗ, KHÔNG chụp, KHÔNG gọi AI; lặp thì không báo lại; sáng lại → null', async () => {
+  it('camera BỊ CHE (tối kịt / mờ phẳng) → onSignal(low_light) tại chỗ, KHÔNG chụp, KHÔNG gọi AI; lặp thì không báo lại; sáng lại → null', async () => {
     // 2026-09-18 prod: che cam cả buổi ⇒ helper (lọc khung tối, sinh ra cho ảnh MỐC B2B) trả null ở
     // mọi nhịp ⇒ 0 request, 0 toast — người luyện không được nhắc gì. Nay tối = lời nhắc bật đèn.
-    frameUsable.mockReturnValue(false);
+    frameCovered.mockReturnValue(true);
     checkFace.mockResolvedValue({ faceCount: 1, signals: [] });
     const onSignal = vi.fn();
     renderHook(() => useB2cFaceCheck({ sessionId: 's1', enabled: true, videoEl: document.createElement('video'), onSignal }));
@@ -71,7 +73,7 @@ describe('useB2cFaceCheck', () => {
     expect(onSignal).toHaveBeenCalledTimes(1);    // vẫn tối ⇒ không dội toast
     expect(record).toHaveBeenCalledTimes(2);      // nhưng VẪN ghi mỗi lượt kiểm (cùng nhịp với no_face phía server)
 
-    frameUsable.mockReturnValue(true);            // bật đèn: khung sáng, có mặt
+    frameCovered.mockReturnValue(false);          // bỏ tay ra: khung có nét, có mặt
     await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
     expect(checkFace).toHaveBeenCalledTimes(1);
     expect(onSignal).toHaveBeenLastCalledWith(null);   // tín hiệu đã hết
