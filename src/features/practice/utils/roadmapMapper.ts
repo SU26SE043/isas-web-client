@@ -19,6 +19,7 @@ import type {
   ApiRoadmapMilestone,
   ApiRoadmapResolvedFrom,
   ApiRoadmapResolvedSession,
+  ApiRoadmapSourceSession,
   LearningResource,
 } from '../types/roadmap.api.types';
 
@@ -67,17 +68,34 @@ function pickNumber(...values: unknown[]): number {
   return 0;
 }
 
+type ResolvedSession = NonNullable<LearningRoadmapDetail['resolvedFrom']>['sessions'][number];
+
 function mapResolvedFrom(raw: ApiRoadmapResolvedFrom | null | undefined): LearningRoadmapDetail['resolvedFrom'] {
   if (!raw || typeof raw !== 'object') return null;
-  const sessions = asArray<ApiRoadmapResolvedSession>(raw.sessionIds)
-    .map((session) => {
+  // BE từ 2026-10-04 trả `sessions` kèm ngày/điểm/tên bài. `sessionIds` chỉ là id trần — đọc nó
+  // làm nguồn chính là đúng lỗi cũ: mọi ô in "Ngày phiên luyện chưa có" dù buổi có ngày thật.
+  const rich = asArray<ApiRoadmapSourceSession>(raw.sessions)
+    .map((session): ResolvedSession | null => {
+      const item = asRecord(session);
+      const id = pickString(item?.id);
+      if (!id) return null;
+      return {
+        id,
+        date: pickString(item?.completedAt, item?.createdAt) || null,
+        score: typeof item?.overallScore === 'number' && Number.isFinite(item.overallScore) ? item.overallScore : null,
+        lessonTitle: pickString(item?.lessonTitle) || null,
+      };
+    })
+    .filter((session): session is ResolvedSession => session !== null);
+  const sessions = rich.length > 0 ? rich : asArray<ApiRoadmapResolvedSession>(raw.sessionIds)
+    .map((session): ResolvedSession | null => {
       const item = typeof session === 'string' ? null : asRecord(session);
       const id = typeof session === 'string' ? session.trim() : pickString(item?.id, item?.sessionId);
       if (!id) return null;
       const date = item ? pickString(item.date, item.createdAt, item.completedAt) || null : null;
-      return { id, date };
+      return { id, date, score: null, lessonTitle: null };
     })
-    .filter((session): session is { id: string; date: string | null } => session !== null);
+    .filter((session): session is ResolvedSession => session !== null);
   return {
     sessions,
     baselineAvailable: raw.baselineAvailable === true,

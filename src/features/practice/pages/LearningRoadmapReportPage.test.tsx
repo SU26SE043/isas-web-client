@@ -140,4 +140,19 @@ describe('LearningRoadmapReportPage', () => {
 
     expect(screen.getByText('practice.learningPath.improvementsEmpty')).toBeInTheDocument();
   });
+
+  // Từ 2026-10-04 BE điền ba ô theo luật cả khi lộ trình còn dở ⇒ ô rỗng = thật sự không có tiêu chí
+  // khớp, mỗi ô phải nói đúng điều đó; ô có nội dung thì hiện đúng từng dòng BE gửi.
+  it('ô Điểm mạnh/Điểm yếu rỗng ⇒ câu riêng; có nội dung ⇒ hiện từng dòng', async () => {
+    vi.mocked(roadmapPracticeService.getRoadmapReport).mockResolvedValue(
+      filledReport({ weaknesses: ['Thiết kế (35%)', 'Thuật ngữ (44%)'], improvements: ['Thuật ngữ: 10% → 44% (+34)'] }),
+    );
+    await renderPage();
+
+    expect(screen.getByText('practice.learningPath.strengthsEmpty')).toBeInTheDocument();
+    expect(screen.queryByText('practice.learningPath.weaknessesEmpty')).not.toBeInTheDocument();
+    expect(screen.getByText('Thiết kế (35%)')).toBeInTheDocument();
+    expect(screen.getByText('Thuật ngữ: 10% → 44% (+34)')).toBeInTheDocument();
+    expect(screen.queryByText('practice.learningPath.improvementsEmpty')).not.toBeInTheDocument();
+  });
 });

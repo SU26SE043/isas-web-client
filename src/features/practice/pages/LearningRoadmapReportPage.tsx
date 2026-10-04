@@ -142,18 +142,21 @@ export function LearningRoadmapReportPage() {
           ngay. Cặp `...Vi` chỉ tồn tại trong fixtures mock — đó là lý do lỗi chạy đẹp lúc phát
           triển và chỉ lộ ra với dữ liệu thật.
         */}
+        {/*
+          Từ 2026-10-04 BE luôn điền ba ô này (theo luật khi lộ trình còn dở, AI khi chốt), nên ô
+          RỖNG nghĩa là THẬT SỰ không có tiêu chí nào khớp — mỗi ô cần câu nói đúng điều đó, dấu
+          "—" trơ bị đọc thành "hệ thống hỏng".
+        */}
         <ListBlock
           title={t('practice.learningPath.strengths')}
           items={language === 'vi' && data.strengthsVi.length > 0 ? data.strengthsVi : data.strengths}
+          emptyText={t('practice.learningPath.strengthsEmpty')}
         />
         <ListBlock
           title={t('practice.learningPath.weaknesses')}
           items={language === 'vi' && data.weaknessesVi.length > 0 ? data.weaknessesVi : data.weaknesses}
+          emptyText={t('practice.learningPath.weaknessesEmpty')}
         />
-        {/*
-          Ô này RỖNG một cách hợp lệ khi chưa tiêu chí nào có mốc để so, nên nó cần
-          câu giải thích riêng — dấu "—" trơ ở đây bị đọc thành "hệ thống hỏng".
-        */}
         <ListBlock
           title={t('practice.learningPath.improvements')}
           items={language === 'vi' && data.improvementsVi.length > 0 ? data.improvementsVi : data.improvements}

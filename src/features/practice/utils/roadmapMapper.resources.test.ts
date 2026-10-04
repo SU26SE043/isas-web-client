@@ -85,12 +85,44 @@ describe('mapApiRoadmapDetail provenance', () => {
 
     expect(mapped.resolvedFrom).toEqual({
       sessions: [
-        { id: 'session-1', date: '2026-08-20T10:00:00Z' },
-        { id: 'session-2', date: '2026-08-21T10:00:00Z' },
+        { id: 'session-1', date: '2026-08-20T10:00:00Z', score: null, lessonTitle: null },
+        { id: 'session-2', date: '2026-08-21T10:00:00Z', score: null, lessonTitle: null },
       ],
       baselineAvailable: false,
       scope: 'Frontend',
     });
+  });
+
+  // Hình dạng BE THẬT: `sessionIds` là id trần (không ngày) + `sessions` kèm ngày/điểm/tên bài
+  // (từ 2026-10-04). Đọc `sessionIds` làm nguồn chính là lỗi cũ "Ngày phiên luyện chưa có".
+  it('prefers rich sessions (date, score, lesson title) over bare sessionIds', () => {
+    const mapped = mapApiRoadmapDetail({
+      id: 'roadmap-3',
+      milestones: [],
+      resolvedFrom: {
+        sessionIds: ['s-1', 's-2'],
+        sessions: [
+          { id: 's-1', createdAt: '2026-10-04T10:41:03Z', completedAt: '2026-10-04T10:44:55Z', overallScore: 41.2, lessonTitle: 'DML cơ bản' },
+          { id: 's-2', createdAt: '2026-09-17T07:02:10Z', completedAt: null, overallScore: null, lessonTitle: null },
+        ],
+        baselineAvailable: true,
+        scope: null,
+      },
+    });
+
+    expect(mapped.resolvedFrom?.sessions).toEqual([
+      { id: 's-1', date: '2026-10-04T10:44:55Z', score: 41.2, lessonTitle: 'DML cơ bản' },
+      { id: 's-2', date: '2026-09-17T07:02:10Z', score: null, lessonTitle: null },
+    ]);
+  });
+
+  it('falls back to bare id strings (older backend) with an unknown date', () => {
+    const mapped = mapApiRoadmapDetail({
+      id: 'roadmap-4',
+      milestones: [],
+      resolvedFrom: { sessionIds: ['s-9'], baselineAvailable: true },
+    });
+    expect(mapped.resolvedFrom?.sessions).toEqual([{ id: 's-9', date: null, score: null, lessonTitle: null }]);
   });
 
   it('keeps provenance absent when the backend omits resolvedFrom', () => {
