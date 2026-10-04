@@ -36,7 +36,7 @@ Wizard at `/employer/campaigns/new` (and draft edit): **6 steps**
 2. Job description — file (local-only until create) **or** text for `jdText`, plus a `criteriaText` note
 3. Evaluation criteria — HR may write criteria or preview the system default set by domain/language; criteria preserve `id`, `levels`, and optional `minPct` floor (0–100). Weights are shown as % and converted to 0–1 decimals on submit.
 4. Questions — AI-generated or HR-authored, each with `prompt`, `source`, `questionGroup`, `isRequired` (“Luôn hỏi”); the question bank shows K questions per candidate and group counts.
-5. Settings — first block **“Luật làm bài”** (ATT1-F1): `timeLimitMinutes` (5–180) and `maxAttempts` (1 / 2 / 3, default 1); then `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion`, `maxQuestions = min(20, K×(1+d))`, and `maxFollowUps`.
+5. Settings — first block **“Luật làm bài”** (ATT1-F1): `timeLimitMinutes` (5–180) and `maxAttempts` (1 / 2 / 3, default 1); then `antiCheatEnabled`, `faceVerifyEnabled`, `adaptiveEnabled`; adaptive depth presets map to `maxDeepPerQuestion` and `maxFollowUps`. `maxQuestions` is read-only and derived as `min(20, max(0, K×(1+d)))`, where `K = questionsPerSession` when positive, otherwise the authored question-bank count. There is no manual max-question input in the wizard.
 6. Review — read-only summary of every step with per-section "Edit" jump links, then **Create/Save** performs the final submit
 
 In step 4 draw mode, `questionsPerSession` (K) is the **total** base questions each candidate receives, including every required question. The “Bốc” input shows and accepts only the number drawn from the optional pool; its value is converted to K by adding the required count. Switching a question between required and pool keeps K unchanged and updates the displayed draw. K is limited to 1–20; `null` means the full bank. The pool heading displays the computed draw and actual pool size. This correction applies to the Draft wizard only and does not change the API or Active campaigns.
@@ -66,6 +66,7 @@ ATT1 makes two campaign values server-enforced rules (contract hash `7e4792f9939
 - Sitting length: whole number in **[5, 180]** minutes (new campaigns default to 60). Out of range → step-5 error `employer.campaigns.wizard.timeLimitInvalid`. Server `400` messages that mention `timeLimit` / `maxAttempts` also route back to step 5.
 - Maximum attempts: choose **1 / 2 / 3** (default 1); helper text says each retake costs 1 organization credit, draws different base questions, and can only be **increased** after deployment.
 - Estimate line: `ceil(K × (1 + d) × 2)` minutes, where `K = questionsPerSession ?? number of authored questions` and `d = maxDeepPerQuestion` when adaptive is on, else 0 (2 min = default 120 s answer time). When the sitting length is below the estimate the line turns warning-coloured — it **never blocks** saving.
+- Read-only question budget: the wizard shows `max(0, min(20, K × (1+d)))` and its formula; an empty bank shows “Chưa có câu hỏi ở bước 4” instead of `0 câu`. The same derived value is used in Review and create/update payloads; a zero result omits `maxQuestions` so the backend can preserve its no-limit meaning.
 - Requests: create always sends `maxAttempts` (and `timeLimitMinutes`) [C1]; the full Draft update body keeps both keys because the backend treats an absent key as “unchanged” [C2]; the dirty-only edit PUT sends them only when changed. Mapper reads `maxAttempts` from `CampaignResponse` [C5]; absent ⇒ 1.
 - Review (“Kiểm tra”) step: summary row “Luật làm bài · {minutes} phút · tối đa {n} lần” with **Sửa** jumping to step 5.
 
@@ -137,7 +138,7 @@ Legacy `/selection` redirects to `/invite`.
 | Apply system criteria (Draft only) | `POST /api/v1/campaign/{id}/criteria/from-system-default` |
 | Criteria contract | `criteria[].id`, `minPct`, `levels` are preserved through mapper and replace-all writes |
 | Questions contract | `questionsPerSession`, `questionGroup`, `isRequired`, `questionBankSummary` |
-| Adaptive validation | `maxDeepPerQuestion`, `maxQuestions`; surface `ADAPTIVE_BUDGET_TOO_SMALL` and `QUESTION_BANK_INVALID`. When `questionsPerSession` (K) is omitted, adaptive budget uses the full question-bank count (`questions.length`) — the same rule used by settings, review, and 400-error guidance. |
+| Adaptive validation | `maxDeepPerQuestion`, derived `maxQuestions`; surface `ADAPTIVE_BUDGET_TOO_SMALL` and `QUESTION_BANK_INVALID`. When `questionsPerSession` (K) is omitted, adaptive budget uses the full question-bank count (`questions.length`) — the same rule used by settings, review, and create/update payloads. |
 | Job-needs contract | `isMustHave`, `eligible`, `missingMustHave`; invitation may send `includeIneligible` |
 | CV screening ranking | `GET /api/v1/campaign/{id}/candidates` — `overallMatchScore` remains the sort score; `verificationRisk` and `screeningVersion` are separate flags |
 | CV screening detail | `GET /api/v1/campaign/{id}/candidates/{candidateId}` — `strengths`/`gaps` include CV evidence; legacy `criterionScores` is not rendered |

@@ -85,8 +85,6 @@ export type CampaignSettingsState = {
   adaptiveEnabled: boolean;
   /** >= 0; only sent to API when adaptiveEnabled. */
   maxFollowUps: number;
-  /** 0..20; only sent to API when adaptiveEnabled. */
-  maxQuestions: number;
   maxDeepPerQuestion?: number;
 };
 
@@ -203,7 +201,6 @@ export function createDefaultSettingsState(): CampaignSettingsState {
     faceVerifyEnabled: false,
     adaptiveEnabled: false,
     maxFollowUps: 2,
-    maxQuestions: 5,
     maxDeepPerQuestion: 0,
   };
 }

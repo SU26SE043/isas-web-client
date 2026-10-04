@@ -7,7 +7,7 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignSettingsState } from '../../types/campaignWizard.types';
 import {
   calculateAdaptiveQuestionBudget,
-  CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+  deriveCampaignMaxQuestions,
 } from '../../utils/campaignAdaptiveBudget';
 import { isValidCampaignTimeLimit } from '../../utils/campaignAttemptRules';
 import { CampaignAttemptRulesPanel, type CampaignAttemptRulesPatch } from './CampaignAttemptRulesPanel';
@@ -81,8 +81,13 @@ export function CampaignSettingsStep({
     questionCount,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
-    settings.maxQuestions,
   );
+  const derivedMaxQuestions = deriveCampaignMaxQuestions(
+    questionCount,
+    settings.adaptiveEnabled,
+    settings.maxDeepPerQuestion,
+  );
+  const baseQuestionCount = Number.isFinite(questionCount) ? Math.max(0, Math.floor(questionCount)) : 0;
 
   return (
     <SectionPanel
@@ -180,44 +185,62 @@ export function CampaignSettingsStep({
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="settings-max-questions">{t('employer.campaigns.form.maxQuestionsSetting')}</Label>
-              <Input
-                id="settings-max-questions"
-                type="number"
-                min={0}
-                max={CAMPAIGN_ADAPTIVE_QUESTION_LIMIT}
-                step={1}
-                disabled={isSaving}
-                value={settings.maxQuestions}
-                onChange={(e) =>
-                  onChange({
-                    maxQuestions: Number(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
+            <DerivedMaxQuestionsSummary
+              baseQuestionCount={baseQuestionCount}
+              derivedMaxQuestions={derivedMaxQuestions}
+              adaptiveEnabled={settings.adaptiveEnabled}
+              maxDeepPerQuestion={settings.maxDeepPerQuestion}
+              t={t}
+            />
           </section>
         ) : (
-          <section className="max-w-sm space-y-2 rounded-xl border border-satin bg-surface-overlay p-4">
-            <Label htmlFor="settings-max-questions">{t('employer.campaigns.form.maxQuestionsSetting')}</Label>
-            <Input
-              id="settings-max-questions"
-              type="number"
-              min={0}
-              max={CAMPAIGN_ADAPTIVE_QUESTION_LIMIT}
-              step={1}
-              disabled={isSaving}
-              value={settings.maxQuestions}
-              onChange={(e) =>
-                onChange({
-                  maxQuestions: Number(e.target.value) || 0,
-                })
-              }
+          <section className="max-w-sm rounded-xl border border-satin bg-surface-overlay p-4">
+            <DerivedMaxQuestionsSummary
+              baseQuestionCount={baseQuestionCount}
+              derivedMaxQuestions={derivedMaxQuestions}
+              adaptiveEnabled={settings.adaptiveEnabled}
+              maxDeepPerQuestion={settings.maxDeepPerQuestion}
+              t={t}
             />
           </section>
         )}
       </div>
     </SectionPanel>
+  );
+}
+
+function DerivedMaxQuestionsSummary({
+  baseQuestionCount,
+  derivedMaxQuestions,
+  adaptiveEnabled,
+  maxDeepPerQuestion,
+  t,
+}: {
+  baseQuestionCount: number;
+  derivedMaxQuestions: number;
+  adaptiveEnabled: boolean;
+  maxDeepPerQuestion?: number;
+  t: (key: string) => string;
+}) {
+  const hasQuestions = baseQuestionCount > 0;
+  const depth = adaptiveEnabled ? Math.max(0, Math.floor(maxDeepPerQuestion ?? 0)) : 0;
+  return (
+    <div aria-live="polite" className="space-y-1">
+      <p className="text-sm font-medium text-foreground">{t('employer.campaigns.form.maxQuestionsDerivedLabel')}</p>
+      <p className="text-lg font-semibold text-foreground">
+        {hasQuestions
+          ? t('employer.campaigns.form.maxQuestionsDerivedValue').replace('{{count}}', String(derivedMaxQuestions))
+          : t('employer.campaigns.form.maxQuestionsDerivedEmpty')}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {hasQuestions
+          ? t(depth > 0
+            ? 'employer.campaigns.form.maxQuestionsDerivedFormula'
+            : 'employer.campaigns.form.maxQuestionsDerivedBaseFormula')
+              .replace('{{base}}', String(baseQuestionCount))
+              .replace('{{depth}}', String(depth))
+          : t('employer.campaigns.form.maxQuestionsDerivedEmptyHelp')}
+      </p>
+    </div>
   );
 }

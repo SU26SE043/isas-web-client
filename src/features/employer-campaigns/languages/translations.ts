@@ -1261,7 +1261,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.questionsExceedMax':
       'Ngân hàng đề vượt trần {{max}} câu của một chiến dịch.',
     'employer.campaigns.wizard.maxFollowUpsInvalid': 'Số câu hỏi đào sâu tối đa phải là số nguyên từ 0 đến 20.',
-    'employer.campaigns.wizard.maxQuestionsInvalid': 'Số câu hỏi tối đa phải trong khoảng 0–20.',
     'employer.campaigns.wizard.jdLocalOnlyHint':
       'File sẽ được tải lên máy chủ ngay sau khi bạn chọn (tạo Draft nếu chưa có).',
     'employer.campaigns.wizard.jdEditUploadHint':
@@ -1634,10 +1633,13 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'AI có thể hỏi thêm câu đào sâu dựa trên câu trả lời trước đó, trong giới hạn dưới.',
     'employer.campaigns.form.maxFollowUps': 'Số câu hỏi đào sâu tối đa',
     'employer.campaigns.form.maxFollowUpsHelp': 'Số lần AI có thể hỏi thêm cho mỗi câu hỏi chính.',
-    'employer.campaigns.form.maxQuestionsSetting': 'Số câu hỏi tối đa (0–20)',
     'employer.campaigns.form.maxDeepPerQuestion': 'Độ sâu tối đa mỗi câu',
-    'employer.campaigns.form.maxQuestionsSettingHelp':
-      'Giới hạn tổng số câu hỏi (gốc + đào sâu) trong một phiên phỏng vấn.',
+    'employer.campaigns.form.maxQuestionsDerivedLabel': 'Số câu tối đa mỗi buổi (tự tính)',
+    'employer.campaigns.form.maxQuestionsDerivedValue': '{{count}} câu',
+    'employer.campaigns.form.maxQuestionsDerivedFormula': '= {{base}} câu chính × (1 + {{depth}} câu đào sâu)',
+    'employer.campaigns.form.maxQuestionsDerivedBaseFormula': '= {{base}} câu chính',
+    'employer.campaigns.form.maxQuestionsDerivedEmpty': 'Chưa có câu hỏi ở bước 4',
+    'employer.campaigns.form.maxQuestionsDerivedEmptyHelp': 'Thêm câu hỏi ở bước 4 để hệ thống tự tính giới hạn mỗi buổi.',
     'employer.campaigns.form.section.general': 'Thông tin chung',
     'employer.campaigns.form.section.schedule': 'Lịch chiến dịch',
     'employer.campaigns.form.section.settings': 'Cài đặt chiến dịch',
@@ -3097,7 +3099,6 @@ export const employerCampaignTranslations: TranslationDictionary = {
     'employer.campaigns.wizard.questionsExceedMax':
       'The question bank exceeds the {{max}}-question cap for one campaign.',
     'employer.campaigns.wizard.maxFollowUpsInvalid': 'Max follow-up questions must be an integer from 0 to 20.',
-    'employer.campaigns.wizard.maxQuestionsInvalid': 'Max questions must be between 0 and 20.',
     'employer.campaigns.wizard.jdLocalOnlyHint':
       'The file uploads to the server as soon as you select it (creates a Draft if needed).',
     'employer.campaigns.wizard.jdEditUploadHint':
@@ -3470,10 +3471,13 @@ export const employerCampaignTranslations: TranslationDictionary = {
       'The AI can ask deeper follow-up questions based on prior answers, within the limits below.',
     'employer.campaigns.form.maxFollowUps': 'Max follow-up questions',
     'employer.campaigns.form.maxFollowUpsHelp': 'How many follow-ups the AI can ask per main question.',
-    'employer.campaigns.form.maxQuestionsSetting': 'Max questions (0-20)',
     'employer.campaigns.form.maxDeepPerQuestion': 'Max depth per question',
-    'employer.campaigns.form.maxQuestionsSettingHelp':
-      'Caps the total number of questions (base + follow-ups) in one interview session.',
+    'employer.campaigns.form.maxQuestionsDerivedLabel': 'Max questions per session (calculated)',
+    'employer.campaigns.form.maxQuestionsDerivedValue': '{{count}} questions',
+    'employer.campaigns.form.maxQuestionsDerivedFormula': '= {{base}} base questions × (1 + {{depth}} follow-up questions)',
+    'employer.campaigns.form.maxQuestionsDerivedBaseFormula': '= {{base}} base questions',
+    'employer.campaigns.form.maxQuestionsDerivedEmpty': 'No questions in step 4 yet',
+    'employer.campaigns.form.maxQuestionsDerivedEmptyHelp': 'Add questions in step 4 to calculate the per-session limit.',
     'employer.campaigns.form.section.general': 'General information',
     'employer.campaigns.form.section.schedule': 'Campaign schedule',
     'employer.campaigns.form.section.settings': 'Campaign settings',

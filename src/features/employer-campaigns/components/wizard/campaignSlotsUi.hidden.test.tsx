@@ -102,7 +102,7 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
         info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, maxAttempts: 1, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
         jd={{ ...createEmptyJdState(), inputMethod: 'text', jdText: 'Build a frontend product.' }}
         rubric={[]} questions={[]} questionsPerSession={5}
-        settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}
+        settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxDeepPerQuestion: 2 }}
         campaignId="c1" inviteEmails={['a@x.vn', 'b@x.vn', 'c@x.vn']} domainLabel="Frontend"
         onGoToStep={vi.fn()} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing" now={Date.UTC(2026, 8, 21)}
       />,
@@ -121,7 +121,7 @@ describe('CampaignReviewStep — coi như 0 ca: không query, không bảng ca, 
         info={{ title: 'Frontend campaign', domain: 'frontend', maxCandidates: 10, timeLimitMinutes: 60, maxAttempts: 1, passScorePct: 70, startsAt: '2026-09-07T09:00', expiresAt: '2026-10-07T09:00', timezone: 'Asia/Ho_Chi_Minh' }}
         jd={{ ...createEmptyJdState(), inputMethod: 'text', jdText: 'Build a frontend product.' }}
         rubric={[]} questions={[]} questionsPerSession={5}
-        settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxQuestions: 20, maxDeepPerQuestion: 2 }}
+        settings={{ antiCheatEnabled: true, faceVerifyEnabled: true, adaptiveEnabled: true, maxFollowUps: 3, maxDeepPerQuestion: 2 }}
         campaignId="c1" inviteEmails={[]} domainLabel="Frontend"
         onGoToStep={onGoToStep} onBack={vi.fn()} onSubmit={vi.fn()} submitLabel="publish" submittingLabel="publishing" now={Date.UTC(2026, 8, 21)}
       />,

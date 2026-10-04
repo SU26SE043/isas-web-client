@@ -14,6 +14,7 @@ import type {
 import { createEmptyHardFiltersState } from '../types/campaignWizard.types';
 import type { CampaignQuestion, EmployerCampaign, RubricCriterion } from '../types/campaignManagement.types';
 import { isServerEntityId } from './campaignQuestionLimits';
+import { deriveCampaignMaxQuestions } from './campaignAdaptiveBudget';
 
 const DOMAIN_API_LABEL: Record<CampaignDomainOption, string> = {
   frontend: 'Frontend',
@@ -245,6 +246,17 @@ export type CampaignWizardSubmitSnapshot = {
   settings: CampaignSettingsState;
 };
 
+function deriveMaxQuestionsForSnapshot(snapshot: CampaignWizardSubmitSnapshot): number {
+  const baseQuestionCount = snapshot.questionsPerSession && snapshot.questionsPerSession > 0
+    ? snapshot.questionsPerSession
+    : snapshot.questions.length;
+  return deriveCampaignMaxQuestions(
+    baseQuestionCount,
+    snapshot.settings.adaptiveEnabled,
+    snapshot.settings.maxDeepPerQuestion,
+  );
+}
+
 function hardFiltersPayload(hardFilters?: CampaignHardFiltersState) {
   const values = hardFilters ?? createEmptyHardFiltersState();
   return {
@@ -274,9 +286,7 @@ export function buildCampaignCreateRequest(
 
   // R1(a) — POST create: tiêu chí chưa có id server ⇒ nhãn id tạm bị bỏ có chủ đích, PUT lại sau khi ghép `created.rubric`.
   const questions = mapQuestionsToApiRequest(snapshot.questions, { unresolvedTargets: 'omit' });
-  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
-  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
-  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
+  const derivedMaxQuestions = deriveMaxQuestionsForSnapshot(snapshot);
 
   return {
     title: info.title.trim(),
@@ -297,7 +307,7 @@ export function buildCampaignCreateRequest(
     questionsPerSession: snapshot.questionsPerSession && snapshot.questionsPerSession > 0
       ? snapshot.questionsPerSession
       : null,
-    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
+    ...(derivedMaxQuestions > 0 ? { maxQuestions: derivedMaxQuestions } : {}),
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     jdText: resolveJdTextForCreate(snapshot.jd),
     criteriaText: snapshot.jd.criteriaText.trim() || null,
@@ -328,9 +338,7 @@ export function buildCampaignUpdateRequest(
   if (!info.language) {
     throw new Error('LANGUAGE_REQUIRED');
   }
-  const depth = settings.adaptiveEnabled ? settings.maxDeepPerQuestion ?? 0 : 0;
-  const baseQuestionCount = snapshot.questionsPerSession ?? settings.maxQuestions ?? 0;
-  const derivedMaxQuestions = settings.adaptiveEnabled ? Math.min(20, Math.max(0, baseQuestionCount * (1 + depth))) : baseQuestionCount;
+  const derivedMaxQuestions = deriveMaxQuestionsForSnapshot(snapshot);
 
   return {
     title: info.title.trim(),
@@ -352,7 +360,7 @@ export function buildCampaignUpdateRequest(
     questionsPerSession: snapshot.questionsPerSession && snapshot.questionsPerSession > 0
       ? snapshot.questionsPerSession
       : null,
-    maxQuestions: derivedMaxQuestions > 0 ? derivedMaxQuestions : undefined,
+    ...(derivedMaxQuestions > 0 ? { maxQuestions: derivedMaxQuestions } : {}),
     maxDeepPerQuestion: settings.adaptiveEnabled ? settings.maxDeepPerQuestion : 0,
     passScorePct: info.passScorePct ?? null,
     jdText: resolveJdTextForUpdate(snapshot.jd),

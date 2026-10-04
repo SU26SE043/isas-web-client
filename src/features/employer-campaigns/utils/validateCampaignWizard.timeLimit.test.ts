@@ -44,7 +44,7 @@ describe('validateCampaignWizardStep — thời lượng bài thi ở bước 5'
   });
 
   it('thời lượng THẤP HƠN ước tính KHÔNG chặn: 5 phút cho 20 câu × d=3 vẫn qua bước 5', () => {
-    const settings = { ...createDefaultSettingsState(), adaptiveEnabled: true, maxDeepPerQuestion: 3, maxQuestions: 20 };
+    const settings = { ...createDefaultSettingsState(), adaptiveEnabled: true, maxDeepPerQuestion: 3 };
     const state = { ...stateWith(5, settings), questionsPerSession: 20 } as CampaignWizardPersistedState;
     expect(validateCampaignWizardStep(state, SETTINGS_STEP)).toBeNull();
   });

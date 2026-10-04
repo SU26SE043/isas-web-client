@@ -2,7 +2,22 @@ import { describe, expect, it } from 'vitest';
 import {
   calculateAdaptiveQuestionBudget,
   CAMPAIGN_ADAPTIVE_QUESTION_LIMIT,
+  deriveCampaignMaxQuestions,
 } from './campaignAdaptiveBudget';
+
+describe('deriveCampaignMaxQuestions', () => {
+  it.each([
+    [4, true, 2, 12],
+    [7, true, 1, 14],
+    [0, true, 1, 0],
+    [6, false, 3, 6],
+    [12, true, 1, 20],
+    [5, true, -2, 5],
+    [5, true, Number.NaN, 5],
+  ])('derives the capped per-session total', (base, adaptive, depth, expected) => {
+    expect(deriveCampaignMaxQuestions(base, adaptive, depth)).toBe(expected);
+  });
+});
 
 describe('calculateAdaptiveQuestionBudget', () => {
   it('keeps a static interview at its base count', () => {
@@ -44,19 +59,8 @@ describe('calculateAdaptiveQuestionBudget', () => {
     expect(calculateAdaptiveQuestionBudget(5, 0, true).requestedTotal).toBe(5);
   });
 
-  it('uses the campaign maxQuestions setting as the adaptive budget limit', () => {
-    expect(calculateAdaptiveQuestionBudget(5, 2, true, 10)).toMatchObject({
-      limit: 10,
-      requestedTotal: 15,
-      effectiveTotal: 10,
-      maxBaseQuestionCount: 3,
-      exceedsLimit: true,
-    });
-  });
-
-  it('falls back to the system limit when maxQuestions is missing or invalid', () => {
-    expect(calculateAdaptiveQuestionBudget(5, 2, true, 0).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
-    expect(calculateAdaptiveQuestionBudget(5, 2, true, null).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
+  it('always uses the system limit', () => {
+    expect(calculateAdaptiveQuestionBudget(5, 2, true).limit).toBe(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT);
   });
 
   it('normalizes invalid negative inputs before calculating', () => {

@@ -98,7 +98,6 @@ const baseProps = {
     faceVerifyEnabled: true,
     adaptiveEnabled: true,
     maxFollowUps: 3,
-    maxQuestions: 20,
     maxDeepPerQuestion: 2,
   },
   campaignId: undefined,

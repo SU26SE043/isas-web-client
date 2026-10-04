@@ -39,7 +39,6 @@ const snapshot = (hardFilters = createEmptyHardFiltersState()): CampaignWizardSu
     faceVerifyEnabled: false,
     adaptiveEnabled: false,
     maxFollowUps: 0,
-    maxQuestions: 5,
   },
 });
 
