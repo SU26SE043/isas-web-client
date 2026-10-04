@@ -9,6 +9,15 @@
   Target,
 } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import type { CriteriaResultViewModel } from '../../utils/practiceSessionResultViewModel';
 import { formatScore } from '../../utils/practiceSessionResultFormat';
 
@@ -26,10 +35,12 @@ export function CriteriaProgressList({
   criteria,
   passThresholdPct,
   weighted = false,
+  overallScore,
 }: {
   criteria: CriteriaResultViewModel[];
   passThresholdPct?: number;
   weighted?: boolean;
+  overallScore?: number;
 }) {
   const { t } = useLanguage();
   if (!criteria.length) {
@@ -39,21 +50,43 @@ export function CriteriaProgressList({
   if (weighted) {
     const allContributionsKnown = criteria.every((item) => item.contribution != null);
     const totalContribution = criteria.reduce((sum, item) => sum + (item.contribution ?? 0), 0);
-    return <div className="overflow-x-auto rounded-xl border border-satin"><table className="w-full min-w-[520px] text-sm">
-      <thead className="bg-surface-overlay text-left text-xs uppercase text-muted-foreground"><tr>
-        <th className="p-3">{t('practice.result.criteriaDetail')}</th><th className="p-3">{t('practice.result.score')}</th><th className="p-3">{t('practice.result.effectiveWeight')}</th><th className="p-3">{t('practice.result.contribution')}</th>
-      </tr></thead>
-      <tbody>{criteria.map((item) => <tr key={item.name} className="border-t border-subtle">
-        <th className="p-3 text-left font-medium text-foreground">{item.name}</th>
-        <td className="p-3 tabular-nums">{formatScore(item.score, item.maxScore)}</td>
-        <td className="p-3 tabular-nums">{item.effectiveWeight == null ? '—' : `${(item.effectiveWeight * 100).toFixed(2)}%`}</td>
-        <td className="p-3 tabular-nums">{item.contribution == null ? '—' : `${item.contribution.toFixed(2)}%`}</td>
-      </tr>)}</tbody>
-      <tfoot className="border-t border-satin bg-surface-overlay/60"><tr>
-        <th colSpan={3} className="p-3 text-right font-semibold">{t('practice.result.contributionTotal')}</th>
-        <td className="p-3 font-semibold tabular-nums">{allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—'}</td>
-      </tr></tfoot>
-    </table></div>;
+    return (
+      <div className="overflow-x-auto rounded-xl">
+        <Table className="min-w-[600px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12 text-center">#</TableHead>
+              <TableHead>{t('practice.result.criteriaDetail')}</TableHead>
+              <TableHead className="w-24 text-center">{t('practice.result.score')}</TableHead>
+              <TableHead className="w-36 text-right">{t('practice.result.effectiveWeight')}</TableHead>
+              <TableHead className="sr-only">{t('practice.result.contribution')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {criteria.map((item, index) => (
+              <TableRow key={item.name}>
+                <TableCell className="text-center text-xs font-semibold text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="font-medium text-foreground">{item.name}</TableCell>
+                <TableCell className="text-center font-semibold tabular-nums text-foreground">{formatScore(item.score, item.maxScore)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {item.effectiveWeight == null ? '—' : `${(item.effectiveWeight * 100).toFixed(2)}%`}
+                </TableCell>
+                <TableCell className="sr-only">{item.contribution == null ? '—' : `${item.contribution.toFixed(2)}%`}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableHead colSpan={3} className="text-right normal-case">{t('practice.result.weightedTotal')}</TableHead>
+              <TableCell className="sr-only">{allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—'}</TableCell>
+              <TableCell className="text-right font-bold tabular-nums text-foreground">
+                {overallScore == null ? (allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—') : `${overallScore.toFixed(1)}/100`}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    );
   }
 
   return (

@@ -77,6 +77,7 @@ export function ReportCriteriaScores({
               criteria={view.criteria}
               passThresholdPct={view.passThresholdPct}
               weighted={view.scoreFormula === 'Weighted'}
+              overallScore={view.overallScore}
             />
             {unassessedCriteria.status === 'known' && unassessedCriteria.names.length > 0 ? (
               <div className="mt-4 rounded-xl border border-info/30 bg-info/5 p-4 text-sm text-foreground" role="status">
