@@ -113,6 +113,9 @@ describe('QuestionPreviewPanel — chấm thử theo câu', () => {
     render(<QuestionPreviewPanel question={question} index={0} ctx={ctx()} preview={preview} />);
     typeAnswer();
     const button = screen.getByRole('button', { name: /rubricPreview\.runPaid/ });
+    // Giá nói MỘT lần (nhãn nút) + lý do một dòng — không còn badge "1 credit / lượt" lặp lại bên cạnh.
+    expect(screen.getByTestId('question-preview-quota')).toHaveTextContent('employer.campaigns.questionCard.preview.quota.hint');
+    expect(screen.queryAllByText(/credit|quota\.paid/)).toHaveLength(0);
     await user.click(button);
     expect(preview.run).not.toHaveBeenCalled();
     expect(await screen.findByText(/questionCard\.preview\.confirm\.paidDescription/)).toBeInTheDocument();

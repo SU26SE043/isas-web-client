@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FlaskConical } from 'lucide-react';
+import { FileText, FlaskConical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -91,7 +91,15 @@ export function QuestionPreviewRunControls({
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label htmlFor={`q-custom-${questionId}`}>{t('employer.campaigns.questionCard.preview.custom.label')}</Label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor={`q-custom-${questionId}`}>{t('employer.campaigns.questionCard.preview.custom.label')}</Label>
+          {sampleAnswer.trim() ? (
+            <Button type="button" variant="ghost" size="sm" disabled={disabled || isRunning} onClick={() => setAnswer(sampleAnswer)}>
+              <FileText className="size-3.5" aria-hidden />
+              {t('employer.campaigns.questionCard.preview.custom.useSample')}
+            </Button>
+          ) : null}
+        </div>
         <Textarea
           id={`q-custom-${questionId}`}
           rows={4}
@@ -100,30 +108,22 @@ export function QuestionPreviewRunControls({
           placeholder={t('employer.campaigns.rubricPreview.custom.placeholder')}
           onChange={(event) => setAnswer(event.target.value)}
         />
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">{t('employer.campaigns.questionCard.preview.custom.hint')}</p>
-          {sampleAnswer.trim() ? (
-            <Button type="button" variant="ghost" size="sm" disabled={disabled || isRunning} onClick={() => setAnswer(sampleAnswer)}>
-              {t('employer.campaigns.questionCard.preview.custom.useSample')}
-            </Button>
-          ) : null}
-        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={disabled || isRunning || !trimmed} loading={isRunning} onClick={submit}>
+        <Button type="button" size="default" className="h-auto min-h-8 max-w-full shrink whitespace-normal py-1.5 text-left" disabled={disabled || isRunning || !trimmed} loading={isRunning} onClick={submit}>
           {!isRunning ? <FlaskConical className="size-3.5" aria-hidden /> : null}
           {isRunning ? t('employer.campaigns.rubricPreview.running') : runLabel}
         </Button>
-        {freeRunsLeft != null ? (
-          <Badge variant={paid ? 'info' : 'success'} data-testid="question-preview-quota">
-            {paid
-              ? t('employer.campaigns.questionCard.preview.quota.paid')
-              : t('employer.campaigns.questionCard.preview.quota.free').replace('{{n}}', String(freeRunsLeft))}
+        {/* Giá chỉ nói MỘT lần: còn lượt miễn phí ⇒ badge; hết ⇒ nút đã ghi "−1 credit", cạnh đó là lý do (không tooltip:
+            trên cảm ứng tooltip không mở được, mà đây là thông tin về tiền). Không rõ quota ⇒ hộp thoại hỏi trước khi chạy. */}
+        {freeRunsLeft != null && !paid ? (
+          <Badge variant="success" data-testid="question-preview-quota">
+            {t('employer.campaigns.questionCard.preview.quota.free').replace('{{n}}', String(freeRunsLeft))}
           </Badge>
         ) : null}
+        {paid ? <p className="min-w-0 flex-1 basis-56 text-xs text-muted-foreground" data-testid="question-preview-quota">{t('employer.campaigns.questionCard.preview.quota.hint')}</p> : null}
       </div>
-      {paid ? <p className="text-xs text-muted-foreground">{t('employer.campaigns.questionCard.preview.quota.hint')}</p> : null}
 
       <ConfirmDialog
         open={dialogOpen}

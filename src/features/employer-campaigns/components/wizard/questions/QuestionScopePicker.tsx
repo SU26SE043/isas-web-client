@@ -58,14 +58,18 @@ export function QuestionScopePicker({ questionId, rubric, value, disabled = fals
         {t('employer.campaigns.questionCard.scope.title')}
       </p>
       {targetable.length === 0 ? (
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <p>{t('employer.campaigns.questionCard.scope.none')}</p>
+        // Không có tiêu chí nào để chọn ⇒ một dòng: chấm những gì + đường sang bước 3. Không giải thích cơ chế ở đây.
+        <p className="text-xs text-muted-foreground">
+          {alwaysLine}
           {onGoToCriteria ? (
-            <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={onGoToCriteria}>
-              {t('employer.campaigns.questionCard.scope.goToCriteria')}
-            </button>
+            <>
+              {' · '}
+              <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={onGoToCriteria}>
+                {t('employer.campaigns.questionCard.scope.goToCriteria')}
+              </button>
+            </>
           ) : null}
-        </div>
+        </p>
       ) : (
         <>
           <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby={`q-scope-${questionId}`}>
@@ -95,7 +99,7 @@ export function QuestionScopePicker({ questionId, rubric, value, disabled = fals
           {stateLine ? <p className="text-xs text-muted-foreground">{stateLine}</p> : null}
         </>
       )}
-      <p className="text-xs text-muted-foreground">{alwaysLine}</p>
+      {targetable.length > 0 ? <p className="text-xs text-muted-foreground">{alwaysLine}</p> : null}
     </div>
   );
 }

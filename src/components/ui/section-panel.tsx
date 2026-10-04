@@ -56,7 +56,7 @@ export function SectionPanel({
         className,
       )}
     >
-      <div className="shrink-0 border-b border-satin px-6 py-6 sm:px-8 sm:py-7">
+      <div className="shrink-0 border-b border-satin px-4 py-6 sm:px-8 sm:py-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className={icon ? 'flex items-start gap-4' : undefined}>
             {icon ? (
@@ -79,13 +79,13 @@ export function SectionPanel({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8">
+      <div className="flex flex-1 flex-col px-4 py-6 sm:px-8 sm:py-8">
         <div className="min-h-0 flex-1">{children}</div>
         {footer}
       </div>
 
       {footerHint ? (
-        <p className="shrink-0 border-t border-satin px-6 py-4 text-center text-xs text-muted-foreground sm:px-8">
+        <p className="shrink-0 border-t border-satin px-4 py-4 text-center text-xs text-muted-foreground sm:px-8">
           {footerHint}
         </p>
       ) : null}

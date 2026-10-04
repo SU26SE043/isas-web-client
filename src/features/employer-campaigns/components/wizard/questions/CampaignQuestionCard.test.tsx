@@ -3,6 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CampaignQuestion, RubricCriterion } from '../../../types/campaignManagement.types';
+import type { QuestionPreviewContext } from '../../../types/questionPreview.types';
+import type { UseQuestionPreviewApi } from '../../../types/rubricPreview.types';
 import { CampaignQuestionCard } from './CampaignQuestionCard';
 
 vi.mock('@/shared/languages', () => ({
@@ -113,5 +115,49 @@ describe('CampaignQuestionCard — Collapsible (SC2 · T9)', () => {
   it('không có preview/previewCtx ⇒ không panel chấm thử', () => {
     render(<ul><CampaignQuestionCard question={baseQuestion} index={0} total={1} open {...handlers()} /></ul>);
     expect(screen.queryByTestId('question-preview-panel')).not.toBeInTheDocument();
+  });
+});
+
+describe('CampaignQuestionCard — hai tab Nội dung · Chấm thử', () => {
+  const LEVELS = [{ score: 1, descriptor: 'Yếu' }, { score: 5, descriptor: 'Tốt' }];
+  const scoredRubric: RubricCriterion[] = [{ id: 'c-a', name: 'Giao tiếp', description: '', weight: 100, maxScore: 5, levels: LEVELS, scoringScope: 'Always' }];
+  const previewApi = (): UseQuestionPreviewApi => ({
+    runs: [], latest: null, isLoadingHistory: false, isRunning: false, runningQuestionId: null, freeRunsRemaining: 1, error: null,
+    run: vi.fn(async () => null), clearError: vi.fn(), billingConfirm: null, clearBillingConfirm: vi.fn(),
+  });
+  const previewCtx = (overrides: Partial<QuestionPreviewContext> = {}): QuestionPreviewContext => ({
+    campaignId: 'c-1', campaignStatus: 'draft', rubric: scoredRubric, questions: [baseQuestion], passScorePct: 60,
+    currentRubricVersion: 1, beforeRun: vi.fn(async () => 'c-1'), onRunningChange: vi.fn(), runningQuestionId: null, ...overrides,
+  });
+  const tab = (name: 'content' | 'preview') => screen.getByRole('tab', { name: new RegExp(`questionCard\\.tabs\\.${name}`) });
+
+  it('wizard mở tab Nội dung; bấm / ←→ sang Chấm thử; tab ẩn vẫn mount nên câu trả lời đang gõ không mất', () => {
+    render(<ul><CampaignQuestionCard question={baseQuestion} index={0} total={1} open {...handlers()} rubric={scoredRubric} previewCtx={previewCtx()} preview={previewApi()} /></ul>);
+
+    expect(tab('content')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('textbox', { name: 'employer.campaigns.campaignQuestions.question.contentLabel' })).toBeVisible();
+    expect(screen.getByTestId('question-preview-panel').closest('[role="tabpanel"]')).toHaveAttribute('hidden');
+
+    fireEvent.click(tab('preview'));
+    expect(tab('preview')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.change(screen.getByLabelText('employer.campaigns.questionCard.preview.custom.label'), { target: { value: 'Bài thử' } });
+
+    fireEvent.keyDown(tab('preview'), { key: 'ArrowRight' });
+    expect(tab('content')).toHaveAttribute('aria-selected', 'true');
+    expect(tab('content')).toHaveFocus();
+    fireEvent.keyDown(tab('content'), { key: 'ArrowLeft' });
+    expect(screen.getByLabelText('employer.campaigns.questionCard.preview.custom.label')).toHaveValue('Bài thử');
+  });
+
+  it('trang chi tiết (readOnly) mở thẳng tab Chấm thử; câu đang chấm tự chuyển sang tab Chấm thử', () => {
+    render(<ul><CampaignQuestionCard question={baseQuestion} index={0} total={1} open {...handlers()} previewCtx={previewCtx({ readOnly: true })} preview={previewApi()} /></ul>);
+    expect(tab('preview')).toHaveAttribute('aria-selected', 'true');
+    cleanup();
+
+    const ctx = previewCtx();
+    const { rerender } = render(<ul><CampaignQuestionCard question={baseQuestion} index={0} total={1} open {...handlers()} previewCtx={ctx} preview={previewApi()} /></ul>);
+    expect(tab('content')).toHaveAttribute('aria-selected', 'true');
+    rerender(<ul><CampaignQuestionCard question={baseQuestion} index={0} total={1} open {...handlers()} previewCtx={{ ...ctx, runningQuestionId: baseQuestion.id }} preview={previewApi()} /></ul>);
+    expect(tab('preview')).toHaveAttribute('aria-selected', 'true');
   });
 });
