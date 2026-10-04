@@ -12,14 +12,20 @@ afterEach(() => {
 });
 
 describe('CampaignBehaviorWarning — non-blocking 5-second notice', () => {
-  it('hiển thị warning đỏ, không có button và tự biến mất sau 5 giây', () => {
+  it.each([
+    ['paste', 'campaigns.violation.behaviorTitlePaste', 'campaigns.violation.behaviorPaste'],
+    ['tab_switch', 'campaigns.violation.behaviorTitleTabSwitch', 'campaigns.violation.behaviorTabSwitch'],
+    ['focus_lost', 'campaigns.violation.behaviorTitleFocusLost', 'campaigns.violation.behaviorFocusLost'],
+  ] as const)('hiển thị đúng lỗi %s, không có button và tự biến mất sau 5 giây', (kind, titleKey, messageKey) => {
     vi.useFakeTimers();
     const onDismiss = vi.fn();
-    render(<CampaignBehaviorWarning kind="paste" onDismiss={onDismiss} />);
+    render(<CampaignBehaviorWarning kind={kind} onDismiss={onDismiss} />);
 
     const notice = screen.getByRole('status');
     expect(notice).toHaveClass('pointer-events-none', 'backdrop-blur-md');
-    expect(screen.getByText('campaigns.violation.title')).toHaveClass('text-error');
+    expect(screen.getByText(titleKey)).toHaveClass('text-error');
+    expect(screen.getByText(messageKey)).toBeInTheDocument();
+    expect(screen.queryByText('campaigns.violation.title')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(4_999));

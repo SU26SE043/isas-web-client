@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CampaignSettingsStep } from './CampaignSettingsStep';
 
@@ -53,5 +53,23 @@ describe('CampaignSettingsStep adaptive budget for fixed and draw modes', () => 
     );
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['settings-anti-cheat', { antiCheatEnabled: false }],
+    ['settings-face-verify', { faceVerifyEnabled: true }],
+    ['settings-adaptive', { adaptiveEnabled: false }],
+  ] as const)('chỉ cập nhật toggle %s mà không chạm các setting khác', (id, patch) => {
+    const onChange = vi.fn();
+    render(<CampaignSettingsStep {...baseProps} onChange={onChange} />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: id === 'settings-anti-cheat'
+      ? 'employer.campaigns.form.antiCheat'
+      : id === 'settings-face-verify'
+        ? 'employer.campaigns.form.faceVerify'
+        : 'employer.campaigns.form.adaptive' }));
+
+    expect(onChange).toHaveBeenCalledWith(patch);
+    expect(onChange).toHaveBeenCalledTimes(1);
   });
 });

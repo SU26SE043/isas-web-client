@@ -16,9 +16,9 @@ Mục tiêu chính:
 - Candidate chỉ được làm bài trong chế độ fullscreen.
 - Khi bắt đầu phỏng vấn phải vào fullscreen trước.
 - Sau khi fullscreen thành công mới chạy countdown `3 → 2 → 1 → Bắt đầu`.
-- Trong lúc phỏng vấn, nếu Candidate rời khỏi màn hình phỏng vấn hoặc vi phạm điều kiện anti-cheating thì bài phải bị pause.
+- Trong lúc phỏng vấn, lỗi cần khắc phục như thoát fullscreen, camera hoặc khuôn mặt sẽ pause bài; các behavior signal `tab_switch`, `paste`, `focus_lost` chỉ hiển thị warning không chặn trong 5 giây.
 - Frontend phát hiện hành vi vi phạm và gửi tín hiệu lên Backend để ghi nhận.
-- Popup vi phạm tự gọi flow `Tiếp tục làm bài` sau 5 giây; Candidate cũng có thể xác nhận sớm.
+- Warning behavior tự đóng sau 5 giây và không yêu cầu Candidate xác nhận. Blocking violation vẫn có nút để Candidate khắc phục và tiếp tục.
 - Chỉ sau khi fullscreen/camera được khôi phục thành công thì bài mới được tiếp tục.
 
 ---
@@ -228,11 +228,9 @@ visible
 
 Khi Candidate quay lại:
 
-- pause interview;
-- gửi violation;
-- hiện popup;
-- background blur;
-- bắt buộc Candidate xác nhận.
+- gửi flag `tab_switch`;
+- hiện warning đỏ không chặn ở giữa màn hình trong 5 giây;
+- interview room, timer và thao tác trả lời vẫn tiếp tục bình thường.
 
 API:
 
@@ -369,9 +367,9 @@ Khi Candidate paste trong Interview ACTIVE:
 
 Sau đó:
 
-- pause;
-- hiện popup;
-- Candidate phải xác nhận mới được tiếp tục.
+- gửi flag `paste`;
+- hiện warning đỏ không chặn ở giữa màn hình trong 5 giây;
+- Candidate vẫn tiếp tục làm bài mà không cần bấm nút xác nhận.
 
 ---
 

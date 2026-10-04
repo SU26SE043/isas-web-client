@@ -70,6 +70,33 @@ describe('useCampaignAntiCheat', () => {
     });
   });
 
+  it('does not report behavior signals when anti-cheat is disabled', () => {
+    const onPause = vi.fn();
+    const onViolation = vi.fn();
+    const onBehaviorSignal = vi.fn();
+    renderHook(() => useCampaignAntiCheat({
+      campaignId: 'campaign-1',
+      sessionId: 'session-1',
+      enabled: false,
+      onPause,
+      onViolation,
+      onBehaviorSignal,
+    }));
+
+    act(() => {
+      document.dispatchEvent(new Event('paste'));
+      window.dispatchEvent(new Event('blur'));
+      setVisibility('hidden');
+      setVisibility('visible');
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(onBehaviorSignal).not.toHaveBeenCalled();
+    expect(onViolation).not.toHaveBeenCalled();
+    expect(onPause).not.toHaveBeenCalled();
+    expect(createFlag).not.toHaveBeenCalled();
+  });
+
   it('reports focus_lost without pausing when the window loses focus', () => {
     const onPause = vi.fn();
     const onViolation = vi.fn();

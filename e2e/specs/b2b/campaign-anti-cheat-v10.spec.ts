@@ -4,7 +4,7 @@ import { installMockMedia } from '../../fixtures/media';
 
 test.describe('B2B campaign anti-cheat API v10', () => {
   test.describe.configure({ timeout: 60_000 });
-  test('paste opens the blocking warning, pauses the timer, and resumes explicitly', async ({ page }) => {
+  test('paste opens a non-blocking warning and keeps the interview running', async ({ page }) => {
     await installMockMedia(page);
     await page.addInitScript(() => {
       let fullscreenElement: Element | null = null;
@@ -59,19 +59,18 @@ test.describe('B2B campaign anti-cheat API v10', () => {
     await expect(timer).toBeVisible();
 
     await page.evaluate(() => document.dispatchEvent(new Event('paste', { bubbles: true })));
-    const dialog = page.getByRole('dialog', { name: /Violation detected/i });
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('button', { name: /Continue interview/i })).toBeVisible();
+    const warning = page.getByRole('status');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText(/Paste action detected|thao tác dán nội dung/i);
+    await expect(warning.getByRole('button')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     const finishButton = page.locator('button', { hasText: /^Finish$/ });
-    await expect(finishButton).toBeDisabled();
-    const pausedAt = await timer.textContent();
-    await page.waitForTimeout(2_000);
-    await expect(timer).toHaveText(pausedAt ?? '');
-    await page.screenshot({ path: 'test-results/fs129-anti-cheat/paste-warning-desktop.png', fullPage: true });
-
-    await dialog.getByRole('button', { name: /Continue interview/i }).click();
-    await expect(dialog).toBeHidden();
     await expect(finishButton).toBeEnabled();
+    const timerBefore = await timer.textContent();
+    await page.waitForTimeout(2_000);
+    await expect.poll(() => timer.textContent()).not.toBe(timerBefore ?? '');
+    await page.screenshot({ path: 'test-results/fs129-anti-cheat/paste-warning-desktop.png', fullPage: true });
+    await expect(warning).toBeHidden({ timeout: 4_000 });
     await expect.poll(() => flags).toEqual([{
       signalType: 'paste',
       note: 'Candidate attempted to paste content during the interview.',
@@ -79,7 +78,7 @@ test.describe('B2B campaign anti-cheat API v10', () => {
     await page.screenshot({ path: 'test-results/fs129-anti-cheat/resumed-room-desktop.png', fullPage: true });
   });
 
-  test('Alt+Tab, tab switching, and fullscreen exit are blocking and deduplicated', async ({ page }) => {
+  test('tab switching and focus loss stay non-blocking while fullscreen recovery stays actionable', async ({ page }) => {
     await installMockMedia(page);
     await page.addInitScript(() => {
       let fullscreenElement: Element | null = null;
@@ -144,7 +143,6 @@ test.describe('B2B campaign anti-cheat API v10', () => {
     expect(flags).toHaveLength(0);
 
     const timer = page.locator('.tabular-nums').first();
-    const dialog = page.getByRole('dialog', { name: /Violation detected/i });
     await page.evaluate(() => {
       window.dispatchEvent(new Event('blur'));
       Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
@@ -155,68 +153,33 @@ test.describe('B2B campaign anti-cheat API v10', () => {
       setFullscreen(false);
     });
     await page.waitForTimeout(350);
-    const pausedAt = await timer.textContent();
+    const timerBefore = await timer.textContent();
     await page.waitForTimeout(1_200);
-    await expect(timer).toHaveText(pausedAt ?? '');
-    await expect(dialog).toBeHidden();
+    await expect.poll(() => timer.textContent()).not.toBe(timerBefore ?? '');
+    const warning = page.getByRole('status');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText(/Tab switch|chuyển tab/i);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Enable fullscreen|Bật toàn màn hình/i })).toBeVisible();
     await expect.poll(() => flags).toEqual([{
       signalType: 'tab_switch',
       note: 'Candidate left the interview window using Alt+Tab or window switching.',
     }]);
 
-    await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
-      document.dispatchEvent(new Event('visibilitychange'));
-      window.dispatchEvent(new Event('focus'));
-    });
-    await expect(dialog).toBeVisible();
-    await expect(page.locator('[data-slot="dialog-overlay"]')).toHaveClass(/backdrop-blur-md/);
-    await page.keyboard.press('Escape');
-    await expect(dialog).toBeVisible();
     await page.screenshot({ path: 'test-results/fs129-anti-cheat/alt-tab-warning-desktop.png', fullPage: true });
     await page.setViewportSize({ width: 375, height: 812 });
     await page.screenshot({ path: 'test-results/fs129-anti-cheat/alt-tab-warning-mobile.png', fullPage: true });
     await page.setViewportSize({ width: 1280, height: 720 });
-    await dialog.getByRole('button', { name: /Continue interview/i }).click();
-    await expect(dialog).toBeHidden();
 
-    await page.waitForTimeout(1_600);
-    await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
-      document.dispatchEvent(new Event('visibilitychange'));
-    });
-    await expect.poll(() => flags).toHaveLength(2);
+    await page.getByRole('button', { name: /Enable fullscreen|Bật toàn màn hình/i }).click();
+    await expect(page.getByRole('button', { name: /Enable fullscreen|Bật toàn màn hình/i })).toBeHidden();
+
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')));
     await page.waitForTimeout(350);
-    await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
-      document.dispatchEvent(new Event('visibilitychange'));
-    });
-    await expect(dialog).toBeVisible();
-    expect(flags[1]).toEqual({
-      signalType: 'tab_switch',
-      note: 'Candidate switched away from the interview tab.',
-    });
-    await dialog.getByRole('button', { name: /Continue interview/i }).click();
-    await expect(dialog).toBeHidden();
-
-    await page.waitForTimeout(1_600);
-    await page.evaluate(() => {
-      const setFullscreen = (window as Window & {
-        __setFullscreenTestState: (active: boolean, failNext?: boolean) => void;
-      }).__setFullscreenTestState;
-      setFullscreen(false, true);
-    });
-    await expect(dialog).toBeVisible();
-    await expect.poll(() => flags).toHaveLength(3);
-    expect(flags[2]).toEqual({
-      signalType: 'tab_switch',
-      note: 'Candidate exited fullscreen mode.',
-    });
-    await dialog.getByRole('button', { name: /Continue interview/i }).click();
-    await expect(dialog).toContainText(/Fullscreen could not be enabled/i);
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: /Try again/i }).click();
-    await expect(dialog).toBeHidden();
-    await page.screenshot({ path: 'test-results/fs129-anti-cheat/resumed-after-window-leave-desktop.png', fullPage: true });
+    const focusWarning = page.getByRole('status');
+    await expect(focusWarning).toBeVisible();
+    await expect(focusWarning).toContainText(/focus|tập trung/i);
+    await expect.poll(() => flags).toHaveLength(2);
+    await page.screenshot({ path: 'test-results/fs129-anti-cheat/focus-lost-warning-desktop.png', fullPage: true });
   });
 });

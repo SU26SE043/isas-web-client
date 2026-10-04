@@ -13,9 +13,15 @@ interface CampaignBehaviorWarningProps {
 export const CAMPAIGN_BEHAVIOR_WARNING_MS = 5_000;
 
 const MESSAGE_KEYS: Record<BehaviorWarningKind, string> = {
-  tab_switch: 'campaigns.violation.tabSwitch',
-  paste: 'campaigns.violation.paste',
-  focus_lost: 'campaigns.violation.focusLost',
+  tab_switch: 'campaigns.violation.behaviorTabSwitch',
+  paste: 'campaigns.violation.behaviorPaste',
+  focus_lost: 'campaigns.violation.behaviorFocusLost',
+};
+
+const TITLE_KEYS: Record<BehaviorWarningKind, string> = {
+  tab_switch: 'campaigns.violation.behaviorTitleTabSwitch',
+  paste: 'campaigns.violation.behaviorTitlePaste',
+  focus_lost: 'campaigns.violation.behaviorTitleFocusLost',
 };
 
 export function CampaignBehaviorWarning({ kind, onDismiss }: CampaignBehaviorWarningProps) {
@@ -42,7 +48,7 @@ export function CampaignBehaviorWarning({ kind, onDismiss }: CampaignBehaviorWar
             <TriangleAlert className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-error">{t('campaigns.violation.title')}</h2>
+            <h2 className="text-xl font-semibold text-error">{t(TITLE_KEYS[kind])}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{t(MESSAGE_KEYS[kind])}</p>
           </div>
         </div>
