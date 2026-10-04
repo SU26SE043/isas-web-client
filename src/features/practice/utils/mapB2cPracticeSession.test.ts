@@ -19,7 +19,9 @@ describe('mapPracticeSessionResponse', () => {
       focusEvents: [
         { signalType: 'tab_switch', count: 2, firstAt: '2026-01-01T00:00:00Z', lastAt: '2026-01-01T00:01:00Z' },
         { signalType: 'unknown', count: 1, firstAt: 'x', lastAt: 'x' },
-        { signalType: 'paste', firstAt: 'x', lastAt: 'x' },
+        { signalType: 'tab_switch', firstAt: 'x', lastAt: 'x' },
+        // Buổi cũ còn dòng dán HỢP LỆ — vẫn bị lọc: phòng trả lời bằng giọng, dán không còn là tín hiệu (2026-10-04).
+        { signalType: 'paste', count: 2, firstAt: '2026-01-01T00:02:00Z', lastAt: '2026-01-01T00:03:00Z' },
       ],
       questions: [],
     }).focusEvents).toEqual([

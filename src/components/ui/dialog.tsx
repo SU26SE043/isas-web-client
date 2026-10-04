@@ -96,7 +96,7 @@ function DialogHeader({
     <div
       data-slot="dialog-header"
       className={cn(
-        "-mx-6 -mt-6 flex flex-col gap-2 border-b border-satin/60 px-6 py-6 pr-16",
+        "-mx-6 -mt-6 flex flex-col gap-2 border-b border-satin px-6 py-6 pr-16",
         className
       )}
       {...props}
@@ -129,7 +129,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-2xl border-t border-satin/60 bg-surface-raised/70 p-6 sm:flex-row sm:justify-end",
+        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-2xl border-t border-satin bg-surface-raised/70 p-6 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

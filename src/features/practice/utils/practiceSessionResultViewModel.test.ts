@@ -128,18 +128,6 @@ describe('practiceSessionResultViewModel — focusTracking: khung hình đếm R
     });
     expect(view.focusLeavePlacement).toBeUndefined();
   });
-
-  it('dán là nhóm RIÊNG: lần dán ở nửa sau KHÔNG kéo placement của "rời buổi" thành "rải trong buổi"', () => {
-    const view = mapPracticeSessionResponseToViewModel({
-      ...base,
-      focusEvents: [
-        { signalType: 'focus_lost', count: 1, firstAt: '2026-09-17T10:02:00Z', lastAt: '2026-09-17T10:02:00Z' },
-        { signalType: 'paste', count: 2, firstAt: '2026-09-17T10:25:00Z', lastAt: '2026-09-17T10:26:00Z' },
-        { signalType: 'camera_blocked', count: 4, firstAt: '2026-09-17T10:20:00Z', lastAt: '2026-09-17T10:21:00Z' },
-      ],
-    });
-    expect(view.focusLeavePlacement).toBe('firstHalf');
-  });
 });
 
 describe('practiceSessionResultFormat', () => {

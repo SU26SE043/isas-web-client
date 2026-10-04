@@ -12,7 +12,7 @@ const FRAME_KINDS = new Set<CoachingNoticeKind>(['no_face', 'multiple_faces', 'l
 /**
  * B2C coaching (BC-6 ngoại lệ) — toast trung tính (KHÔNG `.success`/`.error`, không màu đỏ/cảnh
  * báo: coaching, không phải chống gian lận) cho từng tín hiệu mất tập trung, throttle theo LOẠI
- * để một chuỗi dán liên tục không dội hàng chục toast chồng lên nhau. Bỏ qua khi tab đang ẩn —
+ * để một chuỗi Alt+Tab liên tục không dội hàng chục toast chồng lên nhau. Bỏ qua khi tab đang ẩn —
  * toast không hiện được và không ai đọc.
  */
 export function useB2cCoachingNotices() {

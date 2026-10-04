@@ -10,10 +10,11 @@ const BLUR_CONFIRM_MS = 250;
 const FOCUS_LOST_DEDUP_MS = 1_500;
 
 /**
- * B2C coaching (BC-6 ngoại lệ) — 3 tín hiệu HÀNH VI: `tab_switch` / `paste` / `focus_lost`.
+ * B2C coaching (BC-6 ngoại lệ) — 2 tín hiệu HÀNH VI: `tab_switch` / `focus_lost`.
  * Ghi về server NGAY lúc xảy ra; `onEvent` (nếu có) chỉ gọi lúc người dùng CÓ THỂ thấy toast —
  * với `tab_switch` là lúc tab quay lại visible (toast không hiện được khi tab đang ẩn), còn
- * `paste`/`focus_lost` gọi ngay vì chúng xảy ra trong lúc tab vẫn nhìn thấy được.
+ * `focus_lost` gọi ngay vì nó xảy ra trong lúc tab vẫn nhìn thấy được.
+ * Không nghe `paste` (2026-10-04): phòng trả lời bằng giọng, không có ô nhập ⇒ dán không nói lên điều gì.
  */
 export function useB2cFocusTracking(
   sessionId: string,
@@ -71,21 +72,14 @@ export function useB2cFocusTracking(
 
     const onFocus = () => clearBlurTimer();
 
-    const onPaste = () => {
-      void recordFocusEvent(sessionIdRef.current, 'paste');
-      onEventRef.current?.('paste');
-    };
-
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     window.addEventListener('focus', onFocus);
-    document.addEventListener('paste', onPaste);
     return () => {
       clearBlurTimer();
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('focus', onFocus);
-      document.removeEventListener('paste', onPaste);
     };
   }, [active]);
 }

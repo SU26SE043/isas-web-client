@@ -37,11 +37,11 @@ describe('useB2cCoachingNotices', () => {
 
   it('throttles behavior signals for 10s per kind', () => {
     const { result } = renderHook(() => useB2cCoachingNotices());
-    result.current.notify('paste');
-    result.current.notify('paste');
+    result.current.notify('focus_lost');
+    result.current.notify('focus_lost');
     expect(toastMock).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(10_000);
-    result.current.notify('paste');
+    result.current.notify('focus_lost');
     expect(toastMock).toHaveBeenCalledTimes(2);
   });
 

@@ -99,20 +99,19 @@ describe('useB2cFocusTracking', () => {
     }
   });
 
-  it('records paste immediately', () => {
-    renderHook(() => useB2cFocusTracking('session-1', true, 'answering'));
+  it('KHÔNG ghi dán: phòng trả lời bằng giọng, không có ô nhập (2026-10-04)', () => {
+    const onEvent = vi.fn();
+    renderHook(() => useB2cFocusTracking('session-1', true, 'answering', onEvent));
     act(() => document.dispatchEvent(new Event('paste')));
-    expect(recordFocusEvent).toHaveBeenCalledWith('session-1', 'paste');
+    expect(recordFocusEvent).not.toHaveBeenCalled();
+    expect(onEvent).not.toHaveBeenCalled();
   });
 
-  it('calls onEvent for paste/focus_lost immediately, but only calls onEvent(tab_switch) when the tab becomes visible again', () => {
+  it('only calls onEvent(tab_switch) when the tab becomes visible again', () => {
     vi.useFakeTimers();
     try {
       const onEvent = vi.fn();
       renderHook(() => useB2cFocusTracking('session-1', true, 'answering', onEvent));
-
-      act(() => document.dispatchEvent(new Event('paste')));
-      expect(onEvent).toHaveBeenCalledWith('paste');
 
       act(() => {
         Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
