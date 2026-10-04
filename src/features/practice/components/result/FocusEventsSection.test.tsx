@@ -31,8 +31,8 @@ describe('Tab Tổng quan — mục "Mất tập trung trong buổi" hiện th�
     expect(within(section).getByTestId('focus-metric-window')).toHaveTextContent(/^01$/);
     expect(within(section).getByTestId('focus-metric-face')).toHaveTextContent(/^01$/);
     expect(within(section).getByTestId('focus-metric-camera')).toHaveTextContent(/^02$/);
-    expect(section).toHaveTextContent('practice.result.focusTracking.type.multiple_faces: 1');
-    expect(section).toHaveTextContent('practice.result.focusTracking.type.camera_blocked: 2');
+    expect(within(section).getByTestId('focus-event-multiple_faces')).toHaveTextContent('×1');
+    expect(within(section).getByTestId('focus-event-camera_blocked')).toHaveTextContent('×2');
   });
 
   it('null (không theo dõi) và [] (không ghi nhận gì) → KHÔNG có mục chi tiết', () => {

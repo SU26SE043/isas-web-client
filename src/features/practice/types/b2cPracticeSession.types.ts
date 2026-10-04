@@ -83,8 +83,11 @@ export interface CreatePracticeSessionRequest {
   focusTrackingEnabled?: boolean;
 }
 
-/** Client tự khai qua `POST focus-events` — BE `FocusSignals.Allowed`. */
-export type FocusBehaviorSignalType = 'tab_switch' | 'paste' | 'focus_lost';
+/**
+ * Client tự khai qua `POST focus-events` — tập con của BE `FocusSignals.Allowed`. BE vẫn nhận `paste`, nhưng
+ * phòng luyện B2C trả lời bằng giọng (không có ô nhập) nên client KHÔNG ghi dán nữa (2026-10-04).
+ */
+export type FocusBehaviorSignalType = 'tab_switch' | 'focus_lost';
 /** CHỈ server ghi (sau khi gọi AIService `/face-detect`) — BE `FocusSignals.ServerOnly`. */
 export type FocusFrameSignalType = 'no_face' | 'multiple_faces';
 /**

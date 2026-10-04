@@ -64,24 +64,6 @@ describe('FocusSummaryTile — ba trạng thái D6 (null ≠ [] ≠ có sự ki�
     expect(breakdown).toHaveTextContent('practice.result.focusTracking.short.camera');
   });
 
-  it('có dán → nhóm "Dán" RIÊNG, không gộp vào "rời buổi" (ô Rời tab / cửa sổ không cộng dán)', () => {
-    const { container } = render(
-      <FocusSummaryTile
-        view={makeView({
-          focusTrackingEnabled: true,
-          focusEvents: [
-            { signalType: 'focus_lost', count: 1, firstAt: '2026-09-15T04:05:00Z', lastAt: '2026-09-15T04:05:00Z' },
-            { signalType: 'paste', count: 2, firstAt: '2026-09-15T04:06:00Z', lastAt: '2026-09-15T04:07:00Z' },
-          ],
-        })}
-      />,
-    );
-    expect(within(container).getByText('×3')).toBeInTheDocument();
-    expect(within(container).getByTestId('focus-tile-breakdown')).toHaveTextContent(
-      /^practice\.result\.focusTracking\.short\.leave · practice\.result\.focusTracking\.short\.paste$/,
-    );
-  });
-
   it('chỉ có khung hình → tách nhóm KHÔNG có "rời buổi"', () => {
     const { container } = render(
       <FocusSummaryTile
