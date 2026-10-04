@@ -6,6 +6,7 @@ import {
   type B2cRoomMediaContext,
 } from '@/features/practice/components/B2cPracticeInterviewRoom';
 import { useLanguage } from '@/shared/languages';
+import { CampaignBehaviorWarning } from '../components/CampaignBehaviorWarning';
 import { CampaignViolationDialog } from '../components/CampaignViolationDialog';
 import { ExamClockStillRunning } from '../components/ExamClockStillRunning';
 import { useCampaignAntiCheat } from '../hooks/useCampaignAntiCheat';
@@ -15,7 +16,6 @@ import { useCampaignProctoringLifecycle } from '../hooks/useCampaignProctoringLi
 import { useCampaignViolationQueue } from '../hooks/useCampaignViolationQueue';
 import { MY_CAMPAIGNS_QUERY_KEY } from '../hooks/useMyCampaigns';
 import { myCampaignDetailQueryKey } from '../hooks/useMyCampaignDetail';
-import type { CampaignViolationKind } from '../types/campaignViolation.types';
 import { readCampaignInterviewSession } from '../utils/campaignInterviewSession';
 
 function hasLiveCamera(stream: MediaStream | null | undefined) {
@@ -23,8 +23,6 @@ function hasLiveCamera(stream: MediaStream | null | undefined) {
     (track) => track.readyState === 'live' && track.enabled,
   ));
 }
-
-const NON_BLOCKING_BEHAVIOR_KINDS: CampaignViolationKind[] = ['tab_switch', 'paste', 'focus_lost'];
 
 export function CampaignInterviewPage() {
   const { campaignId = '', sessionId = '' } = useParams();
@@ -41,6 +39,7 @@ export function CampaignInterviewPage() {
   const [examClockRunning, setExamClockRunning] = useState(false);
   // ATT1-F5: phòng đã đóng (hết giờ / không vào được phòng) ⇒ không overlay nào được che màn hết giờ / bảng lỗi.
   const [roomClosed, setRoomClosed] = useState(false);
+  const [behaviorWarning, setBehaviorWarning] = useState<'tab_switch' | 'paste' | 'focus_lost' | null>(null);
   const queryClient = useQueryClient();
   const behaviorWarningTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
@@ -52,8 +51,9 @@ export function CampaignInterviewPage() {
   const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
     if (behaviorWarningTypes.current.has(kind)) return;
     behaviorWarningTypes.current.add(kind);
-    enqueueViolation(kind);
-  }, [enqueueViolation]);
+    setBehaviorWarning(kind);
+  }, []);
+  const dismissBehaviorWarning = useCallback(() => setBehaviorWarning(null), []);
   const handleFaceSignal = useCallback(() => undefined, []);
   // ATT1-F4: begin vừa mở khoá đề ⇒ bản cache của trang chuẩn bị (đề bị che) hết hiệu lực.
   const handleSessionBegun = useCallback(() => {
@@ -79,9 +79,6 @@ export function CampaignInterviewPage() {
     onBehaviorSignal: handleBehaviorSignal,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;
-  const currentViolationPausesRoom = Boolean(
-    violations.currentViolation && !NON_BLOCKING_BEHAVIOR_KINDS.includes(violations.currentViolation.kind),
-  );
   const { markCompleted } = proctoring;
   // Hết giờ: thôi giám sát, gỡ overlay; trang chiến dịch phải tải lại trạng thái lượt (bài đã nộp).
   const handleExamTimeUp = useCallback(() => {
@@ -186,6 +183,7 @@ export function CampaignInterviewPage() {
         examClockRunning={examClockRunning}
         onContinue={() => void handleContinue()}
       />
+      <CampaignBehaviorWarning kind={roomClosed ? null : behaviorWarning} onDismiss={dismissBehaviorWarning} />
 
       <div className="border-b border-satin bg-surface-base/80 px-4 py-2 text-center text-xs text-muted-foreground">
         {t('campaigns.flow.monitoringHint')}
@@ -202,7 +200,7 @@ export function CampaignInterviewPage() {
         onEntryError={handleEntryError}
         examTimeUpBackPath={resolvedCampaignId ? `/candidate/campaigns/${resolvedCampaignId}` : undefined}
         completePath="/candidate/campaigns"
-        violationPaused={violationPaused || currentViolationPausesRoom || !fullscreen.isFullscreen}
+        violationPaused={violationPaused || Boolean(violations.currentViolation) || !fullscreen.isFullscreen}
         cameraAlwaysOn
         onMediaContextChange={handleMediaContext}
         onPhaseChange={proctoring.handlePhaseChange}

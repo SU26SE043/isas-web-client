@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { TriangleAlert } from 'lucide-react';
+import { Loader2, TriangleAlert } from 'lucide-react';
 import { AppModal } from '@/components/ui/app-modal';
 import { useLanguage } from '@/shared/languages';
 import type { CampaignViolation } from '../types/campaignViolation.types';
@@ -14,8 +13,6 @@ interface CampaignViolationDialogProps {
   examClockRunning?: boolean;
   onContinue: () => void;
 }
-
-export const CAMPAIGN_VIOLATION_AUTO_CONTINUE_MS = 5_000;
 
 const MESSAGE_KEYS = {
   tab_switch: 'campaigns.violation.tabSwitch',
@@ -32,24 +29,13 @@ const MESSAGE_KEYS = {
 export function CampaignViolationDialog({
   violation,
   pendingCount,
+  recovering,
   recoveryError,
   examClockRunning = false,
   onContinue,
 }: CampaignViolationDialogProps) {
   const { t } = useLanguage();
   const isIdentityIssue = violation?.kind === 'identity_unverified';
-  const onContinueRef = useRef(onContinue);
-  onContinueRef.current = onContinue;
-
-  useEffect(() => {
-    if (!violation) return undefined;
-
-    const timer = window.setTimeout(() => {
-      onContinueRef.current();
-    }, CAMPAIGN_VIOLATION_AUTO_CONTINUE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [violation?.id]);
 
   return (
     <AppModal
@@ -94,6 +80,17 @@ export function CampaignViolationDialog({
             <p className="mt-4 text-sm text-error" role="alert">{t(recoveryError)}</p>
           ) : null}
 
+          <button
+            type="button"
+            className="btn-primary mt-6 inline-flex w-full items-center justify-center gap-2"
+            disabled={recovering}
+            onClick={onContinue}
+          >
+            {recovering ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {t((isIdentityIssue || recoveryError)
+              ? 'campaigns.violation.retry'
+              : 'campaigns.violation.continue')}
+          </button>
         </div>
       ) : null}
     </AppModal>
