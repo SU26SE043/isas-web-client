@@ -158,6 +158,9 @@ describe('PracticeLiveResultReport tabs', () => {
     expect(screen.getByText('60.00%')).toBeInTheDocument();
     expect(screen.getByText('54.38%')).toBeInTheDocument();
     expect(screen.getByText('90.63%')).toBeInTheDocument();
+    // Dòng tổng = tổng TRƯỚC phạt (khớp các dòng và {before}), không phải điểm cuối 72.5 sau phạt 3/4.
+    expect(screen.getByTestId('weighted-total')).toHaveTextContent('90.6/100');
+    expect(screen.getByTestId('weighted-total')).not.toHaveTextContent('72.5');
     expect(screen.getByText('System design')).toBeInTheDocument();
     expect(screen.getByText('practice.result.unassessed.notAsked')).toBeInTheDocument();
     expect(screen.getByText('practice.result.unassessed.reweighted')).toBeInTheDocument();

@@ -48,18 +48,18 @@ export function CampaignViolationDialog({
       ariaLabel={t(isIdentityIssue
         ? 'campaigns.violation.identityTitle'
         : 'campaigns.violation.title')}
-      contentClassName="border-warning/40 bg-surface-elevated"
-      overlayClassName="z-[120] bg-black/80 backdrop-blur-md"
+      contentClassName="border-error/40 bg-surface-elevated"
+      overlayClassName="z-[120] bg-white/70 backdrop-blur-md"
       className="z-[130]"
     >
       {violation ? (
         <div className="p-1">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full border border-warning/40 bg-warning/10 text-warning">
+            <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full border border-error/40 bg-error/10 text-error">
               <TriangleAlert className="size-5" aria-hidden />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl font-semibold text-error">
                 {t(isIdentityIssue
                   ? 'campaigns.violation.identityTitle'
                   : 'campaigns.violation.title')}
@@ -72,7 +72,7 @@ export function CampaignViolationDialog({
 
           {examClockRunning ? <ExamClockStillRunning className="mt-4" /> : null}
           {pendingCount > 0 ? (
-            <p className="mt-4 text-xs text-warning">
+            <p className="mt-4 text-xs text-error">
               {t('campaigns.violation.pending').replace('{count}', String(pendingCount))}
             </p>
           ) : null}

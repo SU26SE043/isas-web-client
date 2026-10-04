@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   B2cPracticeInterviewRoom,
   type B2cRoomMediaContext,
 } from '@/features/practice/components/B2cPracticeInterviewRoom';
 import { useLanguage } from '@/shared/languages';
+import { CampaignBehaviorWarning } from '../components/CampaignBehaviorWarning';
 import { CampaignViolationDialog } from '../components/CampaignViolationDialog';
 import { ExamClockStillRunning } from '../components/ExamClockStillRunning';
 import { useCampaignAntiCheat } from '../hooks/useCampaignAntiCheat';
@@ -39,18 +39,21 @@ export function CampaignInterviewPage() {
   const [examClockRunning, setExamClockRunning] = useState(false);
   // ATT1-F5: phòng đã đóng (hết giờ / không vào được phòng) ⇒ không overlay nào được che màn hết giờ / bảng lỗi.
   const [roomClosed, setRoomClosed] = useState(false);
+  const [behaviorWarning, setBehaviorWarning] = useState<'tab_switch' | 'paste' | 'focus_lost' | null>(null);
   const queryClient = useQueryClient();
-  const behaviorToastTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
+  const behaviorWarningTypes = useRef(new Set<'tab_switch' | 'paste' | 'focus_lost'>());
   const fullscreenExitRef = useRef<() => void>(() => undefined);
   const violations = useCampaignViolationQueue(antiCheatEnabled);
+  const { enqueue: enqueueViolation } = violations;
   const proctoring = useCampaignProctoringLifecycle(antiCheatEnabled);
 
   const handleViolationPause = useCallback(() => setViolationPaused(true), []);
   const handleBehaviorSignal = useCallback((kind: 'tab_switch' | 'paste' | 'focus_lost') => {
-    if (behaviorToastTypes.current.has(kind)) return;
-    behaviorToastTypes.current.add(kind);
-    toast.success(t('campaigns.violation.behaviorRecorded'), { duration: 5000 });
-  }, [t]);
+    if (behaviorWarningTypes.current.has(kind)) return;
+    behaviorWarningTypes.current.add(kind);
+    setBehaviorWarning(kind);
+  }, []);
+  const dismissBehaviorWarning = useCallback(() => setBehaviorWarning(null), []);
   const handleFaceSignal = useCallback(() => undefined, []);
   // ATT1-F4: begin vừa mở khoá đề ⇒ bản cache của trang chuẩn bị (đề bị che) hết hiệu lực.
   const handleSessionBegun = useCallback(() => {
@@ -72,7 +75,7 @@ export function CampaignInterviewPage() {
     recoveryActive: Boolean(violations.currentViolation),
     stream: media?.stream,
     onPause: handleViolationPause,
-    onViolation: violations.enqueue,
+    onViolation: enqueueViolation,
     onBehaviorSignal: handleBehaviorSignal,
   });
   fullscreenExitRef.current = antiCheat.reportFullscreenExit;
@@ -180,6 +183,7 @@ export function CampaignInterviewPage() {
         examClockRunning={examClockRunning}
         onContinue={() => void handleContinue()}
       />
+      <CampaignBehaviorWarning kind={roomClosed ? null : behaviorWarning} onDismiss={dismissBehaviorWarning} />
 
       <div className="border-b border-satin bg-surface-base/80 px-4 py-2 text-center text-xs text-muted-foreground">
         {t('campaigns.flow.monitoringHint')}

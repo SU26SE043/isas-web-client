@@ -34,7 +34,6 @@ const baseProps = {
   isDraft: true,
   hasJd: true,
   questionCount: 5,
-  maxQuestions: 5,
   onQuestionCount: vi.fn(),
   onQuestionsPerSession: vi.fn(),
   onGenerateAi: vi.fn(),

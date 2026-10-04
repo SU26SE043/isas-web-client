@@ -18,6 +18,8 @@ export interface QuestionCardHeaderProps {
   hasPreviewRun: boolean;
   /** Vị trí (1-based) của câu đang có lượt chấm thử bay, nếu có — hiện trên MỌI card. */
   runningPosition: number | null;
+  /** Ô soạn đề đang hiện ngay bên dưới ⇒ chỉ một dòng ở đây, không in đề đầy đủ hai lần. */
+  compactPrompt?: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -34,7 +36,7 @@ export function resolveTargetNames(rubric: RubricCriterion[], targetIds: string[
  * SC2 · T9 — hàng đầu của card: `Collapsible.Trigger` là NỘI DUNG (STT · prompt · chip); các nút lên/xuống/xoá
  * nằm NGOÀI trigger vì lồng `<button>` trong `<button>` là HTML sai và trình đọc màn hình đọc thành một nút.
  */
-export function QuestionCardHeader({ question, index, total, open, disabled, targetNames, hasPreviewRun, runningPosition, onMoveUp, onMoveDown, onRemove }: QuestionCardHeaderProps) {
+export function QuestionCardHeader({ question, index, total, open, disabled, targetNames, hasPreviewRun, runningPosition, compactPrompt = false, onMoveUp, onMoveDown, onRemove }: QuestionCardHeaderProps) {
   const { t } = useLanguage();
   const isAi = question.source === 'ai';
   const prompt = question.prompt.trim();
@@ -50,7 +52,7 @@ export function QuestionCardHeader({ question, index, total, open, disabled, tar
           {String(index + 1).padStart(2, '0')}
         </span>
         <span className="min-w-0 flex-1 space-y-1">
-          <span className={cn('block text-sm text-foreground', !open && 'line-clamp-2', !prompt && 'text-muted-foreground italic')} data-testid="question-card-prompt">
+          <span className={cn('block text-sm text-foreground', !open && 'line-clamp-2', open && compactPrompt && 'line-clamp-1', !prompt && 'text-muted-foreground italic')} data-testid="question-card-prompt">
             {prompt || t('employer.campaigns.questionCard.emptyPrompt')}
           </span>
           <span className="flex flex-wrap items-center gap-1.5">

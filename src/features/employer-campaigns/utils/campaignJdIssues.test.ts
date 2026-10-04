@@ -47,7 +47,6 @@ const snapshot = (inputMethod: 'file' | 'text') => ({
     faceVerifyEnabled: false,
     adaptiveEnabled: false,
     maxFollowUps: 2,
-    maxQuestions: 5,
   },
 });
 

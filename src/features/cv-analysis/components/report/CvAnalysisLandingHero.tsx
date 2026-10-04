@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, Sparkles } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarClock, FileText, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import { formatJobCategoryDisplay } from '@/shared/domain/jobDomains';
@@ -29,47 +29,69 @@ export function CvAnalysisLandingHero({ result, meta, onOpenCv, onOpenJd }: CvAn
     <section className="relative overflow-hidden rounded-2xl frame-satin bg-surface-raised">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.08),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--color-info-bg),transparent_62%)] opacity-60"
       />
-      <div className="relative p-6 sm:p-10 lg:p-12">
-        <div className="max-w-3xl space-y-6">
-          <p className="text-label text-muted-foreground">{t('cv.landing.kicker')}</p>
-          <div className="space-y-3">
-            <h1 className="heading-primary text-3xl tracking-tight text-foreground sm:text-5xl">
-              {formatJobCategoryDisplay(result.jobCategory, language) ||
-                t('cv.landing.untitledDomain')}
-            </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              {result.summary || t('cv.report.emptySummary')}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-satin bg-surface-overlay px-3 py-1.5">
-              <Sparkles className="size-3.5 text-foreground" aria-hidden />
-              {t('cv.report.statusReady')}
+      <div className="relative p-5 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-info/15 text-info-light ring-1 ring-info/20">
+              <Sparkles className="size-5" aria-hidden />
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarClock className="size-3.5" aria-hidden />
-              {formatDate(result.createdAt, language)}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-info-light">
+                {t('cv.landing.kicker')}
+              </p>
+              <h1 className="mt-1 heading-secondary text-2xl tracking-tight text-foreground sm:text-3xl">
+                {t('cv.report.summary')}
+              </h1>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success">
+            <span className="size-1.5 rounded-full bg-success" aria-hidden />
+            {t('cv.report.statusReady')}
+          </span>
+        </div>
+
+        <p className="mt-5 rounded-xl border border-info/20 bg-info/5 px-4 py-3 text-sm leading-6 text-foreground/90 sm:px-5">
+          {result.summary || t('cv.report.emptySummary')}
+        </p>
+
+        <div className="mt-5 grid gap-2 rounded-xl border border-satin/70 bg-surface-overlay/60 p-3 sm:grid-cols-3 sm:gap-0">
+          <div className="flex items-center gap-3 px-2 py-2 sm:border-r sm:border-satin/70">
+            <BriefcaseBusiness className="size-4 text-info-light" aria-hidden />
+            <span>
+              <span className="block text-[11px] text-muted-foreground">{t('cv.report.domain')}</span>
+              <span className="block text-sm font-semibold text-foreground">
+                {formatJobCategoryDisplay(result.jobCategory, language) || t('cv.landing.untitledDomain')}
+              </span>
             </span>
           </div>
+          <div className="flex items-center gap-3 px-2 py-2 sm:border-r sm:border-satin/70 sm:pl-5">
+            <FileText className="size-4 text-info-light" aria-hidden />
+            <span>
+              <span className="block text-[11px] text-muted-foreground">{t('cv.report.jdStatus')}</span>
+              <span className="block text-sm font-semibold text-foreground">
+                {result.jdId ? t('cv.report.jdUploaded') : t('cv.report.noJd')}
+              </span>
+            </span>
+          </div>
+          <div className="flex items-center gap-3 px-2 py-2 sm:pl-5">
+            <CalendarClock className="size-4 text-info-light" aria-hidden />
+            <span>
+              <span className="block text-[11px] text-muted-foreground">{t('cv.report.analysisTime')}</span>
+              <span className="block text-sm font-semibold text-foreground">{formatDate(result.createdAt, language)}</span>
+            </span>
+          </div>
+        </div>
 
-          <CvReportSourceActions
-            analysis={result}
-            meta={meta}
-            onOpenCv={onOpenCv}
-            onOpenJd={onOpenJd}
-          />
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <CvReportSourceActions analysis={result} meta={meta} onOpenCv={onOpenCv} onOpenJd={onOpenJd} />
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/candidate/cv/analysis" className="btn-primary inline-flex">
-              {t('cv.startNewAnalysis')}
-              <ArrowRight className="size-4" aria-hidden />
+          <div className="flex flex-wrap gap-2">
+            <Link to="/candidate/cv/analysis" className="btn-primary inline-flex text-sm">
+              {t('cv.startNewAnalysis')} <ArrowRight className="size-4" aria-hidden />
             </Link>
-            <Link to="/practice" className="btn-secondary inline-flex">
-              {t('cv.landing.practiceCta')}
-            </Link>
+            <Link to="/practice" className="btn-secondary inline-flex text-sm">{t('cv.landing.practiceCta')}</Link>
           </div>
         </div>
       </div>

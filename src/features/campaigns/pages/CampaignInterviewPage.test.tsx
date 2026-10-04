@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -24,6 +24,9 @@ let currentViolation: { kind: string } | null = null;
 
 const antiCheatCalls: Array<{ enabled: boolean }> = [];
 const faceCheckCalls: Array<{ enabled: boolean }> = [];
+let antiCheatOptions: { enabled: boolean; onBehaviorSignal?: (kind: 'tab_switch' | 'paste' | 'focus_lost') => void } | null = null;
+let lastRoomProps: { violationPaused?: boolean } | null = null;
+const enqueueMock = vi.fn();
 
 vi.mock('@/shared/languages', () => ({
   useLanguage: () => ({ t: (key: string) => key }),
@@ -48,13 +51,14 @@ vi.mock('../hooks/useCampaignViolationQueue', () => ({
   useCampaignViolationQueue: () => ({
     currentViolation,
     pendingCount: 0,
-    enqueue: vi.fn(),
+    enqueue: enqueueMock,
     resolveCurrent: vi.fn(),
   }),
 }));
 
 vi.mock('../hooks/useCampaignAntiCheat', () => ({
-  useCampaignAntiCheat: (options: { enabled: boolean }) => {
+  useCampaignAntiCheat: (options: { enabled: boolean; onBehaviorSignal?: (kind: 'tab_switch' | 'paste' | 'focus_lost') => void }) => {
+    antiCheatOptions = options;
     antiCheatCalls.push({ enabled: options.enabled });
     return { reportFullscreenExit: vi.fn() };
   },
@@ -75,8 +79,9 @@ vi.mock('@/features/practice/components/B2cPracticeInterviewRoom', () => ({
   B2cPracticeInterviewRoom: (props: {
     onPhaseChange?: (phase: string) => void;
     onSessionSubmitting?: () => void;
+    violationPaused?: boolean;
   }) => (
-    <div>
+    <div ref={() => { lastRoomProps = props; }}>
       <button type="button" onClick={() => props.onPhaseChange?.('countdown')}>phase-countdown</button>
       <button type="button" onClick={() => props.onPhaseChange?.('reading')}>phase-reading</button>
       <button type="button" onClick={() => props.onSessionSubmitting?.()}>submit-session</button>
@@ -116,6 +121,9 @@ beforeEach(() => {
   currentViolation = null;
   antiCheatCalls.length = 0;
   faceCheckCalls.length = 0;
+  antiCheatOptions = null;
+  lastRoomProps = null;
+  enqueueMock.mockReset();
 });
 
 afterEach(() => {
@@ -124,6 +132,28 @@ afterEach(() => {
 });
 
 describe('CampaignInterviewPage — khe nối giám sát', () => {
+  it('behavior signal chỉ hiện warning, không enqueue và không pause room', async () => {
+    renderPage();
+    await userEvent.click(screen.getByText('phase-countdown'));
+
+    act(() => antiCheatOptions?.onBehaviorSignal?.('paste'));
+
+    expect(enqueueMock).not.toHaveBeenCalled();
+    expect(lastRoomProps?.violationPaused).toBe(false);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('tab_switch sau khi Chrome thoát fullscreen vẫn giữ nút quay lại fullscreen', async () => {
+    fullscreenState = { isFullscreen: false, hasExited: true, fullscreenSupported: true };
+    renderPage();
+    await userEvent.click(screen.getByText('phase-reading'));
+
+    act(() => antiCheatOptions?.onBehaviorSignal?.('tab_switch'));
+
+    expect(screen.getByRole('button', { name: 'campaigns.fullscreen.enter' })).toBeInTheDocument();
+    expect(enqueueMock).not.toHaveBeenCalled();
+  });
+
   it('ĐANG khắc phục vi phạm thì VẪN giám sát', async () => {
     // Lỗ AC1 #1: điều kiện cũ có `&& !violations.currentViolation` ⇒ giám sát
     // tắt đúng lúc dialog vi phạm đang mở — cửa sổ dễ gian lận nhất cả buổi.

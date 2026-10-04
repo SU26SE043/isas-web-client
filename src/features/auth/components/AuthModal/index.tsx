@@ -106,11 +106,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       showCloseButton
       closeLabel={t('auth.close')}
       ariaLabel={dialogLabel}
-      closeButtonClassName={
-        isSignUp
-          ? 'border-satin text-muted-foreground hover:text-foreground'
-          : 'border-satin text-white/80 hover:text-foreground'
-      }
+      closeButtonClassName="border-satin text-foreground hover:bg-surface-raised hover:text-foreground"
     >
       <div className="relative flex h-full min-h-0 w-full overflow-hidden rounded-2xl surface-elevated">
         <motion.div

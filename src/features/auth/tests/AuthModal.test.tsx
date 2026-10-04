@@ -226,4 +226,19 @@ describe('AuthModal integration', () => {
     expect(screen.getAllByLabelText('auth.passwordPlaceholder')).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'auth.signInTitle' })).toHaveLength(1);
   });
+
+  it('hiển thị nút đóng màu đen và không đổi nền đen khi hover', () => {
+    render(
+      <MemoryRouter>
+        <AuthModal isOpen={true} onClose={onClose} />
+      </MemoryRouter>,
+    );
+
+    const closeButton = screen.getByRole('button', { name: 'auth.close' });
+
+    expect(closeButton).toHaveClass('text-foreground');
+    expect(closeButton).toHaveClass('hover:bg-surface-raised');
+    expect(closeButton).toHaveClass('hover:text-foreground');
+    expect(closeButton).not.toHaveClass('hover:bg-foreground');
+  });
 });

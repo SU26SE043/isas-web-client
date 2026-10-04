@@ -1,4 +1,8 @@
-import { CheckCircle2, Loader2, Pencil, Scale } from 'lucide-react';
+import {
+  CheckCircle2,
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/shared/languages';
 import type { UploadedCvFile } from '@/features/cv-analysis/types/cvAnalysis.types';
@@ -10,10 +14,11 @@ import type {
   PracticeSeniority,
 } from '../../types/b2cPracticeSession.types';
 import type { PracticeRubricCriterion } from '../../types/practiceSetup.types';
-import { PracticeSessionTopics } from '../PracticeSessionTopics';
 import { PracticeWizardNav } from './PracticeWizardNav';
 import { PracticeWizardStepCard } from './PracticeWizardStepCard';
 import { FocusTrackingOptIn } from './FocusTrackingOptIn';
+import { PracticeSummaryCriteriaPanel } from './PracticeSummaryCriteriaPanel';
+import { PracticeSummaryInfoRows } from './PracticeSummaryInfoRows';
 const JOB_LABEL: Record<PracticeJobCategory, string> = {
   FE: 'practice.setup.jobCategory.FE',
   BE: 'practice.setup.jobCategory.BE',
@@ -192,57 +197,25 @@ export function PracticeSetupSummaryStep({
         </p>
       ) : null}
 
-      <dl className="space-y-3">
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            className="flex justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm"
-          >
-            <dt className="text-muted-foreground">{row.label}</dt>
-            <dd className="max-w-[60%] text-right font-medium text-foreground">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <section className="mt-5 rounded-2xl border border-info/30 bg-info/5 p-4" aria-labelledby="practice-summary-criteria">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-info/30 bg-info/10 text-info-light">
-              <Scale className="size-4" aria-hidden />
+      <section className="rounded-2xl border border-satin bg-surface-raised p-4 sm:p-5" aria-labelledby="practice-summary-info">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-xl bg-info/15 text-info-light ring-1 ring-info/20">
+              <FileText className="size-4" aria-hidden />
             </span>
-            <div>
-              <h3 id="practice-summary-criteria" className="font-semibold text-foreground">
-                {t('practice.setup.summary.gradingCriteria')}
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('practice.setup.summary.criteriaCount').replace('{count}', String(criteria.length))}
-              </p>
-            </div>
+            <h3 id="practice-summary-info" className="font-semibold text-foreground">{t('practice.setup.summary.infoTitle')}</h3>
           </div>
-          <button type="button" className="btn-ghost inline-flex items-center gap-1.5 text-xs" onClick={onEditCriteria} disabled={isCreating}>
-            <Pencil className="size-3.5" aria-hidden />
-            {t('practice.setup.summary.editCriteria')}
-          </button>
         </div>
-        <ul className="mt-3 space-y-2 border-t border-info/15 pt-3">
-          {criteria.map((criterion) => (
-            <li key={criterion.id} className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-medium text-foreground">{criterion.name}</span>
-              <span className="shrink-0 font-semibold text-info-light">{criterion.weight}%</span>
-            </li>
-          ))}
-        </ul>
-        {jobCategory ? (
-          <div className="mt-3 border-t border-info/15 pt-3">
-            <PracticeSessionTopics
-              topics={null}
-              jobCategory={jobCategory}
-              seniority={seniority}
-              variant="compact"
-            />
-          </div>
-        ) : null}
+        <PracticeSummaryInfoRows rows={rows} />
       </section>
+
+      <PracticeSummaryCriteriaPanel
+        jobCategory={jobCategory}
+        seniority={seniority}
+        criteria={criteria}
+        isCreating={isCreating}
+        onEditCriteria={onEditCriteria}
+      />
       <FocusTrackingOptIn enabled={focusTrackingEnabled === true} onChange={onFocusTrackingChange ?? (() => undefined)} disabled={isCreating} />
     </PracticeWizardStepCard>
   );

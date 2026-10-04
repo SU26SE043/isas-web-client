@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useLanguage } from '@/shared/languages';
 
 export function FocusTrackingOptIn({ enabled, onChange, disabled = false }: {
@@ -8,7 +8,7 @@ export function FocusTrackingOptIn({ enabled, onChange, disabled = false }: {
 }) {
   const { t } = useLanguage();
   return (
-    <section className="mt-4 rounded-2xl border border-satin bg-surface-overlay p-4" aria-labelledby="focus-tracking-title">
+    <section className="mt-4 rounded-2xl border border-satin bg-surface-overlay/70 p-4" aria-labelledby="focus-tracking-title">
       <label className="flex cursor-pointer items-start gap-3">
         <input
           type="checkbox"
@@ -16,10 +16,10 @@ export function FocusTrackingOptIn({ enabled, onChange, disabled = false }: {
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
           aria-describedby="focus-tracking-description"
-          className="mt-1 size-4 rounded border-satin accent-foreground"
+          className="mt-1 size-4 rounded border-satin accent-info"
         />
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-satin bg-surface-raised text-foreground" aria-hidden>
-          <Eye className="size-4" />
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-satin bg-surface-raised text-info-light" aria-hidden>
+          <Camera className="size-4" />
         </span>
         <span>
           <span id="focus-tracking-title" className="block font-medium text-foreground">

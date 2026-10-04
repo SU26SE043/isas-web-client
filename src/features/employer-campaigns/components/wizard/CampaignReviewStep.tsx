@@ -8,7 +8,7 @@ import type { CampaignQuestion, RubricCriterion } from '../../types/campaignMana
 import type { FailedCampaignInvitation } from '../../types/campaign.api.types';
 import type { CampaignInfoState, CampaignSettingsState, JobDescriptionState } from '../../types/campaignWizard.types';
 import { useCampaignSlots } from '../../hooks/useCampaignSlots';
-import { calculateAdaptiveQuestionBudget } from '../../utils/campaignAdaptiveBudget';
+import { calculateAdaptiveQuestionBudget, deriveCampaignMaxQuestions } from '../../utils/campaignAdaptiveBudget';
 import { campaignSlotCapacity } from '../../utils/campaignSlots';
 import { inviteSlotShortfall, slotsOutsideCampaignWindow } from '../../utils/campaignCapacityChecks';
 import { isCampaignExpiryPast } from '../../utils/campaignWindow';
@@ -67,11 +67,16 @@ export function CampaignReviewStep({
   const assignedCount = slots.reduce((sum, slot) => sum + slot.assignedCount, 0);
   const outsideWindowSlots = slotsOutsideCampaignWindow(slots, info.startsAt, info.expiresAt);
   const slotShortfall = inviteSlotShortfall(slots, inviteEmails.length);
+  const baseQuestionCount = questionsPerSession && questionsPerSession > 0 ? questionsPerSession : questions.length;
   const adaptiveBudget = calculateAdaptiveQuestionBudget(
-    questionsPerSession ?? questions.length,
+    baseQuestionCount,
     settings.maxDeepPerQuestion,
     settings.adaptiveEnabled,
-    settings.maxQuestions,
+  );
+  const derivedMaxQuestions = deriveCampaignMaxQuestions(
+    baseQuestionCount,
+    settings.adaptiveEnabled,
+    settings.maxDeepPerQuestion,
   );
   // SC2 · D-5 — K-rule tính CỤC BỘ từ state (nhãn mới nhất, kể cả chưa lưu) để chặn NGAY ở bước 8 bằng chữ
   // người đọc được; bản server (`questionBankWarnings`, có tiền tố mã) chỉ dùng khi state không tự tính được
@@ -149,7 +154,7 @@ export function CampaignReviewStep({
         {slots.length > 0 ? <CampaignReviewSlotsTable slots={slots} outsideIds={outsideWindowSlots.map((slot) => slot.id)} /> : null}
         {serverWarnings.soft.length ? <Alert variant="warning"><AlertTitle>{t('employer.campaigns.wizard.deploy.warningTitle')}</AlertTitle><AlertDescription><ul className="list-inside list-disc">{serverWarnings.soft.map((warning) => <li key={warning}>{warning}</li>)}</ul></AlertDescription></Alert> : null}
         {settings.adaptiveEnabled ? <section className="frame-satin space-y-2 rounded-xl bg-surface-overlay p-4" aria-label={t('employer.campaigns.wizard.review.adaptiveBudget')}>
-          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {adaptiveBudget.requestedTotal}</h3><span className="text-sm text-muted-foreground">{adaptiveBudget.requestedTotal} / {adaptiveBudget.limit}</span></div>
+          <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-foreground">{t('employer.campaigns.wizard.review.adaptiveBudget')}: {derivedMaxQuestions}</h3><span className="text-sm text-muted-foreground">{adaptiveBudget.requestedTotal} / {adaptiveBudget.limit}</span></div>
           {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-sm text-muted-foreground">maxDeepPerQuestion: {adaptiveBudget.maxDeepPerQuestion}</p> : null}
           {adaptiveBudget.maxDeepPerQuestion > 0 ? <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetFormula').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{total}}', String(adaptiveBudget.requestedTotal))}</p> : null}
           <p className="text-sm text-muted-foreground">{t('employer.campaigns.wizard.review.adaptiveBudgetSummary').replace('{{base}}', String(adaptiveBudget.baseQuestionCount)).replace('{{depth}}', String(adaptiveBudget.maxDeepPerQuestion)).replace('{{requested}}', String(adaptiveBudget.requestedTotal)).replace('{{limit}}', String(adaptiveBudget.limit)).replace('{{status}}', t(adaptiveBudget.exceedsLimit ? 'employer.campaigns.wizard.review.adaptiveBudgetStatus.exceeded' : 'employer.campaigns.wizard.review.adaptiveBudgetStatus.ok'))}</p>

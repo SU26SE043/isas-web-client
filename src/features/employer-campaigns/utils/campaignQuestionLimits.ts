@@ -24,10 +24,10 @@ export const CAMPAIGN_QUESTION_HARD_MAX = 200;
  * (`CampaignService.cs:959`). Bấm sinh nhiều lượt vẫn nạp được tới
  * `CAMPAIGN_QUESTION_HARD_MAX` câu — trần này chặn chi phí token mỗi lần gọi.
  *
- * ⚠ Còn một số 20 THỨ BA, không liên quan cả hai: `settings.maxQuestions` = số câu
+ * ⚠ Còn một số 20 THỨ BA, không liên quan cả hai: `maxQuestions` = số câu
  * MỘT BUỔI THI, khớp CHECK `ck_practice_sessions_max_questions_range`
  * (`Isas.InterviewService/Configurations/PracticeSessionConfiguration.cs:44`) và
- * được canh riêng bằng `MAX_QUESTIONS_LIMIT` trong `validateCampaignWizard.ts`.
+ * được canh riêng bằng công thức adaptive budget.
  * Ba con số, ba hằng — đừng gộp bất kỳ cặp nào.
  */
 export const CAMPAIGN_AI_GENERATE_MAX = 20;

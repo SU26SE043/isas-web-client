@@ -18,6 +18,8 @@ export interface RubricPreviewResultProps {
   onBackToLatest?: () => void;
   /** Đang chạy lượt mới ⇒ mờ kết quả cũ để người dùng không đọc nhầm là lượt vừa bấm. */
   dimmed?: boolean;
+  /** `false` khi đã đứng trong card của chính câu đó — đề đã ở đầu card, in lại chỉ thêm một dòng trùng. */
+  showQuestion?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ export interface RubricPreviewResultProps {
  * theo ngưỡng, rồi từng tiêu chí kèm mức + lý do trích từ bài. Không còn 3 bài AI Yếu/Khá/Xuất sắc và kết luận
  * "thứ tự / biên độ" dựng trên chúng. Lượt CŨ chỉ có bài AI ⇒ nói rõ là lượt cũ, không vẽ lại bảng 3 bài.
  */
-export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToLatest, dimmed = false }: RubricPreviewResultProps) {
+export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToLatest, dimmed = false, showQuestion = true }: RubricPreviewResultProps) {
   const { t, language } = useLanguage();
   const header = t('employer.campaigns.rubricPreview.result.header')
     .replace('{{date}}', formatRunTime(run.createdAt, language)).replace('{{version}}', String(run.rubricVersion));
@@ -37,9 +39,11 @@ export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToL
     <section className={cn('space-y-4', dimmed && 'pointer-events-none opacity-60')} aria-busy={dimmed || undefined} aria-label={header}>
       <div className="min-w-0 space-y-1">
         <p className="text-sm font-semibold text-foreground">{header}</p>
-        <p className="text-xs text-muted-foreground">
-          {t('employer.campaigns.rubricPreview.result.question')}: <span className="text-foreground">{run.questionText}</span>
-        </p>
+        {showQuestion ? (
+          <p className="text-xs text-muted-foreground">
+            {t('employer.campaigns.rubricPreview.result.question')}: <span className="text-foreground">{run.questionText}</span>
+          </p>
+        ) : null}
         {onBackToLatest ? (
           <p className="text-xs text-muted-foreground">
             {t('employer.campaigns.rubricPreview.result.viewingOld')}{' '}
@@ -66,13 +70,17 @@ export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToL
 
       {mine ? (
         <>
-          <div className="grid gap-3 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
-            <div className="rounded-xl border border-satin bg-surface-overlay/60 p-4">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">{t('employer.campaigns.rubricPreview.result.yourScore')}</p>
-              <p className="mt-1 text-4xl font-semibold tabular-nums text-foreground" data-testid="preview-score">
-                {formatPct(mine.actualWeightedPct)}<span className="text-base font-normal text-muted-foreground"> / 100</span>
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+          {/* Điểm là câu trả lời chính ⇒ một khối nổi bật; bài đã chấm là phần xem lại ⇒ một dòng gập ngay dưới,
+              không chia đôi trọng lượng với điểm như trước. */}
+          <div className="rounded-xl border border-satin bg-surface-overlay/60">
+            <div className="flex flex-wrap items-end justify-between gap-3 p-4">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t('employer.campaigns.rubricPreview.result.yourScore')}</p>
+                <p className="mt-1 text-4xl font-semibold tabular-nums text-foreground" data-testid="preview-score">
+                  {formatPct(mine.actualWeightedPct)}<span className="text-base font-normal text-muted-foreground"> / 100</span>
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {passed != null ? (
                   <Badge variant={passed ? 'success' : 'warning'} data-testid="preview-pass">
                     {t(passed ? 'employer.campaigns.rubricPreview.result.pass' : 'employer.campaigns.rubricPreview.result.fail')
@@ -81,18 +89,16 @@ export function RubricPreviewResult({ run, passScorePct, onEditLevels, onBackToL
                 ) : null}
                 {run.billed ? <Badge variant="info">{t('employer.campaigns.rubricPreview.warn.billed')}</Badge> : null}
               </div>
-            </div>
-            <div className="min-w-0 rounded-xl border border-satin bg-surface-overlay/60 p-4">
-              <details>
-                <summary className="cursor-pointer text-sm font-medium text-foreground">
-                  {t('employer.campaigns.rubricPreview.result.answer').replace('{{n}}', String(mine.wordCount))}
-                </summary>
-                <p className="mt-2 max-h-60 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground">{mine.answerText}</p>
-              </details>
               {!run.deliveryMetricsAvailable ? (
-                <p className="mt-2 text-xs leading-snug text-muted-foreground">{t('employer.campaigns.rubricPreview.warn.textOnly')}</p>
+                <p className="basis-full text-xs leading-snug text-muted-foreground">{t('employer.campaigns.rubricPreview.warn.textOnly')}</p>
               ) : null}
             </div>
+            <details className="border-t border-satin px-4 py-3">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">
+                {t('employer.campaigns.rubricPreview.result.answer').replace('{{n}}', String(mine.wordCount))}
+              </summary>
+              <p className="mt-2 max-h-60 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground">{mine.answerText}</p>
+            </details>
           </div>
 
           <ul className="divide-y divide-satin rounded-xl border border-satin" aria-label={t('employer.campaigns.rubricPreview.result.perCriterion')}>

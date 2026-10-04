@@ -66,13 +66,7 @@ export function PracticeLiveResultReport({
       <div className="min-h-[320px]" role="tabpanel">
         {activeTab === 'overview' ? <ReportOverview view={view} /> : null}
         {activeTab === 'criteria' ? (
-          <div
-            className={
-              session.topics?.length
-                ? 'grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] lg:items-start'
-                : undefined
-            }
-          >
+          <div className="space-y-5">
             <ReportCriteriaScores view={view} unassessedCriteria={unassessedCriteria} />
             {session.topics?.length ? (
               <PracticeSessionTopics

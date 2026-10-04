@@ -63,9 +63,13 @@ describe('CampaignDetailQuestionsSection — tab Chi tiết dùng card theo câu
     renderAt(<CampaignDetailQuestionsSection campaign={campaign()} />);
     expect(screen.getAllByTestId('question-card')).toHaveLength(2);
     const cardA = cardOf(QA);
+    // Trang chi tiết không sửa được nội dung ⇒ card mở sẵn tab Chấm thử.
+    expect(within(cardA).getByRole('tab', { name: /questionCard\.tabs\.preview/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(within(cardA).getByRole('tab', { name: /questionCard\.tabs\.content/ }));
     expect(within(cardA).getByRole('textbox', { name: 'employer.campaigns.campaignQuestions.question.contentLabel' })).toBeDisabled();
     expect(within(cardA).queryByTestId('question-scope-picker')).not.toBeInTheDocument();
     expect(within(cardA).queryByLabelText('employer.campaigns.questionCard.sampleAnswer.label')).not.toBeInTheDocument();
+    fireEvent.click(within(cardA).getByRole('tab', { name: /questionCard\.tabs\.preview/ }));
     // Hàng đầu: nút lên/xuống/xoá KHOÁ (card `disabled`) — trang chi tiết không sắp xếp/xoá câu, việc đó thuộc wizard.
     for (const name of ['moveUp', 'moveDown', 'delete']) {
       expect(within(cardA).getByRole('button', { name: `employer.campaigns.campaignQuestions.question.${name}` })).toBeDisabled();

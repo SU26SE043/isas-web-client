@@ -60,11 +60,13 @@ describe('QuestionScopePicker — I2 ba trạng thái', () => {
     expect(screen.getByText('employer.campaigns.questionCard.scope.empty')).toBeInTheDocument();
   });
 
-  it('0 tiêu chí WhenTargeted ⇒ không chip, dòng giải thích + link sang bước 3', () => {
+  it('0 tiêu chí WhenTargeted ⇒ không chip, MỘT dòng "luôn chấm" + link sang bước 3 (không đoạn giải thích cơ chế)', () => {
     const onGoToCriteria = vi.fn();
     render(<QuestionScopePicker questionId="q1" rubric={rubric.slice(0, 2)} value={null} onChange={vi.fn()} onGoToCriteria={onGoToCriteria} />);
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.getByText('employer.campaigns.questionCard.scope.none')).toBeInTheDocument();
+    const line = screen.getByRole('button', { name: 'employer.campaigns.questionCard.scope.goToCriteria' }).closest('p') as HTMLElement;
+    expect(line).toHaveTextContent('employer.campaigns.questionCard.scope.always');
+    expect(screen.getAllByText(/employer\.campaigns\.questionCard\.scope\.always/)).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'employer.campaigns.questionCard.scope.goToCriteria' }));
     expect(onGoToCriteria).toHaveBeenCalledTimes(1);
   });

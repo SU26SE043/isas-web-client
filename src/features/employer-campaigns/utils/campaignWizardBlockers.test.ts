@@ -28,7 +28,7 @@ const snapshot = (over: Partial<CampaignWizardSubmitSnapshot> = {}): CampaignWiz
   rubric: [],
   questions: [],
   questionsPerSession: null,
-  settings: { adaptiveEnabled: false, maxFollowUps: 3, maxDeepPerQuestion: 0, maxQuestions: 20,
+    settings: { adaptiveEnabled: false, maxFollowUps: 3, maxDeepPerQuestion: 0,
     antiCheatEnabled: false, faceVerifyEnabled: false },
   ...over,
 } as CampaignWizardSubmitSnapshot);
