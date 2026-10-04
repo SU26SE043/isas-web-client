@@ -263,10 +263,10 @@ Interview active
 → lưu pending violation
 → Candidate quay lại
 → window.focus
-→ xử lý violation
+→ hiện warning không chặn 5 giây (như mục 8)
 ```
 
-API:
+API khi trang bị ẩn trong lúc rời cửa sổ:
 
 ```json
 {
@@ -274,6 +274,8 @@ API:
   "note": "Candidate left the interview window using Alt+Tab or window switching."
 }
 ```
+
+Nếu trang vẫn `visible` (chỉ mất focus, ví dụ Alt+Tab sang app khác trên màn hình phụ) thì xử lý như mục 11 `focus_lost`. Cả hai trường hợp đều **không** pause bài.
 
 ---
 
@@ -625,6 +627,8 @@ Có thể retry face verification theo flow hiện tại.
 
 ## 21. Flow chung khi phát hiện violation
 
+Áp cho **blocking violation**: thoát fullscreen, `camera_blocked`, `no_face`, `multiple_faces`, `face_mismatch`, `identity_unverified`. Behavior signal (`tab_switch`, `paste`, `focus_lost`) không đi flow này — xem mục 22.
+
 Flow bắt buộc:
 
 ```text
@@ -655,20 +659,30 @@ Resume interview
 
 ---
 
-## 22. Popup tự tiếp tục sau 5 giây
+## 22. Warning không chặn vs popup chặn
 
-Popup cảnh báo hiển thị ở giữa màn hình trong 5 giây, sau đó tự gọi flow `Tiếp tục làm bài`.
+Có hai loại cảnh báo, không được trộn:
+
+| | Behavior warning | Blocking popup |
+|---|---|---|
+| Tín hiệu | `tab_switch`, `paste`, `focus_lost` | thoát fullscreen, camera, khuôn mặt (mục 21) |
+| Pause bài | Không | Có (mục 26–27) |
+| Nút | Không có nút | `Tiếp tục làm bài` (`Thử lại` khi khôi phục thất bại) |
+| Đóng | Tự đóng sau 5 giây | Chỉ đóng khi Continue khôi phục thành công |
+| Gửi flag | Mỗi lần xảy ra | Theo mục 7 |
 
 ```text
-violation
-→ popup đỏ + nền blur trắng bán trong suốt
-→ chờ 5 giây
-→ gọi flow Continue
-→ nếu fullscreen/camera hợp lệ: resume
-→ nếu recovery thất bại: giữ lớp chặn và yêu cầu Candidate khắc phục
+behavior signal
+→ gửi flag
+→ warning đỏ ở giữa màn hình, nền blur trắng bán trong suốt, không chặn click
+→ 5 giây sau tự đóng
 ```
 
-Không được:
+- Mỗi loại behavior warning chỉ hiện UI ở lần đầu trong một lần vào phòng; các lần sau vẫn gửi flag nhưng không hiện lại warning.
+- Nếu cùng hành động đó làm trình duyệt thoát fullscreen (Chrome thoát fullscreen khi chuyển tab), lớp yêu cầu fullscreen vẫn hiện và bài pause cho tới khi Candidate bấm `Bật toàn màn hình`. Warning chỉ thay cho popup vi phạm, không bỏ điều kiện fullscreen.
+- Blocking popup **không** được tự gọi Continue bằng timer: `requestFullscreen()` chỉ chạy trong user gesture, gọi từ timer sẽ bị trình duyệt từ chối.
+
+Blocking popup không được:
 
 ```text
 click backdrop
@@ -689,11 +703,13 @@ ESC
 Thứ tự bắt buộc:
 
 ```text
-Timer 5 giây gọi Continue
+Candidate click Continue
         ↓
-requestFullscreen()
+requestFullscreen() (nếu đang không fullscreen)
         ↓
 Fullscreen success
+        ↓
+Khởi động lại camera (chỉ với camera_blocked)
         ↓
 Close popup
         ↓
@@ -747,19 +763,19 @@ Yêu cầu UI:
 - không click được nội dung phía sau;
 - không đóng bằng backdrop;
 - không đóng bằng ESC;
-- không hiển thị nút Continue;
-- tự gọi Continue sau 5 giây; không tự bỏ qua điều kiện fullscreen/camera.
+- không auto-close và không tự gọi Continue;
+- có nút `Tiếp tục làm bài`; khi khôi phục thất bại đổi thành `Thử lại` (mục 24).
 
 Ví dụ:
 
 ```text
 Phát hiện vi phạm
 
-Bạn đã rời khỏi màn hình phỏng vấn.
+Bạn đã thoát khỏi chế độ toàn màn hình.
 
-Hành vi này đã được hệ thống ghi nhận.
+Vui lòng quay lại toàn màn hình để tiếp tục.
 
-Vui lòng quay lại chế độ toàn màn hình để tiếp tục.
+[ Tiếp tục làm bài ]
 ```
 
 Reuse modal/dialog của project.
@@ -1009,18 +1025,17 @@ Interview fullscreen
 Expected:
 
 ```text
-1 violation
-1 API request
-Interview paused
-Popup hiện
-Background blur
+1 API request (tab_switch nếu trang bị ẩn, focus_lost nếu chỉ mất focus)
+Warning không chặn 5 giây
+Không có nút xác nhận
+Interview KHÔNG pause
 ```
 
-Candidate chưa được làm tiếp.
+Nếu trình duyệt thoát fullscreen theo: lớp yêu cầu fullscreen chặn bài cho tới khi Candidate bật lại (mục 22).
 
 ### Continue
 
-Candidate click:
+Áp cho blocking popup. Candidate click:
 
 ```text
 Tiếp tục làm bài
@@ -1069,9 +1084,8 @@ Expected:
 ```text
 paste detected
 → /flags
-→ popup
-→ pause
-→ Continue
+→ warning không chặn 5 giây
+→ không pause, không cần Continue
 ```
 
 ### Camera Lost
@@ -1150,10 +1164,11 @@ allow retry
 - [ ] multiple_faces được xử lý.
 - [ ] face_mismatch được xử lý.
 - [ ] identity_unverified được xử lý đúng nghĩa.
-- [ ] Violation pause toàn bộ Interview.
+- [ ] Behavior signal (`tab_switch`, `paste`, `focus_lost`) chỉ hiện warning không chặn 5 giây, không pause.
+- [ ] Blocking violation pause toàn bộ Interview.
 - [ ] Popup blocking.
 - [ ] Background blur.
-- [ ] Candidate bắt buộc click Continue.
+- [ ] Blocking violation: Candidate bắt buộc click Continue (không auto-continue bằng timer).
 - [ ] Continue gọi requestFullscreen().
 - [ ] Chỉ fullscreen success mới resume.
 - [ ] Fullscreen fail vẫn block.
