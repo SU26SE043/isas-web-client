@@ -1,5 +1,18 @@
 export const CAMPAIGN_ADAPTIVE_QUESTION_LIMIT = 20;
 
+/** Derives the per-session question ceiling from the base question count. */
+export function deriveCampaignMaxQuestions(
+  baseQuestionCount: number | null | undefined,
+  adaptiveEnabled: boolean,
+  maxDeepPerQuestion: number | null | undefined,
+): number {
+  const base = Number.isFinite(baseQuestionCount) ? Math.max(0, Math.floor(baseQuestionCount ?? 0)) : 0;
+  const depth = adaptiveEnabled && Number.isFinite(maxDeepPerQuestion)
+    ? Math.max(0, Math.floor(maxDeepPerQuestion ?? 0))
+    : 0;
+  return Math.min(CAMPAIGN_ADAPTIVE_QUESTION_LIMIT, base * (1 + depth));
+}
+
 export interface AdaptiveQuestionBudget {
   limit: number;
   baseQuestionCount: number;
@@ -15,11 +28,8 @@ export function calculateAdaptiveQuestionBudget(
   baseQuestionCount: number,
   maxDeepPerQuestion: number | null | undefined,
   adaptiveEnabled: boolean,
-  questionLimit?: number | null,
 ): AdaptiveQuestionBudget {
-  const limit = Number.isFinite(questionLimit) && Number(questionLimit) > 0
-    ? Math.floor(Number(questionLimit))
-    : CAMPAIGN_ADAPTIVE_QUESTION_LIMIT;
+  const limit = CAMPAIGN_ADAPTIVE_QUESTION_LIMIT;
   const base = Number.isFinite(baseQuestionCount) ? Math.max(0, Math.floor(baseQuestionCount)) : 0;
   const depth = adaptiveEnabled && Number.isFinite(maxDeepPerQuestion)
     ? Math.max(0, Math.floor(maxDeepPerQuestion ?? 0))

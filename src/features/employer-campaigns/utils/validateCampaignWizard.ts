@@ -6,16 +6,6 @@ import { isCampaignExpiryPast } from './campaignWindow';
 import { isValidCampaignTimeLimit } from './campaignAttemptRules';
 
 const LAST_STEP_INDEX = 7;
-// Trần số câu MỘT BUỔI THI (`settings.maxQuestions`, gồm cả câu đào sâu) — khớp CHECK
-// `ck_practice_sessions_max_questions_range` = `max_questions BETWEEN 0 AND 20`
-// (`Isas.InterviewService/Configurations/PracticeSessionConfiguration.cs:44`).
-//
-// ⚠ Số 20 này KHÔNG liên quan `CAMPAIGN_QUESTION_HARD_MAX` (trần ngân hàng đề = 200) hay
-// `CAMPAIGN_AI_GENERATE_MAX` (trần một lượt gọi AI = 20). Ba đại lượng, ba hằng. Gộp cái
-// này vào trần AI vì "cùng bằng 20" là nối một ràng buộc DB vào một trần chi phí token:
-// bên nào đổi trước cũng làm bên kia sai mà không gì báo, và sai ở đây thì INSERT session
-// vỡ CHECK — tức SAU khi đã trừ credit (PAY-5).
-const MAX_QUESTIONS_LIMIT = 20;
 export const MAX_CAMPAIGN_TITLE_LENGTH = 255;
 export const MAX_CRITERION_NAME_LENGTH = 255;
 // Backend áp CÙNG MỘT trần cho cả jdText lẫn criteriaText —
@@ -188,7 +178,7 @@ export function validateCampaignWizardStep(
   if (step === 3) {
     if (questions.length === 0) return 'employer.campaigns.wizard.questionsRequired';
     if (questions.some((q) => !q.prompt.trim())) return 'employer.campaigns.form.required';
-    // Trần KÍCH THƯỚC ngân hàng đề (200) — không phải settings.maxQuestions.
+    // Trần KÍCH THƯỚC ngân hàng đề (200) — độc lập với trần per-session tự tính.
     if (questions.length > CAMPAIGN_QUESTION_HARD_MAX) {
       return 'employer.campaigns.wizard.questionsExceedMax';
     }
@@ -200,13 +190,6 @@ export function validateCampaignWizardStep(
     // Mời: lỗi phải đá HR về đúng chỗ có ô nhập. Biên khớp [C1]/[C4] — ngoài [5,180] BE trả 400.
     if (!isValidCampaignTimeLimit(info.timeLimitMinutes)) {
       return 'employer.campaigns.wizard.timeLimitInvalid';
-    }
-    if (
-      !Number.isFinite(settings.maxQuestions) ||
-      settings.maxQuestions < 0 ||
-      settings.maxQuestions > MAX_QUESTIONS_LIMIT
-    ) {
-      return 'employer.campaigns.wizard.maxQuestionsInvalid';
     }
     if (settings.adaptiveEnabled) {
       if (

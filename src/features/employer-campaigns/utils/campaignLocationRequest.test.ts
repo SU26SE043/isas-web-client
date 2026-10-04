@@ -50,7 +50,6 @@ function snapshot(): CampaignWizardSubmitSnapshot {
       faceVerifyEnabled: false,
       adaptiveEnabled: false,
       maxFollowUps: 0,
-      maxQuestions: 5,
     },
   };
 }

@@ -175,7 +175,6 @@ function defaultSettings(campaign?: EmployerCampaign | null): CampaignSettingsSt
     faceVerifyEnabled: campaign.faceVerifyEnabled ?? base.faceVerifyEnabled,
     adaptiveEnabled: campaign.adaptiveEnabled ?? base.adaptiveEnabled,
     maxFollowUps: campaign.maxFollowUps ?? base.maxFollowUps,
-    maxQuestions: campaign.maxQuestions ?? base.maxQuestions,
     maxDeepPerQuestion: campaign.maxDeepPerQuestion ?? base.maxDeepPerQuestion,
   };
 }
@@ -789,7 +788,7 @@ export function useCampaignWizard({
         count = validated.count;
       } else {
         // Số mặc định bám trần MỘT LƯỢT GỌI AI (backend MaxGeneratedQuestions = 20),
-        // KHÔNG phải trần ngân hàng đề (200) và cũng không phải settings.maxQuestions
+        // KHÔNG phải trần ngân hàng đề (200) và cũng không phải trần per-session tự tính.
         // (số câu một buổi thi, CHECK 0..20 ở DB). Ba con số khác bản chất nhau.
         count = defaultGenerateCount();
       }
@@ -816,13 +815,7 @@ export function useCampaignWizard({
           lastSavedAt: updated.updatedAt,
           autosaveStatus: 'saved',
           errorSteps: clearError(prev.errorSteps, 3),
-          settings: {
-            ...prev.settings,
-            maxQuestions:
-              updated.maxQuestions != null && updated.maxQuestions > 0
-                ? updated.maxQuestions
-                : prev.settings.maxQuestions,
-          },
+          settings: prev.settings,
         }));
         setQuestionsSaved(true);
         const received = updated.questions.length;

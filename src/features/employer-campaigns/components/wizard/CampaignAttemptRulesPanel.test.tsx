@@ -33,7 +33,6 @@ const settings = {
   faceVerifyEnabled: false,
   adaptiveEnabled: false,
   maxFollowUps: 2,
-  maxQuestions: 5,
   maxDeepPerQuestion: 0,
 };
 

@@ -10,6 +10,9 @@ vi.mock('@/shared/languages', () => ({
       if (key === 'employer.campaigns.form.adaptiveBudgetWarning') {
         return `${key} {max}`;
       }
+      if (key === 'employer.campaigns.form.maxQuestionsDerivedValue') return '{{count}} câu';
+      if (key === 'employer.campaigns.form.maxQuestionsDerivedFormula') return '= {{base}} câu chính × (1 + {{depth}} câu đào sâu)';
+      if (key === 'employer.campaigns.form.maxQuestionsDerivedBaseFormula') return '= {{base}} câu chính';
       return key;
     },
   }),
@@ -22,8 +25,7 @@ const settings = {
   faceVerifyEnabled: false,
   adaptiveEnabled: true,
   maxFollowUps: 5,
-  maxQuestions: 5,
-  maxDeepPerQuestion: 3,
+  maxDeepPerQuestion: 1,
 };
 
 const baseProps = {
@@ -37,22 +39,41 @@ const baseProps = {
 };
 
 describe('CampaignSettingsStep adaptive budget for fixed and draw modes', () => {
-  it('warns when all mode uses the twenty-question fixed set', () => {
-    render(<CampaignSettingsStep {...baseProps} questionCount={20} />);
+  it('shows the derived total and formula', () => {
+    render(<CampaignSettingsStep {...baseProps} questionCount={7} />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('1');
+    expect(screen.getByText('14 câu')).toBeInTheDocument();
+    expect(screen.getByText('= 7 câu chính × (1 + 1 câu đào sâu)')).toBeInTheDocument();
+    expect(document.querySelector('#settings-max-questions')).not.toBeInTheDocument();
   });
 
-  it('does not warn when the configured total budget fits draw mode', () => {
+  it('updates when the question count or depth changes and warns over the system cap', () => {
     render(
       <CampaignSettingsStep
         {...baseProps}
-        settings={{ ...settings, maxQuestions: 20 }}
+        settings={{ ...settings, maxDeepPerQuestion: 1 }}
         questionCount={5}
       />,
     );
 
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText('10 câu')).toBeInTheDocument();
+    cleanup();
+    render(<CampaignSettingsStep {...baseProps} questionCount={20} />);
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('shows an empty-state message when step 4 has no questions', () => {
+    render(<CampaignSettingsStep {...baseProps} questionCount={0} />);
+
+    expect(screen.getByText('employer.campaigns.form.maxQuestionsDerivedEmpty')).toBeInTheDocument();
+    expect(screen.queryByText(/0 câu/)).not.toBeInTheDocument();
+  });
+
+  it('shows only the base count when adaptive mode is off', () => {
+    render(<CampaignSettingsStep {...baseProps} settings={{ ...settings, adaptiveEnabled: false }} questionCount={7} />);
+
+    expect(screen.getByText('7 câu')).toBeInTheDocument();
+    expect(screen.getByText('= 7 câu chính')).toBeInTheDocument();
   });
 
   it.each([
