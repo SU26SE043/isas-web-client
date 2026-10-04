@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, SearchX } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/shared/languages';
 import type { CvAnalysisResult, RequirementMatch } from '../../types/cvAnalysis.types';
 import { groupRequirementEvidence } from '../../utils/cvEvidence';
@@ -18,6 +19,7 @@ function EvidenceColumn({
   openId,
   onToggle,
   onViewCv,
+  tone,
 }: {
   title: string;
   description: string;
@@ -26,16 +28,26 @@ function EvidenceColumn({
   openId: string | null;
   onToggle: (id: string) => void;
   onViewCv: (match: RequirementMatch) => void;
+  tone: 'strength' | 'gap';
 }) {
   const { t } = useLanguage();
   return (
-    <section className="frame-satin rounded-2xl bg-surface-raised p-5 sm:p-6">
+    <section className={cn(
+      'rounded-2xl border p-5 sm:p-6',
+      tone === 'strength' ? 'border-success/25 bg-success/[0.045]' : 'border-warning/25 bg-warning/[0.045]',
+    )}>
       <div className="flex items-start gap-3">
         {icon}
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
         </div>
+        <span className={cn(
+          'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
+          tone === 'strength' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning',
+        )}>
+          {t('cv.report.evidence.count').replace('{n}', String(matches.length))}
+        </span>
       </div>
       <div className="mt-5 space-y-3">
         {matches.length ? matches.map((match) => (
@@ -97,6 +109,7 @@ export function CvEvidenceInsights({ analysis, onViewCv }: CvEvidenceInsightsPro
           openId={openId}
           onToggle={toggle}
           onViewCv={onViewCv}
+          tone="strength"
         />
         <EvidenceColumn
           title={t('cv.report.weaknesses')}
@@ -106,6 +119,7 @@ export function CvEvidenceInsights({ analysis, onViewCv }: CvEvidenceInsightsPro
           openId={openId}
           onToggle={toggle}
           onViewCv={onViewCv}
+          tone="gap"
         />
       </div>
     </section>
