@@ -39,15 +39,33 @@ afterEach(cleanup);
 describe('CandidateReportsPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('tải hỏng ⇒ hiện báo lỗi, KHÔNG hiện danh sách rỗng', async () => {
+  it('tải hỏng ⇒ tab học tập hiện báo lỗi, KHÔNG hiện danh sách rỗng hay số 0', async () => {
     vi.mocked(fetchCandidateReportsHub).mockRejectedValue(new Error('boom'));
 
     renderPage();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('practice.reports.error');
+    // Phỏng vấn + học tập cùng một nguồn hub ⇒ cả hai tab mang dấu lỗi, không tab nào hiện số 0.
+    expect(await screen.findAllByRole('tab', { name: /practice\.reports\.error/ })).toHaveLength(2);
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('tab', { name: /practice\.reports\.category\.learning/ }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('practice.reports.error');
     // Không được trình bày lỗi thành "chưa có báo cáo nào".
     expect(screen.queryByText('practice.reports.empty.learning')).not.toBeInTheDocument();
-    expect(screen.queryByText('practice.reports.category.learning')).not.toBeInTheDocument();
+  });
+
+  it('hub đang tải hoặc tải hỏng vẫn KHÔNG che báo cáo CV (nguồn riêng)', async () => {
+    let rejectHub: (error: Error) => void = () => undefined;
+    vi.mocked(fetchCandidateReportsHub).mockReturnValue(new Promise((_, reject) => { rejectHub = reject; }));
+
+    renderPage();
+
+    expect(screen.getByText('cv-section')).toBeInTheDocument();
+    rejectHub(new Error('boom'));
+    await screen.findAllByRole('tab', { name: /practice\.reports\.error/ });
+    expect(screen.getByText('cv-section')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('bấm "Thử lại" gọi lại nguồn dữ liệu và hiện được kết quả', async () => {
@@ -56,13 +74,14 @@ describe('CandidateReportsPage', () => {
       .mockResolvedValueOnce({ interview: [], learning: [], cv: [] });
 
     renderPage();
+    await userEvent.click(await screen.findByRole('tab', { name: /practice\.reports\.category\.learning/ }));
     await screen.findByRole('alert');
 
     await userEvent.click(screen.getByRole('button', { name: 'practice.reports.retry' }));
 
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     expect(fetchCandidateReportsHub).toHaveBeenCalledTimes(2);
-    expect(screen.getByText('practice.reports.category.learning')).toBeInTheDocument();
+    expect(await screen.findByText('practice.reports.empty.learning')).toBeInTheDocument();
   });
 
   it('tải được nhưng thật sự chưa có buổi nào ⇒ hiện mục rỗng, KHÔNG hiện báo lỗi', async () => {
@@ -74,7 +93,10 @@ describe('CandidateReportsPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText('practice.reports.category.learning')).toBeInTheDocument();
+    const learningTab = await screen.findByRole('tab', { name: /practice\.reports\.category\.learning/ });
+    await waitFor(() => expect(learningTab).toHaveTextContent('0'));
+    await userEvent.click(learningTab);
+    expect(screen.getByText('practice.reports.empty.learning')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

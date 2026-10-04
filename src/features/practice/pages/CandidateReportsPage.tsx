@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { CvAnalysisReportsSection } from '@/features/cv-analysis/components/report/CvAnalysisReportsSection';
 import { useLanguage } from '@/shared/languages';
 import { ReportListItem } from '../components/reports/ReportListItem';
@@ -46,89 +46,93 @@ export function CandidateReportsPage() {
   }, [reloadToken]);
 
   const scoreLabel = t('practice.reports.score');
+  // Báo cáo CV có query RIÊNG (`useCvAnalyses`): hub (phỏng vấn + học tập) đang tải hay hỏng
+  // chỉ ảnh hưởng hai tab của nó — không được che mất tab CV.
+  const hubReady = !isHubLoading && !hasError;
+  const isHubTab = activeCategory !== 'cv';
 
   return (
     <div className="app-page min-h-full space-y-8">
       <PageHeader title={t('practice.reports.title')} description={t('practice.reports.subtitle')} />
 
       <div className="space-y-3">
-        {isHubLoading ? (
-          <div className="flex items-center gap-3 rounded-xl border border-satin bg-surface-raised px-5 py-4">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden />
-            <span className="text-sm text-muted-foreground">{t('practice.reports.loading')}</span>
-          </div>
-        ) : hasError ? (
-          <div
-            role="alert"
-            className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <span className="text-sm text-foreground">{t('practice.reports.error')}</span>
-            <button
-              type="button"
-              className="btn-secondary inline-flex self-start text-sm sm:self-auto"
-              onClick={() => setReloadToken((value) => value + 1)}
-            >
-              {t('practice.reports.retry')}
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label={t('practice.reports.title')}>
-              <ReportCategoryButton
-                category="cv"
-                activeCategory={activeCategory}
-                label={t('practice.reports.category.cv')}
-                count={cvCount}
-                onSelect={setActiveCategory}
-              />
-              <ReportCategoryButton
-                category="interview"
-                activeCategory={activeCategory}
-                label={t('practice.reports.category.interview')}
-                count={hub.interview.length}
-                onSelect={setActiveCategory}
-              />
-              <ReportCategoryButton
-                category="learning"
-                activeCategory={activeCategory}
-                label={t('practice.reports.category.learning')}
-                count={hub.learning.length}
-                onSelect={setActiveCategory}
-              />
-            </div>
+        <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label={t('practice.reports.title')}>
+          <ReportCategoryButton
+            category="cv"
+            activeCategory={activeCategory}
+            label={t('practice.reports.category.cv')}
+            count={cvCount}
+            onSelect={setActiveCategory}
+          />
+          <ReportCategoryButton
+            category="interview"
+            activeCategory={activeCategory}
+            label={t('practice.reports.category.interview')}
+            count={hubReady ? hub.interview.length : null}
+            errorLabel={hasError ? t('practice.reports.error') : undefined}
+            onSelect={setActiveCategory}
+          />
+          <ReportCategoryButton
+            category="learning"
+            activeCategory={activeCategory}
+            label={t('practice.reports.category.learning')}
+            count={hubReady ? hub.learning.length : null}
+            errorLabel={hasError ? t('practice.reports.error') : undefined}
+            onSelect={setActiveCategory}
+          />
+        </div>
 
-            <div
-              id={`reports-panel-${activeCategory}`}
-              role="tabpanel"
-              aria-label={t(`practice.reports.category.${activeCategory}`)}
-              className="frame-satin rounded-2xl bg-surface-raised p-4 sm:p-5"
-            >
-              <CvAnalysisReportsSection
-                active={activeCategory === 'cv'}
-                onCountChange={setCvCount}
-              />
-              {activeCategory === 'interview' ? (
-                hub.interview.length === 0 ? (
-                  <EmptyCategory message={t('practice.reports.empty.interview')} href="/candidate/practice/history" cta={t('practice.reports.viewHistory')} />
-                ) : (
-                  <div className="space-y-2">
-                    {hub.interview.map((item) => <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />)}
-                    <Link to="/candidate/practice/history" className="inline-flex pt-1 text-sm font-medium text-foreground underline-offset-4 hover:underline">
-                      {t('practice.reports.viewHistory')}
-                    </Link>
-                  </div>
-                )
-              ) : null}
-              {activeCategory === 'learning' ? (
-                hub.learning.length === 0 ? (
-                  <EmptyCategory message={t('practice.reports.empty.learning')} href="/candidate/learning" cta={t('practice.reports.openLearning')} />
-                ) : (
-                  <div className="space-y-2">{hub.learning.map((item) => <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />)}</div>
-                )
-              ) : null}
+        <div
+          id="reports-panel"
+          role="tabpanel"
+          aria-labelledby={`reports-tab-${activeCategory}`}
+          className="frame-satin rounded-2xl bg-surface-raised p-4 sm:p-5"
+        >
+          <CvAnalysisReportsSection
+            active={activeCategory === 'cv'}
+            onCountChange={setCvCount}
+          />
+          {isHubTab && isHubLoading ? (
+            <div className="flex items-center gap-3 px-1 py-2">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden />
+              <span className="text-sm text-muted-foreground">{t('practice.reports.loading')}</span>
             </div>
-          </>
-        )}
+          ) : null}
+          {isHubTab && hasError ? (
+            <div
+              role="alert"
+              className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="text-sm text-foreground">{t('practice.reports.error')}</span>
+              <button
+                type="button"
+                className="btn-secondary inline-flex self-start text-sm sm:self-auto"
+                onClick={() => setReloadToken((value) => value + 1)}
+              >
+                {t('practice.reports.retry')}
+              </button>
+            </div>
+          ) : null}
+          {activeCategory === 'interview' && hubReady ? (
+            hub.interview.length === 0 ? (
+              <EmptyCategory message={t('practice.reports.empty.interview')} href="/candidate/practice/history" cta={t('practice.reports.viewHistory')} />
+            ) : (
+              <div className="space-y-2">
+                {hub.interview.map((item) => <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />)}
+                <Link to="/candidate/practice/history" className="inline-flex pt-1 text-sm font-medium text-foreground underline-offset-4 hover:underline">
+                  {t('practice.reports.viewHistory')}
+                </Link>
+              </div>
+            )
+          ) : null}
+          {activeCategory === 'learning' && hubReady ? (
+            hub.learning.length === 0 ? (
+              <EmptyCategory message={t('practice.reports.empty.learning')} href="/candidate/learning" cta={t('practice.reports.openLearning')} />
+            ) : (
+              <div className="space-y-2">{hub.learning.map((item) => <ReportListItem key={item.id} item={item} language={language} scoreLabel={scoreLabel} />)}</div>
+            )
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -139,12 +143,15 @@ function ReportCategoryButton({
   activeCategory,
   label,
   count,
+  errorLabel,
   onSelect,
 }: {
   category: ReportCategory;
   activeCategory: ReportCategory;
   label: string;
   count: number | null;
+  /** Có giá trị khi nguồn của tab tải hỏng — đánh dấu ngay trên tab để lỗi thấy được từ mọi tab. */
+  errorLabel?: string;
   onSelect: (category: ReportCategory) => void;
 }) {
   const active = category === activeCategory;
@@ -155,14 +162,22 @@ function ReportCategoryButton({
       role="tab"
       id={`reports-tab-${category}`}
       aria-selected={active}
-      aria-controls={`reports-panel-${category}`}
+      aria-controls={active ? 'reports-panel' : undefined}
       onClick={() => onSelect(category)}
       className={active
         ? 'flex min-h-14 items-center justify-between gap-3 rounded-xl border border-foreground bg-foreground px-4 py-3 text-left text-sm font-semibold text-background shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]'
         : 'flex min-h-14 items-center justify-between gap-3 rounded-xl border border-satin bg-surface-raised px-4 py-3 text-left text-sm font-semibold text-foreground transition hover:bg-surface-overlay focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-focus)]'}
     >
-      <span>{label}</span>
-      {count !== null ? <span className={active ? 'rounded-full bg-background/15 px-2.5 py-0.5 text-xs' : 'rounded-full border border-satin bg-surface-overlay px-2.5 py-0.5 text-xs text-muted-foreground'}>{count}</span> : null}
+      <span className="inline-flex items-center gap-2">
+        {label}
+        {errorLabel ? (
+          <span className="inline-flex text-destructive">
+            <AlertCircle className="size-4" aria-hidden />
+            <span className="sr-only">{errorLabel}</span>
+          </span>
+        ) : null}
+      </span>
+      {count !== null ?<span className={active ? 'rounded-full bg-background/15 px-2.5 py-0.5 text-xs' : 'rounded-full border border-satin bg-surface-overlay px-2.5 py-0.5 text-xs text-muted-foreground'}>{count}</span> : null}
     </button>
   );
 }
