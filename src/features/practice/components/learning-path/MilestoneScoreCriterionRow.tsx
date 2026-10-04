@@ -1,5 +1,6 @@
 import { useLanguage } from '@/shared/languages';
 import type { MilestoneScoreCriterion, MilestoneScoreSession } from '../../types/roadmapPractice.api.types';
+import { formatResultDateTime } from '../../utils/practiceSessionResultFormat';
 
 /**
  * `null` = KHUYẾT, trả dấu gạch. Vẽ thành `0%` là bịa ra một số đo không tồn tại,
@@ -15,8 +16,16 @@ export function formatDelta(value: number | null): string {
   return `${value >= 0 ? '+' : '−'}${Math.abs(value)}%`;
 }
 
-function SessionList({ sessions, labelKey }: { sessions: MilestoneScoreSession[]; labelKey: string }) {
-  const { t } = useLanguage();
+function SessionList({
+  sessions,
+  labelKey,
+  emptyKey = 'practice.milestoneReport.noSessions',
+}: {
+  sessions: MilestoneScoreSession[];
+  labelKey: string;
+  emptyKey?: string;
+}) {
+  const { t, language } = useLanguage();
   return (
     <div>
       <p className="text-caption font-medium text-foreground">{t(labelKey)}</p>
@@ -24,22 +33,29 @@ function SessionList({ sessions, labelKey }: { sessions: MilestoneScoreSession[]
         <ul className="mt-1 space-y-1">
           {sessions.map((session) => (
             <li key={`${session.sessionId}-${session.attemptNo}`} className="flex flex-wrap items-baseline gap-x-2 text-caption text-muted-foreground">
-              <span className="text-foreground">{session.lessonTitle}</span>
+              {/* Buổi nguồn của mốc ban đầu có thể là buổi luyện tự do — không có tên bài. */}
+              <span className="text-foreground">{session.lessonTitle || t('practice.milestoneReport.freeSession')}</span>
               {/* Làm lại bài thì mỗi lần là một dòng riêng — phải nói rõ đây là lần thứ mấy. */}
               {session.attemptNo > 1 ? <span>{t('practice.milestoneReport.attempt')} {session.attemptNo}</span> : null}
               <span className="font-semibold text-foreground">{formatPct(session.percentage)}</span>
-              {session.scoredAt ? <span>{session.scoredAt}</span> : null}
+              {session.scoredAt ? <span>{formatResultDateTime(session.scoredAt, language) ?? session.scoredAt}</span> : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-1 text-caption text-muted-foreground">{t('practice.milestoneReport.noSessions')}</p>
+        <p className="mt-1 text-caption text-muted-foreground">{t(emptyKey)}</p>
       )}
     </div>
   );
 }
 
-export function MilestoneScoreCriterionRow({ criterion }: { criterion: MilestoneScoreCriterion }) {
+export function MilestoneScoreCriterionRow({
+  criterion,
+  comparedWith,
+}: {
+  criterion: MilestoneScoreCriterion;
+  comparedWith?: string;
+}) {
   const { t } = useLanguage();
   const mismatch =
     criterion.deltaPct != null && criterion.headlineDeltaPct != null && criterion.deltaPct !== criterion.headlineDeltaPct;
@@ -70,7 +86,17 @@ export function MilestoneScoreCriterionRow({ criterion }: { criterion: Milestone
       ) : null}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <SessionList sessions={criterion.currentSessions} labelKey="practice.milestoneReport.sessionsCurrent" />
-        <SessionList sessions={criterion.referenceSessions} labelKey="practice.milestoneReport.sessionsReference" />
+        {/* Mốc ban đầu có số mà không có buổi = không đối chiếu được buổi nào cộng ra số đó (lộ trình
+            cũ) — nói "chưa có buổi nào được chấm" ở đây là sai: số mốc 60% đang hiện ngay bên trên. */}
+        <SessionList
+          sessions={criterion.referenceSessions}
+          labelKey="practice.milestoneReport.sessionsReference"
+          emptyKey={
+            comparedWith === 'baseline' && criterion.referenceAveragePercentage != null
+              ? 'practice.milestoneReport.baselineSessionsUnknown'
+              : undefined
+          }
+        />
       </div>
     </section>
   );

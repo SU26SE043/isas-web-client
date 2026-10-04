@@ -54,7 +54,7 @@ export function MilestoneScoreReportPanel({ roadmapId, milestoneId }: { roadmapI
       {report.criteria.length ? (
         <div className="space-y-3">
           {report.criteria.map((criterion) => (
-            <MilestoneScoreCriterionRow key={criterion.name} criterion={criterion} />
+            <MilestoneScoreCriterionRow key={criterion.name} criterion={criterion} comparedWith={report.comparedWith} />
           ))}
         </div>
       ) : (

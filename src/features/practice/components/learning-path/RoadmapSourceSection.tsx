@@ -1,5 +1,6 @@
 import type { Language } from '@/shared/languages';
 import type { LearningRoadmapResolvedFrom } from '../../types/learningPath.types';
+import { formatResultDateTime } from '../../utils/practiceSessionResultFormat';
 
 interface RoadmapSourceSectionProps {
   resolvedFrom: LearningRoadmapResolvedFrom;
@@ -9,13 +10,6 @@ interface RoadmapSourceSectionProps {
 
 /** Nguồn dữ liệu đã dựng nên lộ trình: các buổi luyện được gom làm mốc khởi điểm. */
 export function RoadmapSourceSection({ resolvedFrom, language, t }: RoadmapSourceSectionProps) {
-  const formatSessionDate = (date: string | null) => {
-    if (!date) return t('practice.learningPath.sourceSessionDateUnavailable');
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return date;
-    return new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium' }).format(parsed);
-  };
-
   return (
     <section
       className="mt-5 rounded-2xl border border-satin bg-surface-raised/70 p-5"
@@ -32,9 +26,19 @@ export function RoadmapSourceSection({ resolvedFrom, language, t }: RoadmapSourc
           {resolvedFrom.sessions.map((session) => (
             <li
               key={session.id}
+              data-testid="roadmap-source-session"
               className="rounded-xl border border-satin/70 bg-surface-overlay/60 px-3 py-2 text-sm text-foreground"
             >
-              {formatSessionDate(session.date)}
+              <p className="font-medium">
+                {formatResultDateTime(session.date, language) ?? t('practice.learningPath.sourceSessionDateUnavailable')}
+              </p>
+              {/* Ngày đứng một mình không nói được buổi nào — kèm tên bài + điểm để người học nhận ra. */}
+              <p className="mt-0.5 text-caption text-muted-foreground">
+                {session.lessonTitle ?? t('practice.learningPath.sourceSessionFree')}
+                {session.score != null
+                  ? ` · ${t('practice.learningPath.sourceSessionScore').replace('{score}', String(session.score))}`
+                  : ''}
+              </p>
             </li>
           ))}
         </ul>

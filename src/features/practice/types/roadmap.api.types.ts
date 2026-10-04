@@ -76,8 +76,20 @@ export type ApiRoadmapResolvedSession = string | {
   completedAt?: string;
 };
 
+/** Buổi nguồn kèm ngày/điểm/tên bài — BE trả từ 2026-10-04 (`resolvedFrom.sessions`). */
+export type ApiRoadmapSourceSession = {
+  id?: string;
+  createdAt?: string | null;
+  completedAt?: string | null;
+  overallScore?: number | null;
+  /** Tên bài nếu buổi là một bài của lộ trình (kể cả lộ trình khác); null = buổi luyện tự do. */
+  lessonTitle?: string | null;
+};
+
 export type ApiRoadmapResolvedFrom = {
   sessionIds?: ApiRoadmapResolvedSession[] | null;
+  /** Ưu tiên trường này khi có; `sessionIds` chỉ là id trần (BE cũ) nên không có ngày. */
+  sessions?: ApiRoadmapSourceSession[] | null;
   baselineAvailable?: boolean;
   scope?: string | null;
 };

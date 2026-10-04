@@ -1,6 +1,6 @@
-import toast from 'react-hot-toast';
 import { useCallback, useRef } from 'react';
 import { useLanguage } from '@/shared/languages';
+import { showCoachingToast } from '../components/room/CoachingToast';
 import type { FocusBehaviorSignalType, FocusClientHintType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
 
 export type CoachingNoticeKind = FocusBehaviorSignalType | FocusFrameSignalType | FocusClientHintType;
@@ -10,9 +10,9 @@ const FRAME_THROTTLE_MS = 30_000;
 const FRAME_KINDS = new Set<CoachingNoticeKind>(['no_face', 'multiple_faces', 'low_light']);
 
 /**
- * B2C coaching (BC-6 ngoại lệ) — toast trung tính (KHÔNG `.success`/`.error`, không màu đỏ/cảnh
- * báo: coaching, không phải chống gian lận) cho từng tín hiệu mất tập trung, throttle theo LOẠI
- * để một chuỗi dán liên tục không dội hàng chục toast chồng lên nhau. Bỏ qua khi tab đang ẩn —
+ * B2C coaching (BC-6 ngoại lệ) — toast nhắc (KHÔNG `.success`/`.error`, không màu đỏ: coaching, không phải chống
+ * gian lận; điểm nhấn cam + icon từng loại — xem `CoachingToast`) cho từng tín hiệu mất tập trung, throttle theo LOẠI
+ * để một chuỗi Alt+Tab liên tục không dội hàng chục toast chồng lên nhau. Bỏ qua khi tab đang ẩn —
  * toast không hiện được và không ai đọc.
  */
 export function useB2cCoachingNotices() {
@@ -27,7 +27,7 @@ export function useB2cCoachingNotices() {
     const last = lastShownAt.current[kind] ?? 0;
     if (now - last < throttleMs) return;
     lastShownAt.current[kind] = now;
-    toast(t(`practice.room.focusTracking.${kind}`), { id: `practice-coach-${kind}` });
+    showCoachingToast(kind, t);
   }, [t]);
 
   return { notify };

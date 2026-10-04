@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
   captureVideoFrameAsJpegFile,
-  isUsableCameraFrame,
   isVideoFrameReady,
 } from '@/features/campaigns/utils/captureJpegFile';
 import { checkPracticeFace, recordFocusEvent } from '../services/b2cPracticeSession.service';
+import { isCameraCovered } from '../utils/cameraCoverCheck';
 import type { FocusClientHintType, FocusFrameSignalType } from '../types/b2cPracticeSession.types';
 
 export type FaceCheckSignal = FocusFrameSignalType | FocusClientHintType;
@@ -80,7 +80,9 @@ export function useB2cFaceCheck({
       // đen cho AI: nhận về `no_face` là gộp "tối" với "rời chỗ" — hai lời khuyên khác nhau.
       // 2026-10-03: GHI thêm `camera_blocked` mỗi lượt kiểm (cùng nhịp với `no_face` phía server) —
       // trước đó chỉ có toast nên màn kết quả không bao giờ biết người luyện đã che cam.
-      if (!isUsableCameraFrame(videoEl)) {
+      // 2026-10-04: "che" = tối kịt HOẶC mờ phẳng (ngón tay/bàn tay lọt sáng) — trước đó chỉ tối kịt mới tính,
+      // che bằng tay rơi sang AI và bị ghi `no_face` ("Không thấy mặt"). Xem `cameraCoverCheck`.
+      if (isCameraCovered(videoEl)) {
         emit('low_light');
         void recordFocusEvent(sessionId, 'camera_blocked');
         return;

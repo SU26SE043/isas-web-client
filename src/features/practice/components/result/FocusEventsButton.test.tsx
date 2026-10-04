@@ -12,10 +12,8 @@ vi.mock('@/shared/languages', () => ({
     // replace() không có gì để thay.
     t: (key: string) => ({
       'practice.result.focusTracking.short.leave': 'Left session {{n}}',
-      'practice.result.focusTracking.short.paste': 'Pasted {{n}}',
       'practice.result.focusTracking.short.face': 'Face {{n}}',
       'practice.result.focusTracking.message': 'LEFT {{n}}{{placement}}.',
-      'practice.result.focusTracking.pasteMessage': 'PASTED {{n}}.',
       'practice.result.focusTracking.short.camera': 'Camera covered {{n}}',
     } as Record<string, string>)[key] ?? key,
     language: 'en',
@@ -41,37 +39,47 @@ describe('FocusEventsButton', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('opens details only after clicking and keeps groups separate', async () => {
+  it('opens details only after clicking; exactly 3 groups, no paste card', async () => {
     const user = userEvent.setup();
     render(<FocusEventsButton view={makeView([
       { signalType: 'tab_switch', count: 3, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:03:00Z' },
       { signalType: 'focus_lost', count: 1, firstAt: '2026-01-01T09:04:00Z', lastAt: '2026-01-01T09:04:00Z' },
-      { signalType: 'paste', count: 2, firstAt: '2026-01-01T09:05:00Z', lastAt: '2026-01-01T09:06:00Z' },
     ])} />);
-    // Nút đếm TỔNG lần mỗi nhóm (rời 3+1 = 4) chứ KHÔNG phải số loại sự kiện; dán là nhóm RIÊNG — trước đây
-    // "Left session 6" (cộng cả 2 lần dán) trong khi ô "Rời tab / cửa sổ" ghi 04.
-    const button = screen.getByRole('button', { name: 'Left session 4 · Pasted 2' });
+    // Nút đếm TỔNG lần mỗi nhóm (rời 3+1 = 4) chứ KHÔNG phải số loại sự kiện.
+    const button = screen.getByRole('button', { name: 'Left session 4' });
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(button);
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.type.tab_switch: 3');
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.type.focus_lost: 1');
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.type.paste: 2');
+    expect(within(dialog).getByTestId('focus-event-tab_switch')).toHaveTextContent('practice.result.focusTracking.type.tab_switch');
+    expect(within(dialog).getByTestId('focus-event-tab_switch')).toHaveTextContent('×3');
+    expect(within(dialog).getByTestId('focus-event-focus_lost')).toHaveTextContent('×1');
     // Đọc ĐÚNG ô metric, không đọc cả dialog: `toHaveTextContent('04')` trên dialog từng khớp vào giờ "16:04"
-    // của dòng focus_lost ⇒ gộp/bỏ nhóm (ra 06/03) vẫn xanh. Regex neo đầu-cuối nên 06 ≠ 04.
+    // của dòng focus_lost ⇒ gộp/bỏ nhóm vẫn xanh. Regex neo đầu-cuối.
     expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^04$/);
-    expect(within(dialog).getByTestId('focus-metric-paste')).toHaveTextContent(/^02$/);
     expect(within(dialog).getByTestId('focus-metric-face')).toHaveTextContent(/^00$/);
     expect(within(dialog).getByTestId('focus-metric-camera')).toHaveTextContent(/^00$/);
-    // Câu nhận xét cùng số với hai ô: rời 4 (không phải 6), dán 2 là câu riêng.
+    // Ô "Dán nội dung" đã bỏ (2026-10-04): phòng trả lời bằng giọng, dán vô nghĩa.
+    expect(within(dialog).queryByTestId('focus-metric-paste')).not.toBeInTheDocument();
     expect(dialog).toHaveTextContent('LEFT 4, practice.result.focusTracking.spread.');
-    expect(dialog).toHaveTextContent('PASTED 2.');
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.firstAt');
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.lastAt');
+    // Khoảng thời gian (khác giờ) → "Lần đầu … · Lần cuối …"; một mốc (cùng giờ) → "Lúc …", không lặp giờ hai lần.
+    expect(within(dialog).getByTestId('focus-event-tab_switch')).toHaveTextContent(/practice\.result\.focusTracking\.firstAt \d{2}:\d{2} · practice\.result\.focusTracking\.lastAt \d{2}:\d{2}/);
+    expect(within(dialog).getByTestId('focus-event-focus_lost')).toHaveTextContent(/^practice\.result\.focusTracking\.type\.focus_lostpractice\.result\.focusTracking\.at \d{2}:\d{2}×1$/);
     // Giờ phải là HH:mm đã format, không phải chuỗi ISO thô (regex không phụ thuộc múi giờ máy chạy test).
-    expect(dialog.textContent).toMatch(/\d{2}:\d{2}/);
     expect(dialog.textContent).not.toContain('2026-01-01T');
+  });
+
+  it('dòng chi tiết theo thứ tự ô số (rời buổi → khuôn mặt → che cam), không theo thứ tự server trả', async () => {
+    const user = userEvent.setup();
+    render(<FocusEventsButton view={makeView([
+      { signalType: 'focus_lost', count: 1, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:01:00Z' },
+      { signalType: 'no_face', count: 2, firstAt: '2026-01-01T09:02:00Z', lastAt: '2026-01-01T09:03:00Z' },
+      { signalType: 'tab_switch', count: 2, firstAt: '2026-01-01T09:04:00Z', lastAt: '2026-01-01T09:05:00Z' },
+    ])} />);
+    await user.click(screen.getByRole('button'));
+    const dialog = await screen.findByRole('dialog');
+    const order = within(dialog).getAllByTestId(/^focus-event-/).map((row) => row.dataset.testid);
+    expect(order).toEqual(['focus-event-tab_switch', 'focus-event-focus_lost', 'focus-event-no_face']);
   });
 
   it('chỉ có khung hình → nhãn chỉ nhóm khuôn mặt, KHÔNG có "Left session 0"', async () => {
@@ -86,7 +94,7 @@ describe('FocusEventsButton', () => {
     expect(within(dialog).getByTestId('focus-metric-face')).toHaveTextContent(/^07$/);
     expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^00$/);
     expect(dialog).toHaveTextContent('practice.result.focusTracking.frameOnly');
-    expect(dialog).not.toHaveTextContent(/LEFT|PASTED/);
+    expect(dialog).not.toHaveTextContent(/LEFT/);
   });
 
   it('có đủ ba nhóm (rời buổi · 2 khuôn mặt · che cam) → nhãn nút nêu CẢ BA, che cam đếm riêng', async () => {
@@ -102,6 +110,6 @@ describe('FocusEventsButton', () => {
     expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^01$/);
     expect(within(dialog).getByTestId('focus-metric-face')).toHaveTextContent(/^02$/);
     expect(within(dialog).getByTestId('focus-metric-camera')).toHaveTextContent(/^03$/);
-    expect(dialog).toHaveTextContent('practice.result.focusTracking.type.camera_blocked: 3');
+    expect(within(dialog).getByTestId('focus-event-camera_blocked')).toHaveTextContent('×3');
   });
 });
