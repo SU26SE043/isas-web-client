@@ -1,5 +1,7 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CampaignSettingsStep } from './CampaignSettingsStep';
@@ -74,5 +76,12 @@ describe('CampaignSettingsStep adaptive budget for fixed and draw modes', () => 
 
     expect(screen.getByText('7 câu')).toBeInTheDocument();
     expect(screen.getByText('= 7 câu chính')).toBeInTheDocument();
+  });
+
+  it('uses the system adaptive limit instead of a manual question limit', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/features/employer-campaigns/components/wizard/CampaignSettingsStep.tsx'), 'utf8');
+    const call = source.match(/const adaptiveBudget = calculateAdaptiveQuestionBudget\(([\s\S]*?)\n  \);/)?.[1] ?? '';
+    expect(call).not.toContain('settings.maxQuestions');
+    expect(call).not.toMatch(/adaptiveEnabled,\s*\d+/);
   });
 });
