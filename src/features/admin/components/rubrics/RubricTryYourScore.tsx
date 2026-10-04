@@ -39,8 +39,8 @@ export function RubricTryYourScore({ run, sample }: RubricTryYourScoreProps) {
   const measuredRows = sample.scores.filter((s) => s.measured);
   const aiRows = sample.scores.filter((s) => !s.measured);
   const avgLevel = sample.scores.length ? sample.scores.reduce((sum, s) => sum + level(s.actualScore, s.maxScore), 0) / sample.scores.length : 0;
+  // "Còn lại" = hàng BE THẬT chấm. Snapshot `run.rubric` CÓ chứa tiêu chí đo (dev: 7 tiêu chí, bài dán chấm 6) ⇒ không suy từ nó.
   const scoredCount = sample.scores.length;
-  const rubricCount = run.rubric.length + (measuredRows.length ? 0 : 1);   // rubric snapshot không chứa tiêu chí đo
 
   return (
     <section className="space-y-4" aria-label={t('admin.rubrics.try.result.yours')}>
@@ -68,7 +68,7 @@ export function RubricTryYourScore({ run, sample }: RubricTryYourScoreProps) {
                 : <p className="mt-2 text-sm text-warning">{t('admin.rubrics.try.result.fluencyTooShort')}</p>}
             </>
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">{t('admin.rubrics.try.result.fluencySkipped').replace('{count}', String(rubricCount - 1))}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t('admin.rubrics.try.result.fluencySkipped').replace('{count}', String(aiRows.length))}</p>
           )}
         </div>
       </div>

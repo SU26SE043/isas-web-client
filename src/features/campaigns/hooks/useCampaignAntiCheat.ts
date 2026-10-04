@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
+import {
+  CAMPAIGN_FLAG_NOTE_RECOVERY_SUFFIX,
+  CAMPAIGN_FLAG_NOTES,
+} from '@/shared/domain/campaignFlagNotes';
 import { enqueueCampaignFlag, flushCampaignFlagQueue } from '../utils/campaignFlagQueue';
 import type { AllowedFrontendSignalType } from '../types/campaignCandidate.types';
 import type { CampaignViolationKind } from '../types/campaignViolation.types';
@@ -143,7 +147,7 @@ export function useCampaignAntiCheat({
     if (!enabled || aborted.current) return;
     onBehaviorSignal?.(kind);
     const recoveryNote = recoveryActiveRef.current
-      ? `${note} (đang khắc phục thiết bị)`
+      ? `${note}${CAMPAIGN_FLAG_NOTE_RECOVERY_SUFFIX}`
       : note;
     sendFlag(signalType, recoveryNote);
   }, [enabled, onBehaviorSignal, sendFlag]);
@@ -152,7 +156,7 @@ export function useCampaignAntiCheat({
     beginPendingLeave({
       kind: 'fullscreen_exit',
       source: 'fullscreen_exit',
-      note: 'Candidate exited fullscreen mode.',
+      note: CAMPAIGN_FLAG_NOTES.fullscreenExit,
       reported: false,
     });
   }, [beginPendingLeave]);
@@ -179,7 +183,7 @@ export function useCampaignAntiCheat({
         beginPendingLeaveRef.current({
           kind: 'tab_switch',
           source: 'tab_switch',
-          note: 'Candidate switched away from the interview tab.',
+          note: CAMPAIGN_FLAG_NOTES.tabSwitch,
           reported: false,
         });
         return;
@@ -193,7 +197,7 @@ export function useCampaignAntiCheat({
         beginPendingLeaveRef.current({
           kind: 'tab_switch',
           source: 'window_blur',
-          note: 'Candidate left the interview window using Alt+Tab or window switching.',
+          note: CAMPAIGN_FLAG_NOTES.windowSwitch,
           reported: false,
         });
         return;
@@ -205,7 +209,7 @@ export function useCampaignAntiCheat({
           reportBehaviorRef.current(
             'focus_lost',
             'focus_lost',
-            'Candidate lost focus from the interview window.',
+            CAMPAIGN_FLAG_NOTES.focusLost,
           );
         }
       }, LEAVE_CORRELATION_MS);
@@ -219,7 +223,7 @@ export function useCampaignAntiCheat({
       if (document.visibilityState !== 'hidden') revealPendingLeaveRef.current();
     };
     const onPaste = () => {
-      reportBehaviorRef.current('paste', 'paste', 'Candidate attempted to paste content during the interview.');
+      reportBehaviorRef.current('paste', 'paste', CAMPAIGN_FLAG_NOTES.paste);
     };
 
     document.addEventListener('visibilitychange', onVisibility);
@@ -262,7 +266,7 @@ export function useCampaignAntiCheat({
       reportImmediateRef.current(
         'camera_blocked',
         'camera_blocked',
-        'Candidate camera became unavailable during the interview.',
+        CAMPAIGN_FLAG_NOTES.cameraUnavailable,
       );
     };
 

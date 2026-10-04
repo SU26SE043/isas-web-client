@@ -3,10 +3,10 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { goodRun, legacyAiOnlyRun, sample } from '../../../mocks/rubricPreview.fixtures';
-import { RubricPreviewHistory, runNumberOf } from './RubricPreviewHistory';
+import { formatRunTime } from './formatRunTime';
+import { RubricPreviewHistory } from './RubricPreviewHistory';
 
 const messages: Record<string, string> = {
-  'employer.campaigns.rubricPreview.history.run': 'Lượt {{n}}',
   'employer.campaigns.rubricPreview.history.score': 'Bài của bạn {{pct}}%',
   'employer.campaigns.rubricPreview.history.legacy': 'Lượt cũ (3 bài mẫu AI)',
 };
@@ -24,15 +24,26 @@ const runs = [
 ];
 
 describe('RubricPreviewHistory', () => {
-  it('liệt kê các lượt KHÁC lượt đang xem, nhóm theo câu hỏi, đánh số theo thời gian', () => {
+  it('liệt kê các lượt KHÁC lượt đang xem, nhóm theo câu hỏi, mỗi lượt gắn nhãn bằng GIỜ của chính nó', () => {
     render(<RubricPreviewHistory runs={runs} latest={latest} viewingId="r4" onOpen={vi.fn()} />);
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(3);
-    expect(items.map((item) => within(item).getByText(/^Lượt \d$/).textContent)).toEqual(['Lượt 3', 'Lượt 1', 'Lượt 2']);
-    expect(runNumberOf(runs, 'r1')).toBe(1);
-    expect(runNumberOf(runs, 'r4')).toBe(4);
-    expect(runNumberOf(runs, 'ghost')).toBe(0);
+    const times = items.map((item) => item.querySelector('time'));
+    expect(times.map((node) => node?.getAttribute('datetime'))).toEqual(['2026-09-12T09:00:00Z', '2026-09-12T07:00:00Z', '2026-09-12T08:00:00Z']);
+    expect(times.map((node) => node?.textContent)).toEqual(['r3', 'r1', 'r2'].map((id) => formatRunTime(runs.find((r) => r.id === id)!.createdAt, 'vi')));
     expect(screen.getByText('Câu khác')).toBeInTheDocument();
+  });
+
+  it('BE chỉ trả 20 lượt mới nhất ⇒ KHÔNG đánh số "Lượt N" (vị trí trong cửa sổ, kẹt ở 20); hai lượt cùng phút vẫn phân biệt nhờ giây', () => {
+    // 25 lượt thật, GET trả 20 mới nhất (mới-nhất-trước) — cách 7 giây như một lượt chấm thật.
+    const window = Array.from({ length: 20 }, (_, i) => goodRun({ id: `w${i}`, questionId: 'q-1', createdAt: new Date(Date.UTC(2026, 9, 3, 7, 5, 0) - i * 7000).toISOString() }));
+    render(<RubricPreviewHistory runs={window} latest={window[0]} viewingId="w0" onOpen={vi.fn()} />);
+    const items = screen.getAllByRole('listitem');
+    expect(items).toHaveLength(19);
+    expect(document.body.textContent).not.toMatch(/Lượt \d+|Run \d+/);
+    const labels = items.map((item) => item.querySelector('time')?.textContent);
+    expect(new Set(labels).size).toBe(19);
+    expect(labels[0]).toBe(formatRunTime(window[1].createdAt, 'vi'));
   });
 
   it('badge so với lượt mới nhất: cùng fingerprint khác prompt ⇒ promptChanged; khác fp cùng prompt ⇒ rubricChanged; khác cả hai ⇒ bothChanged', () => {

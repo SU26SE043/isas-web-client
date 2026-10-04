@@ -12,7 +12,10 @@ vi.mock('@/shared/languages', () => ({
     // replace() không có gì để thay.
     t: (key: string) => ({
       'practice.result.focusTracking.short.leave': 'Left session {{n}}',
+      'practice.result.focusTracking.short.paste': 'Pasted {{n}}',
       'practice.result.focusTracking.short.face': 'Face {{n}}',
+      'practice.result.focusTracking.message': 'LEFT {{n}}{{placement}}.',
+      'practice.result.focusTracking.pasteMessage': 'PASTED {{n}}.',
       'practice.result.focusTracking.short.camera': 'Camera covered {{n}}',
     } as Record<string, string>)[key] ?? key,
     language: 'en',
@@ -23,7 +26,7 @@ function makeView(
   focusEvents: PracticeSessionResultViewModel['focusEvents'],
   over: Partial<PracticeSessionResultViewModel> = {},
 ): PracticeSessionResultViewModel {
-  return { id: 's1', title: 'Practice', status: 'Scored', maxScore: 100, answeredCount: 1, skippedCount: 0, totalQuestions: 1, strengths: [], improvements: [], nextSteps: [], criteria: [], questions: [], hasResult: true, focusTrackingEnabled: true, focusEvents, focusLeaveCount: 6, focusLeavePlacement: 'spread', ...over };
+  return { id: 's1', title: 'Practice', status: 'Scored', maxScore: 100, answeredCount: 1, skippedCount: 0, totalQuestions: 1, strengths: [], improvements: [], nextSteps: [], criteria: [], questions: [], hasResult: true, focusTrackingEnabled: true, focusEvents, focusLeavePlacement: 'spread', ...over };
 }
 
 afterEach(() => cleanup());
@@ -45,8 +48,9 @@ describe('FocusEventsButton', () => {
       { signalType: 'focus_lost', count: 1, firstAt: '2026-01-01T09:04:00Z', lastAt: '2026-01-01T09:04:00Z' },
       { signalType: 'paste', count: 2, firstAt: '2026-01-01T09:05:00Z', lastAt: '2026-01-01T09:06:00Z' },
     ])} />);
-    // Nút đếm TỔNG lần (3+1+2 = 6) chứ KHÔNG phải số loại sự kiện (3) — fixture cố ý khác nhau.
-    const button = screen.getByRole('button', { name: 'Left session 6' });
+    // Nút đếm TỔNG lần mỗi nhóm (rời 3+1 = 4) chứ KHÔNG phải số loại sự kiện; dán là nhóm RIÊNG — trước đây
+    // "Left session 6" (cộng cả 2 lần dán) trong khi ô "Rời tab / cửa sổ" ghi 04.
+    const button = screen.getByRole('button', { name: 'Left session 4 · Pasted 2' });
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(button);
@@ -60,6 +64,9 @@ describe('FocusEventsButton', () => {
     expect(within(dialog).getByTestId('focus-metric-paste')).toHaveTextContent(/^02$/);
     expect(within(dialog).getByTestId('focus-metric-face')).toHaveTextContent(/^00$/);
     expect(within(dialog).getByTestId('focus-metric-camera')).toHaveTextContent(/^00$/);
+    // Câu nhận xét cùng số với hai ô: rời 4 (không phải 6), dán 2 là câu riêng.
+    expect(dialog).toHaveTextContent('LEFT 4, practice.result.focusTracking.spread.');
+    expect(dialog).toHaveTextContent('PASTED 2.');
     expect(dialog).toHaveTextContent('practice.result.focusTracking.firstAt');
     expect(dialog).toHaveTextContent('practice.result.focusTracking.lastAt');
     // Giờ phải là HH:mm đã format, không phải chuỗi ISO thô (regex không phụ thuộc múi giờ máy chạy test).
@@ -71,7 +78,7 @@ describe('FocusEventsButton', () => {
     const user = userEvent.setup();
     render(<FocusEventsButton view={makeView([
       { signalType: 'no_face', count: 7, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:20:00Z' },
-    ], { focusLeaveCount: 0, focusLeavePlacement: undefined, focusFrameCount: 7 })} />);
+    ], { focusLeavePlacement: undefined })} />);
     const button = screen.getByRole('button', { name: 'Face 7' });
     expect(screen.queryByRole('button', { name: /Left session/ })).not.toBeInTheDocument();
     await user.click(button);
@@ -79,7 +86,7 @@ describe('FocusEventsButton', () => {
     expect(within(dialog).getByTestId('focus-metric-face')).toHaveTextContent(/^07$/);
     expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^00$/);
     expect(dialog).toHaveTextContent('practice.result.focusTracking.frameOnly');
-    expect(dialog).not.toHaveTextContent('practice.result.focusTracking.message');
+    expect(dialog).not.toHaveTextContent(/LEFT|PASTED/);
   });
 
   it('có đủ ba nhóm (rời buổi · 2 khuôn mặt · che cam) → nhãn nút nêu CẢ BA, che cam đếm riêng', async () => {
@@ -89,7 +96,7 @@ describe('FocusEventsButton', () => {
       { signalType: 'focus_lost', count: 1, firstAt: '2026-01-01T09:01:00Z', lastAt: '2026-01-01T09:01:00Z' },
       { signalType: 'multiple_faces', count: 2, firstAt: '2026-01-01T09:05:00Z', lastAt: '2026-01-01T09:06:00Z' },
       { signalType: 'camera_blocked', count: 3, firstAt: '2026-01-01T09:08:00Z', lastAt: '2026-01-01T09:09:00Z' },
-    ], { focusLeaveCount: 1, focusFrameCount: 5 })} />);
+    ])} />);
     await user.click(screen.getByRole('button', { name: 'Left session 1 · Face 2 · Camera covered 3' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByTestId('focus-metric-window')).toHaveTextContent(/^01$/);

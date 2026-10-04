@@ -1,4 +1,5 @@
 import { numberQuestions } from '@/shared/utils/questionNumbering';
+import { focusGroupOf } from './focusTrackingSummary';
 import type {
   PracticeAnswerReview,
   PracticeBenchmark,
@@ -38,11 +39,8 @@ export type PracticeSessionResultViewModel = {
   rubricSource?: PracticeSessionResult['rubricSource'];
   focusTrackingEnabled: boolean;
   focusEvents: FocusEventSummary[] | null | undefined;
-  /** Số lần RỜI KHỎI buổi = chỉ tín hiệu HÀNH VI (tab_switch/focus_lost/paste). Nhãn UI nói "rời khỏi buổi" nên KHÔNG được cộng tín hiệu khung hình vào đây. */
-  focusLeaveCount?: number;
+  /** Các lần RỜI tab/cửa sổ (tab_switch/focus_lost) nằm ở nửa nào của buổi. Số đếm từng nhóm: `countFocusGroups(focusEvents)`. */
   focusLeavePlacement?: 'firstHalf' | 'secondHalf' | 'spread';
-  /** Số lần khung hình có vấn đề (no_face/multiple_faces/camera_blocked) — nhóm riêng, đếm riêng. */
-  focusFrameCount?: number;
   /**
    * CAMP-21 (B2C từ 2026-09-21). `undefined` = buổi không có luật (buổi cũ) — KHÔNG hiện gì.
    * Có giá trị = buổi có luật; `applied` = có câu chính bỏ trống nên điểm đã bị nhân xuống.
@@ -58,9 +56,6 @@ export type PracticeSessionResultViewModel = {
   scoreBeforePenalty?: number | null;
   unassessedCriteria?: Array<{ criterionId: string; name: string; weight: number }> | null;
 };
-
-const FRAME_SIGNALS: ReadonlySet<FocusEventSummary['signalType']> = new Set(['no_face', 'multiple_faces', 'camera_blocked']);
-export const isFrameFocusSignal = (signalType: FocusEventSummary['signalType']): boolean => FRAME_SIGNALS.has(signalType);
 
 export type CriteriaResultViewModel = {
   name: string;
@@ -242,14 +237,10 @@ export function mapPracticeSessionResponseToViewModel(
       ? overallCriteria
       : aggregateCriteriaFromQuestions(questions);
 
-  // "Rời khỏi buổi" chỉ đếm HÀNH VI: nhịp kiểm mặt 15s biến một người cúi xuống ghi chú thành
-  // "Rời khỏi buổi · 40" + lời khuyên "đóng các tab khác" — sai cả số lẫn lời. Khung hình đếm riêng.
+  // Vị trí "rời buổi" chỉ theo RỜI tab/cửa sổ — cùng nhóm `window` mà câu nhận xét đếm. Khung hình (nhịp kiểm mặt
+  // 15s) và dán là nhóm riêng: kéo chúng vào thì một lần cúi ghi chú ở nửa sau biến "nửa đầu" thành "rải trong buổi".
   const leaveEvents = Array.isArray(session.focusEvents)
-    ? session.focusEvents.filter((event) => !isFrameFocusSignal(event.signalType))
-    : undefined;
-  const focusLeaveCount = leaveEvents?.reduce((sum, event) => sum + event.count, 0);
-  const focusFrameCount = Array.isArray(session.focusEvents)
-    ? session.focusEvents.filter((event) => isFrameFocusSignal(event.signalType)).reduce((sum, event) => sum + event.count, 0)
+    ? session.focusEvents.filter((event) => focusGroupOf(event.signalType) === 'window')
     : undefined;
   let focusLeavePlacement: PracticeSessionResultViewModel['focusLeavePlacement'];
   if (leaveEvents && leaveEvents.length && session.createdAt && session.completedAt) {
@@ -311,9 +302,7 @@ export function mapPracticeSessionResponseToViewModel(
     rubricSource: result?.rubricSource,
     focusTrackingEnabled: session.focusTrackingEnabled === true,
     focusEvents: session.focusEvents,
-    focusLeaveCount,
     focusLeavePlacement,
-    focusFrameCount,
     skipPenalty,
     scoreFormula: result?.scoreFormula,
     scoreBeforePenalty: result?.scoreBeforePenalty,

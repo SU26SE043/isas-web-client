@@ -4,7 +4,7 @@ import type { PracticeSessionResultViewModel } from '../../utils/practiceSession
 import { buildFocusBreakdownLabel, countFocusGroups } from '../../utils/focusTrackingSummary';
 
 /**
- * Ô "Mất tập trung" trong lưới thống kê: tổng số lần + tách nhóm ngay dưới (rời buổi · khuôn mặt · che
+ * Ô "Mất tập trung" trong lưới thống kê: tổng số lần + tách nhóm ngay dưới (rời buổi · dán · khuôn mặt · che
  * camera) để con số gộp không che mất loại nào. Câu nhận xét đầy đủ nằm ở mục chi tiết bên dưới thẻ.
  */
 export function FocusSummaryTile({ view }: { view: PracticeSessionResultViewModel }) {
