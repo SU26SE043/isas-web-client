@@ -35,12 +35,15 @@ export function CriteriaProgressList({
   criteria,
   passThresholdPct,
   weighted = false,
-  overallScore,
+  weightedTotal,
+  maxScore,
 }: {
   criteria: CriteriaResultViewModel[];
   passThresholdPct?: number;
   weighted?: boolean;
-  overallScore?: number;
+  /** Tổng có trọng số TRƯỚC phạt bỏ câu — đúng bằng tổng các dòng; điểm cuối sau phạt nằm ở dòng công thức. */
+  weightedTotal?: number | null;
+  maxScore?: number;
 }) {
   const { t } = useLanguage();
   if (!criteria.length) {
@@ -50,16 +53,17 @@ export function CriteriaProgressList({
   if (weighted) {
     const allContributionsKnown = criteria.every((item) => item.contribution != null);
     const totalContribution = criteria.reduce((sum, item) => sum + (item.contribution ?? 0), 0);
+    const contributionTotalText = allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—';
     return (
       <div className="overflow-x-auto rounded-xl">
-        <Table className="min-w-[600px]">
+        <Table className="min-w-[440px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-12 text-center">#</TableHead>
-              <TableHead>{t('practice.result.criteriaDetail')}</TableHead>
+              <TableHead className="whitespace-normal">{t('practice.result.criteriaDetail')}</TableHead>
               <TableHead className="w-24 text-center">{t('practice.result.score')}</TableHead>
-              <TableHead className="w-36 text-right">{t('practice.result.effectiveWeight')}</TableHead>
-              <TableHead className="sr-only">{t('practice.result.contribution')}</TableHead>
+              <TableHead className="w-36 whitespace-normal text-right">{t('practice.result.effectiveWeight')}</TableHead>
+              <TableHead className="sr-only p-0">{t('practice.result.contribution')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,17 +75,18 @@ export function CriteriaProgressList({
                 <TableCell className="text-right tabular-nums">
                   {item.effectiveWeight == null ? '—' : `${(item.effectiveWeight * 100).toFixed(2)}%`}
                 </TableCell>
-                <TableCell className="sr-only">{item.contribution == null ? '—' : `${item.contribution.toFixed(2)}%`}</TableCell>
+                <TableCell className="sr-only p-0">{item.contribution == null ? '—' : `${item.contribution.toFixed(2)}%`}</TableCell>
               </TableRow>
             ))}
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableHead colSpan={3} className="text-right normal-case">{t('practice.result.weightedTotal')}</TableHead>
-              <TableCell className="sr-only">{allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—'}</TableCell>
-              <TableCell className="text-right font-bold tabular-nums text-foreground">
-                {overallScore == null ? (allContributionsKnown ? `${totalContribution.toFixed(2)}%` : '—') : `${overallScore.toFixed(1)}/100`}
+              <TableHead colSpan={2} className="text-right normal-case">{t('practice.result.weightedTotal')}</TableHead>
+              <TableCell className="text-center font-bold tabular-nums text-foreground" data-testid="weighted-total">
+                {weightedTotal != null && Number.isFinite(weightedTotal) ? formatScore(weightedTotal, maxScore) : contributionTotalText}
               </TableCell>
+              <TableCell />
+              <TableCell className="sr-only p-0">{contributionTotalText}</TableCell>
             </TableRow>
           </TableFooter>
         </Table>
