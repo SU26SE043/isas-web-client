@@ -287,8 +287,28 @@ function parseUnscoredFlaggedResult(raw: unknown): CampaignUnscoredFlaggedResult
     sessionId,
     fullName: pickString(record, 'fullName', 'FullName') ?? null,
     email: pickString(record, 'email', 'Email') ?? null,
+    interviewStatus: pickNullableString(record, 'interviewStatus', 'InterviewStatus') as CampaignUnscoredFlaggedResult['interviewStatus'],
+    isLatestAttempt: pickOptionalBoolean(record, 'isLatestAttempt', 'IsLatestAttempt'),
+    abandonReason: pickNullableString(record, 'abandonReason', 'AbandonReason') as CampaignUnscoredFlaggedResult['abandonReason'],
+    interviewStartedAt: pickNullableString(record, 'interviewStartedAt', 'InterviewStartedAt'),
     flags: parseCampaignResultFlags(record.flags ?? record.Flags),
   };
+}
+
+function pickNullableString(record: Record<string, unknown>, ...keys: string[]): string | null | undefined {
+  for (const key of keys) {
+    if (!(key in record)) continue;
+    const value = record[key];
+    return typeof value === 'string' ? value : value === null ? null : undefined;
+  }
+  return undefined;
+}
+
+function pickOptionalBoolean(record: Record<string, unknown>, ...keys: string[]): boolean | undefined {
+  for (const key of keys) {
+    if (typeof record[key] === 'boolean') return record[key] as boolean;
+  }
+  return undefined;
 }
 
 export function parseCampaignResultsResponse(data: unknown): CampaignResultsResponse {

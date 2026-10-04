@@ -8,7 +8,7 @@ import type { QuestionPreviewContext } from '../../../types/questionPreview.type
 import type { RubricPreviewBlocker, UseQuestionPreviewApi } from '../../../types/rubricPreview.types';
 import { computeBlocker, scopedCriteriaForQuestion } from '../../../utils/rubricPreviewVerdict';
 import { projectRunToCriteria, scopedCriterionIdsForRun } from '../../../utils/questionPreviewScope';
-import { RubricPreviewHistory, runNumberOf } from '../preview/RubricPreviewHistory';
+import { RubricPreviewHistory } from '../preview/RubricPreviewHistory';
 import { RubricPreviewResult } from '../preview/RubricPreviewResult';
 import { QuestionPreviewRunControls } from './QuestionPreviewRunControls';
 
@@ -136,7 +136,6 @@ export function QuestionPreviewPanel({ question, index, ctx, preview, disabled =
       {projected && viewing ? (
         <RubricPreviewResult
           run={projected}
-          runNumber={runNumberOf(runs, viewing.id) || runs.length || 1}
           passScorePct={ctx.passScorePct}
           onEditLevels={ctx.onGoToCriteria}
           onBackToLatest={latest && viewing.id !== latest.id ? () => setSelectedRunId(null) : undefined}

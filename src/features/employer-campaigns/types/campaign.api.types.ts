@@ -537,6 +537,10 @@ export type CampaignUnscoredFlaggedResult = {
   sessionId: string;
   fullName?: string | null;
   email?: string | null;
+  interviewStatus?: 'NotStarted' | 'InProgress' | 'Abandoned' | 'Completed' | null;
+  isLatestAttempt?: boolean;
+  abandonReason?: 'no_scored_answer' | 'expired_no_answer' | 'generation_failed' | string | null;
+  interviewStartedAt?: string | null;
   flags: CampaignResultFlag[];
 };
 

@@ -207,6 +207,10 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceEnroll.uploading': 'Đang xác minh ảnh khuôn mặt...',
     'campaigns.faceEnroll.badImage':
       'Không thể sử dụng ảnh này. Vui lòng chụp lại ảnh khuôn mặt rõ hơn.',
+    'campaigns.faceEnroll.multipleFaces':
+      'Ảnh có nhiều hơn một khuôn mặt. Chỉ để một người trong khung hình — kể cả ảnh, poster hay màn hình phía sau. Hãy chụp lại.',
+    'campaigns.faceEnroll.noFace':
+      'Không thấy khuôn mặt nào trong ảnh. Ngồi chính giữa khung, đủ sáng rồi chụp lại.',
     'campaigns.faceEnroll.uploadError': 'Không thể gửi ảnh khuôn mặt. Vui lòng thử lại.',
     'campaigns.faceEnroll.badFrame':
       'Camera chưa cho hình ảnh hợp lệ. Vui lòng đợi camera sẵn sàng, đảm bảo đủ ánh sáng rồi chụp lại.',
@@ -450,6 +454,10 @@ export const campaignsTranslations: TranslationDictionary = {
     'campaigns.faceEnroll.uploading': 'Verifying face photo...',
     'campaigns.faceEnroll.badImage':
       'This photo cannot be used. Please retake a clearer face photo.',
+    'campaigns.faceEnroll.multipleFaces':
+      'More than one face was found in the photo. Keep only one person in frame, including in photos, posters, or screens behind you. Please retake it.',
+    'campaigns.faceEnroll.noFace':
+      'No face was found in the photo. Sit centered in the frame, make sure the lighting is good, and retake it.',
     'campaigns.faceEnroll.uploadError': 'Could not upload the face photo. Please try again.',
     'campaigns.faceEnroll.badFrame':
       'The camera has not produced a usable image yet. Wait for it to be ready, make sure the lighting is good, and take the photo again.',

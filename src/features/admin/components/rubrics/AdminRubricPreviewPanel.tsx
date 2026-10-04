@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/patterns/ConfirmDialog';
 import { useLanguage } from '@/shared/languages';
 import { getApiErrorMessage, getApiStatusCode } from '@/shared/api/apiError';
-import { RubricPreviewHistory, runNumberOf } from '@/features/employer-campaigns/components/wizard/preview/RubricPreviewHistory';
+import { RubricPreviewHistory } from '@/features/employer-campaigns/components/wizard/preview/RubricPreviewHistory';
+import { formatRunTime } from '@/features/employer-campaigns/components/wizard/preview/formatRunTime';
 import { useRubricTryFlow, type RubricTryQuestionInput } from '../../hooks/useRubricTryFlow';
 import type { AdminRubricPreviewRequest, AdminRubricPreviewRun, AdminRubricSet } from '../../types/adminApi.types';
 import { toEmployerPreviewRun } from '../../utils/adminRubricApi';
@@ -28,7 +29,7 @@ interface AdminRubricPreviewPanelProps {
  * bằng giọng nói, xem hệ chấm mình thế nào".
  */
 export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, history }: AdminRubricPreviewPanelProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [question, setQuestion] = useState<RubricTryQuestionState>({ mode: 'sample', sampleQuestionId: rubric.sampleQuestions[0]?.id ?? '', customQuestion: '', seniority: '' });
   const [pendingQuestion, setPendingQuestion] = useState<RubricTryQuestionState | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export function AdminRubricPreviewPanel({ rubric, hasUnsavedChanges, preview, hi
         <div className={`space-y-4 ${preview.isPending ? 'opacity-60' : ''}`} aria-busy={preview.isPending}>
           <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
             <p className="font-medium text-foreground">
-              {t('admin.rubrics.try.result.run').replace('{n}', String(runNumberOf(employerRuns, viewing.id) || runs.length + 1))}
+              {t('admin.rubrics.try.result.run').replace('{time}', formatRunTime(viewing.createdAt, language))}
               <span className="font-normal text-muted-foreground"> · v{viewing.rubricVersion}</span>
             </p>
             <p className="text-muted-foreground">{t('admin.rubrics.try.result.question')}: {viewing.questionText}</p>
