@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { flagTypeLabelKey, getReviewPriority, isWindowFlag } from './proctoringFlagPriority';
+import {
+  distinctFlagTypeCount,
+  flagTypeLabel,
+  flagTypeLabelKey,
+  getReviewPriority,
+  normalizeFlagType,
+  pickTopFlag,
+} from './proctoringFlagPriority';
 
 describe('proctoring flag review priority', () => {
   it('keeps identity_unverified in the environment tier', () => {
@@ -13,17 +20,28 @@ describe('proctoring flag review priority', () => {
   });
 });
 
-describe('isWindowFlag — ô "Vi phạm cửa sổ" chỉ đếm cờ rời màn thi', () => {
-  it('nhận tab/focus/fullscreen, kể cả PascalCase', () => {
-    for (const t of ['tab_switch', 'focus_lost', 'fullscreen_exit', 'TabSwitch', 'FocusLost']) {
-      expect(isWindowFlag(t)).toBe(true);
-    }
+describe('pickTopFlag — loại HR nên thấy đầu tiên trên một hàng', () => {
+  const f = (type: string, count: number) => ({ type, count });
+
+  it('tầng nặng hơn thắng dù ít lượt hơn và đứng sau', () => {
+    expect(pickTopFlag([f('tab_switch', 9), f('camera_blocked', 9), f('multiple_faces', 1)])?.type).toBe('multiple_faces');
   });
 
-  it('KHÔNG nhận cờ mặt/camera/monitoring/paste — trước đây bị cộng vào "cửa sổ" (13 thay vì 5)', () => {
-    for (const t of ['face_mismatch', 'no_face', 'multiple_faces', 'identity_unverified', 'camera_blocked', 'monitoring_gap', 'paste', 'multi_voice']) {
-      expect(isWindowFlag(t)).toBe(false);
-    }
+  it('cùng tầng: nhiều lượt hơn thắng; bằng nhau thì theo tên (ổn định, không phụ thuộc thứ tự mảng)', () => {
+    expect(pickTopFlag([f('paste', 1), f('no_face', 5)])?.type).toBe('no_face');
+    expect(pickTopFlag([f('tab_switch', 2), f('paste', 2)])?.type).toBe('paste');
+    expect(pickTopFlag([f('paste', 2), f('tab_switch', 2)])?.type).toBe('paste');
+  });
+
+  it('mảng rỗng ⇒ null', () => {
+    expect(pickTopFlag([])).toBeNull();
+  });
+});
+
+describe('distinctFlagTypeCount / normalizeFlagType', () => {
+  it('Client và Server cùng loại, khác cách viết vẫn là MỘT loại', () => {
+    expect(distinctFlagTypeCount([{ type: 'monitoring_gap' }, { type: 'MonitoringGap' }, { type: 'paste' }])).toBe(2);
+    expect(normalizeFlagType('No-Face')).toBe('noface');
   });
 });
 
@@ -37,5 +55,13 @@ describe('flagTypeLabelKey — nhãn người-đọc cho từng loại cờ', ()
   it('chuẩn hoá PascalCase về cùng khoá; loại lạ → null (UI in khoá thô, không nuốt)', () => {
     expect(flagTypeLabelKey('FaceMismatch')).toBe('employer.campaigns.results.flags.type.face_mismatch');
     expect(flagTypeLabelKey('weird_new_signal')).toBeNull();
+  });
+});
+
+describe('flagTypeLabel', () => {
+  it('loại biết ⇒ dịch; loại lạ ⇒ in khoá thô', () => {
+    const t = (key: string) => `T(${key})`;
+    expect(flagTypeLabel('NoFace', t)).toBe('T(employer.campaigns.results.flags.type.no_face)');
+    expect(flagTypeLabel('weird_new_signal', t)).toBe('weird_new_signal');
   });
 });

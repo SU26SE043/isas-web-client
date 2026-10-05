@@ -199,7 +199,7 @@ export function CampaignResultsPanel({
       ) : null}
 
       {resultsQuery.data ? (
-        <UnscoredFlaggedSection items={resultsQuery.data.unscoredFlagged ?? []} />
+        <UnscoredFlaggedSection items={resultsQuery.data.unscoredFlagged ?? []} campaignId={campaignId} />
       ) : null}
 
       <OverrideResultModal

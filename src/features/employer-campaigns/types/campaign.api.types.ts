@@ -613,6 +613,24 @@ export type CampaignResultOverrideHistoryResponse = {
   items: CampaignResultOverrideHistoryItem[];
 };
 
+/**
+ * Một sự kiện cờ giám sát THEO GIÂY (`GET …/results/{sessionId}/flags`). Khác `CampaignResultFlag`
+ * (đã gộp theo loại, chỉ giữ ghi chú đầu tiên): đây là từng dòng `session_flags`, giữ ghi chú riêng của
+ * từng lần. Endpoint không trả `source` — nguồn ghi (Client/Server) lấy từ dữ liệu gộp.
+ */
+export type CampaignResultFlagEvent = {
+  signalType: string;
+  detectedAt: string;
+  note: string | null;
+};
+
+export type CampaignResultFlagTimeline = {
+  sessionId: string;
+  /** null khi buổi không có cờ nào (server trả Guid rỗng). */
+  candidateId: string | null;
+  events: CampaignResultFlagEvent[];
+};
+
 export type OverrideCampaignResultPayload = {
   score: number | null;
   result: 'Pass' | 'Fail' | null;

@@ -1,162 +1,80 @@
-import { AppWindow, Clock3, TriangleAlert } from 'lucide-react';
+import { useMemo } from 'react';
 import { useLanguage } from '@/shared/languages';
-import type { CampaignResultFlag } from '../../types/campaign.api.types';
-import { formatResultTime, getResultFlagCount } from '../../utils/campaignResultsActions';
-import { flagNoteText } from '../../utils/flagNoteText';
-import {
-  flagTypeLabelKey,
-  getReviewPriority,
-  isWindowFlag,
-  REVIEW_PRIORITY_CLASS,
-} from '../../utils/proctoringFlagPriority';
-import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
+import type { CampaignResultFlag, CampaignResultFlagEvent } from '../../types/campaign.api.types';
+import { normalizeFlagType } from '../../utils/proctoringFlagPriority';
+import { buildProctoringIncidents, summarizeIncidentsByTier } from '../../utils/proctoringTimeline';
+import { ProctoringAggregatedList } from './proctoring/ProctoringAggregatedList';
+import { ProctoringTierSummary } from './proctoring/ProctoringTierSummary';
+import { ProctoringTimelineList } from './proctoring/ProctoringTimelineList';
+
+export type ProctoringTimelineStatus = 'loading' | 'error' | 'ready';
 
 interface ProctoringAnalysisProps {
+  /** Cờ đã gộp của `/results` — luôn có, là nguồn dự phòng. */
   flags: CampaignResultFlag[];
-  /** true = nằm trong popup (ProctoringFlagsButton): bỏ khung + tiêu đề vì dialog đã có tiêu đề riêng. */
-  embedded?: boolean;
+  /** Từng cờ theo giây (`/results/{sessionId}/flags`). Vắng = chưa tải. */
+  events?: CampaignResultFlagEvent[];
+  timelineStatus?: ProctoringTimelineStatus;
 }
 
-const TIME_FLAG_TYPES = new Set([
-  'timeviolation',
-  'timeexceeded',
-  'durationexceeded',
-  'overtime',
-]);
-
-function normalizedFlagType(type: string) {
-  return type.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-export function ProctoringAnalysis({ flags, embedded = false }: ProctoringAnalysisProps) {
-  const { t, language } = useLanguage();
-  const totalViolations = getResultFlagCount(flags);
-  const timeViolations = getResultFlagCount(
-    flags.filter((flag) => TIME_FLAG_TYPES.has(normalizedFlagType(flag.type))),
+/**
+ * Nội dung popup "Phân tích giám sát".
+ *
+ * Có dòng thời gian ⇒ đếm theo SỰ VIỆC (gộp các lượt kiểm mặt liên tiếp: vắng mặt 1 phút 26 giây là
+ * 1 lần, không phải 8), xếp ba tầng danh tính → hành vi → không quan sát được, rồi dòng thời gian.
+ * Đang tải / lỗi / rỗng ⇒ hiện dữ liệu gộp kèm một dòng nói rõ đó là số lượt ghi nhận — popup không
+ * bao giờ trắng, và không bao giờ nói "không có gì" khi thật ra là chưa tải được.
+ *
+ * Trước 2026-10-05 popup có ô "Vi phạm thời gian" đếm loại cờ backend không bao giờ ghi (luôn 0) và ô
+ * "Vi phạm cửa sổ" đếm theo dòng — cả hai đã gỡ.
+ */
+export function ProctoringAnalysis({ flags, events, timelineStatus = 'loading' }: ProctoringAnalysisProps) {
+  const { t } = useLanguage();
+  const serverKeys = useMemo(
+    () => new Set(flags.filter((flag) => flag.source === 'Server').map((flag) => normalizeFlagType(flag.type))),
+    [flags],
   );
-  // Ô "cửa sổ" CHỈ đếm cờ rời màn thi (tab/focus/fullscreen). Công thức cũ `tổng − thời gian` gộp cả
-  // cờ mặt/camera/monitoring vào "Lần chuyển tab hoặc rời cửa sổ" ⇒ số nói dối nhãn (13 thay vì 5).
-  // Cờ loại mới backend thêm sau KHÔNG tự rơi vào đây — nó vẫn hiện ở danh sách chip bên dưới.
-  const windowViolations = getResultFlagCount(flags.filter((flag) => isWindowFlag(flag.type)));
-  const hasViolations = totalViolations > 0;
-  const hasServerFlags = flags.some((flag) => flag.source === 'Server');
+  const incidents = useMemo(() => buildProctoringIncidents(events ?? []), [events]);
+  const groups = useMemo(() => summarizeIncidentsByTier(incidents), [incidents]);
+  const timelineReady = timelineStatus === 'ready' && incidents.length > 0;
+
+  if (!timelineReady && flags.length === 0) {
+    return <p className="text-sm text-success">{t('employer.campaigns.results.proctoring.none')}</p>;
+  }
 
   return (
-    <section className={embedded ? 'space-y-0' : 'frame-satin rounded-xl bg-surface-raised p-4 sm:p-5'}>
-      {embedded ? null : (
-      <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-warning/25 bg-warning-bg text-warning">
-          <TriangleAlert className="size-4" aria-hidden />
-        </span>
-        <div>
-          <h3 className="text-base font-semibold text-foreground">
-            {t('employer.campaigns.results.proctoring.title')}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('employer.campaigns.results.proctoring.description')}
-          </p>
-        </div>
-      </div>
-      )}
-
-      {hasServerFlags ? (
-        <p className="mt-3 rounded-lg border border-satin bg-surface-overlay p-3 text-xs leading-relaxed text-muted-foreground">
+    <div className="space-y-4">
+      {serverKeys.size > 0 ? (
+        <p className="rounded-lg border border-satin bg-surface-overlay p-3 text-xs leading-relaxed text-muted-foreground">
           {t('employer.campaigns.results.proctoring.sourceExplanation')}
         </p>
       ) : null}
 
-      <div className={`grid gap-3 sm:grid-cols-2 ${embedded ? 'mt-1' : 'mt-4'}`}>
-        <ProctoringMetric
-          icon={AppWindow}
-          value={windowViolations}
-          label={t('employer.campaigns.results.proctoring.windowViolations')}
-          hint={t('employer.campaigns.results.proctoring.windowViolationsHint')}
-          hasViolation={windowViolations > 0}
-        />
-        <ProctoringMetric
-          icon={Clock3}
-          value={timeViolations}
-          suffix={t('employer.campaigns.results.proctoring.minutes')}
-          label={t('employer.campaigns.results.proctoring.timeViolations')}
-          hint={t('employer.campaigns.results.proctoring.timeViolationsHint')}
-          hasViolation={timeViolations > 0}
-        />
-      </div>
-
-      {!hasViolations ? (
-        <p className="mt-3 text-sm text-success">
-          {t('employer.campaigns.results.proctoring.none')}
-        </p>
-      ) : null}
-
-      {flags.length > 0 ? (
-        <ul className="mt-4 space-y-2">
-          {flags.map((flag) => {
-            const firstAt = formatResultTime(flag.firstAt, language);
-            const lastAt = formatResultTime(flag.lastAt, language);
-            return (
-              <li
-                key={`${flag.type}-${flag.count}-${flag.note ?? ''}`}
-                className={`rounded-lg border px-3 py-2 text-xs ${REVIEW_PRIORITY_CLASS[getReviewPriority(flag.type)]}`}
-              >
-                <p className="font-medium">
-                  {flagLabel(flag.type, t)}: {flag.count}
-                  <ResultFlagSourceLabel flag={flag} />
-                </p>
-                {flag.note?.trim() ? <p className="mt-1 text-current/80">{flagNoteText(flag.note, t)}</p> : null}
-                {firstAt || lastAt ? (
-                  <p className="mt-1 text-current/80">
-                    {firstAt ? `${t('employer.campaigns.results.proctoring.firstAt')} ${firstAt}` : null}
-                    {firstAt && lastAt ? ' · ' : null}
-                    {lastAt ? `${t('employer.campaigns.results.proctoring.lastAt')} ${lastAt}` : null}
-                  </p>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-/** Nhãn người-đọc; loại lạ in khoá thô (không nuốt) để HR vẫn thấy có cờ. */
-function flagLabel(type: string, t: (key: string) => string): string {
-  const key = flagTypeLabelKey(type);
-  return key ? t(key) : type;
-}
-
-function ProctoringMetric({
-  icon: Icon,
-  value,
-  suffix,
-  label,
-  hint,
-  hasViolation,
-}: {
-  icon: typeof AppWindow;
-  value: number;
-  suffix?: string;
-  label: string;
-  hint: string;
-  hasViolation: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-satin bg-surface-overlay p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Icon className="size-5 text-muted-foreground" aria-hidden />
-          <p className="text-sm font-medium text-foreground">{label}</p>
-        </div>
-        <span className={hasViolation ? 'text-warning' : 'text-success'}>
-          <TriangleAlert className="size-4" aria-hidden />
-        </span>
-      </div>
-      <p className={`mt-4 text-3xl font-semibold tabular-nums ${hasViolation ? 'text-warning' : 'text-foreground'}`}>
-        {String(value).padStart(2, '0')}
-        {suffix ? <span className="ml-1 text-base font-medium">{suffix}</span> : null}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      {timelineReady ? (
+        <>
+          <p className="text-sm font-medium text-foreground" data-testid="proctoring-summary">
+            {t('employer.campaigns.results.proctoring.summary')
+              .replace('{{incidents}}', String(incidents.length))
+              .replace('{{records}}', String(events?.length ?? 0))}
+          </p>
+          <ProctoringTierSummary groups={groups} serverKeys={serverKeys} />
+          <section className="space-y-2" aria-labelledby="proctoring-timeline-heading">
+            <h4 id="proctoring-timeline-heading" className="text-sm font-semibold text-foreground">
+              {t('employer.campaigns.results.proctoring.timeline.title')}
+            </h4>
+            <ProctoringTimelineList incidents={incidents} />
+          </section>
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground" role="status">
+            {timelineStatus === 'loading'
+              ? t('employer.campaigns.results.proctoring.timeline.loading')
+              : t('employer.campaigns.results.proctoring.timeline.error')}
+          </p>
+          <ProctoringAggregatedList flags={flags} />
+        </>
+      )}
     </div>
   );
 }

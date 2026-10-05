@@ -27,10 +27,10 @@ function renderWithLanguage(ui: React.ReactNode) {
 
 describe('ResultFlagSourceLabel', () => {
   it('shows the system label beside a Server flag in ProctoringAnalysis', () => {
-    renderWithLanguage(<ProctoringAnalysis flags={[serverFlag]} />);
+    renderWithLanguage(<ProctoringAnalysis flags={[serverFlag]} timelineStatus="error" />);
 
     expect(screen.getByText('Hệ thống ghi nhận')).toBeTruthy();
-    expect(screen.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
+    expect(screen.getByText('Gián đoạn giám sát · 1 lượt ghi nhận')).toBeTruthy();
     expect(screen.getByText(/Cờ 'Hệ thống ghi nhận' do máy chủ/)).toBeTruthy();
   });
 
@@ -78,8 +78,8 @@ describe('ResultFlagSourceLabel', () => {
     // một nhãn "Hệ thống ghi nhận" (cờ Server), cờ Client không mang nhãn.
     for (const layout of ['table', 'cards']) {
       const region = within(container.querySelector(`[data-layout="${layout}"]`) as HTMLElement);
-      expect(region.getByText('Gián đoạn giám sát: 1')).toBeTruthy();
-      expect(region.getByText('Rời tab thi: 1')).toBeTruthy();
+      expect(region.getByText('Gián đoạn giám sát · 1 lượt ghi nhận')).toBeTruthy();
+      expect(region.getByText('Rời tab thi · 1 lượt ghi nhận')).toBeTruthy();
       expect(region.getAllByText('Hệ thống ghi nhận')).toHaveLength(1);
     }
   });

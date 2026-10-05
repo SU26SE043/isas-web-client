@@ -10,6 +10,8 @@ import type {
   CampaignTranscriptResponse,
   CampaignResultOverrideHistoryResponse,
   CampaignResultOverrideHistoryItem,
+  CampaignResultFlagEvent,
+  CampaignResultFlagTimeline,
   TranscriptQuestion,
   CampaignUnscoredFlaggedResult,
   CandidateListQuery,
@@ -501,6 +503,36 @@ export function parseCampaignOverrideHistoryResponse(
     })
     .filter((item): item is CampaignResultOverrideHistoryItem => item != null);
   return { sessionId: pickString(body, 'sessionId', 'SessionId') ?? '', items };
+}
+
+const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+
+/**
+ * Dòng thời gian cờ giám sát. KHÁC các parser khác trong file (vốn dễ dãi, rơi về mặc định): trả
+ * `null` khi thân phản hồi không có mảng `events`. Lý do: một phản hồi không phải JSON (vd `index.html`
+ * mã 200 của SPA fallback) đọc dễ dãi sẽ thành "0 sự kiện" — tức popup nói "không có gì" trong khi
+ * thật ra là không tải được. Caller coi `null` là lỗi và rơi về dữ liệu gộp.
+ */
+export function parseCampaignResultFlagTimeline(data: unknown): CampaignResultFlagTimeline | null {
+  const root = asRecord(data);
+  const body = asRecord(root?.data) ?? root;
+  if (!body) return null;
+  const rawEvents = body.events ?? body.Events;
+  if (!Array.isArray(rawEvents)) return null;
+  const events = rawEvents.flatMap((item): CampaignResultFlagEvent[] => {
+    const record = asRecord(item);
+    if (!record) return [];
+    const signalType = pickString(record, 'signalType', 'SignalType');
+    const detectedAt = pickString(record, 'detectedAt', 'DetectedAt');
+    if (!signalType || !detectedAt || Number.isNaN(Date.parse(detectedAt))) return [];
+    return [{ signalType, detectedAt, note: pickString(record, 'note', 'Note') ?? null }];
+  });
+  const candidateId = pickString(body, 'candidateId', 'CandidateId');
+  return {
+    sessionId: pickString(body, 'sessionId', 'SessionId') ?? '',
+    candidateId: candidateId && candidateId !== EMPTY_GUID ? candidateId : null,
+    events,
+  };
 }
 
 /** Only treat absolute http(s) URLs as safe download links. */

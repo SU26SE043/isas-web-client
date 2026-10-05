@@ -3,6 +3,7 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { campaignCandidateService } from '../services/campaignCandidate.service';
 import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
+import { CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX } from '@/shared/domain/campaignFlagNotes';
 import {
   FACE_CHECK_ALERT_INTERVAL_MS,
   FACE_CHECK_INTERVAL_MS,
@@ -170,7 +171,9 @@ describe('useCampaignFaceCheck', () => {
     expect(createFlag).not.toHaveBeenCalled();
   });
 
-  it('reports one measured monitoring gap when a deferred check resumes late', async () => {
+  // Lượt kiểm tới hạn bị HOÃN vì đang gửi câu trả lời ⇒ cờ VẪN gửi (suốt khoảng đó không ai quan sát),
+  // nhưng ghi chú nói rõ lý do để HR không đọc nhầm độ trễ của hệ thống thành hành vi ứng viên.
+  it('reports one measured monitoring gap when a deferred check resumes late — and says it was the upload', async () => {
     vi.useFakeTimers();
     checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
     const video = document.createElement('video');
@@ -187,8 +190,85 @@ describe('useCampaignFaceCheck', () => {
 
     expect(createFlag).toHaveBeenCalledExactlyOnceWith('campaign-1', 'session-1', {
       signalType: 'monitoring_gap',
-      note: `Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~${(FACE_CHECK_INTERVAL_MS + 31_000) / 1000}s (nhịp bình thường ${FACE_CHECK_INTERVAL_MS / 1000}s)`,
+      note: `Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~${(FACE_CHECK_INTERVAL_MS + 31_000) / 1000}s (nhịp bình thường ${FACE_CHECK_INTERVAL_MS / 1000}s)`
+        + CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX,
     });
+  });
+
+  it('upload overlapping a long hidden tab: still reports the gap, but NOT as caused by the upload', async () => {
+    vi.useFakeTimers();
+    checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
+    const video = document.createElement('video');
+    const { rerender } = renderHook(({ uploadInFlight }) => useCampaignFaceCheck({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, videoEl: video,
+      uploadInFlight, onSignal: vi.fn(),
+    }), { initialProps: { uploadInFlight: false } });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); }); // t=15 OK
+    rerender({ uploadInFlight: true });
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS + 2_000); }); // t=32: due at 30, blocked
+    setVisibility('hidden');
+    await act(async () => { await vi.advanceTimersByTimeAsync(8_000); }); // t=40
+    rerender({ uploadInFlight: false }); // upload ends while hidden: 10s blocked
+    await act(async () => { await vi.advanceTimersByTimeAsync(50_000); }); // t=90
+    setVisibility('visible');
+    await act(async () => { await Promise.resolve(); });
+
+    expect(createFlag).toHaveBeenCalledOnce();
+    expect(createFlag.mock.calls[0][2].signalType).toBe('monitoring_gap');
+    expect(createFlag.mock.calls[0][2].note).not.toContain(CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX);
+  });
+
+  it('the upload excuse is reset after each successful check: a later hidden gap is reported without it', async () => {
+    vi.useFakeTimers();
+    checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
+    const video = document.createElement('video');
+    const { rerender } = renderHook(({ uploadInFlight }) => useCampaignFaceCheck({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, videoEl: video,
+      uploadInFlight, onSignal: vi.fn(),
+    }), { initialProps: { uploadInFlight: false } });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
+    rerender({ uploadInFlight: true });
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS + 31_000); });
+    rerender({ uploadInFlight: false });
+    await act(async () => { await Promise.resolve(); });
+    expect(createFlag.mock.calls[0][2].note).toContain(CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX);
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); });
+    setVisibility('hidden');
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS + 31_000); });
+    setVisibility('visible');
+    await act(async () => { await Promise.resolve(); });
+
+    expect(createFlag).toHaveBeenCalledTimes(2);
+    expect(createFlag.mock.calls[1][2].note).not.toContain(CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX);
+  });
+
+  it('a short upload that never blocked a due check excuses nothing', async () => {
+    vi.useFakeTimers();
+    checkFace.mockResolvedValue({ match: true, faceCount: 1, signals: [] });
+    const video = document.createElement('video');
+    const { rerender } = renderHook(({ uploadInFlight }) => useCampaignFaceCheck({
+      campaignId: 'campaign-1', sessionId: 'session-1', enabled: true, videoEl: video,
+      uploadInFlight, onSignal: vi.fn(),
+    }), { initialProps: { uploadInFlight: false } });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(FACE_CHECK_INTERVAL_MS); }); // t=15 OK
+    rerender({ uploadInFlight: true });
+    await act(async () => { await vi.advanceTimersByTimeAsync(4_000); }); // t=19, nothing due
+    rerender({ uploadInFlight: false });
+    // Camera không trả khung hình ở 2 lượt kế (t=30, t=45) ⇒ khoảng trống không liên quan upload.
+    // (Không dùng mockResolvedValueOnce: lượt hỏng còn thử lại trên thẻ <video> khác nếu DOM có — một
+    // test trước để lại thẻ đó, nên hai lần "Once" bị tiêu hết trong cùng một lượt.)
+    capture.mockResolvedValue(null);
+    await act(async () => { await vi.advanceTimersByTimeAsync(31_000); }); // t=50
+    capture.mockResolvedValue(new File(['frame'], 'frame.jpg', { type: 'image/jpeg' }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(11_000); }); // t=61: OK again (gap 45s)
+    await act(async () => { await Promise.resolve(); });
+
+    expect(createFlag).toHaveBeenCalledOnce();
+    expect(createFlag.mock.calls[0][2].note).not.toContain(CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX);
   });
 
   it('defers a hidden-tab check and measures the gap when the candidate returns', async () => {

@@ -1,6 +1,7 @@
 export type ReviewPriority = 'identity' | 'behavior' | 'environment';
 
-function normalizedFlagType(type: string) {
+/** `NoFace`, `no_face`, `no-face` → `noface`. Mọi so khớp loại cờ đi qua đây. */
+export function normalizeFlagType(type: string) {
   return type.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
@@ -21,19 +22,7 @@ const REVIEW_PRIORITY_BY_FLAG: Record<string, ReviewPriority> = {
 };
 
 export function getReviewPriority(type: string): ReviewPriority {
-  return REVIEW_PRIORITY_BY_FLAG[normalizedFlagType(type)] ?? 'environment';
-}
-
-/**
- * Cờ "cửa sổ" = ứng viên rời khỏi màn thi (chuyển tab, mất focus, thoát toàn màn hình). CHỈ nhóm này
- * được cộng vào ô "Vi phạm cửa sổ" — trước 2026-09-15 ô đó cộng MỌI cờ không-phải-thời-gian (kể cả
- * face_mismatch, camera_blocked, monitoring_gap) trong khi nhãn nói "Lần chuyển tab hoặc rời cửa sổ",
- * nên buổi có 5 lần rời tab hiện thành 13 (đo trên dev: 1+1+4+2+1+1+1+1+1).
- */
-const WINDOW_FLAG_TYPES = new Set(['tabswitch', 'focuslost', 'focusswitch', 'fullscreenexit', 'fullexit']);
-
-export function isWindowFlag(type: string): boolean {
-  return WINDOW_FLAG_TYPES.has(normalizedFlagType(type));
+  return REVIEW_PRIORITY_BY_FLAG[normalizeFlagType(type)] ?? 'environment';
 }
 
 /**
@@ -58,12 +47,58 @@ const LABELLED_FLAG_TYPES: Record<string, string> = {
 };
 
 export function flagTypeLabelKey(type: string): string | null {
-  const canonical = LABELLED_FLAG_TYPES[normalizedFlagType(type)];
+  const canonical = LABELLED_FLAG_TYPES[normalizeFlagType(type)];
   return canonical ? `employer.campaigns.results.flags.type.${canonical}` : null;
+}
+
+/** Nhãn người đọc; loại lạ (backend thêm sau) in khoá thô thay vì nuốt im lặng — HR vẫn thấy có cờ. */
+export function flagTypeLabel(type: string, t: (key: string) => string): string {
+  const key = flagTypeLabelKey(type);
+  return key ? t(key) : type;
+}
+
+/** Thứ tự HR nên đọc — khớp `ReviewPriority` của backend (CampaignService, AC1): danh tính → hành vi → môi trường. */
+export const REVIEW_PRIORITY_ORDER: readonly ReviewPriority[] = ['identity', 'behavior', 'environment'];
+
+export function reviewPriorityRank(priority: ReviewPriority): number {
+  return REVIEW_PRIORITY_ORDER.indexOf(priority);
+}
+
+/**
+ * Loại cờ HR nên thấy đầu tiên trên MỘT hàng của bảng: tầng nặng nhất, rồi nhiều lượt nhất, rồi tên.
+ * KHÔNG lấy phần tử đầu mảng — thứ tự backend đúng hôm nay, nhưng ô bảng không được phụ thuộc vào đó
+ * (dữ liệu dựng tay trong test, bản cache cũ, server khác phiên bản).
+ */
+export function pickTopFlag<T extends { type: string; count: number }>(flags: readonly T[]): T | null {
+  let top: T | null = null;
+  for (const flag of flags) {
+    if (!top) {
+      top = flag;
+      continue;
+    }
+    const byTier = reviewPriorityRank(getReviewPriority(flag.type)) - reviewPriorityRank(getReviewPriority(top.type));
+    if (byTier < 0 || (byTier === 0 && (flag.count > top.count
+      || (flag.count === top.count && normalizeFlagType(flag.type) < normalizeFlagType(top.type))))) {
+      top = flag;
+    }
+  }
+  return top;
+}
+
+/** Số LOẠI cờ khác nhau — cùng loại mà có cả dòng Client lẫn Server (MON1-B4) chỉ tính một. */
+export function distinctFlagTypeCount(flags: readonly { type: string }[]): number {
+  return new Set(flags.map((flag) => normalizeFlagType(flag.type))).size;
 }
 
 export const REVIEW_PRIORITY_CLASS: Record<ReviewPriority, string> = {
   identity: 'border-error/35 bg-error/10 text-error',
   behavior: 'border-warning/35 bg-warning/10 text-warning',
   environment: 'border-satin bg-surface-overlay text-muted-foreground',
+};
+
+/** Chấm màu theo tầng — dùng ở dòng thời gian và ô bảng, nơi cả khung màu thì quá nặng. */
+export const REVIEW_PRIORITY_DOT_CLASS: Record<ReviewPriority, string> = {
+  identity: 'bg-error',
+  behavior: 'bg-warning',
+  environment: 'bg-muted-foreground',
 };

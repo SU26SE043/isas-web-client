@@ -10,6 +10,10 @@ import type { CampaignViolationKind } from '../types/campaignViolation.types';
 const LEAVE_CORRELATION_MS = 250;
 const LEAVE_DEDUP_MS = 1_500;
 const CAMERA_POLL_MS = 2_000;
+// Camera phải chạy lại liền ≥ bấy nhiêu lượt poll mới gỡ cờ "đã báo mất camera". `track.muted` chập chờn
+// (Chrome khi app khác giành camera, Safari khi chuyển nền) — gỡ ngay sau 1 lượt sẽ bắn cờ + popup vi
+// phạm liên tục; không gỡ bao giờ thì lần mất camera thứ hai trong buổi không được báo.
+export const CAMERA_REARM_LIVE_POLLS = 2;
 
 interface PendingLeaveViolation {
   kind: Extract<CampaignViolationKind, 'tab_switch' | 'fullscreen_exit'>;
@@ -59,6 +63,7 @@ export function useCampaignAntiCheat({
   const documentHidden = useRef(false);
   const cameraBlocked = useRef(false);
   const cameraWasLive = useRef(false);
+  const cameraLiveStreak = useRef(0);
   const lastLeaveAt = useRef(0);
   const leaveTimer = useRef<number | null>(null);
   const focusTimer = useRef<number | null>(null);
@@ -251,6 +256,7 @@ export function useCampaignAntiCheat({
   useEffect(() => {
     cameraBlocked.current = false;
     cameraWasLive.current = false;
+    cameraLiveStreak.current = 0;
     if (!enabled || !stream) return undefined;
 
     const evaluate = () => {
@@ -261,7 +267,18 @@ export function useCampaignAntiCheat({
         if (!unavailable) cameraWasLive.current = true;
         return;
       }
-      if (!unavailable || cameraBlocked.current) return;
+      if (!unavailable) {
+        cameraLiveStreak.current += 1;
+        if (cameraBlocked.current && cameraLiveStreak.current >= CAMERA_REARM_LIVE_POLLS) {
+          cameraBlocked.current = false;
+        }
+        return;
+      }
+      cameraLiveStreak.current = 0;
+      if (cameraBlocked.current) return;
+      // Tab đang ẩn: `tab_switch` đã ghi việc rời màn thi, và trình duyệt tự tắt camera ở nền. Không báo
+      // ở đây; lượt poll đầu tiên khi tab hiện lại vẫn bắt được nếu camera còn mất.
+      if (document.visibilityState === 'hidden') return;
       cameraBlocked.current = true;
       reportImmediateRef.current(
         'camera_blocked',

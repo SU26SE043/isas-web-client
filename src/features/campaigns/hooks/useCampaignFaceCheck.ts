@@ -4,6 +4,7 @@ import type { FaceCheckResponse } from '../types/campaignCandidate.types';
 import type { CampaignFaceSignal } from '../types/campaignViolation.types';
 import { captureVideoFrameAsJpegFile } from '../utils/captureJpegFile';
 import { enqueueCampaignFlag } from '../utils/campaignFlagQueue';
+import { CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX } from '@/shared/domain/campaignFlagNotes';
 
 // 2026-09-17: 30s → 15s. Giá mỗi lượt phía server đã giảm gần nửa (AIService cache vector ảnh
 // mốc theo hash nội dung — trước đó ảnh mốc bị nhúng lại ở MỌI lượt), nên 15s ≈ tải của 30s cũ.
@@ -63,6 +64,11 @@ export function useCampaignFaceCheck({
   const scheduledInterval = useRef(FACE_CHECK_INTERVAL_MS);
   const lastSuccessfulCheckAt = useRef<number | null>(null);
   const cleanStreak = useRef(0);
+  // Lượt kiểm tới hạn mà bị HOÃN vì đang upload câu trả lời (tab vẫn hiện): mốc bắt đầu bị chặn và tổng
+  // thời gian đã bị chặn kể từ lượt kiểm thành công gần nhất. Dùng để nói LÝ DO của `monitoring_gap`,
+  // không để bỏ cờ.
+  const uploadBlockedSince = useRef<number | null>(null);
+  const uploadBlockedMs = useRef(0);
 
   useEffect(() => {
     aborted.current = false;
@@ -114,19 +120,26 @@ export function useCampaignFaceCheck({
       }
       const signals = result ? resolveSignals(result) : [];
       const now = Date.now();
+      const gapThresholdMs = scheduledIntervalMs != null ? scheduledIntervalMs * 2 : null;
       if (
-        scheduledIntervalMs != null
+        gapThresholdMs != null
         && lastSuccessfulCheckAt.current != null
-        && now - lastSuccessfulCheckAt.current > scheduledIntervalMs * 2
+        && now - lastSuccessfulCheckAt.current > gapThresholdMs
       ) {
-        const elapsedSeconds = Math.round((now - lastSuccessfulCheckAt.current) / 1000);
-        const normalSeconds = Math.round(scheduledIntervalMs / 1000);
+        const gapMs = now - lastSuccessfulCheckAt.current;
+        const elapsedSeconds = Math.round(gapMs / 1000);
+        const normalSeconds = Math.round(scheduledIntervalMs! / 1000);
+        // Bỏ phần bị chặn vì upload mà khoảng trống KHÔNG còn vượt ngưỡng ⇒ khoảng trống là do hệ thống.
+        // Còn vượt (vd upload xong rồi ẩn tab) ⇒ có nguyên nhân khác, không gắn lý do upload.
+        const causedByUpload = uploadBlockedMs.current > 0 && gapMs - uploadBlockedMs.current <= gapThresholdMs;
         sendFlag(
           'monitoring_gap',
-          `Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~${elapsedSeconds}s (nhịp bình thường ${normalSeconds}s)`,
+          `Khoảng cách giữa 2 lần kiểm tra khuôn mặt ~${elapsedSeconds}s (nhịp bình thường ${normalSeconds}s)`
+            + (causedByUpload ? CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX : ''),
         );
       }
       lastSuccessfulCheckAt.current = now;
+      uploadBlockedMs.current = 0;
       for (const signal of signals) {
         if (!activeSignals.current.has(signal)) onSignal(signal);
       }
@@ -151,6 +164,9 @@ export function useCampaignFaceCheck({
   const runScheduledCheck = useCallback(async (intervalMs: number) => {
     if (uploadRef.current || document.visibilityState === 'hidden') {
       deferred.current = true;
+      if (uploadRef.current && document.visibilityState !== 'hidden' && uploadBlockedSince.current == null) {
+        uploadBlockedSince.current = Date.now();
+      }
       return;
     }
     await runCheck(intervalMs);
@@ -193,7 +209,14 @@ export function useCampaignFaceCheck({
 
   useEffect(() => {
     uploadRef.current = uploadInFlight;
-    if (!uploadInFlight) void flushDeferredCheckRef.current();
+    if (!uploadInFlight) {
+      // Đóng khoảng bị chặn TRƯỚC khi chạy lượt kiểm hoãn — thời gian sau đó (vd tab ẩn) không tính.
+      if (uploadBlockedSince.current != null) {
+        uploadBlockedMs.current += Date.now() - uploadBlockedSince.current;
+        uploadBlockedSince.current = null;
+      }
+      void flushDeferredCheckRef.current();
+    }
   }, [flushDeferredCheck, uploadInFlight]);
 
   useEffect(() => {

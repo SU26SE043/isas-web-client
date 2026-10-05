@@ -12,7 +12,10 @@ export function formatDuration(seconds: number | null | undefined, language = 'v
   if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null;
   const rounded = Math.round(seconds);
   const minutes = Math.floor(rounded / 60);
-  return language === 'en' ? `${minutes}m ${rounded % 60}s` : `${minutes} phút ${rounded % 60} giây`;
+  const secs = rounded % 60;
+  // Dưới 1 phút KHÔNG in "0 phút 26 giây".
+  if (minutes === 0) return language === 'en' ? `${secs}s` : `${secs} giây`;
+  return language === 'en' ? `${minutes}m ${secs}s` : `${minutes} phút ${secs} giây`;
 }
 
 export function totalAnswerDuration(questions: TranscriptQuestion[]): number | null {
