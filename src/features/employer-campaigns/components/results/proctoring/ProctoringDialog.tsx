@@ -28,7 +28,11 @@ export function ProctoringDialog({ open, onOpenChange, campaignId, sessionId, fl
   const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      {/* overflowAnchor none: khi dòng thời gian tải xong, danh sách gộp được thay bằng ba tầng —
+          scroll anchoring của trình duyệt có thể giữ "điểm neo" cũ trong khung nhìn nên popup tự cuộn
+          xuống (đo trên dev: 209px, mất tiêu đề). Style trực tiếp: class tuỳ biến Tailwind không được
+          sinh ra trong dev. */}
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl" style={{ overflowAnchor: 'none' }}>
         <DialogHeader>
           <DialogTitle>{t('employer.campaigns.results.proctoring.title')}</DialogTitle>
           <DialogDescription>{t('employer.campaigns.results.proctoring.description')}</DialogDescription>
