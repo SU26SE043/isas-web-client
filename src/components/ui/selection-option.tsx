@@ -44,8 +44,9 @@ export function SelectionOption({
       aria-describedby={description ? descriptionId : undefined}
       className={cn(
         'group flex min-h-[112px] items-center gap-4 rounded-2xl px-6 py-5 text-left transition-[background-color,border-color,box-shadow,opacity,transform] duration-200 ease-out hover:-translate-y-0.5',
+        // Không kèm frame-satin ở nhánh chọn: class đó nằm trong @layer utilities nên đè border-2/shadow-[…] bên dưới.
         selected
-          ? 'frame-satin border-2 border-foreground bg-foreground/[0.08] shadow-[var(--satin-inset),0_0_0_2px_var(--surface-base),0_0_0_4px_var(--satin-border-hover)]'
+          ? 'border-2 border-foreground bg-foreground/[0.08] shadow-[var(--satin-inset),0_0_0_2px_var(--surface-base),0_0_0_4px_var(--satin-border-hover)]'
           : 'frame-satin-interactive bg-surface-overlay hover:border-foreground/35 hover:bg-foreground/[0.03]',
         disabled ? 'cursor-not-allowed opacity-50' : null,
         className,
