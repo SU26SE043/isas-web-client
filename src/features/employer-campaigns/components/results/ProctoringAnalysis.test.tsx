@@ -76,6 +76,20 @@ describe('ProctoringAnalysis — có dòng thời gian: đếm theo SỰ VIỆC'
     expect(rows[5]).not.toHaveTextContent('employer.campaigns.results.flagNotes.tabSwitch');
   });
 
+  it('hai lượt kiểm cùng một giây (lệch mili-giây) KHÔNG in khoảng "18:05:24–18:05:24"', () => {
+    render(
+      <ProctoringAnalysis
+        flags={[f('no_face', 2)]}
+        events={[ev('no_face', '2026-09-15T11:05:24.100Z'), ev('no_face', '2026-09-15T11:05:24.900Z')]}
+        timelineStatus="ready"
+      />,
+    );
+    const row = within(screen.getByRole('list', { name: 'employer.campaigns.results.proctoring.timeline.title' }))
+      .getAllByRole('listitem')[0];
+    expect(row).toHaveTextContent('checks=2');
+    expect(row).not.toHaveTextContent('–');
+  });
+
   it('một lượt kiểm lẻ (dễ là nhiễu) hiện khác một chuỗi lượt kiểm liên tiếp', () => {
     render(<ProctoringAnalysis flags={[f('face_mismatch', 1)]} events={[ev('face_mismatch', '2026-10-05T08:51:00Z')]} timelineStatus="ready" />);
     const mismatch = tier('identity').querySelector('[data-flag-type="facemismatch"]') as HTMLElement;

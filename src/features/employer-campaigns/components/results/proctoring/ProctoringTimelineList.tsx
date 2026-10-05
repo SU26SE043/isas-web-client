@@ -48,9 +48,10 @@ export function ProctoringTimelineList({ incidents }: { incidents: ProctoringInc
 function TimelineRow({ incident }: { incident: ProctoringIncident }) {
   const { t, language } = useLanguage();
   const start = formatResultClock(incident.startAt, language, { seconds: true });
-  const end = incident.endMs > incident.startMs
-    ? formatResultClock(incident.endAt, language, { seconds: true })
-    : null;
+  // Chỉ in khoảng khi hai đầu KHÁC nhau sau khi làm tròn tới giây: hai lượt kiểm cách nhau vài
+  // mili-giây (đo trên dev: no_face ×2 cùng 18:05:24) không được thành "18:05:24–18:05:24".
+  const endText = formatResultClock(incident.endAt, language, { seconds: true });
+  const end = endText && endText !== start ? endText : null;
   const notes = incident.notes.map((note) => flagNoteText(note, t)).filter(Boolean);
   return (
     <li data-flag-type={incident.key} className="flex flex-col gap-0.5 text-sm sm:flex-row sm:gap-3">
