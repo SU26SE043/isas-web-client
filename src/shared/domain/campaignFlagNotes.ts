@@ -19,3 +19,10 @@ export type CampaignFlagNoteName = keyof typeof CAMPAIGN_FLAG_NOTES;
 
 /** Đuôi phòng thi nối vào ghi chú khi ứng viên đang khắc phục thiết bị. */
 export const CAMPAIGN_FLAG_NOTE_RECOVERY_SUFFIX = ' (đang khắc phục thiết bị)';
+
+/**
+ * Đuôi phòng thi nối vào ghi chú `monitoring_gap` khi khoảng trống chủ yếu do lượt kiểm mặt bị HOÃN vì
+ * đang gửi câu trả lời — tức do chính hệ thống chọn, không phải ứng viên. Cờ vẫn được gửi (suốt khoảng
+ * đó thật sự không ai quan sát; bỏ cờ là giấu một điểm mù), chỉ là HR đọc được lý do.
+ */
+export const CAMPAIGN_FLAG_NOTE_UPLOAD_SUFFIX = ' — trong lúc gửi câu trả lời';

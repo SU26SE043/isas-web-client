@@ -267,6 +267,62 @@ describe('useCampaignAntiCheat', () => {
     expect(onViolation).toHaveBeenCalledExactlyOnceWith('camera_blocked');
   });
 
+  describe('camera loss later in the same session', () => {
+    const cameraFlags = () => createFlag.mock.calls.filter(([, , body]) => body.signalType === 'camera_blocked');
+    const mount = (track: ReturnType<typeof createFakeVideoTrack>, onViolation = vi.fn()) => {
+      renderHook(() => useCampaignAntiCheat({
+        campaignId: 'campaign-1', sessionId: 'session-1', enabled: true,
+        stream: createFakeStream([track]), onViolation,
+      }));
+      return onViolation;
+    };
+
+    // Gửi cờ đi qua hàng đợi bất đồng bộ (await từng cờ) ⇒ test phải async để cờ thứ hai thật sự được gửi.
+    const step = async (fn: () => void, ms: number) => {
+      await act(async () => {
+        fn();
+        await vi.advanceTimersByTimeAsync(ms);
+      });
+    };
+
+    // Trước bản vá: cờ "đã báo" chỉ gỡ khi đổi luồng camera ⇒ lần mất camera THỨ HAI không bao giờ được báo.
+    it('reports a second loss once the camera has been live again for two polls', async () => {
+      const track = createFakeVideoTrack();
+      const onViolation = mount(track);
+      await step(() => { track.muted = true; }, 2_000);
+      await step(() => { track.muted = false; }, 4_000);
+      await step(() => { track.muted = true; }, 2_000);
+
+      expect(cameraFlags()).toHaveLength(2);
+      expect(onViolation).toHaveBeenCalledTimes(2);
+    });
+
+    // `track.muted` chập chờn (app khác giành camera, trình duyệt chuyển nền) không được bắn cờ liên tục.
+    it('does not re-arm after a single live poll', async () => {
+      const track = createFakeVideoTrack();
+      const onViolation = mount(track);
+      await step(() => { track.muted = true; }, 2_000);
+      await step(() => { track.muted = false; }, 2_000);
+      await step(() => { track.muted = true; }, 2_000);
+
+      expect(cameraFlags()).toHaveLength(1);
+      expect(onViolation).toHaveBeenCalledTimes(1);
+    });
+
+    // Tab ẩn: `tab_switch` đã ghi việc rời màn thi, trình duyệt tự tắt camera ở nền. Hiện lại mà camera
+    // vẫn mất thì lượt poll kế vẫn bắt được — không có lỗ.
+    it('does not report while the tab is hidden, but catches it on the first poll after returning', async () => {
+      const track = createFakeVideoTrack();
+      mount(track);
+      await step(() => setVisibility('hidden'), 0);
+      await step(() => { track.muted = true; }, 6_000);
+      expect(cameraFlags()).toHaveLength(0);
+
+      await step(() => setVisibility('visible'), 2_000);
+      expect(cameraFlags()).toHaveLength(1);
+    });
+  });
+
   it('does not report a camera that was never live', () => {
     const onViolation = vi.fn();
     renderHook(() => useCampaignAntiCheat({
