@@ -5,7 +5,7 @@ import {
   type CampaignFlagNoteName,
 } from '@/shared/domain/campaignFlagNotes';
 import { employerCampaignTranslations } from '../languages/translations';
-import { flagNoteKey, flagNoteText } from './flagNoteText';
+import { flagNoteKey, flagNoteText, isServerMarkedNote } from './flagNoteText';
 
 describe('flagNoteText', () => {
   const t = (key: string) => `translated:${key}`;
@@ -22,6 +22,18 @@ describe('flagNoteText', () => {
 
   it('keeps an unknown (server) note readable, trimmed like the old rendering', () => {
     expect(flagNoteText('  New server detail  ', t)).toBe('New server detail');
+  });
+
+  // MonitoringGapSweeper gắn marker dedup cuối ghi chú — đó là mã cho server, HR đọc vào chỉ thấy rác.
+  it('strips the server dedup markers [gap#…] / [monitor#none] and recognises them', () => {
+    expect(flagNoteText('Khoảng trống 300s [gap#638950000000000000]', t)).toBe('Khoảng trống 300s');
+    expect(flagNoteText('Không có ảnh nào suốt 4 phút [monitor#none]', t)).toBe('Không có ảnh nào suốt 4 phút');
+    expect(isServerMarkedNote('x [gap#1]')).toBe(true);
+    expect(isServerMarkedNote('x [monitor#none]')).toBe(true);
+    expect(isServerMarkedNote('Candidate lost focus from the interview window.')).toBe(false);
+    expect(isServerMarkedNote(null)).toBe(false);
+    // Chỉ cắt marker ở CUỐI — chuỗi giống marker giữa câu là nội dung thật.
+    expect(flagNoteText('[gap#1] ở đầu câu', t)).toBe('[gap#1] ở đầu câu');
   });
 
   // Mọi câu phòng thi gửi đi phải dịch được — thêm một câu ở hằng số mà quên khoá dịch thì HR lại thấy

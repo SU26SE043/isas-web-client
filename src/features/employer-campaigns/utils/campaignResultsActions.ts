@@ -58,13 +58,53 @@ export function formatResultDateTime(value: string | null | undefined, locale: s
 }
 
 export function formatResultTime(value: string | null | undefined, locale: string): string | null {
+  return formatResultClock(value, locale);
+}
+
+/**
+ * Giờ theo múi giờ của người xem. `seconds` cho dòng thời gian cờ (hai sự kiện cách nhau vài giây
+ * không được trông như cùng một phút); `date` khi dữ liệu trải qua hơn một ngày (làm lại lượt, resume) —
+ * chỉ in giờ thì "21:12" của hôm qua đọc thành của hôm nay.
+ */
+export function formatResultClock(
+  value: string | null | undefined,
+  locale: string,
+  options: { seconds?: boolean; date?: boolean } = {},
+): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
+    ...(options.seconds ? { second: '2-digit' } : {}),
+    ...(options.date ? { day: '2-digit', month: '2-digit' } : {}),
   }).format(date);
+}
+
+/** Ngày (theo múi giờ người xem) — tiêu đề nhóm của dòng thời gian khi nó trải qua nhiều ngày. */
+export function formatResultDay(value: string | null | undefined, locale: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+}
+
+/** Khoá ngày LỊCH ĐỊA PHƯƠNG (không phải UTC): 23:30 và 00:30 giờ VN là hai ngày khác nhau với HR. */
+export function resultDayKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+export function spansMultipleDays(values: readonly (string | null | undefined)[]): boolean {
+  const days = new Set(values.map(resultDayKey).filter((key): key is string => key != null));
+  return days.size > 1;
 }
 
 export function downloadResultBlob(blob: Blob, fileName: string): void {

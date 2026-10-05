@@ -18,6 +18,10 @@ describe('result detail view model', () => {
   });
   it('formats and sums nullable durations', () => {
     expect(formatDuration(125)).toBe('2 phút 5 giây');
+    // Dưới 1 phút không in "0 phút 26 giây".
+    expect(formatDuration(26)).toBe('26 giây');
+    expect(formatDuration(26, 'en')).toBe('26s');
+    expect(formatDuration(60)).toBe('1 phút 0 giây');
     expect(totalAnswerDuration([question({ durationSec: 60 }), question(), question({ durationSec: 5 })])).toBe(65);
     expect(totalAnswerDuration([question()])).toBeNull();
   });

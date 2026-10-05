@@ -11,7 +11,8 @@ import { ProctoringFlagsButton } from './ProctoringFlagsButton';
  * · nút Ứng viên trước/sau (thứ tự HẠNG server, không phải bảng đã lọc). Đóng trang = breadcrumb
  * "Quay lại kết quả" ở trang (trước đây có thêm nút × ở đây ⇒ hai cách đóng cùng một màn).
  */
-export function ResultDetailHeader({ campaignName, item, total, questions, previous, next, onNavigate }: {
+export function ResultDetailHeader({ campaignId, campaignName, item, total, questions, previous, next, onNavigate }: {
+  campaignId: string;
   campaignName: string;
   item: CampaignResultItem;
   total: number;
@@ -39,7 +40,7 @@ export function ResultDetailHeader({ campaignName, item, total, questions, previ
           <Badge variant="outline" className={reviewCount ? 'border-warning/30 bg-warning/10 text-warning' : ''}>
             {t('employer.campaigns.results.detail.needsReview').replace('{{count}}', String(reviewCount))}
           </Badge>
-          <ProctoringFlagsButton flags={item.flags} />
+          <ProctoringFlagsButton flags={item.flags} campaignId={campaignId} sessionId={item.sessionId} />
         </div>
       </div>
       <nav className="flex gap-2" aria-label={t('employer.campaigns.results.detail.candidateNavigation')}>

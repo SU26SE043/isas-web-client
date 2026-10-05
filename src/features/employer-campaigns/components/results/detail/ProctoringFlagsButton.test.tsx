@@ -1,52 +1,76 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProctoringFlagsButton } from './ProctoringFlagsButton';
+import { campaignManagementService } from '../../../services/campaignManagement.service';
 import type { CampaignResultFlag } from '../../../types/campaign.api.types';
 
 vi.mock('@/shared/languages', () => ({
-  useLanguage: () => ({ t: (key: string) => key, language: 'vi' }),
+  useLanguage: () => ({
+    t: (key: string) => (key === 'employer.campaigns.results.detail.proctoringButton' ? 'button={{count}}' : key),
+    language: 'vi',
+  }),
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const f = (type: string, count: number): CampaignResultFlag => ({ type, count, source: 'Client', note: null, firstAt: null, lastAt: null });
 
+function renderWithQuery(ui: ReactNode) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 describe('ProctoringFlagsButton — cờ giám sát là MỘT NÚT ở đầu trang, bấm mở popup', () => {
   it('0 cờ → badge tĩnh "không ghi nhận", KHÔNG có nút, KHÔNG có dialog', () => {
-    render(<ProctoringFlagsButton flags={[]} />);
+    renderWithQuery(<ProctoringFlagsButton flags={[]} campaignId="c1" sessionId="s1" />);
     expect(screen.getByText('employer.campaigns.results.detail.proctoringNone')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('có cờ → nút mang TỔNG số lần; popup ĐÓNG cho tới khi bấm', () => {
-    render(<ProctoringFlagsButton flags={[f('tab_switch', 4), f('face_mismatch', 1)]} />);
-    const btn = screen.getByRole('button', { name: /proctoringButton/ });
-    expect(btn).toHaveTextContent('employer.campaigns.results.detail.proctoringButton');
-    // {{count}} được thay bằng tổng 5 — mock t trả key nên kiểm qua aria-expanded + không có dialog
+  it('nút mang TỔNG lượt ghi nhận; popup đóng và CHƯA gọi dòng thời gian cho tới khi bấm', () => {
+    const timeline = vi.spyOn(campaignManagementService, 'getCampaignResultFlagTimeline');
+    renderWithQuery(<ProctoringFlagsButton flags={[f('tab_switch', 4), f('face_mismatch', 1)]} campaignId="c1" sessionId="s1" />);
+    const btn = screen.getByRole('button', { name: /button=5/ });
     expect(btn).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(timeline).not.toHaveBeenCalled();
   });
 
-  it('bấm nút → dialog mở, bên trong là danh sách cờ với nhãn + ô "Vi phạm cửa sổ" đếm đúng', async () => {
+  it('bấm → gọi dòng thời gian ĐÚNG MỘT LẦN cho đúng buổi, popup đếm theo sự việc', async () => {
+    const timeline = vi.spyOn(campaignManagementService, 'getCampaignResultFlagTimeline').mockResolvedValue({
+      sessionId: 's1',
+      candidateId: 'cand-1',
+      events: [
+        { signalType: 'no_face', detectedAt: '2026-10-05T01:39:07Z', note: null },
+        { signalType: 'no_face', detectedAt: '2026-10-05T01:39:19Z', note: null },
+        { signalType: 'tab_switch', detectedAt: '2026-10-05T01:39:46Z', note: null },
+      ],
+    });
     const user = userEvent.setup();
-    render(<ProctoringFlagsButton flags={[f('tab_switch', 4), f('face_mismatch', 1), f('monitoring_gap', 1)]} />);
-    await user.click(screen.getByRole('button', { name: /proctoringButton/ }));
+    renderWithQuery(<ProctoringFlagsButton flags={[f('no_face', 2), f('tab_switch', 1)]} campaignId="c1" sessionId="s1" />);
+    await user.click(screen.getByRole('button', { name: /button=3/ }));
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveTextContent('employer.campaigns.results.flags.type.face_mismatch: 1');
-    expect(dialog).toHaveTextContent('employer.campaigns.results.flags.type.monitoring_gap: 1');
-    // ô cửa sổ = 4 (chỉ tab_switch), không phải tổng 6
-    expect(dialog).toHaveTextContent('04');
-    expect(dialog).not.toHaveTextContent('06');
+    expect(await screen.findByTestId('proctoring-summary')).toBeInTheDocument();
+    expect(timeline).toHaveBeenCalledTimes(1);
+    expect(timeline).toHaveBeenCalledWith('c1', 's1');
+    expect(dialog).toHaveTextContent('employer.campaigns.results.proctoring.tier.identity.title');
   });
 
-  it('tổng trên nút cộng mọi loại (không chỉ cửa sổ)', () => {
-    const { container } = render(<ProctoringFlagsButton flags={[f('tab_switch', 2), f('no_face', 3)]} />);
-    // t mock trả key nên đếm qua hàm thay thế: kiểm bằng cách render lại với t thật là việc của test i18n;
-    // ở đây khoá bất biến "nút tồn tại khi tổng > 0"
-    expect(container.querySelector('button')).not.toBeNull();
+  it('dòng thời gian lỗi ⇒ popup vẫn có danh sách cờ (dữ liệu gộp) + lời báo, không trắng', async () => {
+    vi.spyOn(campaignManagementService, 'getCampaignResultFlagTimeline').mockRejectedValue(new Error('boom'));
+    const user = userEvent.setup();
+    renderWithQuery(<ProctoringFlagsButton flags={[f('face_mismatch', 1)]} campaignId="c1" sessionId="s1" />);
+    await user.click(screen.getByRole('button', { name: /button=1/ }));
+    expect(await screen.findByText('employer.campaigns.results.proctoring.timeline.error')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent('employer.campaigns.results.flags.type.face_mismatch');
   });
 });

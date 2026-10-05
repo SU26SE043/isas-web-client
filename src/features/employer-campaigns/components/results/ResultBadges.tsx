@@ -11,6 +11,14 @@ import {
 import { ResultFlagSourceLabel } from './ResultFlagSourceLabel';
 import { ResultsCriterionCutoff } from './ResultsContextStrip';
 import { flagNoteText } from '../../utils/flagNoteText';
+import {
+  distinctFlagTypeCount,
+  flagTypeLabel,
+  getReviewPriority,
+  pickTopFlag,
+  REVIEW_PRIORITY_CLASS,
+  REVIEW_PRIORITY_DOT_CLASS,
+} from '../../utils/proctoringFlagPriority';
 
 export function ResultStatusBadge({ result }: { result: CampaignResultStatus }) {
   const { t } = useLanguage();
@@ -62,28 +70,48 @@ export function ResultOverrideBadge({ item, hideNone = false }: { item: Campaign
   );
 }
 
+/**
+ * Ô cờ của bảng kết quả: loại NẶNG NHẤT (tầng danh tính → hành vi → không quan sát được) tô theo tầng,
+ * kèm "+N loại khác" và tổng LƯỢT GHI NHẬN. Trước đây mọi hàng cùng một chữ "N cảnh báo" màu cam nên
+ * "Khuôn mặt không khớp" trông y như "Gián đoạn giám sát", và tooltip in mã thô (`tab_switch: 3`).
+ * Số ở đây là lượt ghi nhận chứ không phải số sự việc — gộp sự việc cần dòng thời gian từng buổi.
+ */
 export function ResultFlagsCell({ item }: { item: CampaignResultItem }) {
   const { t } = useLanguage();
   const flagCount = getResultFlagCount(item.flags);
-  if (flagCount === 0) {
+  const top = pickTopFlag(item.flags);
+  if (flagCount === 0 || !top) {
     return <span className="text-xs text-muted-foreground">{t('employer.campaigns.results.flags.none')}</span>;
   }
-  const summary = item.flags.map((flag) => `${flag.type}: ${flag.count}`).join('\n');
-  const notes = item.flags
-    .filter((flag) => flag.note?.trim())
-    .map((flag) => `${flag.type}: ${flagNoteText(flag.note!, t)}`)
+  const priority = getReviewPriority(top.type);
+  const moreTypes = distinctFlagTypeCount(item.flags) - 1;
+  const tooltip = item.flags
+    .map((flag) => {
+      const records = t('employer.campaigns.results.proctoring.records').replace('{{count}}', String(flag.count));
+      const source = flag.source === 'Server' ? ` (${t('employer.campaigns.results.flags.recordedBySystem')})` : '';
+      const note = flag.note?.trim() ? ` — ${flagNoteText(flag.note, t)}` : '';
+      return `${flagTypeLabel(flag.type, t)}: ${records}${source}${note}`;
+    })
     .join('\n');
   const serverFlag = item.flags.find((flag) => flag.source === 'Server');
   return (
-    <span
-      className="text-xs text-warning"
-      title={[summary, notes].filter(Boolean).join('\n\n')}
-    >
-      {t('employer.campaigns.results.flags.count').replace(
-        '{{count}}',
-        String(flagCount),
-      )}
-      {serverFlag ? <ResultFlagSourceLabel flag={serverFlag} /> : null}
+    <span className="inline-flex flex-col items-start gap-1" title={tooltip}>
+      <span
+        data-priority={priority}
+        className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${REVIEW_PRIORITY_CLASS[priority]}`}
+      >
+        <span className={`size-1.5 shrink-0 rounded-full ${REVIEW_PRIORITY_DOT_CLASS[priority]}`} aria-hidden />
+        <span className="truncate">{flagTypeLabel(top.type, t)}</span>
+        {moreTypes > 0 ? (
+          <span className="shrink-0 font-normal">
+            {t('employer.campaigns.results.flags.moreTypes').replace('{{count}}', String(moreTypes))}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-xs text-muted-foreground">
+        {t('employer.campaigns.results.flags.count').replace('{{count}}', String(flagCount))}
+        {serverFlag ? <ResultFlagSourceLabel flag={serverFlag} /> : null}
+      </span>
     </span>
   );
 }

@@ -59,7 +59,7 @@ export function FocusEventsAnalysis({ view }: { view: PracticeSessionResultViewM
     .sort((a, b) => TYPE_ORDER.indexOf(a.signalType) - TYPE_ORDER.indexOf(b.signalType));
   const message = buildFocusSummaryMessage(view, t);
 
-  // Không bọc frame: nội dung nằm TRONG Dialog/mục đã có khung + tiêu đề (cùng lý do ProctoringAnalysis `embedded`).
+  // Không bọc frame: nội dung nằm TRONG Dialog/mục đã có khung + tiêu đề (cùng lý do popup giám sát B2B).
   return (
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">

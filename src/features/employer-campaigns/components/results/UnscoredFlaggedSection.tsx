@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { ShieldAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -11,14 +14,39 @@ import { useLanguage } from '@/shared/languages';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
 import { candidateDisplayEmail, candidateDisplayName } from './ResultBadges';
 import { UnscoredFlagList, UnscoredStatus } from './UnscoredFlagList';
+import { ProctoringDialog } from './proctoring/ProctoringDialog';
 
 export function UnscoredFlaggedSection({
   items,
+  campaignId,
 }: {
   items: CampaignUnscoredFlaggedResult[];
+  /** Có thì mỗi hàng có nút mở popup giám sát (dòng thời gian chạy được cả với buổi chưa chấm/bỏ ngang). */
+  campaignId?: string;
 }) {
   const { t } = useLanguage();
   const list = items ?? [];
+  // `open` tách khỏi `selected`: đóng popup chỉ hạ `open`, giữ buổi đã chọn để nội dung không nháy
+  // thành "không có vi phạm" trong lúc popup đang chạy hiệu ứng đóng.
+  const [selected, setSelected] = useState<CampaignUnscoredFlaggedResult | null>(null);
+  const [open, setOpen] = useState(false);
+  const viewButton = (item: CampaignUnscoredFlaggedResult) =>
+    campaignId && item.flags.length > 0 ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="mt-2"
+        aria-haspopup="dialog"
+        onClick={() => {
+          setSelected(item);
+          setOpen(true);
+        }}
+      >
+        <ShieldAlert aria-hidden />
+        {t('employer.campaigns.results.unscoredFlagged.viewProctoring')}
+      </Button>
+    ) : null;
 
   return (
     <section className="space-y-3" aria-labelledby="unscoerror-flagged-heading">
@@ -67,6 +95,7 @@ export function UnscoredFlaggedSection({
                     </TableCell>
                     <TableCell>
                       <UnscoredFlagList flags={item.flags} />
+                      {viewButton(item)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -92,12 +121,22 @@ export function UnscoredFlaggedSection({
                 </div>
                 <div className="mt-3 border-t border-satin pt-3">
                   <UnscoredFlagList flags={item.flags} />
+                  {viewButton(item)}
                 </div>
               </li>
             ))}
           </ul>
         </>
       )}
+      {campaignId && selected ? (
+        <ProctoringDialog
+          open={open}
+          onOpenChange={setOpen}
+          campaignId={campaignId}
+          sessionId={selected.sessionId}
+          flags={selected.flags}
+        />
+      ) : null}
     </section>
   );
 }

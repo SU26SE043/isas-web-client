@@ -22,6 +22,7 @@ import type {
   CampaignResultsResponse,
   CampaignTranscriptResponse,
   CampaignResultOverrideHistoryResponse,
+  CampaignResultFlagTimeline,
   GenerateCampaignQuestionsParams,
   OverrideCampaignResultPayload,
   GetCampaignInvitationsQuery,
@@ -61,6 +62,7 @@ import {
   parseCampaignResultsResponse,
   parseCampaignTranscriptResponse,
   parseCampaignOverrideHistoryResponse,
+  parseCampaignResultFlagTimeline,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -1040,6 +1042,19 @@ export const campaignManagementService = {
       campaignManagementEndpoints.resultOverrideHistory(id, sessionId),
     );
     return parseCampaignOverrideHistoryResponse(response.data);
+  },
+
+  /** Live: GET /api/v1/campaign/{id}/results/{sessionId}/flags — từng cờ theo giây (cả buổi chưa chấm). */
+  async getCampaignResultFlagTimeline(
+    id: string,
+    sessionId: string,
+  ): Promise<CampaignResultFlagTimeline> {
+    const response = await apiClient.get<unknown>(
+      campaignManagementEndpoints.resultFlagTimeline(id, sessionId),
+    );
+    const timeline = parseCampaignResultFlagTimeline(response.data);
+    if (!timeline) throw new CampaignRequestError(502, 'FLAG_TIMELINE_INVALID');
+    return timeline;
   },
 
   async getCampaignResultAnswerAudio(

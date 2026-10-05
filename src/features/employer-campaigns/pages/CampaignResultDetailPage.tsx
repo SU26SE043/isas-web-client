@@ -86,6 +86,7 @@ export function CampaignResultDetailPage() {
           {t('employer.campaigns.results.detail.back')}
         </Link>
         <ResultDetailHeader
+          campaignId={campaignId}
           campaignName={campaignQuery.campaign?.title || campaignId}
           item={item}
           total={resultsQuery.data?.results.length ?? 0}

@@ -44,6 +44,8 @@ export const campaignManagementEndpoints = {
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/transcript`,
   resultOverrideHistory: (id: string, sessionId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/override-history`,
+  resultFlagTimeline: (id: string, sessionId: string) =>
+    `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/flags`,
   resultAnswerAudio: (id: string, sessionId: string, answerId: string) =>
     `${CAMPAIGN_API_PREFIX}/${encodeURIComponent(id)}/results/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/audio`,
   resultOverride: (id: string, sessionId: string) =>

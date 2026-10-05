@@ -13,6 +13,8 @@ export const campaignResultKeys = {
     [...campaignResultKeys.all, campaignId, 'transcript', sessionId] as const,
   overrideHistory: (campaignId: string, sessionId: string) =>
     [...campaignResultKeys.all, campaignId, 'override-history', sessionId] as const,
+  flagTimeline: (campaignId: string, sessionId: string) =>
+    [...campaignResultKeys.all, campaignId, 'flag-timeline', sessionId] as const,
 };
 
 /** @deprecated Prefer campaignResultKeys.list */
@@ -57,6 +59,22 @@ export function useCampaignResultOverrideHistory(
   return useQuery({
     queryKey: campaignResultKeys.overrideHistory(campaignId ?? '', sessionId ?? ''),
     queryFn: () => campaignManagementService.getCampaignResultOverrideHistory(campaignId!, sessionId!),
+    enabled: Boolean(campaignId) && Boolean(sessionId) && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * Dòng thời gian cờ giám sát. KHÔNG đặt `retry` riêng: retry ở cấp query đè `retry:false` của client
+ * test, và trong lúc thử lại UI vẫn đang hiện dữ liệu gộp nên người dùng không phải chờ trắng.
+ */
+export function useCampaignResultFlagTimeline(
+  campaignId: string | undefined,
+  sessionId: string | null,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: campaignResultKeys.flagTimeline(campaignId ?? '', sessionId ?? ''),
+    queryFn: () => campaignManagementService.getCampaignResultFlagTimeline(campaignId!, sessionId!),
     enabled: Boolean(campaignId) && Boolean(sessionId) && (options?.enabled ?? true),
   });
 }

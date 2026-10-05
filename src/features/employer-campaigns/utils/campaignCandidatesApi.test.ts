@@ -5,6 +5,7 @@ import {
   parseCampaignResultsResponse,
   parseCampaignTranscriptResponse,
   parseCampaignOverrideHistoryResponse,
+  parseCampaignResultFlagTimeline,
   parseCandidateDetail,
   parseCandidateListItem,
   parseCandidateUploadResponse,
@@ -281,5 +282,37 @@ describe('campaignCandidatesApi', () => {
     expect(history.items).toHaveLength(2);
     expect(history.items[1]?.kind).toBe('Clear');
     expect(history.items[0]?.actorEmail).toBeNull();
+  });
+});
+
+describe('parseCampaignResultFlagTimeline', () => {
+  it('reads camelCase, PascalCase and the data envelope; empty Guid candidate becomes null', () => {
+    expect(parseCampaignResultFlagTimeline({
+      data: { SessionId: 's1', CandidateId: '00000000-0000-0000-0000-000000000000', Events: [
+        { SignalType: 'tab_switch', DetectedAt: '2026-10-05T01:39:46Z', Note: 'x' },
+      ] },
+    })).toEqual({
+      sessionId: 's1',
+      candidateId: null,
+      events: [{ signalType: 'tab_switch', detectedAt: '2026-10-05T01:39:46Z', note: 'x' }],
+    });
+  });
+
+  it('drops rows without a type, without a time or with an unparseable time', () => {
+    const parsed = parseCampaignResultFlagTimeline({ sessionId: 's1', events: [
+      { signalType: 'no_face', detectedAt: '2026-10-05T01:39:07Z' },
+      { detectedAt: '2026-10-05T01:39:07Z' },
+      { signalType: 'paste' },
+      { signalType: 'paste', detectedAt: 'yesterday-ish' },
+      'garbage',
+    ] });
+    expect(parsed?.events).toEqual([{ signalType: 'no_face', detectedAt: '2026-10-05T01:39:07Z', note: null }]);
+  });
+
+  it('returns null — not an empty timeline — when the body has no events array (eg. an HTML fallback page)', () => {
+    expect(parseCampaignResultFlagTimeline('<!doctype html><html></html>')).toBeNull();
+    expect(parseCampaignResultFlagTimeline({ sessionId: 's1' })).toBeNull();
+    expect(parseCampaignResultFlagTimeline(null)).toBeNull();
+    expect(parseCampaignResultFlagTimeline({ events: [] })).toEqual({ sessionId: '', candidateId: null, events: [] });
   });
 });

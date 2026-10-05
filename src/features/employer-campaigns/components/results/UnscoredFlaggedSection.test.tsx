@@ -1,12 +1,18 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { campaignManagementService } from '../../services/campaignManagement.service';
 import type { CampaignUnscoredFlaggedResult } from '../../types/campaign.api.types';
 import { UnscoredFlaggedSection } from './UnscoredFlaggedSection';
 
 vi.mock('@/shared/languages', () => ({ useLanguage: () => ({ t: (key: string) => key, language: 'en' }) }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const K = 'employer.campaigns.results.unscoredFlagged';
 
@@ -95,5 +101,39 @@ describe('UnscoredFlaggedSection', () => {
     for (const view of ['table', 'cards'] as const) {
       expect(layout(container, view).getAllByText(`${K}.noScore`)).toHaveLength(1);
     }
+  });
+
+  it('không có campaignId ⇒ không có nút xem chi tiết giám sát', () => {
+    render(<UnscoredFlaggedSection items={[item({ flags: [{ type: 'tab_switch', count: 1, source: 'Client' }] })]} />);
+    expect(screen.queryByRole('button', { name: `${K}.viewProctoring` })).not.toBeInTheDocument();
+  });
+
+  it('có campaignId ⇒ nút ở CẢ bảng lẫn thẻ (chỉ hàng có cờ); bấm mở MỘT popup cho ĐÚNG buổi đó', async () => {
+    const timeline = vi.spyOn(campaignManagementService, 'getCampaignResultFlagTimeline').mockResolvedValue({
+      sessionId: 's2', candidateId: 'c2', events: [{ signalType: 'no_face', detectedAt: '2026-10-05T01:39:07Z', note: null }],
+    });
+    const user = userEvent.setup();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <UnscoredFlaggedSection
+          campaignId="camp-1"
+          items={[
+            item({ candidateId: 'c1', sessionId: 's1' }),
+            item({ candidateId: 'c2', sessionId: 's2', flags: [{ type: 'no_face', count: 1, source: 'Client' }] }),
+          ]}
+        />
+      </QueryClientProvider>,
+    );
+    for (const view of ['table', 'cards'] as const) {
+      expect(layout(container, view).getAllByRole('button', { name: `${K}.viewProctoring` })).toHaveLength(1);
+    }
+    expect(timeline).not.toHaveBeenCalled();
+
+    await user.click(layout(container, 'table').getByRole('button', { name: `${K}.viewProctoring` }));
+    expect(await screen.findAllByRole('dialog')).toHaveLength(1);
+    expect(await screen.findByTestId('proctoring-summary')).toBeInTheDocument();
+    expect(timeline).toHaveBeenCalledTimes(1);
+    expect(timeline).toHaveBeenCalledWith('camp-1', 's2');
   });
 });

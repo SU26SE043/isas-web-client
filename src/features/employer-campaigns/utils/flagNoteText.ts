@@ -16,9 +16,20 @@ const KNOWN_NOTE_KEYS: Record<string, string> = Object.fromEntries(
     .map(([name, note]) => [note, flagNoteKey(name)]),
 );
 
+/**
+ * Marker dedup mà `MonitoringGapSweeper` (server) gắn cuối ghi chú: `[gap#<ticks>]` (LUẬT 1) và
+ * `[monitor#none]` (LUẬT 2). Chỉ để server khỏi ghi trùng — HR đọc vào chỉ thấy mã rác.
+ */
+const SERVER_NOTE_MARKER = /\s*\[(?:gap#\d+|monitor#none)\]\s*$/;
+
+/** Ghi chú mang marker của server ⇒ cờ do server suy ra, mốc giờ là lúc server QUÉT, không phải lúc xảy ra. */
+export function isServerMarkedNote(note: string | null | undefined): boolean {
+  return Boolean(note && SERVER_NOTE_MARKER.test(note));
+}
+
 /** Translate FE-generated anti-cheat notes while leaving unknown (server) notes readable. */
 export function flagNoteText(note: string, t: Translate): string {
-  const trimmed = note.trim();
+  const trimmed = note.replace(SERVER_NOTE_MARKER, '').trim();
   const recovery = trimmed.endsWith(CAMPAIGN_FLAG_NOTE_RECOVERY_SUFFIX);
   const base = recovery ? trimmed.slice(0, -CAMPAIGN_FLAG_NOTE_RECOVERY_SUFFIX.length) : trimmed;
   const key = KNOWN_NOTE_KEYS[base];

@@ -3,10 +3,12 @@ import type { CampaignResultItem } from '../types/campaign.api.types';
 import {
   defaultExportFileName,
   filterAndSortResults,
+  formatResultClock,
   formatResultScore,
   getResultFlagCount,
   hasResultOverride,
   parseOverrideScoreInput,
+  spansMultipleDays,
 } from './campaignResultsActions';
 import { parseContentDispositionFilename } from './campaignFiles';
 
@@ -90,5 +92,26 @@ describe('campaignResultsActions', () => {
       ),
     ).toBe('campaign_camp-1_results.pdf');
     expect(parseContentDispositionFilename(undefined)).toBeUndefined();
+  });
+});
+
+describe('flag clock helpers', () => {
+  // Không ghim múi giờ của máy chạy test: so với chính Intl cùng tham số, và chọn mốc cách nhau đủ xa.
+  const fmt = (iso: string, options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', ...options }).format(new Date(iso));
+
+  it('formats seconds and the date only when asked', () => {
+    const iso = '2026-10-05T01:39:07Z';
+    expect(formatResultClock(iso, 'vi')).toBe(fmt(iso, {}));
+    expect(formatResultClock(iso, 'vi', { seconds: true })).toBe(fmt(iso, { second: '2-digit' }));
+    expect(formatResultClock(iso, 'vi', { date: true })).toBe(fmt(iso, { day: '2-digit', month: '2-digit' }));
+    expect(formatResultClock('not a date', 'vi')).toBeNull();
+    expect(formatResultClock(null, 'vi')).toBeNull();
+  });
+
+  it('detects events spanning more than one local day', () => {
+    expect(spansMultipleDays(['2026-10-04T12:00:00Z', '2026-10-05T13:00:00Z'])).toBe(true);
+    expect(spansMultipleDays(['2026-10-05T12:00:00Z', '2026-10-05T12:00:30Z', null])).toBe(false);
+    expect(spansMultipleDays([])).toBe(false);
   });
 });
